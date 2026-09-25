@@ -3,7 +3,7 @@
 A free, local-first place to learn concepts, practise coding, and see what you can solve independently. Code Reps starts with TypeScript and is designed to grow into frontend, backend, algorithms, data structures, debugging, and code-reading exercises.
 
 The product plan is in [PROJECT.md](./PROJECT.md).
-See [ROADMAP.md](./ROADMAP.md) for the version plan and [docs/LOCAL_SETUP.md](./docs/LOCAL_SETUP.md) for local installation, updates, and restores.
+See [ROADMAP.md](./ROADMAP.md) for the version plan, [docs/LOCAL_SETUP.md](./docs/LOCAL_SETUP.md) for local installation, updates, and restores, and [docs/CONTENT_AUTHORING.md](./docs/CONTENT_AUTHORING.md) for internal content guidance. Source rights are reserved for now; the core app is intended to remain free to use.
 
 ## Status
 

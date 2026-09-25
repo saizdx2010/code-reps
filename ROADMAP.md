@@ -41,9 +41,9 @@ Code Reps' core learning loop is always free and runs on each learner's laptop. 
 
 ## 1.0 — Easy local distribution
 
-- [ ] Package a reproducible, signed desktop build for macOS, Windows, and Linux.
+- [ ] Package a reproducible, signed desktop build for macOS, Windows, and Linux. Portable unsigned test bundles are available in CI; signing remains.
 - [ ] Test first run, upgrades, backup restore, and offline use on each platform.
-- [ ] Publish a plain-language guide and contribution guide for free content.
+- [ ] Publish a plain-language public contribution guide if source or content contribution terms are chosen. Internal content authoring guidance exists now.
 
 ## Release gates
 
