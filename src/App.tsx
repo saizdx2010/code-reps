@@ -8,6 +8,7 @@ import { arrayJourney, getArrayJourney, reflectionGuides, stageLabels } from './
 import type { LearnerStart } from './learning'
 import { mergeHistory, parseBackup } from './portability'
 import type { Backup } from './portability'
+import { isServerReady, localStore } from './local-store'
 import './App.css'
 import './design.css'
 
@@ -32,7 +33,7 @@ function reviewDue(record: AttemptRecord, now = Date.now()) {
 
 function readHistory(): AttemptRecord[] {
   try {
-    const saved: unknown = JSON.parse(localStorage.getItem(historyKey) || '[]')
+    const saved: unknown = JSON.parse(localStore.getItem(historyKey) || '[]')
     return Array.isArray(saved) ? saved.filter((item): item is AttemptRecord =>
       typeof item?.id === 'string' && typeof item?.repId === 'string' && typeof item?.completedAt === 'string' &&
       typeof item?.plan === 'string' && typeof item?.code === 'string' && typeof item?.explanation === 'string') : []
@@ -41,7 +42,7 @@ function readHistory(): AttemptRecord[] {
 
 function readAttempt(rep: Rep): Attempt {
   try {
-    const saved = JSON.parse(localStorage.getItem(storageKey(rep.id)) || 'null') as Partial<Attempt> | null
+    const saved = JSON.parse(localStore.getItem(storageKey(rep.id)) || 'null') as Partial<Attempt> | null
     return {
       plan: typeof saved?.plan === 'string' ? saved.plan : '',
       code: typeof saved?.code === 'string' ? saved.code : rep.starter,
@@ -57,13 +58,13 @@ function readAttempt(rep: Rep): Attempt {
 function App() {
   const [view, setView] = useState<'home' | 'workspace' | 'history' | 'learn' | 'paths' | 'progress'>('home')
   const [learnerStart, setLearnerStart] = useState<LearnerStart | null>(() => {
-    try { const saved = localStorage.getItem(learnerStartKey); return saved === 'new' || saved === 'returning' ? saved : null }
+    try { const saved = localStore.getItem(learnerStartKey); return saved === 'new' || saved === 'returning' ? saved : null }
     catch { return null }
   })
   const [mobileTab, setMobileTab] = useState<'task' | 'workspace'>('task')
   const [history, setHistory] = useState(readHistory)
   const [repId, setRepId] = useState(() => {
-    try { return reps.find((item) => item.id === localStorage.getItem('code-reps:selected-rep'))?.id ?? reps[0].id }
+    try { return reps.find((item) => item.id === localStore.getItem('code-reps:selected-rep'))?.id ?? reps[0].id }
     catch { return reps[0].id }
   })
   const rep = reps.find((item) => item.id === repId) ?? reps[0]
@@ -71,7 +72,7 @@ function App() {
   const [results, setResults] = useState<TestResult[] | null>(null)
   const [runError, setRunError] = useState('')
   const [running, setRunning] = useState(false)
-  const [saveState, setSaveState] = useState('Saved locally')
+  const [saveState, setSaveState] = useState(isServerReady() ? 'Saved on this laptop' : 'Saved in browser')
   const workerRef = useRef<Worker | null>(null)
   const timerRef = useRef<number | null>(null)
   const resetDialogRef = useRef<HTMLDialogElement | null>(null)
@@ -81,13 +82,18 @@ function App() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      try { localStorage.setItem(storageKey(repId), JSON.stringify(attempt)); setSaveState('Saved locally') }
+      try { localStore.setItem(storageKey(repId), JSON.stringify(attempt)); setSaveState('Saved locally') }
       catch { setSaveState('Could not save on this device') }
     }, 300)
     return () => window.clearTimeout(timer)
   }, [attempt, repId])
 
   useEffect(() => () => { workerRef.current?.terminate(); if (timerRef.current !== null) window.clearTimeout(timerRef.current) }, [])
+  useEffect(() => {
+    const onError = () => setSaveState('Local server save failed; download a backup')
+    window.addEventListener('code-reps-storage-error', onError)
+    return () => window.removeEventListener('code-reps-storage-error', onError)
+  }, [])
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 60_000)
     return () => window.clearInterval(timer)
@@ -111,8 +117,8 @@ function App() {
     if (!nextRep) return
     stopRun()
     try {
-      localStorage.setItem(storageKey(repId), JSON.stringify(attempt))
-      localStorage.setItem('code-reps:selected-rep', nextId)
+      localStore.setItem(storageKey(repId), JSON.stringify(attempt))
+      localStore.setItem('code-reps:selected-rep', nextId)
       setSaveState('Saved locally')
     } catch { setSaveState('Could not save on this device') }
     setRepId(nextId)
@@ -140,7 +146,7 @@ function App() {
 
   function chooseStart(value: LearnerStart) {
     setLearnerStart(value)
-    try { localStorage.setItem(learnerStartKey, value) }
+    try { localStore.setItem(learnerStartKey, value) }
     catch { setSaveState('Could not save on this device') }
   }
 
@@ -148,7 +154,7 @@ function App() {
     try {
       const drafts: Backup['drafts'] = {}
       for (const item of reps) {
-        const saved = localStorage.getItem(storageKey(item.id))
+        const saved = localStore.getItem(storageKey(item.id))
         if (saved) drafts[item.id] = readAttempt(item)
       }
       drafts[repId] = attempt
@@ -170,13 +176,13 @@ function App() {
       const updates: [string, string][] = [[historyKey, JSON.stringify(merged)]]
       for (const [id, draft] of Object.entries(backup.drafts)) {
         const key = storageKey(id)
-        if (localStorage.getItem(key) === null) updates.push([key, JSON.stringify(draft)])
+        if (localStore.getItem(key) === null) updates.push([key, JSON.stringify(draft)])
       }
       if (!learnerStart && backup.learnerStart) updates.push([learnerStartKey, backup.learnerStart])
-      const previous = updates.map(([key]) => [key, localStorage.getItem(key)] as const)
-      try { for (const [key, value] of updates) localStorage.setItem(key, value) }
+      const previous = updates.map(([key]) => [key, localStore.getItem(key)] as const)
+      try { for (const [key, value] of updates) localStore.setItem(key, value) }
       catch (error) {
-        for (const [key, value] of previous) { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value) }
+        for (const [key, value] of previous) { if (value === null) localStore.removeItem(key); else localStore.setItem(key, value) }
         throw error
       }
       window.location.reload()
@@ -235,8 +241,8 @@ function App() {
     const completed = { ...attempt, completedAt }
     const nextHistory = [{ ...completed, id: crypto.randomUUID(), repId }, ...history]
     try {
-      localStorage.setItem(historyKey, JSON.stringify(nextHistory))
-      localStorage.setItem(storageKey(repId), JSON.stringify(completed))
+      localStore.setItem(historyKey, JSON.stringify(nextHistory))
+      localStore.setItem(storageKey(repId), JSON.stringify(completed))
       setHistory(nextHistory)
       setAttempt(completed)
       setSaveState('Saved locally')

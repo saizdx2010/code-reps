@@ -3,14 +3,15 @@
 A free, local-first place to learn concepts, practise coding, and see what you can solve independently. Code Reps starts with TypeScript and is designed to grow into frontend, backend, algorithms, data structures, debugging, and code-reading exercises.
 
 The product plan is in [PROJECT.md](./PROJECT.md).
+See [ROADMAP.md](./ROADMAP.md) for the version plan and [docs/LOCAL_SETUP.md](./docs/LOCAL_SETUP.md) for local installation, updates, and restores.
 
 ## Status
 
-Sixteen TypeScript reps are playable. Learners can start with language basics or guided problem solving. The first complete skill journey uses arrays: guided practice, a related problem without hints, and a fresh recall problem after three days. Progress explains the evidence behind Learning, Practising, Independent, and Retained. Code checks verify behavior; a written rubric helps learners review their own plans and explanations. Attempts and drafts stay in this browser, with JSON export and import for portability. A SQLite service remains a possible later storage option.
+Sixteen TypeScript reps are playable. Learners can start with language basics or guided problem solving. The first complete skill journey uses arrays: guided practice, a related problem without hints, and a fresh recall problem after three days. Progress explains the evidence behind Learning, Practising, Independent, and Retained. Code checks verify behavior; a written rubric helps learners review their own plans and explanations. Attempts and drafts are saved locally with SQLite when using the local server, with JSON export and import for portability.
 
 ## Run locally
 
-Requires a current Node.js installation.
+Requires Node.js 24 or later.
 
 ```sh
 yarn install
@@ -24,7 +25,7 @@ yarn build
 yarn serve
 ```
 
-Open the local address printed by the server. The server binds to `127.0.0.1`; learner data remains in that browser's local storage, so use Progress → Download backup before changing browsers or clearing site data. Import backup adds history and fills empty drafts without replacing existing drafts. No account or paid tier is needed.
+Open the local address printed by the server. It binds to `127.0.0.1` and stores learner data in `~/.code-reps/progress.sqlite`. On first use, it migrates browser data from the same address. If you previously used a different port, download a backup there and import it in the local app. A SQLite backup is saved on startup and daily while running; the seven most recent daily backups are kept in `~/.code-reps/backups`. Progress → Download backup also creates a portable JSON file. No account or paid tier is needed.
 
 Run `yarn build`, `yarn lint`, and `yarn test` to check the app.
 

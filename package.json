@@ -3,13 +3,14 @@
   "private": true,
   "version": "0.0.0",
   "packageManager": "yarn@1.22.22",
+  "engines": { "node": ">=24" },
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "serve": "vite preview --host 127.0.0.1",
+    "serve": "node server/index.mjs",
     "test": "node --experimental-strip-types --test tests/*.test.mjs"
   },
   "dependencies": {
