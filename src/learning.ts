@@ -62,4 +62,49 @@ export const reflectionGuides: Record<string, { plan: string[]; explanation: str
     explanation: ['Explain why equal values are excluded.', 'Describe the number of visits and the extra storage used.'],
     example: 'I count each value strictly greater than the threshold. Equal values do not count. One pass takes O(n) time and O(1) extra space.',
   },
+  'count-words': {
+    plan: ['Handle empty or whitespace-only text.', 'Separate words on runs of whitespace.', 'Count the resulting words.'],
+    explanation: ['Explain why repeated spaces do not create extra words.', 'Describe the time and storage used.'],
+    example: 'I trim the text first. If it is empty, I return zero; otherwise I split on whitespace and count the pieces. The scan takes O(n) time and the split uses O(n) extra space.',
+  },
+  'first-long-word': {
+    plan: ['Visit words in their given order.', 'Compare each length with the minimum.', 'Return null if none qualifies.'],
+    explanation: ['Explain why the first qualifying word is returned.', 'Describe the worst-case scan.'],
+    example: 'I scan left to right and return the first word whose length meets the minimum. If there is none, I return null. The scan takes O(n) time and O(1) extra space.',
+  },
+  'count-long-words': {
+    plan: ['Start a count at zero.', 'Check every word against the minimum length.', 'Include words exactly at the minimum.'],
+    explanation: ['Explain how empty input and exact-length words behave.', 'Describe the time and storage used.'],
+    example: 'I visit each word and count it when its length is at least the minimum. An empty list keeps the count at zero. This takes O(n) time and O(1) extra space.',
+  },
+  'has-duplicate': {
+    plan: ['Remember values already visited.', 'Check before adding a value.', 'Return false when the scan ends without a repeat.'],
+    explanation: ['Explain why a set helps with repeat detection.', 'Describe the time and storage used.'],
+    example: 'I scan the array with a set of seen values. If a value is already in the set, I return true. Otherwise I add it and continue. This is O(n) expected time and O(n) extra space.',
+  },
+  'most-frequent-number': {
+    plan: ['Count occurrences with a map.', 'Handle empty input.', 'Resolve equal counts by choosing the smaller number.'],
+    explanation: ['Explain when the best number changes.', 'Describe the time and storage used.'],
+    example: 'I count each number in a map, then choose the highest count and smaller number on a tie. Empty input returns null. This takes O(n) expected time and O(n) extra space.',
+  },
+  'first-repeated-number': {
+    plan: ['Scan left to right with a set of seen numbers.', 'Return as soon as one appears again.', 'Return null if none repeats.'],
+    explanation: ['Explain why the second occurrence decides the answer.', 'Describe the time and storage used.'],
+    example: 'I check each number against a set before adding it. The first number already present is the answer. If the scan ends, I return null. This takes O(n) expected time and O(n) extra space.',
+  },
+  'valid-parentheses': {
+    plan: ['Track unmatched opening parentheses.', 'Reject a closing one when nothing is open.', 'Accept only when none remain.'],
+    explanation: ['Explain early rejection and the final check.', 'Describe the time and storage used.'],
+    example: 'I increase a count for each opening parenthesis and decrease it for each closing one. A negative count fails immediately; zero at the end succeeds. This takes O(n) time and O(1) space.',
+  },
+  'balanced-brackets': {
+    plan: ['Push opening brackets onto a stack.', 'Match each closing bracket against the most recent opening.', 'Require an empty stack at the end.'],
+    explanation: ['Explain why matching counts alone are insufficient.', 'Describe the time and storage used.'],
+    example: 'I push openings and compare each closing bracket with the top of the stack. A mismatch fails, and an empty stack at the end succeeds. This takes O(n) time and O(n) space.',
+  },
+  'remove-adjacent-pairs': {
+    plan: ['Use a stack for characters not yet removed.', 'Pop the top when it equals the next character.', 'Join the remaining characters.'],
+    explanation: ['Explain why a new pair can form after removal.', 'Describe the time and storage used.'],
+    example: 'I compare each character with the last saved one, removing a match or saving a nonmatch. The stack naturally exposes newly adjacent characters. This takes O(n) time and O(n) space.',
+  },
 }

@@ -95,6 +95,7 @@ main { padding-bottom: 92px; }
 .reflection-guide ul { margin: 9px 0; padding-left: 18px; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .reflection-guide li { margin-bottom: 6px; }
 .reflection-example { padding-top: 13px; border-top: 1px solid var(--border); }
+.failed-input { display: block; margin-top: 6px; color: var(--text); overflow-wrap: anywhere; font-size: 11px; }
 
 .continue-panel, .path-overview {
   margin-top: 40px;
@@ -303,6 +304,10 @@ textarea:focus, select:focus { border-color: var(--lime); }
 .history-list li > div span { color: var(--muted); }
 .history-list summary { color: var(--lime); }
 .history-list pre { background: var(--surface); border-radius: 5px; }
+.attempt-compare { margin: 16px 0; padding: 14px; border-left: 2px solid var(--lime); background: var(--surface); }
+.attempt-compare > p, .attempt-compare details p { color: var(--muted); font-size: 12px; line-height: 1.6; }
+.attempt-compare summary { margin-top: 10px; font-size: 12px; cursor: pointer; }
+.attempt-compare h4 { margin: 12px 0 3px; font-size: 12px; }
 
 .reset-dialog { background: var(--surface); border-color: var(--border); border-radius: 7px; }
 .reset-dialog::backdrop { background: #0a100ecb; }

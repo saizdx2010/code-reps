@@ -24,9 +24,9 @@ Code Reps' core learning loop is always free and runs on each learner's laptop. 
 
 ## 0.4 — Better feedback
 
-- [ ] Make failed checks actionable without giving away the solution.
-- [ ] Add authored approach comparisons for the new journeys.
-- [ ] Show changes between a learner's attempts without scoring prose automatically.
+- [x] Make failed checks actionable without giving away the solution.
+- [x] Add authored approach comparisons for the new journeys.
+- [x] Show changes between a learner's attempts without scoring prose automatically.
 
 ## 0.5 — Useful review
 

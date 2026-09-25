@@ -19,13 +19,14 @@ self.onmessage = (event: MessageEvent<RunRequest>) => {
     const solve = new Function(`${output.outputText}\nreturn typeof ${rep.functionName} === 'function' ? ${rep.functionName} : undefined`)() as unknown
     if (typeof solve !== 'function') throw new Error(`Define a function named ${rep.functionName}.`)
     const results: TestResult[] = rep.checks.map(({ name, input, expected }) => {
+      const inputPreview = `${rep.functionName}(${input.map((value) => JSON.stringify(value)).join(', ')})`.slice(0, 200)
       try {
         const args = structuredClone(input)
         const actual = (solve as (...values: unknown[]) => unknown)(...args)
         const passed = Object.is(actual, expected)
-        return { name, passed, message: passed ? undefined : `Expected ${String(expected)}, received ${String(actual)}.` }
+        return { name, passed, input: passed ? undefined : inputPreview, message: passed ? undefined : `Expected ${String(expected)}, received ${String(actual)}.` }
       } catch (error) {
-        return { name, passed: false, message: error instanceof Error ? error.message : 'The solution threw an error.' }
+        return { name, passed: false, input: inputPreview, message: error instanceof Error ? error.message : 'The solution threw an error.' }
       }
     })
     self.postMessage({ results })
