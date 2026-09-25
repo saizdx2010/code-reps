@@ -84,7 +84,7 @@
 @media(max-width:850px){
   .practice-main .workspace-layout{grid-template-columns:1fr}
   .practice-main .task-column,.practice-main .code-column{display:none}
-  .practice-main .task-column.mobile-active,.practice-main .code-column.mobile-active{display:flex}
+  .practice-main .task-column.mobile-active,.practice-main .code-column.mobile-active{display:flex;flex-direction:column}
   .practice-main .explain-panel{display:none;grid-template-columns:1fr}
   .practice-main .explain-panel.mobile-active{display:grid}
   .practice-main .explain-panel .explain-intro{padding-right:0}

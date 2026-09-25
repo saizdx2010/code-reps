@@ -6,6 +6,8 @@ Code Reps is a local-first coding practice platform for developers who know how 
 
 The first audience is working TypeScript developers who feel rusty with algorithms, data structures, or explaining their thinking. The app should eventually serve frontend and backend learners too.
 
+The core learning journey remains free for everyone. Each learner can run the app on their own laptop through a loopback-only local server, with no account required. Local export and import let them carry their work elsewhere.
+
 ## Core learning loop
 
 1. **Understand:** Read a concise prompt, examples, constraints, and definitions of unfamiliar terms.
@@ -25,6 +27,8 @@ Vocabulary help is always available. Solution hints are intentional reveals. Lea
 - A **rep** is one exercise with a prompt, examples, starter files, checks, hints, solution explanation, and review prompts.
 
 Skill progression: guided → independent → timed → retained. A skill should appear in multiple contexts where useful. For example, maps can appear in an algorithm, a UI data transformation, a backend task, and an interview explanation.
+
+The first complete journey is arrays: guided practice, a related independent problem, then a different recall problem at least three days later. Hinted completions remain visible but cannot establish independence or retention. A stage must name the attempts and dates that support it.
 
 Planned rep formats: algorithms and data structures, TypeScript, UI implementation, backend APIs and data, debugging, and code reading. The first curated pack should be small and excellent, beginning with arrays, maps, and stacks. Content packs should be versioned and validated before distribution; imported executable content requires stronger isolation.
 

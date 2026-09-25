@@ -78,6 +78,15 @@ main { padding-bottom: 92px; }
 .evidence-list span { color: var(--muted); font-size: 12px; line-height: 1.5; }
 .evidence-list .text-button { margin: 0; text-align: right; }
 .evidence-note { max-width: 650px; }
+.local-data { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; margin-top: 50px; padding-top: 24px; border-top: 1px solid var(--border); }
+.local-data > div:first-child { max-width: 610px; }
+.local-data h2 { font-size: 18px; }
+.local-data p { color: var(--muted); font-size: 12px; line-height: 1.6; }
+.local-data-actions { display: flex; align-items: start; gap: 10px; }
+.local-data-actions button { padding: 11px 13px; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font: 11px var(--font-mono); }
+.local-data-actions button:hover { border-color: var(--lime); }
+.local-data-actions input { display: none; }
+.local-data .transfer-message { flex-basis: 100%; color: var(--lime); }
 .reflection-guide { margin: 20px 0; padding: 17px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface-2); }
 .reflection-guide summary { color: var(--lime); cursor: pointer; font: 12px var(--font-mono); }
 .reflection-guide > p, .reflection-example p { margin-top: 12px !important; color: var(--muted) !important; font-size: 12px !important; }
