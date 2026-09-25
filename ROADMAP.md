@@ -30,8 +30,8 @@ Code Reps' core learning loop is always free and runs on each learner's laptop. 
 
 ## 0.5 — Useful review
 
-- [ ] Recommend due recall, incomplete independent work, and difficult attempts with a clear reason.
-- [ ] Keep review dates and evidence visible in Progress.
+- [x] Recommend due recall, incomplete independent work, and difficult attempts with a clear reason.
+- [x] Keep review dates and evidence visible in Progress.
 - [ ] Check scheduling and learner understanding with real users before tuning intervals.
 
 ## 0.6 — Real-world transfer
