@@ -39,11 +39,11 @@ Code Reps' core learning loop is always free and runs on each learner's laptop. 
 - [x] Add a small debugging, code-reading, and data-transformation task using familiar skills.
 - [x] Keep tests and self-review suited to each format.
 
-## 1.0 — Easy local distribution
+## 1.0 — Easy local web distribution
 
-- [ ] Package a reproducible, signed desktop build for macOS, Windows, and Linux. Portable unsigned test bundles are available in CI; signing remains.
-- [ ] Test first run, upgrades, backup restore, and offline use on each platform.
-- [ ] Publish a plain-language public contribution guide if source or content contribution terms are chosen. Internal content authoring guidance exists now.
+- [x] Build portable local web bundles for macOS, Windows, and Linux with a bundled Node runtime. No desktop installer or signing is planned.
+- [ ] Test first run, upgrades, backup restore, and offline use on each platform before public release.
+- [x] Publish a plain-language local guide and internal content authoring guide. Source rights remain reserved; public contributions are deferred.
 
 ## Release gates
 

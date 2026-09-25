@@ -1,7 +1,24 @@
 const prefix = 'code-reps:'
 let serverReady = false
 let pending = Promise.resolve()
+let pendingError: Error | null = null
 export const isServerReady = () => serverReady
+
+export async function flushStorage() {
+  await pending
+  if (pendingError) {
+    const error = pendingError
+    pendingError = null
+    throw error
+  }
+}
+
+function queueWrite(task: () => Promise<void>) {
+  pending = pending.then(task).catch((error: unknown) => {
+    pendingError = error instanceof Error ? error : new Error('Could not save to local server.')
+    window.dispatchEvent(new Event('code-reps-storage-error'))
+  })
+}
 
 function localEntries() {
   const entries: Record<string, string> = {}
@@ -42,19 +59,19 @@ export const localStore = {
   setItem(key: string, value: string) {
     localStorage.setItem(key, value)
     if (serverReady && key.startsWith(prefix)) {
-      pending = pending.then(async () => {
+      queueWrite(async () => {
         const response = await fetch('/api/entry', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key, value }) })
         if (!response.ok) throw new Error('Could not save to local server.')
-      }).catch(() => { window.dispatchEvent(new Event('code-reps-storage-error')) })
+      })
     }
   },
   removeItem(key: string) {
     localStorage.removeItem(key)
     if (serverReady && key.startsWith(prefix)) {
-      pending = pending.then(async () => {
+      queueWrite(async () => {
         const response = await fetch('/api/entry', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key }) })
         if (!response.ok) throw new Error('Could not remove saved entry.')
-      }).catch(() => { window.dispatchEvent(new Event('code-reps-storage-error')) })
+      })
     }
   },
 }

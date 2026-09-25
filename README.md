@@ -25,6 +25,8 @@ yarn build
 yarn serve
 ```
 
+`yarn package` creates a portable local web bundle with its own Node runtime. It still opens in a browser; it does not install a desktop app.
+
 Open the local address printed by the server. It binds to `127.0.0.1` and stores learner data in `~/.code-reps/progress.sqlite`. On first use, it migrates browser data from the same address. If you previously used a different port, download a backup there and import it in the local app. A SQLite backup is saved on startup and daily while running; the seven most recent daily backups are kept in `~/.code-reps/backups`. Progress → Download backup also creates a portable JSON file. No account or paid tier is needed.
 
 Run `yarn build`, `yarn lint`, and `yarn test` to check the app.

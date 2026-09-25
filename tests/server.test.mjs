@@ -3,6 +3,7 @@ import test from 'node:test'
 import { mkdtemp, readdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { request as httpRequest } from 'node:http'
 import { startServer } from '../server/index.mjs'
 
 test('local server migrates once, persists data, and backs up on restart', async () => {
@@ -20,6 +21,12 @@ test('local server migrates once, persists data, and backs up on restart', async
     assert.equal((await (await request('/api/migrate', 'POST', { entries: { 'code-reps:history:v1': '[]' } })).json()).migrated, false)
     assert.deepEqual((await (await request('/api/state')).json()).entries, legacy)
     assert.equal((await fetch(`${origin}/api/state`, { headers: { Origin: 'http://other-site.test' } })).status, 403)
+    const badHostStatus = await new Promise((resolve, reject) => {
+      const req = httpRequest(`${origin}/api/state`, { headers: { Host: 'other-site.test' } }, (res) => { res.resume(); resolve(res.statusCode) })
+      req.on('error', reject)
+      req.end()
+    })
+    assert.equal(badHostStatus, 403)
     assert.equal((await request('/api/entry', 'PUT', { key: 'code-reps:selected-rep', value: 'sum-positive-numbers' })).status, 200)
     await new Promise((resolve) => running.server.close(resolve))
     running = await startServer({ port: 0, dataDir })

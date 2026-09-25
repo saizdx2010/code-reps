@@ -73,7 +73,7 @@ main { padding-bottom: 92px; }
 .progress-heading { display: flex; justify-content: space-between; gap: 20px; align-items: start; }
 .progress-heading h2 { font-size: 21px; }
 .evidence-list { margin: 20px 0; padding: 0; list-style: none; }
-.evidence-list li { display: grid; grid-template-columns: 185px minmax(0, 1fr) 100px; gap: 20px; align-items: center; padding: 19px 0; border-top: 1px solid var(--border); }
+.evidence-list li { display: grid; grid-template-columns: 185px minmax(0, 1fr) 130px; gap: 20px; align-items: center; padding: 19px 0; border-top: 1px solid var(--border); }
 .evidence-list strong { color: var(--text); font-size: 12px; }
 .evidence-list span { color: var(--muted); font-size: 12px; line-height: 1.5; }
 .evidence-list .text-button { margin: 0; text-align: right; }
