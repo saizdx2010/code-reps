@@ -7,5 +7,6 @@ export const firstPath = {
     { title: 'Count and remember', description: 'Use maps and sets when repeated lookup helps.', repIds: ['has-duplicate', 'most-frequent-number', 'first-unique-character'] },
     { title: 'Handle text and gaps', description: 'Think through whitespace and missing values.', repIds: ['count-words', 'missing-number'] },
     { title: 'Match openings and closings', description: 'Track what remains unmatched.', repIds: ['valid-parentheses', 'balanced-brackets'] },
+    { title: 'Recall in a new setting', description: 'Return to related word, lookup, and stack problems after a break.', repIds: ['count-long-words', 'first-repeated-number', 'remove-adjacent-pairs'] },
   ],
 } as const

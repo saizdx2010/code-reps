@@ -18,9 +18,9 @@ Code Reps' core learning loop is always free and runs on each learner's laptop. 
 
 ## 0.3 — More skill journeys
 
-- [ ] Add three more authored journeys with distinct guided, independent, and recall reps.
-- [ ] Give beginners and returning developers separate suggested sequences.
-- [ ] Validate every journey's rep IDs, checks, and review timing.
+- [x] Add three more authored journeys with distinct guided, independent, and recall reps.
+- [x] Give beginners and returning developers separate suggested sequences.
+- [x] Validate every journey's rep IDs, checks, and review timing.
 
 ## 0.4 — Better feedback
 

@@ -206,5 +206,7 @@ export const reps: Rep[] = [
       { name: 'Accepts adjacent pairs', input: ['()()'], expected: true }, { name: 'Rejects one closing parenthesis', input: [')'], expected: false },
     ],
   },
+  ...journeyReps,
 ]
-import { foundationReps } from './foundations'
+import { foundationReps } from './foundations.ts'
+import { journeyReps } from './journey-reps.ts'

@@ -254,6 +254,8 @@ textarea:focus, select:focus { border-color: var(--lime); }
 .path-stage ol { border-color: var(--border); }
 .path-stage li button { border-color: var(--border); }
 .path-stage li button:hover, .path-stage li button > span:last-child { color: var(--lime); }
+.path-stage li button:disabled { opacity: .55; cursor: default; }
+.path-stage li button:disabled:hover { color: var(--muted); }
 .path-stage li small { color: var(--muted); }
 
 .learn-section { margin-top: 52px; }

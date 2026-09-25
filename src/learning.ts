@@ -6,33 +6,41 @@ export type LearningRecord = {
   hintCount: number
 }
 
-export const arrayJourney = {
-  title: 'Work through arrays',
-  guided: 'sum-positive-numbers',
-  independent: 'count-even-numbers',
-  recall: 'count-above-threshold',
-  delayDays: 3,
-} as const
+export type Journey = { id: string; title: string; guided: string; independent: string; recall: string; delayDays: number }
+
+export const journeys: Journey[] = [
+  { id: 'arrays', title: 'Work through arrays', guided: 'sum-positive-numbers', independent: 'count-even-numbers', recall: 'count-above-threshold', delayDays: 3 },
+  { id: 'text', title: 'Work through words', guided: 'count-words', independent: 'first-long-word', recall: 'count-long-words', delayDays: 3 },
+  { id: 'lookup', title: 'Count and remember', guided: 'has-duplicate', independent: 'most-frequent-number', recall: 'first-repeated-number', delayDays: 3 },
+  { id: 'stacks', title: 'Match what came before', guided: 'valid-parentheses', independent: 'balanced-brackets', recall: 'remove-adjacent-pairs', delayDays: 3 },
+]
+
+export const arrayJourney = journeys[0]
 
 export type JourneyStage = 'learning' | 'practising' | 'independent' | 'retained'
 
-export function getArrayJourney(records: LearningRecord[], now = Date.now()) {
+export function getJourney(journey: Journey, records: LearningRecord[], now = Date.now()) {
   const chronological = [...records].filter((record) => Number.isFinite(Date.parse(record.completedAt)))
     .sort((a, b) => Date.parse(a.completedAt) - Date.parse(b.completedAt))
-  const guided = chronological.find((record) => record.repId === arrayJourney.guided)
+  const guided = chronological.find((record) => record.repId === journey.guided)
   const independent = guided && chronological.find((record) =>
-    record.repId === arrayJourney.independent && record.hintCount === 0 &&
+    record.repId === journey.independent && record.hintCount === 0 &&
     Date.parse(record.completedAt) >= Date.parse(guided.completedAt))
-  const recallAt = independent && Date.parse(independent.completedAt) + arrayJourney.delayDays * 86_400_000
+  const recallAt = independent && Date.parse(independent.completedAt) + journey.delayDays * 86_400_000
   const retained = recallAt && chronological.find((record) =>
-    record.repId === arrayJourney.recall && record.hintCount === 0 &&
+    record.repId === journey.recall && record.hintCount === 0 &&
     Date.parse(record.completedAt) >= recallAt)
   const stage: JourneyStage = retained ? 'retained' : independent ? 'independent' : guided ? 'practising' : 'learning'
-  const nextRepId = !guided ? arrayJourney.guided : !independent ? arrayJourney.independent :
-    !retained && now >= recallAt! ? arrayJourney.recall : null
+  const nextRepId = !guided ? journey.guided : !independent ? journey.independent :
+    !retained && now >= recallAt! ? journey.recall : null
   return { stage, guided, independent, retained, recallAt: recallAt ?? null, nextRepId,
     recallDue: Boolean(independent && !retained && now >= recallAt!) }
 }
+
+export const getArrayJourney = (records: LearningRecord[], now = Date.now()) => getJourney(arrayJourney, records, now)
+export type JourneyProgress = ReturnType<typeof getJourney> & { journey: Journey }
+export const getAllJourneys = (records: LearningRecord[], now = Date.now()): JourneyProgress[] =>
+  journeys.map((journey) => ({ journey, ...getJourney(journey, records, now) }))
 
 export const stageLabels: Record<JourneyStage, string> = {
   learning: 'Learning', practising: 'Practising', independent: 'Independent', retained: 'Retained',
