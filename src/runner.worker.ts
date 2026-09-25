@@ -1,6 +1,7 @@
 import ts from 'typescript'
 import { reps } from './rep'
 import type { TestResult } from './runner.types'
+import { sameValue } from './compare'
 
 type RunRequest = { code: string; repId: string }
 
@@ -23,8 +24,9 @@ self.onmessage = (event: MessageEvent<RunRequest>) => {
       try {
         const args = structuredClone(input)
         const actual = (solve as (...values: unknown[]) => unknown)(...args)
-        const passed = Object.is(actual, expected)
-        return { name, passed, input: passed ? undefined : inputPreview, message: passed ? undefined : `Expected ${String(expected)}, received ${String(actual)}.` }
+        const passed = sameValue(actual, expected)
+        const format = (value: unknown) => { try { return JSON.stringify(value) ?? String(value) } catch { return String(value) } }
+        return { name, passed, input: passed ? undefined : inputPreview, message: passed ? undefined : `Expected ${format(expected)}, received ${format(actual)}.` }
       } catch (error) {
         return { name, passed: false, input: inputPreview, message: error instanceof Error ? error.message : 'The solution threw an error.' }
       }

@@ -107,4 +107,19 @@ export const reflectionGuides: Record<string, { plan: string[]; explanation: str
     explanation: ['Explain why a new pair can form after removal.', 'Describe the time and storage used.'],
     example: 'I compare each character with the last saved one, removing a match or saving a nonmatch. The stack naturally exposes newly adjacent characters. This takes O(n) time and O(n) space.',
   },
+  'repair-visible-count': {
+    plan: ['Trace one active and one inactive item through the original condition.', 'Identify the reversed condition.', 'Keep the rest of the loop.'],
+    explanation: ['Name the bug and why the correction works.', 'Explain the scan cost.'],
+    example: 'The condition used !item.active, so it counted inactive items. I changed it to item.active. The loop visits each item once, using O(n) time and O(1) extra space.',
+  },
+  'read-unique-names': {
+    plan: ['Read what the loop adds to names.', 'Check what slice(1) returns.', 'Preserve the loop and return the complete result.'],
+    explanation: ['Describe what the set and array each do.', 'Explain why the first name was lost.'],
+    example: 'The set prevents duplicates while names preserves first-seen order. slice(1) removed the first kept name, so I return names directly. The loop uses O(n) expected time and O(n) space.',
+  },
+  'transform-active-labels': {
+    plan: ['Skip inactive users.', 'Trim each active name and skip an empty result.', 'Uppercase names and keep the input order.'],
+    explanation: ['Explain why trim comes before the empty check.', 'Describe the output and scan cost.'],
+    example: 'I visit each user, skip inactive ones, trim the name, and add its uppercase form only when it is nonempty. This preserves order and takes O(n) visits plus the work to process each name.',
+  },
 }

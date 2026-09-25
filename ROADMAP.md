@@ -36,8 +36,8 @@ Code Reps' core learning loop is always free and runs on each learner's laptop. 
 
 ## 0.6 — Real-world transfer
 
-- [ ] Add a small debugging, code-reading, and data-transformation task using familiar skills.
-- [ ] Keep tests and self-review suited to each format.
+- [x] Add a small debugging, code-reading, and data-transformation task using familiar skills.
+- [x] Keep tests and self-review suited to each format.
 
 ## 1.0 — Easy local distribution
 

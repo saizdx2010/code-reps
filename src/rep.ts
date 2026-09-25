@@ -3,6 +3,7 @@ export type Rep = {
   id: string
   title: string
   category: string
+  format?: 'debug' | 'read' | 'transform'
   prompt: string
   example: { input: string; output: string }
   note: string
@@ -207,6 +208,8 @@ export const reps: Rep[] = [
     ],
   },
   ...journeyReps,
+  ...transferReps,
 ]
 import { foundationReps } from './foundations.ts'
 import { journeyReps } from './journey-reps.ts'
+import { transferReps } from './transfer-reps.ts'

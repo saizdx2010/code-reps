@@ -8,5 +8,6 @@ export const firstPath = {
     { title: 'Handle text and gaps', description: 'Think through whitespace and missing values.', repIds: ['count-words', 'missing-number'] },
     { title: 'Match openings and closings', description: 'Track what remains unmatched.', repIds: ['valid-parentheses', 'balanced-brackets'] },
     { title: 'Recall in a new setting', description: 'Return to related word, lookup, and stack problems after a break.', repIds: ['count-long-words', 'first-repeated-number', 'remove-adjacent-pairs'] },
+    { title: 'Use skills in code', description: 'Repair a bug, read a teammate\'s function, and transform data for a UI.', repIds: ['repair-visible-count', 'read-unique-names', 'transform-active-labels'] },
   ],
 } as const
