@@ -6,7 +6,7 @@ The product plan is in [PROJECT.md](./PROJECT.md).
 
 ## Status
 
-Project initialized with a React, TypeScript, and Vite starter. The practice engine, content library, and local storage are planned but not implemented yet.
+The first TypeScript rep is playable: plan an approach, solve it in a local Monaco editor, run six checks, explain your reasoning, and save the attempt in this browser. More reps, attempt history, and the local service are still planned.
 
 ## Run locally
 
@@ -17,7 +17,9 @@ npm install
 npm run dev
 ```
 
-Run `npm run build` and `npm run lint` to check the starter.
+Run `npm run build` and `npm run lint` to check the app.
+
+The first rep runs authored code in a browser worker with a five-second timeout. This is for personal practice with code you write yourself; it is not an isolation boundary for imported third-party exercises.
 
 ## Guiding principles
 
