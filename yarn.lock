@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@fontsource/maple-mono@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/maple-mono/-/maple-mono-5.3.0.tgz#4bd768479e3b2c9919f01684caaa77d46cd5b785"
+  integrity sha512-8N3FVDWphO/971tZIig9D558j9jf09fWYIXFjgv7DKJEvDjtgfATx1ScWHdTCsf+tufFS5M1bAa4AumVBKPhSQ==
+
 "@monaco-editor/loader@^1.5.0":
   version "1.7.0"
   resolved "https://registry.yarnpkg.com/@monaco-editor/loader/-/loader-1.7.0.tgz#967aaa4601b19e913627688dfe8159d57549e793"

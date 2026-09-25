@@ -15,6 +15,7 @@ export type Rep = {
 }
 
 export const reps: Rep[] = [
+  ...foundationReps,
   {
     id: 'most-frequent-number',
     title: 'Find the most frequent number',
@@ -187,3 +188,4 @@ export const reps: Rep[] = [
     ],
   },
 ]
+import { foundationReps } from './foundations'

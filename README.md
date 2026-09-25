@@ -6,7 +6,7 @@ The product plan is in [PROJECT.md](./PROJECT.md).
 
 ## Status
 
-Ten TypeScript reps are playable: plan an approach, solve it in a local Monaco editor, run six checks, explain your reasoning, reflect on the difficulty, and save the attempt in this browser. Each rep keeps its own draft in this browser. Completed attempts are saved in History with their reflection. Paths offers a guided TypeScript problem-solving sequence through the current reps and tracks completed work. Home recommends unfinished work and brings back reps marked for more practice or completed with hints after three days. Learn has short skill notes and a glossary drawn from the reps. A local service and SQLite storage are still planned.
+Fifteen TypeScript reps are playable, beginning with variables, basic types, objects, arrays, and functions before the problem-solving sequence. Each rep lets you plan, code in a local Monaco editor, run checks, explain your reasoning, reflect on difficulty, and save the attempt in this browser. Completed attempts are saved in History. Paths guides the full sequence and tracks completed work. Home recommends unfinished work and brings back reps marked for more practice or completed with hints after three days. Learn has short TypeScript lessons, skill notes, and a glossary. A local service and SQLite storage are still planned.
 
 ## Run locally
 

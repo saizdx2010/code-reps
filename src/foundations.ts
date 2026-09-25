@@ -1,0 +1,117 @@
+import type { Rep } from './rep'
+
+export const foundations = [
+  {
+    repId: 'declare-variables', title: 'Variables with const and let',
+    explanation: 'A variable gives a value a name. Use const when you will not reassign that name. Use let when its value needs to change. TypeScript usually infers the type from the first value.',
+    example: 'const name = "Ada" // inferred as string\nlet score = 0     // inferred as number\nscore = score + 1',
+    tip: 'const prevents reassignment. It does not make an object or array immutable.',
+  },
+  {
+    repId: 'basic-types', title: 'Strings, numbers, and booleans',
+    explanation: 'A string is text, a number is numeric, and a boolean is true or false. Add a type after a colon when it makes the code clearer or when there is no starting value to infer from.',
+    example: 'const city: string = "Jakarta"\nconst visits: number = 3\nconst isOpen: boolean = true',
+    tip: 'Use quotes for strings. The values true and false have no quotes.',
+  },
+  {
+    repId: 'create-objects', title: 'Create and type objects',
+    explanation: 'An object groups named values called properties. Read a property with a dot. A type describes the properties an object must have.',
+    example: 'type Person = { name: string; age: number }\nconst person: Person = { name: "Ada", age: 28 }\nconst greeting = `Hello, ${person.name}`',
+    tip: 'Use commas between values in an object. In a type, semicolons or new lines separate properties.',
+  },
+  {
+    repId: 'make-arrays', title: 'Work with arrays',
+    explanation: 'An array keeps values in order. Write number[] for an array of numbers, and use square brackets to read a value by its zero-based index.',
+    example: 'const scores: number[] = [4, 7, 9]\nconst first = scores[0] // 4\nconst count = scores.length // 3',
+    tip: 'The first item is at index 0, not index 1.',
+  },
+  {
+    repId: 'write-functions', title: 'Write a function',
+    explanation: 'A function accepts inputs called parameters and returns an output. TypeScript can describe each parameter and the returned value.',
+    example: 'function greet(name: string): string {\n  return `Hello, ${name}`\n}\nconst message = greet("Ada")',
+    tip: 'The type after the closing parenthesis describes the return value.',
+  },
+] as const
+
+export const foundationReps: Rep[] = [
+  {
+    id: 'declare-variables', title: 'Declare a value', category: 'TypeScript basics',
+    prompt: 'Create a const named greeting with the text "Hello, ". Create a let named message, combine greeting and the given name, and return message.',
+    example: { input: "makeGreeting('Ada')", output: "'Hello, Ada'" },
+    note: 'Keep the function name and parameter from the starter code.',
+    vocabulary: [{ term: 'Variable', meaning: 'a name for a value' }, { term: 'Reassign', meaning: 'give an existing variable a new value' }],
+    planPrompt: 'Which value stays the same? Which variable will receive the combined message?',
+    starter: 'function makeGreeting(name: string): string {\n  // Create greeting with const and message with let.\n  return ""\n}\n',
+    functionName: 'makeGreeting',
+    hints: ['Text values go inside quotes.', 'Use const greeting = "Hello, " and let message = greeting + name.', 'Return message after assigning it.'],
+    checks: [
+      { name: 'Greets Ada', input: ['Ada'], expected: 'Hello, Ada' },
+      { name: 'Greets another name', input: ['Sam'], expected: 'Hello, Sam' },
+      { name: 'Handles an empty name', input: [''], expected: 'Hello, ' },
+    ],
+  },
+  {
+    id: 'basic-types', title: 'Use basic types', category: 'TypeScript basics',
+    prompt: 'Return a sentence describing the given name, age, and whether the person is active. Use the three parameter values in the result.',
+    example: { input: "describePerson('Ada', 28, true)", output: "'Ada is 28. Active: true'" },
+    note: 'The starter shows string, number, and boolean parameter types. A template string can combine them.',
+    vocabulary: [{ term: 'Boolean', meaning: 'a value that is either true or false' }, { term: 'Type annotation', meaning: 'a type written after a colon' }],
+    planPrompt: 'Which input is text, which is a number, and which is a boolean?',
+    starter: 'function describePerson(name: string, age: number, active: boolean): string {\n  // Use all three values.\n  return ""\n}\n',
+    functionName: 'describePerson',
+    hints: ['The output must be one string.', 'A template string uses backticks and ${value}.', 'Try return `${name} is ${age}. Active: ${active}`.'],
+    checks: [
+      { name: 'Describes Ada', input: ['Ada', 28, true], expected: 'Ada is 28. Active: true' },
+      { name: 'Handles false', input: ['Bo', 0, false], expected: 'Bo is 0. Active: false' },
+      { name: 'Uses the supplied values', input: ['Lee', 42, true], expected: 'Lee is 42. Active: true' },
+    ],
+  },
+  {
+    id: 'create-objects', title: 'Create an object', category: 'TypeScript basics',
+    prompt: 'Inside the function, create a person object with name and age properties from the inputs. Return a sentence using those properties.',
+    example: { input: "introduce('Ada', 28)", output: "'Ada is 28 years old'" },
+    note: 'Define the Person type in the starter code before creating the object.',
+    vocabulary: [{ term: 'Object', meaning: 'a value with named properties' }, { term: 'Property', meaning: 'one named value inside an object' }],
+    planPrompt: 'What properties belong in Person? How will you read them from the object?',
+    starter: 'type Person = { name: string; age: number }\n\nfunction introduce(name: string, age: number): string {\n  // Create a person object, then read its properties.\n  return ""\n}\n',
+    functionName: 'introduce',
+    hints: ['Use const person: Person = { name, age }.', 'Read properties with person.name and person.age.', 'Return `${person.name} is ${person.age} years old`.'],
+    checks: [
+      { name: 'Introduces Ada', input: ['Ada', 28], expected: 'Ada is 28 years old' },
+      { name: 'Uses another person', input: ['Sam', 19], expected: 'Sam is 19 years old' },
+      { name: 'Handles age zero', input: ['Bo', 0], expected: 'Bo is 0 years old' },
+    ],
+  },
+  {
+    id: 'make-arrays', title: 'Read an array', category: 'TypeScript basics',
+    prompt: 'Return the first item of the names array. Return null when the array is empty.',
+    example: { input: "firstName(['Ada', 'Sam'])", output: "'Ada'" },
+    note: 'Arrays start at index 0. Check length before reading the first item.',
+    vocabulary: [{ term: 'Array', meaning: 'an ordered list of values' }, { term: 'Index', meaning: 'the position of an item, starting at zero' }],
+    planPrompt: 'How will you detect an empty array? Which index contains its first item?',
+    starter: 'function firstName(names: string[]): string | null {\n  // Check whether the array is empty.\n  return null\n}\n',
+    functionName: 'firstName',
+    hints: ['names.length is the number of items.', 'If names.length === 0, return null.', 'Otherwise return names[0].'],
+    checks: [
+      { name: 'Returns the first name', input: [['Ada', 'Sam']], expected: 'Ada' },
+      { name: 'Handles an empty array', input: [[]], expected: null },
+      { name: 'Handles one name', input: [['Bo']], expected: 'Bo' },
+    ],
+  },
+  {
+    id: 'write-functions', title: 'Return from a function', category: 'TypeScript basics',
+    prompt: 'Complete the function so it returns the price multiplied by the quantity.',
+    example: { input: 'totalPrice(5, 3)', output: '15' },
+    note: 'The values passed to a function are arguments. Its parameter names let you use them inside.',
+    vocabulary: [{ term: 'Parameter', meaning: 'an input named in a function definition' }, { term: 'Return', meaning: 'send a value back from a function' }],
+    planPrompt: 'What are the two inputs? What expression produces the output?',
+    starter: 'function totalPrice(price: number, quantity: number): number {\n  // Return the total.\n  return 0\n}\n',
+    functionName: 'totalPrice',
+    hints: ['Use the parameter names inside the function.', 'The multiplication operator is *.', 'Return price * quantity.'],
+    checks: [
+      { name: 'Calculates the example', input: [5, 3], expected: 15 },
+      { name: 'Handles zero quantity', input: [8, 0], expected: 0 },
+      { name: 'Handles a decimal', input: [2.5, 2], expected: 5 },
+    ],
+  },
+]
