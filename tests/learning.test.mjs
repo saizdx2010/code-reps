@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { getArrayJourney, getJourney, journeys } from '../src/learning.ts'
 import { reps } from '../src/rep.ts'
+import { paths } from '../src/path.ts'
+import { coreLessons } from '../src/ai-era-reps.ts'
 
 const record = (repId, day, hintCount = 0) => ({ repId, completedAt: `2026-09-${String(day).padStart(2, '0')}T00:00:00.000Z`, hintCount })
 const at = (day) => Date.parse(`2026-09-${String(day).padStart(2, '0')}T00:00:00.000Z`)
@@ -41,5 +43,24 @@ test('every journey has distinct playable reps and delayed evidence rules', () =
     const records = [record(journey.guided, 20), record(journey.independent, 21), record(journey.recall, 24)]
     assert.equal(getJourney(journey, records, at(25)).stage, 'retained')
     assert.equal(getJourney(journey, [records[0], records[1], record(journey.recall, 23)], at(25)).stage, 'independent')
+  }
+})
+
+test('every path and new lesson points to playable content', () => {
+  const ids = new Set(reps.map((rep) => rep.id))
+  assert.equal(new Set(paths.map((path) => path.id)).size, paths.length)
+  for (const path of paths) {
+    const repIds = path.stages.flatMap((stage) => stage.repIds)
+    assert.ok(repIds.length > 0, path.id)
+    assert.equal(new Set(repIds).size, repIds.length, `${path.id} repeats a rep`)
+    for (const id of repIds) assert.ok(ids.has(id), `${path.id}: ${id}`)
+    for (const field of ['title', 'body', 'example', 'explanation', 'next']) {
+      assert.ok(path.introduction[field].trim(), `${path.id} introduction needs ${field}`)
+    }
+  }
+  for (const lesson of coreLessons) {
+    const rep = reps.find((item) => item.id === lesson.repId)
+    assert.ok(rep, lesson.repId)
+    assert.ok(rep.checks.length >= 3, lesson.repId)
   }
 })

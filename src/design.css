@@ -238,6 +238,22 @@ textarea:focus, select:focus { border-color: var(--lime); }
 
 /* Secondary screens use space and lines in place of repeated cards. */
 .path-overview { margin-top: 38px; }
+.path-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 30px; }
+.path-choices button { display: block; text-align: left; padding: 18px 20px; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
+.path-choices button[aria-pressed="true"] { border-color: var(--lime); background: var(--surface-2); }
+.path-choices button:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; }
+.path-choices strong { display: block; font-size: 15px; margin-bottom: 6px; }
+.path-choices span { display: block; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.path-introduction { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 32px; margin-top: 18px; padding: 28px 30px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; scroll-margin-top: 24px; }
+.path-introduction h2 { margin: 12px 0; font-size: 22px; }
+.path-introduction p { color: var(--muted); font-size: 14px; line-height: 1.65; }
+.path-introduction-next { margin: 20px 0; padding-top: 18px; border-top: 1px solid var(--border); }
+.path-introduction-next strong { font-size: 13px; }
+.path-introduction-next p { margin: 7px 0 0; }
+.path-introduction-example { align-self: start; min-width: 0; }
+.path-introduction-example pre { overflow-x: auto; margin: 12px 0; padding: 18px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; line-height: 1.7; }
+.path-introduction-example p { margin: 0; font-size: 13px; }
+.path-introduction + .path-progress { margin-top: 22px; }
 .path-progress { background: var(--surface-2); border-radius: 3px; }
 .path-progress span { background: var(--lime); }
 .path-stages { margin-top: 44px; gap: 0; }
@@ -352,6 +368,7 @@ footer span:first-child { color: var(--lime); }
 }
 
 @media (max-width: 700px) {
+  .path-introduction { grid-template-columns: 1fr; gap: 24px; padding: 24px; }
   .starting-point { grid-template-columns: 1fr; gap: 12px; }
   .evidence-list li { grid-template-columns: 1fr; gap: 7px; }
   .evidence-list .text-button { text-align: left; }
@@ -381,6 +398,7 @@ footer span:first-child { color: var(--lime); }
   .rep-list-row { min-height: 75px; }
   .path-stage { padding: 24px 0; }
   .skill-list, .glossary-list { grid-template-columns: 1fr; }
+  .path-choices { grid-template-columns: 1fr; }
   .history-list li { padding: 22px 0; }
   footer { padding-left: 18px; padding-right: 18px; }
 }

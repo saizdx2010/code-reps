@@ -17,6 +17,7 @@ export type Rep = {
 
 export const reps: Rep[] = [
   ...foundationReps,
+  ...aiEraReps,
   {
     id: 'most-frequent-number',
     title: 'Find the most frequent number',
@@ -211,5 +212,6 @@ export const reps: Rep[] = [
   ...transferReps,
 ]
 import { foundationReps } from './foundations.ts'
+import { aiEraReps } from './ai-era-reps.ts'
 import { journeyReps } from './journey-reps.ts'
 import { transferReps } from './transfer-reps.ts'

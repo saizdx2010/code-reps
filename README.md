@@ -7,7 +7,7 @@ See [ROADMAP.md](./ROADMAP.md) for the version plan, [docs/LOCAL_SETUP.md](./doc
 
 ## Status
 
-Twenty-two TypeScript reps are playable. Learners can start with language basics or guided problem solving. Four skill journeys cover arrays, words, lookups, and stacks: guided practice, a related problem without hints, and a fresh recall problem after three days. Small debugging, code-reading, and data-transformation tasks apply familiar skills to working code. Progress explains the evidence behind Learning, Practising, Independent, and Retained. Code checks verify behavior; a written rubric helps learners review their own plans and explanations. Attempts and drafts are saved locally with SQLite when using the local server, with JSON export and import for portability.
+Twenty-nine TypeScript reps are playable. Learners can start with language basics or guided problem solving. Free paths now cover AI-era coding habits, frontend core, backend core, and untimed frontend and backend interview practice. Each path begins with a plain-language introduction and a small example before its first rep. The new lessons teach learners to inspect suggested code, validate inputs, derive UI states, and explain their choices. Four skill journeys cover arrays, words, lookups, and stacks: guided practice, a related problem without hints, and a fresh recall problem after three days. Progress explains the evidence behind Learning, Practising, Independent, and Retained. Code checks verify behavior; a written rubric helps learners review their own plans and explanations. Attempts and drafts are saved locally with SQLite when using the local server, with JSON export and import for portability.
 
 ## Run locally
 

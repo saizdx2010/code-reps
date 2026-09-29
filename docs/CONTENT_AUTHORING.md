@@ -14,4 +14,6 @@ This is an internal authoring guide. Source rights are reserved for now; public 
 
 Checks currently run authored TypeScript in a browser worker. Do not import exercise packs from untrusted sources or treat this worker as a secure sandbox. Content review should include accessibility, clarity for English learners, and whether the checks match the prompt.
 
+AI-era content should make verification a learner action: trace a proposed answer, name a boundary case, run checks, and explain any correction. Avoid treating generated code as an authority. Frontend and backend interview reps should explicitly prompt for clarification, planning, implementation, explanation, and review; current interview practice is untimed and uses the same TypeScript function runner as other reps.
+
 For a substantial new format, add one complete playable task and its self-review flow before adding a large catalog.
