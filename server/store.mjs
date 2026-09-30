@@ -1,4 +1,4 @@
-import { mkdir, readdir, rm } from 'node:fs/promises'
+import { mkdir, readdir, rm, rename } from 'node:fs/promises'
 import { existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
@@ -40,15 +40,48 @@ export function createStore(dataDir = process.env.CODE_REPS_DATA_DIR || join(hom
       return { migrated: true, entries: entries() }
     } catch (error) { db.exec('ROLLBACK'); throw error }
   }
-  async function makeBackup() {
+  function applyEntries(candidate) {
+    if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) throw new Error('Invalid saved entries.')
+    const pairs = Object.entries(candidate)
+    if (pairs.length > 500 || pairs.some(([key, value]) => !keyAllowed(key) || (value !== null && (typeof value !== 'string' || value.length > 1_000_000)))) throw new Error('Invalid saved entries.')
+    db.exec('BEGIN IMMEDIATE')
+    try {
+      for (const [key, value] of pairs) {
+        if (value === null) remove.run(key)
+        else put.run(key, value, new Date().toISOString())
+      }
+      db.exec('COMMIT')
+    } catch (error) { db.exec('ROLLBACK'); throw error }
+  }
+  let backupQueue = Promise.resolve()
+  let closed = false
+  let closing
+  async function writeBackup() {
     const backupDir = join(dataDir, 'backups')
     await mkdir(backupDir, { recursive: true, mode: 0o700 })
     const date = new Date().toISOString().slice(0, 10)
     const target = join(backupDir, `${date}.sqlite`)
-    if (!existsSync(target)) await backup(db, target)
+    if (!existsSync(target)) {
+      const temporary = `${target}.${process.pid}.tmp`
+      try { await backup(db, temporary); await rename(temporary, target) }
+      finally { await rm(temporary, { force: true }) }
+    }
     const files = (await readdir(backupDir)).filter((file) => /^\d{4}-\d{2}-\d{2}\.sqlite$/.test(file)).sort().reverse()
     await Promise.all(files.slice(7).map((file) => rm(join(backupDir, file))))
     return target
   }
-  return { entries, set, unset, migrate, makeBackup, close: () => db.close(), existed, dbPath }
+  function makeBackup() {
+    if (closed) return Promise.reject(new Error('The progress store is closing.'))
+    const operation = backupQueue.then(writeBackup)
+    backupQueue = operation.catch(() => {})
+    return operation
+  }
+  function close() {
+    if (!closing) {
+      closed = true
+      closing = backupQueue.then(() => db.close())
+    }
+    return closing
+  }
+  return { entries, set, unset, migrate, applyEntries, makeBackup, close, existed, dbPath }
 }

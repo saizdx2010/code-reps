@@ -47,6 +47,101 @@ export const stageLabels: Record<JourneyStage, string> = {
 }
 
 export const reflectionGuides: Record<string, { plan: string[]; explanation: string[]; example: string }> = {
+  'debug-cart-total': {
+    plan: ["Trace quantities, sold-out items, and repeated discount application in the draft.", "Repair the subtotal rules before applying the discount.", "Preserve the input objects."],
+    explanation: ["Explain each bug and the regression case that exposes it.", "Distinguish integer cents from floating-point currency values."],
+    example: "I count only available items at priceCents times quantity, subtract the discount once, then clamp to zero. This fixes the quantity, sold-out, and repeated-discount bugs. One pass uses O(n) time and O(1) extra space.",
+  },
+  'frontend-directory': {
+    plan: ["Choose loading before error before loaded content.", "Build labelled controls and a list using safe text insertion.", "Update the filtered list on input without mutating people."],
+    explanation: ["Explain state precedence, query normalization, and original-label preservation.", "Review keyboard focus and all four states in the preview yourself.", "Passing interaction checks does not establish visual or accessibility quality."],
+    example: "I render loading or error first, wiring Retry to the supplied callback. For loaded data I create a labelled input and rerender the list on input events, using textContent for names. Filtering visits the people and processes their name text; rendering work scales with the visible output. I separately review keyboard access and layout.",
+  },
+  'read-batch-labels': {
+    plan: ["Write predictions before running checks.", "Trace raw, trimmed label, seen, and output for every iteration.", "Compare blank input and case-sensitive names."],
+    explanation: ["Explain how trimming happens before duplicate detection.", "Explain why first-seen order is preserved and case variants remain distinct.", "Review whether your trace predicted the result without calling the supplied collector."],
+    example: "For repeat, the first raw label becomes Ada, Bo is then added, and the final Ada is already seen. Empty produces no output; blank keeps only Bo; case keeps Ada and ada separately. I wrote the predictions before checking them. The collector scans input and stores accepted labels, with additional work for trimming each string.",
+  },
+  'backend-ticket-handler': {
+    plan: ["Validate method before query shape and optional fields.", "Filter by status and normalized search before counting.", "Page the filtered list and preserve source objects."],
+    explanation: ["Explain the 405 and 400 responses and the defaults.", "Explain why total is measured before pagination.", "State that these are parsed request objects, not live HTTP or URL-parser checks."],
+    example: "I reject unsupported methods, validate optional query fields without coercion, then filter in input order. I calculate total before slicing the requested page. Invalid queries always return the same 400 error contract. Filtering takes a pass plus title-search work; output and the filtered array use extra space proportional to their sizes.",
+  },
+  'refactor-stock-summary': {
+    plan: ["Run the existing behavior checks before changing the working code.", "Replace unclear names and duplicated conditions.", "Preserve zero-unit IDs, duplicates, order, and source data."],
+    explanation: ["Compare the original three scans with your revised structure.", "Explain why the new names clarify the response fields.", "Review structure yourself: passing checks alone does not prove the code improved."],
+    example: "I use descriptive ids, units, and valueCents accumulators and update all three during one pass over available products. Zero units still keep an ID, and duplicates stay duplicated. Both versions are O(n) time; one pass reduces repeated logic. The IDs array uses O(n) output space. I assess readability separately from passing checks.",
+  },
+  'declare-variables': {
+    plan: ["Name the fixed greeting and the combined message.", "Keep the trailing space in the greeting."],
+    explanation: ["Check your use of const and let yourself; output checks cannot establish it.", "Explain what happens with an empty name."],
+    example: "The greeting stays the same, so I use const. I store the combined greeting and name in message using let. The checks verify the output, while I review the declarations myself.",
+  },
+  'basic-types': {
+    plan: ["Identify the string, number, and boolean inputs.", "Match the punctuation and spacing in the example."],
+    explanation: ["Explain how each value becomes part of the sentence.", "Show that false and zero are preserved."],
+    example: "I combine all three inputs into one template string. False and zero are values to display, not reasons to skip a field.",
+  },
+  'create-objects': {
+    plan: ["Create a person with both supplied properties.", "Read the properties to build the sentence."],
+    explanation: ["Review your object and Person type yourself; output checks cannot prove their use.", "Explain the difference between a property and a local variable."],
+    example: "I create a Person object from name and age, then read person.name and person.age. The sentence checks do not prove that I used an object or checked its type.",
+  },
+  'make-arrays': {
+    plan: ["Handle an empty array before reading its first item.", "Use the first index."],
+    explanation: ["Explain why an empty string is still a valid first item.", "Describe the time and extra storage used."],
+    example: "I return null only when length is zero; otherwise I return index 0. Reading the length and first item takes O(1) time and extra space.",
+  },
+  'write-functions': {
+    plan: ["Identify price and quantity as inputs.", "Return their product."],
+    explanation: ["Explain the difference between returning and printing.", "Describe zero quantity."],
+    example: "I return price multiplied by quantity. Zero quantity gives zero. This uses a fixed number of arithmetic operations and O(1) extra space.",
+  },
+  'first-unique-character': {
+    plan: ["Count occurrences or compare first and last positions.", "Search in original order.", "Handle empty input and repeated characters."],
+    explanation: ["Explain zero-based indices and case-sensitive comparison.", "State the cost of your chosen approach."],
+    example: "I count characters, then scan from index 0 for the first count of one. I return -1 if none qualifies. For the stated basic Latin input, this takes O(n) expected time and O(k) space for k distinct characters.",
+  },
+  'missing-number': {
+    plan: ["Use the array length to identify the full range.", "Compare the expected range with the supplied values.", "Consider missing zero and missing n."],
+    explanation: ["State the assumption that exactly one value is missing and none repeats.", "Explain your chosen time and storage costs."],
+    example: "I subtract the supplied sum from n * (n + 1) / 2. The contract guarantees one missing value and no duplicates. One scan takes O(n) time and O(1) extra space.",
+  },
+  'verify-generated-code': {
+    plan: ["Trace the draft with a blank first label.", "Find the first useful label in original order.", "Consider an empty list and only blank labels."],
+    explanation: ["Describe actual versus expected output before the repair.", "Explain trimming and the no-match result."],
+    example: "The draft returns a blank first label without inspecting later labels. I scan in order, trim each label, and return the first nonempty result. Otherwise I return null. Cost depends on the labels visited and their lengths.",
+  },
+  'frontend-visible-items': {
+    plan: ["Normalize the query once.", "Keep only active matching items.", "Preserve original labels and order."],
+    explanation: ["Explain why an empty normalized query matches every active label.", "Account for the work to process label text."],
+    example: "I trim and lowercase the query, compare it with lowercase active labels, and return the original labels. This avoids changing display text. The scan visits every item and performs string processing for each active label.",
+  },
+  'frontend-view-state': {
+    plan: ["Choose loading before other states.", "Check nonempty error next.", "Use count only when loading and error are absent."],
+    explanation: ["Explain conflicting inputs such as loading with an error.", "Explain why an empty error string is ignored."],
+    example: "I check loading, then a nonempty error, then zero count. Everything else is ready. Explicit precedence prevents an unfinished request from appearing empty. The function uses O(1) time and space.",
+  },
+  'backend-validate-user': {
+    plan: ["Reject null, arrays, and primitive values before field access.", "Validate name and integer age including both bounds.", "Return a new normalized result."],
+    explanation: ["Explain why TypeScript alone cannot validate an unknown request.", "Describe what happens for missing fields and wrong types."],
+    example: "I check object shape before reading fields, require a trimmed nonblank name and an integer age from 0 through 120, and return a new object. Invalid input returns null. Name trimming requires work proportional to its length.",
+  },
+  'backend-page-results': {
+    plan: ["Clamp page and size before calculating the offset.", "Use the normalized size for both offset and end.", "Consider empty input and a page past the end."],
+    explanation: ["Explain one-based pages versus zero-based array indices.", "Show how you preserve the input."],
+    example: "I normalize page and size, calculate (page - 1) * size, and return a slice. Slice leaves the input unchanged. The result holds at most three IDs, so copying it has bounded time and extra space.",
+  },
+  'interview-frontend': {
+    plan: ["Restate which tasks qualify and how ties work.", "Order a new array by descending priority.", "Return titles without changing any input objects."],
+    explanation: ["Explain filtering, stable ties, and mutation prevention.", "Discuss sorting cost and a possible larger-data tradeoff."],
+    example: "I filter unfinished tasks into a new array, sort it by descending priority, and map to titles. Stable sorting preserves ties. For m unfinished tasks among n inputs, typical comparison sorting costs O(n + m log m) time and the copied data uses O(m) space.",
+  },
+  'interview-backend': {
+    plan: ["Restate the deliberately small email and role contract.", "Check shape and types before normalization.", "Consider missing sides, repeated @, and invalid roles."],
+    explanation: ["Explain what this contract leaves unchecked, including internal spaces.", "Distinguish validation from normalization."],
+    example: "I reject invalid shapes and roles, trim the email, and require exactly one @ with nonblank text on each side. I lowercase valid email text. This is not complete email validation and allows internal spaces under the stated rules. String processing scales with email length.",
+  },
   'sum-positive-numbers': {
     plan: ['Start with a total of zero.', 'Visit each number and add only values greater than zero.', 'Consider an empty array and values at zero.'],
     explanation: ['Say why zero and negative values are skipped.', 'Describe the number of visits and the extra storage used.'],

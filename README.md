@@ -7,7 +7,7 @@ See [ROADMAP.md](./ROADMAP.md) for the version plan, [docs/LOCAL_SETUP.md](./doc
 
 ## Status
 
-Twenty-nine TypeScript reps are playable. Learners can start with language basics or guided problem solving. Free paths now cover AI-era coding habits, frontend core, backend core, and untimed frontend and backend interview practice. Each path begins with a plain-language introduction and a small example before its first rep. The new lessons teach learners to inspect suggested code, validate inputs, derive UI states, and explain their choices. Four skill journeys cover arrays, words, lookups, and stacks: guided practice, a related problem without hints, and a fresh recall problem after three days. Progress explains the evidence behind Learning, Practising, Independent, and Retained. Code checks verify behavior; a written rubric helps learners review their own plans and explanations. Attempts and drafts are saved locally with SQLite when using the local server, with JSON export and import for portability.
+Thirty-four TypeScript reps are playable. A real-world path adds checkout debugging, batch-pipeline predictions, an interactive browser directory, a ticket request handler, and behavior-preserving stock-report refactoring. Learners can start with language basics or guided problem solving. Free paths now cover AI-era coding habits, frontend core, backend core, and untimed frontend and backend interview practice. Each path begins with a plain-language introduction and a small example before its first rep. The new lessons teach learners to inspect suggested code, validate inputs, derive UI states, and explain their choices. Four skill journeys cover arrays, words, lookups, and stacks: guided practice, a related problem without hints, and a fresh recall problem after three days. Progress explains the evidence behind Learning, Practising, Independent, and Retained. Code checks verify behavior; a written rubric helps learners review their own plans and explanations. Attempts and drafts are saved locally with SQLite when using the local server, with JSON export and import for portability.
 
 ## Run locally
 
@@ -31,7 +31,9 @@ Open the local address printed by the server. It binds to `127.0.0.1` and stores
 
 Run `yarn build`, `yarn lint`, and `yarn test` to check the app.
 
-Each rep runs authored code in a browser worker with a five-second timeout. This is for personal practice with code you write yourself; it is not an isolation boundary for imported third-party exercises.
+Function reps run authored code in a browser worker with a five-second timeout. The frontend implementation rep uses a sandboxed browser frame for its preview and DOM interaction checks; it needs no external service. This is for personal practice with code you write yourself; it is not an isolation boundary for imported third-party exercises.
+
+In the workspace, press Ctrl+Enter or Command+Enter to run checks, or use Run checks. Stop checks cancels a run without changing your code. Editing code cancels an active run and clears old feedback. Tab moves focus out of the editor. If the editor cannot load, a plain text editor lets you keep writing and running checks. Narrow and short screens use page scrolling, and narrow screens keep save feedback visible.
 
 ## Guiding principles
 

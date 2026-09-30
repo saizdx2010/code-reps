@@ -15,7 +15,7 @@ type Props = {
 export function ProgressPage({ progress, onOpenRep, onReviewRep, onExport, onImport, transferMessage, serverReady }: Props) {
   const importRef = useRef<HTMLInputElement | null>(null)
   return <main className="progress-main">
-    <div className="home-heading"><span className="home-label">EVIDENCE OF GROWTH</span><h1>What can you solve on your own?</h1><p>Passing checks shows working code. Each skill shows when you solved related problems without hints. Plans and explanations are yours to review.</p></div>
+    <div className="home-heading"><span className="home-label">EVIDENCE OF GROWTH</span><h1 tabIndex={-1}>What can you solve on your own?</h1><p>Passing checks shows working code. Each skill shows when you solved related problems without hints. Plans and explanations are yours to review.</p></div>
     {progress.map(({ journey, stage, guided, independent, retained, recallAt, recallDue }, index) => <details className="progress-journey" aria-labelledby={`progress-${journey.id}`} key={journey.id} open={index === 0}>
       <summary className="progress-heading"><div><h2 id={`progress-${journey.id}`}>{journey.title}</h2><p>Guided practice → independent problem → fresh recall after {journey.delayDays} days</p></div><span className="journey-state">{stageLabels[stage]}</span></summary>
       <ol className="evidence-list">

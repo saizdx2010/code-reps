@@ -3,7 +3,9 @@ export type Rep = {
   id: string
   title: string
   category: string
-  format?: 'debug' | 'read' | 'transform'
+  format?: 'debug' | 'read' | 'transform' | 'frontend' | 'backend' | 'refactor'
+  context?: string
+  acceptanceCriteria?: string[]
   prompt: string
   example: { input: string; output: string }
   note: string
@@ -11,6 +13,7 @@ export type Rep = {
   planPrompt: string
   starter: string
   functionName: string
+  preserveInput?: boolean
   hints: string[]
   checks: Check[]
 }
@@ -49,7 +52,7 @@ export const reps: Rep[] = [
     category: 'Strings & maps',
     prompt: 'Given a string, return the index of the first character that appears exactly once. Count uppercase and lowercase letters separately.',
     example: { input: "firstUnique('swiss')", output: '1' },
-    note: 'Return -1 when no character is unique. An empty string also returns -1.',
+    note: 'Return -1 when no character is unique. An empty string also returns -1. Inputs contain basic Latin letters, digits, spaces, and punctuation; emoji are outside this exercise.',
     vocabulary: [{ term: 'Index', meaning: 'the zero-based position of a character in a string' }, { term: 'Unique', meaning: 'appearing exactly once' }],
     planPrompt: 'How will you know which characters appear once? How will you keep their original order?',
     starter: `/** Return the index of the first character that occurs once. */\nfunction firstUnique(text: string): number {\n  // Write your solution here\n  return -1\n}\n`,
@@ -111,7 +114,7 @@ export const reps: Rep[] = [
   {
     id: 'count-even-numbers', title: 'Count even numbers', category: 'Arrays',
     prompt: 'Return how many numbers in an array are even.', example: { input: 'countEvens([1, 2, 4, 7])', output: '2' },
-    note: 'Zero and negative even numbers count too.', vocabulary: [{ term: 'Even', meaning: 'divisible by two with no remainder' }],
+    note: 'Inputs are integers. Zero and negative even numbers count too.', vocabulary: [{ term: 'Even', meaning: 'divisible by two with no remainder' }],
     planPrompt: 'How can you check whether a number is even? What should the count start at?',
     starter: `function countEvens(numbers: number[]): number {\n  // Write your solution here\n  return 0\n}\n`, functionName: 'countEvens',
     hints: ['Use the remainder operator %.', 'A number is even when number % 2 is zero.', 'Increase a count for each even number.'],
@@ -149,7 +152,7 @@ export const reps: Rep[] = [
     hints: ['Visit the words from left to right.', 'Return immediately when a word has length >= minimum.', 'Return null after the loop if none matched.'],
     checks: [
       { name: 'Finds the example', input: [['cat', 'tiger', 'dog'], 5], expected: 'tiger' }, { name: 'Handles no match', input: [['a', 'bb'], 3], expected: null },
-      { name: 'Handles empty words', input: [[], 2], expected: null }, { name: 'Includes exact length', input: [['four'], 4], expected: 'four' },
+      { name: 'Handles an empty array', input: [[], 2], expected: null }, { name: 'Includes exact length', input: [['four'], 4], expected: 'four' },
       { name: 'Keeps original order', input: [['first', 'second'], 3], expected: 'first' }, { name: 'Handles zero minimum', input: [['', 'a'], 0], expected: '' },
     ],
   },
@@ -210,8 +213,11 @@ export const reps: Rep[] = [
   },
   ...journeyReps,
   ...transferReps,
+  ...richReps,
 ]
 import { foundationReps } from './foundations.ts'
 import { aiEraReps } from './ai-era-reps.ts'
 import { journeyReps } from './journey-reps.ts'
 import { transferReps } from './transfer-reps.ts'
+
+import { richReps } from './rich-reps.ts'

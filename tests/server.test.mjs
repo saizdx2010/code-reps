@@ -28,12 +28,12 @@ test('local server migrates once, persists data, and backs up on restart', async
     })
     assert.equal(badHostStatus, 403)
     assert.equal((await request('/api/entry', 'PUT', { key: 'code-reps:selected-rep', value: 'sum-positive-numbers' })).status, 200)
-    await new Promise((resolve) => running.server.close(resolve))
+    await running.close()
     running = await startServer({ port: 0, dataDir })
     assert.equal((await (await fetch(`${running.url}/api/state`)).json()).entries['code-reps:selected-rep'], 'sum-positive-numbers')
     assert.equal((await readdir(join(dataDir, 'backups'))).length, 1)
   } finally {
-    if (running?.server.listening) await new Promise((resolve) => running.server.close(resolve))
+    await running?.close()
     await rm(dataDir, { recursive: true, force: true })
   }
 })

@@ -1,5 +1,6 @@
 import MonacoEditor, { loader } from '@monaco-editor/react'
 import * as monaco from 'monaco-editor'
+import { useLayoutEffect, useRef } from 'react'
 import type { ComponentProps } from 'react'
 import editorWorker from '../node_modules/monaco-editor/esm/vs/editor/editor.worker.js?worker'
 import tsWorker from '../node_modules/monaco-editor/esm/vs/language/typescript/ts.worker.js?worker'
@@ -12,8 +13,44 @@ self.MonacoEnvironment = {
 
 loader.config({ monaco })
 
-export default function CodeEditor(props: ComponentProps<typeof MonacoEditor>) {
-  return <MonacoEditor {...props} theme="code-reps" beforeMount={(instance) => {
+export default function CodeEditor({ onRunChecks, focusRequest = 0, ...props }: ComponentProps<typeof MonacoEditor> & { onRunChecks: () => void; focusRequest?: number }) {
+  const runRef = useRef(onRunChecks)
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
+  const pathRef = useRef(props.path)
+  const focusRequestRef = useRef(focusRequest)
+  const viewSaveTimer = useRef<number | undefined>(undefined)
+  useLayoutEffect(() => {
+    const save = () => {
+      const editor = editorRef.current
+      if (editor && pathRef.current) {
+        try { sessionStorage.setItem(`code-reps:editor:${pathRef.current}`, JSON.stringify(editor.saveViewState())) } catch { /* View state is optional. */ }
+      }
+    }
+    window.addEventListener('pagehide', save)
+    return () => { window.clearTimeout(viewSaveTimer.current); save(); window.removeEventListener('pagehide', save) }
+  }, [])
+  useLayoutEffect(() => {
+    focusRequestRef.current = focusRequest
+    if (!focusRequest) return
+    const frame = requestAnimationFrame(() => editorRef.current?.focus())
+    return () => cancelAnimationFrame(frame)
+  }, [focusRequest])
+  useLayoutEffect(() => { runRef.current = onRunChecks }, [onRunChecks])
+  return <MonacoEditor {...props} onMount={(editor, instance) => {
+    editorRef.current = editor
+    if (focusRequestRef.current) requestAnimationFrame(() => editor.focus())
+    try { const saved = sessionStorage.getItem(`code-reps:editor:${props.path}`); if (saved) editor.restoreViewState(JSON.parse(saved)) } catch { /* Keep the default position. */ }
+    const scheduleViewSave = () => {
+      window.clearTimeout(viewSaveTimer.current)
+      viewSaveTimer.current = window.setTimeout(() => {
+        try { sessionStorage.setItem(`code-reps:editor:${props.path}`, JSON.stringify(editor.saveViewState())) } catch { /* View state is optional. */ }
+      }, 120)
+    }
+    editor.onDidChangeCursorPosition(scheduleViewSave)
+    editor.onDidScrollChange(scheduleViewSave)
+    editor.addAction({ id: 'code-reps.run-checks', label: 'Run checks', keybindings: [instance.KeyMod.CtrlCmd | instance.KeyCode.Enter], run: () => runRef.current() })
+    props.onMount?.(editor, instance)
+  }} theme="code-reps" beforeMount={(instance) => {
     instance.editor.defineTheme('code-reps', {
       base: 'vs-dark',
       inherit: true,

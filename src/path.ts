@@ -23,6 +23,22 @@ export const firstPath = {
 export const paths = [
   firstPath,
   {
+    id: 'real-world', title: 'Apply skills in real code',
+    description: 'Debug a checkout, trace an importer, build an interactive UI, implement a request handler, and refactor a working report.',
+    introduction: {
+      title: 'Small tasks with complete behavior',
+      body: 'Real work starts with an existing contract, a bug report, or a person who needs an interface. These reps reuse arrays, sets, validation, and state decisions in complete small tasks. Revisit the language and core paths if those pieces are unfamiliar.',
+      example: 'Bug report: two units are charged as one.\nTrace: price 250 cents × quantity 2 = 500 cents.\nCheck: the discount is applied once after the subtotal.',
+      explanation: 'A concrete trace separates the requirement from the current implementation. It also suggests a regression check before you make a change.',
+      next: 'Start with the checkout bug report. Write what the original code does before repairing it, then explore the other formats.',
+    },
+    stages: [
+      { title: 'Understand existing code', description: 'Use a bug report and a trace to establish the current behavior.', repIds: ['debug-cart-total', 'read-batch-labels'] },
+      { title: 'Implement a complete small feature', description: 'Build a browser interface and a request handler with clear states and boundaries.', repIds: ['frontend-directory', 'backend-ticket-handler'] },
+      { title: 'Improve code safely', description: 'Refactor a working report, preserve its behavior, and explain the tradeoffs.', repIds: ['refactor-stock-summary'] },
+    ],
+  },
+  {
     id: 'ai-era', title: 'Code confidently with AI',
     description: 'Learn the language, inspect suggested code, and prove behavior with your own checks and explanations.',
     introduction: {
@@ -51,7 +67,7 @@ export const paths = [
     stages: [
       { title: 'Prepare the language', description: 'Use typed objects, arrays, and functions.', repIds: ['create-objects', 'make-arrays', 'write-functions'] },
       { title: 'Derive what the UI shows', description: 'Filter data and decide when to show loading, error, empty, or ready.', repIds: ['frontend-visible-items', 'frontend-view-state'] },
-      { title: 'Apply the skill', description: 'Transform realistic data and explain the result.', repIds: ['transform-active-labels'] },
+      { title: 'Apply the skill', description: 'Transform realistic data and explain the result.', repIds: ['transform-active-labels', 'frontend-directory'] },
     ],
   },
   {
@@ -67,7 +83,7 @@ export const paths = [
     stages: [
       { title: 'Prepare the language', description: 'Work with typed values, objects, arrays, and functions.', repIds: ['basic-types', 'create-objects', 'make-arrays', 'write-functions'] },
       { title: 'Handle untrusted input', description: 'Validate values at runtime before using them.', repIds: ['backend-validate-user'] },
-      { title: 'Return predictable results', description: 'Bound and page a list while preserving the original data.', repIds: ['backend-page-results'] },
+      { title: 'Return predictable results', description: 'Bound and page a list while preserving the original data.', repIds: ['backend-page-results', 'backend-ticket-handler'] },
     ],
   },
   {

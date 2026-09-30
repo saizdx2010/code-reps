@@ -166,11 +166,11 @@ button:disabled { transform: none !important; }
 .foundation-lesson summary:focus-visible,
 .progress-journey summary:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; }
 .paths-main {
-  height: calc(100dvh - 130px);
+  height: auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
   padding-bottom: 18px;
 }
 .paths-main > .home-heading,
@@ -178,13 +178,8 @@ button:disabled { transform: none !important; }
 .paths-main > .path-overview,
 .paths-main > .path-progress { flex: none; }
 .paths-main .path-stages {
-  flex: 1;
-  min-height: 0;
-  overflow-y: scroll;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
-  scrollbar-width: thin;
-  scrollbar-color: #718470 #253029;
+  flex: none;
+  overflow: visible;
 }
 
 .learn-main {
@@ -300,7 +295,7 @@ button:disabled { transform: none !important; }
   .home-main .continue-panel { padding: 24px; }
   .home-journey { padding-right: 0; }
   .path-stage ol { margin-left: 0; }
-  .paths-main { height: calc(100dvh - 165px); }
+  .paths-main { height: auto; }
   .learn-main { height: calc(100dvh - 165px); }
   .progress-main, .history-main { height: calc(100dvh - 165px); }
   .foundation-content { padding-left: 8px; padding-right: 8px; }
@@ -318,3 +313,60 @@ button:disabled { transform: none !important; }
 @media (prefers-reduced-motion: reduce) {
   .foundation-lesson summary .disclosure-arrow { transition: none; }
 }
+
+.practice-queue { margin-top: 28px; border-top: 1px solid var(--border); padding-top: 22px; }
+.practice-queue .home-section-heading { margin-bottom: 10px; }
+.practice-queue h2 { font-size: 20px; }
+.practice-queue ul { list-style: none; padding: 0; margin: 0; }
+.practice-queue li { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+.practice-queue li > div { min-width: 0; }
+.practice-queue strong { font-size: 14px; }
+.practice-queue li p { color: var(--muted); font-size: 13px; line-height: 1.6; margin: 6px 0 0; overflow-wrap: anywhere; }
+.practice-queue .text-button { flex-shrink: 0; min-height: 44px; }
+@media (max-width: 650px) {
+  .practice-queue li { align-items: flex-start; flex-direction: column; gap: 6px; }
+}
+
+/* Keep run controls and recovery usable without changing the practice desk. */
+.workspace-save-status { display: none; flex: none; color: var(--muted); font-size: 12px; line-height: 1.5; margin: -12px 0 14px; overflow-wrap: anywhere; }
+.run-buttons { display: flex; align-items: center; gap: 10px; }
+.stop-checks-button { min-height: 44px; padding: 9px 12px; background: transparent; border: 1px solid var(--border); border-radius: 6px; color: var(--text); }
+.stop-checks-button:hover { border-color: var(--lime); }
+.editor-recovery { display: flex; flex-direction: column; height: 100%; padding: 16px; gap: 8px; }
+.editor-recovery p { color: var(--muted); font-size: 12px; line-height: 1.5; margin: 0; }
+.editor-recovery textarea { width: 100%; flex: 1; min-height: 140px; resize: none; font: 13px/1.6 var(--font-mono); color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 12px; }
+.practice-main .result-list li > div { min-width: 0; }
+.practice-main .result-list p { overflow-wrap: anywhere; }
+@media (max-width: 900px) {
+  .practice-main { height: auto; min-height: calc(100dvh - 175px); overflow: visible; }
+  .practice-main .workspace-layout { flex: none; overflow: visible; }
+  .practice-main .task-column, .practice-main .code-column { overflow: visible; scrollbar-gutter: auto; }
+}
+@media (max-width: 700px) { .workspace-save-status { display: block; } }
+@media (max-width: 550px) {
+  .run-buttons { justify-content: flex-end; flex-wrap: wrap; }
+  .run-buttons .primary-button { flex: 1; }
+  .practice-main .code-actions > span { text-align: left; }
+}
+@media (min-width: 901px) and (max-height: 650px) {
+  .practice-main { height: auto; min-height: calc(100dvh - 130px); overflow: visible; }
+  .practice-main .workspace-layout { flex: none; overflow: visible; }
+  .practice-main .task-column, .practice-main .code-column { overflow: visible; }
+}
+
+.practice-main .rep-context { padding: 12px 14px; border-left: 2px solid var(--lime); background: var(--surface); font-size: 13px; }
+.acceptance-criteria { color: var(--muted); font-size: 13px; line-height: 1.7; padding-left: 20px; }
+.practice-main .frontend-preview { padding: 22px 24px; border-top: 1px solid var(--border); }
+.frontend-preview > p { color: var(--muted); font-size: 13px; line-height: 1.6; }
+.preview-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 14px 0; }
+.preview-controls label { font-size: 12px; color: var(--muted); }
+.preview-controls select { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 5px; padding: 10px; min-height: 44px; }
+.frontend-preview iframe { width: 100%; min-height: 300px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); }
+.preview-empty { padding: 24px; border: 1px dashed var(--border); border-radius: 6px; font-size: 13px; color: var(--muted); }
+.frontend-preview .preview-stale { color: var(--lime); }
+@media (max-width: 550px) { .practice-main .frontend-preview { padding: 21px; } .preview-controls .primary-button { width: 100%; } }
+
+.storage-recovery { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 12px 24px; color: var(--error); background: var(--surface); border-bottom: 1px solid var(--border); }
+.storage-recovery p { flex: 1 1 260px; font-size: 13px; line-height: 1.5; margin: 0; }
+.storage-recovery button { min-height: 44px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 5px; color: var(--text); background: var(--surface-2); }
+.storage-recovery button:hover { border-color: var(--lime); }

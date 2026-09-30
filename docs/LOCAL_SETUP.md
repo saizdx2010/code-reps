@@ -22,6 +22,21 @@ Stop the server, update the project files, then run `yarn install`, `yarn build`
 
 ## Restore
 
-Use **Progress → Import backup** with a Code Reps JSON backup. It adds completed attempts and fills empty drafts without replacing existing drafts. Daily SQLite snapshots are also kept in `~/.code-reps/backups` for seven days; stop the server before replacing a damaged database with one of those files.
+Use **Progress → Import backup** with a Code Reps JSON backup. It adds completed attempts and fills empty drafts without replacing existing drafts. Daily SQLite snapshots are also kept in `~/.code-reps/backups`. The seven latest dated snapshots are retained. A snapshot is created on restart when a database already exists, then once every 24 hours while the server runs. The first snapshot for each UTC date is kept.
+
+To restore a SQLite snapshot:
+
+1. Stop the server and close app tabs.
+2. Move `progress.sqlite` and any `progress.sqlite-wal` and `progress.sqlite-shm` files into a separate recovery folder. Keep them until recovery is confirmed.
+3. Copy your chosen dated snapshot into the data directory and name the copy `progress.sqlite`. Keep the original snapshot.
+4. Restart the server and check History and Progress. Pending browser saves may be replayed onto the restored database to recover recent work.
 
 If you need a different data location or port, set `CODE_REPS_DATA_DIR` or `CODE_REPS_PORT` when starting the server. Keep the port stable: browsers separate local data by address and port.
+
+## When saving fails
+
+The app keeps pending server writes in the browser and retries them before loading server progress on the next startup. Keep the same browser and address, restart the local server, then choose **Retry saving**. Use **Download backup** while the browser copy is still available. Clearing browser data can remove pending work.
+
+Backup imports are committed to SQLite as one batch. Invalid batches leave stored progress unchanged. An import that cannot reach the server stays pending in the browser until saving succeeds.
+
+See [local reliability verification](LOCAL_RELIABILITY.md) for tested behavior and remaining platform checks.

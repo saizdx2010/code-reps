@@ -21,7 +21,7 @@ export const transferReps: Rep[] = [
     id: 'read-unique-names', title: 'Read a name collector', category: 'Code reading', format: 'read',
     prompt: 'Read the starter function. Its loop keeps the first occurrence of each nonempty name. Fix the return statement so the full kept list is returned.',
     example: { input: "uniqueNames(['Ada', 'Bo', 'Ada'])", output: "['Ada', 'Bo']" },
-    note: 'Name comparison is case-sensitive. Do not change the working loop.',
+    note: 'Name comparison is case-sensitive. Skip only the empty string; keep whitespace-only names as written. Do not change the working loop.',
     vocabulary: [{ term: 'Slice', meaning: 'a portion of an array' }],
     planPrompt: 'What is in names after the loop? Why does slice(1) lose data?',
     starter: 'function uniqueNames(input: string[]): string[] {\n  const seen = new Set<string>()\n  const names: string[] = []\n  for (const name of input) {\n    if (name !== "" && !seen.has(name)) {\n      seen.add(name)\n      names.push(name)\n    }\n  }\n  return names.slice(1)\n}\n',
@@ -32,6 +32,8 @@ export const transferReps: Rep[] = [
       { name: 'Skips empty names', input: [['', 'Bo']], expected: ['Bo'] },
       { name: 'Handles empty input', input: [[]], expected: [] },
       { name: 'Keeps original order', input: [['Z', 'A', 'Z']], expected: ['Z', 'A'] },
+      { name: 'Treats case separately', input: [['Ada', 'ada', 'Ada']], expected: ['Ada', 'ada'] },
+      { name: 'Keeps whitespace-only names', input: [['', ' ', 'Bo']], expected: [' ', 'Bo'] },
     ],
   },
   {
@@ -42,7 +44,7 @@ export const transferReps: Rep[] = [
     vocabulary: [{ term: 'Transform', meaning: 'create a new value from existing data' }, { term: 'Trim', meaning: 'remove surrounding whitespace' }],
     planPrompt: 'Which users should you keep? In what order will you trim, check, and uppercase each name?',
     starter: 'function activeLabels(users: { name: string; active: boolean }[]): string[] {\n  // Return a new list of labels.\n  return []\n}\n',
-    functionName: 'activeLabels', hints: ['Visit users in their original order.', 'Skip inactive users; trim a name before checking whether it is empty.', 'Add trimmed.toUpperCase() to a new array.'],
+    functionName: 'activeLabels', preserveInput: true, hints: ['Visit users in their original order.', 'Skip inactive users; trim a name before checking whether it is empty.', 'Add trimmed.toUpperCase() to a new array.'],
     checks: [
       { name: 'Transforms the example', input: [[{ name: ' Ada ', active: true }, { name: 'Bo', active: false }]], expected: ['ADA'] },
       { name: 'Preserves order', input: [[{ name: ' zoe', active: true }, { name: 'amy ', active: true }]], expected: ['ZOE', 'AMY'] },

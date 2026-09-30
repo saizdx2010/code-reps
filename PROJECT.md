@@ -90,6 +90,30 @@ The app, content, and progress should work offline. Runners start on demand, rep
 
 Each stage should leave the app usable. Before expanding the catalog, test whether people return regularly and can solve and explain a previously difficult skill independently after a gap.
 
+## Next development priorities
+
+Before inviting learners, improve the platform through an internal quality pass. Learner validation remains a later milestone; internal checks establish content and product quality, while learner sessions will establish whether skills transfer and last.
+
+1. **Learning quality:** Audit every rep's wording, examples, constraints, starter code, checks, hints, and explanations. Keep terminology plain, difficulty increases gradual, and independent reps free of accidental solution clues.
+2. **Daily practice flow:** Give learners a clear next rep with a reason, let them resume unfinished work, and make difficult attempts and due reviews easy to revisit. Preserve the evidence behind progress states.
+3. **Workspace polish:** Refine editor interactions, actionable feedback, keyboard navigation, narrow-screen layouts, and saved, loading, error, and success states. Switching views or recovering from an error must preserve work.
+4. **Exercise depth:** Add realistic debugging, code-reading, frontend, backend, and refactoring exercises using familiar skills. Deliver a small number of complete experiences before expanding their volume.
+5. **Local reliability:** Verify first run, offline use, upgrades, backups, restore, and runner cleanup before sharing the platform. Cover each supported platform before public release.
+
+### Richer exercises
+
+Begin with one debugging rep and one frontend rep to establish the workspace and feedback needed by the broader set. Then add code reading, backend, and refactoring. Reuse arrays, maps, validation, and state concepts so learners apply known skills in new contexts.
+
+| Format | First exercise scope | Evidence |
+| --- | --- | --- |
+| Debugging | Repair broken code from a realistic bug report and failing tests. | The reported failure is fixed and related behavior still passes. |
+| Code reading | Trace existing code, predict its behavior, and explain an edge case. | Authored expected outcomes and a transparent self-review rubric. |
+| Frontend | Build a small interactive UI with loading, empty, error, and success states. | A local preview, interaction checks, and a visual/accessibility review checklist. |
+| Backend | Implement input validation, filtering, pagination, and consistent error responses. | Request/response checks covering valid input, boundaries, and failures. |
+| Refactoring | Improve messy code while preserving behavior. | Existing regression checks plus an authored comparison of structure and tradeoffs. |
+
+Each exercise needs a realistic brief, examples and constraints, starter code, observable checks, progressive hints, an authored solution review, and reflection prompts. Introduce multi-file editing, UI previews, and local services only where the exercise requires them. Keep checks separate from self-reviewed reasoning and communication; passing tests alone must not imply those dimensions were assessed.
+
 ## Decisions to validate
 
 - The exact first path and difficulty range for working TypeScript developers.

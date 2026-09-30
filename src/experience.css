@@ -1,0 +1,136 @@
+/* Small utilities that keep a practice session moving. */
+.screen-content { min-width: 0; }
+.topbar { gap: 20px; }
+.topbar-right { min-width: 0; }
+.top-nav { min-width: 0; overflow-x: auto; }
+.top-nav button, .commands-trigger, .save-status, .topbar-divider { flex-shrink: 0; }
+.primary-button { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.completion-panel > div > button { min-width: 0; }
+.commands-trigger, .utility-heading button, .workspace-toolbar-links button {
+  border: 1px solid var(--border); border-radius: 6px; background: transparent; color: var(--text); padding: 8px 10px; font-size: 12px; min-height: 36px;
+}
+kbd { font: 10px var(--font-mono); color: var(--muted); white-space: nowrap; }
+.commands-trigger kbd { margin-left: 8px; }
+.save-status { width: 175px; min-height: 30px; display: flex; align-items: center; overflow-wrap: anywhere; }
+.filter-bar { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin: 18px 0 0; flex: none; }
+.filter-bar label { display: grid; gap: 6px; font-size: 11px; color: var(--muted); flex: 1 1 145px; }
+.filter-bar select, .filter-bar input, .utility-dialog input, .preview-controls select { min-height: 42px; width: 100%; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); padding: 9px 12px; font: 13px ui-sans-serif, system-ui, sans-serif; }
+.filter-bar .text-button { min-height: 42px; }
+.catalog-main .catalog-list-heading { margin-top: 20px; }
+.utility-note { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.utility-dialog { width: min(680px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); overflow-y: auto; padding: 24px; border: 1px solid #60715e; border-radius: 12px; background: var(--surface); color: var(--text); box-shadow: 0 24px 100px #0009; }
+.utility-dialog::backdrop { background: #080d0bcc; }
+.utility-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
+.utility-heading h2 { margin: 0; font-size: 20px; }
+.utility-dialog .glossary-list { display: block; }
+.utility-dialog .glossary-list > div { padding: 14px 0; border-bottom: 1px solid var(--border); }
+.utility-dialog .glossary-list dd { margin: 6px 0 0; line-height: 1.6; }
+.command-results { max-height: min(420px, 55dvh); overflow-y: auto; }
+.command-results button { width: 100%; border: 0; padding: 13px 12px; background: transparent; color: var(--text); text-align: left; display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
+.command-results [aria-selected=true] button { background: #344332; color: var(--lime); border-radius: 5px; }
+.practice-main .workspace-layout { gap: 0; }
+.workspace-split { cursor: col-resize; display: flex; align-items: center; justify-content: center; touch-action: none; }
+.workspace-split span { height: 45px; width: 3px; border-radius: 3px; background: var(--border); transition: background-color .15s; }
+.workspace-split:hover span, .workspace-split:focus-visible span { background: var(--lime); }
+.workspace-split:focus-visible { outline: 2px solid var(--lime); outline-offset: -2px; }
+.resizing-workspace, .resizing-workspace * { cursor: col-resize !important; user-select: none !important; }
+.resizing-workspace iframe { pointer-events: none; }
+.practice-main .workspace-toolbar { position: sticky; top: 0; z-index: 5; padding: 10px 16px; background: #202a24f7; border-bottom: 1px solid var(--border); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; flex: none; }
+.workspace-toolbar-links, .workspace-toolbar-run { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.workspace-toolbar-run > span { width: 88px; font-size: 11px; color: var(--muted); }
+.workspace-toolbar .primary-button, .workspace-toolbar .stop-checks-button { min-height: 36px; padding: 8px 12px; font-size: 12px; }
+.practice-main .intro-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.practice-main.focus-mode .task-column, .practice-main.focus-mode .workspace-split { display: none; }
+.practice-main.focus-mode .code-column { display: flex; }
+.practice-main.focus-mode { max-width: 1700px; }
+.practice-main.focus-mode .editor-wrap { height: auto; }
+.practice-main section[id] { scroll-margin-top: calc(var(--workspace-toolbar-height, 105px) + 12px); }
+.practice-main .results-panel { min-height: 200px; }
+.practice-main .result-list li > div { flex: 1; }
+.result-list details { width: 100%; }
+.result-list summary { font-size: 13px; font-weight: 600; cursor: pointer; line-height: 1.6; }
+.result-list pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 10px; font: 12px/1.7 var(--font-mono); margin: 8px 0 12px; }
+.value-comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.value-comparison > div:first-child pre { border-left: 2px solid var(--lime); }
+.value-comparison > div:last-child pre { border-left: 2px solid var(--error); }
+.passed-checks { padding-top: 16px; }
+.passed-checks > summary { font-size: 13px; color: var(--muted); cursor: pointer; }
+.completion-checklist { display: flex; flex-wrap: wrap; gap: 8px 16px; list-style: none; padding: 0; margin: 20px 0 12px; font-size: 12px; color: var(--muted); }
+.completion-checklist .done { color: var(--lime); }
+.completion-panel { margin-top: 22px; padding: 22px; background: #29382b; border: 1px solid #52694b; border-radius: 8px; }
+.completion-panel h3 { font-size: 19px; margin: 8px 0; }
+.completion-panel p { font-size: 13px; line-height: 1.7; color: var(--muted); }
+.completion-panel > div { display: flex; flex-wrap: wrap; gap: 10px; }
+.attempt-comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.attempt-comparison > div { min-width: 0; }
+.attempt-comparison h4 { color: var(--lime); }
+.attempt-comparison h5 { margin: 18px 0 8px; font-size: 12px; color: var(--muted); }
+.attempt-comparison pre { max-height: 400px; }
+.preview-viewport { overflow-x: auto; padding: 8px; background: #111916; border: 1px solid var(--border); border-radius: 6px; }
+.frontend-preview .preview-viewport iframe { display: block; max-width: none; margin: auto; height: 400px; }
+.preview-expanded { position: fixed; inset: 20px; z-index: 30; margin: 0 !important; max-height: calc(100dvh - 40px); overflow-y: auto; background: var(--surface) !important; border: 1px solid var(--border) !important; box-shadow: 0 0 0 30px #080d0bcc; border-radius: 10px !important; }
+.preview-expanded .preview-viewport iframe { height: min(65dvh, 700px); }
+.preview-controls select { width: auto; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; }
+h1:focus, section[tabindex='-1']:focus { outline: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .utility-dialog[open], .completion-panel, .result-summary { animation: utility-arrive .16s ease-out; }
+  button, summary, select { transition: background-color .15s ease, border-color .15s ease, color .15s ease; }
+  details::details-content { transition: content-visibility .16s allow-discrete, opacity .16s; }
+  details:not([open])::details-content { opacity: 0; }
+}
+@keyframes utility-arrive { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+@media (max-width: 1100px) { .commands-trigger kbd { display: none; } .save-status { width: 130px; } }
+@media (max-width: 900px) {
+  .practice-main .workspace-layout { grid-template-columns: minmax(0, 1fr) !important; }
+  .workspace-split { display: none; }
+  .practice-main .workspace-toolbar { top: 0; }
+  .practice-main .code-column { overflow: visible; }
+  .practice-main .workspace-save-status { min-height: 36px; }
+}
+@media (max-width: 700px) {
+  .topbar { gap: 0; }
+  .save-status { display: none; }
+  .commands-trigger { padding: 7px; min-height: 32px; font-size: 11px; }
+  .topbar-right { flex-wrap: wrap; justify-content: flex-end; }
+  .filter-bar { gap: 10px; }
+  .filter-bar label { flex-basis: 120px; }
+  .catalog-main { height: auto; min-height: calc(100dvh - 165px); }
+  .catalog-list { max-height: 60dvh; flex: none; }
+  .history-main { height: auto; overflow: visible; }
+  .history-list { max-height: 70dvh; flex: none; }
+  .attempt-comparison, .value-comparison { grid-template-columns: 1fr; }
+  .preview-expanded { inset: 8px; max-height: calc(100dvh - 16px); }
+  .utility-dialog { padding: 18px; }
+}
+.utility-dialog.preview-dialog { width: calc(100vw - 40px); max-width: 1500px; }
+.preview-dialog .preview-viewport iframe { height: min(60dvh, 700px); }
+.utility-dialog.glossary-drawer { position: fixed; inset: 16px 16px 16px auto; margin: 0; width: min(440px, calc(100vw - 32px)); height: calc(100dvh - 32px); max-height: none; }
+.glossary-drawer::backdrop { background: #080d0b80; }
+.history-list { align-content: start; grid-auto-rows: max-content; }
+@media (max-width: 700px) {
+  .topbar-right { height: auto; min-height: 46px; overflow: visible; flex-wrap: nowrap; gap: 6px; }
+  .top-nav { flex: 1; width: auto; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .top-nav button { flex-shrink: 0; }
+  .commands-trigger { flex: none; width: 34px; height: 34px; padding: 0; font-size: 0; }
+  .commands-trigger::before { content: '⌘'; font-size: 17px; }
+  .commands-trigger kbd { display: none; }
+}
+@media (max-width: 550px) {
+  .practice-main .intro-row { flex-direction: column; align-items: stretch; }
+  .practice-main .intro-actions { display: flex; width: 100%; }
+  .practice-main .intro-actions .reset-button { width: auto; flex: 1; min-height: 42px; }
+}
+.value-comparison > div:first-child .diff-line { background: #bce57b20; }
+.value-comparison > div:last-child .diff-line { background: #ef978b25; }
+.plan-to-code { margin-top: 14px; min-height: 42px; }
+@media (max-width: 900px) {
+  .practice-main .mobile-tabs { position: sticky; top: 0; z-index: 10; flex: none; background: var(--surface); }
+}
+@media (max-width: 900px) {
+  .practice-main .workspace-toolbar { top: var(--workspace-tabs-height, 56px); }
+  .practice-main section[id] { scroll-margin-top: calc(var(--workspace-toolbar-height, 134px) + var(--workspace-tabs-height, 56px) + 12px); }
+}
