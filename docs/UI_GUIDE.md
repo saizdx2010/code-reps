@@ -33,11 +33,14 @@
 
 - Glossary opens a searchable drawer without leaving the exercise.
 - Frontend previews support fit-to-panel, phone (375px), tablet (768px), and desktop (1280px) widths. Larger previews scroll horizontally when needed.
-- Expanded preview uses a modal with the same state and size controls. Update preview refreshes the code; changing the request scenario refreshes an existing preview.
+- Expanded preview uses a modal with the same running frame and size controls. Expanding or closing the modal preserves preview interactions; Update preview deliberately restarts it with the latest code; changing the request scenario also refreshes an existing preview.
 
 ## Keyboard and motion
 
 - Ctrl/Command K opens the searchable command palette. Up/Down selects an action; Enter opens it; Escape closes the palette or glossary.
 - Ctrl/Command Enter runs checks in the workspace, including the editor.
 - The command palette includes page navigation, exercises, glossary, editor focus, focus mode, results, and explanation.
+- Selecting a knowledge lesson scrolls to its content and moves keyboard focus there.
+- Narrow screens keep save feedback visible on every page; the navigation scrollbar reveals additional pages and Commands retains its text label.
+- Profile switching, creation, import, export, and deletion show an operation message while work is pending.
 - Focus outlines, native modal focus containment, reserved feedback space, and short transitions support continuity. Reduced-motion preferences disable UI animation and smooth scrolling.

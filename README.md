@@ -33,6 +33,8 @@ Open the local address printed by the server. It binds to `127.0.0.1` and stores
 
 Run `yarn content:check`, `yarn build`, `yarn lint`, and `yarn test` to check the app.
 
+For real-browser practice checks, run `yarn playwright install chromium` once after installing dependencies, then `yarn test:e2e`. See [docs/BROWSER_TESTING.md](./docs/BROWSER_TESTING.md) for coverage and isolation details.
+
 Function reps run authored code in a browser worker with a five-second timeout. The frontend implementation rep uses a sandboxed browser frame for its preview and DOM interaction checks; it needs no external service. This is for personal practice with code you write yourself; it is not an isolation boundary for imported third-party exercises.
 
 In the workspace, press Ctrl+Enter or Command+Enter to run checks, or use Run checks. Stop checks cancels a run without changing your code. Editing code cancels an active run and clears old feedback. Tab moves focus out of the editor. If the editor cannot load, a plain text editor lets you keep writing and running checks. Narrow and short screens use page scrolling, and narrow screens keep save feedback visible.

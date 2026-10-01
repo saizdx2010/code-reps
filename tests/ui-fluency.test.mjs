@@ -49,6 +49,11 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
     const click=async(text)=>{const target=button(text);assert.ok(target,`Missing button ${text}`);await act(async()=>target.click())}
     const input=async(element,value)=>{assert.ok(element);await act(async()=>{const setter=Object.getOwnPropertyDescriptor(element.tagName==='TEXTAREA'?dom.window.HTMLTextAreaElement.prototype:element.tagName==='SELECT'?dom.window.HTMLSelectElement.prototype:dom.window.HTMLInputElement.prototype,'value').set;setter.call(element,value);element.dispatchEvent(new dom.window.Event(element.tagName==='SELECT'?'change':'input',{bubbles:true}))})}
     await click('Knowledge')
+    const nextLesson = document.querySelector('.knowledge-topic-list button:nth-child(2)')
+    await act(async()=>nextLesson.click())
+    await act(async()=>new Promise(resolve=>setTimeout(resolve,10)))
+    assert.equal(document.activeElement,document.querySelector('.knowledge-reading'))
+    await act(async()=>document.querySelector('.knowledge-topic-list button').click())
     assert.ok(document.body.textContent.includes('Values, types, and functions'))
     assert.equal(document.querySelectorAll('.top-nav button').length,6)
     assert.ok(![...document.querySelectorAll('.top-nav button')].some(button=>button.textContent==='Learn'))
@@ -152,6 +157,36 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
     assert.equal(document.querySelectorAll('#home-drafts>li').length,5)
     await click('Show fewer drafts')
     assert.equal(document.querySelectorAll('#home-drafts>li').length,3)
+
+    await click('Manage profiles')
+    let finishImport
+    const pendingFile={text:()=>new Promise(resolve=>{finishImport=resolve})}
+    const fileInput=document.querySelector('.profile-dialog input[type="file"]')
+    Object.defineProperty(fileInput,'files',{value:[pendingFile],configurable:true})
+    await act(async()=>fileInput.dispatchEvent(new Event('change',{bubbles:true})))
+    assert.equal(document.querySelector('.profile-dialog [role="status"]').textContent,'Importing profile…')
+    assert.equal(button('Create profile').disabled,true)
+    await act(async()=>finishImport('{}'))
+    assert.notEqual(document.querySelector('.profile-dialog [role="status"]').textContent,'Importing profile…')
+    assert.equal(button('Close').disabled,false)
+    await click('Close')
+
+    const {default:FrontendPreview}=await import(pathToFileURL(join(rootDir,'FrontendPreview.js')))
+    const {reps}=await import(pathToFileURL(join(rootDir,'rep.js')))
+    const frontend=reps.find(rep=>rep.format==='frontend')
+    assert.ok(frontend)
+    await act(async()=>root.render(jsx(FrontendPreview,{code:frontend.starter,rep:frontend})))
+    await click('Update preview')
+    const frame=document.querySelector('iframe')
+    const frameWindow=frame.contentWindow
+    await click('Expand preview')
+    assert.equal(document.querySelector('iframe'),frame)
+    assert.equal(frame.contentWindow,frameWindow)
+    await click('Exit expanded preview')
+    assert.equal(document.querySelector('iframe'),frame)
+    assert.equal(frame.contentWindow,frameWindow)
+    await act(async()=>new Promise(resolve=>setTimeout(resolve,10)))
+    assert.equal(document.activeElement,button('Expand preview'))
 
   }finally{
     if(root){const {act}=await import('react');await act(async()=>root.unmount())}

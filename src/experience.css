@@ -113,10 +113,9 @@ h1:focus, section[tabindex='-1']:focus { outline: none; }
 .history-list { align-content: start; grid-auto-rows: max-content; }
 @media (max-width: 700px) {
   .topbar-right { height: auto; min-height: 46px; overflow: visible; flex-wrap: nowrap; gap: 6px; }
-  .top-nav { flex: 1; width: auto; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .top-nav { flex: 1; width: auto; min-width: 0; overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; padding-bottom: 4px; }
   .top-nav button { flex-shrink: 0; }
-  .commands-trigger { flex: none; width: 34px; height: 34px; padding: 0; font-size: 0; }
-  .commands-trigger::before { content: '⌘'; font-size: 17px; }
+  .commands-trigger { flex: none; min-height: 44px; padding: 8px 10px; font-size: 11px; }
   .commands-trigger kbd { display: none; }
 }
 @media (max-width: 550px) {
@@ -133,4 +132,12 @@ h1:focus, section[tabindex='-1']:focus { outline: none; }
 @media (max-width: 900px) {
   .practice-main .workspace-toolbar { top: var(--workspace-tabs-height, 56px); }
   .practice-main section[id] { scroll-margin-top: calc(var(--workspace-toolbar-height, 134px) + var(--workspace-tabs-height, 56px) + 12px); }
+}
+
+/* The preview stays in one dialog so expansion preserves the running frame. */
+dialog.preview-inline { position: static; inset: auto; display: block; width: 100%; max-width: none; margin: 0; color: var(--text); }
+.knowledge-reading { min-width: 0; scroll-margin-top: 18px; }
+.mobile-save-status { display: none; }
+@media (max-width: 700px) {
+  .mobile-save-status { display: block; margin: 0; min-height: 32px; padding: 7px 18px; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; border-bottom: 1px solid var(--border); }
 }

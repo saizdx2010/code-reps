@@ -6,7 +6,7 @@ Code Reps is a free, local-first coding practice and self-assessment app. Its co
 
 Prioritize learner work, honest assessment, clear content, and a reliable practice loop. Accounts, cloud sync, leaderboards, certificates, and AI tutoring are outside the current product scope. Do not add external services or network-dependent features without a task that calls for them.
 
-Read `README.md` for current behavior, `PROJECT.md` for product intent, and `ROADMAP.md` for planned work. Some technical directions in the plan are aspirational: inspect the implementation before adopting them. The current runners use a browser worker and a sandboxed frontend frame, and tests use Node's built-in test runner.
+Read `README.md` for current behavior, `PROJECT.md` for product intent, and `ROADMAP.md` for planned work. Some technical directions in the plan are aspirational: inspect the implementation before adopting them. The current runners use a browser worker and a sandboxed frontend frame, unit/integration tests use Node's built-in test runner, and browser-flow tests use Playwright with Chromium.
 
 ## Start here
 
@@ -29,6 +29,8 @@ Use **Node.js 24 or later** and **Yarn Classic 1.22.22**, as declared in `packag
 | `yarn preview` | Preview the Vite build; this is not the SQLite service |
 | `yarn lint` | Run Oxlint |
 | `yarn test` | Run `tests/*.test.mjs` with Node's test runner and TypeScript stripping |
+| `yarn playwright install chromium` | Install the browser required by the end-to-end suite |
+| `yarn test:e2e` | Run real-browser practice flows in Chromium |
 | `yarn content:check` | Validate authored content and depth coverage |
 | `yarn package` | Build a portable web bundle with a Node runtime |
 | `node scripts/verify-portable.mjs` | Smoke-test the generated portable bundle |
@@ -101,7 +103,9 @@ For source changes, run the relevant focused tests while developing, then `yarn 
 
 For packaging or local-service reliability changes, run `yarn package` and `node scripts/verify-portable.mjs` as appropriate. The portable workflow builds on Linux, macOS, and Windows; a local pass establishes only the platform actually exercised.
 
-For UI changes, verify the affected browser flow when available, including keyboard access, narrow layouts, and preservation of work. Node/jsdom tests that substitute Monaco do not establish real editor behavior, visual fidelity, or assistive-technology support. Local asset availability does not establish disconnected-browser operation.
+For changes affecting practice, editors, navigation, profiles, or browser persistence, run `yarn test:e2e` alongside the Node suite. Playwright tests live in `tests/e2e/`; configuration is in `playwright.config.ts`. They start a dedicated loopback Vite server on port 4175 and use fresh browser contexts without accessing the learner's SQLite database. Do not reuse a running learner server or seed the user's real progress. Any future SQLite browser tests must use temporary data directories. Failure traces and screenshots are written to ignored `test-results/`, and the HTML report to `playwright-report/`.
+
+For UI changes, verify the affected browser flow when available, including keyboard access, narrow layouts, and preservation of work. The initial Playwright suite covers real Monaco editing, worker checks and stale feedback, draft reloads, profile separation, and narrow-pane switching with keyboard exit. It does not establish SQLite recovery, disconnected-browser operation, other browser engines, cross-platform behavior, visual fidelity, or assistive-technology support. Node/jsdom tests that substitute Monaco do not establish real editor behavior, visual fidelity, or assistive-technology support. Local asset availability does not establish disconnected-browser operation.
 
 Documentation-only changes need link/path and command review plus `git diff --check`; do not run the full app suite solely for prose edits.
 

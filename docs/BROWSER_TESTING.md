@@ -1,0 +1,37 @@
+# Browser-flow tests
+
+The Playwright suite complements the Node tests with real Chromium, Monaco, and browser-worker execution. Requires the same Node.js 24+ and Yarn Classic 1.22.22 as the app.
+
+```sh
+yarn install --frozen-lockfile
+yarn playwright install chromium
+yarn test:e2e
+```
+
+On Linux CI, use `yarn playwright install --with-deps chromium` to install browser system dependencies too. Browser installation requires a download; running the installed suite uses local assets.
+
+Playwright starts its own loopback Vite server at `http://127.0.0.1:4175`. The port must be free: the suite deliberately refuses to reuse an existing server. Each test gets a fresh browser context and browser-local learner data. It does not launch the SQLite service or touch `~/.code-reps`. Future server-mode tests must use temporary data directories.
+
+## Coverage
+
+- Edit through real Monaco keyboard input, run worker checks with the keyboard shortcut, clear stale feedback after an edit, and check failing feedback.
+- Reload and restore a saved plan and executable code draft.
+- Create and switch local profiles, verify a fresh profile starts without the original draft, and recover the original profile's work.
+- Switch task/code panes at a 390px viewport, preserve the plan, run checks, exit the editor with Tab, and check for page overflow.
+
+The tests use authored fixture code through the visible editor, without mocking Monaco, worker checks, or persistence. Tests are independent and run without retries so failures remain visible.
+
+## Debugging
+
+```sh
+yarn test:e2e --headed
+yarn test:e2e --debug
+yarn test:e2e --grep 'reload'
+yarn playwright show-report
+```
+
+Failures retain screenshots and traces under `test-results/`. The HTML report is under `playwright-report/`. Both directories are ignored by Git. Open a failure trace with `yarn playwright show-trace <trace-file>`.
+
+This suite does not verify SQLite save/recovery, backup restore, runner cancellation/timeouts, frontend-frame exercises, disconnected-browser operation, Firefox/WebKit, other operating systems, or assistive-technology support. Narrow layout assertions are functional checks, not screenshot or visual-design approval. Keep the existing Node suite and manual release walkthroughs; browser tests do not establish learning effectiveness.
+
+Configuration: `playwright.config.ts`. Tests: `tests/e2e/practice.spec.ts`. `yarn test` and `just check` do not run this suite; run `yarn test:e2e` explicitly for affected browser flows.
