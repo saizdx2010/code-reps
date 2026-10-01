@@ -80,6 +80,7 @@ Each version needs a clean build, lint, focused tests, a real local-server smoke
 - [x] Prepared learner observation and delayed-transfer protocol in `docs/LEARNER_VALIDATION.md`.
 - [ ] Complete real visual, keyboard, assistive-technology, zoom, and disconnected-browser walkthroughs.
 - [ ] Execute release checks on Windows/Linux and observe real learners before claiming learning effectiveness.
+- [x] Add a complete request-ownership journey with search-state practice, delayed multi-slot recall, refresh transfer, and compact content discovery. See `docs/CONTENT_GAPS.md` for the remaining coverage gaps.
 - [ ] Deepen async, React, and database practice beyond the introductory reference lessons; introduce real service/database runners when those tasks need them.
 - [ ] Add externally distributable content-pack tooling after an isolation and content-migration design.
 

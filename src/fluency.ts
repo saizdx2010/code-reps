@@ -1,5 +1,5 @@
 import { paths } from './path.ts'
-import { skills } from './knowledge.ts'
+import { skills, knowledgeGroups } from './knowledge.ts'
 import { journeys, getAllJourneys } from './learning.ts'
 import type { PortableRecord } from './portability.ts'
 export type Judgment = 'not-yet' | 'with-help' | 'independent'
@@ -40,6 +40,7 @@ export function parseFluency(raw: unknown): FluencyState {
   return raw as unknown as FluencyState
 }
 export const recallVariants: Record<string, string[]> = {
+  'request-ownership': ['refresh-report-state', 'preview-slot-results', 'search-request-state'],
   'resource-ownership': ['subscription-cleanup', 'room-leases', 'shared-resource'],
   arrays: ['sum-matching-prices', 'count-open-tickets', 'count-above-threshold'],
   text: ['first-label-ending', 'count-label-prefix', 'count-long-words'],
@@ -109,6 +110,8 @@ export function validateKnowledge(repIds: Set<string>) {
     if (new Set(skill.questions.map(q=>q.id)).size !== skill.questions.length) problems.push(`${skill.id}: duplicate question`)
     for (const q of skill.questions) if (!Number.isInteger(q.answer) || q.answer < 0 || q.answer >= q.options.length || !q.explanation) problems.push(`${skill.id}: invalid question ${q.id}`)
   }
+  const groupedIds = knowledgeGroups.flatMap(group => group.skillIds)
+  if (new Set(groupedIds).size !== groupedIds.length || groupedIds.length !== skills.length || groupedIds.some(id => !skillIds.has(id))) problems.push('Knowledge groups must contain every skill exactly once')
   const visit = (id: string, stack: Set<string>) => {
     if (stack.has(id)) { problems.push(`${id}: prerequisite cycle`); return }
     for (const dep of skills.find(s=>s.id===id)?.prerequisites ?? []) visit(dep, new Set([...stack, id]))

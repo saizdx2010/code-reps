@@ -8,6 +8,12 @@
 - Returning to a screen restores its scroll position and open sections. Filters, the selected path, and the mobile workspace tab survive refresh in the same browser session.
 - Editor cursor, selection, and scroll position are remembered per exercise. Learner drafts remain in the existing local store; session-only UI preferences do not enter backups.
 
+## Browse learning content
+
+- Knowledge is the main entry for full lessons, predictions, self-assessment, planning, and notes. Its index groups lessons by topic, with search, a topic filter, and bookmarks. Search opens matching groups; Clear knowledge filters restores all topics. Filters survive refresh in the same profile and browser session.
+- Quick lessons inside Knowledge opens short introductions. The existing `#/learn` bookmark still works; it no longer needs a separate main-navigation item.
+- Home previews up to three saved drafts and three due reviews. Show all exposes the complete queue without changing drafts, priorities, or review dates; Show fewer restores the compact view. Expansion is a session preference.
+
 ## Arrange the workspace
 
 - Drag the divider between brief and editor. Focus the divider and use Left/Right to resize, Home/End for the limits, or double-click to restore the default split. The split preference is saved locally.

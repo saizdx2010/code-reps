@@ -203,4 +203,14 @@ export const skills: Skill[] = [
 ]
 export const skillById = (id: string) => skills.find(skill => skill.id === id)
 export const skillsForRep = (id: string) => skills.filter(skill => skill.repIds.includes(id))
-export const contentVersion = 3
+export const contentVersion = 4
+
+// Discovery categories only; these do not change skill identity or learner evidence.
+export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[] = [
+  { id: 'language', title: 'Language & problem solving', skillIds: ['values', 'arrays', 'text', 'lookup', 'stacks', 'complexity'] },
+  { id: 'frontend', title: 'Frontend', skillIds: ['frontend', 'react'] },
+  { id: 'backend', title: 'Backend & data', skillIds: ['validation', 'http', 'databases'] },
+  { id: 'async', title: 'Async & runtime', skillIds: ['async', 'closures', 'reference-identity', 'event-loop', 'debouncing', 'throttling', 'request-ownership'] },
+  { id: 'resources', title: 'Patterns & resources', skillIds: ['singleton', 'events', 'dependency-injection', 'resource-ownership', 'websockets', 'live-transports'] },
+  { id: 'reliability', title: 'Reliability & testing', skillIds: ['debugging', 'testing', 'caching', 'retries', 'idempotency', 'optimistic-updates'] },
+]

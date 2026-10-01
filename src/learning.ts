@@ -15,6 +15,7 @@ export const journeys: Journey[] = [
   { id: 'text', title: 'Work through words', guided: 'count-words', independent: 'first-long-word', recall: 'count-long-words', delayDays: 3 },
   { id: 'lookup', title: 'Count and remember', guided: 'has-duplicate', independent: 'most-frequent-number', recall: 'first-repeated-number', delayDays: 3 },
   { id: 'stacks', title: 'Match what came before', guided: 'valid-parentheses', independent: 'balanced-brackets', recall: 'remove-adjacent-pairs', delayDays: 3 },
+  { id: 'request-ownership', title: 'Keep asynchronous results current', guided: 'latest-request', independent: 'search-request-state', recall: 'preview-slot-results', delayDays: 3 },
   { id: 'resource-ownership', title: 'Own and clean up shared resources', guided: 'shared-resource', independent: 'subscription-cleanup', recall: 'room-leases', delayDays: 3 },
 ]
 

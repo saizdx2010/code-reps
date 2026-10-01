@@ -57,7 +57,8 @@ export function getPracticePlan(drafts: Record<string, PortableAttempt>, history
   } : undefined
   const available = reps.find(rep => status(rep.id) === 'Not started' && (learnerStart !== 'returning' || !foundations.some(lesson => lesson.repId === rep.id)) &&
     !progress.some(state => state.journey.recall === rep.id && !state.recallDue && !state.retained))
-  const goalRepId = goalPathId !== 'typescript' ? paths.find(path => path.id === goalPathId)?.stages.flatMap(stage => stage.repIds).find(id => status(id) !== 'Completed') : undefined
+  const recallAvailable = (id: string) => !progress.some(state => state.journey.recall === id && !state.recallDue && !state.retained)
+  const goalRepId = goalPathId !== 'typescript' ? paths.find(path => path.id === goalPathId)?.stages.flatMap(stage => stage.repIds).find(id => status(id) !== 'Completed' && recallAvailable(id)) : undefined
   const goalAction: PracticeAction | undefined = goalRepId ? { repId: goalRepId, mode: status(goalRepId) === 'In progress' ? 'resume' : 'start', reason: 'Build toward your selected learning goal.' } : undefined
   const next: PracticeAction | null = recalls[0] ?? recurring[0] ?? unfinished[0] ?? reviews[0] ??
     goalAction ?? (foundation ? { repId: foundation.repId, mode: 'start', reason: 'Build a TypeScript foundation before the problem-solving journeys.' } : undefined) ??

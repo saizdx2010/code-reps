@@ -84,3 +84,14 @@ test('a selected backend goal changes new practice without hiding saved work', (
   const saved = { 'sum-positive-numbers': { plan: 'Resume my plan', code: '', explanation: '', hintCount: 0 } }
   assert.equal(getPracticePlan(saved, [], 'returning', 'sum-positive-numbers', Date.now(), 'backend').next.mode, 'resume')
 })
+
+
+test('selected practical path cannot recommend recall before its independent evidence and delay', () => {
+  const journey = journeys.find(journey => journey.id === 'request-ownership')
+  const preceding = ['closure-counters', 'reference-groups', 'promise-outcomes', 'event-loop-order', 'singleton-owner', 'pubsub-trace', 'injected-clock', 'debounce-schedule', 'leading-throttle', 'latest-request', 'search-request-state', 'websocket-gate', 'choose-live-transport', 'shared-resource', 'subscription-cleanup', 'cache-freshness', 'retry-backoff', 'idempotent-ledger', 'optimistic-balance']
+  const drafts = Object.fromEntries(preceding.map(id => [id, draft(id, {completedAt: old})]))
+  const history = [record(journey.guided), record(journey.independent, {completedAt: '2026-09-29T12:00:00Z'})]
+  const plan = getPracticePlan(drafts, history, 'returning', '', now, 'practical-concepts')
+  assert.equal(plan.next.repId, 'refresh-report-state')
+  assert.notEqual(plan.next.repId, journey.recall)
+})

@@ -1,3 +1,4 @@
+import { asyncReps, asyncRepDepth, asyncGuides } from './async-reps.ts'
 import type { Skill } from './knowledge.ts'
 import type { Rep } from './rep.ts'
 import type { RepDepth } from './rep-depth.ts'
@@ -556,6 +557,10 @@ export const practicalSkills: Skill[] = [
       {
         "title": "Abort is cooperative",
         "body": "AbortController supplies a signal to supported operations such as fetch. Aborting can stop work and reading a response, but it does not guarantee the server undoes a write. Promises have no universal cancel method. Keep ownership guards for obsolete results and handle intentional cancellation separately from ordinary failure."
+      },
+      {
+        "title": "Ownership ends and has a scope",
+        "body": "The search, preview, and refresh exercises allow a pending request to settle once. After accepting success, failure, or cancellation, remove its pending ownership so a duplicate callback cannot change the settled display. The guided visible-response trace is simpler: it keeps current identity after resolve, until replacement or cancellation. Ownership can belong to one search screen or separately to each preview slot. Keeping previous data during refresh is a display policy: it does not allow an old request to replace it. The practice journey uses deterministic event traces; browser cancellation and actual request timing need separate integration checks."
       }
     ],
     "example": "let current = 0\nasync function load(url: string) {\n  const mine = ++current\n  const data = await fetch(url).then(r => r.json())\n  if (mine === current) show(data)\n}\n// Also handle HTTP errors, failures, and cleanup in real code.",
@@ -595,7 +600,10 @@ export const practicalSkills: Skill[] = [
       }
     ],
     "repIds": [
-      "latest-request"
+      "latest-request",
+      "search-request-state",
+      "preview-slot-results",
+      "refresh-report-state"
     ],
     "related": [
       "async",
@@ -3049,10 +3057,12 @@ export const practicalReps: Rep[] = [
         ]
       }
     ]
-  }
+  },
+  ...asyncReps,
 ]
 
 export const practicalRepDepth: Record<string, RepDepth> = {
+  ...asyncRepDepth,
   "closure-counters": {
     "reasoning": "Each factory invocation owns a binding that survives through its returned function. The trace wrapper preserves call order.",
     "trace": "Starts [0,10] create two environments. Calls [0,0,1,0] produce [1,2,11,3]; counter 1 does not affect counter 0.",
@@ -3248,9 +3258,9 @@ export const practicalLessonDepth: Record<string, LessonDepth> = {
   "request-ownership": {
     "title": "Cancellation and race conditions: a boundary to explain",
     "code": "let current = 0\nasync function load(url: string) {\n  const mine = ++current\n  const data = await fetch(url).then(r => r.json())\n  if (mine === current) show(data)\n}\n// Also handle HTTP errors, failures, and cleanup in real code.",
-    "reasoning": "Ownership, rather than arrival time, controls which result can update state. Clearing on start is an explicit policy of this exercise.",
-    "challenge": "If cancellation is unsupported, can ownership still prevent an obsolete response from displaying?",
-    "answer": "Yes. The work may continue, but a request identity check prevents its result from updating the current view."
+    "reasoning": "Ownership, rather than arrival time, controls which result can update state. A pending owner ends on settlement. Ownership is scoped to the surface: one search screen can have one owner, while several preview slots need separate owners. Clearing data on start and preserving it during refresh are different display contracts.",
+    "challenge": "Cover starts load A, then detail starts load B. Can one global current token safely allow both previews to complete? Explain how removal and duplicate completion should affect ownership.",
+    "answer": "No: B would obsolete A even though the slots are independent. Each slot needs its own pending identity. Removing a slot removes that ownership; accepting its result ends the load so duplicates are ignored. Unsupported cancellation may leave work running, but the ownership check can still reject its obsolete result."
   },
   "websockets": {
     "title": "WebSockets and connection state: a boundary to explain",
@@ -3304,6 +3314,7 @@ export const practicalLessonDepth: Record<string, LessonDepth> = {
 }
 
 export const practicalGuides = {
+  ...asyncGuides,
   "closure-counters": {
     "plan": [
       "Restate the contract and its boundary rules.",
