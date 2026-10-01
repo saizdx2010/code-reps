@@ -2,6 +2,7 @@ import { Button } from './Button'
 import { Input, NumberInput, Select, Textarea } from './Input'
 import { useEffect, useState } from 'react'
 import { skills, skillById } from './knowledge'
+import { lessonDepth } from './lesson-depth'
 import { capstones, diagnosticRepIds, recurringReviews, rubrics, skillEvidence, weeklyPlan } from './fluency'
 import type { FluencyState, Judgment, LearningNote, SelfReview } from './fluency'
 import type { PortableRecord } from './portability'
@@ -16,6 +17,7 @@ function Lesson({ skillId, state, update, openRep, onSkill, history }: Omit<Prop
   const skill = skillById(skillId) ?? skills[0]
   const [choices,setChoices]=useState<Record<string,number>>({})
   const [responses,setResponses]=useState<Record<string,string>>({})
+  const depth = lessonDepth[skill.id]
   const evidence=skillEvidence(skill.id,history,state)
   const review=state.reviews[skill.id]??defaultReview()
   function saveReview(key: keyof SelfReview, value: string) { update({...state,reviews:{...state.reviews,[skill.id]:{...review,[key]:value,updatedAt:new Date().toISOString()}}}) }
@@ -24,6 +26,7 @@ function Lesson({ skillId, state, update, openRep, onSkill, history }: Omit<Prop
     <section><h3>What you will learn</h3><ul>{skill.objectives.map(o=><li key={o}>{o}</li>)}</ul></section>
     {skill.sections.map(section=><section key={section.title}><h3>{section.title}</h3><p>{section.body}</p></section>)}
     <section><h3>A worked example</h3><pre><code>{skill.example}</code></pre><ol>{skill.walkthrough.map(step=><li key={step}>{step}</li>)}</ol></section>
+    {depth && <section><h3>{depth.title}</h3><pre><code>{depth.code}</code></pre><p>{depth.reasoning}</p><h4>Reason it through</h4><p>{depth.challenge}</p><p>Write a prediction and a reason before revealing the discussion. This is self-review, separate from checked lesson answers.</p><details><summary>Compare your reasoning</summary><p>{depth.answer}</p></details></section>}
     <section><h3>Common mistakes</h3><ul>{skill.mistakes.map(m=><li key={m}>{m}</li>)}</ul></section>
     <section><h3>Predict, then check</h3><p>These short checks exercise recognition and tracing. They do not establish independent coding fluency.</p>{skill.questions.map(question=>{
       const id=`${skill.id}:${question.id}`;const answer=state.answers[id];const choice=choices[id]??answer?.choice;const response=responses[id]??answer?.response??''

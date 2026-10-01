@@ -33,3 +33,19 @@ For every new exercise, provide an independent reference solution in the test fi
 Multi-file capstones use `encodeFiles` with an entry module and named `.ts` files. Use local relative imports; dependencies outside the project are unavailable. Keep frontend checks in the sandboxed frame and backend behavior in the timed worker. Neither environment is a security boundary for arbitrary third-party exercise packs. Avoid treating integration success as proof of module quality.
 
 Run `yarn content:check` before publishing an app/content update. Keep exercise IDs stable so saved attempts remain linked. If changing an interactive question's answer or option ordering, add a new question ID or migrate saved answers explicitly. Content version alone does not migrate learner evidence.
+
+## Depth standard for every rep and lesson
+
+Every rep, including foundations, independent tasks, delayed recall, debugging, and project milestones, must have a task-specific entry in `src/rep-depth.ts`:
+
+- **Reasoning:** explain why the approach satisfies the contract, using an invariant, state precedence, or validation argument where relevant.
+- **Trace:** follow concrete values through a boundary or conflicting case, not just restate the happy-path example.
+- **Alternative:** compare a plausible approach, including relevant time, storage, readability, or contract tradeoffs.
+- **Counterexample:** name a tempting mistake and an input or observation that exposes it.
+- **Transfer:** propose an unfamiliar variation and the decision it requires. Keep it explicitly self-reviewed; original checks do not validate a changed contract.
+
+These reviews appear in the existing post-check comparison reveal. Do not copy solution reasoning into independent or recall prompts. Scale depth to the skill: a foundational expression needs a clear value trace, not an artificially complicated algorithm.
+
+Every knowledge lesson must also have an entry in `src/lesson-depth.ts` with a concrete example, causal reasoning, a prediction/repair/counterexample challenge, and a separately revealed discussion. These challenges are self-review, not automated evidence of coding independence. Existing checked questions retain their identities and answer contracts.
+
+Run `yarn content:check`, `yarn lint`, `yarn test`, and `yarn build`. Coverage validation rejects missing fields and unknown targets; human review must still verify correctness, plain wording, progressive difficulty, and whether an alternative actually teaches a decision. Adding text volume alone does not meet the editorial standard.

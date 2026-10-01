@@ -201,4 +201,4 @@ export const skills: Skill[] = [
 ]
 export const skillById = (id: string) => skills.find(skill => skill.id === id)
 export const skillsForRep = (id: string) => skills.filter(skill => skill.repIds.includes(id))
-export const contentVersion = 1
+export const contentVersion = 2

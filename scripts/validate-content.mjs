@@ -1,9 +1,10 @@
+import { validateContentDepth } from '../src/content-depth.ts'
 import { reps } from '../src/rep.ts'
 import { skills, contentVersion } from '../src/knowledge.ts'
 import { validateKnowledge } from '../src/fluency.ts'
 import { reflectionGuides } from '../src/learning.ts'
 const ids = new Set(reps.map(rep => rep.id))
-const errors = validateKnowledge(ids)
+const errors = [...validateKnowledge(ids), ...validateContentDepth(ids, new Set(skills.map(skill => skill.id)))]
 if (ids.size !== reps.length) errors.push('Exercise IDs must be unique.')
 for (const rep of reps) {
   for (const field of ['title','category','prompt','note','planPrompt','starter','functionName']) if (!rep[field]?.trim()) errors.push(`${rep.id}: missing ${field}`)

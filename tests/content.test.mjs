@@ -1,3 +1,7 @@
+import { validateContentDepth } from '../src/content-depth.ts'
+import { repDepth } from '../src/rep-depth.ts'
+import { lessonDepth } from '../src/lesson-depth.ts'
+import { skills } from '../src/knowledge.ts'
 import { capstoneSolutions } from './fixtures/capstone-solutions.mjs'
 import assert from 'node:assert/strict'
 import test from 'node:test'
@@ -69,4 +73,17 @@ test('running a mutating attempt does not corrupt authored inputs', () => {
   runRep('function pageIds(ids: string[], page: number, size: number) { ids.splice(0, ids.length); return ids }', 'backend-page-results')
   const code = 'function pageIds(ids: string[], page: number, size: number) { page = Math.max(1,page); size = Math.min(3,Math.max(1,size)); return ids.slice((page-1)*size, page*size) }'
   assert.ok(runRep(code, 'backend-page-results').every(result => result.passed))
+})
+
+
+test('every rep and lesson meets the content depth standard', () => {
+  const repIds = new Set(reps.map(rep => rep.id))
+  const skillIds = new Set(skills.map(skill => skill.id))
+  assert.deepEqual(validateContentDepth(repIds, skillIds), [])
+  const incomplete = { ...repDepth, 'sum-positive-numbers': { ...repDepth['sum-positive-numbers'], trace: '  ' } }
+  assert.ok(validateContentDepth(repIds, skillIds, incomplete).includes('sum-positive-numbers: missing rep review trace'))
+  const missingLesson = { ...lessonDepth }
+  delete missingLesson.async
+  assert.ok(validateContentDepth(repIds, skillIds, repDepth, missingLesson).includes('async: missing lesson depth challenge'))
+  assert.ok(validateContentDepth(repIds, skillIds, { ...repDepth, orphan: repDepth['sum-positive-numbers'] }).includes('orphan: unknown rep review target'))
 })
