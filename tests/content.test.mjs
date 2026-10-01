@@ -1,5 +1,7 @@
+import { capstoneSolutions } from './fixtures/capstone-solutions.mjs'
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { fluencySolutions } from '../src/fluency-reps.ts'
 import { reps } from '../src/rep.ts'
 import { aiEraReps } from '../src/ai-era-reps.ts'
 import { runRep } from '../src/runner.ts'
@@ -8,6 +10,7 @@ import { richSolutions } from './fixtures/rich-solutions.mjs'
 
 // These independent implementations check authored expected results, not learner prose.
 const solutions = {
+  ...fluencySolutions,
   'declare-variables': 'function makeGreeting(name: string) { const greeting = "Hello, "; let message = greeting + name; return message }',
   'basic-types': 'function describePerson(name: string, age: number, active: boolean) { return `${name} is ${age}. Active: ${active}` }',
   'create-objects': 'type Person = {name: string; age: number}; function introduce(name: string, age: number) { const person: Person = {name, age}; return `${person.name} is ${person.age} years old` }',
@@ -33,7 +36,7 @@ const solutions = {
 }
 
 test('every rep has reference-solution coverage and a complete learning brief', () => {
-  const covered = new Set([...Object.keys(solutions), ...Object.keys(richSolutions), ...aiEraReps.map(rep => rep.id)])
+  const covered = new Set([...Object.keys(solutions), ...Object.keys(richSolutions), ...Object.keys(capstoneSolutions), ...aiEraReps.map(rep => rep.id)])
   assert.equal(new Set(reps.map(rep => rep.id)).size, reps.length, 'Rep IDs must be unique')
   assert.deepEqual([...covered].sort(), reps.map(rep => rep.id).sort())
   for (const rep of reps) {

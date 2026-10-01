@@ -1,3 +1,5 @@
+import { paths } from './path.ts'
+import { recurringReviews } from './fluency.ts'
 import { reps } from './rep.ts'
 import { foundations } from './foundations.ts'
 import { getAllJourneys } from './learning.ts'
@@ -22,7 +24,7 @@ function difficultyReason(record: PortableRecord) {
   return reasons[record.difficulty ?? ''] ?? (record.hintCount > 0 ? 'You used hints on your last attempt.' : 'You wanted more practice on your last attempt.')
 }
 
-export function getPracticePlan(drafts: Record<string, PortableAttempt>, history: PortableRecord[], learnerStart: LearnerStart | null, selectedRepId: string, now = Date.now()) {
+export function getPracticePlan(drafts: Record<string, PortableAttempt>, history: PortableRecord[], learnerStart: LearnerStart | null, selectedRepId: string, now = Date.now(), goalPathId = 'typescript') {
   const status = (id: string) => attemptStatus(id, drafts[id])
   const progress = getAllJourneys(history, now)
   const latest = new Map<string, PortableRecord>()
@@ -44,7 +46,8 @@ export function getPracticePlan(drafts: Record<string, PortableAttempt>, history
       (record.hintCount > 0 || record.confidence !== 'confident' || Boolean(record.difficulty && record.difficulty !== 'none')))
     .sort((a, b) => Date.parse(a.completedAt) - Date.parse(b.completedAt))
     .map(record => ({ repId: record.repId, mode: 'review', reason: `${difficultyReason(record)} At least three days have passed; try again from the starter.` }))
-  const due = [...recalls, ...reviews]
+  const recurring: PracticeAction[] = recurringReviews(history, now).filter(review => review.due).map(review => ({ repId: review.repId, mode: status(review.repId) === 'In progress' ? 'resume' : 'review', reason: review.reason }))
+  const due = [...new Map([...recalls, ...recurring, ...reviews].map(action => [action.repId, action])).values()]
   const foundation = learnerStart === 'new' ? foundations.find(lesson => status(lesson.repId) !== 'Completed') : undefined
   const nextJourney = progress.find(state => state.nextRepId)
   const nextId = nextJourney?.nextRepId
@@ -54,8 +57,10 @@ export function getPracticePlan(drafts: Record<string, PortableAttempt>, history
   } : undefined
   const available = reps.find(rep => status(rep.id) === 'Not started' && (learnerStart !== 'returning' || !foundations.some(lesson => lesson.repId === rep.id)) &&
     !progress.some(state => state.journey.recall === rep.id && !state.recallDue && !state.retained))
-  const next: PracticeAction | null = recalls[0] ?? unfinished[0] ?? reviews[0] ??
-    (foundation ? { repId: foundation.repId, mode: 'start', reason: 'Build a TypeScript foundation before the problem-solving journeys.' } : undefined) ??
+  const goalRepId = goalPathId !== 'typescript' ? paths.find(path => path.id === goalPathId)?.stages.flatMap(stage => stage.repIds).find(id => status(id) !== 'Completed') : undefined
+  const goalAction: PracticeAction | undefined = goalRepId ? { repId: goalRepId, mode: status(goalRepId) === 'In progress' ? 'resume' : 'start', reason: 'Build toward your selected learning goal.' } : undefined
+  const next: PracticeAction | null = recalls[0] ?? recurring[0] ?? unfinished[0] ?? reviews[0] ??
+    goalAction ?? (foundation ? { repId: foundation.repId, mode: 'start', reason: 'Build a TypeScript foundation before the problem-solving journeys.' } : undefined) ??
     journeyAction ?? (available ? { repId: available.id, mode: 'start', reason: 'Try a new application of your skills. Start with a plan, then write and check your solution.' } : null)
   return { next, unfinished, due, progress }
 }

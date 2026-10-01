@@ -1,3 +1,5 @@
+import { Input } from './Input'
+import { getActiveProfile } from './local-store'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { Rep } from './rep'
@@ -6,13 +8,14 @@ import type { TestResult } from './runner.types'
 type ScreenState = { windowY: number; scroll: [number, number][]; open: Record<string, boolean>; focusId?: string }
 const screens = new Map<string, ScreenState>()
 export function ScreenMemory({ screenKey, children }: { screenKey: string; children: ReactNode }) {
+  const memoryKey = `${getActiveProfile()}:${screenKey}`
   const root = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
     const element = root.current!
     const detailKey = (detail: HTMLDetailsElement) => `${detail.closest('[data-attempt-id]')?.getAttribute('data-attempt-id') ?? ''}:${detail.closest('section[id]')?.id ?? ''}:${detail.querySelector(':scope > summary')?.textContent ?? ''}`
     const scrollElements = () => Array.from(element.querySelectorAll<HTMLElement>('main, .catalog-list, .path-stages, .history-list, .task-column, .code-column'))
-    let saved = screens.get(screenKey)
-    if (!saved) { try { saved = JSON.parse(sessionStorage.getItem(`code-reps:screen:${screenKey}`) || 'null') } catch { /* Storage is optional. */ } }
+    let saved = screens.get(memoryKey)
+    if (!saved) { try { saved = JSON.parse(sessionStorage.getItem(`code-reps:screen:${memoryKey}`) || 'null') } catch { /* Storage is optional. */ } }
     if (saved) {
       element.querySelectorAll('details').forEach(detail => { const open = saved!.open[detailKey(detail)]; if (typeof open === 'boolean') detail.open = open })
       scrollElements().forEach((item, index) => { const position = saved!.scroll[index]; if (position) { item.scrollTop = position[0]; item.scrollLeft = position[1] } })
@@ -21,12 +24,12 @@ export function ScreenMemory({ screenKey, children }: { screenKey: string; child
     } else { window.scrollTo(0, 0); element.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true }) }
     const capture = () => {
       const state: ScreenState = { windowY: window.scrollY, scroll: scrollElements().map(item => [item.scrollTop, item.scrollLeft]), open: Object.fromEntries(Array.from(element.querySelectorAll('details')).map(item => [detailKey(item), item.open])), focusId: element.contains(document.activeElement) ? document.activeElement?.id : undefined }
-      screens.set(screenKey, state)
-      try { sessionStorage.setItem(`code-reps:screen:${screenKey}`, JSON.stringify(state)) } catch { /* Continue without session persistence. */ }
+      screens.set(memoryKey, state)
+      try { sessionStorage.setItem(`code-reps:screen:${memoryKey}`, JSON.stringify(state)) } catch { /* Continue without session persistence. */ }
     }
     window.addEventListener('pagehide', capture)
     return () => { capture(); window.removeEventListener('pagehide', capture) }
-  }, [screenKey])
+  }, [memoryKey])
   return <div ref={root} className="screen-content">{children}</div>
 }
 
@@ -39,7 +42,7 @@ export function SearchDrawer({ title, children, onClose, className = '' }: { tit
 export function GlossaryDrawer({ terms, onClose }: { terms: { term: string; meaning: string }[]; onClose: () => void }) {
   const [query, setQuery] = useState('')
   const visible = terms.filter(item => `${item.term} ${item.meaning}`.toLowerCase().includes(query.toLowerCase()))
-  return <SearchDrawer title="Quick glossary" className="glossary-drawer" onClose={onClose}><label className="field-label" htmlFor="glossary-query">FIND A TERM</label><input id="glossary-query" type="search" autoFocus value={query} onChange={event => setQuery(event.target.value)} placeholder="Try index, map, or frequency" /><p className="utility-note">Definitions stay available while you practise.</p><dl className="glossary-list">{visible.map(item => <div key={item.term}><dt>{item.term}</dt><dd>{item.meaning}</dd></div>)}</dl>{!visible.length && <p>No matching terms. Try a shorter search.</p>}</SearchDrawer>
+  return <SearchDrawer title="Quick glossary" className="glossary-drawer" onClose={onClose}><label className="field-label" htmlFor="glossary-query">FIND A TERM</label><Input id="glossary-query" type="search" autoFocus value={query} onChange={event => setQuery(event.target.value)} placeholder="Try index, map, or frequency" /><p className="utility-note">Definitions stay available while you practise.</p><dl className="glossary-list">{visible.map(item => <div key={item.term}><dt>{item.term}</dt><dd>{item.meaning}</dd></div>)}</dl>{!visible.length && <p>No matching terms. Try a shorter search.</p>}</SearchDrawer>
 }
 
 type Command = { label: string; shortcut?: string; run: () => void }
@@ -49,7 +52,7 @@ export function CommandPalette({ reps, commands, onOpenRep, onClose }: { reps: R
   const matches: Command[] = [...commands, ...reps.map(rep => ({ label: `Practice: ${rep.title}`, run: () => onOpenRep(rep.id) }))].filter(item => item.label.toLowerCase().includes(query.toLowerCase()))
   const execute = (command: Command) => { onClose(); requestAnimationFrame(command.run) }
   useEffect(() => { document.getElementById(`command-${active}`)?.scrollIntoView({ block: 'nearest' }) }, [active])
-  return <SearchDrawer title="Commands & exercises" onClose={onClose}><label htmlFor="command-query" className="field-label">SEARCH OR CHOOSE AN ACTION</label><input id="command-query" autoFocus value={query} onChange={event => { setQuery(event.target.value); setActive(0) }} role="combobox" aria-expanded="true" aria-controls="command-results" aria-autocomplete="list" aria-activedescendant={matches.length ? `command-${active}` : undefined} placeholder="Find a page, rep, or workspace action…" onKeyDown={event => { if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); setActive(index => Math.max(0, Math.min(matches.length - 1, index + (event.key === 'ArrowDown' ? 1 : -1)))) } if (event.key === 'Enter' && matches[active]) { event.preventDefault(); execute(matches[active]) } }} /><p className="utility-note"><kbd>↑</kbd> <kbd>↓</kbd> choose · <kbd>Enter</kbd> open · <kbd>Ctrl / ⌘ K</kbd> commands · <kbd>Ctrl / ⌘ Enter</kbd> run checks</p><div id="command-results" role="listbox" aria-label="Matching commands" className="command-results">{matches.map((command, index) => <div key={command.label} id={`command-${index}`} role="option" aria-selected={index === active} onMouseEnter={() => setActive(index)}><button type="button" tabIndex={-1} onClick={() => execute(command)}>{command.label}{command.shortcut && <kbd>{command.shortcut}</kbd>}</button></div>)}</div>{!matches.length && <p>No matching commands or exercises.</p>}</SearchDrawer>
+  return <SearchDrawer title="Commands & exercises" onClose={onClose}><label htmlFor="command-query" className="field-label">SEARCH OR CHOOSE AN ACTION</label><Input id="command-query" autoFocus value={query} onChange={event => { setQuery(event.target.value); setActive(0) }} role="combobox" aria-expanded="true" aria-controls="command-results" aria-autocomplete="list" aria-activedescendant={matches.length ? `command-${active}` : undefined} placeholder="Find a page, rep, or workspace action…" onKeyDown={event => { if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); setActive(index => Math.max(0, Math.min(matches.length - 1, index + (event.key === 'ArrowDown' ? 1 : -1)))) } if (event.key === 'Enter' && matches[active]) { event.preventDefault(); execute(matches[active]) } }} /><p className="utility-note"><kbd>↑</kbd> <kbd>↓</kbd> choose · <kbd>Enter</kbd> open · <kbd>Ctrl / ⌘ K</kbd> commands · <kbd>Ctrl / ⌘ Enter</kbd> run checks</p><div id="command-results" role="listbox" aria-label="Matching commands" className="command-results">{matches.map((command, index) => <div key={command.label} id={`command-${index}`} role="option" aria-selected={index === active} onMouseEnter={() => setActive(index)}><button type="button" tabIndex={-1} onClick={() => execute(command)}>{command.label}{command.shortcut && <kbd>{command.shortcut}</kbd>}</button></div>)}</div>{!matches.length && <p>No matching commands or exercises.</p>}</SearchDrawer>
 }
 
 function formatValue(value: string) {

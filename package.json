@@ -14,7 +14,8 @@
     "preview": "vite preview",
     "serve": "node server/index.mjs",
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
-    "package": "yarn build && node scripts/package.mjs"
+    "package": "yarn build && node scripts/package.mjs",
+    "content:check": "node --experimental-strip-types scripts/validate-content.mjs"
   },
   "dependencies": {
     "@fontsource/maple-mono": "^5.3.0",

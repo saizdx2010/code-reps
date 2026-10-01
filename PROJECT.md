@@ -2,6 +2,8 @@
 
 ## Purpose
 
+Code Reps is a free, local, self-assessment application for building coding fluency, supported by excellent authored practice and a rich searchable knowledge base. Accounts, certificates, leaderboards, video courses, and AI tutoring are excluded. Local profiles separate learners and learning tracks without signup. See [docs/FLUENCY_PLATFORM.md](./docs/FLUENCY_PLATFORM.md) for the implemented learning tools and their current limits.
+
 Code Reps is a local-first coding practice platform for developers who know how to build software but want to regain independent coding fluency and prepare for technical interviews. It should also be approachable to learners who speak English as an additional language: technical words are explained plainly without turning coding exercises into reading tests.
 
 The first audience is working TypeScript developers who feel rusty with algorithms, data structures, or explaining their thinking. The app should eventually serve frontend and backend learners too.
@@ -16,7 +18,7 @@ The core learning journey remains free for everyone. Each learner can run the ap
 4. **Explain:** Describe the solution, tradeoffs, and time and space costs in clear English.
 5. **Review:** Inspect feedback, record where the difficulty was, and retry later.
 
-Vocabulary help is always available. Solution hints are intentional reveals. Learn mode guides the loop; Practice mode allows independent work; Interview mode adds timing and communication; Review mode revisits weak or fading skills.
+Vocabulary help is always available. Solution hints are intentional reveals. Learn mode guides the loop; Practice mode allows independent work; optional Interview rounds add timing and communication; Review mode revisits weak or fading skills.
 
 ## Content model
 

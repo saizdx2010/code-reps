@@ -1,3 +1,5 @@
+import { parseFluency } from './fluency.ts'
+import type { FluencyState } from './fluency.ts'
 export type PortableAttempt = {
   plan: string
   code: string
@@ -17,6 +19,7 @@ export type Backup = {
   learnerStart: 'new' | 'returning' | null
   history: PortableRecord[]
   drafts: Record<string, PortableAttempt>
+  learning?: FluencyState
 }
 
 const object = (value: unknown): value is Record<string, unknown> =>
@@ -63,7 +66,7 @@ export function parseBackup(text: string, knownRepIds: Set<string>): Backup {
   }
   return { format: 'code-reps-backup', version: 1,
     exportedAt: typeof raw.exportedAt === 'string' ? raw.exportedAt : '',
-    learnerStart: raw.learnerStart, history, drafts }
+    learnerStart: raw.learnerStart, history, drafts, ...(raw.learning === undefined ? {} : { learning: parseFluency(raw.learning) }) }
 }
 
 export function mergeHistory<T extends { id: string }>(current: T[], imported: T[]): T[] {

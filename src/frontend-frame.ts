@@ -1,4 +1,4 @@
-import ts from 'typescript'
+import { compileSolution } from './compile-solution.ts'
 import type { Rep } from './rep'
 
 export type DirectoryScenario = { loading: boolean; error: string | null; people: { name: string }[] }
@@ -11,12 +11,8 @@ export const previewScenarios: Record<string, DirectoryScenario> = {
 
 export function buildFrontendFrame(code: string, rep: Rep, token: string, mode: 'preview' | 'checks', scenario = previewScenarios.ready): string {
   if (typeof code !== 'string' || code.length > 100_000) throw new Error('The solution is too large to preview.')
-  const output = ts.transpileModule(code, {
-    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext }, reportDiagnostics: true,
-  })
-  const error = output.diagnostics?.find(diagnostic => diagnostic.category === ts.DiagnosticCategory.Error)
-  if (error) throw new Error(ts.flattenDiagnosticMessageText(error.messageText, '\n'))
-  const payload = JSON.stringify({ code: output.outputText, functionName: rep.functionName, checks: rep.checks, preserveInput: rep.preserveInput, token, mode, scenario }).replace(/</g, '\\u003c')
+  const outputText = compileSolution(code, rep.functionName)
+  const payload = JSON.stringify({ code: outputText, functionName: rep.functionName, checks: rep.checks, preserveInput: rep.preserveInput, token, mode, scenario }).replace(/</g, '\\u003c')
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'"><meta name="viewport" content="width=device-width, initial-scale=1"><style>
   * { box-sizing: border-box } body { margin: 0; padding: 24px; background: #171d1c; color: #edf0eb; font: 15px/1.6 system-ui, sans-serif } label { display: block; margin-bottom: 6px } input, button { font: inherit; border: 1px solid #718873; border-radius: 5px; padding: 9px 12px; color: inherit; background: #252d2b } input { width: 100%; max-width: 360px } button { cursor: pointer } :focus-visible { outline: 2px solid #bce57b; outline-offset: 3px } ul, ol { padding-left: 24px } li { padding: 5px 0 } [role="alert"] { color: #ef978b } .preview-feedback { border-top: 1px solid #37413e; margin-top: 20px; padding-top: 12px; font-size: 12px; color: #bce57b }
   </style></head><body><main id="exercise-root"></main><script>

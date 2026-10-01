@@ -64,3 +64,23 @@ Complete an internal quality pass before inviting learners. Learner validation r
 ## Release gates
 
 Each version needs a clean build, lint, focused tests, a real local-server smoke test, and a manual pass through its learner flow. The next development phase may add the small richer-exercise set above before learner validation. After the internal quality pass, ask a small group of learners whether they can solve a later related problem independently and understand why their progress state changed before expanding the catalog broadly or tuning review intervals.
+
+## Local fluency platform — implemented foundations
+
+- [x] Local profiles with legacy migration, save-before-switch, rename, separate imports, full exports, and confirmed deletion.
+- [x] Searchable skill reference: 14 lessons with objectives, prerequisites, worked examples, walkthroughs, common mistakes, related concepts, and bookmarks.
+- [x] Interactive prediction and missing-code checks; separate knowledge-check evidence from coding evidence.
+- [x] Optional dated starting assessment and transparent four-dimension self-review.
+- [x] Eleven more application/recall exercises and recurring review variants with visible scheduling reasons.
+- [x] Personal weekly plans and searchable notes, mistakes, questions, and saved notebook drafts.
+- [x] Frontend/backend project milestones and multi-file integration exercises with local module imports.
+- [x] Optional interview timers, saved clarification, and post-round debrief.
+- [x] Knowledge references attached to workspace tasks and failed-check concepts.
+- [x] Content validation command, independent reference checks, profile/backup tests, and React flow coverage.
+- [x] Prepared learner observation and delayed-transfer protocol in `docs/LEARNER_VALIDATION.md`.
+- [ ] Complete real visual, keyboard, assistive-technology, zoom, and disconnected-browser walkthroughs.
+- [ ] Execute release checks on Windows/Linux and observe real learners before claiming learning effectiveness.
+- [ ] Deepen async, React, and database practice beyond the introductory reference lessons; introduce real service/database runners when those tasks need them.
+- [ ] Add externally distributable content-pack tooling after an isolation and content-migration design.
+
+No accounts, certificates, leaderboards, video courses, or AI tutoring will be added. Learning effectiveness and cross-platform validation remain evidence gates, not automatic consequences of shipping features.

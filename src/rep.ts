@@ -214,6 +214,8 @@ export const reps: Rep[] = [
   ...journeyReps,
   ...transferReps,
   ...richReps,
+  ...fluencyReps,
+  ...capstoneReps,
 ]
 import { foundationReps } from './foundations.ts'
 import { aiEraReps } from './ai-era-reps.ts'
@@ -221,3 +223,7 @@ import { journeyReps } from './journey-reps.ts'
 import { transferReps } from './transfer-reps.ts'
 
 import { richReps } from './rich-reps.ts'
+
+import { fluencyReps } from './fluency-reps.ts'
+
+import { capstoneReps } from './capstone-reps.ts'

@@ -1,0 +1,72 @@
+/* Shared fields match Practice search and the existing workspace forms. */
+.ui-input,
+.ui-select,
+.ui-textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #57685a;
+  border-radius: 7px;
+  background: #202824;
+  color: var(--text);
+  font: 13px/1.5 ui-sans-serif, system-ui, sans-serif;
+  outline: none;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.ui-input::placeholder,
+.ui-textarea::placeholder { color: #94a297; opacity: 1; }
+.ui-input:hover:not(:disabled),
+.ui-select:hover:not(:disabled),
+.ui-textarea:hover:not(:disabled) { border-color: #8ba487; }
+.ui-input:focus-visible,
+.ui-select:focus-visible,
+.ui-textarea:focus-visible {
+  border-color: var(--lime);
+  box-shadow: 0 0 0 3px #bce57b30;
+}
+.ui-input:disabled,
+.ui-select:disabled,
+.ui-textarea:disabled { opacity: .5; cursor: not-allowed; }
+.ui-input[aria-invalid=true],
+.ui-select[aria-invalid=true],
+.ui-textarea[aria-invalid=true] { border-color: var(--error); }
+.ui-textarea { display: block; resize: vertical; min-height: 100px; }
+.ui-select.ui-select {
+  appearance: none;
+  padding-right: 34px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 17px) 50%, calc(100% - 12px) 50%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+}
+.ui-select option { background: var(--surface); color: var(--text); }
+.ui-choice {
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  flex: none;
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  border: 1px solid #718470;
+  border-radius: 4px;
+  background: var(--bg);
+  vertical-align: middle;
+  cursor: pointer;
+}
+.ui-choice[type=radio] { border-radius: 50%; }
+.ui-choice:checked { border-color: var(--lime); background: var(--lime); }
+.ui-choice::before { content: ''; opacity: 0; }
+.ui-choice[type=checkbox]::before { width: 5px; height: 9px; border: solid var(--bg); border-width: 0 2px 2px 0; transform: translateY(-1px) rotate(45deg); }
+.ui-choice[type=radio]::before { width: 7px; height: 7px; border-radius: 50%; background: var(--bg); }
+.ui-choice:checked::before { opacity: 1; }
+.ui-choice:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; }
+.ui-choice:disabled { opacity: .5; cursor: not-allowed; }
+.ui-file-input { display: block; width: 100%; min-width: 0; color: var(--muted); font: 12px/1.5 ui-sans-serif, system-ui, sans-serif; }
+.ui-file-input::file-selector-button { margin-right: 12px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-2); color: var(--text); font: inherit; cursor: pointer; }
+.ui-file-input:focus-visible { outline: 2px solid var(--lime); outline-offset: 4px; border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) {
+  .ui-input, .ui-select, .ui-textarea { transition: none; }
+}

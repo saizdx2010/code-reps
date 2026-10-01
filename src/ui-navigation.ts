@@ -1,6 +1,6 @@
-export type View = 'home' | 'catalog' | 'workspace' | 'history' | 'learn' | 'paths' | 'progress'
+export type View = 'home' | 'catalog' | 'workspace' | 'history' | 'learn' | 'paths' | 'progress' | 'knowledge'
 export type Route = { view: View; repId?: string }
-const views: View[] = ['home', 'catalog', 'workspace', 'history', 'learn', 'paths', 'progress']
+const views: View[] = ['home', 'catalog', 'workspace', 'history', 'learn', 'paths', 'progress', 'knowledge']
 export function readRoute(hash: string, repIds: string[]): Route {
   const [page, rawId] = hash.replace(/^#\/?/, '').split('/')
   if (page === 'practice' && rawId) {

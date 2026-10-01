@@ -1,3 +1,4 @@
+import { scopedKey, profileRegistryKey, parseProfiles } from './profiles.ts'
 const journalKey = 'code-reps:pending-writes:v1'
 const serverModeKey = 'code-reps:server-mode:v1'
 type Entries = Record<string, string | null>
@@ -153,4 +154,18 @@ const storage = createLocalStore({
   request: (url, options) => fetch(url, options),
   onError: () => window.dispatchEvent(new Event('code-reps-storage-error')),
 })
-export const { initializeStorage, flushStorage, retryStorage, isServerReady, storageIssue, localStore } = storage
+export const { initializeStorage, flushStorage, retryStorage, isServerReady, storageIssue } = storage
+export const rawLocalStore = storage.localStore
+let activeProfile = 'default'
+export const getActiveProfile = () => activeProfile
+export function activateProfile(id: string) { scopedKey(id, 'code-reps:test'); activeProfile = id }
+function requireActiveProfile() {
+  const registry = rawLocalStore.getItem(profileRegistryKey)
+  if (registry && !parseProfiles(registry).profiles.some(profile => profile.id === activeProfile)) throw new Error('This profile was removed in another tab. Reload and choose a remaining profile.')
+}
+export const localStore = {
+  getItem: (key: string) => rawLocalStore.getItem(scopedKey(activeProfile, key)),
+  setItem: (key: string, value: string) => { requireActiveProfile(); rawLocalStore.setItem(scopedKey(activeProfile, key), value) },
+  removeItem: (key: string) => { requireActiveProfile(); rawLocalStore.removeItem(scopedKey(activeProfile, key)) },
+  setEntries: (entries: Entries) => { requireActiveProfile(); rawLocalStore.setEntries(Object.fromEntries(Object.entries(entries).map(([key, value]) => [scopedKey(activeProfile, key), value]))) },
+}

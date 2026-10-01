@@ -75,3 +75,11 @@ test('a finished catalog without due work has no arbitrary recommendation', () =
   for (const item of history) if (['count-above-threshold', 'count-long-words', 'first-repeated-number', 'remove-adjacent-pairs'].includes(item.repId)) item.completedAt = '2026-09-25T12:00:00Z'
   assert.equal(getPracticePlan(drafts, history, 'new', '', now).next, null)
 })
+
+test('a selected backend goal changes new practice without hiding saved work', () => {
+  const plan = getPracticePlan({}, [], 'returning', 'sum-positive-numbers', Date.now(), 'backend')
+  assert.equal(plan.next.repId, 'basic-types')
+  assert.match(plan.next.reason, /goal/)
+  const saved = { 'sum-positive-numbers': { plan: 'Resume my plan', code: '', explanation: '', hintCount: 0 } }
+  assert.equal(getPracticePlan(saved, [], 'returning', 'sum-positive-numbers', Date.now(), 'backend').next.mode, 'resume')
+})

@@ -1,3 +1,4 @@
+import { Textarea } from './Input'
 import { Component, lazy, Suspense } from 'react'
 import type { ComponentProps, ReactNode } from 'react'
 import type CodeEditor from './CodeEditor'
@@ -12,7 +13,7 @@ class EditorRecovery extends Component<{ children: ReactNode; value: string; onC
   static getDerivedStateFromError() { return { failed: true } }
   render() {
     if (!this.state.failed) return this.props.children
-    return <div className="editor-recovery"><p role="status">The code editor could not load. You can keep working in this plain text editor and run the same checks.</p><label htmlFor="fallback-code" className="field-label">SOLUTION.TS</label><textarea id="fallback-code" value={this.props.value} onChange={event => this.props.onChange(event.target.value)} spellCheck={false} autoCapitalize="off" autoCorrect="off" /></div>
+    return <div className="editor-recovery"><p role="status">The code editor could not load. You can keep working in this plain text editor and run the same checks.</p><label htmlFor="fallback-code" className="field-label">SOLUTION.TS</label><Textarea id="fallback-code" value={this.props.value} onChange={event => this.props.onChange(event.target.value)} spellCheck={false} autoCapitalize="off" autoCorrect="off" /></div>
   }
 }
 

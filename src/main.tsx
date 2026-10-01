@@ -5,12 +5,12 @@ import '@fontsource/maple-mono/500.css'
 import '@fontsource/maple-mono/600.css'
 import '@fontsource/maple-mono/700.css'
 import './index.css'
-import App from './App.tsx'
+import ProfileApp from './ProfileApp.tsx'
 import { initializeStorage } from './local-store.ts'
 
 async function start() {
   await initializeStorage()
-  createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>)
+  createRoot(document.getElementById('root')!).render(<StrictMode><ProfileApp /></StrictMode>)
 }
 
 void start()

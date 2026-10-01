@@ -21,3 +21,15 @@ Output checks do not prove a learner used a particular declaration, type, or app
 AI-era content should make verification a learner action: trace a proposed answer, name a boundary case, run checks, and explain any correction. Avoid treating generated code as an authority. Frontend and backend interview reps should explicitly prompt for clarification, planning, implementation, explanation, and review; current interview practice is untimed and uses the same TypeScript function runner as other reps.
 
 For a substantial new format, add one complete playable task and its self-review flow before adding a large catalog.
+
+## Knowledge lessons and fluency evidence
+
+Author skill articles in `src/knowledge.ts`. Each skill needs stable identity, objectives, prerequisites, a plain-language explanation, a worked example and trace, common mistakes, two interactive checks, relevant exercise IDs, and related skill links. Keep recognition checks separate from independent coding tasks: correctly picking an answer is not evidence of implementation fluency.
+
+Completion questions should request a small, unambiguous token/expression and state the permitted form. The current checker compares trimmed text to the authored expected expression; it is not a semantic code equivalence checker. Use coding reps when multiple implementations should be accepted.
+
+For every new exercise, provide an independent reference solution in the test fixtures and an authored self-review guide. State input limits and mutation rules; include empty, equality, normalization, malformed-input, or conflicting-state checks where the contract requires them. Add recall variants to `src/fluency.ts` with distinct applications rather than changing only example values.
+
+Multi-file capstones use `encodeFiles` with an entry module and named `.ts` files. Use local relative imports; dependencies outside the project are unavailable. Keep frontend checks in the sandboxed frame and backend behavior in the timed worker. Neither environment is a security boundary for arbitrary third-party exercise packs. Avoid treating integration success as proof of module quality.
+
+Run `yarn content:check` before publishing an app/content update. Keep exercise IDs stable so saved attempts remain linked. If changing an interactive question's answer or option ordering, add a new question ID or migrate saved answers explicitly. Content version alone does not migrate learner evidence.

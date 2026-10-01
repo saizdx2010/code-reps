@@ -1,4 +1,4 @@
-import ts from 'typescript'
+import { compileSolution } from './compile-solution.ts'
 import { reps } from './rep.ts'
 import { sameValue } from './compare.ts'
 import type { TestResult } from './runner.types'
@@ -8,13 +8,8 @@ export function runRep(code: string, repId: string): TestResult[] {
   if (!rep) throw new Error('This rep could not be found.')
   if (rep.format === 'frontend') throw new Error('This exercise uses browser interaction checks. Run it in the workspace.')
   if (typeof code !== 'string' || code.length > 100_000) throw new Error('The solution is too large to run.')
-  const output = ts.transpileModule(code, {
-    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
-    reportDiagnostics: true,
-  })
-  const errors = output.diagnostics?.filter((diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error) ?? []
-  if (errors.length) throw new Error(ts.flattenDiagnosticMessageText(errors[0].messageText, '\n'))
-  const solve = new Function(`${output.outputText}\nreturn typeof ${rep.functionName} === 'function' ? ${rep.functionName} : undefined`)() as unknown
+  const outputText = compileSolution(code, rep.functionName)
+  const solve = new Function(`${outputText}\nreturn typeof ${rep.functionName} === 'function' ? ${rep.functionName} : undefined`)() as unknown
   if (typeof solve !== 'function') throw new Error(`Define a function named ${rep.functionName}.`)
   return rep.checks.map(({ name, input, expected }) => {
     const inputPreview = `${rep.functionName}(${input.map((value) => JSON.stringify(value)).join(', ')})`.slice(0, 200)

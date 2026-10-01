@@ -24,3 +24,9 @@ Run `yarn lint`, `yarn test`, and `yarn package`, then `node scripts/verify-port
 - Migration from every previously released bundle version and assistive-technology checks.
 
 The earlier frontend exercise browser pass verified its checks and local persistence; it does not establish these new recovery flows. Learner validation remains deferred until the internal quality pass is ready.
+
+## Local fluency platform follow-up
+
+Profile migration, profile-separated learning state, validated full-profile restore inputs, recurring-review scheduling, knowledge references, module imports, and React profile/notebook/assessment/round/project flows are covered by automated tests. The React flow test substitutes Monaco; it does not establish editor fidelity or accessibility. The updated macOS arm64 portable bundle smoke passed with 111 local assets, a path containing spaces, the bundled runtime, persistence across restart, snapshot creation, and clean shutdown. Temporary data directories were used.
+
+Native Zen automation reached the isolated local app, but its screenshot/accessibility output remained stale or limited. A full visual or assistive-technology walkthrough cannot be claimed from that attempt. Windows/Linux and disconnected-browser checks remain pending.

@@ -284,7 +284,8 @@ button:disabled { transform: none !important; }
   .history-main { animation: page-arrive .3s ease-out both; }
   .home-main > .home-journey { animation-delay: .045s; }
 }
-@keyframes page-arrive { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+/* Keep pages visible even when a background browser throttles animations. */
+@keyframes page-arrive { from { transform: translateY(6px); } to { transform: translateY(0); } }
 
 @media (max-width: 700px) {
   .home-main, .paths-main, .learn-main, .progress-main, .history-main, .catalog-main { padding-top: 30px; }
