@@ -1,3 +1,4 @@
+import { practicalReps } from './practical-concepts.ts'
 export type Check = { name: string; input: unknown[]; expected: unknown }
 export type Rep = {
   id: string
@@ -19,6 +20,7 @@ export type Rep = {
 }
 
 export const reps: Rep[] = [
+  ...practicalReps,
   ...foundationReps,
   ...aiEraReps,
   {

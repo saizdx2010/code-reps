@@ -1,3 +1,4 @@
+import { practicalSkills } from './practical-concepts.ts'
 export type Question = { completion?: boolean; id: string; prompt: string; code: string; options: string[]; answer: number; explanation: string }
 export type Skill = { id: string; title: string; summary: string; prerequisites: string[]; objectives: string[]; sections: { title: string; body: string }[]; example: string; walkthrough: string[]; mistakes: string[]; questions: Question[]; repIds: string[]; related: string[] }
 const q = (id: string, prompt: string, code: string, options: string[], answer: number, explanation: string): Question => ({ id, prompt, code, options, answer, explanation })
@@ -140,7 +141,7 @@ export const skills: Skill[] = [
     walkthrough: ['Calling loadName returns a Promise.', 'fetch settles when a response is available.', 'HTTP failure requires an explicit response.ok check.', 'Parsing also returns a Promise and can fail.', 'The catch handles either failure in this example.'],
     mistakes: ['Using a Promise as though it were its result.', 'Assuming fetch rejects on every HTTP error.', 'Letting an old response overwrite newer state.'],
     questions: [q('async-result', 'What does calling an async function return?', 'async function value() { return 4 }\nvalue()', ['4 directly', 'A Promise', 'undefined'], 1, 'Even an immediate returned value is wrapped in a Promise.'), q('fetch', 'How should a 404 response be detected?', '', ['Only through catch', 'By checking response.ok or status', 'It always means invalid JSON'], 1, 'fetch normally resolves for HTTP error responses; check the status explicitly.')],
-    repIds: ['frontend-view-state', 'frontend-directory'], related: ['http', 'frontend', 'react'],
+    repIds: ['promise-outcomes', 'frontend-view-state', 'frontend-directory'], related: ['http', 'frontend', 'react', 'event-loop', 'request-ownership'],
   },
   {
     id: 'http', title: 'HTTP requests and response contracts', summary: 'Understand methods, status codes, payloads, and validation at a service boundary.', prerequisites: ['validation'],
@@ -198,7 +199,8 @@ export const skills: Skill[] = [
     questions: [q('sql-values', 'How should user input be passed to SQL?', '', ['String concatenation', 'Query parameters', 'Removing all spaces'], 1, 'Parameters keep data values separate from SQL syntax.'), q('transaction', 'What protects an import from partial writes?', '', ['A transaction', 'A longer file name', 'Sorting the JSON keys'], 0, 'A transaction provides all-or-nothing commit behavior for related writes.')],
     repIds: ['backend-ticket-handler', 'project-ticket-api', 'validate-page-query'], related: ['http', 'testing'],
   },
+  ...practicalSkills,
 ]
 export const skillById = (id: string) => skills.find(skill => skill.id === id)
 export const skillsForRep = (id: string) => skills.filter(skill => skill.repIds.includes(id))
-export const contentVersion = 2
+export const contentVersion = 3

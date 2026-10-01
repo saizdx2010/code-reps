@@ -1,7 +1,9 @@
+import { practicalRepDepth } from './practical-concepts.ts'
 export type RepDepth = { reasoning: string; trace: string; alternative: string; counterexample: string; transfer: string }
 
 // Authored post-attempt reviews. Keep these out of independent task prompts.
 export const repDepth: Record<string, RepDepth> = {
+  ...practicalRepDepth,
   "declare-variables": {
     "reasoning": "A name and its value are different: const protects the binding, not every value reachable through it.",
     "trace": "With name Ada, greeting remains Hello plus a space; message becomes Hello, Ada. With an empty name the space remains.",

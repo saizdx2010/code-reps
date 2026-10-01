@@ -1,3 +1,4 @@
+import { journeys } from '../src/learning.ts'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { getPracticePlan, attemptStatus } from '../src/practice.ts'
@@ -71,8 +72,8 @@ test('a finished catalog without due work has no arbitrary recommendation', () =
   const drafts = Object.fromEntries(reps.map(rep => [rep.id, draft(rep.id, { completedAt: old })]))
   const history = reps.map(rep => record(rep.id))
   // Complete independent and recall evidence in order, beyond the review delay.
-  for (const item of history) if (['count-even-numbers', 'first-long-word', 'most-frequent-number', 'balanced-brackets'].includes(item.repId)) item.completedAt = '2026-09-21T12:00:00Z'
-  for (const item of history) if (['count-above-threshold', 'count-long-words', 'first-repeated-number', 'remove-adjacent-pairs'].includes(item.repId)) item.completedAt = '2026-09-25T12:00:00Z'
+  for (const item of history) if (journeys.some(journey => journey.independent === item.repId)) item.completedAt = '2026-09-21T12:00:00Z'
+  for (const item of history) if (journeys.some(journey => journey.recall === item.repId)) item.completedAt = '2026-09-25T12:00:00Z'
   assert.equal(getPracticePlan(drafts, history, 'new', '', now).next, null)
 })
 

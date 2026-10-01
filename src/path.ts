@@ -23,6 +23,25 @@ export const firstPath = {
 export const paths = [
   firstPath,
   {
+    id: 'practical-concepts', title: 'Practical concepts',
+    description: 'Learn closures, shared instances, events, async control, live connections, cleanup, and reliable updates.',
+    introduction: {
+      title: 'Understand the problem behind the pattern',
+      body: 'Start with values, functions, arrays, and maps in the TypeScript path. Then use Knowledge to read each concept, predict its example, and check your understanding before coding. These reps isolate decisions you will meet in real applications: who owns a connection, which response can update a screen, and whether a retry repeats an effect.',
+      example: 'Request A starts. Request B starts.\nB finishes first and updates the screen.\nA finishes later: ignore its obsolete result.',
+      explanation: 'Completion order is not request ownership. A small state model lets you practise that distinction without a live server. Real timers, networks, authentication, and server persistence still require integration checks.',
+      next: 'Begin with closures and reference identity, then work through async and networking policies. Use the related Knowledge lesson for each rep and explain one boundary after checking your code. Return to the resource-ownership recall task after three days.',
+    },
+    stages: [
+      { title: 'Understand runtime behavior', description: 'Explore private state, reference identity, promise outcomes, and callback ordering.', repIds: ['closure-counters', 'reference-groups', 'promise-outcomes', 'event-loop-order'] },
+      { title: 'Share and decouple work', description: 'Scope a singleton, route subscriptions, and inject a clock.', repIds: ['singleton-owner', 'pubsub-trace', 'injected-clock'] },
+      { title: 'Control asynchronous updates', description: 'Separate debounce and throttle policies; guard cancelled and obsolete requests.', repIds: ['debounce-schedule', 'leading-throttle', 'latest-request'] },
+      { title: 'Keep live connections correct', description: 'Gate socket messages, compare polling and SSE, and release shared resources.', repIds: ['websocket-gate', 'choose-live-transport', 'shared-resource', 'subscription-cleanup'] },
+      { title: 'Handle uncertainty', description: 'Check cache freshness, bound backoff, deduplicate operations, and reconcile optimistic updates.', repIds: ['cache-freshness', 'retry-backoff', 'idempotent-ledger', 'optimistic-balance'] },
+      { title: 'Recall ownership in a new setting', description: 'After independent subscription cleanup, wait three days and apply ownership to room membership without hints.', repIds: ['room-leases'] },
+    ],
+  },
+  {
     id: 'real-world', title: 'Apply skills in real code',
     description: 'Debug a checkout, trace an importer, build an interactive UI, implement a request handler, and refactor a working report.',
     introduction: {

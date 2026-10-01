@@ -1,3 +1,4 @@
+import { practicalSolutions } from './fixtures/practical-solutions.mjs'
 import { validateContentDepth } from '../src/content-depth.ts'
 import { repDepth } from '../src/rep-depth.ts'
 import { lessonDepth } from '../src/lesson-depth.ts'
@@ -14,6 +15,7 @@ import { richSolutions } from './fixtures/rich-solutions.mjs'
 
 // These independent implementations check authored expected results, not learner prose.
 const solutions = {
+  ...practicalSolutions,
   ...fluencySolutions,
   'declare-variables': 'function makeGreeting(name: string) { const greeting = "Hello, "; let message = greeting + name; return message }',
   'basic-types': 'function describePerson(name: string, age: number, active: boolean) { return `${name} is ${age}. Active: ${active}` }',
