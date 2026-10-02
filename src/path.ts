@@ -104,6 +104,9 @@ export const paths = [
     stages: [
       { title: 'Prepare the language', description: 'Work with typed values, objects, arrays, and functions.', repIds: ['basic-types', 'create-objects', 'make-arrays', 'write-functions'] },
       { title: 'Handle untrusted input', description: 'Validate values at runtime before using them.', repIds: ['backend-validate-user'] },
+      { title: 'Validate independently', description: 'Apply a fresh boundary contract without hints after guided validation.', repIds: ['validate-stock-adjustment'] },
+      { title: 'Recall conditional validation', description: 'Wait three days after independent practice, then apply defaults and error precedence in a different setting.', repIds: ['parse-delivery-window'] },
+      { title: 'Validate a complete batch', description: 'Check normalized IDs, conflicting errors, and all-or-nothing output in a further application.', repIds: ['validate-import-batch'] },
       { title: 'Return predictable results', description: 'Bound and page a list while preserving the original data.', repIds: ['backend-page-results', 'backend-ticket-handler'] },
     ],
   },

@@ -40,6 +40,7 @@ export function parseFluency(raw: unknown): FluencyState {
   return raw as unknown as FluencyState
 }
 export const recallVariants: Record<string, string[]> = {
+  validation: ['validate-import-batch', 'parse-delivery-window', 'validate-stock-adjustment'],
   'request-ownership': ['refresh-report-state', 'preview-slot-results', 'search-request-state'],
   'resource-ownership': ['subscription-cleanup', 'room-leases', 'shared-resource'],
   arrays: ['sum-matching-prices', 'count-open-tickets', 'count-above-threshold'],

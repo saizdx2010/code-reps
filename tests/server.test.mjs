@@ -37,3 +37,37 @@ test('local server migrates once, persists data, and backs up on restart', async
     await rm(dataDir, { recursive: true, force: true })
   }
 })
+
+test('CLI closes through its parent IPC channel without exposing a shutdown endpoint', async () => {
+  const { spawn } = await import('node:child_process')
+  const { once } = await import('node:events')
+  const dataDir = await mkdtemp(join(tmpdir(), 'code-reps-ipc-'))
+  const child = spawn(process.execPath, ['server/index.mjs'], {
+    stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+    env: { ...process.env, CODE_REPS_DATA_DIR: dataDir, CODE_REPS_PORT: '0' },
+  })
+  const timeout = setTimeout(() => child.kill('SIGKILL'), 10000)
+  try {
+    let output = ''
+    let errors = ''
+    child.stderr.on('data', chunk => { errors += chunk })
+    const exited = once(child, 'exit')
+    const ready = new Promise((resolve, reject) => {
+      child.stdout.on('data', chunk => {
+        output += chunk
+        const url = output.match(/running at (http:\/\/127\.0\.0\.1:\d+)/)?.[1]
+        if (url) resolve(url)
+      })
+      child.once('error', reject)
+      child.once('exit', () => reject(new Error(`Server exited before startup: ${errors}`)))
+    })
+    const url = await ready
+    assert.equal((await fetch(`${url}/api/shutdown`, { method: 'POST' })).status, 404)
+    child.send('shutdown')
+    assert.deepEqual(await exited, [0, null])
+  } finally {
+    clearTimeout(timeout)
+    if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL')
+    await rm(dataDir, { recursive: true, force: true })
+  }
+})

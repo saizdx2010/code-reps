@@ -1,5 +1,5 @@
 import MonacoEditor, { loader } from '@monaco-editor/react'
-import * as monaco from 'monaco-editor'
+import * as monaco from './monaco'
 import { useLayoutEffect, useRef } from 'react'
 import type { ComponentProps } from 'react'
 import editorWorker from '../node_modules/monaco-editor/esm/vs/editor/editor.worker.js?worker'

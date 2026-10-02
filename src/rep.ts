@@ -1,4 +1,5 @@
 import { practicalReps } from './practical-concepts.ts'
+import { validationReps } from './validation-reps.ts'
 export type Check = { name: string; input: unknown[]; expected: unknown }
 export type Rep = {
   id: string
@@ -218,6 +219,7 @@ export const reps: Rep[] = [
   ...richReps,
   ...fluencyReps,
   ...capstoneReps,
+  ...validationReps,
 ]
 import { foundationReps } from './foundations.ts'
 import { aiEraReps } from './ai-era-reps.ts'

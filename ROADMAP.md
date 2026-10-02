@@ -78,6 +78,9 @@ Each version needs a clean build, lint, focused tests, a real local-server smoke
 - [x] Knowledge references attached to workspace tasks and failed-check concepts.
 - [x] Content validation command, independent reference checks, profile/backup tests, and React flow coverage.
 - [x] Prepared learner observation and delayed-transfer protocol in `docs/LEARNER_VALIDATION.md`.
+- [x] Add pull-request checks for lint, Node tests, content validation, build/bundle budgets, and Chromium flows; run portable smoke checks in the release matrix. Remote CI results remain unverified locally.
+- [x] Add real-browser worker cancellation/timeouts, editor fallback, preview interactions, and isolated SQLite failure/retry/reload/restore coverage. Selected local-server flows block external requests; full disconnected and platform validation remains pending.
+- [x] Add a validation journey with fresh stock-adjustment independence, conditional delivery-window recall, and normalized batch-import transfer. Scheduling checks do not establish learning effectiveness.
 - [ ] Complete real visual, keyboard, assistive-technology, zoom, and disconnected-browser walkthroughs.
 - [ ] Execute release checks on Windows/Linux and observe real learners before claiming learning effectiveness.
 - [x] Add a complete request-ownership journey with search-state practice, delayed multi-slot recall, refresh transfer, and compact content discovery. See `docs/CONTENT_GAPS.md` for the remaining coverage gaps.

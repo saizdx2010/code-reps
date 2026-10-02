@@ -85,7 +85,7 @@ export const skills: Skill[] = [
     walkthrough: ['Reject absent values, primitives, and arrays.', 'Check that name exists and is text.', 'Trim the value, then reject a blank result.', 'Return trusted text without changing the request.'],
     mistakes: ['Accessing a property before guarding null.', 'Accepting NaN or fractional numbers where integers are required.', 'Using as to pretend untrusted input is valid.'],
     questions: [q('null', 'What does typeof null return?', 'typeof null', ['"null"', '"undefined"', '"object"'], 2, 'This JavaScript behavior means an object check alone does not rule out null.'), q('integer', 'Which value fails an integer age contract?', '', ['0', '24.5', '120'], 1, '24.5 is fractional. Bounds alone would not catch it.')],
-    repIds: ['backend-validate-user', 'backend-page-results', 'backend-ticket-handler', 'project-ticket-api', 'validate-page-query', 'interview-backend'], related: ['http', 'testing'],
+    repIds: ['backend-validate-user', 'validate-stock-adjustment', 'parse-delivery-window', 'validate-import-batch', 'backend-page-results', 'backend-ticket-handler', 'project-ticket-api', 'validate-page-query', 'interview-backend'], related: ['http', 'testing'],
   },
   {
     id: 'frontend', title: 'Frontend state and derived data', summary: 'Represent loading, errors, empty results, and ready content without conflicting UI.', prerequisites: ['arrays', 'text'],
@@ -203,7 +203,7 @@ export const skills: Skill[] = [
 ]
 export const skillById = (id: string) => skills.find(skill => skill.id === id)
 export const skillsForRep = (id: string) => skills.filter(skill => skill.repIds.includes(id))
-export const contentVersion = 4
+export const contentVersion = 5
 
 // Discovery categories only; these do not change skill identity or learner evidence.
 export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[] = [

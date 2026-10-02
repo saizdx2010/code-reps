@@ -1,6 +1,6 @@
 # Grow content through complete journeys
 
-Implementation inventory: 2026-10-01, content version 4. Every current skill has a knowledge lesson, interactive questions, authored depth, and linked coding applications. A linked application is not necessarily independent practice, and recognizing an answer does not establish coding fluency. The dedicated journeys below are the only skills with guided → independent → delayed-recall evidence rules.
+Implementation inventory: 2026-10-02, content version 5. Every current skill has a knowledge lesson, interactive questions, authored depth, and linked coding applications. A linked application is not necessarily independent practice, and recognizing an answer does not establish coding fluency. The dedicated journeys below are the only skills with guided → independent → delayed-recall evidence rules.
 
 ## Coverage map
 
@@ -13,7 +13,7 @@ The source of truth remains `src/knowledge.ts`, `src/learning.ts`, and `src/flue
 | Text and normalization | 6 | Guided, independent, delayed recall | Observe comprehension and unfamiliar delayed transfer. |
 | Maps, sets, and lookup | 5 | Guided, independent, delayed recall | Observe comprehension and unfamiliar delayed transfer. |
 | Stacks and nested structure | 5 | Guided, independent, delayed recall | Observe comprehension and unfamiliar delayed transfer. |
-| Runtime validation and API boundaries | 6 | None | Connect existing boundary tasks into an independent/recall sequence. |
+| Runtime validation and API boundaries | 9 | Guided, independent, delayed recall | Observe normalization, error precedence, and unfamiliar delayed transfer. |
 | Frontend state and derived data | 6 | None | Add fresh independent and recall interfaces; keep visual review separate. |
 | Debugging, reading, and safe refactoring | 6 | None | Add distinct repair and reading cases with delayed recall. |
 | Time, space, and tradeoffs | 3 | None | Add unfamiliar comparison tasks; behavior alone cannot assess analysis. |
@@ -39,7 +39,7 @@ The source of truth remains `src/knowledge.ts`, `src/learning.ts`, and `src/flue
 | Idempotency and safe repeated requests | 1 | None | Add distinct independent and delayed-recall applications. |
 | Optimistic updates and rollback | 1 | None | Add distinct independent and delayed-recall applications. |
 
-## The first batch
+## Request ownership batch
 
 Request ownership now has four applications within the existing Practical Concepts path:
 
@@ -52,10 +52,25 @@ Request ownership now has four applications within the existing Practical Concep
 
 Independent and recall prompts state the observable contract without providing an implementation approach. Hints are intentional reveals; full reasoning, traces, alternatives, counterexamples, and transfer challenges appear in the existing post-check review. These exercises consume deterministic records and do not test real HTTP cancellation, image loading, or timer behavior. A passing transfer rep checks that rep's contract; each further challenge remains self-reviewed.
 
+## Validation and data-boundary batch
+
+Content version 5 adds a journey to the existing Backend core path and validation lesson:
+
+| Role | Rep | Decision practised |
+| --- | --- | --- |
+| Guided, existing | `backend-validate-user` | Check unknown shape and field types, then normalize accepted input. |
+| Independent, new | `validate-stock-adjustment` | Apply a fresh character, length, integer, and nonzero boundary contract without hints. |
+| Recall after three days, new | `parse-delivery-window` | Apply conditional fields, absent-value defaults, and conflicting-error precedence in a different setting. |
+| Recurring review / transfer, new | `validate-import-batch` | Validate a complete batch, detect normalized duplicates, and return the earliest row error without partial output. |
+
+New tasks preserve input and have independent reference solutions, boundary checks, progressive hints, and authored reviews. Existing rep and checked-question IDs, answer ordering, and backup formats remain unchanged. Existing user-request completions can supply guided evidence; only later unhinted completion of the new independent task starts the recall delay. Early or hinted recall does not establish retention. Recognizing the validation lesson's answers is separate evidence.
+
+These functions consume parsed objects. They do not establish real HTTP validation, inventory correctness, delivery behavior, or database transaction safety. Transfer challenges remain self-reviewed. Adding this journey does not establish learner comprehension or delayed transfer.
+
 ## Next batches
 
 1. **Observe the new journey.** Use `docs/LEARNER_VALIDATION.md` to check whether the wording, recommendations, and delayed application make sense. Internal coverage does not prove learning effectiveness.
-2. **Validation and data boundaries.** Reuse existing backend tasks for a guided starting point, then author fresh independent and recall contracts. Cover normalization, invalid values, precedence, and unchanged input.
+2. **Observe validation and data boundaries.** The new journey covers normalization, invalid values, conditional fields, precedence, and unchanged input. Check whether learners can explain these decisions before expanding it.
 3. **Frontend state and debugging.** Reuse the existing directory and repair formats, with genuinely different applications. Keep visual, accessibility, reasoning, and behavioral evidence separate.
 4. **Runtime and reliability topics.** Expand one topic at a time from its current single trace into a complete journey. Prioritize learner difficulty and missing applications rather than catalog size.
 5. **React and databases.** Ship one complete format and review flow when a task requires the actual runtime. Current DOM/function tasks and simulated handlers do not establish React rendering or SQL behavior.
@@ -66,6 +81,12 @@ Add a batch of roughly three to five reps around one learning goal. Reuse existi
 
 A batch needs independent reference solutions, normal and boundary checks, progressive hints, authored depth and self-review, stable IDs, and dedicated recall scheduling where retention is claimed. Run `yarn content:check`, `yarn lint`, `yarn test`, `yarn build`, and `git diff --check`. Verify discovery, keyboard access, narrow layouts, draft preservation, and the new learner flow in a browser. Record browser, offline, platform, and learner validation separately; these remain release gates where not exercised.
 
-## Verification of this batch
+## Earlier request-ownership verification
 
 Lint, the full Node suite, content validation, and the TypeScript/Vite build passed. The build reports a large-chunk warning. On macOS, headless Chromium checks passed at desktop and 375px phone widths for topic search, session filter restoration, native keyboard disclosures, Quick lessons navigation, and compact Home queue expansion/restoration. Real Monaco model edits survived navigation; the search exercise passed browser-worker checks and completed through the normal review flow. This does not establish Monaco keyboard editing, assistive-technology support, disconnected-browser operation, Windows/Linux behavior, or learner comprehension and delayed transfer; those checks remain pending.
+
+## Validation batch verification
+
+Lint, 154 Node tests, content validation, build/bundle budgets, and 21 Chromium flows passed on macOS. The browser suite includes the new guided/independent/delayed-recall flow, an early solve that does not establish retention, fresh recall reset, complete batch checks, and a 320px layout with editor keyboard exit and preserved work. A follow-up narrow-flow check verifies step labels stay inside their buttons. Desktop and phone content renders were inspected separately. The macOS arm64 portable bundle smoke passed using temporary data directories.
+
+This does not establish human comprehension or delayed transfer, assistive-technology support, browser zoom, Windows/Linux execution, or remote GitHub Actions results. The remaining manual protocol is in `docs/ACCESSIBILITY_REVIEW.md` and `docs/LEARNER_VALIDATION.md`.

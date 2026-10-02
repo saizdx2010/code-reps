@@ -15,11 +15,11 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [{ name: 'chromium', use: { browserName: 'chromium', viewport: { width: 1280, height: 900 } } }],
-  // Dedicated browser-only server: never use the learner's SQLite service.
+  // Build fresh assets for isolated SQLite tests, then start dedicated Vite.
   webServer: {
-    command: 'yarn dev --host 127.0.0.1 --port 4175 --strictPort',
+    command: 'yarn build && yarn dev --host 127.0.0.1 --port 4175 --strictPort',
     url: 'http://127.0.0.1:4175',
     reuseExistingServer: false,
-    timeout: 60_000,
+    timeout: 120_000,
   },
 })

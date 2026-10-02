@@ -1,6 +1,6 @@
 import { createServer } from 'node:http'
 import { readFile, stat } from 'node:fs/promises'
-import { join, resolve, extname } from 'node:path'
+import { join, resolve, extname, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createStore } from './store.mjs'
 
@@ -28,9 +28,11 @@ export async function startServer({ port = Number(process.env.CODE_REPS_PORT || 
   const store = createStore(dataDir)
   try { if (store.existed) await store.makeBackup() }
   catch (error) { await store.close(); throw error }
+  let boundPort = port
   const server = createServer(async (request, response) => {
     const host = request.headers.host
-    const expectedHost = `127.0.0.1:${server.address().port}`
+    // Keep the bound address while close() drains already accepted requests.
+    const expectedHost = `127.0.0.1:${boundPort}`
     if (host !== expectedHost) return sendJson(response, 403, { error: 'This server accepts local requests only.' })
     const origin = request.headers.origin
     if (origin && origin !== `http://${expectedHost}`) return sendJson(response, 403, { error: 'This request came from another site.' })
@@ -59,7 +61,7 @@ export async function startServer({ port = Number(process.env.CODE_REPS_PORT || 
       if (pathname.startsWith('/api/')) return sendJson(response, 404, { error: 'Unknown endpoint.' })
       if (request.method !== 'GET' && request.method !== 'HEAD') return sendJson(response, 405, { error: 'Method not allowed.' })
       const candidate = resolve(appDir, `.${pathname}`)
-      if (!candidate.startsWith(`${appDir}/`) && candidate !== appDir) return sendJson(response, 403, { error: 'Invalid path.' })
+      if (!candidate.startsWith(`${appDir}${sep}`) && candidate !== appDir) return sendJson(response, 403, { error: 'Invalid path.' })
       let file = candidate
       try { if (!(await stat(file)).isFile()) throw new Error('Not a file') }
       catch {
@@ -72,7 +74,7 @@ export async function startServer({ port = Number(process.env.CODE_REPS_PORT || 
     } catch (error) { sendJson(response, error instanceof Error && /Invalid|large/.test(error.message) ? 400 : 500, { error: error instanceof Error ? error.message : 'Server error.' }) }
   })
   try {
-    await new Promise((done, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', () => { server.removeListener('error', reject); done() }) })
+    await new Promise((done, reject) => { server.once('error', reject); server.listen(port, '127.0.0.1', () => { boundPort = server.address().port; server.removeListener('error', reject); done() }) })
   } catch (error) { await store.close(); throw error }
   const timer = setInterval(() => store.makeBackup().catch((error) => process.stderr.write(`Backup failed: ${error}\n`)), 24 * 60 * 60 * 1000)
   server.on('close', () => { clearInterval(timer); void store.close().catch(error => process.stderr.write(`Closing progress failed: ${error}\n`)) })
@@ -86,9 +88,11 @@ export async function startServer({ port = Number(process.env.CODE_REPS_PORT || 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   startServer().then(({ url, store, close }) => {
     process.stdout.write(`Code Reps is running at ${url}\nData: ${store.dbPath}\n`)
-    const shutdown = () => { void close().catch(error => { process.stderr.write(`${error}\n`); process.exitCode = 1 }) }
+    const shutdown = () => { void close().catch(error => { process.stderr.write(`${error}\n`); process.exitCode = 1 }).finally(() => { if (process.connected) process.disconnect() }) }
     process.once('SIGINT', shutdown)
     process.once('SIGTERM', shutdown)
+    // A parent smoke-test process can close the bundled Windows runtime cleanly.
+    if (process.connected) process.on('message', message => { if (message === 'shutdown') shutdown() })
   })
     .catch((error) => { process.stderr.write(`${error}\n`); process.exitCode = 1 })
 }

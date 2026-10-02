@@ -6,18 +6,18 @@ Code Reps helps people build coding fluency and assess their own understanding. 
 
 Open **Knowledge** from the main navigation. Its six areas connect reference material to practice:
 
-- **Knowledge:** 14 authored skill lessons with objectives, suggested prerequisites, worked examples, execution walkthroughs, common mistakes, related concepts, bookmarks, and 28 interactive prediction/completion checks. Search includes article text. Subjects include values, arrays, text, lookup, stacks, runtime validation, frontend state, debugging, complexity, asynchronous work, HTTP, React, testing, and databases.
+- **Knowledge:** 30 authored skill lessons with objectives, suggested prerequisites, worked examples, execution walkthroughs, common mistakes, related concepts, bookmarks, and 60 interactive prediction/completion checks. Search includes article text. Subjects include values, arrays, text, lookup, stacks, runtime validation, frontend state, debugging, complexity, asynchronous work, HTTP, React, testing, and databases.
 - **Self-assessment:** an optional four-task coding diagnostic with dated evidence and a suggested focus. Each skill separates checked attempts, completions without revealed hints, latest prediction results, delayed recall, and learner judgments. Understanding, approach, implementation, and explanation have explicit rubrics. There is no overall mastery score.
 - **Practice plan:** choose a path, session budget, and days. The next seven local calendar days mix due reviews, unfinished work, and remaining exercises on the chosen path. Suggestions can be overridden.
 - **Notebook:** searchable notes, mistakes, and questions linked to a skill and exercise. Unfinished entries are saved as profile drafts, including across profile switches. Saved entries can be edited or deleted.
 - **Projects:** frontend and backend milestone sequences culminate in two multi-file implementations. TypeScript file tabs preserve the other files while editing. Frontend integration has a local sandboxed preview and DOM checks; backend integration checks parsed request/response behavior. The backend exercise does not start a real HTTP service or database.
 - **Interview:** optional timed frontend/backend rounds. Clarifications and debriefs are saved. The timer persists through navigation and refresh using its start date; reaching the budget does not submit or erase code. End the round manually and review each dimension separately.
 
-The catalog has 47 exercises. Eleven new focused exercises add further array, text, lookup, stack, validation, derived-state, and debugging applications; two capstones add module integration. Asynchronous work, React, and database articles are introductory reference lessons, not complete courses with framework/database execution environments.
+The catalog has 72 exercises. Eleven new focused exercises add further array, text, lookup, stack, validation, derived-state, and debugging applications; two capstones add module integration. Asynchronous work, React, and database articles are introductory reference lessons, not complete courses with framework/database execution environments.
 
 ## Local profiles
 
-Use **Manage profiles** above the app to create, switch, rename, export, import, or delete a local profile. Each profile owns its attempts, drafts, history, starting choice, learning-tool data, selected exercise, and workspace preference. Session UI preferences and editor paths are separated too.
+Use **Profiles** in the app header to create, switch, rename, export, import, or delete a local profile. Each profile owns its attempts, drafts, history, starting choice, learning-tool data, selected exercise, and workspace preference. Session UI preferences and editor paths are separated too.
 
 On first upgrade, existing `code-reps:*` learner keys move into the default **My learning** profile in a single batch. Storage infrastructure keys are excluded. Switching saves the active exercise and waits for pending server writes before changing the profile. Failed saves leave the current profile open.
 
@@ -37,6 +37,8 @@ The existing guided → independent → delayed recall evidence remains intact. 
 4. Early attempts or out-of-sequence variants do not establish scheduled recall.
 
 Dates and reasons remain visible. A review completion is evidence for the checked task, not a guarantee of permanent retention. These initial intervals need learner validation.
+
+The validation journey uses the existing user-request validator for guided work, a stock-adjustment contract for independence, and a delivery-window contract after three days for recall. After retention, scheduled reviews begin with batch import validation. Defaults, error precedence, and normalized duplicate detection require different applications; passing output checks does not assess the learner's reasoning or establish a live service.
 
 ## Content quality
 

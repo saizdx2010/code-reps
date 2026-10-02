@@ -45,7 +45,7 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
     await act(async()=>root.render(jsx(ProfileApp,{})))
     assert.equal(localStorage.getItem('code-reps:history:v1'),null)
     assert.equal(localStorage.getItem('code-reps:profile:default:history:v1'),'[]')
-    const button=(text)=>[...document.querySelectorAll('button')].find(b=>b.textContent.trim()===text)
+    const button=(text)=>[...document.querySelectorAll('button')].find(b=>b.textContent.trim()===text || b.getAttribute('aria-label')===text)
     const click=async(text)=>{const target=button(text);assert.ok(target,`Missing button ${text}`);await act(async()=>target.click())}
     const input=async(element,value)=>{assert.ok(element);await act(async()=>{const setter=Object.getOwnPropertyDescriptor(element.tagName==='TEXTAREA'?dom.window.HTMLTextAreaElement.prototype:element.tagName==='SELECT'?dom.window.HTMLSelectElement.prototype:dom.window.HTMLInputElement.prototype,'value').set;setter.call(element,value);element.dispatchEvent(new dom.window.Event(element.tagName==='SELECT'?'change':'input',{bubbles:true}))})}
     await click('Knowledge')
@@ -87,7 +87,7 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
     await click('New entry');await input(document.querySelector('input[maxlength="120"]'),'An unfinished thought')
     const savedWithDraft=localStorage.getItem('code-reps:profile:default:fluency:v1')
     await click('Manage profiles');await input(document.querySelector('.profile-dialog input[maxlength="60"]'),'Second learner');await click('Create profile')
-    assert.ok(document.querySelector('.profile-strip').textContent.includes('Second learner'))
+    assert.ok(document.querySelector('.profile-trigger').textContent.includes('Second learner'))
     await click('Close');await click('Knowledge');await click('Notebook')
     assert.ok(document.body.textContent.includes('Your notebook is empty.'))
     assert.equal(localStorage.getItem('code-reps:profile:default:fluency:v1'),savedWithDraft)

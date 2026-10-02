@@ -13,9 +13,11 @@ import { aiEraReps } from '../src/ai-era-reps.ts'
 import { runRep } from '../src/runner.ts'
 import { reflectionGuides } from '../src/learning.ts'
 import { richSolutions } from './fixtures/rich-solutions.mjs'
+import { validationSolutions } from './fixtures/validation-solutions.mjs'
 
 // These independent implementations check authored expected results, not learner prose.
 const solutions = {
+  ...validationSolutions,
   ...asyncSolutions,
   ...practicalSolutions,
   ...fluencySolutions,

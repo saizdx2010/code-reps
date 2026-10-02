@@ -2,8 +2,11 @@ import { useRef } from 'react'
 import { stageLabels } from './learning'
 import type { JourneyProgress } from './learning'
 
+type PracticeAction = { title: string; reason: string; label: string; open: () => void }
 type Props = {
   progress: JourneyProgress[]
+  recommendation?: PracticeAction
+  dueReviews: (PracticeAction & { repId: string })[]
   onOpenRep: (id: string) => void
   onReviewRep: (id: string) => void
   onExport: () => void
@@ -12,12 +15,20 @@ type Props = {
   serverReady: boolean
 }
 
-export function ProgressPage({ progress, onOpenRep, onReviewRep, onExport, onImport, transferMessage, serverReady }: Props) {
+export function ProgressPage({ progress, recommendation, dueReviews, onOpenRep, onReviewRep, onExport, onImport, transferMessage, serverReady }: Props) {
   const importRef = useRef<HTMLInputElement | null>(null)
   return <main className="progress-main">
     <div className="home-heading"><span className="home-label">EVIDENCE OF GROWTH</span><h1 tabIndex={-1}>What can you solve on your own?</h1><p>Passing checks shows working code. Each skill shows when you solved related problems without hints. Plans and explanations are yours to review.</p></div>
+    <dl className="progress-summary" aria-label="Skill evidence summary">
+      <div><dt>Reviews ready</dt><dd>{dueReviews.length}</dd></div>
+      <div><dt>Independent skills</dt><dd>{progress.filter(item => item.independent).length}</dd></div>
+      <div><dt>Retained skills</dt><dd>{progress.filter(item => item.retained).length}</dd></div>
+    </dl>
+    {recommendation ? <section className="progress-next" aria-labelledby="progress-next-title"><div><span className="home-label">NEXT USEFUL STEP</span><h2 id="progress-next-title">{recommendation.title}</h2><p>{recommendation.reason}</p></div><button type="button" className="primary-button" onClick={recommendation.open}>{recommendation.label} →</button></section> : <p className="utility-note">No unfinished reps or reviews are ready. Inspect your evidence or revisit a skill below.</p>}
+    {dueReviews.length > 0 && <details className="progress-reviews"><summary>Choose a review · {dueReviews.length} ready</summary><ul>{dueReviews.map(review => <li key={review.repId}><div><strong>{review.title}</strong><p>{review.reason}</p></div><button type="button" className="text-button" onClick={review.open}>{review.label} →</button></li>)}</ul></details>}
+    <h2 className="progress-skills-title">Your skill journeys</h2>
     {progress.map(({ journey, stage, guided, independent, retained, recallAt, recallDue }, index) => <details className="progress-journey" aria-labelledby={`progress-${journey.id}`} key={journey.id} open={index === 0}>
-      <summary className="progress-heading"><div><h2 id={`progress-${journey.id}`}>{journey.title}</h2><p>Guided practice → independent problem → fresh recall after {journey.delayDays} days</p></div><span className="journey-state">{stageLabels[stage]}</span></summary>
+      <summary className="progress-heading"><div><h2 id={`progress-${journey.id}`}>{journey.title}</h2><p>{retained ? `Recall recorded ${new Date(retained.completedAt).toLocaleDateString()}` : recallDue ? 'Fresh recall is ready now' : recallAt ? `Recall ready ${new Date(recallAt).toLocaleDateString()}` : independent ? 'Independent practice recorded' : guided ? 'Next: solve a related problem without hints' : 'Next: start with guided practice'}</p></div><span className="journey-state">{stageLabels[stage]}</span></summary>
       <ol className="evidence-list">
         <li><strong>1. Guided practice</strong><span>{guided ? `Completed ${new Date(guided.completedAt).toLocaleDateString()}${guided.hintCount ? ` with ${guided.hintCount} hint(s)` : ' without hints'}` : 'Start with a guided rep.'}</span><button type="button" className="text-button" onClick={() => onOpenRep(journey.guided)}>Open rep →</button></li>
         <li><strong>2. Independent problem</strong><span>{independent ? `Solved without hints ${new Date(independent.completedAt).toLocaleDateString()}` : 'Solve a related problem without hints after guided practice.'}</span><button type="button" className="text-button" disabled={!guided} onClick={() => onReviewRep(journey.independent)}>{!guided ? 'After guided rep' : independent ? 'Open rep →' : 'Try rep →'}</button></li>

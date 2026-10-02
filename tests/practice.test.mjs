@@ -33,21 +33,29 @@ test('all due recalls remain visible, and a saved recall is resumed', () => {
 })
 
 test('a single difficult review is shown even with confident self-report', () => {
-  const history = [record('backend-validate-user', { difficulty: 'edge-cases' })]
+  const history = [record('backend-page-results', { difficulty: 'edge-cases' })]
   const plan = getPracticePlan({}, history, 'returning', '', now)
   assert.equal(plan.due.length, 1)
-  assert.equal(plan.next.repId, 'backend-validate-user')
+  assert.equal(plan.next.repId, 'backend-page-results')
   assert.match(plan.next.reason, /edge cases/)
 })
 
 test('latest evidence wins even if history is not sorted', () => {
-  const history = [record('backend-validate-user', { hintCount: 2 }), record('backend-validate-user', { id: 'new', completedAt: '2026-09-29T12:00:00Z' })]
+  const history = [record('backend-page-results', { hintCount: 2 }), record('backend-page-results', { id: 'new', completedAt: '2026-09-29T12:00:00Z' })]
   assert.equal(getPracticePlan({}, history, 'returning', '', now).due.length, 0)
 })
 
+test('guided validation follows journey evidence instead of a duplicate generic review', () => {
+  const plan = getPracticePlan({}, [record('backend-validate-user', { difficulty: 'edge-cases' })], 'returning', '', now)
+  assert.equal(plan.due.length, 0)
+  const validation = plan.progress.find(state => state.journey.id === 'validation')
+  assert.equal(validation.stage, 'practising')
+  assert.equal(validation.nextRepId, 'validate-stock-adjustment')
+})
+
 test('an unfinished retry is resumed instead of being reset or duplicated as a due review', () => {
-  const history = [record('backend-validate-user', { confidence: 'need-practice' })]
-  const drafts = { 'backend-validate-user': draft('backend-validate-user', { code: 'work in progress' }) }
+  const history = [record('backend-page-results', { confidence: 'need-practice' })]
+  const drafts = { 'backend-page-results': draft('backend-page-results', { code: 'work in progress' }) }
   const before = structuredClone(drafts)
   const plan = getPracticePlan(drafts, history, 'returning', '', now)
   assert.equal(plan.due.length, 0)
@@ -64,7 +72,7 @@ test('a hinted independent completion recommends a fresh retry', () => {
 })
 
 test('recent difficult attempts wait three days and unknown or invalid records are ignored', () => {
-  const history = [record('backend-validate-user', { confidence: 'need-practice', completedAt: '2026-09-29T12:00:00Z' }), { ...record('backend-validate-user'), repId: 'removed-rep' }, record('interview-backend', { completedAt: 'invalid' })]
+  const history = [record('backend-page-results', { confidence: 'need-practice', completedAt: '2026-09-29T12:00:00Z' }), { ...record('backend-page-results'), repId: 'removed-rep' }, record('interview-backend', { completedAt: 'invalid' })]
   assert.equal(getPracticePlan({}, history, 'new', '', now).due.length, 0)
 })
 
