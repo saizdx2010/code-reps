@@ -1,8 +1,10 @@
+import { dsaLessonDepth } from './dsa-knowledge.ts'
 import { practicalLessonDepth } from './practical-concepts.ts'
 export type LessonDepth = { title: string; code: string; reasoning: string; challenge: string; answer: string }
 
 export const lessonDepth: Record<string, LessonDepth> = {
   ...practicalLessonDepth,
+  ...dsaLessonDepth,
   "values": {
     "title": "A binding and an object can change independently",
     "code": "const first = { score: 1 };\nconst second = first;\nsecond.score = 2;\n// first.score is now 2.",

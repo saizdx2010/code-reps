@@ -1,3 +1,4 @@
+import { dsaGuides } from './dsa-reps.ts'
 import { practicalGuides } from './practical-concepts.ts'
 import { fluencyGuides } from './fluency-reps.ts'
 import { validationGuides } from './validation-reps.ts'
@@ -54,6 +55,7 @@ export const stageLabels: Record<JourneyStage, string> = {
 
 export const reflectionGuides: Record<string, { plan: string[]; explanation: string[]; example: string }> = {
   ...practicalGuides,
+  ...dsaGuides,
   ...fluencyGuides,
   ...validationGuides,
   'project-team-directory': { plan: ['Separate selection from rendering.', 'Keep all request states explicit.', 'Use safe text and keyboard-operable controls.'], explanation: ['Trace an interaction across modules.', 'Review accessibility manually.', 'Explain why integration checks alone do not prove module design.'], example: 'I keep filtering in the data module and DOM work in the rendering module. The input listener obtains a fresh selection and renders original labels as text. I test all states and separately review focus and layout.' },

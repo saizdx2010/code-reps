@@ -23,6 +23,43 @@ export const firstPath = {
 export const paths = [
   firstPath,
   {
+    'id': 'algorithms-data-structures',
+    'title': 'Algorithms & Data Structures',
+    'description': 'Start with collection operations, apply arrays, maps, sets, stacks, and queues, then learn techniques for sorted data and windows.',
+    'introduction': {
+      'title': 'Learn the tools before solving the problem',
+      'body': 'A data structure organizes values; an algorithm describes steps for working with them. Learn them together here. If TypeScript is new, begin with the short language reps. Read “Use collections before solving problems” in Knowledge, then practise declaring and updating collections before attempting the problem-solving stages. Read “Stack and queue operations” before that stage and “Two pointers, windows, and binary search” before the final stage.',
+      'example': 'const waiting: number[] = [4, 7]\nwaiting.push(9) // add at the back\nwaiting.shift() // serve 4 first\nwaiting[0] // next is 7',
+      'explanation': 'This array acts as a queue: earlier arrivals leave first. A stack removes the latest arrival instead. Trace operations before choosing a structure for a larger task.',
+      'next': 'Start with language foundations or go directly to collection operations if you can already write a TypeScript function. Explain empty cases and input ownership after each rep. Existing array, lookup, and stack journeys offer distinct independent and delayed recall tasks; new introductory and technique reps do not establish retention on their own.'
+    },
+    'stages': [{
+        'title': 'Prepare the language',
+        'description': 'Declare values, create typed arrays, and return results from functions.',
+        'repIds': ['declare-variables', 'basic-types', 'make-arrays', 'write-functions']
+      }, {
+        'title': 'Use collections',
+        'description': 'Read the collection-operations lesson, then practise copying, adding, deleting, overwriting, and reading before problem solving.',
+        'repIds': ['ds-array-operations', 'ds-set-operations', 'ds-map-operations']
+      }, {
+        'title': 'Apply arrays and text',
+        'description': 'Scan values and handle empty input; progress from guided practice to independence and delayed recall.',
+        'repIds': ['sum-positive-numbers', 'count-even-numbers', 'count-above-threshold', 'count-words', 'first-long-word', 'count-long-words']
+      }, {
+        'title': 'Apply maps and sets',
+        'description': 'Use membership and counts, explain ties, and return later for a different lookup application.',
+        'repIds': ['has-duplicate', 'most-frequent-number', 'first-unique-character', 'first-repeated-number']
+      }, {
+        'title': 'Use stacks and queues',
+        'description': 'Read the operations lesson, practise both removal orders, then apply stacks to nesting and cancellation.',
+        'repIds': ['ds-stack-operations', 'ds-queue-operations', 'valid-parentheses', 'balanced-brackets', 'remove-adjacent-pairs']
+      }, {
+        'title': 'Learn algorithm techniques',
+        'description': 'Read the techniques lesson, trace why each move is safe, then practise two pointers, fixed windows, and binary search.',
+        'repIds': ['algo-sorted-pair', 'algo-window-sum', 'algo-binary-search']
+      }]
+  },
+  {
     id: 'practical-concepts', title: 'Practical concepts',
     description: 'Learn closures, shared instances, events, async control, live connections, cleanup, and reliable updates.',
     introduction: {

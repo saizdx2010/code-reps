@@ -1,3 +1,4 @@
+import { dsaReps } from './dsa-reps.ts'
 import { practicalReps } from './practical-concepts.ts'
 import { validationReps } from './validation-reps.ts'
 export type Check = { name: string; input: unknown[]; expected: unknown }
@@ -23,6 +24,7 @@ export type Rep = {
 export const reps: Rep[] = [
   ...practicalReps,
   ...foundationReps,
+  ...dsaReps,
   ...aiEraReps,
   {
     id: 'most-frequent-number',

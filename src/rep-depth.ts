@@ -1,3 +1,4 @@
+import { dsaDepth } from './dsa-reps.ts'
 import { practicalRepDepth } from './practical-concepts.ts'
 import { validationDepth } from './validation-reps.ts'
 export type RepDepth = { reasoning: string; trace: string; alternative: string; counterexample: string; transfer: string }
@@ -5,6 +6,7 @@ export type RepDepth = { reasoning: string; trace: string; alternative: string; 
 // Authored post-attempt reviews. Keep these out of independent task prompts.
 export const repDepth: Record<string, RepDepth> = {
   ...practicalRepDepth,
+  ...dsaDepth,
   ...validationDepth,
   "declare-variables": {
     "reasoning": "A name and its value are different: const protects the binding, not every value reachable through it.",
