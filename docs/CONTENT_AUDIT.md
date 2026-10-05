@@ -20,6 +20,14 @@ The audit is an internal content and behavior pass. A manual browser walkthrough
 
 Next priority: daily practice flow, including explained recommendations, unfinished drafts, and difficult attempts/due reviews.
 
+## Contract consistency pass — 2026-10-05
+
+Clarified the exact sentence templates in the basic-types and object reps, changed the open-ticket title to say “at or above,” and documented basic Latin input and JavaScript string length for both long-word reps. Rep IDs and existing expected answers remain unchanged.
+
+Added checks for uppercase suffix normalization, ordinary undo strings with different case or surrounding whitespace, and paging size lower bounds, fractions, numeric strings, and the minimum valid size. Regression coverage runs known incorrect solutions against the authored checks to ensure these omissions cannot silently return.
+
+Content validation, lint, the full Node suite, build/typecheck, and all 28 Chromium browser-flow tests passed. The browser suite covers existing app flows; it does not provide a manual walkthrough of each edited rep or establish learner comprehension or retention.
+
 ## Depth pass — 2026-10-01 (content v2)
 
 Expanded all 47 current reps with authored post-check reasoning, a concrete boundary trace, an approach comparison, a counterexample or separately observed failure, and an optional transfer variation. Coverage includes the five foundations, independent and recall exercises, practical transfer tasks, richer formats, interview tasks, and both multi-file projects. Added a deeper example and a prediction/repair/reasoning challenge with a separately revealed discussion to all 14 knowledge lessons.

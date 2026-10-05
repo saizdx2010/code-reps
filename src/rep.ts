@@ -149,7 +149,7 @@ export const reps: Rep[] = [
   {
     id: 'first-long-word', title: 'Find the first long word', category: 'Arrays & strings',
     prompt: 'Return the first word whose length is at least the given minimum.', example: { input: "firstLongWord(['cat', 'tiger', 'dog'], 5)", output: "'tiger'" },
-    note: 'Return null if no word is long enough. The minimum can be zero.', vocabulary: [{ term: 'At least', meaning: 'greater than or equal to' }],
+    note: 'Return null if no word is long enough. The minimum is a nonnegative integer. Words contain basic Latin characters; length is JavaScript string length, including any spaces. The minimum can be zero.', vocabulary: [{ term: 'At least', meaning: 'greater than or equal to' }],
     planPrompt: 'Why does checking words in their original order matter?',
     starter: `function firstLongWord(words: string[], minimum: number): string | null {\n  // Write your solution here\n  return null\n}\n`, functionName: 'firstLongWord',
     hints: ['Visit the words from left to right.', 'Return immediately when a word has length >= minimum.', 'Return null after the loop if none matched.'],

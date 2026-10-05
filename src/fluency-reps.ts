@@ -221,7 +221,7 @@ export const fluencyReps: Rep[] = [
   },
   {
     "id": "count-open-tickets",
-    "title": "Count open tickets above a priority",
+    "title": "Count open tickets at or above a priority",
     "category": "Arrays & maps",
     "prompt": "Count tickets that are open and have priority at least minimum.",
     "note": "Priorities and minimum are integers, including negative values. Empty input returns zero.",
@@ -336,6 +336,17 @@ export const fluencyReps: Rep[] = [
       "Return the original label, not its normalized copy."
     ],
     "checks": [
+      {
+        "name": "Normalizes an uppercase ending",
+        "input": [
+          [
+            " report.txt ",
+            "photo.png"
+          ],
+          ".TXT"
+        ],
+        "expected": " report.txt "
+      },
       {
         "name": "Normalizes comparison but keeps display",
         "input": [
@@ -649,6 +660,23 @@ export const fluencyReps: Rep[] = [
     ],
     "checks": [
       {
+        "name": "Keeps case and whitespace variants as ordinary actions",
+        "input": [
+          [
+            "a",
+            "undo",
+            "Undo",
+            " UNDO ",
+            "UNDO"
+          ]
+        ],
+        "expected": [
+          "a",
+          "undo",
+          "Undo"
+        ]
+      },
+      {
         "name": "Undoes most recent action",
         "input": [
           [
@@ -833,6 +861,59 @@ export const fluencyReps: Rep[] = [
       "Return a new object without extra fields."
     ],
     "checks": [
+      {
+        "name": "Accepts minimum size",
+        "input": [
+          {
+            "page": 1,
+            "size": 1
+          }
+        ],
+        "expected": {
+          "page": 1,
+          "size": 1
+        }
+      },
+      {
+        "name": "Rejects zero size",
+        "input": [
+          {
+            "page": 1,
+            "size": 0
+          }
+        ],
+        "expected": null
+      },
+      {
+        "name": "Rejects negative size",
+        "input": [
+          {
+            "page": 1,
+            "size": -1
+          }
+        ],
+        "expected": null
+      },
+      {
+        "name": "Rejects fractional size",
+        "input": [
+          {
+            "page": 1,
+            "size": 1.5
+          }
+        ],
+        "expected": null
+      },
+      {
+        "name": "Rejects numeric string size",
+        "input": [
+          {
+            "page": 1,
+            "size": "2"
+          }
+        ],
+        "expected": null
+      },
       {
         "name": "Returns only trusted fields",
         "input": [

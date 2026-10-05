@@ -67,6 +67,17 @@ for (const [id, code] of Object.entries(solutions)) {
   })
 }
 
+test('authored checks reject omitted normalization and paging boundaries', () => {
+  const incorrectSolutions = {
+    'first-label-ending': 'function firstEnding(labels:string[], ending:string) { return labels.find(label => label.trim().toLowerCase().endsWith(ending)) ?? null }',
+    'remaining-actions': 'function remainingActions(actions:string[]) { const result:string[] = []; for (const action of actions) { if (action.toUpperCase() === "UNDO") result.pop(); else result.push(action) } return result }',
+    'validate-page-query': 'function validatePaging(input:unknown) { if (!input || typeof input !== "object" || Array.isArray(input)) return null; const x = input as Record<string,unknown>; if (typeof x.page !== "number" || !Number.isInteger(x.page) || x.page < 1 || typeof x.size !== "number" || x.size > 50) return null; return {page:x.page,size:x.size} }',
+  }
+  for (const [id, code] of Object.entries(incorrectSolutions)) {
+    assert.ok(runRep(code, id).some(result => !result.passed), `${id}: accepted a known contract violation`)
+  }
+})
+
 test('behavioral success does not hide prohibited input mutation', () => {
   const code = 'function activeLabels(users: {name: string; active: boolean}[]) { for (const user of users) user.name = user.name.trim(); return users.filter(user => user.active && user.name).map(user => user.name.toUpperCase()) }'
   const failures = runRep(code, 'transform-active-labels').filter(result => !result.passed)

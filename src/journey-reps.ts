@@ -5,7 +5,7 @@ export const journeyReps: Rep[] = [
     id: 'count-long-words', title: 'Count long words', category: 'Arrays & strings',
     prompt: 'Given an array of words and a minimum length, count how many words are at least that long.',
     example: { input: "countLongWords(['cat', 'tiger', 'bear'], 4)", output: '2' },
-    note: 'A word with exactly the minimum length counts. An empty array returns zero.',
+    note: 'A word with exactly the minimum length counts. The minimum is a nonnegative integer, including zero. Words contain basic Latin characters; length is JavaScript string length, including any spaces. An empty array returns zero.',
     vocabulary: [{ term: 'At least', meaning: 'greater than or equal to' }],
     planPrompt: 'What should the count start at? How will you compare each word length with the minimum?',
     starter: 'function countLongWords(words: string[], minimum: number): number {\n  // Write your solution here\n  return 0\n}\n',
