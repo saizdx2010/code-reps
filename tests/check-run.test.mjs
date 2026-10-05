@@ -70,3 +70,43 @@ test('authored runner errors appear once without being treated as successful che
   assert.deepEqual(run.errors, ['Define the expected function.'])
   assert.deepEqual(run.results, [])
 })
+
+test('malformed worker replies report recovery and never publish check evidence', () => {
+  for (const data of [null, undefined, 'done', {}, { error: '' }, { error: 42 },
+    { results: null }, { results: {} }, { results: [null] }, { results: new Array(1) },
+    { results: [{ name: 'Example', passed: 'true' }] },
+    { results: [{ name: 'Example', passed: true, actual: {} }] }]) {
+    const run = setup()
+    run.worker.onmessage({ data })
+    run.worker.onmessage({ data: { results: [{ name: 'Late', passed: true }] } })
+    run.timeout()
+    assert.deepEqual(run.results, [])
+    assert.equal(run.errors.length, 1)
+    assert.match(run.errors[0], /could not be read.*code is still here/)
+    assert.deepEqual(run.counts(), { terminated: 1, cleared: 1 })
+  }
+})
+
+test('unreadable worker messages release resources and cancelled runs ignore them', () => {
+  const run = setup()
+  run.worker.onmessageerror()
+  run.worker.onerror()
+  run.timeout()
+  assert.equal(run.errors.length, 1)
+  assert.match(run.errors[0], /could not be read/)
+  assert.deepEqual(run.counts(), { terminated: 1, cleared: 1 })
+
+  const cancelled = setup()
+  cancelled.cancel()
+  cancelled.worker.onmessageerror()
+  assert.deepEqual(cancelled.errors, [])
+  assert.deepEqual(cancelled.counts(), { terminated: 1, cleared: 1 })
+})
+
+test('structured failed-check feedback is preserved', () => {
+  const run = setup()
+  const results = [{ name: 'Boundary', passed: false, input: '[]', expected: '0', actual: '1', message: 'Compare the empty case.' }]
+  run.worker.onmessage({ data: { results } })
+  assert.deepEqual(run.results, [results])
+  assert.deepEqual(run.errors, [])
+})
