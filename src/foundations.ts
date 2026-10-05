@@ -52,7 +52,7 @@ export const foundationReps: Rep[] = [
   },
   {
     id: 'basic-types', title: 'Use basic types', category: 'TypeScript basics',
-    prompt: 'Return a sentence describing the given name, age, and whether the person is active. Use the three parameter values in the result.',
+    prompt: 'Return a sentence describing the given name, age, and whether the person is active. Use the exact format "{name} is {age}. Active: {active}", substituting the supplied values and writing the boolean as true or false.',
     example: { input: "describePerson('Ada', 28, true)", output: "'Ada is 28. Active: true'" },
     note: 'The starter shows string, number, and boolean parameter types. A template string can combine them.',
     vocabulary: [{ term: 'Boolean', meaning: 'a value that is either true or false' }, { term: 'Type annotation', meaning: 'a type written after a colon' }],
@@ -68,7 +68,7 @@ export const foundationReps: Rep[] = [
   },
   {
     id: 'create-objects', title: 'Create an object', category: 'TypeScript basics',
-    prompt: 'Inside the function, create a person object with name and age properties from the inputs. Return a sentence using those properties.',
+    prompt: 'Inside the function, create a person object with name and age properties from the inputs. Return a sentence using those properties in the exact format "{name} is {age} years old", substituting the supplied values.',
     example: { input: "introduce('Ada', 28)", output: "'Ada is 28 years old'" },
     note: 'Use the Person type supplied in the starter code. Checks verify the returned sentence; review your own use of the object and its properties.',
     vocabulary: [{ term: 'Object', meaning: 'a value with named properties' }, { term: 'Property', meaning: 'one named value inside an object' }],
