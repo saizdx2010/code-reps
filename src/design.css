@@ -109,6 +109,8 @@ main { max-width: 1104px; margin: 0 auto; padding: 36px 28px 64px; }
 .path-picker > summary > span { margin-left: auto; color: var(--muted); font-size: 13px; }
 .path-picker > summary::after { content: '+'; }
 .path-picker[open] > summary::after { content: '−'; }
+.path-select { display: grid; gap: 8px; width: min(100%, 420px); margin: 0 0 24px; color: var(--muted); font-size: 14px; }
+.path-select .ui-select-control { min-width: 0; }
 .path-choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 8px; }
 .path-choices button { display: flex; flex-direction: column; gap: 9px; min-width: 0; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius); background: transparent; color: var(--text); text-align: left; }
 .path-choices button[aria-pressed=true] { border-color: var(--accent); background: var(--accent-soft); }

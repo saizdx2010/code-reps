@@ -13,7 +13,7 @@
 
 - Home puts the starting-point choice before the first recommendation. After choosing, Change starting point keeps it available without interrupting the daily practice queue.
 - The header shows the active local profile and opens profile management. Switching is immediately available; creation/renaming and full-profile export/import open separately. Save feedback remains visible in the page navigation or workspace controls.
-- Paths leads with the selected path and its next action. Explore paths shows a grid with completed-rep counts; it starts collapsed on narrow screens and remembers expansion in the current session. Selecting a path on a narrow screen closes the chooser and focuses the selected path heading.
+- Paths has an always-visible Choose path dropdown before the selected path and its next action. The menu supports keyboard selection and remembers the chosen path in the current session. Explore paths shows a grid with completed-rep counts; it starts collapsed on narrow screens and remembers expansion in the current session. Selecting a path on a narrow screen closes the chooser and focuses the selected path heading.
 - Practice filters exercises by skill, format, and draft status or review due. Filters start expanded on desktop and collapsed on narrow screens; expansion is a session preference. Clear filters restores the full library. Search stays visible.
 - History filters completed attempts by rep or skill search, skill, difficulty, and local calendar date.
 - Exercise URLs use `#/practice/<rep-id>`. Pages and exercises support bookmarks, refresh, and browser Back/Forward.
