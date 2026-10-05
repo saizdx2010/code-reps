@@ -8,6 +8,8 @@ Code Reps is a local-first coding practice platform for developers who know how 
 
 The first audience is working TypeScript developers who feel rusty with algorithms, data structures, or explaining their thinking. The app should eventually serve frontend and backend learners too.
 
+The plain TypeScript browser journey also serves learners with basic JavaScript or other programming-language experience. Its first endpoint is creating, testing, and debugging a local DOM application outside Code Reps, using detailed requirements and learner self-review. Three freely accessible project levels increase scope; external completion remains learner-reported, separate from checked fluency evidence. See [the journey decision](./docs/TYPESCRIPT_BROWSER_JOURNEY.md) for implemented content and remaining gaps.
+
 The core learning journey remains free for everyone. Each learner can run the app on their own laptop through a loopback-only local server, with no account required. Local export and import let them carry their work elsewhere.
 
 ## Core learning loop

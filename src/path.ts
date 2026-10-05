@@ -23,6 +23,24 @@ export const firstPath = {
 export const paths = [
   firstPath,
   {
+    id: 'typescript-browser', title: 'Build with TypeScript and the DOM',
+    description: 'Bridge programming knowledge to typed state, browser interactions, persistence, async behavior, tests, and three external project levels.',
+    introduction: {
+      title: 'Own a small browser application',
+      body: 'Start with basic programming knowledge in JavaScript or another language. Use the short language reps as a refresher, then model valid states and practise browser decisions. Projects supplies three levels with detailed requirements for applications you create outside Code Reps. Navigation is free; readiness guidance does not lock tasks.',
+      example: "type State = {status: 'pending'} | {status: 'ready'; titles: string[]}",
+      explanation: 'The tag identifies which fields exist. Semantic type checking, behavioral tests, and browser observations provide different evidence. The current worker checks behavior, while external projects require a strict compiler check.',
+      next: 'Read Model states with TypeScript unions, try the guided and independent reps, and return after three days for distinct recall. Choose any external project level in Projects and record its self-review in the notebook.',
+    },
+    stages: [
+      { title: 'Refresh the language', description: 'Optional starting practice for values, objects, arrays, and functions.', repIds: ['basic-types', 'create-objects', 'make-arrays', 'write-functions'] },
+      { title: 'Model valid states', description: 'Guided state labels, independent save outcomes, and distinct delayed catalog recall.', repIds: ['task-state-label', 'saved-record-status', 'catalog-request-summary'] },
+      { title: 'Level 1 preparation: forms and views', description: 'Practise selection, state precedence, and DOM interaction before building the external task list.', repIds: ['frontend-visible-items', 'frontend-view-state', 'frontend-directory'] },
+      { title: 'Level 2 preparation: validation and modules', description: 'Practise unknown inputs and module integration before the external persistent reading journal.', repIds: ['backend-validate-user', 'validate-stock-adjustment', 'parse-delivery-window', 'project-team-directory'] },
+      { title: 'Level 3 preparation: async and debugging', description: 'Practice policy traces and regression reasoning before the external catalog tests real promises and recovery.', repIds: ['promise-outcomes', 'latest-request', 'search-request-state', 'preview-slot-results', 'debug-cart-total'] },
+    ],
+  },
+  {
     'id': 'algorithms-data-structures',
     'title': 'Algorithms & Data Structures',
     'description': 'Start with collection operations, apply arrays, maps, sets, stacks, and queues, then learn techniques for sorted data and windows.',

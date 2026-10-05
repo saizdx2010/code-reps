@@ -86,6 +86,8 @@ Each version needs a clean build, lint, focused tests, a real local-server smoke
 - [x] Add a complete request-ownership journey with search-state practice, delayed multi-slot recall, refresh transfer, and compact content discovery. See `docs/CONTENT_GAPS.md` for the remaining coverage gaps.
 - [x] Add a combined beginner-friendly Algorithms & Data Structures path with collection operations, stack/queue introductions, and initial array techniques. See `docs/ALGORITHMS_DATA_STRUCTURES.md` for the playable scope and expansion order.
 - [ ] Add distinct independent/recall tasks for queue and algorithm techniques, then complete linked-list, recursion, sorting, tree, graph, and dynamic-programming stages.
+- [x] Add a plain TypeScript browser path, a state-modeling lesson and guided/independent/delayed-recall journey, and three external project levels with detailed requirements and notebook self-review. External work remains learner-reported.
+- [ ] Validate the three-level browser progression with learners, then add equivalent project choices and deepen dedicated DOM, persistence, generics, and learner-written-test practice.
 - [ ] Deepen async, React, and database practice beyond the introductory reference lessons; introduce real service/database runners when those tasks need them.
 - [ ] Add externally distributable content-pack tooling after an isolation and content-migration design.
 

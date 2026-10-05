@@ -1,3 +1,4 @@
+import { browserStateDepth } from './browser-state-reps.ts'
 import { dsaDepth } from './dsa-reps.ts'
 import { practicalRepDepth } from './practical-concepts.ts'
 import { validationDepth } from './validation-reps.ts'
@@ -8,6 +9,7 @@ export const repDepth: Record<string, RepDepth> = {
   ...practicalRepDepth,
   ...dsaDepth,
   ...validationDepth,
+  ...browserStateDepth,
   "declare-variables": {
     "reasoning": "A name and its value are different: const protects the binding, not every value reachable through it.",
     "trace": "With name Ada, greeting remains Hello plus a space; message becomes Hello, Ada. With an empty name the space remains.",

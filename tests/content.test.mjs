@@ -1,3 +1,4 @@
+import { browserStateSolutions } from './fixtures/browser-state-solutions.mjs'
 import { dsaSolutions } from './fixtures/dsa-solutions.mjs'
 import { asyncSolutions } from './fixtures/async-solutions.mjs'
 import { practicalSolutions } from './fixtures/practical-solutions.mjs'
@@ -18,6 +19,7 @@ import { validationSolutions } from './fixtures/validation-solutions.mjs'
 
 // These independent implementations check authored expected results, not learner prose.
 const solutions = {
+  ...browserStateSolutions,
   ...validationSolutions,
   ...dsaSolutions,
   ...asyncSolutions,

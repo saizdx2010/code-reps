@@ -34,12 +34,13 @@ The workspace follows five steps:
 
 ## What you can practise
 
-- **TypeScript foundations:** 72 playable reps and 30 searchable knowledge lessons, with starting points for beginners and returning developers.
+- **TypeScript foundations:** 83 playable reps and 34 searchable knowledge lessons, with starting points for beginners and returning developers.
 - **Guided paths:** language basics, problem solving, AI-era coding habits, frontend core, backend core, and untimed interview practice.
 - **Real-world tasks:** checkout debugging, batch-pipeline predictions, an interactive browser directory, a ticket request handler, and behavior-preserving stock-report refactoring.
-- **Skill journeys:** arrays, words, lookups, stacks, request ownership, resource ownership, and validation. Each pairs guided work with an independent problem and fresh recall after three days.
+- **Skill journeys:** arrays, words, lookups, stacks, request ownership, resource ownership, validation, and TypeScript state modeling. Each pairs guided work with an independent problem and fresh recall after three days.
 - **Algorithms & Data Structures:** collection operations before problem solving, stack and queue ordering, two pointers, fixed windows, and binary search. See the [path guide](./docs/ALGORITHMS_DATA_STRUCTURES.md) for scope and expansion.
 - **Practical concepts:** closures, reference equality, async ordering, subscriptions, dependency injection, cancellation, caching, retries, idempotency, and optimistic updates. See the [Practical Concepts guide](./docs/PRACTICAL_CONCEPTS.md) for the full scope.
+- **Browser application journey:** a TypeScript state-modeling lesson and guided/independent/delayed-recall reps, plus three freely accessible external project levels using plain TypeScript and the DOM. Detailed requirements cover forms, persistence recovery, real promises, learner-written tests, and a runnable production build. External self-reviews are learner-reported and do not grant retained-skill status.
 - **Personal practice:** two multi-file projects, weekly plans, notes, recurring reviews, self-assessment, and optional timed interview rounds.
 
 Home brings together your next rep, drafts, and due reviews. Practice holds exercises, projects, and interviews; Learn holds paths, lessons, and notes; Progress includes your local profile, path completion badges, completed-rep calendar streaks, and the evidence behind **Learning**, **Practising**, **Independent**, and **Retained**.

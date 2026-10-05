@@ -1,3 +1,4 @@
+import { paths } from '../../src/path'
 import { expect, test } from '@playwright/test'
 import { chooseOption, editor, replaceCode, route, saved, solution } from './helpers'
 
@@ -189,7 +190,7 @@ test('local profile progress is readable on narrow screens and links to paths', 
   await expect(page.getByRole('heading', { name: 'My learning', exact: true })).toBeVisible()
   await expect(page.getByRole('definition').filter({ hasText: /^0 days$/ })).toHaveCount(2)
   await expect(page.getByRole('heading', { name: 'Path completion badges' })).toBeVisible()
-  await expect(page.locator('.profile-badge-list li')).toHaveCount(8)
+  await expect(page.locator('.profile-badge-list li')).toHaveCount(paths.length)
   await expect(page.locator('.profile-summary')).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   await page.locator('.profile-badge-list').getByRole('button', { name: 'Explore path' }).first().focus()
