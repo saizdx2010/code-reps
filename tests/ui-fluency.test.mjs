@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import ts from 'typescript'
 import { JSDOM } from 'jsdom'
+import { knowledgeGroups } from '../src/knowledge.ts'
 
 // Run the actual React profile/hub flows in a DOM. Monaco's unrelated native worker
 // loading is stubbed; real code execution and module integration have separate tests.
@@ -57,7 +58,7 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
     assert.ok(document.body.textContent.includes('Values, types, and functions'))
     assert.equal(document.querySelectorAll('.top-nav button').length,4)
     assert.ok([...document.querySelectorAll('.top-nav button')].some(button=>button.textContent==='Learn'))
-    assert.equal(document.querySelectorAll('.knowledge-group').length,6)
+    assert.equal(document.querySelectorAll('.knowledge-group').length,knowledgeGroups.length)
     const topic=document.querySelector('.knowledge-index select')
     await input(topic,'async')
     assert.equal(document.querySelectorAll('.knowledge-group').length,1)

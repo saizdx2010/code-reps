@@ -1,3 +1,4 @@
+import { Select } from './Input'
 import { PathIntroduction } from './PathIntroduction'
 import { paths } from './path'
 import { reps } from './rep'
@@ -31,6 +32,11 @@ export function PathsPage({ pathId, setPathId, pathPicker, setPathPicker, learne
       <h1 tabIndex={-1}>Follow a learning path.</h1>
       <p>Build a skill through guided practice, independent work, and later recall.</p>
     </div>
+    <label className="path-select">Choose path
+      <Select value={selectedPath.id} onChange={event => setPathId(event.target.value as PathId)}>
+        {paths.map(path => <option key={path.id} value={path.id}>{path.title}</option>)}
+      </Select>
+    </label>
     <section className="path-overview" aria-labelledby="path-title">
       <div>
         <h2 id="path-title" tabIndex={-1}>{learnerStart === 'returning' && selectedPath.id === 'typescript' ? 'Return to problem solving' : selectedPath.title}</h2>

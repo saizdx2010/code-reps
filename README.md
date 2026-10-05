@@ -38,6 +38,7 @@ The workspace follows five steps:
 - **Guided paths:** language basics, problem solving, AI-era coding habits, frontend core, backend core, and untimed interview practice.
 - **Real-world tasks:** checkout debugging, batch-pipeline predictions, an interactive browser directory, a ticket request handler, and behavior-preserving stock-report refactoring.
 - **Skill journeys:** arrays, words, lookups, stacks, request ownership, resource ownership, and validation. Each pairs guided work with an independent problem and fresh recall after three days.
+- **Algorithms & Data Structures:** collection operations before problem solving, stack and queue ordering, two pointers, fixed windows, and binary search. See the [path guide](./docs/ALGORITHMS_DATA_STRUCTURES.md) for scope and expansion.
 - **Practical concepts:** closures, reference equality, async ordering, subscriptions, dependency injection, cancellation, caching, retries, idempotency, and optimistic updates. See the [Practical Concepts guide](./docs/PRACTICAL_CONCEPTS.md) for the full scope.
 - **Personal practice:** two multi-file projects, weekly plans, notes, recurring reviews, self-assessment, and optional timed interview rounds.
 
@@ -130,6 +131,7 @@ Automated checks do not establish learning effectiveness, full disconnected-brow
 | [Portable bundles](./docs/PORTABLE_BUNDLE.md) | Distribution with a bundled Node runtime |
 | [UI guide](./docs/UI_GUIDE.md) | Routes, keyboard controls, and saved state |
 | [Fluency platform](./docs/FLUENCY_PLATFORM.md) | Learning tools and progress evidence |
+| [Algorithms & Data Structures](./docs/ALGORITHMS_DATA_STRUCTURES.md) | Beginner progression and planned expansion |
 | [Practical concepts](./docs/PRACTICAL_CONCEPTS.md) | Application policies and transfer practice |
 | [Content authoring](./docs/CONTENT_AUTHORING.md) | Internal exercise and lesson standards |
 | [Content gap map](./docs/CONTENT_GAPS.md) | Priorities for future practice content |
