@@ -23,6 +23,9 @@ Playwright first builds current assets, including bundle-size checks, then start
 - Open failed checks one at a time with the keyboard, keeping structured input and value comparisons.
 - Follow the practice steps through missing requirements, explanation, reflection, completion, and reload. An unhinted solve before its guided journey must not establish independence.
 - Navigate lesson sections, preserve checked predictions and self-review evidence on reload, and select a path through the narrow-screen chooser.
+- Use app-owned dropdowns with label clicks, arrow keys, typeahead, Escape cancellation, Tab selection, and reload persistence; verify their popup fits a narrow viewport and opens inside the Profiles dialog.
+- Navigate the history calendar across month boundaries and leap days, cancel without changing the filter, select and reload a date, and clear it.
+- Exercise number limits and empty-field recovery, search clearing and focus restoration, keyboard-operated styled choices, tooltip dismissal, and failed file-import recovery through the custom file button.
 
 - Stop and edit an endless worker run, reject obsolete feedback after its deadline, recover from the real five-second timeout, and run a corrected draft.
 - Fail the editor module request, recover the existing draft through the plain text editor, run checks, and restore Monaco with the edited draft after reload.
