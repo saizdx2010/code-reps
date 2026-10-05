@@ -13,6 +13,7 @@ The local reliability implementation is complete for this internal pass. Cross-p
 - Missing assets return JSON 404 errors; app routes return uncached HTML. Missing builds and occupied ports fail cleanly.
 - The portable bundle starts from another working directory and a path containing spaces, using its included runtime. Its 112 assets respond locally. Saved data survives shutdown and restart, and a restart creates a snapshot.
 - Worker and iframe lifecycle tests cover stop, timeout, cleanup, and stale results.
+- Worker reply validation and message-decoding failures have Node coverage: unreadable feedback reports a retryable error, releases resources, and cannot publish check evidence. This failure injection does not establish a real-browser message-decoding failure.
 
 Run `yarn lint`, `yarn test`, and `yarn package`, then `node scripts/verify-portable.mjs`. The portable check uses temporary app/data folders and removes them afterward. On Windows it invokes the bundled runtime directly; the `.cmd` launcher still needs a manual pass.
 

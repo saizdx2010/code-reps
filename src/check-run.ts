@@ -1,13 +1,19 @@
 import type { TestResult } from './runner.types'
 
-type WorkerMessage = { results?: TestResult[]; error?: string }
-type CheckWorker = Pick<Worker, 'onmessage' | 'onerror' | 'postMessage' | 'terminate'>
+type CheckWorker = Pick<Worker, 'onmessage' | 'onmessageerror' | 'onerror' | 'postMessage' | 'terminate'>
 type RunOptions = {
   createWorker: () => CheckWorker
   onResults: (results: TestResult[]) => void
   onError: (message: string) => void
   schedule: (callback: () => void, milliseconds: number) => number
   clearTimer: (id: number) => void
+}
+
+function isTestResult(value: unknown): value is TestResult {
+  if (!value || typeof value !== 'object') return false
+  const result = value as Record<string, unknown>
+  return typeof result.name === 'string' && typeof result.passed === 'boolean'
+    && ['message', 'input', 'expected', 'actual'].every(key => result[key] === undefined || typeof result[key] === 'string')
 }
 
 /** One run owns its worker and timer. Disposed runs cannot publish stale feedback. */
@@ -24,11 +30,26 @@ export function startCheckRun(code: string, repId: string, options: RunOptions):
   try {
     worker = options.createWorker()
     worker.onmessage = event => {
-      const data = event.data as WorkerMessage
       if (disposed) return
       dispose()
-      if (data.error) options.onError(data.error)
-      else options.onResults(data.results ?? [])
+      const data: unknown = event.data
+      if (data && typeof data === 'object') {
+        const reply = data as Record<string, unknown>
+        if (typeof reply.error === 'string' && reply.error.trim()) {
+          options.onError(reply.error)
+          return
+        }
+        if (reply.error === undefined && Array.isArray(reply.results) && Array.from(reply.results).every(isTestResult)) {
+          options.onResults(reply.results)
+          return
+        }
+      }
+      options.onError('The check results could not be read. Your code is still here; try running them again.')
+    }
+    worker.onmessageerror = () => {
+      if (disposed) return
+      dispose()
+      options.onError('The check results could not be read. Your code is still here; try running them again.')
     }
     worker.onerror = () => {
       if (disposed) return
