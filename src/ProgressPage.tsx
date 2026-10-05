@@ -1,9 +1,18 @@
 import { useRef } from 'react'
+import type { paths } from './path'
+import { profileProgress } from './profile-progress'
+import type { PortableRecord } from './portability'
+import { Button } from './Button'
 import { stageLabels } from './learning'
 import type { JourneyProgress } from './learning'
 
 type PracticeAction = { title: string; reason: string; label: string; open: () => void }
 type Props = {
+  profileName: string
+  history: PortableRecord[]
+  now: number
+  onManageProfiles?: () => void
+  onOpenPath: (id: typeof paths[number]['id']) => void
   progress: JourneyProgress[]
   recommendation?: PracticeAction
   dueReviews: (PracticeAction & { repId: string })[]
@@ -15,10 +24,23 @@ type Props = {
   serverReady: boolean
 }
 
-export function ProgressPage({ progress, recommendation, dueReviews, onOpenRep, onReviewRep, onExport, onImport, transferMessage, serverReady }: Props) {
+export function ProgressPage({ profileName, history, now, onManageProfiles, onOpenPath, progress, recommendation, dueReviews, onOpenRep, onReviewRep, onExport, onImport, transferMessage, serverReady }: Props) {
+  const summary = profileProgress(history, new Date(now))
   const importRef = useRef<HTMLInputElement | null>(null)
   return <main className="progress-main">
-    <div className="home-heading"><h1 tabIndex={-1}>See what stayed with you.</h1><p>Follow the evidence from guided practice to independent work and later recall.</p></div>
+    <div className="home-heading profile-heading"><div><span className="home-label">Your local learning profile</span><h1 tabIndex={-1}>{profileName}</h1><p>Your practice, milestones, and evidence of what stayed with you.</p></div>{onManageProfiles && <Button onClick={onManageProfiles}>Manage profiles</Button>}</div>
+    <dl className="progress-summary profile-summary" aria-label="Practice summary">
+      <div><dt>Completed reps</dt><dd>{summary.completedReps}</dd></div>
+      <div><dt>Current streak</dt><dd>{summary.currentStreak}<small> days</small></dd></div>
+      <div><dt>Longest streak</dt><dd>{summary.longestStreak}<small> days</small></dd></div>
+      <div><dt>Practice days</dt><dd>{summary.practiceDays}</dd></div>
+    </dl>
+    <p className="utility-note">A practice day counts when you finish a rep with checks, a plan, and a reflection. Your current streak stays active through today if you practised yesterday. Breaks are welcome; your milestones stay.</p>
+    <section className="profile-badges" aria-labelledby="profile-badges-title">
+      <h2 id="profile-badges-title">Path completion badges</h2><p className="utility-note">{summary.badges.filter(badge => badge.earned).length} earned. Finish every rep in a path to earn its badge. Completion can include hints; independent skill and retention have separate evidence below.</p>
+      <ul className="profile-badge-list">{summary.badges.map(badge => <li key={badge.id} className={badge.earned ? 'badge-earned' : undefined}><span className="home-label">{badge.earned ? '✓ Completed' : badge.completed ? 'In progress' : 'Not started'}</span><h3>{badge.title}</h3><p>{badge.completed} of {badge.total} reps completed</p><progress value={badge.completed} max={badge.total} aria-label={`${badge.title} completion`} /><Button variant="text" onClick={() => onOpenPath(badge.id)}>{badge.earned ? 'Revisit path' : 'Explore path'}</Button></li>)}</ul>
+    </section>
+    <h2>Skill evidence</h2><p className="utility-note">Follow guided practice, independent work, and later recall.</p>
     <dl className="progress-summary" aria-label="Skill evidence summary">
       <div><dt>Reviews ready</dt><dd>{dueReviews.length}</dd></div>
       <div><dt>Independent skills</dt><dd>{progress.filter(item => item.independent).length}</dd></div>

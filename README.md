@@ -42,7 +42,7 @@ The workspace follows five steps:
 - **Practical concepts:** closures, reference equality, async ordering, subscriptions, dependency injection, cancellation, caching, retries, idempotency, and optimistic updates. See the [Practical Concepts guide](./docs/PRACTICAL_CONCEPTS.md) for the full scope.
 - **Personal practice:** two multi-file projects, weekly plans, notes, recurring reviews, self-assessment, and optional timed interview rounds.
 
-Home brings together your next rep, drafts, and due reviews. Practice holds exercises, projects, and interviews; Learn holds paths, lessons, and notes; Progress shows history and the evidence behind **Learning**, **Practising**, **Independent**, and **Retained**.
+Home brings together your next rep, drafts, and due reviews. Practice holds exercises, projects, and interviews; Learn holds paths, lessons, and notes; Progress includes your local profile, path completion badges, completed-rep calendar streaks, and the evidence behind **Learning**, **Practising**, **Independent**, and **Retained**.
 
 Practical-concept traces check authored application policies; they do not establish live network or timer behavior. See the [learning tools and verification boundaries](./docs/FLUENCY_PLATFORM.md) for details.
 
@@ -142,3 +142,5 @@ Automated checks do not establish learning effectiveness, full disconnected-brow
 Code Reps values independent work, plain-English explanations, useful retries, and learning data that stays on the learner’s machine. Accounts, cloud sync, leaderboards, certificates, and AI tutoring are outside the current scope.
 
 **Free to use.** Source rights are reserved for now; the core app is intended to remain free.
+
+Path badges count a completed attempt for every distinct rep in the path, including hinted attempts. They do not establish mastery. Streaks use completed attempts grouped by calendar day in the current local timezone; yesterday keeps the current streak active until today ends. Imported completion history contributes to these summaries. All summaries are derived per profile without new storage or accounts.
