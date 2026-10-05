@@ -139,9 +139,11 @@ test('practice steps preserve work, explain missing requirements, and record com
   await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue(/Count occurrences/)
   await page.locator('.site-menu > summary').click()
   await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name: 'Progress', exact: true }).click()
+  await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Completed reps1')
+  await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Current streak1 days')
   // An unhinted solve before its guided journey is not evidence of independence.
-  await expect(page.locator('.progress-summary')).toContainText('Independent skills0')
-  await expect(page.locator('.progress-summary')).toContainText('Retained skills0')
+  await expect(page.locator('[aria-label="Skill evidence summary"]')).toContainText('Independent skills0')
+  await expect(page.locator('[aria-label="Skill evidence summary"]')).toContainText('Retained skills0')
 })
 
 test('lesson section navigation preserves predictions and opens self-review', async ({ page }) => {
@@ -179,4 +181,20 @@ test('narrow path discovery selects a path without horizontal scrolling', async 
   await page.reload()
   await expect(page.locator('#path-title')).toHaveText('Backend core')
   await expect(page.locator('.path-picker')).not.toHaveAttribute('open', '')
+})
+
+test('local profile progress is readable on narrow screens and links to paths', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/#/progress')
+  await expect(page.getByRole('heading', { name: 'My learning', exact: true })).toBeVisible()
+  await expect(page.getByRole('definition').filter({ hasText: /^0 days$/ })).toHaveCount(2)
+  await expect(page.getByRole('heading', { name: 'Path completion badges' })).toBeVisible()
+  await expect(page.locator('.profile-badge-list li')).toHaveCount(8)
+  await expect(page.locator('.profile-summary')).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  await page.locator('.profile-badge-list').getByRole('button', { name: 'Explore path' }).first().focus()
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/#\/paths/)
+  await page.goBack()
+  await expect(page.getByRole('heading', { name: 'My learning', exact: true })).toBeVisible()
 })

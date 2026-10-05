@@ -542,3 +542,15 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 .site-menu > summary::after, .workspace-options > summary::after, .knowledge-browser > summary::after, .disclosure-arrow { content: ''; flex: none; width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg) translateY(-2px); }
 .site-menu[open] > summary::after, .workspace-options[open] > summary::after, .knowledge-browser[open] > summary::after, .foundation-lesson[open] .disclosure-arrow { transform: rotate(225deg); }
 * { scrollbar-color: var(--border-strong) var(--bg); }
+
+.profile-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.profile-summary { flex-wrap: wrap; }
+.profile-summary dd small { font-size: 14px; font-weight: 400; color: var(--muted); }
+.profile-badges { margin: 32px 0 40px; }
+.profile-badge-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 16px; list-style: none; padding: 0; }
+.profile-badge-list li { padding: 20px; border: 1px solid var(--border); border-radius: var(--radius); }
+.profile-badge-list h3 { margin: 0; font-size: 17px; }
+.profile-badge-list p { color: var(--muted); font-size: 14px; }
+.profile-badge-list progress { display: block; width: 100%; height: 6px; margin-bottom: 10px; accent-color: var(--accent); }
+.profile-badge-list .badge-earned { border-color: var(--accent); }
+.profile-badge-list .badge-earned .home-label { color: var(--accent); }
