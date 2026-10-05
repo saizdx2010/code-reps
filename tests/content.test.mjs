@@ -1,3 +1,4 @@
+import { dsaSolutions } from './fixtures/dsa-solutions.mjs'
 import { asyncSolutions } from './fixtures/async-solutions.mjs'
 import { practicalSolutions } from './fixtures/practical-solutions.mjs'
 import { validateContentDepth } from '../src/content-depth.ts'
@@ -18,6 +19,7 @@ import { validationSolutions } from './fixtures/validation-solutions.mjs'
 // These independent implementations check authored expected results, not learner prose.
 const solutions = {
   ...validationSolutions,
+  ...dsaSolutions,
   ...asyncSolutions,
   ...practicalSolutions,
   ...fluencySolutions,

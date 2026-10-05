@@ -1,50 +1,142 @@
+<div align="center">
+
 # Code Reps
 
-A free, local-first place to learn concepts, practise coding, and see what you can solve independently. Code Reps starts with TypeScript and is designed to grow into frontend, backend, algorithms, data structures, debugging, and code-reading exercises.
+**Build coding fluency, one rep at a time.**
 
-The product plan is in [PROJECT.md](./PROJECT.md).
-See [ROADMAP.md](./ROADMAP.md) for the version plan, [docs/LOCAL_SETUP.md](./docs/LOCAL_SETUP.md) for local installation, updates, and restores, and [docs/CONTENT_AUTHORING.md](./docs/CONTENT_AUTHORING.md) for internal content guidance. Source rights are reserved for now; the core app is intended to remain free to use.
+A free, local-first place to learn concepts, practise independently, and explain your decisions.
 
-## Status
+**Understand → Plan → Solve → Explain → Review**
 
-Seventy-two TypeScript reps are playable. Local profiles separate each learner’s work without signup. A learning hub adds 30 searchable knowledge lessons, interactive checks, self-assessment rubrics, personal practice plans, notes, recurring reviews, timed interview practice, and two multi-file projects. See [docs/FLUENCY_PLATFORM.md](./docs/FLUENCY_PLATFORM.md) for the learning tools and verification boundaries. A real-world path adds checkout debugging, batch-pipeline predictions, an interactive browser directory, a ticket request handler, and behavior-preserving stock-report refactoring. Learners can start with language basics or guided problem solving. Free paths now cover AI-era coding habits, frontend core, backend core, and untimed frontend and backend interview practice. Each path begins with a plain-language introduction and a small example before its first rep. The new lessons teach learners to inspect suggested code, validate inputs, derive UI states, and explain their choices. Seven skill journeys cover arrays, words, lookups, stacks, request ownership, resource ownership, and validation: guided practice, a related problem without hints, and a fresh recall problem after three days. Progress explains the evidence behind Learning, Practising, Independent, and Retained. Code checks verify behavior; a written rubric helps learners review their own plans and explanations. Attempts and drafts are saved locally with SQLite when using the local server, with JSON export and import for portability.
+[Get started](#get-started) · [What you can practise](#what-you-can-practise) · [Documentation](#documentation) · [Roadmap](./ROADMAP.md)
 
-The [Practical Concepts path](./docs/PRACTICAL_CONCEPTS.md) adds closures, reference equality, event-loop ordering, promises, singleton ownership, observer and pub/sub subscriptions, dependency injection, debouncing, throttling, cancellation and races, WebSockets, polling and SSE, cleanup and reference counting, caching, retry backoff, idempotency, and optimistic updates. Learn groups lessons by topic, and Home keeps draft and review queues compact with an option to show all. The [content gap map](./docs/CONTENT_GAPS.md) guides future batches. Practical-concept traces check application policies; they do not establish live network or timer behavior.
+</div>
 
-Home, Practice, Learn, and Progress organize the app. Projects and interviews are in Practice; paths and notes are in Learn; history and self-assessment are in Progress. The practice workspace keeps a focused Understand, Plan, Solve, Explain, and Review flow, with writing steps beside the editor on desktop and one pane at a time on mobile. Controls, dropdown menus, and the history calendar use our own UI; Monaco remains the code editor. See [the UI guide](./docs/UI_GUIDE.md) for routes, keyboard controls, and saved-state behavior.
+---
 
-## Run locally
+## A place to practise with intention
 
-Requires Node.js 24 or later.
+Code Reps starts with TypeScript and pairs coding exercises with plain-English lessons, progressive hints, and authored self-reviews. Local profiles keep each learner’s work separate, with no signup or paid tier.
+
+| Learn | Practise | Reflect |
+| --- | --- | --- |
+| Searchable lessons, worked examples, and interactive knowledge checks | Coding reps, realistic debugging, multi-file projects, and optional timed interviews | Saved attempts, personal notes, recurring reviews, and evidence behind progress |
+
+The workspace follows five steps:
+
+1. **Understand** the task, examples, constraints, and vocabulary.
+2. **Plan** your approach and identify edge cases.
+3. **Solve** in the editor, run checks, and reveal hints when you need them.
+4. **Explain** your decisions, tradeoffs, and complexity in plain English.
+5. **Review** the result, reflect on difficulties, and return for fresh practice.
+
+> Passing checks establishes behavior. Plans and explanations use a self-review rubric; independent fluency and retention need evidence from unhinted work and later recall.
+
+## What you can practise
+
+- **TypeScript foundations:** 72 playable reps and 30 searchable knowledge lessons, with starting points for beginners and returning developers.
+- **Guided paths:** language basics, problem solving, AI-era coding habits, frontend core, backend core, and untimed interview practice.
+- **Real-world tasks:** checkout debugging, batch-pipeline predictions, an interactive browser directory, a ticket request handler, and behavior-preserving stock-report refactoring.
+- **Skill journeys:** arrays, words, lookups, stacks, request ownership, resource ownership, and validation. Each pairs guided work with an independent problem and fresh recall after three days.
+- **Practical concepts:** closures, reference equality, async ordering, subscriptions, dependency injection, cancellation, caching, retries, idempotency, and optimistic updates. See the [Practical Concepts guide](./docs/PRACTICAL_CONCEPTS.md) for the full scope.
+- **Personal practice:** two multi-file projects, weekly plans, notes, recurring reviews, self-assessment, and optional timed interview rounds.
+
+Home brings together your next rep, drafts, and due reviews. Practice holds exercises, projects, and interviews; Learn holds paths, lessons, and notes; Progress shows history and the evidence behind **Learning**, **Practising**, **Independent**, and **Retained**.
+
+Practical-concept traces check authored application policies; they do not establish live network or timer behavior. See the [learning tools and verification boundaries](./docs/FLUENCY_PLATFORM.md) for details.
+
+## Get started
+
+Requires **Node.js 24+** and **Yarn Classic 1.22.22**.
+
+### Development
 
 ```sh
-yarn install
+yarn install --frozen-lockfile
 yarn dev
 ```
 
-To run the built app from a local server on your laptop:
+Open the address printed by Vite. Development saves learner work in the browser and works without the SQLite service.
+
+### Local app with SQLite
+
+After installing dependencies:
 
 ```sh
 yarn build
 yarn serve
 ```
 
-`yarn package` creates a portable local web bundle with its own Node runtime. It still opens in a browser; it does not install a desktop app.
+Open the address printed by the server. It binds to `127.0.0.1` and stores learner data in `~/.code-reps/progress.sqlite`.
 
-Open the local address printed by the server. It binds to `127.0.0.1` and stores learner data in `~/.code-reps/progress.sqlite`. On first use, it migrates browser data from the same address. If you previously used a different port, download a backup there and import it in the local app. A SQLite backup is saved on startup and daily while running; the seven most recent daily backups are kept in `~/.code-reps/backups`. Progress → Download backup also creates a portable JSON file. No account or paid tier is needed.
+### Portable bundle
 
-Run `yarn content:check`, `yarn build`, `yarn lint`, and `yarn test` to check the app. The build also checks JavaScript bundle-size budgets. Pull requests and pushes to main run these checks plus Chromium browser flows in CI; portable release builds run a bundle smoke test.
+```sh
+yarn package
+```
 
-For real-browser practice checks, run `yarn playwright install chromium` once after installing dependencies, then `yarn test:e2e`. See [docs/BROWSER_TESTING.md](./docs/BROWSER_TESTING.md) for coverage and isolation details.
+This creates a portable local web bundle with its own Node runtime. It opens in your browser rather than installing a desktop app. See the [portable bundle guide](./docs/PORTABLE_BUNDLE.md) for instructions and platform verification limits.
 
-Function reps run authored code in a browser worker with a five-second timeout. The frontend implementation rep uses a sandboxed browser frame for its preview and DOM interaction checks; it needs no external service. This is for personal practice with code you write yourself; it is not an isolation boundary for imported third-party exercises.
+## Your work stays local
 
-In the workspace, press Ctrl+Enter or Command+Enter to run checks, or use Run checks. Stop checks cancels a run without changing your code. Editing code cancels an active run and clears old feedback. Tab moves focus out of the editor. If the editor cannot load, a plain text editor lets you keep writing and running checks. Narrow and short screens use page scrolling, and narrow screens keep save feedback visible.
+- **Separate profiles** keep each learner’s drafts, attempts, and progress apart.
+- **Portable JSON backups** are available through **Progress → Download backup**, with import for restores and transfers.
+- **Automatic SQLite backups** run on startup and daily while the local server is running. The seven most recent daily backups stay in `~/.code-reps/backups`.
+- **Browser migration** imports existing browser data on first use of the local server at the same address. If you used a different port, download a backup there and import it into the local app.
 
-## Guiding principles
+The [local setup guide](./docs/LOCAL_SETUP.md) covers installation, updates, backups, and restores.
 
-- Learn terminology without revealing the solution.
-- Practise independently, then explain the reasoning.
-- Track retained skills and useful retries, not just completed problems.
-- Keep learning data on the learner's machine.
-- Make the workspace pleasant and focused enough to return to regularly.
+## A focused workspace
+
+| Control | Behavior |
+| --- | --- |
+| **Ctrl+Enter / Command+Enter** | Run checks from the workspace |
+| **Stop checks** | Cancel the active run and keep your code |
+| **Edit code** | Cancel an active run and clear obsolete feedback |
+| **Tab** | Move focus out of the editor |
+
+Monaco is the code editor, with a plain text fallback if it cannot load. Desktop layouts keep writing steps beside the editor; narrow screens show one pane at a time and keep save feedback visible. See the [UI guide](./docs/UI_GUIDE.md) for navigation, keyboard controls, and saved-state behavior.
+
+Function reps execute authored code in a browser worker with a five-second timeout. Frontend reps use a sandboxed browser frame for previews and DOM checks, without an external service. These runners are for personal practice with code you write yourself, not secure isolation for arbitrary third-party exercises.
+
+## Development checks
+
+| Command | Checks |
+| --- | --- |
+| `yarn lint` | Source linting with Oxlint |
+| `yarn test` | Unit and integration tests with Node’s test runner |
+| `yarn content:check` | Authored content and depth coverage |
+| `yarn build` | TypeScript, production build, and JavaScript bundle-size budgets |
+| `yarn test:e2e` | Real-browser flows with Chromium and Monaco |
+
+Install Chromium once before running the browser suite:
+
+```sh
+yarn playwright install chromium
+yarn test:e2e
+```
+
+Pull requests and pushes to main run these checks in CI. Portable release builds also run a bundle smoke test. See [browser testing](./docs/BROWSER_TESTING.md) for coverage, data isolation, and debugging.
+
+Automated checks do not establish learning effectiveness, full disconnected-browser operation, cross-platform behavior, visual fidelity, or assistive-technology support. Those remain separate validation tasks.
+
+## Documentation
+
+| Guide | What it covers |
+| --- | --- |
+| [Project plan](./PROJECT.md) | Product intent, learning loop, and scope |
+| [Roadmap](./ROADMAP.md) | Shipped foundations, planned work, and release gates |
+| [Local setup](./docs/LOCAL_SETUP.md) | Installation, updates, backups, and restores |
+| [Portable bundles](./docs/PORTABLE_BUNDLE.md) | Distribution with a bundled Node runtime |
+| [UI guide](./docs/UI_GUIDE.md) | Routes, keyboard controls, and saved state |
+| [Fluency platform](./docs/FLUENCY_PLATFORM.md) | Learning tools and progress evidence |
+| [Practical concepts](./docs/PRACTICAL_CONCEPTS.md) | Application policies and transfer practice |
+| [Content authoring](./docs/CONTENT_AUTHORING.md) | Internal exercise and lesson standards |
+| [Content gap map](./docs/CONTENT_GAPS.md) | Priorities for future practice content |
+| [Browser testing](./docs/BROWSER_TESTING.md) | Real-browser coverage and verification limits |
+
+---
+
+Code Reps values independent work, plain-English explanations, useful retries, and learning data that stays on the learner’s machine. Accounts, cloud sync, leaderboards, certificates, and AI tutoring are outside the current scope.
+
+**Free to use.** Source rights are reserved for now; the core app is intended to remain free.

@@ -1,3 +1,4 @@
+import { dsaSkills } from './dsa-knowledge.ts'
 import { practicalSkills } from './practical-concepts.ts'
 export type Question = { completion?: boolean; id: string; prompt: string; code: string; options: string[]; answer: number; explanation: string }
 export type Skill = { id: string; title: string; summary: string; prerequisites: string[]; objectives: string[]; sections: { title: string; body: string }[]; example: string; walkthrough: string[]; mistakes: string[]; questions: Question[]; repIds: string[]; related: string[] }
@@ -200,14 +201,16 @@ export const skills: Skill[] = [
     repIds: ['backend-ticket-handler', 'project-ticket-api', 'validate-page-query'], related: ['http', 'testing'],
   },
   ...practicalSkills,
+  ...dsaSkills,
 ]
 export const skillById = (id: string) => skills.find(skill => skill.id === id)
 export const skillsForRep = (id: string) => skills.filter(skill => skill.repIds.includes(id))
-export const contentVersion = 5
+export const contentVersion = 6
 
 // Discovery categories only; these do not change skill identity or learner evidence.
 export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[] = [
   { id: 'language', title: 'Language & problem solving', skillIds: ['values', 'arrays', 'text', 'lookup', 'stacks', 'complexity'] },
+  { id: 'dsa', title: 'Algorithms & data structures', skillIds: ['collection-operations', 'queues', 'array-techniques'] },
   { id: 'frontend', title: 'Frontend', skillIds: ['frontend', 'react'] },
   { id: 'backend', title: 'Backend & data', skillIds: ['validation', 'http', 'databases'] },
   { id: 'async', title: 'Async & runtime', skillIds: ['async', 'closures', 'reference-identity', 'event-loop', 'debouncing', 'throttling', 'request-ownership'] },
