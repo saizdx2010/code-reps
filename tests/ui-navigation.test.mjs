@@ -1,13 +1,23 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { readRoute, routeHash } from '../src/ui-navigation.ts'
+import { navigationArea, navigationSections, readRoute, routeHash } from '../src/ui-navigation.ts'
 import { runRep } from '../src/runner.ts'
 
 test('exercise bookmarks, library, and every product page round-trip', () => {
-  for (const view of ['home', 'catalog', 'paths', 'learn', 'progress', 'history', 'knowledge']) {
+  for (const view of ['home', 'catalog', 'paths', 'learn', 'progress', 'history', 'knowledge', 'projects', 'interview', 'notebook', 'assessment', 'plan']) {
     assert.deepEqual(readRoute(routeHash({ view }), ['one']), { view })
   }
   assert.deepEqual(readRoute(routeHash({ view: 'workspace', repId: 'one' }), ['one']), { view: 'workspace', repId: 'one' })
+})
+
+test('every tool has one navigation home while legacy lessons and exercises stay reachable', () => {
+  for (const [area, pages] of Object.entries(navigationSections)) {
+    for (const page of pages) assert.equal(navigationArea(page.view), area)
+  }
+  assert.equal(navigationArea('workspace'), 'practice')
+  assert.equal(navigationArea('learn'), 'learn')
+  const pages = Object.values(navigationSections).flat()
+  assert.equal(new Set(pages.map(page => page.view)).size, pages.length)
 })
 
 test('unknown exercises and malformed bookmarks recover without throwing', () => {

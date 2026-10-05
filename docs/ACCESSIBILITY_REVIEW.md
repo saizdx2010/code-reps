@@ -1,6 +1,6 @@
 # Accessibility and learner review
 
-Automated Chromium checks exercise keyboard practice steps, focus after navigation and preview-modal exit, editor Tab exit, draft preservation, and no horizontal page overflow on selected 320px and 390px flows. They also exercise reduced motion on the narrow validation task. These checks do not establish assistive-technology support or browser zoom behavior.
+Automated Chromium checks exercise keyboard practice steps, focus after navigation and preview-modal exit, editor Tab exit, draft preservation, and no horizontal page overflow on selected 320px and 390px flows. They also exercise reduced motion on the narrow validation task, custom dropdown exploration/cancellation/typeahead/Tab, calendar month and leap-year boundaries, number bounds, search clearing, and file-import recovery. These checks do not establish assistive-technology support, other browser engines, or browser zoom behavior.
 
 ## Manual walkthrough still required
 
@@ -8,6 +8,7 @@ Use a fresh local profile, keeping any exported work on the learner's machine. R
 
 - With only the keyboard, choose a starting point, open a path, write a plan, edit code, inspect a failed check, explain, and complete an attempt. Confirm focus stays visible and the editor can be exited.
 - Open and close Commands, Glossary, Profiles, Tools, and an expanded frontend preview. Confirm labels, focus containment where applicable, Escape, and focus restoration.
+- Explore dropdown options with arrows and typing; confirm the highlighted option is announced, Escape cancels, and Enter/Tab commits. Open the history calendar, navigate days/months/years, and confirm the selected date and month are announced. Include menus inside Profiles and the expanded preview.
 - At 200% browser zoom and on a short window, confirm navigation, save feedback, Run/Stop, task text, and completion controls remain reachable. Check overflow inside the code editor separately from page overflow.
 - With VoiceOver or another available screen reader, read headings and landmarks, identify every input, inspect check results, and hear save/error feedback. Confirm the names and states of disclosures and selected practice steps.
 - Trigger editor loading failure and confirm the plain text recovery editor remains labelled, preserves the draft, and allows running checks.

@@ -49,12 +49,13 @@ async function serverPlan(url: string) {
 
 test('SQLite save failure, retry, and restart preserve the newest browser draft', async ({ page, browser, service }) => {
   await page.goto(service.url + route)
-  await page.getByLabel('YOUR PLAN', { exact: true }).fill('Already saved plan')
+  await page.getByRole('button', { name: 'Plan', exact: true }).click()
+  await page.getByLabel('Your plan', { exact: true }).fill('Already saved plan')
   await expect.poll(() => serverPlan(service.url)).toContain('Already saved plan')
   let failWrites = true
   await page.route('**/api/entries', request => failWrites
     ? request.fulfill({ status: 503, json: { error: 'Test save failure' } }) : request.continue())
-  await page.getByLabel('YOUR PLAN', { exact: true }).fill('Newest plan kept during failure')
+  await page.getByLabel('Your plan', { exact: true }).fill('Newest plan kept during failure')
   const recovery = page.locator('.storage-recovery')
   await expect(recovery.getByRole('button', { name: 'Retry saving' })).toBeVisible()
   expect(await serverPlan(service.url)).toContain('Already saved plan')
@@ -65,7 +66,8 @@ test('SQLite save failure, retry, and restart preserve the newest browser draft'
   expect(backup.drafts['most-frequent-number'].plan).toBe('Newest plan kept during failure')
   // Reload must replay the journal without overwriting it with the older SQLite copy.
   await page.reload()
-  await expect(page.getByLabel('YOUR PLAN', { exact: true })).toHaveValue('Newest plan kept during failure')
+  await page.getByRole('button', { name: 'Plan', exact: true }).click()
+  await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue('Newest plan kept during failure')
   failWrites = false
   await recovery.getByRole('button', { name: 'Retry saving' }).click()
   await expect(recovery).toHaveCount(0)
@@ -76,7 +78,8 @@ test('SQLite save failure, retry, and restart preserve the newest browser draft'
   try {
     const restored = await clean.newPage()
     await restored.goto(service.url + route)
-    await expect(restored.getByLabel('YOUR PLAN', { exact: true })).toHaveValue('Newest plan kept during failure')
+    await restored.getByRole('button', { name: 'Plan', exact: true }).click()
+    await expect(restored.getByLabel('Your plan', { exact: true })).toHaveValue('Newest plan kept during failure')
     await expect(restored.getByText('Saved on this laptop', { exact: true }).filter({ visible: true })).toBeVisible()
   } finally { await clean.close() }
 })
@@ -95,23 +98,27 @@ test('an older SQLite acknowledgement cannot discard a newer pending edit', asyn
     await request.continue()
   })
   try {
-    await page.getByLabel('YOUR PLAN', { exact: true }).fill('Older edit awaiting acknowledgement')
+    await page.getByRole('button', { name: 'Plan', exact: true }).click()
+    await page.getByLabel('Your plan', { exact: true }).fill('Older edit awaiting acknowledgement')
     await expect.poll(() => held).toBe(true)
-    await page.getByLabel('YOUR PLAN', { exact: true }).fill('Newer edit awaiting acknowledgement')
+    await page.getByLabel('Your plan', { exact: true }).fill('Newer edit awaiting acknowledgement')
     await expect.poll(() => page.evaluate(() => localStorage.getItem('code-reps:pending-writes:v1'))).toContain('Newer edit awaiting acknowledgement')
     release()
     await expect.poll(() => serverPlan(service.url)).toContain('Newer edit awaiting acknowledgement')
     await expect.poll(() => page.evaluate(() => localStorage.getItem('code-reps:pending-writes:v1'))).toBeNull()
     await page.reload()
-    await expect(page.getByLabel('YOUR PLAN', { exact: true })).toHaveValue('Newer edit awaiting acknowledgement')
+    await page.getByRole('button', { name: 'Plan', exact: true }).click()
+    await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue('Newer edit awaiting acknowledgement')
   } finally { release() }
 })
 
 test('browser backup validation preserves work and a valid restore reaches SQLite', async ({ page, service }) => {
   await page.goto(service.url + route)
-  await page.getByLabel('YOUR PLAN', { exact: true }).fill('Exported plan')
+  await page.getByRole('button', { name: 'Plan', exact: true }).click()
+  await page.getByLabel('Your plan', { exact: true }).fill('Exported plan')
   await replaceCode(page, solution)
   await page.goto(service.url + '/#/progress')
+  await page.locator('.local-data > summary').click()
   const downloadPromise = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Download backup', exact: true }).click()
   const contents = await readFile((await (await downloadPromise).path())!)
@@ -119,21 +126,25 @@ test('browser backup validation preserves work and a valid restore reaches SQLit
   await expect(page.locator('.transfer-message')).toBeVisible()
   await expect(page.locator('.transfer-message')).not.toContainText('Backup downloaded')
   await page.goto(service.url + route)
-  await expect(page.getByLabel('YOUR PLAN', { exact: true })).toHaveValue('Exported plan')
+  await page.getByRole('button', { name: 'Plan', exact: true }).click()
+  await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue('Exported plan')
   await page.getByRole('button', { name: 'Manage profiles' }).click()
   const dialog = page.getByRole('dialog', { name: 'Local profiles' })
+  await dialog.getByText('Create or rename a profile', { exact: true }).click()
   await dialog.getByLabel('Profile name', { exact: true }).fill('Restored learner')
   await dialog.getByRole('button', { name: 'Create profile', exact: true }).click()
   await expect(dialog.getByRole('status')).toHaveText('Profile created.')
   await dialog.getByRole('button', { name: 'Close', exact: true }).click()
   await page.goto(service.url + '/#/progress')
+  await page.locator('.local-data > summary').click()
   await Promise.all([
     page.waitForEvent('load'),
     page.getByLabel('Choose Code Reps backup').setInputFiles({ name: 'backup.json', mimeType: 'application/json', buffer: contents }),
   ])
   await expect(page.locator('.transfer-message')).toHaveCount(0)
   await page.goto(service.url + route)
-  await expect(page.getByLabel('YOUR PLAN', { exact: true })).toHaveValue('Exported plan')
+  await page.getByRole('button', { name: 'Plan', exact: true }).click()
+  await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue('Exported plan')
   await expect(editor(page)).toBeVisible()
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
   await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()

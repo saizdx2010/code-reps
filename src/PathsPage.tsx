@@ -28,16 +28,15 @@ export function PathsPage({ pathId, setPathId, pathPicker, setPathPicker, learne
   const pathCompletedCount = pathRepIds.filter((id) => completedPathIds.has(id)).length
   return <main className="paths-main">
     <div className="home-heading">
-      <h1 tabIndex={-1}>Choose a learning path.</h1>
-      <p>Free lessons and practice for coding in an AI-rich world. Open any path or rep.</p>
+      <h1 tabIndex={-1}>Follow a learning path.</h1>
+      <p>Build a skill through guided practice, independent work, and later recall.</p>
     </div>
     <section className="path-overview" aria-labelledby="path-title">
       <div>
-        <span className="home-label">START HERE</span>
         <h2 id="path-title" tabIndex={-1}>{learnerStart === 'returning' && selectedPath.id === 'typescript' ? 'Return to problem solving' : selectedPath.title}</h2>
         <p>{learnerStart === 'returning' && selectedPath.id === 'typescript' ? 'Start with guided problems, then revisit skills without hints after a break.' : selectedPath.description}</p>
         <span className="continue-status">{pathCompletedCount} of {pathRepIds.length} reps completed</span>
-      </div>{nextPathRep && <button className="primary-button" type="button" onClick={() => pathCompletedCount === 0 ? document.getElementById('path-introduction')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }) : openRep(nextPathRep.id)}>{pathCompletedCount === 0 ? 'Read introduction ↓' : 'Continue path →'}</button>}</section>
+      </div>{nextPathRep && <button className="primary-button" type="button" onClick={() => pathCompletedCount === 0 ? document.getElementById('path-introduction')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }) : openRep(nextPathRep.id)}>{pathCompletedCount === 0 ? 'Read introduction ↓' : 'Continue path'}</button>}</section>
     <details className="path-picker" open={pathPicker === 'open'} onToggle={event => setPathPicker(event.currentTarget.open ? 'open' : 'closed')}>
       <summary>Explore paths <span>{paths.length} available</span>
       </summary>
@@ -63,7 +62,6 @@ export function PathsPage({ pathId, setPathId, pathPicker, setPathPicker, learne
             <button type="button" disabled={!recallReady(id)} onClick={() => openRep(id)}>
               <span>{item.title}</span>
               <small>{!recallReady(id) ? 'Available after independent practice' : done ? 'Completed' : repStatus(item)}</small>
-              <span aria-hidden="true">→</span>
             </button>
           </li> })}</ol>
       </details>)}</div>

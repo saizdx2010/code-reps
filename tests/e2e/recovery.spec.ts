@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { editor, replaceCode, route, saved, solution } from './helpers'
+import { chooseOption, editor, replaceCode, route, saved, solution } from './helpers'
 
 const endless = 'function mostFrequent(numbers: number[]): number | null { while (true) {} }'
 
@@ -85,15 +85,15 @@ test('frontend preview states, keyboard modal exit, and frame checks use authore
   await expect(frame.getByLabel('Search people')).toBeVisible()
   await frame.getByLabel('Search people').fill('nobody matches')
   await expect(frame.getByText('No people found.', { exact: true })).toBeVisible()
-  await preview.getByLabel('Request state').selectOption('loading')
+  await chooseOption(preview.getByRole('combobox', { name: 'Request state', exact: true }), 'loading')
   await expect(frame.getByText('Loading…', { exact: true })).toBeVisible()
-  await preview.getByLabel('Request state').selectOption('error')
+  await chooseOption(preview.getByRole('combobox', { name: 'Request state', exact: true }), 'error')
   await frame.getByRole('button', { name: 'Retry', exact: true }).click()
   await expect(frame.getByText('Retry requested 1 time.', { exact: true })).toBeVisible()
-  await preview.getByLabel('Request state').selectOption('empty')
+  await chooseOption(preview.getByRole('combobox', { name: 'Request state', exact: true }), 'empty')
   await expect(frame.getByText('No people found.', { exact: true })).toBeVisible()
-  await preview.getByLabel('Request state').selectOption('ready')
-  await preview.getByLabel('Viewport').selectOption('375')
+  await chooseOption(preview.getByRole('combobox', { name: 'Request state', exact: true }), 'ready')
+  await chooseOption(preview.getByRole('combobox', { name: 'Viewport', exact: true }), '375')
   await expect(page.locator('iframe[title="Your directory implementation"]')).toHaveCSS('width', '375px')
   await preview.getByRole('button', { name: 'Expand preview', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Expanded preview' })

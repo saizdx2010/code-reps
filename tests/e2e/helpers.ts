@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test'
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 
 export const route = '/#/practice/most-frequent-number'
 export const solution = `function mostFrequent(numbers: number[]): number | null {
@@ -30,3 +30,13 @@ export async function saved(page: Page) {
   await expect(page.getByText('Saved in browser', { exact: true }).filter({ visible: true })).toBeVisible()
 }
 
+
+/** Exercise the visible app-owned menu, including menus inside native dialogs. */
+export async function chooseOption(control: Locator, value: string | { label: string }) {
+  await control.click()
+  const id = await control.getAttribute('aria-controls')
+  const popup = control.page().locator(`[id=${JSON.stringify(id)}]`)
+  const option = typeof value === 'string' ? popup.locator(`[role="option"][data-value=${JSON.stringify(value)}]`) : popup.getByRole('option', { name: value.label, exact: true })
+  await option.click()
+  await expect(control).toHaveAttribute('aria-expanded', 'false')
+}

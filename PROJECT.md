@@ -49,25 +49,26 @@ Save each attempt's code, result, duration, hints, explanation, notes, and diffi
 - **Progress:** Attempts, skill history, retained skills, and next focus.
 - **Glossary:** Searchable plain-English definitions with small code examples.
 
-The rep workspace is the reference screen: task and vocabulary beside an editor or preview, with readable test feedback. On narrow screens, task and workspace become tabs without losing work.
+The rep workspace is the reference screen: task and vocabulary beside an editor or preview, with readable test feedback. On narrow screens, the five practice steps show one pane at a time without losing work.
 
 ## Experience and visual direction
 
 Aim for an immaculate, calm training-studio feel: readable type, generous spacing, strong hierarchy, keyboard access, clear focus, and polished loading, error, success, and saved states. Inspiration comes from the motivation and momentum of interactive learning products, while Code Reps develops its own identity around clarity, independence, and interview communication.
 
-Use semantic UI tokens so components do not contain scattered color values. Initial palette direction:
+Use semantic UI tokens so components do not contain scattered color values. The reading surfaces and coding desk use this palette:
 
 | Role | Value |
 | --- | --- |
-| Background | `#101827` |
-| Surface | `#1B2738` |
-| Text | `#F5F3EC` |
-| Muted text | `#A8B4C3` |
-| Primary action | `#C8F36B` |
-| Learning accent | `#78C9E8` |
-| Error | `#F08A7E` |
+| Background | `#2B3531` |
+| Surface | `#35423B` |
+| Text | `#EDF0EB` |
+| Muted text | `#BDC8BE` |
+| Primary action | `#BCE57B` |
+| Links and focus | `#BCE57B` |
+| Editor background | `#303F38` |
+| Error | `#EF978B` |
 
-Include tokens for borders, focus, spacing, radii, typography, and motion. Consider a light reading surface and dark workspace using the same semantic roles. Use shadcn/ui selectively for basic accessible controls; build the path, rep, feedback, and progress experiences specifically for Code Reps.
+Source Sans 3 carries interface and reading text; Maple Mono carries code. Both fonts are bundled locally. Reuse the app-owned shared controls and tokens for borders, focus, spacing, radii, typography, and motion. Dropdowns, menus, calendars, number buttons, and file controls use our own presentation; native text fields and choices retain browser input semantics. Monaco remains the code editor. Home, Practice, Learn, and Progress group the full app; secondary pages stay bookmarkable. Disclose filters and management tools when needed, and keep the editor mounted while learners plan, explain, and review.
 
 ## Technical direction
 

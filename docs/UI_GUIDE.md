@@ -1,11 +1,20 @@
 # Practice UI
 
+## Navigation and visual structure
+
+- Main navigation has Home, Practice, Learn, and Progress. The second row contains only the pages in the selected area: Today and Practice plan; Exercises, Projects, and Interview; Lessons, Paths, and Notebook; or Skills, History, and Self-assessment.
+- Each tool has a bookmarkable hash route, including `#/plan`, `#/projects`, `#/interview`, `#/notebook`, and `#/assessment`. Existing `#/knowledge`, `#/learn`, and exercise bookmarks remain valid. Learn opens full lessons; `#/learn` continues to open quick introductions.
+- During practice, Navigate opens the main destinations in a compact menu. Escape closes it and restores focus to its summary. Profile management remains beside the profile name. Search opens the command palette; its keyboard shortcut is also available in the narrow workspace.
+- Reading surfaces use medium-dark charcoal and sage, with the original lime actions and links. These surfaces are brighter than the original near-black palette. The editor and its checks use a green-gray surface with the same lime accent. Source Sans 3 is bundled in `public/fonts/` under the included SIL Open Font License; Maple Mono remains the code face. Fonts do not require a runtime external request.
+- `src/design.css` owns navigation, shared controls, pages, workspace, and utilities. `src/fluency.css` owns learning layouts; `src/input.css` owns fields. The earlier overlapping App, practice, system, and experience stylesheets have been replaced.
+- Shared controls are app-owned: `Input.tsx` provides styled text fields, choices, search clearing, file selection, and number buttons; `Select.tsx` renders dropdown menus; `DateInput.tsx` renders the history calendar; `Tooltip.tsx` renders hover/focus descriptions. Menu indicators, dialogs, and command search also use our own presentation. Monaco remains the code editor, with its menus and suggestions themed to the same palette. File selection opens the operating system's file chooser.
+
 ## Find and resume work
 
 - Home puts the starting-point choice before the first recommendation. After choosing, Change starting point keeps it available without interrupting the daily practice queue.
-- The header shows the active local profile and opens profile management. Save feedback remains visible in the header or the narrow-screen page/workspace controls.
+- The header shows the active local profile and opens profile management. Switching is immediately available; creation/renaming and full-profile export/import open separately. Save feedback remains visible in the page navigation or workspace controls.
 - Paths leads with the selected path and its next action. Explore paths shows a grid with completed-rep counts; it starts collapsed on narrow screens and remembers expansion in the current session. Selecting a path on a narrow screen closes the chooser and focuses the selected path heading.
-- Practice filters exercises by skill, format, and draft status or review due. Clear filters restores the full library.
+- Practice filters exercises by skill, format, and draft status or review due. Filters start expanded on desktop and collapsed on narrow screens; expansion is a session preference. Clear filters restores the full library. Search stays visible.
 - History filters completed attempts by rep or skill search, skill, difficulty, and local calendar date.
 - Exercise URLs use `#/practice/<rep-id>`. Pages and exercises support bookmarks, refresh, and browser Back/Forward.
 - Returning to a screen restores its scroll position and open sections. Filters, the selected path, and the mobile workspace tab survive refresh in the same browser session.
@@ -13,18 +22,18 @@
 
 ## Browse learning content
 
-- Lessons have Read, Predict, Practise, and Review section navigation. Review opens the evidence and self-assessment disclosure. Moving between sections preserves predictions and written evidence; predictions remain distinct from independent coding evidence.
-- Knowledge is the main entry for full lessons, predictions, self-assessment, planning, and notes. Its index groups lessons by topic, with search, a topic filter, and bookmarks. Search opens matching groups; Clear knowledge filters restores all topics. Filters survive refresh in the same profile and browser session.
-- Quick lessons inside Knowledge opens short introductions. The existing `#/learn` bookmark still works; it no longer needs a separate main-navigation item.
+- Lessons have focused Read, Predict, Practise, and Review views. Review opens the evidence and self-assessment disclosure. Moving between views keeps predictions and written evidence mounted; the selected view survives refresh per lesson and profile. Predictions remain distinct from independent coding evidence.
+- Learn opens full lessons. Its index groups lessons by topic, with search, a topic filter, and bookmarks. Search opens matching groups; Clear knowledge filters restores all topics. Filters survive refresh in the same profile and browser session. On narrow screens, Browse lessons starts collapsed and selecting a lesson closes the index and focuses the reader.
+- Quick lessons inside the lesson index opens short introductions. The existing `#/learn` bookmark still works.
 - Home previews up to three saved drafts and three due reviews. Show all exposes the complete queue without changing drafts, priorities, or review dates; Show fewer restores the compact view. Expansion is a session preference.
 
 ## Arrange the workspace
 
 - Drag the divider between brief and editor. Focus the divider and use Left/Right to resize, Home/End for the limits, or double-click to restore the default split. The split preference is saved locally.
-- Focus mode expands the coding workspace. Use Exit focus in Tools or press Escape to return; Understand and Plan also restore the brief.
-- Understand, Plan, Solve, Explain, and Review navigate the practice loop without enforcing a sequence. Status labels show written work and behavioral checks, not an assessment of understanding or writing quality. The selected step is a session preference.
-- A sticky workspace toolbar keeps Run/Stop and result counts within reach. Results links appear after checking, and passing checks offers a direct action to explain the solution.
-- On narrow screens, the practice steps switch to the appropriate task or code pane and focus the requested section. Both panes retain their drafts and editor state.
+- Focus mode expands the coding workspace. Use Exit focus in Tools or press Escape to return; selecting a writing or understanding step also exits focus mode.
+- Understand, Plan, Solve, Explain, and Review navigate the practice loop without enforcing a sequence. The brief is available during Understand and Solve; Plan, Explain, and Review each show their own writing or reflection view. The editor remains mounted beside the selected step on desktop. Step status descriptions report written work and behavioral checks, not an assessment of understanding or writing quality. The selected step is a session preference.
+- A sticky workspace toolbar keeps Run/Stop and result counts within reach. Checks start compact, expand on running or selecting Results, and can be collapsed without discarding feedback. Passing checks offers a direct action to explain the solution.
+- On narrow screens, Solve shows the coding pane and checks; the other steps show only their selected task or writing view. Both panes remain mounted, preserving drafts, file selection, cursor, selection, preview interactions, and editor scroll position.
 - Glossary stays beside the exercise title; Tools contains focus mode, Reset rep, and related concepts. Escape closes Tools and returns focus to its summary.
 - The editor begins loading when an exercise row is hovered or focused. Editor recovery remains available if loading fails.
 
@@ -36,6 +45,7 @@
 - Completion records the attempt, explains hint use, shows applicable recall timing, and offers the next recommendation and skill evidence.
 - History compares earlier and current code, plans, explanations, and hint counts. Written work remains self-reviewed.
 - Progress leads with reviews ready, counts of skills with independent and retained evidence, and the existing next-practice recommendation. Journey summaries show the next stage or recall date; expanding a journey exposes its supporting attempts. Independent counts include retained skills and do not constitute an overall coding score.
+- Practice backup controls in Progress open on demand. They retain the existing merge behavior and differ from full-profile export/import in Profiles. Timed interview setup selects a focus and duration before starting a round; project summaries open their milestones and final self-review.
 
 ## Reference and preview
 
@@ -47,9 +57,12 @@
 
 - Ctrl/Command K opens the searchable command palette. Up/Down selects an action; Enter opens it; Escape closes the palette or glossary.
 - Ctrl/Command Enter runs checks in the workspace, including the editor.
+- Practice-step descriptions and the full profile name appear on hover or focus. Escape dismisses these tooltips while keeping focus on their trigger.
+- Dropdowns keep focus on their trigger. Arrow keys explore options, Home/End reach the first/last option, and typing searches option labels. Enter or Tab applies the highlighted option; Escape closes without changing it. Menus use the browser's popover top layer to avoid clipping inside panes and dialogs; this requires a browser supporting the Popover API.
+- The calendar opens with focus on the selected date or today. Arrow keys move by day/week, Home/End reach the week's boundaries, and Page Up/Down changes month while preserving the day where possible. Shift with Page Up/Down changes year. Enter selects a date; Escape cancels and returns focus. Clear date removes the filter. Values remain local `YYYY-MM-DD` dates.
 - The command palette includes page navigation, exercises, glossary, editor focus, focus mode, results, and explanation.
 - Selecting a knowledge lesson scrolls to its content and moves keyboard focus there.
-- Narrow screens keep save feedback visible on every page; the navigation scrollbar reveals additional pages and Commands retains its text label.
+- Narrow screens keep save feedback visible on every page. Main navigation fits in four destinations; section navigation can scroll when needed. Search keeps a visible text label on browsing pages, and Ctrl/Command K remains available in practice.
 - Profile switching, creation, import, export, and deletion show an operation message while work is pending.
 - Focus outlines, native modal focus containment, reserved feedback space, and short transitions support continuity. Reduced-motion preferences disable UI animation and smooth scrolling.
 

@@ -1,16 +1,19 @@
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
-import { editor, replaceCode } from './helpers'
+import { chooseOption, editor, replaceCode } from './helpers'
 import { validationSolutions } from '../fixtures/validation-solutions.mjs'
 
 async function finish(page: Page, id: string, code: string) {
-  await page.getByLabel('YOUR PLAN', { exact: true }).fill('Restate the accepted values, name boundary cases, and preserve the input.')
+  await page.getByRole('button', { name: 'Plan', exact: true }).click()
+  await page.getByLabel('Your plan', { exact: true }).fill('Restate the accepted values, name boundary cases, and preserve the input.')
   await replaceCode(page, code, id)
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
   await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
-  await page.getByLabel('YOUR EXPLANATION', { exact: true }).fill('I traced the boundary and conflicting invalid cases. I return a new object and keep the documented error order.')
-  await page.getByLabel('WHAT WAS HARDEST?', { exact: true }).selectOption('none')
-  await page.getByLabel('HOW CONFIDENT DO YOU FEEL?', { exact: true }).selectOption('confident')
+  await page.getByRole('button', { name: 'Explain', exact: true }).click()
+  await page.getByLabel('Your explanation', { exact: true }).fill('I traced the boundary and conflicting invalid cases. I return a new object and keep the documented error order.')
+  await page.getByRole('button', { name: 'Review', exact: true }).click()
+  await chooseOption(page.getByLabel('What was hardest?', { exact: true }), 'none')
+  await chooseOption(page.getByLabel('How confident do you feel?', { exact: true }), 'confident')
   await page.getByRole('button', { name: 'Complete rep', exact: false }).click()
   await expect(page.getByText('Completed and saved on this device.', { exact: true })).toBeVisible()
 }
@@ -44,7 +47,8 @@ test('validation journey requires a fresh delayed recall and remains discoverabl
   await page.reload()
   await journey.locator('summary').click()
   await journey.getByRole('button', { name: 'Try recall', exact: false }).click()
-  await expect(page.getByLabel('YOUR PLAN', { exact: true })).toHaveValue('')
+  await page.getByRole('button', { name: 'Plan', exact: true }).click()
+  await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue('')
   await expect(editor(page)).toBeVisible()
   await expect(page.locator('.view-lines')).toContainText('Implement the written contract')
   await finish(page, 'parse-delivery-window', validationSolutions['parse-delivery-window'])
@@ -69,7 +73,7 @@ test('validation prompts and catalogue remain usable at 320 CSS pixels', async (
   }))).toBe(true)
   await page.getByRole('button', { name: 'Plan', exact: true }).click()
   await expect(page.locator('#plan-section')).toBeFocused()
-  await page.getByLabel('YOUR PLAN', { exact: true }).fill('Small-screen plan with precedence cases.')
+  await page.getByLabel('Your plan', { exact: true }).fill('Small-screen plan with precedence cases.')
   await page.getByRole('button', { name: 'Solve', exact: true }).click()
   await replaceCode(page, validationSolutions['parse-delivery-window'], 'parse-delivery-window')
   await page.keyboard.press('Tab')
@@ -79,9 +83,10 @@ test('validation prompts and catalogue remain usable at 320 CSS pixels', async (
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await page.reload()
   await page.getByRole('button', { name: 'Plan', exact: true }).click()
-  await expect(page.getByLabel('YOUR PLAN', { exact: true })).toHaveValue('Small-screen plan with precedence cases.')
+  await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue('Small-screen plan with precedence cases.')
   await page.goto('/#/practice')
-  await page.getByLabel('Format', { exact: true }).selectOption('backend')
+  await page.locator('.catalog-filters > summary').click()
+  await chooseOption(page.getByLabel('Format', { exact: true }), 'backend')
   await page.getByLabel('Find a rep', { exact: true }).fill('stock adjustment')
   await expect(page.getByRole('button', { name: /Validate a stock adjustment/ })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
