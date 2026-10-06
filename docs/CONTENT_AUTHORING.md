@@ -49,3 +49,7 @@ These reviews appear in the existing post-check comparison reveal. Do not copy s
 Every knowledge lesson must also have an entry in `src/lesson-depth.ts` with a concrete example, causal reasoning, a prediction/repair/counterexample challenge, and a separately revealed discussion. These challenges are self-review, not automated evidence of coding independence. Existing checked questions retain their identities and answer contracts.
 
 Run `yarn content:check`, `yarn lint`, `yarn test`, and `yarn build`. Coverage validation rejects missing fields and unknown targets; human review must still verify correctness, plain wording, progressive difficulty, and whether an alternative actually teaches a decision. Adding text volume alone does not meet the editorial standard.
+
+## Path application links
+
+`src/curriculum.ts` contains authored path-to-project application links. Each link names an existing project milestone rep and explains how it applies the path's skills. Keep links relevant rather than assigning every path a destination. Roles and recall evidence derive from `src/learning.ts`; do not duplicate journey definitions. `tests/curriculum.test.mjs` checks target validity and evidence distinctions. Project completion is not automatic proof of transfer or mastery.

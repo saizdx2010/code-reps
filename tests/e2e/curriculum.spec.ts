@@ -1,0 +1,38 @@
+import { expect, test } from '@playwright/test'
+import { chooseOption } from './helpers'
+
+for (const width of [1280, 320]) {
+  test(`path goal is explicit and survives reload at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/#/paths')
+    await chooseOption(page.getByRole('combobox', { name: 'Choose path', exact: true }), 'frontend')
+    await expect(page.getByText('Browsing this path does not change your learning goal.')).toBeVisible()
+    await page.reload()
+    await expect(page.getByText('Browsing this path does not change your learning goal.')).toBeVisible()
+    const selectGoal = page.getByRole('button', { name: 'Use this as my learning goal' })
+    await selectGoal.focus()
+    await page.keyboard.press('Enter')
+    await expect(page.getByText('Your current learning goal.')).toBeVisible()
+    await page.getByRole('button', { name: 'Home', exact: true }).click()
+    await expect(page.getByRole('region', { name: 'Learning goal' })).toContainText('Frontend core')
+    await expect(page.locator('.continue-panel')).toContainText('selected learning goal: Frontend core')
+    await page.reload()
+    await expect(page.getByRole('region', { name: 'Learning goal' })).toContainText('Frontend core')
+    await page.getByRole('button', { name: 'View or choose goal path' }).click()
+    await expect(page.getByRole('heading', { name: 'Apply this path in a project' })).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await page.screenshot({ path: `test-results/curriculum-${width}.png`, fullPage: true })
+    await page.getByRole('button', { name: 'Open project milestone' }).click()
+    await expect(page).toHaveURL(/practice\/project-team-directory/)
+  })
+}
+
+test('early recall remains accessible without claiming retention', async ({ page }) => {
+  await page.goto('/#/paths')
+  const stage = page.locator('.path-stage').filter({ hasText: 'Work through values' })
+  await stage.locator('summary').click()
+  const recall = stage.getByRole('button', { name: /Count values above a limit/ })
+  await expect(recall).toContainText('Complete independent practice without hints to schedule recall.')
+  await recall.click()
+  await expect(page).toHaveURL(/practice\/count-above-threshold/)
+})

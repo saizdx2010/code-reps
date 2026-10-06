@@ -69,3 +69,11 @@
 Home, path discovery, and the practice library render in `HomePage.tsx`, `PathsPage.tsx`, and `PracticeCatalog.tsx`. `App.tsx` retains their session preferences, navigation, draft persistence, practice recommendations, and runner lifecycle. Presentation extraction does not introduce a second source of learner state.
 
 See [the accessibility walkthrough](./ACCESSIBILITY_REVIEW.md) for manual screen-reader, zoom, contrast, and learner checks that automated keyboard and narrow-layout tests cannot establish. See [performance budgets](./PERFORMANCE.md) for local editor-loading measurements and verification limits.
+
+## Goal paths and curriculum connections
+
+Home links to the current ordered goal path. Browsing another path does not change the goal; choose **Use this as my learning goal** to save that preference for the current profile. The existing TypeScript goal is the starting suggestion.
+
+Paths identify guided, independent, and recall reps from the authored skill journeys, show recall availability and evidence, and connect relevant frontend, backend, and real-world paths to project integration milestones. Path completion includes hinted attempts and remains separate from independence and retention. Early recall can be opened freely, but existing timing and hint rules still govern retention evidence.
+
+Due recall remains first in recommendations. Drafts within the goal path take priority over new path work; other drafts remain visible for explicit resume. Existing difficult-review scheduling remains available. Completed attempts show the reason for the recommended next action. Daily session start/end and separate practice records remain planned work.

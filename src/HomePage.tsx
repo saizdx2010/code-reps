@@ -2,11 +2,14 @@ import type { ReactNode } from 'react'
 import { preloadEditor } from './editor-loader'
 import { reps } from './rep'
 import type { Rep } from './rep'
+import { paths } from './path'
 import { stageLabels } from './learning'
 import type { LearnerStart } from './learning'
 import type { getPracticePlan, PracticeAction } from './practice'
 
 type Props = {
+  goalPathId: string
+  onPath: (id: (typeof paths)[number]['id']) => void
   learnerStart: LearnerStart | null
   startingPoint: ReactNode
   practicePlan: ReturnType<typeof getPracticePlan>
@@ -22,7 +25,7 @@ type Props = {
   onCatalog: () => void
 }
 
-export function HomePage({ learnerStart, startingPoint, practicePlan, draftQueue, setDraftQueue, reviewQueue, setReviewQueue, repStatus, openPracticeAction, actionLabel, onProgress, onKnowledge, onCatalog }: Props) {
+export function HomePage({ goalPathId, onPath, learnerStart, startingPoint, practicePlan, draftQueue, setDraftQueue, reviewQueue, setReviewQueue, repStatus, openPracticeAction, actionLabel, onProgress, onKnowledge, onCatalog }: Props) {
   const recommendation = practicePlan.next
   const recommendedRep = recommendation && reps.find(rep => rep.id === recommendation.repId)
   const journeyStates = practicePlan.progress
@@ -32,6 +35,7 @@ export function HomePage({ learnerStart, startingPoint, practicePlan, draftQueue
       <h1 tabIndex={-1}>{learnerStart ? 'Pick up your practice.' : 'Start with what you know.'}</h1>
       <p>One useful rep, then a little reflection. Your work stays on this device.</p>
     </div>
+    <section className="home-goal" aria-label="Learning goal"><div><strong>{paths.find(path => path.id === goalPathId)?.title}</strong><p>Follow your ordered path or explicitly choose a different learning goal.</p></div><button type="button" className="text-button" onClick={() => onPath((paths.find(path => path.id === goalPathId) ?? paths[0]).id)}>View or choose goal path</button></section>
     {!learnerStart && <div className="first-run-start">{startingPoint}</div>}
     {recommendation && recommendedRep ? <section className="continue-panel" aria-labelledby="continue-heading">
       <div>

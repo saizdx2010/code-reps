@@ -554,3 +554,12 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 .profile-badge-list progress { display: block; width: 100%; height: 6px; margin-bottom: 10px; accent-color: var(--accent); }
 .profile-badge-list .badge-earned { border-color: var(--accent); }
 .profile-badge-list .badge-earned .home-label { color: var(--accent); }
+
+.home-goal, .path-goal { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
+.home-goal p, .path-goal p { color: var(--muted); margin: 6px 0; }
+.path-role, .path-evidence { display: block; margin-top: 6px; }
+.path-stage li button[aria-current=step] { color: var(--accent); }
+.path-stage li button > small { max-width: 38ch; }
+.path-applications { margin-top: 32px; }
+.path-applications > div { padding: 20px 0; border-top: 1px solid var(--border); }
+.path-applications p { max-width: 70ch; color: var(--muted); }
