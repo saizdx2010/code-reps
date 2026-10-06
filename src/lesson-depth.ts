@@ -1,8 +1,10 @@
+import { browserStateLessonDepth } from './browser-state-reps.ts'
 import { dsaLessonDepth } from './dsa-knowledge.ts'
 import { practicalLessonDepth } from './practical-concepts.ts'
 export type LessonDepth = { title: string; code: string; reasoning: string; challenge: string; answer: string }
 
 export const lessonDepth: Record<string, LessonDepth> = {
+  'state-modeling': browserStateLessonDepth,
   ...practicalLessonDepth,
   ...dsaLessonDepth,
   "values": {

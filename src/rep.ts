@@ -1,3 +1,4 @@
+import { browserStateReps } from './browser-state-reps.ts'
 import { dsaReps } from './dsa-reps.ts'
 import { practicalReps } from './practical-concepts.ts'
 import { validationReps } from './validation-reps.ts'
@@ -222,6 +223,7 @@ export const reps: Rep[] = [
   ...fluencyReps,
   ...capstoneReps,
   ...validationReps,
+  ...browserStateReps,
 ]
 import { foundationReps } from './foundations.ts'
 import { aiEraReps } from './ai-era-reps.ts'

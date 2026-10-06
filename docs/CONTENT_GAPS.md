@@ -1,6 +1,8 @@
 # Grow content through complete journeys
 
-Implementation inventory: 2026-10-02, content version 5. Every current skill has a knowledge lesson, interactive questions, authored depth, and linked coding applications. A linked application is not necessarily independent practice, and recognizing an answer does not establish coding fluency. The dedicated journeys below are the only skills with guided → independent → delayed-recall evidence rules.
+For the agreed goal of independently building, testing, and debugging a plain TypeScript browser app outside Code Reps, see the [browser application journey decision and gap assessment](./TYPESCRIPT_BROWSER_JOURNEY.md). Its three external project briefs and state-modeling journey are implemented; the wider curriculum remains proposed.
+
+Implementation inventory: 2026-10-05, content version 7. Every current skill has a knowledge lesson, interactive questions, authored depth, and linked coding applications. A linked application is not necessarily independent practice, and recognizing an answer does not establish coding fluency. The dedicated journeys below are the only skills with guided → independent → delayed-recall evidence rules.
 
 ## Coverage map
 
@@ -8,6 +10,7 @@ The source of truth remains `src/knowledge.ts`, `src/learning.ts`, and `src/flue
 
 | Skill | Linked coding applications | Dedicated journey | Next gap |
 | --- | ---: | --- | --- |
+| TypeScript state modeling | 3 | Guided, independent, delayed recall | Observe unfamiliar application; in-app checks remain behavioral, not semantic type analysis. |
 | Values, types, and functions | 5 | None | Add a distinct independent application and delayed recall. |
 | Arrays and one-pass reasoning | 5 | Guided, independent, delayed recall | Observe comprehension and unfamiliar delayed transfer. |
 | Text and normalization | 6 | Guided, independent, delayed recall | Observe comprehension and unfamiliar delayed transfer. |
