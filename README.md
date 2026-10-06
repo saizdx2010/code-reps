@@ -43,7 +43,7 @@ The workspace follows five steps:
 - **Browser application journey:** a TypeScript state-modeling lesson and guided/independent/delayed-recall reps, plus three freely accessible external project levels using plain TypeScript and the DOM. Detailed requirements cover forms, persistence recovery, real promises, learner-written tests, and a runnable production build. External self-reviews are learner-reported and do not grant retained-skill status.
 - **Personal practice:** two multi-file projects, weekly plans, notes, recurring reviews, self-assessment, and optional timed interview rounds.
 
-Home brings together your next rep, drafts, and due reviews. Practice holds exercises, projects, and interviews; Learn holds paths, lessons, and notes; Progress includes your local profile, path completion badges, completed-rep calendar streaks, and the evidence behind **Learning**, **Practising**, **Independent**, and **Retained**.
+Home brings together your next rep, drafts, and due reviews. Explicit practice sessions pair one rep with reflection; Progress → Practice history keeps ended and unfinished sessions separate from completed attempts and skill evidence. Practice holds exercises, projects, and interviews; Learn holds paths, lessons, and notes; Progress includes your local profile, path completion badges, completed-rep calendar streaks, and the evidence behind **Learning**, **Practising**, **Independent**, and **Retained**.
 
 Practical-concept traces check authored application policies; they do not establish live network or timer behavior. See the [learning tools and verification boundaries](./docs/FLUENCY_PLATFORM.md) for details.
 

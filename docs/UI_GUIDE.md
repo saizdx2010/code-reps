@@ -76,4 +76,14 @@ Home links to the current ordered goal path. Browsing another path does not chan
 
 Paths identify guided, independent, and recall reps from the authored skill journeys, show recall availability and evidence, and connect relevant frontend, backend, and real-world paths to project integration milestones. Path completion includes hinted attempts and remains separate from independence and retention. Early recall can be opened freely, but existing timing and hint rules still govern retention evidence.
 
-Due recall remains first in recommendations. Drafts within the goal path take priority over new path work; other drafts remain visible for explicit resume. Existing difficult-review scheduling remains available. Completed attempts show the reason for the recommended next action. Daily session start/end and separate practice records remain planned work.
+Due recall remains first in recommendations. Drafts within the goal path take priority over new path work; other drafts remain visible for explicit resume. Existing difficult-review scheduling remains available. Completed attempts show the reason for the recommended next action. Daily session start/end and separate practice records are described below.
+
+## Daily practice sessions
+
+Choose **Start practice** from Home or the workspace to create a session around one rep. Opening a rep normally remains available and creates no session. While active, the session asks what you learned or where you got stuck; text saves as you type. You may intentionally reuse your solution explanation. **End session** requires nonblank reflection and may be used before the rep is complete. **Save and leave** preserves work without marking the session ended. Completing a rep and ending a session are separate actions.
+
+Progress → Practice history separates ended sessions from unfinished sessions. Resuming starts a new session using current saved work; the earlier record stays unfinished. You can edit reflection or explicitly remove a session after confirmation without deleting drafts or completed attempts. Draft links open current work; stable completed-attempt links display a snapshot without replacing your draft. Missing work is identified explicitly.
+
+Reload and profile changes preserve records but do not automatically resume a session. A session spanning midnight stays one session. These records do not contribute to completed-rep streaks, path completion, independence, retention, or recall scheduling.
+
+Session recovery distinguishes browser saves awaiting the local service from failed local saves. For conflicting changes in another tab, reload session records, review preserved unsaved reflection, and retry saving. Recovery backups include the locally held reflection. Session writes require browser Web Locks; regular practice remains available if that capability is absent.

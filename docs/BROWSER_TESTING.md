@@ -30,6 +30,11 @@ Playwright first builds current assets, including bundle-size checks, then start
 - Stop and edit an endless worker run, reject obsolete feedback after its deadline, recover from the real five-second timeout, and run a corrected draft.
 - Fail the editor module request, recover the existing draft through the plain text editor, run checks, and restore Monaco with the edited draft after reload.
 - Exercise frontend preview states, filtering, Retry, viewport selection, modal Escape/focus restoration, stale preview feedback, and real sandboxed-frame checks/cleanup.
+- Choose a goal path explicitly at 1280px and 320px, preserve it on reload, and keep early recall accessible without claiming retention.
+- End an unfinished rep with session reflection at 1280px and 320px without completing an attempt; reload history and resume explicitly into a new session.
+- Preserve session reflections across tab conflicts and quota failures; keep code after session deletion, reject invalid imports, isolate profiles, and round-trip full-profile exports.
+- Keep completed attempts separate from ended sessions, open immutable attempt snapshots with focus restoration, and preserve recall due dates and independent evidence after session end.
+- Replay session endings after failed SQLite writes and restore session records through a learner backup using temporary service data.
 - With actual SQLite, fail writes, export the cached work, replay pending saves after reload, retry, restart the service, and restore through a clean browser context. Delay an older acknowledgement while a newer edit is pending.
 - Reject malformed browser imports without replacing work, then restore a valid backup into a separate profile and verify SQLite persistence.
 - Block every external HTTP request during a cold local-server flow and exercise Monaco, worker checks, previews, and frontend checks. This tests the local assets for those flows while loopback remains available.
@@ -54,3 +59,5 @@ This suite does not verify every storage-failure or upgrade case, disconnected o
 Configuration: `playwright.config.ts`. Tests: `tests/e2e/*.spec.ts`; shared editor helpers: `tests/e2e/helpers.ts`. Pull requests and pushes to main run the suite through `.github/workflows/checks.yml`, retaining failure reports for seven days. `yarn test` and `just check` do not run this suite; run `yarn test:e2e` explicitly for affected browser flows.
 
 See [performance measurements](./PERFORMANCE.md) and [the remaining accessibility/learner walkthrough](./ACCESSIBILITY_REVIEW.md) for their specific evidence boundaries.
+
+See [daily-practice verification](./DAILY_PRACTICE_VERIFICATION.md) for the stage 3 results, stage 4 findings, and pending learner gates.

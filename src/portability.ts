@@ -1,3 +1,5 @@
+import { parseSessions } from './practice-sessions.ts'
+import type { SessionState } from './practice-sessions.ts'
 import { parseFluency } from './fluency.ts'
 import type { FluencyState } from './fluency.ts'
 export type PortableAttempt = {
@@ -19,6 +21,7 @@ export type Backup = {
   learnerStart: 'new' | 'returning' | null
   history: PortableRecord[]
   drafts: Record<string, PortableAttempt>
+  sessions?: SessionState
   learning?: FluencyState
 }
 
@@ -66,7 +69,7 @@ export function parseBackup(text: string, knownRepIds: Set<string>): Backup {
   }
   return { format: 'code-reps-backup', version: 1,
     exportedAt: typeof raw.exportedAt === 'string' ? raw.exportedAt : '',
-    learnerStart: raw.learnerStart, history, drafts, ...(raw.learning === undefined ? {} : { learning: parseFluency(raw.learning) }) }
+    learnerStart: raw.learnerStart, history, drafts, ...(raw.sessions === undefined ? {} : { sessions: parseSessions(raw.sessions, knownRepIds) }), ...(raw.learning === undefined ? {} : { learning: parseFluency(raw.learning) }) }
 }
 
 export function mergeHistory<T extends { id: string }>(current: T[], imported: T[]): T[] {

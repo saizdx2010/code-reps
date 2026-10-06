@@ -173,3 +173,36 @@ test('cold local-server editing, worker checks, and previews need no external re
   await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
   expect(external).toEqual([])
 })
+
+test('session endings replay after SQLite failure and restore through learner backup', async ({ page, service }) => {
+  const sessionKey = 'code-reps:profile:default:sessions:v1'
+  await page.goto(service.url + '/#/practice/sum-positive-numbers')
+  await page.getByRole('button', { name: 'Start practice', exact: true }).click()
+  let failWrites = true
+  await page.route('**/api/entries', request => failWrites ? request.fulfill({ status: 503, json: { error: 'Test session save failure' } }) : request.continue())
+  await page.getByLabel('What did you learn or where did you get stuck?').fill('Session saved locally during service failure')
+  await page.getByRole('button', { name: 'End session', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Session saved' })).toBeVisible()
+  await expect(page.locator('.session-save')).toContainText('waiting for the local server')
+  const downloading = page.waitForEvent('download')
+  await page.locator('.session-save').getByRole('button', { name: 'Download recovery backup' }).click()
+  const contents = await readFile((await (await downloading).path())!)
+  expect(JSON.parse(contents.toString()).sessions.records[0].endedAt).toBeTruthy()
+  failWrites = false
+  await page.locator('.session-save').getByRole('button', { name: 'Retry session save' }).click()
+  await expect.poll(async () => {
+    const { entries } = await (await fetch(service.url + '/api/state')).json()
+    return JSON.parse(entries[sessionKey] || '{"records":[]}').records[0]?.reflection
+  }).toBe('Session saved locally during service failure')
+  await page.reload()
+  await page.goto(service.url + '/#/sessions')
+  await expect(page.getByText('Session saved locally during service failure', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Delete record…' }).click()
+  await page.getByRole('button', { name: 'Remove session record' }).click()
+  await expect(page.getByText('No ended sessions yet.', { exact: false })).toBeVisible()
+  await page.goto(service.url + '/#/progress')
+  await page.locator('.local-data > summary').click()
+  await Promise.all([page.waitForEvent('load'), page.getByLabel('Choose Code Reps backup').setInputFiles({ name: 'sessions.json', mimeType: 'application/json', buffer: contents })])
+  await page.goto(service.url + '/#/sessions')
+  await expect(page.getByText('Session saved locally during service failure', { exact: true })).toBeVisible()
+})

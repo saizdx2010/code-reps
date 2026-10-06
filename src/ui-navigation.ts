@@ -1,12 +1,12 @@
-export type View = 'home' | 'catalog' | 'workspace' | 'history' | 'learn' | 'paths' | 'progress' | 'knowledge' | 'notebook' | 'plan' | 'assessment' | 'projects' | 'interview'
+export type View = 'sessions' | 'home' | 'catalog' | 'workspace' | 'history' | 'learn' | 'paths' | 'progress' | 'knowledge' | 'notebook' | 'plan' | 'assessment' | 'projects' | 'interview'
 export type Route = { view: View; repId?: string }
-const views: View[] = ['home', 'catalog', 'workspace', 'history', 'learn', 'paths', 'progress', 'knowledge', 'notebook', 'plan', 'assessment', 'projects', 'interview']
+const views: View[] = ['sessions', 'home', 'catalog', 'workspace', 'history', 'learn', 'paths', 'progress', 'knowledge', 'notebook', 'plan', 'assessment', 'projects', 'interview']
 
 export const navigationSections = {
   home: [{ view: 'home', label: 'Today' }, { view: 'plan', label: 'Practice plan' }],
   practice: [{ view: 'catalog', label: 'Exercises' }, { view: 'projects', label: 'Projects' }, { view: 'interview', label: 'Interview' }],
   learn: [{ view: 'knowledge', label: 'Lessons' }, { view: 'paths', label: 'Paths' }, { view: 'notebook', label: 'Notebook' }],
-  progress: [{ view: 'progress', label: 'Skills' }, { view: 'history', label: 'History' }, { view: 'assessment', label: 'Self-assessment' }],
+  progress: [{ view: 'progress', label: 'Skills' }, { view: 'history', label: 'History' }, { view: 'sessions', label: 'Practice history' }, { view: 'assessment', label: 'Self-assessment' }],
 } satisfies Record<string, { view: View; label: string }[]>
 
 export function navigationArea(view: View): keyof typeof navigationSections {

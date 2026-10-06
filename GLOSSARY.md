@@ -20,6 +20,18 @@ _Avoid_: Browsing selection, assigned course
 A record of an ended session, including its reflection and connection to the learner's work. It does not by itself establish rep completion or skill evidence.
 _Avoid_: Completed attempt, mastery evidence
 
+**Active session**:
+The one practice session a learner is currently working in for a profile. Browsing another rep does not change its associated rep.
+_Avoid_: Open rep, completed attempt
+
+**Unfinished session**:
+A practice session left without an explicit ending and its required reflection. Returning to its work starts a new session while preserving the earlier session as unfinished.
+_Avoid_: Ended session, failed attempt
+
+**Session reflection**:
+The learner's written account of what they learned or where they got stuck during practice. It is distinct from explaining how a solution works.
+_Avoid_: Solution explanation, confidence rating
+
 **Path**:
 An ordered sequence of reps toward a learning goal. It is the main view of the curriculum.
 _Avoid_: Skill journey, session

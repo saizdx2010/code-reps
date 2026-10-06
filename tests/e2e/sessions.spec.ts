@@ -1,0 +1,195 @@
+import { expect, test } from '@playwright/test'
+import { chooseOption, replaceCode } from './helpers'
+
+const repId = 'sum-positive-numbers'
+const sessionKey = 'code-reps:profile:default:sessions:v1'
+async function start(page: import('@playwright/test').Page) {
+  await page.goto(`/#/practice/${repId}`)
+  await page.getByRole('button', { name: 'Start practice', exact: true }).click()
+  await expect(page.getByLabel('What did you learn or where did you get stuck?')).toBeVisible()
+}
+
+for (const width of [1280, 320]) {
+  test(`unfinished rep can end a session without changing evidence at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await start(page)
+    const reflection = page.getByLabel('What did you learn or where did you get stuck?')
+    await reflection.fill('I need to trace empty input before coding.')
+    await expect(page.getByRole('button', { name: 'End session', exact: true })).toBeEnabled()
+    await page.getByRole('button', { name: 'End session', exact: true }).focus()
+    await page.keyboard.press('Enter')
+    await expect(page.getByRole('heading', { name: 'Session saved' })).toBeVisible()
+    const data = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!), sessionKey)
+    expect(data.records).toHaveLength(1)
+    expect(data.records[0].endedAt).toBeTruthy()
+    expect(data.records[0].attemptId).toBeUndefined()
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('code-reps:profile:default:history:v1') || '[]'))).toEqual([])
+    await page.getByRole('button', { name: 'Back to Home', exact: true }).click()
+    await page.getByRole('button', { name: 'Progress', exact: true }).click()
+    await page.getByRole('button', { name: 'Practice history', exact: true }).click()
+    await expect(page.getByText('I need to trace empty input before coding.', { exact: true })).toBeVisible()
+    await page.getByRole('button', { name: 'Edit reflection' }).click()
+    await page.getByLabel('Session reflection').fill('I traced the empty case and will retry tomorrow.')
+    await page.getByRole('button', { name: 'Done editing' }).click()
+    await page.reload()
+    await expect(page.getByText('I traced the empty case and will retry tomorrow.', { exact: true })).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await page.screenshot({ path: `test-results/session-history-${width}.png`, fullPage: true })
+  })
+}
+
+test('reload keeps reflection and explicit resume creates a new session', async ({ page }) => {
+  await start(page)
+  await page.getByLabel('What did you learn or where did you get stuck?').fill('Still working on my plan.')
+  await page.getByRole('button', { name: 'Save and leave', exact: true }).click()
+  await page.reload()
+  await page.getByRole('button', { name: 'Resume practice', exact: true }).click()
+  await expect(page.getByLabel('What did you learn or where did you get stuck?')).toHaveValue('')
+  const data = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!), sessionKey)
+  expect(data.records).toHaveLength(2)
+  expect(data.records.every((record: { endedAt?: string }) => !record.endedAt)).toBe(true)
+  expect(data.records[1].reflection).toBe('Still working on my plan.')
+})
+
+test('another tab cannot silently overwrite session reflections', async ({ page, context }) => {
+  await start(page)
+  await page.getByLabel('What did you learn or where did you get stuck?').fill('First tab reflection')
+  await expect.poll(() => page.evaluate(key => JSON.parse(localStorage.getItem(key)!).records[0].reflection, sessionKey)).toBe('First tab reflection')
+  const other = await context.newPage()
+  await other.goto('/#/sessions')
+  await other.getByRole('button', { name: 'Unfinished', exact: true }).click()
+  await other.getByRole('button', { name: 'Edit reflection' }).click()
+  await other.getByLabel('Session reflection').fill('Second tab reflection')
+  await expect(page.getByText(/Practice history changed in another tab/)).toBeVisible()
+  await page.getByLabel('What did you learn or where did you get stuck?').fill('Unsaved recovery text')
+  await expect.poll(() => other.evaluate(key => JSON.parse(localStorage.getItem(key)!).records[0].reflection, sessionKey)).toBe('Second tab reflection')
+  await page.getByRole('button', { name: 'Reload session records' }).click()
+  await page.getByRole('button', { name: 'Retry session save' }).click()
+  await expect.poll(() => page.evaluate(key => JSON.parse(localStorage.getItem(key)!).records[0].reflection, sessionKey)).toBe('Unsaved recovery text')
+})
+
+test('session deletion keeps the code draft and invalid imports preserve sessions', async ({ page }) => {
+  await start(page)
+  await page.getByLabel('What did you learn or where did you get stuck?').fill('Keep my code.')
+  await page.getByRole('button', { name: 'End session', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Session saved' })).toBeVisible()
+  const before = await page.evaluate(key => localStorage.getItem(key), sessionKey)
+  await page.goto('/#/progress')
+  await page.getByText('Back up or restore practice', { exact: true }).click()
+  const invalid = { format: 'code-reps-backup', version: 1, learnerStart: null, history: [], drafts: {}, sessions: { version: 1, revision: '', records: [{ bad: true }] } }
+  await page.getByLabel('Choose Code Reps backup').setInputFiles({ name: 'invalid.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(invalid)) })
+  await expect(page.locator('.transfer-message')).toContainText('invalid session')
+  expect(await page.evaluate(key => localStorage.getItem(key), sessionKey)).toBe(before)
+  await page.goto('/#/sessions')
+  await page.getByRole('button', { name: 'Delete record…' }).click()
+  await page.getByRole('button', { name: 'Remove session record' }).click()
+  await expect(page.getByText('No ended sessions yet.', { exact: false })).toBeVisible()
+  expect(await page.evaluate(id => localStorage.getItem(`code-reps:profile:default:attempt:${id}:v1`), repId)).toBeTruthy()
+})
+
+test('sessions and full-profile exports stay isolated between profiles', async ({ page }) => {
+  await start(page)
+  await page.getByLabel('What did you learn or where did you get stuck?').fill('Original learner reflection')
+  await page.getByRole('button', { name: 'End session', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Session saved' })).toBeVisible()
+  await page.getByRole('button', { name: 'Manage profiles' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Local profiles' })
+  if (await dialog.locator('.profile-portability').getAttribute('open') === null) await dialog.getByText('Export or import a profile', { exact: true }).click()
+  const downloading = page.waitForEvent('download')
+  await dialog.getByRole('button', { name: 'Export current', exact: true }).click()
+  const { readFile } = await import('node:fs/promises')
+  const contents = await readFile((await (await downloading).path())!)
+  const exported = JSON.parse(contents.toString())
+  expect(JSON.parse(exported.entries['sessions:v1']).records[0].reflection).toBe('Original learner reflection')
+  await dialog.getByText('Create or rename a profile', { exact: true }).click()
+  await dialog.getByLabel('Profile name', { exact: true }).fill('Separate practice')
+  await dialog.getByRole('button', { name: 'Create profile', exact: true }).click()
+  await expect(dialog.getByRole('status')).toHaveText('Profile created.')
+  await dialog.getByRole('button', { name: 'Close', exact: true }).click()
+  await page.goto('/#/sessions')
+  await expect(page.getByText('No ended sessions yet.', { exact: false })).toBeVisible()
+  await page.getByRole('button', { name: 'Manage profiles' }).click()
+  if (await dialog.locator('.profile-portability').getAttribute('open') === null) await dialog.getByText('Export or import a profile', { exact: true }).click()
+  const choosing = page.waitForEvent('filechooser')
+  await dialog.getByRole('button', { name: 'Choose file', exact: true }).click()
+  await (await choosing).setFiles({ name: 'profile.json', mimeType: 'application/json', buffer: contents })
+  await expect(dialog.getByRole('status')).toHaveText('Imported as a separate local profile.')
+  await dialog.getByRole('button', { name: 'Close', exact: true }).click()
+  await page.goto('/#/sessions')
+  await expect(page.getByText('Original learner reflection', { exact: true })).toBeVisible()
+})
+
+test('local quota failure preserves reflection and does not acknowledge an ended session', async ({ page }) => {
+  await start(page)
+  await page.evaluate(() => {
+    const setItem = Storage.prototype.setItem
+    Storage.prototype.setItem = function(key, value) {
+      if (key.endsWith('sessions:v1')) throw new DOMException('Test full storage', 'QuotaExceededError')
+      return setItem.call(this, key, value)
+    }
+  })
+  await page.getByLabel('What did you learn or where did you get stuck?').fill('Unsaved text must survive failure')
+  await expect(page.locator('.session-save')).toContainText('Test full storage')
+  await page.getByRole('button', { name: 'End session', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Your practice session' })).toBeVisible()
+  await expect(page.getByLabel('What did you learn or where did you get stuck?')).toHaveValue('Unsaved text must survive failure')
+  expect(await page.evaluate(key => JSON.parse(localStorage.getItem(key)!).records[0].endedAt, sessionKey)).toBeUndefined()
+  const downloading = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Download recovery backup', exact: true }).click()
+  const { readFile } = await import('node:fs/promises')
+  const backup = JSON.parse(await readFile((await (await downloading).path())!, 'utf8'))
+  expect(backup.sessions.records[0].reflection).toBe('Unsaved text must survive failure')
+})
+
+
+test('completed attempts stay separate from sessions and open immutable work', async ({ page }) => {
+  await start(page)
+  await page.getByRole('button', { name: 'Plan', exact: true }).click()
+  await page.getByLabel('Your plan', { exact: true }).fill('Visit numbers and add the positive ones.')
+  await page.getByRole('button', { name: 'Solve', exact: true }).click()
+  await replaceCode(page, 'function sumPositive(numbers: number[]): number { return numbers.filter(n => n > 0).reduce((sum, n) => sum + n, 0) }', repId)
+  await page.keyboard.press('ControlOrMeta+Enter')
+  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Explain', exact: true }).click()
+  await page.getByLabel('Your explanation', { exact: true }).fill('I filter positive numbers and add them; empty input returns zero.')
+  await page.getByRole('button', { name: 'Review', exact: true }).click()
+  await chooseOption(page.getByLabel('What was hardest?', { exact: true }), 'none')
+  await chooseOption(page.getByLabel('How confident do you feel?', { exact: true }), 'confident')
+  await page.getByRole('button', { name: 'Complete rep', exact: true }).click()
+  await expect(page.getByText('Completed and saved on this device.', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Your practice session' })).toBeVisible()
+  await page.getByLabel('What did you learn or where did you get stuck?').fill('I checked zero and negative values.')
+  await page.getByRole('button', { name: 'End session', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Session saved' })).toBeVisible()
+  await page.goto('/#/sessions')
+  await page.getByRole('button', { name: 'View recorded attempt' }).click()
+  const snapshot = page.getByRole('region', { name: 'Recorded attempt', exact: true })
+  await expect(snapshot).toBeFocused()
+  await expect(snapshot).toContainText('numbers.filter')
+  await page.getByRole('button', { name: 'Close recorded attempt' }).click()
+  await expect(page.getByRole('button', { name: 'View recorded attempt' })).toBeFocused()
+})
+
+test('ending a recall session leaves due dates and independent evidence unchanged', async ({ page }) => {
+  // Seed before startup reads history; hash navigation does not remount the profile.
+  await page.addInitScript(() => {
+    const base = { plan: 'Recorded plan', code: 'Recorded code', explanation: 'Recorded explanation', hintCount: 0, confidence: 'confident', difficulty: 'none' }
+    const history = [
+      { ...base, id: 'guided-one', repId: 'sum-positive-numbers', completedAt: new Date(Date.now() - 5 * 86400000).toISOString() },
+      { ...base, id: 'independent-one', repId: 'count-even-numbers', completedAt: new Date(Date.now() - 4 * 86400000).toISOString() },
+    ]
+    localStorage.setItem('code-reps:profile:default:history:v1', JSON.stringify(history))
+  })
+  await page.goto('/#/practice/count-above-threshold')
+  const before = await page.evaluate(() => localStorage.getItem('code-reps:profile:default:history:v1'))
+  await page.getByRole('button', { name: 'Start practice', exact: true }).click()
+  await page.getByLabel('What did you learn or where did you get stuck?').fill('I need another independent try before asking for help.')
+  await page.getByRole('button', { name: 'End session', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Session saved' })).toBeVisible()
+  expect(await page.evaluate(() => localStorage.getItem('code-reps:profile:default:history:v1'))).toBe(before)
+  await page.getByRole('button', { name: 'Back to Home', exact: true }).click()
+  await expect(page.locator('.continue-panel')).toContainText('Count values above a limit')
+  await page.goto('/#/progress')
+  await expect(page.locator('[aria-label="Skill evidence summary"]')).toContainText('Independent skills1')
+  await expect(page.locator('[aria-label="Skill evidence summary"]')).toContainText('Retained skills0')
+})

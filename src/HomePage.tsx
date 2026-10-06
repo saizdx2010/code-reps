@@ -1,3 +1,4 @@
+import type { PracticeSession } from './practice-sessions'
 import type { ReactNode } from 'react'
 import { preloadEditor } from './editor-loader'
 import { reps } from './rep'
@@ -8,6 +9,11 @@ import type { LearnerStart } from './learning'
 import type { getPracticePlan, PracticeAction } from './practice'
 
 type Props = {
+  sessionBusy: boolean
+  startPractice: (action: PracticeAction) => void
+  unfinishedSessions: PracticeSession[]
+  resumeSession: (repId: string) => void
+  onPracticeHistory: () => void
   goalPathId: string
   onPath: (id: (typeof paths)[number]['id']) => void
   learnerStart: LearnerStart | null
@@ -25,7 +31,7 @@ type Props = {
   onCatalog: () => void
 }
 
-export function HomePage({ goalPathId, onPath, learnerStart, startingPoint, practicePlan, draftQueue, setDraftQueue, reviewQueue, setReviewQueue, repStatus, openPracticeAction, actionLabel, onProgress, onKnowledge, onCatalog }: Props) {
+export function HomePage({ sessionBusy, startPractice, unfinishedSessions, resumeSession, onPracticeHistory, goalPathId, onPath, learnerStart, startingPoint, practicePlan, draftQueue, setDraftQueue, reviewQueue, setReviewQueue, repStatus, openPracticeAction, actionLabel, onProgress, onKnowledge, onCatalog }: Props) {
   const recommendation = practicePlan.next
   const recommendedRep = recommendation && reps.find(rep => rep.id === recommendation.repId)
   const journeyStates = practicePlan.progress
@@ -53,6 +59,8 @@ export function HomePage({ goalPathId, onPath, learnerStart, startingPoint, prac
       </div>
       <button className="primary-button" type="button" onClick={onProgress}>See progress</button>
     </section>}
+    {recommendation && <button type="button" className="text-button" disabled={sessionBusy} onClick={() => startPractice(recommendation)}>Start practice</button>}
+    {unfinishedSessions.length > 0 && <section className="home-sessions" aria-labelledby="unfinished-sessions-title"><h2 id="unfinished-sessions-title">Unfinished sessions</h2><p>Resume the saved work in a new session. Earlier sessions remain unfinished.</p><ul>{[...new Map(unfinishedSessions.map(record => [record.repId, record])).values()].slice(0, 3).map(record => <li key={record.id}><span>{reps.find(rep => rep.id === record.repId)?.title}</span><button type="button" className="text-button" disabled={sessionBusy} onClick={() => resumeSession(record.repId)}>Resume practice</button></li>)}</ul><button type="button" className="text-button" onClick={onPracticeHistory}>View practice history</button></section>}
     {practicePlan.unfinished.length > 0 && <section className="practice-queue" aria-labelledby="unfinished-heading">
       <div className="home-section-heading">
         <h2 id="unfinished-heading">Your unfinished work</h2>

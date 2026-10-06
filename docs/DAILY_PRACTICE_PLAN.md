@@ -1,6 +1,6 @@
 # Daily practice and curriculum cohesion
 
-Status: shared understanding confirmed. Stage 1 implemented; stages 2 and 3 remain planned.
+Status: shared understanding confirmed. Stages 1 and 2 implemented. Stage 3 engineering verification and observation preparation executed; stage 4 engineering findings addressed. Learner observation and the remaining manual/environment gates are pending. See [the verification report](./DAILY_PRACTICE_VERIFICATION.md).
 
 ## Agreed direction
 
@@ -47,6 +47,8 @@ Relevant owners: `src/path.ts`, `src/PathsPage.tsx`, `src/HomePage.tsx`, `src/pr
 
 ### 2. Daily session lifecycle
 
+See [the stage 2 session design](./DAILY_SESSION_DESIGN.md) for the accepted lifecycle, history, recovery, and backup decisions.
+
 Add explicit start and end actions around one rep plus reflection, optional continuation through another session, draft resume, and separate per-profile practice records. Preserve save-and-leave behavior without requiring reflection. Reuse existing reflection where suitable instead of asking learners to write the same response twice.
 
 Route session data through existing profile and persistence mechanisms. Define and validate its additive backup contract before implementation; cover legacy imports, profile separation, failed writes, newer edits during acknowledgements, and draft/attempt links. Preserve browser-only and local-service modes. Use temporary data for service checks.
@@ -58,6 +60,21 @@ Relevant owners: `src/App.tsx`, `src/practice.ts`, `src/fluency.ts`, `src/local-
 Run focused tests, lint, the Node suite, content validation for authored relationships/model changes, build, Chromium flows, and diff checks. Run portable/service verification if persistence changes affect those contracts. Browser coverage should include keyboard and narrow layouts, reload/resume, unfinished session endings, profile separation, optional recall help, and unchanged recall evidence after session end.
 
 Observe returning learners before tuning scheduling. Ask whether they can identify the next rep and its reason, end and resume practice without losing work, and explain the difference between path completion and skill evidence. Automated behavior checks do not establish comprehension or learning effectiveness.
+
+### 4. Findings-driven fixes and revalidation
+
+Fix reproducible engineering failures found during stage 3, preserving the agreed learner experience and existing persistence contracts. Use actual returning-learner observations to justify comprehension and content changes. Record each finding, its evidence, the change, and the affected verification; rerun those checks after the fix. If stage 3 produces no actionable findings, record that outcome rather than inventing features.
+
+Scheduling changes and curriculum expansion remain deferred until evidence supports a separately agreed change. Stage 4 cannot claim learner validation while observations are pending.
+
+## Accepted stage 3 and 4 boundaries
+
+- Target three to five returning TypeScript developers. Prepare the observation packet now; recruitment and actual sessions remain pending. Do not contact participants without explicit authorization.
+- Observe recommendation reasoning, explicit path choice, ending an unfinished rep with reflection, resuming without losing work, distinctions between completion and independent/retained evidence, optional help, and later recall.
+- Engineering verification targets Chromium and macOS arm64, including keyboard, narrow layout, and an available manual zoom walkthrough. Record results for the exact build tested.
+- Screen-reader review, full disconnected operation, other browser engines, and Windows/Linux verification remain separate pending gates unless actually exercised.
+- Automated behavior, manual UI observations, and learner outcomes are distinct evidence. A prepared protocol is not a completed observation.
+- Stage 3 produces a verification report and observation packet. Stage 4 addresses supported findings and revalidates changes; participant-dependent work stays visibly pending.
 
 ## Acceptance scenarios
 

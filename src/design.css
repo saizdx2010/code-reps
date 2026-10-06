@@ -563,3 +563,20 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 .path-applications { margin-top: 32px; }
 .path-applications > div { padding: 20px 0; border-top: 1px solid var(--border); }
 .path-applications p { max-width: 70ch; color: var(--muted); }
+
+.session-panel { margin: 18px 0; padding: 18px; border: 1px solid var(--border); border-radius: var(--radius); }
+.session-panel h2 { font-size: 20px; margin: 0 0 8px; }
+.session-panel p, .session-history p { color: var(--muted); max-width: 70ch; }
+.session-panel label, .session-history label { display: block; margin: 12px 0 8px; }
+.session-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0; }
+.session-save { padding: 8px 24px; color: var(--muted); }
+.session-save p { margin: 6px 0; }
+.session-save button { margin: 4px 12px 4px 0; }
+.session-reflection { white-space: pre-wrap; overflow-wrap: anywhere; }
+.session-history { list-style: none; padding: 0; }
+.session-history > li { border-top: 1px solid var(--border); padding: 24px 0; }
+.home-sessions { margin: 24px 0; }
+.home-sessions ul { padding: 0; list-style: none; }
+.home-sessions li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.recorded-attempt { margin: 16px auto; padding: 24px; max-width: 1000px; border: 1px solid var(--border); }
+.recorded-attempt pre { overflow: auto; max-height: 50vh; }
