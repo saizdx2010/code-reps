@@ -218,29 +218,30 @@ main { max-width: 1104px; margin: 0 auto; padding: 36px 28px 64px; }
 footer { display: flex; justify-content: space-between; gap: 20px; max-width: 1048px; margin: 0 auto; padding: 24px 28px; border-top: 1px solid var(--border); color: var(--muted); font-size: 13px; }
 
 /* Practice: the selected step sits beside code that never leaves the desk. */
-.practice-main { display: flex; flex-direction: column; min-height: calc(100dvh - 56px); max-width: none; padding: 20px 28px 24px; }
-.page-intro { flex: none; margin-bottom: 18px; }
-.practice-context { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
-.breadcrumb { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
-.breadcrumb-link { border: 0; padding: 0; background: transparent; color: var(--accent); font-size: inherit; }
-.practice-status { color: var(--muted); font-size: 12px; }
-.intro-row { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-.practice-main h1 { font-size: clamp(23px, 2.3vw, 29px); margin: 0; }
-.intro-actions { display: flex; align-items: center; gap: 12px; flex: none; }
+.practice-main { display: flex; flex-direction: column; min-height: calc(100dvh - 56px); max-width: none; padding: 10px 28px 24px; }
+.workspace-header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; flex: none; min-height: 44px; margin-bottom: 10px; }
+.workspace-title { display: flex; align-items: center; gap: 12px; flex: 1 1 280px; min-width: 0; }
+.practice-main h1 { min-width: 0; margin: 0; overflow: hidden; font-size: clamp(19px, 1.8vw, 22px); text-overflow: ellipsis; white-space: nowrap; }
+.breadcrumb-link { display: inline-flex; align-items: center; flex: none; min-height: 36px; padding: 0 12px 0 2px; border: 0; border-right: 1px solid var(--border); background: transparent; color: var(--accent); font-size: 14px; font-weight: 550; }
+.workspace-category { overflow: hidden; color: var(--muted); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.workspace-actions { order: 2; display: flex; align-items: center; gap: 8px; flex: none; }
+.workspace-header :is(.reset-button, .session-panel .ui-button), .workspace-options > summary { min-height: 36px; padding: 6px 12px; font-size: 14px; }
 .workspace-options { position: relative; }
-.workspace-options > summary { list-style: none; min-height: 40px; padding: 9px 14px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); font-size: 14px; cursor: pointer; }
+.workspace-options > summary { list-style: none; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); cursor: pointer; }
 .workspace-options > summary::-webkit-details-marker { display: none; }
 .workspace-options > div { display: grid; gap: 10px; position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; width: min(280px, calc(100vw - 40px)); padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-menu); }
 .workspace-knowledge { display: grid; gap: 8px; padding-top: 10px; font-size: 13px; color: var(--muted); }
 .workspace-knowledge button { min-height: 36px; border: 0; background: transparent; color: var(--accent); text-align: left; font-size: 14px; }
-.practice-steps { position: relative; isolation: isolate; display: flex; align-items: stretch; gap: 4px; flex: none; padding: 5px; margin-bottom: 18px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); }
-.practice-steps button { position: relative; z-index: 1; flex: 1; justify-content: center; border-radius: var(--radius-control); display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 44px; padding: 9px 4px; border: 0; background: transparent; color: var(--text); font-size: 15px; }
+/* The step bar is horizontal by default; desktop turns it into a rail beside the brief. */
+.practice-steps { position: relative; isolation: isolate; display: flex; align-items: stretch; gap: 4px; flex: none; padding: 5px; margin-bottom: 18px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); counter-reset: step; }
+.practice-steps button { position: relative; z-index: 1; flex: 1; justify-content: center; border-radius: var(--radius-control); display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 44px; padding: 9px 4px; border: 0; background: transparent; color: var(--text); font-size: 15px; counter-increment: step; }
 .practice-steps button[aria-current=step] { color: var(--action-text); font-weight: 600; }
 .practice-steps button:hover:not([aria-current]) { background: var(--accent-soft); }
 .workspace-layout { display: grid; align-items: stretch; gap: 0; flex: none; height: clamp(440px, 58dvh, 680px); min-height: 0; }
-.task-column, .code-column { min-width: 0; min-height: 0; border-radius: var(--radius); scrollbar-width: thin; overscroll-behavior: contain; }
-.task-column { overflow-y: auto; background: var(--surface); border: 1px solid var(--border); }
-.code-column { display: flex; flex-direction: column; overflow-y: auto; background: var(--editor); color: var(--text); border: 1px solid #55685b; color-scheme: dark; --action: #bce57b; --action-hover: #ceeaa3; --action-text: #293e33; --warning: #f0d38b; --warning-soft: #4b432d; --warning-border: #78683c; --shadow-menu: 0 8px 24px #16281f55; --bg: #303f38; --surface: #303f38; --surface-2: #3b4b42; --border: #55685b; --border-strong: #94a88c; --text: #edf0eb; --muted: #c0cbc1; --accent: #bce57b; --accent-soft: #40523c; --success: #a0d6bc; --success-soft: #203c35; --error: #ffb5ad; --error-soft: #442d32; }
+.task-pane { display: grid; grid-template-columns: 84px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); min-width: 0; min-height: 0; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.task-column, .code-column { min-width: 0; min-height: 0; scrollbar-width: thin; overscroll-behavior: contain; }
+.task-column { overflow-y: auto; background: var(--surface); }
+.code-column { border-radius: var(--radius); display: flex; flex-direction: column; overflow-y: auto; background: var(--editor); color: var(--text); border: 1px solid #55685b; color-scheme: dark; --action: #bce57b; --action-hover: #ceeaa3; --action-text: #293e33; --warning: #f0d38b; --warning-soft: #4b432d; --warning-border: #78683c; --shadow-menu: 0 8px 24px #16281f55; --bg: #303f38; --surface: #303f38; --surface-2: #3b4b42; --border: #55685b; --border-strong: #94a88c; --text: #edf0eb; --muted: #c0cbc1; --accent: #bce57b; --accent-soft: #40523c; --success: #a0d6bc; --success-soft: #203c35; --success-border: #3f7360; --error: #ffb5ad; --error-soft: #442d32; --error-border: #8a5058; }
 .panel { min-width: 0; }
 .task-panel, .plan-panel, .explain-panel, .reflection-section { padding: 28px; }
 .panel-heading { margin-bottom: 18px; }
@@ -319,14 +320,16 @@ footer { display: flex; justify-content: space-between; gap: 20px; max-width: 10
 .editor-recovery { display: flex; flex-direction: column; flex: 1; min-height: 320px; gap: 12px; padding: 20px; }
 .editor-recovery p { margin: 0; color: var(--muted); font-size: 14px; }
 .editor-recovery textarea { flex: 1; min-height: 220px; font: 13px/1.8 var(--font-mono); }
-.results-panel { flex: none; margin-top: 18px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); scroll-margin-top: 64px; }
-.results-panel.passed { background: var(--success-soft); border-color: var(--success-border); }
-.results-panel.failed { background: var(--error-soft); border-color: var(--error-border); }
-.results-panel.running { background: var(--warning-soft); border-color: var(--warning-border); }
-.checks-toggle { display: flex; justify-content: space-between; align-items: center; gap: 16px; width: 100%; min-height: 48px; padding: 16px 24px; border: 0; border-radius: var(--radius); background: transparent; color: var(--text); text-align: left; font-size: 14px; }
+/* Checks open as a drawer inside the dark coding desk, above the run toolbar. */
+.checks-drawer { display: flex; flex-direction: column; flex: 0 1 auto; min-height: 40px; max-height: min(50%, 20rem); border-top: 1px solid var(--border); background: var(--surface); scroll-margin-top: 64px; }
+.code-column:has(.preview-inline) .checks-drawer { max-height: min(35%, 20rem); }
+.checks-drawer.passed { background: var(--success-soft); border-top-color: var(--success-border); }
+.checks-drawer.failed { background: var(--error-soft); border-top-color: var(--error-border); }
+.checks-drawer.running { background: var(--warning-soft); border-top-color: var(--warning-border); }
+.checks-toggle { display: flex; justify-content: space-between; align-items: center; flex: none; gap: 16px; width: 100%; min-height: 40px; padding: 8px 16px; border: 0; background: transparent; color: var(--text); text-align: left; font-size: 14px; }
 .checks-toggle > span:last-child { color: var(--muted); font-size: 12px; }
 .checks-toggle > span:last-child > span { margin-left: 12px; }
-#check-details { padding: 0 24px 24px; }
+#check-details { min-height: 0; padding: 0 16px 16px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
 .result-summary { display: flex; align-items: start; gap: 12px; padding: 8px 0 18px; margin: 0; }
 .result-summary.passed { color: var(--success); background: var(--success-soft); }
 .result-summary.failed { color: var(--error); background: var(--error-soft); }
@@ -434,13 +437,13 @@ dialog.preview-inline { display: block; position: static; inset: auto; width: 10
   .section-nav { gap: 20px; }
   .section-bar .save-status { padding: 8px 0; }
   main { padding: 28px 22px 48px; }
-  .practice-main { height: auto; overflow: visible; padding: 18px 22px 32px; }
-  .intro-row { align-items: start; }
-  .intro-actions { gap: 8px; }
-  .practice-main .workspace-save-status { display: none; }
-  .practice-main .page-intro { padding-bottom: 26px; position: relative; }
-  .practice-main .workspace-save-status { display: block; position: absolute; bottom: 0; left: 0; }
-  .practice-main h1 { font-size: 24px; }
+  .practice-main { height: auto; overflow: visible; padding: 14px 22px 32px; }
+  .workspace-title { flex-basis: 100%; }
+  .workspace-category { display: none; }
+  .workspace-actions { flex: 1 1 auto; justify-content: flex-end; }
+  .workspace-actions .workspace-save-status { margin-right: auto; }
+  .task-pane { display: contents; }
+  .task-column { border: 1px solid var(--border); border-radius: var(--radius); }
   .practice-steps { position: sticky; top: 0; z-index: 10; justify-content: space-between; gap: 4px; background: var(--surface-2); padding: 5px; }
   .practice-steps button { min-height: 44px; padding: 9px 4px; font-size: 14px; }
   .workspace-layout { grid-template-columns: minmax(0, 1fr) !important; flex: none; height: auto; overflow: visible; }
@@ -449,9 +452,10 @@ dialog.preview-inline { display: block; position: static; inset: auto; width: 10
   .task-column.mobile-active, .code-column.mobile-active { display: flex; flex-direction: column; }
   .focus-mode .code-column { display: flex; }
   .workspace-toolbar { flex-wrap: wrap; }
+  .checks-drawer { max-height: none; }
+  #check-details { max-height: none; overflow: visible; }
   .code-panel { flex: none; height: clamp(380px, 58dvh, 650px); }
   .editor-wrap { min-height: 260px; }
-  #check-details { max-height: none; overflow: visible; }
   .practice-main section[id] { scroll-margin-top: calc(var(--workspace-tabs-height, 53px) + 12px); }
   .task-panel, .plan-panel, .explain-panel, .reflection-section { padding: 24px; }
   .path-choices { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -512,14 +516,17 @@ dialog.preview-inline { display: block; position: static; inset: auto; width: 10
   .workspace-topbar .site-menu { flex: none; }
   .workspace-topbar .brand { font-size: 18px; }
   .site-menu summary { padding: 10px 6px; font-size: 13px; }
-  .practice-main { padding: 16px 18px 28px; }
-  .practice-context { gap: 8px; flex-wrap: wrap; }
-  .practice-context .practice-status { margin-left: auto; }
-  .breadcrumb { font-size: 12px; }
-  .intro-row { flex-direction: column; gap: 12px; }
-  .intro-actions { justify-content: flex-end; width: 100%; }
-  .practice-main .page-intro { padding-bottom: 0; }
-  .practice-main .workspace-save-status { position: static; flex: 1; font-size: 12px; }
+  .practice-main { padding: 12px 18px 28px; }
+  .workspace-title, .workspace-actions { display: contents; }
+  .workspace-header { gap: 6px 8px; }
+  .breadcrumb-link { order: 1; }
+  .workspace-actions .workspace-save-status { order: 2; flex: 1; font-size: 12px; text-align: right; white-space: nowrap; }
+  .workspace-title .status-chip { order: 3; }
+  .practice-main h1 { order: 4; flex: 1 1 100%; overflow: visible; font-size: 20px; text-overflow: clip; white-space: normal; }
+  .workspace-header :is(.session-panel h2, .session-panel .ui-button, .session-strip .session-actions) { order: 5; }
+  .workspace-actions .reset-button { order: 6; margin-left: auto; }
+  .workspace-options { order: 7; }
+  .workspace-header .session-panel > details { order: 8; }
   .practice-steps { gap: 2px; }
   .practice-steps button { font-size: 13px; padding: 8px 2px; }
   .task-panel, .plan-panel, .explain-panel, .reflection-section { padding: 22px; }
@@ -545,29 +552,27 @@ dialog.preview-inline { display: block; position: static; inset: auto; width: 10
   .app-shell:has(.practice-main) { display: flex; flex-direction: column; height: 100dvh; }
   .app-shell:has(.practice-main) > .topbar, .app-shell:has(.practice-main) > .storage-recovery { flex: none; }
   .app-shell:has(.practice-main) > .screen-content { flex: 1; min-height: 0; }
-  .practice-main { height: 100%; min-height: 0; overflow: hidden; padding: 16px 28px; }
-  .practice-main .page-intro { margin-bottom: 12px; }
-  .practice-main .practice-steps { margin-bottom: 12px; }
-  .practice-main .session-panel { flex: none; max-height: 20dvh; overflow-y: auto; overscroll-behavior: contain; margin-bottom: 12px; }
+  .practice-main { height: 100%; min-height: 0; overflow: hidden; padding: 10px 28px 16px; }
   .workspace-layout { flex: 1 1 0; height: auto; min-height: 0; }
+  .practice-steps { flex-direction: column; gap: 4px; margin-bottom: 0; padding: 6px; overflow-y: auto; border-width: 0 1px 0 0; border-radius: 0; scrollbar-width: none; }
+  .practice-steps button { flex: none; flex-direction: column; justify-content: center; gap: 0; min-height: 58px; padding: 6px 2px; font-size: 12.5px; }
+  .practice-steps button > span::before { content: counter(step); display: grid; place-items: center; width: 22px; height: 22px; margin: 0 auto 4px; border: 1px solid currentColor; border-radius: 50%; font-size: 11px; font-weight: 550; opacity: .75; }
+  .practice-steps button[aria-current=step] > span::before { opacity: 1; }
+  .task-column { border-radius: 0; }
   .code-column { overflow: hidden; }
-  .code-panel { flex: 1 1 0; min-height: 0; overflow: hidden; }
+  .code-panel { flex: 1 1 0; min-height: 120px; overflow: hidden; }
   .editor-wrap, .editor-loading, .editor-recovery { min-height: 0; }
   .editor-recovery textarea { min-height: 0; }
   .project-file-tabs { flex: none; flex-wrap: nowrap; overflow-x: auto; }
   .project-file-tabs button { flex: none; }
   .workspace-toolbar { position: static; }
   dialog.preview-inline { flex: 0 1 35%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
-  .results-panel { display: flex; flex-direction: column; min-height: 0; max-height: 28dvh; margin-top: 12px; }
-  .checks-toggle { flex: none; min-height: 42px; padding: 10px 20px; }
-  #check-details { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 }
 
 .profile-management { margin-top: 22px; border-top: 1px solid var(--border); padding-top: 12px; }
 .profile-management > summary, .profile-portability > summary { min-height: 44px; padding: 10px 0; color: var(--accent); font-size: 15px; cursor: pointer; }
 @media (max-width: 900px) {
   .workspace-toolbar { border-radius: 0 0 var(--radius) var(--radius); }
-  .results-panel, .checks-toggle { border-radius: var(--radius); }
 }
 
 /* Disclosure indicators are drawn by the app; details retain native keyboard semantics. */
@@ -599,21 +604,17 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 .home-goal, .path-goal { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
 .home-goal p, .path-goal p { color: var(--muted); margin: 6px 0; }
 
-.session-panel { margin: 0 0 16px; padding: 10px 0; border-top: 1px solid var(--border); }
-.session-strip { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-.session-strip > div:first-child { min-width: 0; }
-.session-strip > div > span { display: block; color: var(--muted); font-size: 12px; }
-.session-strip > button { flex: none; }
-.session-ending { margin-top: 12px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
-.session-record { margin-top: 8px; font-size: 13px; }
+/* The session record is a compact control in the workspace header; its reflection opens as a row below it. */
+.session-panel, .session-strip, .session-strip > div { display: contents; }
+.session-ending { margin-top: 0; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.session-record { margin-top: 0; font-size: 13px; }
 .session-record > summary { padding: 8px 0; cursor: pointer; }
-@media (max-width: 600px) {
-  .session-strip { align-items: start; flex-wrap: wrap; gap: 8px; }
-  .session-strip > div:first-child { flex: 1 1 140px; }
-  .session-strip > button { font-size: 12px; }
-  .session-strip .session-actions { margin: 0; }
-}
-.session-panel h2 { font-size: 14px; margin: 0 0 3px; }
+.session-panel > details { order: 3; flex: 0 0 100%; max-height: 24dvh; overflow-y: auto; overscroll-behavior: contain; }
+.session-panel > #session-ending:not([open]) { display: none; }
+.session-panel[data-state=idle] h2, .session-strip > div > span { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.session-panel h2 { order: 1; margin: 0; padding: 4px 10px; border: 1px solid var(--feature-border); border-radius: 999px; background: var(--feature); color: var(--feature-text); font-size: 12px; font-weight: 550; letter-spacing: 0; white-space: nowrap; }
+.session-panel .ui-button, .session-strip .session-actions { order: 1; }
+.session-strip .session-actions { margin: 0; gap: 8px; }
 .session-panel p, .session-history p { color: var(--muted); max-width: 70ch; }
 .session-panel label, .session-history label { display: block; margin: 12px 0 8px; }
 .session-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0; }

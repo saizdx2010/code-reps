@@ -148,7 +148,7 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
       assert.ok(row)
       await act(async()=>row.click())
       await input(document.querySelector('#plan'),'Preserve this draft')
-      await click('Practice')
+      await click('Library')
     }
     await click('Trail')
     assert.equal(document.querySelectorAll('#home-drafts>li').length,3)
