@@ -2,8 +2,8 @@
 
 ## Navigation and visual structure
 
-- Main navigation has Home, Practice, Learn, and Progress. The second row contains only the pages in the selected area: Today and Practice plan; Exercises, Projects, and Interview; Lessons, Paths, and Notebook; or Skills, History, and Self-assessment.
-- Each tool has a bookmarkable hash route, including `#/plan`, `#/projects`, `#/interview`, `#/notebook`, and `#/assessment`. Existing `#/knowledge`, `#/learn`, and exercise bookmarks remain valid. Learn opens full lessons; `#/learn` continues to open quick introductions.
+- Main navigation has Trail, Library, and Progress. The second row contains only the pages in the selected area: Your trail, All tracks, and This week; Exercises, Lessons, Projects, and Interview; or Skills, Journal, and Self-assessment. Journal switches between Attempts (`#/history`), Practice sessions (`#/sessions`), and Notebook (`#/notebook`) with a segmented control; each keeps its own bookmarkable route.
+- Each tool has a bookmarkable hash route, including `#/plan`, `#/projects`, `#/interview`, `#/notebook`, and `#/assessment`. Existing `#/knowledge`, `#/learn`, and exercise bookmarks remain valid. Lessons opens full lessons; `#/learn` continues to open quick introductions.
 - During practice, Navigate opens the main destinations in a compact menu. Escape closes it and restores focus to its summary. Profile management remains beside the profile name. Search opens the command palette; its keyboard shortcut is also available in the narrow workspace.
 - Reading surfaces use a light sage background, white practice sheets, green text, and dark green actions with lime labels. Home highlights the recommended rep on a pale lime surface. The coding desk retains the logo's dark green with lime actions. The compact Home practice loop is explanatory, not a progress indicator. Source Sans 3 is bundled in `public/fonts/` under the included SIL Open Font License; Maple Mono remains the code face. Fonts do not require a runtime external request.
 - The [Code Reps visual system](./DESIGN_SYSTEM.md) defines our shared palette, controls, hierarchy, and motion. Practice and lesson navigation use a moving active indicator. Buttons respond on hover and press, menus and dialogs reveal, and native disclosures expand; reduced-motion preferences keep all controls usable without movement. These effects do not remount writing fields or editors, delay real check feedback, or change save acknowledgements.
@@ -16,7 +16,8 @@
 
 - Home puts the starting-point choice before the first recommendation. After choosing, Change starting point keeps it available without interrupting the daily practice queue.
 - The header shows the active local profile and opens profile management. Switching is immediately available; creation/renaming and full-profile export/import open separately. Save feedback remains visible in the page navigation or workspace controls.
-- Paths has an always-visible Choose path dropdown before the selected path and its next action. The menu supports keyboard selection and remembers the chosen path in the current session. Explore paths shows a grid with completed-rep counts; it starts collapsed on narrow screens and remembers expansion in the current session. Selecting a path on a narrow screen closes the chooser and focuses the selected path heading.
+- Home (`#/home`) is the learner's trail: the goal path drawn as stages of connected nodes, with the next practice, unfinished sessions, drafts, and due reviews beside it (above it on narrow screens). Each lesson appears once, immediately before the first rep that uses it; reps show done, next, in progress, or recall-later states, and project milestones end the trail.
+- All tracks (`#/paths`) has an always-visible Choose path dropdown before the selected path and its next action. The menu supports keyboard selection and remembers the chosen path in the current session. Explore paths shows Foundations first, then the other tracks grouped as problem solving, browser and server, and real code, with completed-rep counts; it starts open on desktop, collapsed on narrow screens, and remembers expansion in the current session. Stages made only of Foundations reps are marked as covered by Foundations and link back to it. Selecting a path on a narrow screen closes the chooser and focuses the selected path heading.
 - Practice filters exercises by skill, format, and draft status or review due. Filters start expanded on desktop and collapsed on narrow screens; expansion is a session preference. Clear filters restores the full library. Search stays visible.
 - History filters completed attempts by rep or skill search, skill, difficulty, and local calendar date.
 - Exercise URLs use `#/practice/<rep-id>`. Pages and exercises support bookmarks, refresh, and browser Back/Forward.
@@ -26,7 +27,7 @@
 ## Browse learning content
 
 - Lessons have focused Read, Predict, Practise, and Review views. Review opens the evidence and self-assessment disclosure. Moving between views keeps predictions and written evidence mounted; the selected view survives refresh per lesson and profile. Predictions remain distinct from independent coding evidence.
-- Learn opens full lessons. Its index groups lessons by topic, with search, a topic filter, and bookmarks. Search opens matching groups; Clear knowledge filters restores all topics. Filters survive refresh in the same profile and browser session. On narrow screens, Browse lessons starts collapsed and selecting a lesson closes the index and focuses the reader.
+- Lessons opens full lessons. Its index groups lessons by topic, with search, a topic filter, and bookmarks. Search opens matching groups; Clear knowledge filters restores all topics. Filters survive refresh in the same profile and browser session. On narrow screens, Browse lessons starts collapsed and selecting a lesson closes the index and focuses the reader.
 - Quick lessons inside the lesson index opens short introductions. The existing `#/learn` bookmark still works.
 - Home previews up to three saved drafts and three due reviews. Show all exposes the complete queue without changing drafts, priorities, or review dates; Show fewer restores the compact view. Expansion is a session preference.
 
@@ -75,7 +76,7 @@ See [the accessibility walkthrough](./ACCESSIBILITY_REVIEW.md) for manual screen
 
 ## Goal paths and curriculum connections
 
-Home links to the current ordered goal path. Browsing another path does not change the goal; choose **Use this as my learning goal** to save that preference for the current profile. The existing TypeScript goal is the starting suggestion.
+Home draws the current ordered goal path as a trail. Browsing another path does not change the goal; choose **Use this as my learning goal** to save that preference for the current profile. The existing TypeScript goal is the starting suggestion.
 
 Paths identify guided, independent, and recall reps from the authored skill journeys, show recall availability and evidence, and connect relevant frontend, backend, and real-world paths to project integration milestones. Path completion includes hinted attempts and remains separate from independence and retention. Early recall can be opened freely, but existing timing and hint rules still govern retention evidence.
 

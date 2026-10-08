@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { navigationArea, navigationSections, readRoute, routeHash } from '../src/ui-navigation.ts'
+import { navigationArea, navigationSections, readRoute, routeHash, sectionView } from '../src/ui-navigation.ts'
 import { runRep } from '../src/runner.ts'
 
 test('exercise bookmarks, library, and every product page round-trip', () => {
@@ -18,6 +18,11 @@ test('every tool has one navigation home while legacy lessons and exercises stay
   assert.equal(navigationArea('learn'), 'library')
   assert.deepEqual(Object.keys(navigationSections), ['trail', 'library', 'progress'])
   assert.equal(navigationSections.trail[0].view, 'home')
+  for (const view of ['history', 'sessions', 'notebook']) {
+    assert.equal(navigationArea(view), 'progress')
+    assert.equal(sectionView(view), 'history')
+  }
+  assert.equal(sectionView('learn'), 'knowledge')
   const pages = Object.values(navigationSections).flat()
   assert.equal(new Set(pages.map(page => page.view)).size, pages.length)
 })

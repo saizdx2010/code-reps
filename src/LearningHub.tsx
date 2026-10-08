@@ -8,6 +8,7 @@ import type { HubTab } from './learning-pages'
 import { revealElement } from './ui-motion'
 import { Input, NumberInput, Select, Textarea } from './Input'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 import { skills, skillById, knowledgeGroups } from './knowledge'
 import { lessonDepth } from './lesson-depth'
 import { capstones, diagnosticRepIds, recurringReviews, rubrics, skillEvidence, weeklyPlan } from './fluency'
@@ -18,7 +19,7 @@ import { reps } from './rep'
 import { useSessionPreference } from './useSessionPreference'
 const BrowserProjects = lazy(() => import('./BrowserProjects').then(module => ({ default: module.BrowserProjects })).catch(() => ({ default: () => <section role="alert"><p>Browser projects could not load. Reload to try again; your saved work will be kept.</p><Button onClick={() => window.location.reload()}>Reload projects</Button></section> })))
 export type { HubTab } from './learning-pages'
-type Props = { tab: HubTab; setTab: (tab: HubTab) => void; state: FluencyState; update: (next: FluencyState) => boolean; error: string; history: PortableRecord[]; openRep: (id: string) => void; reviewRep: (id: string) => void; skillId: string; onSkill: (id: string) => void; onQuickLessons: () => void; candidates: { repId: string; reason: string; mode?: string }[] }
+type Props = { journalTabs?: ReactNode; tab: HubTab; setTab: (tab: HubTab) => void; state: FluencyState; update: (next: FluencyState) => boolean; error: string; history: PortableRecord[]; openRep: (id: string) => void; reviewRep: (id: string) => void; skillId: string; onSkill: (id: string) => void; onQuickLessons: () => void; candidates: { repId: string; reason: string; mode?: string }[] }
 const labels: Record<Judgment,string> = { 'not-yet': 'Not yet', 'with-help': 'With help', independent: 'Independently' }
 const defaultReview = (): SelfReview => ({ understanding: 'not-yet', approach: 'not-yet', implementation: 'not-yet', explanation: 'not-yet', evidence: '', updatedAt: new Date().toISOString() })
 function Lesson({ skillId, state, update, openRep, onSkill, history }: Omit<Props, 'error' | 'reviewRep' | 'candidates' | 'tab' | 'setTab' | 'onQuickLessons'>) {
@@ -101,7 +102,7 @@ export function LearningHub(props: Props) {
   const diagnostic=diagnosticRepIds.map(id=>{const attempts=history.filter(r=>r.repId===id&&state.diagnosticStartedAt&&Date.parse(r.completedAt)>=Date.parse(state.diagnosticStartedAt));return {rep:reps.find(r=>r.id===id)!,attempt:attempts[0]}})
   const missing=diagnostic.find(d=>!d.attempt||d.attempt.hintCount)
   const [indexOpen, setIndexOpen] = useSessionPreference<'open' | 'closed'>('lesson-index', matchMedia('(min-width: 901px)').matches ? 'open' : 'closed')
-  return <main className="learning-hub"><PageHeader title={learningPageTitles[tab].title} description={learningPageTitles[tab].description} />{props.error&&<p role="alert">{props.error}</p>}
+  return <main className="learning-hub"><PageHeader eyebrow={tab === 'notebook' ? 'Journal' : undefined} title={learningPageTitles[tab].title} description={learningPageTitles[tab].description} actions={tab === 'notebook' ? props.journalTabs : undefined} />{props.error&&<p role="alert">{props.error}</p>}
     {tab==='knowledge'&&<div className="knowledge-layout"><details className="knowledge-browser" open={indexOpen === 'open'} onToggle={event => setIndexOpen(event.currentTarget.open ? 'open' : 'closed')}><summary>Browse lessons<span aria-live="polite">{groups.reduce((count, group) => count + group.lessons.length, 0)} available</span></summary><aside className="knowledge-index"><div className="knowledge-controls">
       <label>Search knowledge<Input type="search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Try arrays or promises"/></label>
       <label>Topic<Select value={topic} onChange={e=>setTopic(e.target.value)}><option value="">All topics</option>{knowledgeGroups.map(group=><option key={group.id} value={group.id}>{group.title}</option>)}</Select></label>

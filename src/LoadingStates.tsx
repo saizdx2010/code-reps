@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { PageHeader } from './Layout'
 import { learningPageTitles } from './learning-pages'
 import type { HubTab } from './learning-pages'
@@ -18,13 +19,13 @@ function ProjectSkeleton() {
   return <div aria-hidden="true"><h2>Build outside Code Reps</h2><div className="loading-project-intro"><span className="skeleton-label" /></div><Rows /></div>
 }
 
-type PageLoadingProps = { page: HubTab; notebookHasDraft?: boolean; notebookHasEntries?: boolean }
+type PageLoadingProps = { page: HubTab; notebookHasDraft?: boolean; notebookHasEntries?: boolean; journalTabs?: ReactNode }
 
 /** Pending routes keep the loaded heading and first working surface in the same place. */
-export function PageLoading({ page, notebookHasDraft = false, notebookHasEntries = false }: PageLoadingProps) {
+export function PageLoading({ page, notebookHasDraft = false, notebookHasEntries = false, journalTabs }: PageLoadingProps) {
   const copy = learningPageTitles[page]
   return <main className={`learning-hub page-loading loading-${page}`} aria-busy="true">
-    <PageHeader title={copy.title} description={copy.description} />
+    <PageHeader eyebrow={page === 'notebook' ? 'Journal' : undefined} title={copy.title} description={copy.description} actions={page === 'notebook' ? journalTabs : undefined} />
     <p className="loading-status page-loading-status" role="status">{({ knowledge: 'Opening lesson…', notebook: 'Opening notebook…', plan: 'Preparing practice week…', assessment: 'Preparing self-assessment…', projects: 'Opening projects…', interview: 'Preparing interview practice…' })[page]}</p>
     <div aria-hidden="true">
       {page === 'knowledge' ? <div className="loading-lesson-layout"><aside><span className="skeleton-label" /><Fields stacked /><Rows /></aside><div className="knowledge-article loading-sheet"><div className="loading-lesson-heading"><div><Lines /></div><span className="skeleton-action" /></div><div className="loading-tabs">{Array.from({ length: 4 }, (_, index) => <span key={index} />)}</div><Rows /><div className="skeleton-code" /></div></div>

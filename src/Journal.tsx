@@ -1,0 +1,11 @@
+import { Button } from './Button'
+import type { View } from './ui-navigation'
+
+const journalPages = [{ view: 'history', label: 'Attempts' }, { view: 'sessions', label: 'Practice sessions' }, { view: 'notebook', label: 'Notebook' }] as const
+
+/** One Journal in Progress: completed attempts, practice sessions, and notes keep their own routes. */
+export function JournalTabs({ view, onNavigate }: { view: View; onNavigate: (view: View) => void }) {
+  return <div className="segmented-control journal-tabs" role="group" aria-label="Journal">
+    {journalPages.map(page => <Button key={page.view} aria-pressed={view === page.view} onClick={() => onNavigate(page.view)}>{page.label}</Button>)}
+  </div>
+}
