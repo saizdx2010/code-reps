@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test'
+import { reps } from '../../src/rep'
+import { diagnosticRepIds } from '../../src/fluency'
 import { chooseOption, editor, replaceCode, route, solution } from './helpers'
 
 test('focused writing steps preserve the real editor and hide unrelated forms', async ({ page }) => {
@@ -91,4 +93,47 @@ test('all product pages fit a narrow screen and lessons open without the topic l
   await page.getByRole('button', { name: 'Cancellation and race conditions', exact: true }).click()
   await expect(page.getByLabel('Search knowledge', { exact: true })).not.toBeVisible()
   await expect(page.getByRole('heading', { name: 'Cancellation and race conditions', exact: true })).toBeVisible()
+})
+
+test('exercise topics start collapsed, remember expansion, and reveal search matches', async ({ page }) => {
+  await page.goto('/#/practice')
+  const groups = page.locator('.catalog-list .list-group')
+  await expect(groups.first()).toBeVisible()
+  const groupCount = await groups.count()
+  expect(groupCount).toBeGreaterThan(1)
+  await expect(page.locator('.catalog-list .list-group[open]')).toHaveCount(0)
+  expect(await groups.locator('.list-group-title').allTextContents()).toEqual([...new Set(reps.map(rep => rep.category))].sort())
+  const first = groups.first()
+  const topic = await first.locator('.list-group-title').innerText()
+  await first.locator('summary').click()
+  await expect(first).toHaveAttribute('open', '')
+  await expect(first.locator('.list-row > button').first()).toBeVisible()
+  expect(await first.locator('.list-row-text strong').allTextContents()).toEqual(reps.filter(rep => rep.category === topic).map(rep => rep.title))
+  await page.reload()
+  await expect(groups.filter({ has: page.locator('.list-group-title', { hasText: topic }) }).first()).toHaveAttribute('open', '')
+  await page.getByLabel('Find a rep', { exact: true }).fill('stock adjustment')
+  await expect(page.locator('.catalog-list .list-row > button')).toHaveCount(1)
+  await expect(page.locator('.catalog-list .list-group[open]')).toHaveCount(1)
+  await expect(page.locator('.catalog-list .list-row > button')).toBeVisible()
+  await page.getByRole('button', { name: 'Clear Find a rep', exact: true }).click()
+  await expect(groups).toHaveCount(groupCount)
+  await expect(groups.first()).toHaveAttribute('open', '')
+})
+
+test('assessment topics disclose skill evidence and preserve the assessment flow', async ({ page }) => {
+  await page.goto('/#/assessment')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
+  await expect(page.locator('.hub-evidence .list-group[open]')).toHaveCount(0)
+  const group = page.locator('.hub-evidence .list-group').first()
+  await group.locator(':scope > summary').focus()
+  await page.keyboard.press('Enter')
+  const skill = group.locator('.evidence-card').first()
+  await skill.locator('summary').click()
+  await expect(skill.getByRole('button', { name: 'Inspect evidence and assess' })).toBeVisible()
+  await page.getByRole('button', { name: 'Start assessment', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Start a new assessment', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Try from a fresh start' })).toHaveCount(diagnosticRepIds.length)
+  await skill.getByRole('button', { name: 'Inspect evidence and assess' }).click()
+  await expect(page).toHaveURL(/#\/knowledge/)
+  await expect(page.locator('.knowledge-article h2').first()).toBeVisible()
 })

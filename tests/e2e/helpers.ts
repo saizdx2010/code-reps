@@ -16,11 +16,15 @@ export const editor = (page: Page) => page.getByRole('textbox', { name: /^TypeSc
 export async function replaceCode(page: Page, code: string, repId = 'most-frequent-number') {
   await expect(editor(page)).toBeVisible()
   await editor(page).focus()
-  await page.keyboard.press('ControlOrMeta+A')
-  await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
-  await page.evaluate(text => navigator.clipboard.writeText(text), code)
-  await page.keyboard.press('ControlOrMeta+V')
-  // Read the saved draft to confirm the whole paste reached React and persistence.
+  await expect(editor(page)).toBeFocused()
+  await editor(page).press('ControlOrMeta+A')
+  // Exercise Monaco's paste handler with test-local data, avoiding a shared OS clipboard.
+  await editor(page).evaluate((element, text) => {
+    const clipboardData = new DataTransfer()
+    clipboardData.setData('text/plain', text)
+    element.dispatchEvent(new ClipboardEvent('paste', { clipboardData, bubbles: true, cancelable: true }))
+  }, code)
+  // Confirm the complete edit reached React and persistence through the real editor.
   await expect.poll(() => page.evaluate(id => Object.entries(localStorage)
     .filter(([key]) => key.includes(id))
     .map(([, value]) => JSON.parse(value).code), repId)).toContain(code)

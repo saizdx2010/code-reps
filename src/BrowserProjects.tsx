@@ -1,3 +1,4 @@
+import { InfoNote } from './Layout'
 import { Button } from './Button'
 import { browserProjects, externalSetup, projectReflection, projectReview } from './browser-projects'
 import type { BrowserProject } from './browser-projects'
@@ -9,8 +10,8 @@ export function BrowserProjects({ openRep, recordReflection }: { openRep: (id: s
   }
   return <section aria-labelledby="browser-project-heading">
     <h2 id="browser-project-heading">Build outside Code Reps</h2>
-    <p>Three levels for plain TypeScript and the DOM. Open any level; readiness guidance is optional. Each level includes a complete project with requirements and a self-review.</p>
-    <p>Use documentation, choose your implementation, and write your own tests. External work and self-review are learner-reported; they do not automatically establish Independent or Retained skills.</p>
+    <InfoNote><p>Three levels for plain TypeScript and the DOM. Open any level; readiness guidance is optional. Each level includes a complete project with requirements and a self-review.</p>
+    <p>Use documentation, choose your implementation, and write your own tests. External work and self-review are learner-reported; they do not automatically establish Independent or Retained skills.</p></InfoNote>
     <details className="project-review"><summary>Set up your local project</summary><ol>{externalSetup.map(point => <li key={point}>{point}</li>)}</ol></details>
     {browserProjects.map(project => <details key={project.id} className="hub-panel project-overview">
       <summary><h3>Level {project.level}: {project.title}</h3><p>{project.brief}</p><span>External project · Self-review</span></summary>

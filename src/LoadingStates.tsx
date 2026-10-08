@@ -1,3 +1,4 @@
+import { PageHeader } from './Layout'
 import { learningPageTitles } from './learning-pages'
 import type { HubTab } from './learning-pages'
 
@@ -14,7 +15,7 @@ function Rows({ count = 3 }: { count?: number }) {
 }
 
 function ProjectSkeleton() {
-  return <div aria-hidden="true"><h2>Build outside Code Reps</h2><div className="loading-project-intro"><span className="skeleton-line" /><span className="skeleton-line skeleton-short" /><span className="skeleton-line" /><span className="skeleton-line skeleton-short" /></div><Rows /></div>
+  return <div aria-hidden="true"><h2>Build outside Code Reps</h2><div className="loading-project-intro"><span className="skeleton-label" /></div><Rows /></div>
 }
 
 type PageLoadingProps = { page: HubTab; notebookHasDraft?: boolean; notebookHasEntries?: boolean }
@@ -23,13 +24,13 @@ type PageLoadingProps = { page: HubTab; notebookHasDraft?: boolean; notebookHasE
 export function PageLoading({ page, notebookHasDraft = false, notebookHasEntries = false }: PageLoadingProps) {
   const copy = learningPageTitles[page]
   return <main className={`learning-hub page-loading loading-${page}`} aria-busy="true">
-    <div className="hub-page-heading"><h1 tabIndex={-1}>{copy.title}</h1><p>{copy.description}</p></div>
+    <PageHeader title={copy.title} description={copy.description} />
     <p className="loading-status page-loading-status" role="status">{({ knowledge: 'Opening lesson…', notebook: 'Opening notebook…', plan: 'Preparing practice week…', assessment: 'Preparing self-assessment…', projects: 'Opening projects…', interview: 'Preparing interview practice…' })[page]}</p>
     <div aria-hidden="true">
       {page === 'knowledge' ? <div className="loading-lesson-layout"><aside><span className="skeleton-label" /><Fields stacked /><Rows /></aside><div className="knowledge-article loading-sheet"><div className="loading-lesson-heading"><div><Lines /></div><span className="skeleton-action" /></div><div className="loading-tabs">{Array.from({ length: 4 }, (_, index) => <span key={index} />)}</div><Rows /><div className="skeleton-code" /></div></div>
         : page === 'notebook' ? <div className="loading-notebook-surface"><div className="hub-heading loading-notebook-heading"><div><span className="skeleton-line" /><span className="skeleton-line skeleton-short" /></div><span className="skeleton-action" /></div><Fields count={1} />{notebookHasDraft ? <div className="hub-panel loading-sheet"><Lines /><Fields count={1} /><Fields count={3} /><div className="skeleton-writing" /><span className="skeleton-action" /></div> : notebookHasEntries ? <div className="hub-cards">{[0, 1].map(index => <div className="hub-panel loading-sheet" key={index}><Lines /></div>)}</div> : <div className="hub-empty loading-notebook-empty"><Lines /><span className="skeleton-action" /></div>}</div>
           : page === 'plan' ? <div className="hub-panel loading-sheet"><Lines /><Fields /><span className="skeleton-label" /><div className="loading-week">{Array.from({ length: 7 }, (_, index) => <span key={index} />)}</div><Rows /></div>
-            : page === 'assessment' ? <><div className="hub-panel loading-sheet"><Lines /><span className="skeleton-action" /></div><Rows count={4} /></>
+            : page === 'assessment' ? <><div className="hub-panel loading-sheet"><Lines /><span className="skeleton-action" /></div><Rows count={3} /></>
               : page === 'projects' ? <ProjectSkeleton />
                 : <div className="hub-panel loading-sheet loading-interview-sheet"><Lines /><Fields stacked /><span className="skeleton-action" /></div>}
     </div>
