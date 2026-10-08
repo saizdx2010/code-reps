@@ -149,8 +149,8 @@ test('practice steps preserve work, explain missing requirements, and record com
   await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Completed reps1')
   await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Current streak1 days')
   // An unhinted solve before its guided journey is not evidence of independence.
-  await expect(page.locator('[aria-label="Skill evidence summary"]')).toContainText('Independent skills0')
-  await expect(page.locator('[aria-label="Skill evidence summary"]')).toContainText('Retained skills0')
+  await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Independent skills0')
+  await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Retained skills0')
 })
 
 test('lesson section navigation preserves predictions and opens self-review', async ({ page }) => {
@@ -196,10 +196,10 @@ test('local profile progress is readable on narrow screens and links to paths', 
   await expect(page.getByRole('heading', { name: 'My learning', exact: true })).toBeVisible()
   await expect(page.getByRole('definition').filter({ hasText: /^0 days$/ })).toHaveCount(2)
   await expect(page.getByRole('heading', { name: 'Path completion badges' })).toBeVisible()
-  await expect(page.locator('.profile-badge-list li')).toHaveCount(paths.length)
+  await expect(page.locator('.compact-path-list li')).toHaveCount(paths.length)
   await expect(page.locator('.profile-summary')).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  await page.locator('.profile-badge-list').getByRole('button', { name: 'Explore path' }).first().focus()
+  await page.locator('.compact-path-list').getByRole('button').first().focus()
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/#\/paths/)
   await page.goBack()

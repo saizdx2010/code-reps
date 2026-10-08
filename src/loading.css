@@ -77,3 +77,9 @@
   .loading-lesson-heading > .skeleton-action { width: 68px; }
 }
 @media (prefers-reduced-motion: reduce) { .startup-loading *, .page-loading *, .project-list-loading *, .loading-code-lines * { animation: none !important; } }
+
+.page-loading .loading-sheet { padding: 20px; margin-bottom: 16px; }
+.loading-assessment .loading-row { padding: 12px 0; }
+.loading-assessment .loading-row .skeleton-line:not(:first-child) { display: none; }
+.loading-project-intro { padding: 4px 0; }
+.loading-projects .loading-row { padding: 14px 0; }

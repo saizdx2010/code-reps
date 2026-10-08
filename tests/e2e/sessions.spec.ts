@@ -193,8 +193,8 @@ test('ending a recall session leaves due dates and independent evidence unchange
   await page.getByRole('button', { name: 'Back to Home', exact: true }).click()
   await expect(page.locator('.continue-panel')).toContainText('Count values above a limit')
   await page.goto('/#/progress')
-  await expect(page.locator('[aria-label="Skill evidence summary"]')).toContainText('Independent skills1')
-  await expect(page.locator('[aria-label="Skill evidence summary"]')).toContainText('Retained skills0')
+  await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Independent skills1')
+  await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Retained skills0')
 })
 
 test('short-screen practice keeps sessions compact and reflection survives closing', async ({ page }) => {

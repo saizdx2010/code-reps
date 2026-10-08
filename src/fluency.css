@@ -157,3 +157,30 @@
 .project-overview .milestone-list { margin-top: 0; }
 .project-review { padding: 8px 0 24px; }
 .project-review > summary { min-height: 44px; padding: 10px 0; color: var(--accent); cursor: pointer; font-size: 15px; }
+
+/* Browsing pages disclose secondary explanations and supporting evidence. */
+.learning-hub { padding-top: 32px; }
+.learning-hub .page-header p { font-size: 15px; line-height: 1.5; }
+.learning-hub .info-note p { font-size: 14px; line-height: 1.6; }
+.learning-hub .hub-panel:not(.evidence-card):not(.project-overview) { padding: 20px; margin-bottom: 16px; }
+.learning-hub .hub-panel > h2 { margin-top: 0; font-size: 21px; }
+.hub-evidence .list-rows > li { list-style: none; }
+.hub-evidence .evidence-card { margin: 0; }
+.hub-evidence .evidence-card > summary { min-height: 52px; padding: 8px 12px; gap: 12px; }
+.hub-evidence .evidence-card > summary h3 { font-size: 15px; }
+.hub-evidence .evidence-card-body { padding: 0 12px 16px; }
+.knowledge-controls { display: grid; gap: 8px; }
+.knowledge-controls > label { margin: 0; }
+.knowledge-controls .check-label { display: flex; align-items: center; gap: 8px; min-height: 32px; }
+.knowledge-controls .utility-note { margin: 0; }
+.learning-hub .project-overview { margin-bottom: 0; }
+.learning-hub .project-overview > summary { padding: 14px 30px 14px 0; }
+.learning-hub .project-overview > summary h2, .learning-hub .project-overview > summary h3 { font-size: 18px; margin-bottom: 4px; }
+.learning-hub .project-overview > summary p { margin-bottom: 4px; font-size: 14px; line-height: 1.5; }
+.learning-hub .project-overview > summary::after { top: 18px; }
+.learning-hub .milestone-list li { padding: 12px 0; }
+@media (max-width: 600px) {
+  .hub-evidence .evidence-card > summary h3 { flex-basis: auto; }
+  .hub-evidence .evidence-card > summary { flex-wrap: wrap; }
+  .lesson-navigation { gap: 2px; }
+}

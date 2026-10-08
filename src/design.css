@@ -590,8 +590,8 @@ dialog.preview-inline { display: block; position: static; inset: auto; width: 10
 summary { list-style: none; }
 summary::-webkit-details-marker { display: none; }
 summary::marker { content: ''; }
-details:not(.site-menu):not(.workspace-options):not(.knowledge-browser):not(.knowledge-group):not(.path-picker):not(.path-stage):not(.progress-journey):not(.evidence-card):not(.project-overview):not(.foundation-lesson) > summary::before { content: ''; display: inline-block; width: 18px; height: 18px; margin: 0 8px 0 0; background: currentColor; mask: var(--icon-chevron) center / contain no-repeat; transform: rotate(-90deg); vertical-align: middle; }
-details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):not(.knowledge-group):not(.path-picker):not(.path-stage):not(.progress-journey):not(.evidence-card):not(.project-overview):not(.foundation-lesson) > summary::before { transform: rotate(0deg); }
+details:not(.site-menu):not(.workspace-options):not(.knowledge-browser):not(.knowledge-group):not(.path-picker):not(.path-stage):not(.progress-journey):not(.evidence-card):not(.project-overview):not(.foundation-lesson):not(.list-group):not(.info-note) > summary::before { content: ''; display: inline-block; width: 18px; height: 18px; margin: 0 8px 0 0; background: currentColor; mask: var(--icon-chevron) center / contain no-repeat; transform: rotate(-90deg); vertical-align: middle; }
+details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):not(.knowledge-group):not(.path-picker):not(.path-stage):not(.progress-journey):not(.evidence-card):not(.project-overview):not(.foundation-lesson):not(.list-group):not(.info-note) > summary::before { transform: rotate(0deg); }
 .site-menu > summary, .workspace-options > summary { display: flex; align-items: center; gap: 10px; }
 .site-menu > summary::after, .workspace-options > summary::after, .knowledge-browser > summary::after, .disclosure-arrow { content: ''; flex: none; width: 18px; height: 18px; background: currentColor; mask: var(--icon-chevron) center / contain no-repeat; }
 .site-menu[open] > summary::after, .workspace-options[open] > summary::after, .knowledge-browser[open] > summary::after, .foundation-lesson[open] .disclosure-arrow { transform: rotate(180deg); }
@@ -671,3 +671,46 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 /* The coding desk stays dark, with the selected scheme's surfaces and actions. */
 :root[data-palette=ocean] .code-column { --editor:#213442; --bg:#213442; --surface:#213442; --surface-2:#2b4353; --border:#416072; --border-strong:#88aabe; --text:#e9f3fa; --muted:#acc3d2; --accent:#97d9f5; --accent-soft:#2a485b; --action:#97d9f5; --action-hover:#bdeaff; --action-text:#203c4c; border-color:var(--border); }
 :root[data-palette=plum] .code-column { --editor:#3a2b39; --bg:#3a2b39; --surface:#3a2b39; --surface-2:#4b3748; --border:#70526a; --border-strong:#bd94b4; --text:#faedf7; --muted:#d0b6c9; --accent:#edb9e3; --accent-soft:#573d51; --action:#edb9e3; --action-hover:#f9d6f2; --action-text:#493047; border-color:var(--border); }
+
+/* Library and progress keep overview rows compact; details retain their evidence. */
+.catalog-main, .progress-main { padding-top: 32px; }
+.catalog-filters { margin-bottom: 16px; }
+.catalog-filters .filter-bar { margin-bottom: 0; padding: 8px 0; }
+.catalog-list { border: 0; }
+.catalog-list-heading { margin-bottom: 4px; }
+.progress-main .progress-summary { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px; padding: 16px 0; margin: 0; }
+.progress-main .progress-summary > div { padding: 0; border: 0; }
+.progress-main .progress-summary dd { font-size: 26px; }
+.progress-main .progress-summary dt { font-size: 12px; }
+.compact-path-list { list-style: none; margin: 0; padding: 0; }
+.compact-path-list .list-row { border-bottom: 1px solid var(--border); }
+.compact-path-list progress { display: block; width: min(240px, 100%); height: 3px; margin-top: 5px; accent-color: var(--accent); border: 0; }
+.compact-path-list progress::-webkit-progress-bar { background: var(--border); }
+.compact-path-list progress::-webkit-progress-value { background: var(--accent); }
+.progress-main .profile-badges { margin: 20px 0; }
+.progress-main .profile-badges h2, .progress-main .progress-skills-title { font-size: 20px; margin: 20px 0 8px; }
+.progress-main .progress-journey { padding: 0; margin: 0; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; }
+.progress-main .progress-heading { min-height: 64px; padding: 10px 0; gap: 16px; }
+.progress-main .progress-heading h2 { font-size: 16px; margin: 0; }
+.progress-main .progress-heading p { margin: 3px 0 0; font-size: 12px; }
+.journey-markers { display: flex; gap: 8px; flex-wrap: wrap; }
+.journey-markers > span { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 11px; }
+.journey-markers > span::before { content: ''; width: 7px; height: 7px; border: 1px solid var(--border-strong); border-radius: 50%; }
+.journey-markers > span[data-complete=true]::before { border-color: var(--success); background: var(--success); }
+@media (max-width: 700px) {
+  .catalog-search { width: min(320px, 100%); }
+  .page-header-actions { width: 100%; }
+  .progress-main .progress-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .progress-main .progress-heading { flex-wrap: wrap; }
+  .journey-markers { width: 100%; }
+}
+@media (min-width: 901px) {
+  .catalog-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; align-items: start; }
+  .catalog-list > .list-group[open], .catalog-list > .empty-state { grid-column: 1 / -1; }
+  .catalog-list[data-filtering=true] { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 700px) {
+  .progress-main .progress-heading { display: grid; grid-template-columns: minmax(0, 1fr) 18px; gap: 6px 12px; }
+  .progress-main .progress-heading > div, .progress-main .journey-markers { grid-column: 1; }
+  .progress-main .progress-heading::after { grid-column: 2; grid-row: 1 / 3; }
+}

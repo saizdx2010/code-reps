@@ -47,3 +47,8 @@
 @media (prefers-reduced-motion: reduce) {
   .list-row > button > .ui-icon, .list-group > summary .ui-icon { translate: none; transition: none; }
 }
+
+/* Shared disclosures supply their own icon, without the global native marker. */
+.list-group > summary::before, .list-group > summary::after,
+.info-note > summary::before, .info-note > summary::after { content: none; }
+.list-row-text { overflow-wrap: anywhere; }

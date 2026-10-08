@@ -144,7 +144,7 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
     // Real profile drafts feed the Home queue; expanding must not discard hidden work.
     await click('Practice')
     for(const title of ['Keep search results consistent','Recall ownership across preview slots','Refresh a report without losing its data','Reject obsolete request results']) {
-      const row=[...document.querySelectorAll('.rep-list-row')].find(row=>row.textContent.includes(title))
+      const row=[...document.querySelectorAll('.catalog-list .list-row > button')].find(row=>row.textContent.includes(title))
       assert.ok(row)
       await act(async()=>row.click())
       await input(document.querySelector('#plan'),'Preserve this draft')

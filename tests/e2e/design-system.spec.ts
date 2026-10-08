@@ -166,7 +166,7 @@ test('lesson section tabs preserve scroll and keyboard focus', async ({ page }) 
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(scroll)
 })
 
-test('lesson rows stay flat while badge cards respond without moving their layout', async ({ page }) => {
+test('lesson and path completion rows respond in place without moving their layout', async ({ page }) => {
   await page.goto('/#/knowledge')
   const row = page.locator('.knowledge-topic-list button').first()
   await row.hover()
@@ -174,11 +174,14 @@ test('lesson rows stay flat while badge cards respond without moving their layou
   expect(await row.evaluate(element => getComputedStyle(element).boxShadow)).toBe('none')
   await page.goto('/#/progress')
   await expect.poll(() => page.locator('main').evaluate(element => element.getAnimations().length)).toBe(0)
-  const card = page.locator('.profile-badge-list li').first()
-  const next = page.locator('.profile-badge-list li').nth(1)
+  const card = page.locator('.compact-path-list .list-row > button').first()
+  const next = page.locator('.compact-path-list .list-row > button').nth(1)
   const nextPosition = await next.boundingBox()
   await card.hover()
-  await expect.poll(() => card.evaluate(element => getComputedStyle(element).transform)).not.toBe('none')
+  await expect.poll(() => card.evaluate(element => getComputedStyle(element).transform)).toBe('none')
+  await expect.poll(() => card.locator('.icon-arrow').evaluate(element => getComputedStyle(element).opacity)).toBe('1')
+  await card.focus()
+  await expect(card).toBeFocused()
   expect(await next.boundingBox()).toEqual(nextPosition)
   await page.emulateMedia({ reducedMotion: 'reduce' })
   expect(await card.evaluate(element => getComputedStyle(element).transform)).toBe('none')
@@ -188,12 +191,17 @@ test('a progress disclosure visibly collapses and reverses without losing its ac
   await page.goto('/#/progress')
   const disclosure = page.locator('.progress-journey').first()
   const summary = disclosure.locator('summary')
+  await summary.click()
+  await expect(disclosure.getByRole('button', { name: 'Open rep', exact: true })).toBeVisible()
+  await expect.poll(() => disclosure.evaluate(element => getComputedStyle(element, '::details-content').opacity)).toBe('1')
   const expanded = await disclosure.evaluate(element => element.getBoundingClientRect().height)
   const collapsed = await summary.evaluate(element => element.getBoundingClientRect().height)
   await summary.click()
   await expect(disclosure).not.toHaveAttribute('open', '')
-  await expect.poll(() => disclosure.evaluate(element => element.getBoundingClientRect().height)).toBeLessThan(expanded - 4)
-  expect(await disclosure.evaluate(element => element.getBoundingClientRect().height)).toBeGreaterThan(collapsed + 4)
+  await expect.poll(async () => {
+    const height = await disclosure.evaluate(element => element.getBoundingClientRect().height)
+    return height < expanded - 4 && height > collapsed + 4
+  }, { intervals: [16] }).toBe(true)
   await summary.click()
   await expect(disclosure).toHaveAttribute('open', '')
   await expect(disclosure.getByRole('button', { name: 'Open rep', exact: true })).toBeVisible()
@@ -291,9 +299,9 @@ test('notebook loading reserves an existing writing draft and preserves it after
   await expect(page.getByRole('textbox', { name: 'What you learned', exact: true })).toHaveValue('A skeleton should reserve the real working surface.')
 })
 
-test('badge card surface navigates and session history selection stays visible', async ({ page }) => {
+test('path completion row navigates and session history selection stays visible', async ({ page }) => {
   await page.goto('/#/progress')
-  await page.locator('.profile-badge-list li').first().click({ position: { x: 30, y: 70 } })
+  await page.locator('.compact-path-list .list-row > button').first().click()
   await expect(page).toHaveURL(/#\/paths$/)
   await page.goto('/#/sessions')
   const group = page.getByRole('group', { name: 'Session history view' })
