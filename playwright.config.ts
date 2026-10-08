@@ -1,5 +1,8 @@
 import { defineConfig } from '@playwright/test'
 
+// E2E_PORT lets separate checkouts run the suite side by side without sharing a server.
+const port = Number(process.env.E2E_PORT) || 4175
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -10,15 +13,15 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: 'http://127.0.0.1:4175',
+    baseURL: `http://127.0.0.1:${port}`,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
   projects: [{ name: 'chromium', use: { browserName: 'chromium', viewport: { width: 1280, height: 900 } } }],
   // Build fresh assets for isolated SQLite tests, then start dedicated Vite.
   webServer: {
-    command: 'yarn build && yarn dev --host 127.0.0.1 --port 4175 --strictPort',
-    url: 'http://127.0.0.1:4175',
+    command: `yarn build && yarn dev --host 127.0.0.1 --port ${port} --strictPort`,
+    url: `http://127.0.0.1:${port}`,
     reuseExistingServer: false,
     timeout: 120_000,
   },
