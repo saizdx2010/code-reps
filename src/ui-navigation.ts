@@ -3,17 +3,15 @@ export type Route = { view: View; repId?: string }
 const views: View[] = ['sessions', 'home', 'catalog', 'workspace', 'history', 'learn', 'paths', 'progress', 'knowledge', 'notebook', 'plan', 'assessment', 'projects', 'interview']
 
 export const navigationSections = {
-  home: [{ view: 'home', label: 'Today' }, { view: 'plan', label: 'Practice plan' }],
-  practice: [{ view: 'catalog', label: 'Exercises' }, { view: 'projects', label: 'Projects' }, { view: 'interview', label: 'Interview' }],
-  learn: [{ view: 'knowledge', label: 'Lessons' }, { view: 'paths', label: 'Paths' }, { view: 'notebook', label: 'Notebook' }],
-  progress: [{ view: 'progress', label: 'Skills' }, { view: 'history', label: 'History' }, { view: 'sessions', label: 'Practice history' }, { view: 'assessment', label: 'Self-assessment' }],
+  trail: [{ view: 'home', label: 'Your trail' }, { view: 'paths', label: 'All tracks' }, { view: 'plan', label: 'This week' }],
+  library: [{ view: 'catalog', label: 'Exercises' }, { view: 'knowledge', label: 'Lessons' }, { view: 'projects', label: 'Projects' }, { view: 'interview', label: 'Interview' }],
+  progress: [{ view: 'progress', label: 'Skills' }, { view: 'history', label: 'History' }, { view: 'sessions', label: 'Practice history' }, { view: 'notebook', label: 'Notebook' }, { view: 'assessment', label: 'Self-assessment' }],
 } satisfies Record<string, { view: View; label: string }[]>
 
 export function navigationArea(view: View): keyof typeof navigationSections {
-  if (view === 'workspace') return 'practice'
-  if (view === 'learn') return 'learn'
+  if (view === 'workspace' || view === 'learn') return 'library'
   return (Object.keys(navigationSections) as (keyof typeof navigationSections)[])
-    .find(area => navigationSections[area].some(item => item.view === view)) ?? 'home'
+    .find(area => navigationSections[area].some(item => item.view === view)) ?? 'trail'
 }
 export function readRoute(hash: string, repIds: string[]): Route {
   const [page, rawId] = hash.replace(/^#\/?/, '').split('/')

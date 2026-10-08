@@ -25,3 +25,20 @@ export function repCurriculumEvidence(repId: string, progress: JourneyProgress[]
   if (state.recallAt) return `${state.recallDue ? 'Recall ready' : 'Recall available'} ${new Date(state.recallAt).toLocaleDateString()}.`
   return 'Complete independent practice without hints to schedule recall.'
 }
+
+type PathId = (typeof paths)[number]['id']
+
+/** Foundations is the shared root; every other track builds on it. Paths keep their own rep lists for badges and goals. */
+export const foundationsPathId: PathId = 'typescript'
+export const trackGroups: { title: string; pathIds: PathId[] }[] = [
+  { title: 'Problem solving', pathIds: ['algorithms-data-structures', 'interviews'] },
+  { title: 'Build for the browser and server', pathIds: ['typescript-browser', 'frontend', 'backend'] },
+  { title: 'Work in real code', pathIds: ['practical-concepts', 'real-world', 'ai-era'] },
+]
+
+const foundationsRepIds = new Set<string>(paths.find(path => path.id === foundationsPathId)!.stages.flatMap(stage => stage.repIds))
+
+/** A stage made only of Foundations reps is shown once, as a link back to Foundations, instead of repeating it. */
+export function stageCoveredByFoundations(pathId: string, repIds: readonly string[]) {
+  return pathId !== foundationsPathId && repIds.length > 0 && repIds.every(id => foundationsRepIds.has(id))
+}

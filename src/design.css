@@ -152,19 +152,6 @@ main { max-width: 1104px; margin: 0 auto; padding: 36px 28px 64px; }
 .path-progress { height: 4px; border-radius: var(--radius-control); overflow: hidden; background: var(--border); }
 .path-progress span { display: block; height: 100%; background: var(--accent); }
 .path-stages { margin-top: 24px; }
-.path-stage { border-bottom: 1px solid var(--border); }
-.path-stage-heading { display: flex; align-items: center; gap: 20px; padding: 22px 0; list-style: none; cursor: pointer; }
-.path-stage-heading::-webkit-details-marker { display: none; }
-.path-stage-heading > span { color: var(--muted); font-size: 14px; }
-.path-stage-heading > div { flex: 1; }
-.path-stage-heading::after { content: ''; display: inline-block; width: 18px; height: 18px; flex: none; background: currentColor; mask: var(--icon-plus) center / contain no-repeat; color: var(--muted); font-size: 20px; }
-.path-stage[open] .path-stage-heading::after { mask-image: var(--icon-minus); }
-.path-stage h3 { margin: 0; font-size: 20px; }
-.path-stage p { color: var(--muted); font-size: 14px; margin: 6px 0 0; }
-.path-stage ol { list-style: none; padding: 0; margin: 0 0 20px 40px; }
-.path-stage li button { display: flex; justify-content: space-between; align-items: center; gap: 16px; width: 100%; min-height: 52px; padding: 10px 0; border: 0; border-top: 1px solid var(--border); color: var(--text); background: transparent; text-align: left; }
-.path-stage li small { color: var(--muted); font-size: 13px; }
-.path-stage li button:hover:not(:disabled) { color: var(--accent); }
 .learn-section, .foundation-lesson { border-bottom: 1px solid var(--border); }
 .learn-section > summary { padding: 22px 0; cursor: pointer; }
 .learn-section > summary h2 { display: inline; font-size: 23px; }
@@ -507,9 +494,6 @@ dialog.preview-inline { display: block; position: static; inset: auto; width: 10
   .path-overview { align-items: start; flex-direction: column; padding: 22px; }
   .path-choices, .path-introduction { grid-template-columns: minmax(0, 1fr); }
   .path-introduction { gap: 24px; padding: 8px 0; }
-  .path-stage ol { margin-left: 0; }
-  .path-stage li button { flex-wrap: wrap; gap: 6px; }
-  .path-stage li small { flex-basis: 100%; }
   .progress-summary { gap: 24px; justify-content: space-between; }
   .progress-summary dt { font-size: 13px; }
   .progress-summary dd { font-size: 28px; }
@@ -590,8 +574,8 @@ dialog.preview-inline { display: block; position: static; inset: auto; width: 10
 summary { list-style: none; }
 summary::-webkit-details-marker { display: none; }
 summary::marker { content: ''; }
-details:not(.site-menu):not(.workspace-options):not(.knowledge-browser):not(.knowledge-group):not(.path-picker):not(.path-stage):not(.progress-journey):not(.evidence-card):not(.project-overview):not(.foundation-lesson) > summary::before { content: ''; display: inline-block; width: 18px; height: 18px; margin: 0 8px 0 0; background: currentColor; mask: var(--icon-chevron) center / contain no-repeat; transform: rotate(-90deg); vertical-align: middle; }
-details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):not(.knowledge-group):not(.path-picker):not(.path-stage):not(.progress-journey):not(.evidence-card):not(.project-overview):not(.foundation-lesson) > summary::before { transform: rotate(0deg); }
+details:not(.site-menu):not(.workspace-options):not(.knowledge-browser):not(.knowledge-group):not(.path-picker):not(.path-stage):not(.progress-journey):not(.evidence-card):not(.project-overview):not(.foundation-lesson):not(.info-note):not(.list-group) > summary::before { content: ''; display: inline-block; width: 18px; height: 18px; margin: 0 8px 0 0; background: currentColor; mask: var(--icon-chevron) center / contain no-repeat; transform: rotate(-90deg); vertical-align: middle; }
+details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):not(.knowledge-group):not(.path-picker):not(.path-stage):not(.progress-journey):not(.evidence-card):not(.project-overview):not(.foundation-lesson):not(.info-note):not(.list-group) > summary::before { transform: rotate(0deg); }
 .site-menu > summary, .workspace-options > summary { display: flex; align-items: center; gap: 10px; }
 .site-menu > summary::after, .workspace-options > summary::after, .knowledge-browser > summary::after, .disclosure-arrow { content: ''; flex: none; width: 18px; height: 18px; background: currentColor; mask: var(--icon-chevron) center / contain no-repeat; }
 .site-menu[open] > summary::after, .workspace-options[open] > summary::after, .knowledge-browser[open] > summary::after, .foundation-lesson[open] .disclosure-arrow { transform: rotate(180deg); }
@@ -614,12 +598,6 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 
 .home-goal, .path-goal { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
 .home-goal p, .path-goal p { color: var(--muted); margin: 6px 0; }
-.path-role, .path-evidence { display: block; margin-top: 6px; }
-.path-stage li button[aria-current=step] { color: var(--accent); }
-.path-stage li button > small { max-width: 38ch; }
-.path-applications { margin-top: 32px; }
-.path-applications > div { padding: 20px 0; border-top: 1px solid var(--border); }
-.path-applications p { max-width: 70ch; color: var(--muted); }
 
 .session-panel { margin: 0 0 16px; padding: 10px 0; border-top: 1px solid var(--border); }
 .session-strip { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
