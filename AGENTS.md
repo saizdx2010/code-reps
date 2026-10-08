@@ -59,6 +59,7 @@ Use the relevant guide rather than guessing: `docs/CONTENT_AUTHORING.md`, `docs/
 - Match existing TypeScript and ESM conventions: single quotes, no routine semicolons, explicit type-only imports, and the local import style. Node-loaded TypeScript modules often need `.ts` extensions.
 - Keep content, assessment rules, persistence, and runners separate from React presentation. Prefer extending an existing owner over creating a second source of truth.
 - Reuse the existing controls and CSS tokens. Inspect `src/Input.tsx`, `src/Button.tsx`, and the relevant stylesheets before adding UI. Do not introduce a component library merely because the project plan mentions one.
+- Follow `docs/DESIGN_SYSTEM.md` for Code Reps' logo-based palette, shared control geometry, page hierarchy, and motion. Extend the existing visual and motion owners; retain the original logo and reduced-motion behavior.
 - Preserve the calm, readable workspace: clear hierarchy, visible focus, semantic controls, keyboard operation, and reduced-motion support.
 - Cover loading, empty, error, saved, and recovery states. A failed editor load must leave a usable fallback and preserve the draft.
 - Keep narrow and short screens usable. Preserve pane selection, scroll position, editor state, and save feedback when navigation or layout changes.

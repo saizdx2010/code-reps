@@ -1,3 +1,4 @@
+import { Icon } from './Icon'
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import type { ComponentProps } from 'react'
 
@@ -100,10 +101,10 @@ export function Select({ className, children, id, ...props }: ComponentProps<'se
         const index = options.findIndex(option => !option.disabled && option.label.toLowerCase().startsWith(search.current.text))
         if (index >= 0) { setActive(index); if (!open) show(index) }
       }
-    }}><span>{options[selected]?.label ?? options[0]?.label ?? ''}</span><span className="ui-chevron" aria-hidden="true" /></button>
+    }}><span>{options[selected]?.label ?? options[0]?.label ?? ''}</span><Icon name="chevron" /></button>
     <select {...props} ref={field} id={`${controlId}-native`} hidden aria-hidden="true" aria-label={undefined} aria-labelledby={undefined} tabIndex={-1} className="ui-select-native">{children}</select>
     <div ref={popup} id={`${controlId}-list`} role="listbox" aria-label={`${props['aria-label'] ?? label} options`} popover="manual" hidden={!open} className="ui-select-popup" style={{ left: position.left, top: position.top, width: position.width, maxHeight: position.maxHeight, transform: position.above ? 'translateY(-100%)' : undefined }}>
-      {options.map((option, index) => <div key={`${option.value}:${index}`} id={`${controlId}-option-${index}`} role="option" aria-selected={index === active} aria-disabled={option.disabled || undefined} data-index={index} data-value={option.value} className={index === active ? 'ui-option active' : 'ui-option'} onPointerMove={() => { if (!option.disabled) setActive(index) }} onPointerDown={event => event.preventDefault()} onClick={event => { event.preventDefault(); choose(index) }}><span>{option.label}</span>{index === selected && <span aria-hidden="true">✓</span>}</div>)}
+      {options.map((option, index) => <div key={`${option.value}:${index}`} id={`${controlId}-option-${index}`} role="option" aria-selected={index === active} aria-disabled={option.disabled || undefined} data-index={index} data-value={option.value} className={index === active ? 'ui-option active' : 'ui-option'} onPointerMove={() => { if (!option.disabled) setActive(index) }} onPointerDown={event => event.preventDefault()} onClick={event => { event.preventDefault(); choose(index) }}><span>{option.label}</span>{index === selected && <Icon name="check" />}</div>)}
     </div>
   </span>
 }

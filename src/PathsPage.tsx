@@ -1,3 +1,4 @@
+import { Icon } from './Icon'
 import { pathApplications, repCurriculumRole, repCurriculumEvidence } from './curriculum'
 import type { JourneyProgress } from './learning'
 import { Select } from './Input'
@@ -48,7 +49,7 @@ export function PathsPage({ goalPathId, setGoalPath, goalError, progress, pathId
         <h2 id="path-title" tabIndex={-1}>{learnerStart === 'returning' && selectedPath.id === 'typescript' ? 'Return to problem solving' : selectedPath.title}</h2>
         <p>{learnerStart === 'returning' && selectedPath.id === 'typescript' ? 'Start with guided problems, then revisit skills without hints after a break.' : selectedPath.description}</p>
         <span className="continue-status">{pathCompletedCount} of {pathRepIds.length} reps completed</span>
-      </div>{nextPathRep && <button className="primary-button" type="button" onClick={() => pathCompletedCount === 0 ? document.getElementById('path-introduction')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }) : openRep(nextPathRep.id)}>{pathCompletedCount === 0 ? 'Read introduction ↓' : 'Continue path'}</button>}</section>
+      </div>{nextPathRep && <button className="primary-button" type="button" onClick={() => pathCompletedCount === 0 ? document.getElementById('path-introduction')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }) : openRep(nextPathRep.id)}>{pathCompletedCount === 0 ? <>Read introduction<Icon name="down" /></> : 'Continue path'}</button>}</section>
     <p>Path completion records finished reps, including hinted work. Independence and retention use separate skill evidence.</p>
     <div className="path-goal"><p>{goalPathId === selectedPath.id ? 'Your current learning goal.' : 'Browsing this path does not change your learning goal.'}</p><button type="button" className="text-button" disabled={goalPathId === selectedPath.id} onClick={() => setGoalPath(selectedPath.id)}>Use this as my learning goal</button>{goalError && <p role="alert">{goalError}</p>}</div>
     <details className="path-picker" open={pathPicker === 'open'} onToggle={event => setPathPicker(event.currentTarget.open ? 'open' : 'closed')}>

@@ -15,7 +15,7 @@ export function PracticeHistory({ hasDraft, records, activeId, reflection, setRe
   const [editing, setEditing] = useState<string | null>(null)
   const visible = records.filter(record => Boolean(record.endedAt) === (tab === 'ended'))
   return <main className="progress-main"><div className="home-heading"><h1 tabIndex={-1}>Practice history</h1><p>Sessions record effort and reflection. Completed-attempt History holds code snapshots and skill evidence.</p></div>
-    <div className="session-actions" role="group" aria-label="Session history view"><Button aria-pressed={tab === 'ended'} onClick={() => setTab('ended')}>Ended</Button><Button aria-pressed={tab === 'unfinished'} onClick={() => setTab('unfinished')}>Unfinished</Button></div>
+    <div className="segmented-control" role="group" aria-label="Session history view"><Button aria-pressed={tab === 'ended'} onClick={() => setTab('ended')}>Ended</Button><Button aria-pressed={tab === 'unfinished'} onClick={() => setTab('unfinished')}>Unfinished</Button></div>
     {!visible.length && <p>No {tab} sessions yet. Start practice explicitly from Home or a rep.</p>}
     <ul className="session-history">{visible.map(record => {
       const rep = reps.find(rep => rep.id === record.repId)!

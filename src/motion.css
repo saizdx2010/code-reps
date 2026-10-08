@@ -1,0 +1,143 @@
+/* The Code Reps motion language: responsive controls, continuous steps, stable drafts. */
+.step-indicator { position: absolute; top: 0; left: 0; z-index: 0; pointer-events: none; border-radius: var(--radius-control); background: var(--action); transition: transform 160ms cubic-bezier(.2, .8, .2, 1); }
+.screen-motion > main { animation: page-arrive 380ms var(--motion-ease); }
+@keyframes page-arrive { from { opacity: .3; translate: 0 12px; } to { opacity: 1; translate: 0 0; } }
+
+:is(.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button) { position: relative; isolation: isolate; overflow: hidden; border-radius: var(--radius-control); transition: transform 260ms var(--motion-spring), box-shadow 260ms var(--motion-ease), background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease); }
+:is(.primary-button, .finish-button)::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(110deg, transparent 20%, #ffffff22 46%, #ffffff08 55%, transparent 75%); transform: translateX(-130%); opacity: 0; }
+@media (hover: hover) and (pointer: fine) {
+  :is(.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button):hover:not(:disabled):not([aria-disabled=true]) { transform: translateY(-3px) scale(1.025); box-shadow: 0 3px 0 #293e3322, 0 8px 16px #293e3318; }
+  :is(.primary-button, .finish-button):hover:not(:disabled)::after { animation: button-shine 650ms ease-out both; }
+  :is(.primary-button, .reset-button, .hint-button):hover:not(:disabled) > .icon-arrow:not(.icon-down) { transform: translateX(2px); }
+}
+:is(.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button):active:not(:disabled) { transform: translateY(1px) scale(.96); box-shadow: none; transition-duration: 90ms; }
+:is(.primary-button, .finish-button, .reset-button, .hint-button):focus-visible { box-shadow: 0 3px 0 #293e3320, 0 6px 14px #293e3316; }
+.button-ripple { position: absolute; pointer-events: none; width: 18px; height: 18px; border-radius: 50%; background: currentColor; opacity: 0; transform: translate(-50%, -50%); }
+@keyframes button-shine { 0% { transform: translateX(-130%); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateX(130%); opacity: 0; } }
+.ui-icon { width: 18px; height: 18px; flex: none; transition: transform 260ms var(--motion-spring); }
+.hint-button:hover:not(:disabled) > .ui-icon { transform: rotate(-12deg) scale(1.12); }
+.lesson-navigation button, .knowledge-topic-list button { transform: none !important; box-shadow: none !important; }
+.lesson-navigation button { background: transparent !important; overflow: visible; }
+
+.ui-input, .ui-textarea, .ui-select, .ui-choice, .ui-option, .ui-calendar-day, .top-nav button, .knowledge-topic-list button { transition: background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease); }
+.icon-chevron { transition: rotate var(--motion-fast) var(--motion-ease); }
+.ui-select-popup:popover-open, .site-menu[open] .top-nav, .workspace-options[open] > div { animation: menu-arrive 240ms var(--motion-ease); }
+/* Individual translate preserves a select popup's existing above-anchor transform. */
+@keyframes menu-arrive { from { opacity: 0; translate: 0 -6px; } to { opacity: 1; translate: 0 0; } }
+.utility-dialog[open], .reset-dialog[open], .profile-dialog[open], .ui-calendar[open] { animation: dialog-arrive 380ms var(--motion-spring); }
+.utility-dialog, .reset-dialog, .profile-dialog, .ui-calendar { opacity: 0; translate: 0 10px; scale: .97; transition: opacity 180ms ease, translate 180ms ease, scale 180ms ease, display 180ms allow-discrete, overlay 180ms allow-discrete; }
+.utility-dialog[open], .reset-dialog[open], .profile-dialog[open], .ui-calendar[open] { opacity: 1; translate: 0 0; scale: 1; }
+@keyframes dialog-arrive { from { opacity: 0; translate: 0 16px; scale: .96; } to { opacity: 1; translate: 0 0; scale: 1; } }
+.utility-dialog[open]::backdrop, .reset-dialog[open]::backdrop, .profile-dialog[open]::backdrop, .ui-calendar[open]::backdrop { animation: backdrop-arrive 240ms ease-out; }
+@keyframes backdrop-arrive { from { opacity: 0; } to { opacity: 1; } }
+.result-summary.passed > span { animation: success-arrive 420ms var(--motion-spring); }
+@keyframes success-arrive { from { scale: .65; opacity: 0; } to { scale: 1; opacity: 1; } }
+
+/* Rows and small controls respond in place; cards use a softer depth than actions. */
+.rep-list-row, .path-stage li button, .section-nav button, .text-button, summary,
+.day-picker label, .ui-number-buttons button, .ui-search-clear, .ui-calendar-icon,
+.checks-toggle, .project-file-tabs button, .commands-trigger, .breadcrumb-link,
+.local-data-actions button, .storage-recovery button, .reset-dialog-actions button,
+.workspace-toolbar-links button, .workspace-knowledge button, .mistake-help button,
+.utility-heading button, .command-results button {
+  transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease), text-decoration-color var(--motion-fast) var(--motion-ease);
+}
+.starting-options button, .path-choices button, .profile-badge-list li {
+  transition: transform 260ms var(--motion-spring), border-color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease), box-shadow 260ms var(--motion-ease);
+}
+.continue-panel, .hub-cards > .hub-panel { transition: border-color var(--motion-fast) var(--motion-ease), box-shadow 260ms var(--motion-ease); }
+.text-button { text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px; }
+.profile-badge-list li:focus-within { border-color: var(--accent); box-shadow: 0 3px 12px #293e330d; }
+@media (hover: hover) and (pointer: fine) {
+  .starting-options button:hover:not(:disabled), .path-choices button:hover:not(:disabled), .profile-badge-list li:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 5px 16px #293e3310; }
+  .path-choices button:hover:not(:disabled) { background: var(--surface); }
+  .profile-badge-list li:hover .text-button { text-decoration-color: currentColor; }
+  .continue-panel:hover, .hub-cards > .hub-panel:hover { border-color: var(--accent); }
+  .section-nav button:hover, .commands-trigger:hover, .breadcrumb-link:hover { color: var(--accent); }
+  .ui-choice:hover:not(:disabled), .storage-recovery button:hover:not(:disabled), .reset-dialog-actions button:hover:not(:disabled) { border-color: var(--accent); }
+  .reset-dialog-actions .reset-dialog-confirm:hover:not(:disabled) { border-color: var(--error); }
+  .project-file-tabs button:hover:not(:disabled), .command-results button:hover { background: var(--accent-soft); color: var(--accent); }
+  .workspace-toolbar-links button:hover:not(:disabled), .workspace-knowledge button:hover, .mistake-help button:hover, .utility-heading button:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 4px; }
+  summary:hover, .path-stage li button:hover:not(:disabled), .day-picker label:hover, .checks-toggle:hover { background-color: color-mix(in srgb, var(--accent-soft) 65%, transparent); }
+  .text-button:hover:not(:disabled) { text-decoration-color: currentColor; }
+}
+
+/* Native disclosures animate in both directions without delaying their open state. */
+@supports (interpolate-size: allow-keywords) {
+  details { interpolate-size: allow-keywords; }
+  details::details-content { height: 0; opacity: 0; overflow: clip; transition: height 420ms cubic-bezier(.4, 0, .2, 1), opacity 420ms ease, content-visibility 420ms allow-discrete; }
+  details[open]::details-content { height: auto; opacity: 1; }
+  /* Menus must expose their first item to Tab immediately after opening. */
+  .site-menu::details-content, .workspace-options::details-content { height: auto; opacity: 1; overflow: visible; transition: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  :is(.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button):hover,
+  :is(.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button):active,
+  .ui-icon { transform: none !important; }
+  .starting-options button:hover, .path-choices button:hover, .profile-badge-list li:hover { transform: none !important; }
+  .button-ripple, .primary-button::after, .finish-button::after { display: none; }
+}
+
+/* Profile access is a compact utility: quick feedback, with restrained depth. */
+.profile-trigger { transition: transform 130ms ease-out, background-color 130ms ease-out, border-color 130ms ease-out, box-shadow 130ms ease-out; }
+@media (hover: hover) and (pointer: fine) {
+  .profile-trigger:hover:not(:disabled) { transform: translateY(-1px); background: var(--accent-soft); border-color: var(--accent); box-shadow: 0 3px 8px #293e3310; }
+}
+.profile-trigger:active:not(:disabled) { transform: translateY(0); box-shadow: none; transition-duration: 70ms; }
+@media (prefers-reduced-motion: reduce) { .profile-trigger:hover, .profile-trigger:active { transform: none; } }
+
+/* Tab feedback stays inside its hit area; selection retains its own indicator. */
+:is(.top-nav, .practice-steps, .lesson-navigation, .project-file-tabs, .segmented-control) button {
+  position: relative;
+  isolation: isolate;
+  transition: color 140ms ease-out, background-color 140ms ease-out, border-color 140ms ease-out;
+}
+:is(.top-nav, .practice-steps, .lesson-navigation, .project-file-tabs, .segmented-control) button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--accent-soft);
+  opacity: 0;
+  transform: scale(.94);
+  transition: opacity 140ms ease-out, transform 180ms var(--motion-spring);
+  pointer-events: none;
+}
+.section-nav button::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: center;
+  opacity: .55;
+  transition: transform 180ms var(--motion-spring), opacity 140ms ease-out;
+}
+.section-nav button[aria-current]::after { transform: scaleX(1); opacity: 1; }
+@media (hover: hover) and (pointer: fine) {
+  :is(.top-nav, .practice-steps, .lesson-navigation, .project-file-tabs, .segmented-control) button:hover:not([aria-current]):not([aria-pressed=true]):not(:disabled) {
+    background: transparent;
+    color: var(--accent);
+  }
+  :is(.top-nav, .practice-steps, .lesson-navigation, .project-file-tabs, .segmented-control) button:hover:not([aria-current]):not([aria-pressed=true]):not(:disabled)::before {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .section-nav button:hover:not([aria-current])::after { transform: scaleX(1); }
+}
+:is(.top-nav, .practice-steps, .lesson-navigation, .project-file-tabs, .segmented-control) button:focus-visible:not([aria-current]):not([aria-pressed=true])::before { opacity: 1; transform: scale(1); }
+:is(.top-nav, .practice-steps, .lesson-navigation, .project-file-tabs, .segmented-control) button:active:not([aria-current]):not([aria-pressed=true])::before { transform: scale(.97); transition-duration: 70ms; }
+@media (prefers-reduced-motion: reduce) {
+  :is(.top-nav, .practice-steps, .lesson-navigation, .project-file-tabs, .segmented-control) button::before { transform: none; }
+}
+
+.segmented-control button { transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease); }
+
+/* A view switch responds in place, including while its selected item is hovered. */
+.segmented-control button:hover:not(:disabled):not([aria-disabled=true]), .segmented-control button:active:not(:disabled):not([aria-disabled=true]), .segmented-control button:focus-visible { transform: none; box-shadow: none; }
+.segmented-control button[aria-pressed=true]:hover:not(:disabled), .segmented-control button[aria-pressed=true]:active:not(:disabled) { background: var(--action); color: var(--action-text); }

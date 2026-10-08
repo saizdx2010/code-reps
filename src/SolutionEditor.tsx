@@ -1,4 +1,5 @@
 import { Textarea } from './Input'
+import { EditorLoading } from './LoadingStates'
 import { Component, lazy, Suspense } from 'react'
 import type { ComponentProps, ReactNode } from 'react'
 import type CodeEditor from './CodeEditor'
@@ -18,6 +19,6 @@ class EditorRecovery extends Component<{ children: ReactNode; value: string; onC
 }
 
 export function SolutionEditor(props: Props) {
-  const loading = <div className="editor-loading" role="status">Loading editor… Your saved code will appear here.</div>
+  const loading = <EditorLoading />
   return <EditorRecovery value={String(props.value ?? '')} onChange={props.onChange}><Suspense fallback={loading}><Editor {...props} onChange={value => props.onChange(value ?? '')} loading={loading} /></Suspense></EditorRecovery>
 }

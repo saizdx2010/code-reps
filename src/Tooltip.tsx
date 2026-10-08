@@ -25,7 +25,7 @@ export function Tooltip({ text, children }: { text: string; children: ReactEleme
   }, [open])
   useEffect(() => () => window.clearTimeout(timer.current), [])
   return <span ref={trigger} className="ui-tooltip-trigger" onMouseEnter={show} onMouseLeave={() => {
-    timer.current = window.setTimeout(() => { if (!trigger.current?.contains(document.activeElement)) setOpen(false) }, 150)
+    timer.current = window.setTimeout(() => { if (!trigger.current?.contains(document.activeElement)) setOpen(false) }, 60)
   }} onFocus={show} onBlur={hide} onKeyDownCapture={event => { if (event.key === 'Escape' && open) { event.stopPropagation(); hide() } }}>
     {cloneElement(children, { 'aria-describedby': [children.props['aria-describedby'], id].filter(Boolean).join(' ') })}
     <span ref={hint} id={id} role="tooltip" className="ui-tooltip" hidden={!open} style={position}>{text}</span>

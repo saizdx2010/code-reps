@@ -131,6 +131,7 @@ Automated checks do not establish learning effectiveness, full disconnected-brow
 | [Local setup](./docs/LOCAL_SETUP.md) | Installation, updates, backups, and restores |
 | [Portable bundles](./docs/PORTABLE_BUNDLE.md) | Distribution with a bundled Node runtime |
 | [UI guide](./docs/UI_GUIDE.md) | Routes, keyboard controls, and saved state |
+| [Design system](./docs/DESIGN_SYSTEM.md) | Code Reps palette, app-owned controls, and motion |
 | [Fluency platform](./docs/FLUENCY_PLATFORM.md) | Learning tools and progress evidence |
 | [Algorithms & Data Structures](./docs/ALGORITHMS_DATA_STRUCTURES.md) | Beginner progression and planned expansion |
 | [Practical concepts](./docs/PRACTICAL_CONCEPTS.md) | Application policies and transfer practice |

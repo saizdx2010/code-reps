@@ -1,3 +1,4 @@
+import { Icon } from './Icon'
 import { useRef } from 'react'
 import type { paths } from './path'
 import { profileProgress } from './profile-progress'
@@ -38,7 +39,7 @@ export function ProgressPage({ profileName, history, now, onManageProfiles, onOp
     <p className="utility-note">A practice day counts when you finish a rep with checks, a plan, and a reflection. Your current streak stays active through today if you practised yesterday. Breaks are welcome; your milestones stay.</p>
     <section className="profile-badges" aria-labelledby="profile-badges-title">
       <h2 id="profile-badges-title">Path completion badges</h2><p className="utility-note">{summary.badges.filter(badge => badge.earned).length} earned. Finish every rep in a path to earn its badge. Completion can include hints; independent skill and retention have separate evidence below.</p>
-      <ul className="profile-badge-list">{summary.badges.map(badge => <li key={badge.id} className={badge.earned ? 'badge-earned' : undefined}><span className="home-label">{badge.earned ? '✓ Completed' : badge.completed ? 'In progress' : 'Not started'}</span><h3>{badge.title}</h3><p>{badge.completed} of {badge.total} reps completed</p><progress value={badge.completed} max={badge.total} aria-label={`${badge.title} completion`} /><Button variant="text" onClick={() => onOpenPath(badge.id)}>{badge.earned ? 'Revisit path' : 'Explore path'}</Button></li>)}</ul>
+      <ul className="profile-badge-list">{summary.badges.map(badge => <li key={badge.id} className={badge.earned ? 'badge-earned' : undefined}><span className="home-label">{badge.earned ? <><Icon name="check" /> Completed</> : badge.completed ? 'In progress' : 'Not started'}</span><h3>{badge.title}</h3><p>{badge.completed} of {badge.total} reps completed</p><progress value={badge.completed} max={badge.total} aria-label={`${badge.title} completion`} /><Button variant="text" className="badge-path-action" aria-label={`${badge.earned ? 'Revisit' : 'Explore'} path: ${badge.title}`} onClick={() => onOpenPath(badge.id)}>{badge.earned ? 'Revisit path' : 'Explore path'}</Button></li>)}</ul>
     </section>
     <h2>Skill evidence</h2><p className="utility-note">Follow guided practice, independent work, and later recall.</p>
     <dl className="progress-summary" aria-label="Skill evidence summary">

@@ -1,6 +1,7 @@
 import type { PracticeSession } from './practice-sessions'
 import type { ReactNode } from 'react'
 import { preloadEditor } from './editor-loader'
+import { Icon } from './Icon'
 import { reps } from './rep'
 import type { Rep } from './rep'
 import { paths } from './path'
@@ -40,6 +41,9 @@ export function HomePage({ sessionBusy, startPractice, unfinishedSessions, resum
     <div className="home-heading">
       <h1 tabIndex={-1}>{learnerStart ? 'Pick up your practice.' : 'Start with what you know.'}</h1>
       <p>One useful rep, then a little reflection. Your work stays on this device.</p>
+      <ol className="home-practice-loop" aria-label="The practice loop">
+        {['Understand', 'Plan', 'Solve', 'Explain', 'Review'].map(step => <li key={step}>{step}</li>)}
+      </ol>
     </div>
     <section className="home-goal" aria-label="Learning goal"><div><strong>{paths.find(path => path.id === goalPathId)?.title}</strong><p>Follow your ordered path or explicitly choose a different learning goal.</p></div><button type="button" className="text-button" onClick={() => onPath((paths.find(path => path.id === goalPathId) ?? paths[0]).id)}>View or choose goal path</button></section>
     {!learnerStart && <div className="first-run-start">{startingPoint}</div>}
@@ -50,7 +54,7 @@ export function HomePage({ sessionBusy, startPractice, unfinishedSessions, resum
         <p>{recommendation.reason}</p>
         <span className="continue-status">{recommendedRep.category}<span>{repStatus(recommendedRep)}</span></span>
       </div>
-      <button className="primary-button" type="button" onMouseEnter={preloadEditor} onFocus={preloadEditor} onClick={() => openPracticeAction(recommendation)}>{actionLabel(recommendation.mode)}</button>
+      <button className="primary-button" type="button" onMouseEnter={preloadEditor} onFocus={preloadEditor} onClick={() => openPracticeAction(recommendation)}>{actionLabel(recommendation.mode)}<Icon name="arrow" /></button>
     </section> : <section className="continue-panel" aria-labelledby="continue-heading">
       <div>
         <span className="home-label">Caught up for now</span>

@@ -1,40 +1,38 @@
 .ui-input, .ui-select, .ui-textarea {
-  width: 100%; min-width: 0; min-height: 42px; padding: 10px 12px;
-  border: 1px solid var(--border-strong); border-radius: 6px;
+  width: 100%; min-width: 0; min-height: var(--control-height); padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: var(--radius-control);
   background: var(--surface); color: var(--text); font: inherit; font-size: 15px; line-height: 1.5;
 }
 .ui-input::placeholder, .ui-textarea::placeholder { color: var(--muted); opacity: .8; }
 .ui-input:hover:not(:disabled), .ui-select:hover:not(:disabled), .ui-textarea:hover:not(:disabled) { border-color: var(--accent); }
-.ui-input:focus-visible, .ui-select:focus-visible, .ui-textarea:focus-visible { border-color: var(--accent); outline: 2px solid var(--accent); outline-offset: 2px; }
+.ui-input:focus-visible, .ui-select:focus-visible, .ui-textarea:focus-visible { border-color: var(--accent); outline: 1px solid var(--accent); outline-offset: 1px; }
 .ui-input[aria-invalid=true], .ui-select[aria-invalid=true], .ui-textarea[aria-invalid=true] { border-color: var(--error); }
 .ui-input:disabled, .ui-select:disabled, .ui-textarea:disabled { opacity: .55; cursor: not-allowed; }
 .ui-textarea { display: block; resize: vertical; min-height: 100px; }
-.ui-choice { appearance: none; display: inline-grid; place-content: center; flex: none; width: 18px; height: 18px; margin: 0; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--surface); vertical-align: middle; cursor: pointer; }
+.ui-choice { appearance: none; display: inline-grid; place-content: center; flex: none; width: 18px; height: 18px; margin: 0; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); vertical-align: middle; cursor: pointer; }
 .ui-choice[type=radio] { border-radius: 50%; }
 .ui-choice:checked { border-color: var(--action); background: var(--action); }
 .ui-choice::before { content: ''; opacity: 0; }
-.ui-choice[type=checkbox]::before { width: 5px; height: 9px; border: solid var(--action-text); border-width: 0 2px 2px 0; transform: translateY(-1px) rotate(45deg); }
+.ui-choice[type=checkbox]::before { width: 16px; height: 16px; background: var(--action-text); mask: var(--icon-check) center / contain no-repeat; }
 .ui-choice[type=radio]::before { width: 8px; height: 8px; border-radius: 50%; background: var(--action-text); }
 .ui-choice:checked::before { opacity: 1; }
 .ui-choice:disabled { opacity: .55; cursor: not-allowed; }
-.ui-choice:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.ui-choice:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
 
 /* Select menus live in the top layer so panes and dialogs cannot clip them. */
 .ui-select-control, .ui-number-control, .ui-date-control, .ui-search-control { display: block; width: 100%; min-width: 0; }
 label > .ui-select-control, label > .ui-number-control, label > .ui-date-control, label > .ui-search-control { margin-top: 7px; }
 .ui-select { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-right: 14px; text-align: left; font-weight: 400; }
 .ui-select > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ui-chevron { flex: none; width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg) translateY(-2px); }
-.ui-select[aria-expanded=true] .ui-chevron { transform: rotate(225deg) translate(-1px, -1px); }
-.ui-select-popup { position: fixed; inset: auto; margin: 0; padding: 6px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); color: var(--text); box-shadow: 0 10px 32px #18211b66; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
-.ui-option { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 42px; padding: 9px 10px; border-radius: 4px; font-size: 15px; line-height: 1.5; cursor: pointer; }
+.ui-select-popup { position: fixed; inset: auto; margin: 0; padding: 6px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); box-shadow: var(--shadow-menu); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.ui-option { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: var(--control-height); padding: 9px 10px; border-radius: var(--radius-control); font-size: 15px; line-height: 1.5; cursor: pointer; }
 .ui-option.active { color: var(--accent); background: var(--accent-soft); }
 .ui-option[aria-disabled=true] { opacity: .5; cursor: not-allowed; }
 .ui-number-control, .ui-search-control { position: relative; }
 .ui-number-control .ui-input { padding-right: 88px; appearance: textfield; }
 .ui-number-control .ui-input::-webkit-inner-spin-button, .ui-number-control .ui-input::-webkit-outer-spin-button { appearance: none; margin: 0; }
 .ui-number-buttons { position: absolute; top: 3px; right: 3px; bottom: 3px; display: flex; }
-.ui-number-buttons button, .ui-search-clear { width: 36px; min-height: 36px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--text); font-size: 20px; }
+.ui-number-buttons button, .ui-search-clear { width: 36px; min-height: 36px; padding: 0; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--text); font-size: 20px; }
 .ui-number-buttons button:hover:not(:disabled), .ui-search-clear:hover { background: var(--accent-soft); color: var(--accent); }
 .ui-search-control .ui-input { padding-right: 44px; }
 .ui-search-control .ui-input::-webkit-search-cancel-button { appearance: none; }
@@ -43,16 +41,16 @@ label > .ui-select-control, label > .ui-number-control, label > .ui-date-control
 .ui-file-name { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
 .ui-date-trigger { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; font-weight: 400; }
 .ui-date-trigger svg { flex: none; color: var(--muted); }
-.ui-calendar { width: min(380px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); margin: auto; padding: 20px; overflow-y: auto; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--surface); color: var(--text); box-shadow: 0 20px 60px #18211b66; }
+.ui-calendar { width: min(380px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); margin: auto; padding: 20px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); box-shadow: 0 16px 48px #23392d33; }
 .ui-calendar-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .ui-calendar-heading h2 { margin: 0; font-size: 20px; }
-.ui-calendar-icon { flex: none; width: 40px; min-height: 40px; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: transparent; color: var(--text); font-size: 26px; }
+.ui-calendar-icon { flex: none; width: 40px; min-height: 40px; padding: 0; border: 1px solid var(--border); border-radius: var(--radius-control); background: transparent; color: var(--text); font-size: 26px; }
 .ui-calendar-icon:hover { border-color: var(--accent); }
 .ui-calendar-help { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 14px 0; }
 .ui-calendar-grid { table-layout: fixed; width: 100%; border-collapse: collapse; }
 .ui-calendar-grid th { height: 36px; color: var(--muted); font-size: 12px; font-weight: 500; text-align: center; }
 .ui-calendar-grid td { padding: 2px; text-align: center; }
-.ui-calendar-day { width: 100%; min-height: 40px; padding: 3px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--text); font-size: 14px; }
+.ui-calendar-day { width: 100%; min-height: 40px; padding: 3px; border: 1px solid transparent; border-radius: var(--radius-control); background: transparent; color: var(--text); font-size: 14px; }
 .ui-calendar-day:hover { background: var(--accent-soft); }
 .ui-calendar-day.other-month { color: var(--muted); }
 .ui-calendar-day[aria-current=date] { border-color: var(--border-strong); }
@@ -62,4 +60,6 @@ label > .ui-select-control, label > .ui-number-control, label > .ui-date-control
 @media (max-width: 400px) { .ui-calendar { padding: 16px; } }
 @media (forced-colors: active) { .ui-choice:checked { background: Highlight; } .ui-choice::before { border-color: HighlightText; } .ui-choice[type=radio]::before { background: HighlightText; } }
 .ui-tooltip-trigger { display: inline-flex; min-width: 0; }
-.ui-tooltip { position: fixed; z-index: 200; width: max-content; max-width: min(240px, calc(100vw - 16px)); padding: 8px 12px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--surface-2); color: var(--text); box-shadow: 0 6px 20px #18211b66; font-size: 13px; font-weight: 400; line-height: 1.5; }
+.ui-tooltip { position: fixed; z-index: 200; width: max-content; max-width: min(240px, calc(100vw - 16px)); padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); color: var(--muted); box-shadow: 0 3px 12px #293e3312; font-size: 12px; font-weight: 400; line-height: 1.5; pointer-events: none; opacity: 0; translate: 0 -3px; transition: opacity 110ms ease-out, translate 110ms ease-out, display 110ms allow-discrete; }
+.ui-tooltip:not([hidden]) { opacity: 1; translate: 0 0; }
+@starting-style { .ui-tooltip:not([hidden]) { opacity: 0; translate: 0 -3px; } }

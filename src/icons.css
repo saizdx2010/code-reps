@@ -1,0 +1,34 @@
+/* One outline family: 24px geometry, 1.8px rounded strokes. */
+:root {
+  --icon-circle: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.8%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%228%22/%3E%3C/svg%3E");
+  --icon-arrow: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M5%2012h14m-6-6%206%206-6%206%22/%3E%3C/svg%3E");
+  --icon-play: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m8%205%2011%207-11%207Z%22/%3E%3C/svg%3E");
+  --icon-hint: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M9%2018h6m-5%203h4M8%2014a6%206%200%201%201%208%200c-1%201-1%202-1%202H9s0-1-1-2Z%22/%3E%3C/svg%3E");
+  --icon-chevron: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22/%3E%3C/svg%3E");
+  --icon-check: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m5%2012%204%204L19%206%22/%3E%3C/svg%3E");
+  --icon-close: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%206%2012%2012M18%206%206%2018%22/%3E%3C/svg%3E");
+  --icon-plus: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M5%2012h14M12%205v14%22/%3E%3C/svg%3E");
+  --icon-minus: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M5%2012h14%22/%3E%3C/svg%3E");
+  --icon-calendar: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M7%203v4m10-4v4M4%2010h16M6%205h12a2%202%200%200%201%202%202v12a2%202%200%200%201-2%202H6a2%202%200%200%201-2-2V7a2%202%200%200%201%202-2ZM8%2014h2m4%200h2m-8%203h2%22/%3E%3C/svg%3E");
+  --icon-alert: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%208v5m0%203h.01M10%204%202%2018a1%201%200%200%200%201%202h18a1%201%200%200%200%201-2L14%204a2.3%202.3%200%200%200-4%200%22/%3E%3C/svg%3E");
+  --icon-code: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%221.8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m8%207-5%205%205%205m8-10%205%205-5%205%22/%3E%3C/svg%3E");
+}
+.ui-icon { display: inline-block; width: 18px; height: 18px; flex: none; background: currentColor; mask: var(--icon-image) center / contain no-repeat; vertical-align: middle; }
+.icon-arrow { --icon-image: var(--icon-arrow); }
+.icon-play { --icon-image: var(--icon-play); }
+.icon-hint { --icon-image: var(--icon-hint); }
+.icon-chevron { --icon-image: var(--icon-chevron); }
+.icon-check { --icon-image: var(--icon-check); }
+.icon-close { --icon-image: var(--icon-close); }
+.icon-plus { --icon-image: var(--icon-plus); }
+.icon-minus { --icon-image: var(--icon-minus); }
+.icon-calendar { --icon-image: var(--icon-calendar); }
+.icon-alert { --icon-image: var(--icon-alert); }
+.icon-code { --icon-image: var(--icon-code); }
+.icon-left { rotate: 90deg; }
+.icon-right { rotate: -90deg; }
+.ui-select[aria-expanded=true] .icon-chevron { rotate: 180deg; }
+.ui-number-buttons button, .ui-calendar-icon { display: inline-flex; align-items: center; justify-content: center; }
+
+.icon-circle { --icon-image: var(--icon-circle); }
+.icon-down { rotate: 90deg; }

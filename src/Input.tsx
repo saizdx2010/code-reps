@@ -1,3 +1,4 @@
+import { Icon } from './Icon'
 import { useLayoutEffect, useRef, useState } from 'react'
 import type { ComponentProps } from 'react'
 import './input.css'
@@ -33,7 +34,7 @@ function SearchInput({ className, ...props }: ComponentProps<'input'>) {
     Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!.call(node, '')
     node.dispatchEvent(new Event('input', { bubbles: true }))
     node.focus()
-  }}>×</button>}</span>
+  }}><Icon name="close" /></button>}</span>
 }
 
 export function Textarea({ className, ...props }: ComponentProps<'textarea'>) {
@@ -76,5 +77,5 @@ export function NumberInput({ value, min, max, onValueChange, onBlur, ...props }
     onBlur={event => {
       setEdit({ source: value, text: String(value) })
       onBlur?.(event)
-    }} /><span className="ui-number-buttons"><button type="button" disabled={props.disabled || value <= min} aria-label={`Decrease ${label}`} onClick={() => step(-1)}>−</button><button type="button" disabled={props.disabled || value >= max} aria-label={`Increase ${label}`} onClick={() => step(1)}>+</button></span></span>
+    }} /><span className="ui-number-buttons"><button type="button" disabled={props.disabled || value <= min} aria-label={`Decrease ${label}`} onClick={() => step(-1)}><Icon name="minus" /></button><button type="button" disabled={props.disabled || value >= max} aria-label={`Increase ${label}`} onClick={() => step(1)}><Icon name="plus" /></button></span></span>
 }

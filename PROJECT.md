@@ -61,16 +61,18 @@ Use semantic UI tokens so components do not contain scattered color values. The 
 
 | Role | Value |
 | --- | --- |
-| Background | `#2B3531` |
-| Surface | `#35423B` |
-| Text | `#EDF0EB` |
-| Muted text | `#BDC8BE` |
-| Primary action | `#BCE57B` |
-| Links and focus | `#BCE57B` |
+| Background | `#F0F4ED` |
+| Surface | `#FFFFFF` |
+| Text | `#293E33` |
+| Muted text | `#607465` |
+| Reading action | `#303F38` with `#BCE57B` text |
+| Links and focus | `#456833` |
 | Editor background | `#303F38` |
-| Error | `#EF978B` |
+| Error | `#8A3E22` |
 
 Source Sans 3 carries interface and reading text; Maple Mono carries code. Both fonts are bundled locally. Reuse the app-owned shared controls and tokens for borders, focus, spacing, radii, typography, and motion. Dropdowns, menus, calendars, number buttons, and file controls use our own presentation; native text fields and choices retain browser input semantics. Monaco remains the code editor. Home, Practice, Learn, and Progress group the full app; secondary pages stay bookmarkable. Disclose filters and management tools when needed, and keep the editor mounted while learners plan, explain, and review.
+
+The [Code Reps visual system](./docs/DESIGN_SYSTEM.md) defines the logo-based light practice sheets, dark coding desk, shared controls, and responsive motion. Movement follows learner actions and respects reduced motion; it does not delay saves, check results, or navigation.
 
 ## Technical direction
 
