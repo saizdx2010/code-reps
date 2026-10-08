@@ -53,3 +53,15 @@ Run `yarn content:check`, `yarn lint`, `yarn test`, and `yarn build`. Coverage v
 ## Path application links
 
 `src/curriculum.ts` contains authored path-to-project application links. Each link names an existing project milestone rep and explains how it applies the path's skills. Keep links relevant rather than assigning every path a destination. Roles and recall evidence derive from `src/learning.ts`; do not duplicate journey definitions. `tests/curriculum.test.mjs` checks target validity and evidence distinctions. Project completion is not automatic proof of transfer or mastery.
+
+## Optional visual step traces
+
+A rep depth entry may add `traceSteps: RepTrace` alongside its required prose `trace`.
+Use a non-empty `code` array, an `input` description, and at least two snapshots in
+`steps`. Each snapshot has a zero-based `line`, `vars`, a non-empty `note`, and
+an optional array, stack (bottom to top), or map `structure`. Array `pointers`
+use in-bounds zero-based indices; `dimmed` marks visited or inactive indices.
+Keep variable names and values concise so diagram labels remain readable.
+These authored snapshots appear only in the post-check comparison reveal after
+all checks pass. They describe the reference approach, not the learner's live
+execution, and must never be copied into independent or recall prompts.

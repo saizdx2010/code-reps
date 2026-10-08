@@ -2,7 +2,14 @@ import { browserStateDepth } from './browser-state-reps.ts'
 import { dsaDepth } from './dsa-reps.ts'
 import { practicalRepDepth } from './practical-concepts.ts'
 import { validationDepth } from './validation-reps.ts'
-export type RepDepth = { reasoning: string; trace: string; alternative: string; counterexample: string; transfer: string }
+export type TraceStructure =
+  | { kind: 'array'; values: (string | number)[]; pointers?: Record<string, number>; dimmed?: number[] }
+  | { kind: 'stack'; values: (string | number)[] }
+  | { kind: 'map'; entries: [string, string | number][] }
+export type TraceStep = { line: number; vars: Record<string, string | number | boolean | null>; structure?: TraceStructure; note: string }
+export type RepTrace = { code: string[]; input: string; steps: TraceStep[] }
+
+export type RepDepth = { reasoning: string; trace: string; traceSteps?: RepTrace; alternative: string; counterexample: string; transfer: string }
 
 // Authored post-attempt reviews. Keep these out of independent task prompts.
 export const repDepth: Record<string, RepDepth> = {
@@ -116,6 +123,18 @@ export const repDepth: Record<string, RepDepth> = {
     "transfer": "Allow non-bracket text to be ignored. State that new rule and test a mixed-text expression."
   },
   "sum-positive-numbers": {
+    traceSteps: {
+      code: ['let total = 0', 'for (const number of numbers) {', '  if (number > 0) total += number', '}', 'return total'],
+      input: 'numbers = [3, -2, 0, 4]',
+      steps: [
+        { line: 0, vars: { total: 0 }, structure: { kind: 'array', values: [3, -2, 0, 4] }, note: 'Start at zero. Only positive values contribute.' },
+        { line: 2, vars: { total: 3, number: 3 }, structure: { kind: 'array', values: [3, -2, 0, 4], pointers: { current: 0 } }, note: 'Three is positive, so add it to the total.' },
+        { line: 2, vars: { total: 3, number: -2 }, structure: { kind: 'array', values: [3, -2, 0, 4], pointers: { current: 1 }, dimmed: [0] }, note: 'Skip negative two. The total stays three.' },
+        { line: 2, vars: { total: 3, number: 0 }, structure: { kind: 'array', values: [3, -2, 0, 4], pointers: { current: 2 }, dimmed: [0, 1] }, note: 'Zero is not positive. The total still stays three.' },
+        { line: 2, vars: { total: 7, number: 4 }, structure: { kind: 'array', values: [3, -2, 0, 4], pointers: { current: 3 }, dimmed: [0, 1, 2] }, note: 'Add four. The total is now seven.' },
+        { line: 4, vars: { total: 7 }, structure: { kind: 'array', values: [3, -2, 0, 4], dimmed: [0, 1, 2, 3] }, note: 'Every value has been visited. Return seven.' },
+      ],
+    },
     "reasoning": "After each visit, total equals the sum of positive values in the visited prefix.",
     "trace": "For [-2,4,0,3], totals are 0,4,4,7. Empty input leaves the initial zero untouched.",
     "alternative": "A loop keeps only a total; filter then reduce creates a selected array. A reducer without an initial value fails on empty input.",
