@@ -110,11 +110,14 @@ test('failed checks open one case at a time with keyboard access', async ({ page
   await expect(cases.nth(1)).toContainText('mostFrequent([7])')
   await expect(page.getByRole('list', { name: 'Passed checks' })).toBeVisible()
   await expect(page.locator('.passed-checks li')).toHaveCount(1)
-  await expect(page.locator('#code-workspace #checks-section')).toHaveCount(0)
-  const workspace = await page.locator('.workspace-layout').boundingBox()
+  await expect(page.locator('#code-workspace #checks-section')).toHaveCount(1)
+  const desk = await page.locator('#code-workspace').boundingBox()
   const checks = await page.locator('#checks-section').boundingBox()
-  expect(checks!.y).toBeGreaterThanOrEqual(workspace!.y + workspace!.height)
-  expect(checks!.width).toBeCloseTo(workspace!.width, 0)
+  const toolbar = await page.locator('.workspace-toolbar').boundingBox()
+  expect(checks!.y).toBeGreaterThanOrEqual(desk!.y)
+  expect(checks!.y + checks!.height).toBeLessThanOrEqual(toolbar!.y + 1)
+  expect(checks!.height).toBeLessThanOrEqual(desk!.height / 2 + 1)
+  expect(checks!.width).toBeLessThanOrEqual(desk!.width)
 })
 
 test('practice steps preserve work, explain missing requirements, and record completion', async ({ page }) => {
@@ -149,8 +152,8 @@ test('practice steps preserve work, explain missing requirements, and record com
   await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Completed reps1')
   await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Current streak1 days')
   // An unhinted solve before its guided journey is not evidence of independence.
-  await expect(page.locator('[aria-label="Skill evidence summary"]')).toContainText('Independent skills0')
-  await expect(page.locator('[aria-label="Skill evidence summary"]')).toContainText('Retained skills0')
+  await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Independent skills0')
+  await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Retained skills0')
 })
 
 test('lesson section navigation preserves predictions and opens self-review', async ({ page }) => {
@@ -196,17 +199,17 @@ test('local profile progress is readable on narrow screens and links to paths', 
   await expect(page.getByRole('heading', { name: 'My learning', exact: true })).toBeVisible()
   await expect(page.getByRole('definition').filter({ hasText: /^0 days$/ })).toHaveCount(2)
   await expect(page.getByRole('heading', { name: 'Path completion badges' })).toBeVisible()
-  await expect(page.locator('.profile-badge-list li')).toHaveCount(paths.length)
+  await expect(page.locator('.compact-path-list li')).toHaveCount(paths.length)
   await expect(page.locator('.profile-summary')).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  await page.locator('.profile-badge-list').getByRole('button', { name: 'Explore path' }).first().focus()
+  await page.locator('.compact-path-list').getByRole('button').first().focus()
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/#\/paths/)
   await page.goBack()
   await expect(page.getByRole('heading', { name: 'My learning', exact: true })).toBeVisible()
 })
 
-test('checks use a full-width light sheet below the retained workspace', async ({ page }) => {
+test('checks open as a bounded drawer inside the coding desk above the run toolbar', async ({ page }) => {
   await page.goto(route)
   await replaceCode(page, solution)
   await page.keyboard.press('ControlOrMeta+Enter')
@@ -215,12 +218,22 @@ test('checks use a full-width light sheet below the retained workspace', async (
   await expect(checks.locator('.passed-checks li')).toHaveCount(6)
   for (const width of [1280, 320]) {
     await page.setViewportSize({ width, height: 900 })
-    const workspaceBox = await page.locator('.workspace-layout').boundingBox()
+    const desk = await page.locator('#code-workspace').boundingBox()
     const checksBox = await checks.boundingBox()
-    expect(checksBox!.y).toBeGreaterThanOrEqual(workspaceBox!.y + workspaceBox!.height)
-    expect(checksBox!.width).toBeCloseTo(workspaceBox!.width, 0)
+    const editorBox = await page.locator('#solution-section').boundingBox()
+    const toolbar = await page.locator('.workspace-toolbar').boundingBox()
+    await expect(page.locator('#code-workspace #checks-section')).toHaveCount(1)
+    expect(checksBox!.y).toBeGreaterThanOrEqual(editorBox!.y + editorBox!.height - 1)
+    // The toolbar is sticky on narrow screens, so compare flow order there instead of positions.
+    if (width > 900) expect(checksBox!.y + checksBox!.height).toBeLessThanOrEqual(toolbar!.y + 1)
+    else expect(await checks.evaluate(element => Boolean(element.compareDocumentPosition(document.querySelector('.workspace-toolbar')!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true)
+    expect(checksBox!.x).toBeGreaterThanOrEqual(desk!.x)
+    expect(checksBox!.x + checksBox!.width).toBeLessThanOrEqual(desk!.x + desk!.width + 1)
+    // Desktop bounds the drawer; narrow screens let it follow the editor in the Solve pane.
+    if (width > 900) expect(checksBox!.height).toBeLessThanOrEqual(desk!.height / 2 + 1)
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-    expect(await checks.evaluate(element => getComputedStyle(element).backgroundColor)).toBe('rgb(232, 243, 226)')
+    // The drawer is part of the dark desk: the passed surface is the desk's success tone.
+    expect(await checks.evaluate(element => getComputedStyle(element).backgroundColor)).toBe('rgb(32, 60, 53)')
   }
   const toggle = checks.getByRole('button', { name: /^Checks/ })
   await toggle.focus()
@@ -231,12 +244,35 @@ test('checks use a full-width light sheet below the retained workspace', async (
   await expect.poll(() => page.evaluate(() => Object.entries(localStorage).filter(([key]) => key.includes('most-frequent-number')).map(([, value]) => JSON.parse(value).code))).toContain(solution)
 })
 
+test('compact header shows the editor, first step, and an in-desk drawer without scrolling', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto(route)
+  await expect(editor(page)).toBeVisible()
+  const first = page.getByRole('navigation', { name: 'Practice steps' }).getByRole('button', { name: 'Understand', exact: true })
+  await expect(first).toBeInViewport({ ratio: 1 })
+  await expect(page.getByRole('heading', { level: 1, name: 'Find the most frequent number' })).toBeInViewport({ ratio: 1 })
+  const header = await page.locator('.workspace-header').boundingBox()
+  expect(header!.y + header!.height).toBeLessThan(130)
+  const editorBox = await page.locator('#solution-section').boundingBox()
+  expect(editorBox!.y).toBeLessThan(200)
+  expect(editorBox!.height).toBeGreaterThan(400)
+  await page.getByRole('button', { name: 'Run checks', exact: true }).click()
+  const checks = page.locator('#code-workspace #checks-section')
+  await expect(checks.getByRole('button', { name: /^Checks/ })).toHaveAttribute('aria-expanded', 'true')
+  await expect(checks.getByText('1 of 6 checks passed', { exact: true })).toBeVisible()
+  await expect(checks).toBeInViewport({ ratio: 1 })
+  expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true)
+  expect(await page.evaluate(() => scrollY)).toBe(0)
+})
+
 test('desktop desk stays fixed while task and checks scroll', async ({ page }) => {
   for (const height of [900, 600]) {
     await page.setViewportSize({ width: 1280, height })
     await page.goto(route)
     await expect(editor(page)).toBeVisible()
-    await page.getByRole('button', { name: /^Reveal hint/ }).click()
+    // Reveal every remaining hint so the brief overflows the roomier compact desk.
+    const nextHint = page.getByRole('button', { name: /^Reveal hint/ })
+    while (await nextHint.count()) await nextHint.click()
     const task = page.locator('.task-column')
     await task.hover()
     await page.mouse.wheel(0, 1000)

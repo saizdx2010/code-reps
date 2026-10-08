@@ -1,0 +1,63 @@
+/* Shared page structure: compact headers, secondary notes, status chips, grouped rows, and empty states. */
+.page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap; margin-bottom: 24px; }
+.page-header h1 { margin: 0; font-size: var(--type-page); }
+.page-header p { max-width: 65ch; margin: 6px 0 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
+.page-eyebrow { display: block; margin-bottom: 4px; color: var(--muted); font-size: 13px; font-weight: 550; }
+.page-header-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+.info-note { margin: 12px 0; color: var(--muted); font-size: 13px; }
+.info-note summary { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; list-style: none; cursor: pointer; border-radius: var(--radius-control); color: var(--muted); }
+.info-note summary::-webkit-details-marker { display: none; }
+.info-note summary:hover { color: var(--accent); }
+.info-note .ui-icon { width: 16px; height: 16px; }
+.info-note-body { max-width: 65ch; margin-top: 4px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); line-height: 1.55; }
+.info-note-body > :first-child { margin-top: 0; }
+.info-note-body > :last-child { margin-bottom: 0; }
+
+.status-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; padding: 2px 9px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--muted); font-size: 12px; font-weight: 550; white-space: nowrap; }
+.status-chip::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .7; }
+.chip-progress { border-color: var(--feature-border); background: var(--feature); color: var(--feature-text); }
+.chip-success { border-color: var(--success-border); background: var(--success-soft); color: var(--success); }
+.chip-attention { border-color: var(--warning-border); background: var(--warning-soft); color: var(--warning); }
+
+.empty-state { display: grid; justify-items: start; gap: 6px; padding: 24px; border: 1px dashed var(--border-strong); border-radius: var(--radius); color: var(--muted); }
+.empty-state strong { color: var(--text); font-size: 16px; }
+.empty-state p { margin: 0; }
+
+.list-group { border-bottom: 1px solid var(--border); }
+.list-group > summary { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 4px; list-style: none; cursor: pointer; font-weight: 600; }
+.list-group > summary::-webkit-details-marker { display: none; }
+.list-group > summary .ui-icon { margin-left: auto; color: var(--muted); transition: rotate var(--motion-fast) var(--motion-ease); }
+.list-group[open] > summary .ui-icon { rotate: 180deg; }
+.list-group-count { color: var(--muted); font-size: 13px; font-weight: 500; }
+.list-rows { display: grid; gap: 2px; margin: 0 0 12px; padding: 0; list-style: none; }
+.list-row > button, .list-row > div { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 8px 12px; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--text); text-align: left; }
+.list-row > button:hover, .list-row > button:focus-visible { background: var(--surface); }
+.list-row > button[aria-current=step] { background: var(--accent-soft); }
+.list-row > button > .ui-icon { color: var(--accent); opacity: 0; translate: -4px 0; transition: opacity var(--motion-fast) var(--motion-ease), translate var(--motion-fast) var(--motion-ease); }
+.list-row > button:hover > .ui-icon, .list-row > button:focus-visible > .ui-icon, .list-row > button[aria-current=step] > .ui-icon { opacity: 1; translate: 0 0; }
+.list-row-text { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.list-row-text strong { font-size: 15px; font-weight: 600; }
+.list-row-text small { color: var(--muted); font-size: 13px; }
+.list-row-status { flex: none; }
+@media (max-width: 640px) {
+  .list-row > button, .list-row > div { flex-wrap: wrap; }
+  .list-row > button > .ui-icon { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .list-row > button > .ui-icon, .list-group > summary .ui-icon { translate: none; transition: none; }
+}
+
+/* Shared disclosures supply their own icon, without the global native marker. */
+.list-group > summary::before, .list-group > summary::after,
+.info-note > summary::before, .info-note > summary::after { content: none; }
+.list-row-text { overflow-wrap: anywhere; }
+
+/* Expand/collapse controls share one rotating chevron: down to open, up when open. The checks drawer opens upward. */
+button[aria-expanded] > .icon-chevron, button[aria-expanded] > span > .icon-chevron { transition: rotate var(--motion-fast) var(--motion-ease); }
+button[aria-expanded=true] > .icon-chevron, button[aria-expanded=true] > span > .icon-chevron { rotate: 180deg; }
+.checks-toggle[aria-expanded=false] .icon-chevron { rotate: 180deg; }
+.checks-toggle[aria-expanded=true] .icon-chevron { rotate: 0deg; }
+@media (prefers-reduced-motion: reduce) {
+  button[aria-expanded] .icon-chevron { transition: none; }
+}

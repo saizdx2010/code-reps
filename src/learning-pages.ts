@@ -1,5 +1,6 @@
 export type HubTab = 'knowledge' | 'assessment' | 'plan' | 'notebook' | 'projects' | 'interview'
 
+/** Shared by compact loaded and pending PageHeader surfaces. */
 export const learningPageTitles: Record<HubTab, { title: string; description: string }> = {
   knowledge: { title: 'Learn a concept.', description: 'Read it, trace an example, then put it into practice.' },
   notebook: { title: 'Your notebook.', description: 'Keep the ideas and mistakes you want to return to.' },

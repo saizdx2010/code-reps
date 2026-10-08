@@ -11,7 +11,7 @@ test('moving practice indicator follows the selected step across layouts without
     await expect.poll(() => page.locator('.practice-steps').evaluate(element => {
       const selected = element.querySelector('button[aria-current=step]')!.getBoundingClientRect()
       const indicator = element.querySelector('.step-indicator')!.getBoundingClientRect()
-      return Math.abs(selected.left - indicator.left) < 1 && Math.abs(selected.top - indicator.top) < 1 && Math.abs(selected.width - indicator.width) < 1
+      return Math.abs(selected.left - indicator.left) < 1 && Math.abs(selected.top - indicator.top) < 1 && Math.abs(selected.width - indicator.width) < 1 && Math.abs(selected.height - indicator.height) < 1
     })).toBe(true)
   }
   await page.getByRole('button', { name: 'Plan', exact: true }).click()
@@ -166,7 +166,7 @@ test('lesson section tabs preserve scroll and keyboard focus', async ({ page }) 
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(scroll)
 })
 
-test('lesson rows stay flat while badge cards respond without moving their layout', async ({ page }) => {
+test('lesson and path completion rows respond in place without moving their layout', async ({ page }) => {
   await page.goto('/#/knowledge')
   const row = page.locator('.knowledge-topic-list button').first()
   await row.hover()
@@ -174,11 +174,14 @@ test('lesson rows stay flat while badge cards respond without moving their layou
   expect(await row.evaluate(element => getComputedStyle(element).boxShadow)).toBe('none')
   await page.goto('/#/progress')
   await expect.poll(() => page.locator('main').evaluate(element => element.getAnimations().length)).toBe(0)
-  const card = page.locator('.profile-badge-list li').first()
-  const next = page.locator('.profile-badge-list li').nth(1)
+  const card = page.locator('.compact-path-list .list-row > button').first()
+  const next = page.locator('.compact-path-list .list-row > button').nth(1)
   const nextPosition = await next.boundingBox()
   await card.hover()
-  await expect.poll(() => card.evaluate(element => getComputedStyle(element).transform)).not.toBe('none')
+  await expect.poll(() => card.evaluate(element => getComputedStyle(element).transform)).toBe('none')
+  await expect.poll(() => card.locator('.icon-arrow').evaluate(element => getComputedStyle(element).opacity)).toBe('1')
+  await card.focus()
+  await expect(card).toBeFocused()
   expect(await next.boundingBox()).toEqual(nextPosition)
   await page.emulateMedia({ reducedMotion: 'reduce' })
   expect(await card.evaluate(element => getComputedStyle(element).transform)).toBe('none')
@@ -188,12 +191,17 @@ test('a progress disclosure visibly collapses and reverses without losing its ac
   await page.goto('/#/progress')
   const disclosure = page.locator('.progress-journey').first()
   const summary = disclosure.locator('summary')
+  await summary.click()
+  await expect(disclosure.getByRole('button', { name: 'Open rep', exact: true })).toBeVisible()
+  await expect.poll(() => disclosure.evaluate(element => getComputedStyle(element, '::details-content').opacity)).toBe('1')
   const expanded = await disclosure.evaluate(element => element.getBoundingClientRect().height)
   const collapsed = await summary.evaluate(element => element.getBoundingClientRect().height)
   await summary.click()
   await expect(disclosure).not.toHaveAttribute('open', '')
-  await expect.poll(() => disclosure.evaluate(element => element.getBoundingClientRect().height)).toBeLessThan(expanded - 4)
-  expect(await disclosure.evaluate(element => element.getBoundingClientRect().height)).toBeGreaterThan(collapsed + 4)
+  await expect.poll(async () => {
+    const height = await disclosure.evaluate(element => element.getBoundingClientRect().height)
+    return height < expanded - 4 && height > collapsed + 4
+  }, { intervals: [16] }).toBe(true)
   await summary.click()
   await expect(disclosure).toHaveAttribute('open', '')
   await expect(disclosure.getByRole('button', { name: 'Open rep', exact: true })).toBeVisible()
@@ -291,9 +299,9 @@ test('notebook loading reserves an existing writing draft and preserves it after
   await expect(page.getByRole('textbox', { name: 'What you learned', exact: true })).toHaveValue('A skeleton should reserve the real working surface.')
 })
 
-test('badge card surface navigates and session history selection stays visible', async ({ page }) => {
+test('path completion row navigates and session history selection stays visible', async ({ page }) => {
   await page.goto('/#/progress')
-  await page.locator('.profile-badge-list li').first().click({ position: { x: 30, y: 70 } })
+  await page.locator('.compact-path-list .list-row > button').first().click()
   await expect(page).toHaveURL(/#\/paths$/)
   await page.goto('/#/sessions')
   const group = page.getByRole('group', { name: 'Session history view' })
@@ -302,7 +310,14 @@ test('badge card surface navigates and session history selection stays visible',
   await unfinished.press('Enter')
   await expect(unfinished).toHaveAttribute('aria-pressed', 'true')
   await unfinished.hover()
-  await expect(unfinished).toHaveCSS('background-color', 'rgb(48, 63, 56)')
+  // The selected fill is the sliding indicator; it must settle exactly behind the hovered selection.
+  const fill = group.locator('.step-indicator')
+  await expect(fill).toHaveCSS('background-color', 'rgb(48, 63, 56)')
+  await expect.poll(async () => {
+    const [selected, indicator] = await Promise.all([unfinished.boundingBox(), fill.boundingBox()])
+    return Math.abs(selected!.x - indicator!.x) < 1 && Math.abs(selected!.width - indicator!.width) < 1 && Math.abs(selected!.y - indicator!.y) < 1
+  }).toBe(true)
+  await expect(unfinished).toHaveCSS('color', 'rgb(188, 229, 123)')
   await expect(unfinished).toHaveCSS('transform', 'none')
 })
 
@@ -322,4 +337,26 @@ test('utility drawers retain their exit and restore keyboard focus', async ({ pa
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/#\/home$/)
   await expect(page.locator('.utility-dialog')).toHaveCount(0)
+})
+
+test('every page shares one frame, type scale, and control height', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  for (const route of ['home', 'paths', 'plan', 'practice', 'knowledge', 'projects', 'interview', 'progress', 'history', 'sessions', 'notebook', 'assessment', 'learn']) {
+    await page.goto(`/#/${route}`)
+    // Wait past the startup shell and any lazy page placeholder for the loaded page header.
+    await expect(page.locator('main .page-header h1')).toBeVisible()
+    await expect(page.locator('.page-loading')).toHaveCount(0)
+    const frame = await page.evaluate(() => {
+      const h1 = document.querySelector('main h1')!
+      const tab = document.querySelector('.section-nav button')!
+      const controls = [...document.querySelectorAll<HTMLElement>('main .ui-input:not(textarea), main .ui-select, main .primary-button, main .reset-button')]
+        // Rows and tab bars reuse button styles with their own geometry; only standalone controls share the height.
+        .filter(element => element.getBoundingClientRect().height > 0 && !element.closest('nav, .knowledge-topic-list, .lesson-navigation'))
+        .map(element => Math.round(element.getBoundingClientRect().height))
+      return { h1Left: Math.round(h1.getBoundingClientRect().left), tabLeft: Math.round(tab.getBoundingClientRect().left), size: getComputedStyle(h1).fontSize, controls }
+    })
+    expect(frame.h1Left, `${route} heading aligns with section tabs`).toBe(frame.tabLeft)
+    expect(frame.size, `${route} page title size`).toBe('32px')
+    for (const height of frame.controls) expect(height, `${route} control height`).toBe(40)
+  }
 })

@@ -1,0 +1,94 @@
+/* The trail: stages of connected nodes. Lessons are squares, reps circles, projects flags. */
+.trail { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.trail-stage { position: relative; }
+.trail .path-stage { border-bottom: 1px solid var(--border); }
+.trail .path-stage-heading { display: flex; align-items: center; gap: 16px; padding: 16px 4px; list-style: none; cursor: pointer; }
+.trail .path-stage-heading::-webkit-details-marker { display: none; }
+.trail .path-stage-heading > div { flex: 1; min-width: 0; }
+.trail .path-stage-heading h3 { margin: 0; font-size: var(--type-card); }
+.trail .path-stage-heading p { margin: 3px 0 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
+.trail .path-stage-heading::after { content: ''; width: 18px; height: 18px; flex: none; background: var(--muted); mask: var(--icon-chevron) center / contain no-repeat; transition: rotate var(--motion-fast) var(--motion-ease); }
+.trail .path-stage[open] > .path-stage-heading::after { rotate: 180deg; mask-image: var(--icon-chevron); }
+.trail-stage-index { display: grid; place-items: center; width: 32px; height: 32px; flex: none; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.trail-stage.is-current .trail-stage-index { border-color: var(--feature-border); background: var(--feature); color: var(--feature-text); font-weight: 650; }
+.trail-stage.is-done .trail-stage-index { border-color: var(--action); background: var(--action); color: var(--action-text); }
+.trail-stage-count { flex: none; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.trail-covered { margin: -4px 0 4px 52px; }
+
+.trail-nodes { position: relative; display: grid; gap: 2px; margin: 0 0 16px; padding: 0 0 0 52px; list-style: none; }
+.trail-nodes::before { content: ''; position: absolute; left: 19px; top: 18px; bottom: 18px; width: 2px; border-radius: 2px; background: var(--border); }
+.trail-node { position: relative; }
+.trail-marker { position: absolute; left: -46px; top: 14px; z-index: 1; display: grid; place-items: center; width: 26px; height: 26px; border: 2px solid var(--border-strong); border-radius: 50%; background: var(--bg); color: var(--muted); }
+.trail-marker .ui-icon { width: 14px; height: 14px; }
+.node-lesson .trail-marker { border-radius: 7px; }
+.trail-node.is-done .trail-marker { border-color: var(--action); background: var(--action); color: var(--action-text); }
+.trail-node.is-next .trail-marker { border-color: var(--feature-border); background: var(--feature); color: var(--feature-text); box-shadow: 0 0 0 5px color-mix(in srgb, var(--feature) 55%, transparent); }
+.trail-node.is-draft .trail-marker { border-color: var(--accent); color: var(--accent); }
+.trail-node.is-later .trail-marker { border-style: dashed; }
+.trail-node > button, .trail-project { display: grid; gap: 3px; width: 100%; min-height: 54px; padding: 10px 12px; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--text); text-align: left; }
+.trail-node > button:hover, .trail-node > button:focus-visible { background: var(--surface); }
+.trail-node > button[aria-current=step] { background: var(--surface); box-shadow: inset 0 0 0 1px var(--feature-border); }
+.trail-node-title { font-size: 15px; font-weight: 600; }
+.node-lesson .trail-node-title { font-weight: 550; }
+.trail-node small { color: var(--muted); font-size: 13px; line-height: 1.45; }
+.trail-node .path-role, .trail-node .path-evidence { display: block; margin: 0; }
+.trail-project .text-button { justify-self: start; min-height: 32px; }
+
+@media (max-width: 640px) {
+  .trail-nodes { padding-left: 40px; }
+  .trail-nodes::before { left: 13px; }
+  .trail-marker { left: -40px; }
+  .trail-covered { margin-left: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .trail .path-stage-heading::after { transition: none; }
+}
+
+/* Trail home: the trail on the left, the next action beside it. On narrow screens the next action comes first. */
+.trail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px 44px; align-items: start; }
+.trail-column { grid-column: 1; grid-row: 1; min-width: 0; }
+.trail-column.home-goal { display: block; padding: 0; border: 0; }
+.trail-column .path-progress { margin: -8px 0 8px; }
+.trail-aside { grid-column: 2; grid-row: 1; display: grid; gap: 18px; min-width: 0; }
+.trail-aside .continue-panel { flex-direction: column; align-items: stretch; gap: 18px; padding: 22px; }
+.trail-aside .continue-panel p { margin: 8px 0 12px; font-size: 15px; }
+.trail-aside .continue-panel .primary-button { align-self: flex-start; }
+.trail-aside > .text-button { margin-top: -8px; }
+.trail-queue { margin: 0; }
+.trail-queue h2 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 4px; font-size: 15px; }
+.trail-queue h2 span { color: var(--muted); font-size: 13px; font-weight: 500; }
+.trail-queue ul { margin: 0; padding: 0; list-style: none; }
+.trail-queue li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; padding: 6px 0; border-top: 1px solid var(--border); font-size: 14px; }
+.trail-queue li .text-button { min-height: 32px; }
+.trail-links { display: flex; flex-wrap: wrap; gap: 4px 20px; padding-top: 4px; border-top: 1px solid var(--border); }
+.trail-aside .info-note, .trail-aside .starting-point-settings { margin: 0; }
+@media (min-width: 1101px) {
+  .trail-aside { position: sticky; top: 24px; }
+}
+@media (max-width: 900px) {
+  .trail-layout { grid-template-columns: minmax(0, 1fr); }
+  .trail-column, .trail-aside { grid-column: 1; grid-row: auto; }
+}
+
+/* All tracks: Foundations first, then grouped tracks. */
+.page-header .path-select { width: min(100%, 320px); margin: 0; }
+.track-map { display: grid; gap: 20px; margin-top: 8px; }
+.track-map .home-label { margin-bottom: 8px; }
+.track-group .path-choices, .track-foundations { margin-top: 0; }
+.track-foundations { display: block; }
+.track-foundations .track-root { width: 100%; }
+.path-choices button { padding: 16px 18px; }
+.path-choices strong { font-size: 16px; }
+.path-choices span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.path-overview { margin-top: 20px; padding: 22px 24px; }
+.path-overview .home-label { margin-bottom: 4px; }
+.path-overview .path-goal { margin-top: 8px; }
+.path-overview-action { display: grid; justify-items: end; gap: 12px; flex: none; }
+.path-overview .continue-status { color: var(--muted); }
+.paths-main .path-progress { margin-top: 14px; }
+.path-intro-details { margin: 8px 0 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.path-intro-details > summary { padding: 14px 18px; cursor: pointer; font-weight: 600; }
+.path-intro-details .path-introduction { margin: 0; padding: 0 18px 18px; border: 0; background: transparent; }
+@media (max-width: 900px) {
+  .path-overview-action { justify-items: start; }
+}

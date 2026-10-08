@@ -3,9 +3,18 @@ import { Input } from './Input'
 import { useLayoutEffect, useState } from 'react'
 import { SearchDrawer } from './Experience'
 import { useSessionPreference } from './useSessionPreference'
-import { navigationArea, navigationSections } from './ui-navigation'
+import { navigationArea, navigationSections, sectionView } from './ui-navigation'
 import type { View } from './ui-navigation'
 import { Tooltip } from './Tooltip'
+import { flushSync } from 'react-dom'
+import { reducedMotion } from './ui-motion'
+
+/** The dark-mode toggle crossfades where the browser supports view transitions; otherwise it applies immediately. Colour-scheme radios apply immediately so their checked state never lags the click. */
+function crossfade(update: () => void) {
+  const start = (document as Document & { startViewTransition?: (callback: () => void) => unknown }).startViewTransition
+  if (!start || reducedMotion()) { update(); return }
+  start.call(document, () => flushSync(update))
+}
 
 type Props = {
   view: View
@@ -28,7 +37,7 @@ export function AppNavigation({ view, profileName, saveState, onNavigate, onMana
   const area = navigationArea(view)
   const workspace = view === 'workspace'
   const mainNavigation = <nav className="top-nav" aria-label="Main navigation">
-    {([{ area: 'home', label: 'Home', view: 'home' }, { area: 'practice', label: 'Practice', view: 'catalog' }, { area: 'learn', label: 'Learn', view: 'knowledge' }, { area: 'progress', label: 'Progress', view: 'progress' }] as const).map(item =>
+    {([{ area: 'trail', label: 'Trail', view: 'home' }, { area: 'library', label: 'Library', view: 'catalog' }, { area: 'progress', label: 'Progress', view: 'progress' }] as const).map(item =>
       <button key={item.area} type="button" aria-current={area === item.area ? 'page' : undefined} onClick={() => onNavigate(item.view)}>{item.label}</button>)}
   </nav>
   return <>
@@ -50,10 +59,10 @@ export function AppNavigation({ view, profileName, saveState, onNavigate, onMana
         {onManageProfiles && <Tooltip text={`Local profile: ${profileName}`}><button className="profile-trigger" type="button" aria-label="Manage profiles" onClick={onManageProfiles}><span>{profileName}</span><Icon name="chevron" /></button></Tooltip>}
       </div>
     </header>
-    {appearanceOpen && <SearchDrawer title="Appearance" className="appearance-dialog" onClose={() => setAppearanceOpen(false)}><p>Choose the colours that feel right for your practice.</p><button className="appearance-mode" type="button" aria-label="Dark mode" aria-pressed={theme === 'dark'} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}><span>Dark mode</span><span>{theme === 'dark' ? 'On' : 'Off'}</span></button><fieldset className="palette-options"><legend>Colour scheme</legend>{(['sage', 'ocean', 'plum'] as const).map(option => <label key={option}><Input type="radio" name="colour-scheme" value={option} checked={palette === option} onChange={() => setPalette(option)} /><span className={`palette-swatch swatch-${option}`} aria-hidden="true" /><span>{({ sage: 'Sage', ocean: 'Ocean', plum: 'Plum' })[option]}</span>{palette === option && <Icon name="check" />}</label>)}</fieldset></SearchDrawer>}
+    {appearanceOpen && <SearchDrawer title="Appearance" className="appearance-dialog" onClose={() => setAppearanceOpen(false)}><p>Choose the colours that feel right for your practice.</p><button className="appearance-mode" type="button" aria-label="Dark mode" aria-pressed={theme === 'dark'} onClick={() => crossfade(() => setTheme(theme === 'dark' ? 'light' : 'dark'))}><span>Dark mode</span><span>{theme === 'dark' ? 'On' : 'Off'}</span></button><fieldset className="palette-options"><legend>Colour scheme</legend>{(['sage', 'ocean', 'plum'] as const).map(option => <label key={option}><Input type="radio" name="colour-scheme" value={option} checked={palette === option} onChange={() => setPalette(option)} /><span className={`palette-swatch swatch-${option}`} aria-hidden="true" /><span>{({ sage: 'Sage', ocean: 'Ocean', plum: 'Plum' })[option]}</span>{palette === option && <Icon name="check" />}</label>)}</fieldset></SearchDrawer>}
     {!workspace && <div className="section-bar">
-      <nav className="section-nav" aria-label={`${area === 'learn' ? 'Learning' : area === 'practice' ? 'Practice' : area === 'progress' ? 'Progress' : 'Home'} pages`}>
-        {navigationSections[area].map(item => <button key={item.view} type="button" aria-current={view === item.view || view === 'learn' && item.view === 'knowledge' ? 'page' : undefined} onClick={() => onNavigate(item.view)}>{item.label}</button>)}
+      <nav className="section-nav" aria-label={`${area === 'library' ? 'Library' : area === 'progress' ? 'Progress' : 'Trail'} pages`}>
+        {navigationSections[area].map(item => <button key={item.view} type="button" aria-current={sectionView(view) === item.view ? 'page' : undefined} onClick={() => onNavigate(item.view)}>{item.label}</button>)}
       </nav>
       <span className={`save-status${saveState === 'Saving…' ? ' is-loading' : ''}`} role="status">{saveState}</span>
     </div>}

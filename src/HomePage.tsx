@@ -2,10 +2,11 @@ import type { PracticeSession } from './practice-sessions'
 import type { ReactNode } from 'react'
 import { preloadEditor } from './editor-loader'
 import { Icon } from './Icon'
+import { InfoNote, PageHeader } from './Layout'
+import { Trail } from './Trail'
+import type { buildTrail } from './trail-map'
 import { reps } from './rep'
-import type { Rep } from './rep'
 import { paths } from './path'
-import { stageLabels } from './learning'
 import type { LearnerStart } from './learning'
 import type { getPracticePlan, PracticeAction } from './practice'
 
@@ -24,84 +25,75 @@ type Props = {
   setDraftQueue: (value: 'short' | 'all') => void
   reviewQueue: 'short' | 'all'
   setReviewQueue: (value: 'short' | 'all') => void
-  repStatus: (rep: Rep) => string
+  repStatus: (rep: (typeof reps)[number]) => string
   openPracticeAction: (action: PracticeAction) => void
   actionLabel: (mode: string) => string
   onProgress: () => void
-  onKnowledge: () => void
-  onCatalog: () => void
+  onPlan: () => void
+  trail: ReturnType<typeof buildTrail>
+  evidence: (repId: string) => string
+  openRep: (id: string) => void
+  openLesson: (skillId: string) => void
 }
 
-export function HomePage({ sessionBusy, startPractice, unfinishedSessions, resumeSession, onPracticeHistory, goalPathId, onPath, learnerStart, startingPoint, practicePlan, draftQueue, setDraftQueue, reviewQueue, setReviewQueue, repStatus, openPracticeAction, actionLabel, onProgress, onKnowledge, onCatalog }: Props) {
+const title = (id: string) => reps.find(item => item.id === id)?.title
+
+/** Home is the learner's trail: the goal path drawn as connected stages, with the next useful action beside it. */
+export function HomePage({ sessionBusy, startPractice, unfinishedSessions, resumeSession, onPracticeHistory, goalPathId, onPath, learnerStart, startingPoint, practicePlan, draftQueue, setDraftQueue, reviewQueue, setReviewQueue, repStatus, openPracticeAction, actionLabel, onProgress, onPlan, trail, evidence, openRep, openLesson }: Props) {
+  const goal = paths.find(path => path.id === goalPathId) ?? paths[0]
   const recommendation = practicePlan.next
   const recommendedRep = recommendation && reps.find(rep => rep.id === recommendation.repId)
-  const journeyStates = practicePlan.progress
-  const journey = journeyStates.find(item => item.recallDue) ?? journeyStates.find(item => item.nextRepId) ?? journeyStates.find(item => item.stage !== 'retained') ?? journeyStates[0]
-  return <main className="home-main" id="top">
-    <div className="home-heading">
-      <h1 tabIndex={-1}>{learnerStart ? 'Pick up your practice.' : 'Start with what you know.'}</h1>
-      <p>One useful rep, then a little reflection. Your work stays on this device.</p>
-      <ol className="home-practice-loop" aria-label="The practice loop">
-        {['Understand', 'Plan', 'Solve', 'Explain', 'Review'].map(step => <li key={step}>{step}</li>)}
-      </ol>
-    </div>
-    <section className="home-goal" aria-label="Learning goal"><div><strong>{paths.find(path => path.id === goalPathId)?.title}</strong><p>Follow your ordered path or explicitly choose a different learning goal.</p></div><button type="button" className="text-button" onClick={() => onPath((paths.find(path => path.id === goalPathId) ?? paths[0]).id)}>View or choose goal path</button></section>
+  const sessions = [...new Map(unfinishedSessions.map(record => [record.repId, record])).values()].slice(0, 3)
+  return <main className="home-main trail-home" id="top">
     {!learnerStart && <div className="first-run-start">{startingPoint}</div>}
-    {recommendation && recommendedRep ? <section className="continue-panel" aria-labelledby="continue-heading">
-      <div>
-        <span className="home-label">{recommendation.mode === 'review' ? 'Ready to review' : recommendation.mode === 'resume' ? 'Your saved draft' : 'Next practice'}</span>
-        <h2 id="continue-heading">{recommendedRep.title}</h2>
-        <p>{recommendation.reason}</p>
-        <span className="continue-status">{recommendedRep.category}<span>{repStatus(recommendedRep)}</span></span>
-      </div>
-      <button className="primary-button" type="button" onMouseEnter={preloadEditor} onFocus={preloadEditor} onClick={() => openPracticeAction(recommendation)}>{actionLabel(recommendation.mode)}<Icon name="arrow" /></button>
-    </section> : <section className="continue-panel" aria-labelledby="continue-heading">
-      <div>
-        <span className="home-label">Caught up for now</span>
-        <h2 id="continue-heading">Your next review can wait.</h2>
-        <p>No unfinished reps or reviews are ready. Check your skill evidence or choose a rep to practise again.</p>
-      </div>
-      <button className="primary-button" type="button" onClick={onProgress}>See progress</button>
-    </section>}
-    {recommendation && <button type="button" className="text-button" disabled={sessionBusy} onClick={() => startPractice(recommendation)}>Start practice</button>}
-    {unfinishedSessions.length > 0 && <section className="home-sessions" aria-labelledby="unfinished-sessions-title"><h2 id="unfinished-sessions-title">Unfinished sessions</h2><p>Resume the saved work in a new session. Earlier sessions remain unfinished.</p><ul>{[...new Map(unfinishedSessions.map(record => [record.repId, record])).values()].slice(0, 3).map(record => <li key={record.id}><span>{reps.find(rep => rep.id === record.repId)?.title}</span><button type="button" className="text-button" disabled={sessionBusy} onClick={() => resumeSession(record.repId)}>Resume practice</button></li>)}</ul><button type="button" className="text-button" onClick={onPracticeHistory}>View practice history</button></section>}
-    {practicePlan.unfinished.length > 0 && <section className="practice-queue" aria-labelledby="unfinished-heading">
-      <div className="home-section-heading">
-        <h2 id="unfinished-heading">Your unfinished work</h2>
-        <p>{practicePlan.unfinished.length} saved {practicePlan.unfinished.length === 1 ? 'draft' : 'drafts'}. Continue with your work intact.</p>
-      </div>
-      <ul id="home-drafts">{(draftQueue==='all'?practicePlan.unfinished:practicePlan.unfinished.slice(0,3)).map(action => <li key={action.repId}>
+    <div className="trail-layout">
+      <aside className="trail-aside" aria-label="Up next">
+        {recommendation && recommendedRep ? <section className="continue-panel" aria-labelledby="continue-heading">
           <div>
-            <strong>{reps.find(item => item.id === action.repId)!.title}</strong>
-            <p>{action.reason}</p>
+            <span className="home-label">{recommendation.mode === 'review' ? 'Ready to review' : recommendation.mode === 'resume' ? 'Your saved draft' : 'Next practice'}</span>
+            <h2 id="continue-heading">{recommendedRep.title}</h2>
+            <p>{recommendation.reason}</p>
+            <span className="continue-status">{recommendedRep.category}<span>{repStatus(recommendedRep)}</span></span>
           </div>
-          <button className="text-button" type="button" onClick={() => openPracticeAction(action)}>Continue rep</button>
-        </li>)}</ul>{practicePlan.unfinished.length>3&&<button type="button" className="text-button" aria-expanded={draftQueue==='all'} aria-controls="home-drafts" onClick={()=>setDraftQueue(draftQueue==='all'?'short':'all')}>{draftQueue==='all'?'Show fewer drafts':`Show all ${practicePlan.unfinished.length} drafts`}</button>}</section>}
-    {practicePlan.due.length > 0 && <section className="practice-queue" aria-labelledby="reviews-heading">
-      <div className="home-section-heading">
-        <h2 id="reviews-heading">Ready to review</h2>
-        <p>{practicePlan.due.length} {practicePlan.due.length === 1 ? 'rep is' : 'reps are'} ready. Completed attempts stay in History.</p>
-      </div>
-      <ul id="home-reviews">{(reviewQueue==='all'?practicePlan.due:practicePlan.due.slice(0,3)).map(action => <li key={action.repId}>
+          <button className="primary-button" type="button" onMouseEnter={preloadEditor} onFocus={preloadEditor} onClick={() => openPracticeAction(recommendation)}>{actionLabel(recommendation.mode)}<Icon name="arrow" /></button>
+        </section> : <section className="continue-panel" aria-labelledby="continue-heading">
           <div>
-            <strong>{reps.find(item => item.id === action.repId)!.title}</strong>
-            <p>{action.reason}</p>
+            <span className="home-label">Caught up for now</span>
+            <h2 id="continue-heading">Your next review can wait.</h2>
+            <p>No unfinished reps or reviews are ready. Check your skill evidence or choose a rep to practise again.</p>
           </div>
-          <button className="text-button" type="button" onClick={() => openPracticeAction(action)}>{action.mode === 'resume' ? 'Continue recall' : 'Start review'}</button>
-        </li>)}</ul>{practicePlan.due.length>3&&<button type="button" className="text-button" aria-expanded={reviewQueue==='all'} aria-controls="home-reviews" onClick={()=>setReviewQueue(reviewQueue==='all'?'short':'all')}>{reviewQueue==='all'?'Show fewer reviews':`Show all ${practicePlan.due.length} reviews`}</button>}</section>}
-    <section className="home-journey" aria-labelledby="home-journey-title">
-      <div>
-        <h2 id="home-journey-title">{journey.journey.title}</h2>
-        <p>{journey.stage === 'retained' ? 'You solved a fresh problem after a gap, without hints.' : journey.stage === 'independent' ? journey.recallDue ? 'Your fresh recall problem is ready.' : `You solved a related problem without hints. Return ${new Date(journey.recallAt!).toLocaleDateString()} for a fresh one.` : journey.stage === 'practising' ? 'You completed guided practice. Try a related problem without hints.' : 'Start with a guided rep.'}</p>
-      </div>
-      <button className="text-button" type="button" onClick={onProgress}>View skill evidence</button>
-      <span className="journey-state">{stageLabels[journey.stage]}</span>
-    </section>
-    {learnerStart && <details className="starting-point-settings">
-      <summary>Change starting point</summary>{startingPoint}</details>}
-    <nav className="home-discovery" aria-label="Explore Code Reps">
-      <button className="text-button" type="button" onClick={onCatalog}>Browse exercises</button>
-      <button className="text-button" type="button" onClick={onKnowledge}>Learn a concept</button>
-    </nav>
+          <button className="primary-button" type="button" onClick={onProgress}>See progress</button>
+        </section>}
+        {recommendation && <button type="button" className="text-button" disabled={sessionBusy} onClick={() => startPractice(recommendation)}>Start practice</button>}
+        {sessions.length > 0 && <section className="home-sessions trail-queue" aria-labelledby="unfinished-sessions-title"><h2 id="unfinished-sessions-title">Unfinished sessions</h2><ul>{sessions.map(record => <li key={record.id}><span>{title(record.repId)}</span><button type="button" className="text-button" disabled={sessionBusy} onClick={() => resumeSession(record.repId)}>Resume practice</button></li>)}</ul><button type="button" className="text-button" onClick={onPracticeHistory}>View practice history</button></section>}
+        {practicePlan.unfinished.length > 0 && <section className="practice-queue trail-queue" aria-labelledby="unfinished-heading">
+          <h2 id="unfinished-heading">Your unfinished work <span>{practicePlan.unfinished.length}</span></h2>
+          <ul id="home-drafts">{(draftQueue === 'all' ? practicePlan.unfinished : practicePlan.unfinished.slice(0, 3)).map(action => <li key={action.repId}>
+            <span>{title(action.repId)}</span>
+            <button className="text-button" type="button" onClick={() => openPracticeAction(action)}>Continue rep</button>
+          </li>)}</ul>
+          {practicePlan.unfinished.length > 3 && <button type="button" className="text-button" aria-expanded={draftQueue === 'all'} aria-controls="home-drafts" onClick={() => setDraftQueue(draftQueue === 'all' ? 'short' : 'all')}>{draftQueue === 'all' ? 'Show fewer drafts' : `Show all ${practicePlan.unfinished.length} drafts`}</button>}
+        </section>}
+        {practicePlan.due.length > 0 && <section className="practice-queue trail-queue" aria-labelledby="reviews-heading">
+          <h2 id="reviews-heading">Ready to review <span>{practicePlan.due.length}</span></h2>
+          <ul id="home-reviews">{(reviewQueue === 'all' ? practicePlan.due : practicePlan.due.slice(0, 3)).map(action => <li key={action.repId}>
+            <span>{title(action.repId)}</span>
+            <button className="text-button" type="button" onClick={() => openPracticeAction(action)}>{action.mode === 'resume' ? 'Continue recall' : 'Start review'}</button>
+          </li>)}</ul>
+          {practicePlan.due.length > 3 && <button type="button" className="text-button" aria-expanded={reviewQueue === 'all'} aria-controls="home-reviews" onClick={() => setReviewQueue(reviewQueue === 'all' ? 'short' : 'all')}>{reviewQueue === 'all' ? 'Show fewer reviews' : `Show all ${practicePlan.due.length} reviews`}</button>}
+        </section>}
+        <nav className="trail-links" aria-label="Plan and progress">
+          <button type="button" className="text-button" onClick={onPlan}><Icon name="calendar" />Plan this week</button>
+          <button type="button" className="text-button" onClick={onProgress}>View skill evidence</button>
+        </nav>
+        <InfoNote label="How a rep works"><p>Each rep follows the same loop: understand the brief, plan, solve with checks, explain your solution, then review. Your work stays on this device.</p></InfoNote>
+        {learnerStart && <details className="starting-point-settings"><summary>Change starting point</summary>{startingPoint}</details>}
+      </aside>
+      <section className="trail-column home-goal" aria-label="Learning goal">
+        <PageHeader eyebrow="Your trail" title={goal.title} description={`${trail.done} of ${trail.total} reps completed. Lessons appear just before the reps that use them.`} actions={<button type="button" className="text-button" onClick={() => onPath(goal.id)}>View or choose goal path</button>} />
+        <div className="path-progress" role="progressbar" aria-label="Trail progress" aria-valuenow={trail.done} aria-valuemin={0} aria-valuemax={trail.total}><span style={{ width: `${trail.total ? trail.done / trail.total * 100 : 0}%` }} /></div>
+        <Trail stages={trail.stages} evidence={evidence} onOpenRep={openRep} onOpenLesson={openLesson} onOpenFoundations={() => onPath('typescript')} />
+      </section>
+    </div>
   </main>
 }

@@ -1,95 +1,183 @@
 # Code Reps design language
 
-Code Reps uses bright practice sheets and a green coding desk. The original logo supplies the charcoal green, sage, and lime colors. Source Sans 3 carries interface and reading text; Maple Mono carries code. Both are local assets. This system belongs to the app and uses the existing React controls, native HTML semantics, and CSS; it adds no UI library or hosted service.
+Code Reps uses bright practice sheets and a green coding desk. The original logo supplies the charcoal green, sage, and lime colors. Source Sans 3 carries interface and reading text; Maple Mono carries code. Both are local assets. This system belongs to the app and uses app-owned React components, native HTML semantics, and CSS; it adds no UI library or hosted service.
 
 ## Character
 
-Practice steps select immediately. The indicator glides for 160 ms without spring overshoot or animated width/height; new pane content fades from 80% opacity for 120 ms without translating. Required pane scrolling is instant, and rapid selections must leave focus on the latest pane. Keep unchanged learner summaries out of tab-only recalculation. Reduced motion disables the visual transition.
+The interface should feel like a welcoming workbook: playful when a learner interacts, calm while they read, write, or code. Its identity comes from the original logo, the contrast between light practice sheets and the dark coding desk, and the same frame, type scale, and control geometry repeated across every page.
 
-Dark mode uses deep green surfaces, pale readable text, and the same logo-derived lime actions. Semantic tokens apply across pages, inputs, popovers, feedback, and loading surfaces; the coding desk stays dark and follows the selected colour scheme. The Appearance panel's Dark mode toggle starts from the system preference and keeps an explicit choice across refresh in this browser session, shared between local profiles. It is a UI preference and never enters learner backups. Startup HTML resolves the theme before first paint.
+Three ideas organize the redesign:
 
-Switching lesson sections keeps the page scroll position and focus on the activated tab. Selecting a different lesson may still bring its article into view.
-
-Lesson-list rows respond in place: a quick white hover surface and the shared arrow fading/sliding into its reserved space. The selected lesson retains its sage surface and visible arrow. Keyboard focus reveals the same cue; reduced motion removes its movement. Avoid lifted shadows or moving the entire row.
-
-The interface should feel like a welcoming workbook: playful when a learner interacts, calm while they read, write, or code. Its identity comes from the original logo, the contrast between light practice sheets and the dark coding desk, and the same control geometry repeated across every page.
+- **A visible route.** Learners always see where they are on a trail and what comes next. Structure is drawn (stages, connected nodes, states), not explained in paragraphs.
+- **Work first.** Chrome stays compact so the brief, the editor, and the learner's writing own the screen.
+- **Quiet evidence.** Evidence rules stay accurate and available, but live in `InfoNote` disclosures and visual state rather than repeated body text.
 
 Use lime to draw attention to the next useful action, warm yellow for hints, and motion to acknowledge interaction. Keep decoration purposeful. Avoid unrelated gradients, ornamental badges, competing card styles, or constant animation. Every new page should look and behave as part of the same app.
 
-## Shared rules
+## Information architecture
 
-`src/index.css` owns semantic tokens. `src/design.css`, `src/fluency.css`, and `src/input.css` apply them to pages, learning tools, and controls. `src/motion.css` owns the shared interaction treatment.
+Main navigation has three areas. Each area's section tabs list only its own pages.
+
+| Area | Sections | Purpose |
+| --- | --- | --- |
+| Trail | Your trail (`#/home`), All tracks (`#/paths`), This week (`#/plan`) | Where you are and what to do next |
+| Library | Exercises (`#/practice`), Lessons (`#/knowledge`), Projects, Interview | Everything, browsable by topic |
+| Progress | Skills (`#/progress`), Journal, Self-assessment | Evidence and records |
+
+Journal is one section with an Attempts / Practice sessions / Notebook switch (`JournalTabs`); each view keeps its own route (`#/history`, `#/sessions`, `#/notebook`). Quick lessons (`#/learn`) belongs to Lessons. `ui-navigation.ts` owns sections and the `sectionView` aliases; do not add a fourth main area or a second navigation row inside a page. Old bookmarks must keep resolving.
+
+Foundations (`typescript`) is the shared root track. Other tracks are grouped in `curriculum.ts` (`trackGroups`) and declare it implicitly; a stage made only of Foundations reps is shown as covered by Foundations rather than repeated. Path IDs, rep lists, badges, and recommendations are unchanged by this presentation.
+
+## Page frame and layout
+
+- Every page uses one frame: `main` is `max-width: var(--page-width)` (1224px) with `var(--page-gutter)` side padding (28px, 22px at ≤900px, 18px at ≤600px). The section tabs use the same frame, so the page title, section tabs, and content share one left edge. Do not set per-page `max-width` on `main`; narrow a reading block inside the page instead (for example, 65ch prose).
+- Each page starts with `PageHeader`: an optional eyebrow, exactly one `h1`, one line of description, and optional actions on the right (search, a path chooser, `JournalTabs`). There are no hero headings.
+- The practice workspace is the one exception: it uses the full window width with its own compact header row.
+- Two-column pages (Trail) put the primary content on the left and the next action on the right; on narrow screens the next action comes first.
+
+## Type scale
+
+`src/index.css` owns the scale. Use the tokens instead of pixel sizes for headings.
+
+| Token | Size | Use |
+| --- | --- | --- |
+| `--type-page` | 32px (26px narrow) | The page `h1` in `PageHeader` |
+| `--type-reading` | 26px | A lesson's reading title |
+| `--type-feature` | 22px | The recommended rep, the selected track, practice panel titles |
+| `--type-section` | 20px | Section headings within a page |
+| `--type-card` | 17px | Card, row-group, trail-stage, and journey titles |
+
+The workspace title is a dense 22px (20px narrow). Body text is 15–16px; secondary text 13–14px. Text disclosures (Filters, Explore paths, Set up your local project, Change starting point) are 15px; disclosures that act as group headings use the card or section title; dense workspace disclosures are 14px, lesson-index group labels 13px, and `InfoNote` 13px.
+
+## Tokens and colour
+
+`src/index.css` owns semantic tokens. `src/design.css`, `src/fluency.css`, `src/input.css`, `src/layout.css`, and `src/trail.css` apply them; `src/motion.css` owns the shared interaction treatment.
 
 | Role | Treatment |
 | --- | --- |
 | Reading background | `#F0F4ED` |
 | Practice sheet, menu, dialog | White with a `#C4D1C1` border |
-| Text / supporting text | `#293E33` / `#607465` |
+| Text / supporting text | `#293E33` / `#5A6D5F` |
 | Reading action | `#303F38` with lime text |
 | Coding action | Lime with dark green text |
 | Hint / attention | Warm yellow with dark brown text |
+| Selected or recommended | Sage `--accent-soft`, or pale lime `--feature` for the single next action |
 | Success / error | Separate semantic text, border, and surface tokens, paired with explicit copy |
 | Controls / panels | 8px / 12px corners |
-| Standard control height | 40px; dense editor and calendar controls retain their local layout constraints |
+| Standard control height | 40px for fields, selects, and buttons; dense workspace header controls are 36px |
 
-Use `Button`, `Input`, `Select`, `DateInput`, `Tooltip`, and the existing dialog owners. Existing action classes receive the same treatment. `Icon.tsx` provides small app-owned action icons with an 18px box and a consistent stroke. Keep the original `/favicon.svg` logo rather than replacing it with a code symbol.
+Text keeps at least 4.5:1 contrast in every scheme and mode. Supporting text on a selected (`--accent-soft`) or recommended (`--feature`) surface uses `--feature-muted` rather than `--muted`. Status is never conveyed by colour alone; pair it with a label.
 
-## Hierarchy and learner work
+## Components
 
-Home highlights the actual recommended rep. The exercise library retains search and disclosed filters. The workspace has its own header and five-step navigation; it does not repeat library filters. Reading, planning, explanation, and reflection occupy the task pane beside the coding desk. On narrow screens, the existing pane selection keeps one working surface visible while retaining both panes and drafts.
+All components are app-owned. Extend these before writing page-specific markup.
 
-Active primary navigation uses a quiet sage surface. Active practice and lesson steps use the stronger green fill with lime text. Do not make every navigation item a primary action. Written work and behavioral checks remain separate evidence.
+| Component | Owner | Use |
+| --- | --- | --- |
+| `Button`, `Input`, `Select`, `DateInput`, `Tooltip`, `Icon` | `Button.tsx`, `Input.tsx`, `Select.tsx`, `DateInput.tsx`, `Tooltip.tsx`, `Icon.tsx` | All controls. Keep the existing action classes (`primary-button`, `reset-button`, `text-button`). |
+| `PageHeader` | `Layout.tsx` | Every page title, description, and header actions |
+| `InfoNote` | `Layout.tsx` | “ⓘ How evidence works” and other secondary explanation; never body paragraphs of caveats |
+| `StatusChip` + `statusTone` | `Layout.tsx`, `ui-status.ts` | Rep and path status: neutral, progress, success, attention |
+| `EmptyState` | `Layout.tsx` | Empty lists and no-match results, with one recovery action |
+| `ListGroup` / `ListRow` | `Layout.tsx` | Collapsible topic groups and their rows (exercises, path badges, assessment skills) |
+| `Trail` | `Trail.tsx`, `trail.css`, `trail-map.ts` | Path stages and nodes on Home and All tracks |
+| `JournalTabs` | `Journal.tsx` | The Journal switch |
+| Segmented control | `.segmented-control` | Small view switches with a visible selected state |
+| `StepIndicator` | `StepIndicator.tsx` | Moving indicator for practice steps (vertical or horizontal) and lesson sections |
+
+## The trail
+
+Home is the learner's trail: the goal path drawn as stages of connected nodes on the reading background, with the recommended rep on a pale lime surface beside it. `trail-map.ts` derives node order and state from existing progress without storing anything.
+
+- Node shapes: square for a lesson (placed once, immediately before the first rep that uses it), circle for a rep, flag for a project milestone, repeat icon for a recall rep.
+- Node states: completed nodes use the dark action fill with a check; the single next rep uses the lime ring and `aria-current="step"`; drafts use the accent outline; recall that is not yet due uses a dashed outline and says when it becomes available.
+- Stages are native disclosures. The current stage and an unfinished first stage start open; project stages stay open. Completed stages show a check in their index.
+- Generic “Application” roles are not labelled; Guided, Independent, and Recall are.
+
+## Practice workspace
+
+Practice gives the working surfaces priority: one compact header row (back to Library, title, status chip, category, save status, session control, Glossary, Tools), a slim vertical step rail on the left edge of the brief pane, and a resizable 40/60 reading/code split by default. Existing divider preferences remain in effect. On narrow screens the same moving indicator and buttons become a horizontal step bar above the selected pane, and both panes stay mounted.
+
+Check results open as a drawer inside the dark coding desk, anchored above the run toolbar and limited to about half the desk (about a third beside a frontend preview); the editor shrinks rather than being covered. Use the desk's semantic surfaces for running, failed, and passed states. Keep passed cases visible with a status at the right; failed cases reveal one diagnostic at a time. The inline frontend preview is padded like the desk's other panels and keeps its state, viewport, Update, and Expand controls in one compact row.
+
+Session reflection stays mounted behind an explicit Reflect and end session control; starting a session does not open the reflection form or complete the rep. Practice step tabs are direct buttons without tooltips. Active primary navigation uses a quiet sage surface; active practice and lesson steps use the stronger green fill with lime text. Do not make every navigation item a primary action. Written work and behavioral checks remain separate evidence.
+
+## Disclosures and icons
+
+Use `Icon.tsx` for decorative control icons. `icons.css` is the single geometry source for both components and native disclosure markers: a 24px view box, 1.8px rounded outline strokes, and an 18px display size. Icons inherit the control color and are hidden from assistive technology; keep visible labels and accessible names. Do not substitute Unicode glyphs or separate inline SVG drawings. Preserve the original logo as its own brand asset.
+
+- **Arrow:** forward actions and row navigation.
+- **Chevron:** every expand/collapse control. Collapsible groups and cards (topic groups, trail stages, journeys, project overviews, path picker) use a trailing chevron that points down and rotates 180° when open. Inline text disclosures (Quick vocabulary, Change starting point) use the leading native marker. Buttons with `aria-expanded` rotate their chevron the same way; the checks drawer opens upward, so its chevron points up while closed.
+- **Plus/minus:** only for adding and subtracting values, such as number steppers. Never for disclosure.
+- **Check / close:** success and selection / dismissal and failed checks.
+- **Info, book, repeat, flag:** `InfoNote`, lesson nodes, recall nodes, and project nodes.
 
 ## Motion
 
-- Page changes arrive over 380ms. Practice and lesson indicators move over 420ms with the shared spring easing.
-- Buttons lift on precise-pointer hover, respond on press, and show a brief click ripple. Icons respond within the same button. Disabled controls remain still; text fields and code do not tilt or move on hover.
-- Lesson rows, exercise rows, secondary navigation, disclosure headings, and small field controls respond in place with color and border transitions. Lesson rows never inherit raised button shadows. Starting-point and path-choice cards lift by 2px; path badge cards use the same soft depth and acknowledge focus within their real action. Reading sheets and editable forms stay stable.
-- Menus enter over 240ms; tooltips use 110ms entry and exit. Dialogs enter over 380ms and use native close/focus behavior. Disclosures expand using native details semantics, with a presentation fallback for browsers without animated intrinsic sizing.
-- Native disclosures expand and collapse over 420ms with a balanced easing curve and matching opacity timing, so closing remains visible. A second activation reverses the transition. Menu items remain available immediately when opened.
-- Hints and real check feedback reveal over 320ms. Checks display real results as soon as they arrive: there are no simulated checks, delayed acknowledgements, or artificial progress stages in the app.
+Motion acknowledges interaction and shows where something came from; it never decorates idle screens. Each kind of element has one recognizable interaction, all built from the shared tokens (`--motion-fast` 180ms, `--motion-panel` 320ms, `--motion-ease`, `--motion-spring`). Movement stays inside the element's own box, so hovering never shifts neighbours, and nothing animates continuously: the only repeating motion is the next trail node's ring, which plays twice on arrival and stops.
 
-`StepIndicator` measures the existing active button. `ui-motion.ts` and `useAppMotion.ts` add presentation without owning learner state. Animations must never remount editors, replace drafts, block an action, or change cancellation and stale-result handling. Honor `prefers-reduced-motion` for CSS and JavaScript motion, including hover/press movement and ripple creation. Keyboard focus remains visible independently of animation.
+| Element | Interaction |
+| --- | --- |
+| Primary action | Lifts 2px with a soft shadow and a single shine sweep; arrow and play icons nudge forward; press compresses to 97%; a ripple marks the press point |
+| Secondary action | Lifts 1px and takes an accent border; no shine |
+| Text link | Underline fades in while rising toward the text |
+| Main navigation tab | Sage wash scales in behind the label |
+| Section tab | Underline grows from the centre; the current tab keeps it |
+| Practice steps, lesson sections, segmented switches, Journal | Selected fill glides between options (`StepIndicator`); first placement and layout resizes snap |
+| Trail node | Marker grows to 114% with an accent ring; title takes the accent; press washes the row |
+| Next trail node | Lime ring pulses twice when the trail arrives, then stays still |
+| Trail stage, topic group, check results | Rows cascade in (30ms apart, capped at 180ms) when the group opens or results arrive |
+| List row | Stays in place; the arrow slides into its reserved space; press settles to 99.5% |
+| Track and starting cards | Lift 2px on hover; settle on press |
+| Progress bars | Fill grows from the left when the page arrives |
+| Progress statistics, track cards | Rise in a short cascade |
+| Status chip | Settles in (scale and fade) when it appears or its status changes; an unchanged status stays still |
+| Checkbox and radio | Mark pops in |
+| Info note | Icon tilts on hover; the note takes the accent when open |
+| Disclosure | Native content expands and collapses over 420ms; chevron rotates over 180ms |
+| Close and clear icons | Quarter-turn on hover |
+| Number stepper | Presses down |
+| Workspace divider | Grip lengthens on hover and focus |
+| Logo, appearance symbol | Logo tilts slightly; the light/dark symbol half-turns |
+| Dark mode toggle | The page crossfades over 260ms (View Transitions where supported). Colour-scheme radios apply immediately so their checked state never lags |
+| Menus, tooltips, dialogs | Menus enter over 240ms; tooltips 110ms; dialogs 380ms with native close and focus |
+| Page change | The page arrives over 380ms |
+| Hints and real check feedback | Reveal over 320ms. Results appear as soon as they arrive: no simulated checks, delayed acknowledgements, or artificial progress |
 
-Keyboard focus uses a thin 1px green outline. Fields use a 1px offset alongside their emphasized border, avoiding the former thick double ring. Keep focus visible on both white sheets and the dark coding desk.
+Practice steps select immediately; new pane content fades from 80% opacity for 120ms without translating, and rapid selections leave focus on the latest pane. Lesson rows, reading sheets, and editable forms stay stable: text fields and code never move on hover, and rows never inherit raised button shadows. Disabled controls stay still.
+
+`StepIndicator` measures the existing active button. `ui-motion.ts` and `useAppMotion.ts` add presentation without owning learner state; groups that cascade their own rows are excluded from the generic disclosure reveal. Animations must never remount editors, replace drafts, block an action, or change cancellation and stale-result handling. Animate children rather than page containers, so loading and page surfaces settle with no running animations.
+
+Honor `prefers-reduced-motion` for CSS and JavaScript motion: hover and press movement, icon rotation, cascades, progress fills, ripples, the dark-mode crossfade, and indicator glides all switch to immediate state changes. Keyboard focus uses a thin 1px green outline (fields add a 1px offset), stays visible on both white sheets and the dark coding desk, and receives the same cue as hover where one exists.
 
 ## Loading language
 
-Learning tools load as a separate local bundle when opened, keeping the initial app within its existing JavaScript budget. `LoadingStates.tsx` owns page-specific pending layouts, while `learning-pages.ts` shares headings with the loaded pages; `loading.css` owns their presentation. Lessons reserve their index and reading sheet, including the narrow-screen browse strip. Notebook shows writing fields only when an existing draft is open; otherwise it reserves the entry list or empty workspace. Practice plan shows a week and schedule rows, assessment shows an introduction and task rows, projects reserve their introduction and requirement rows, and interview shows its setup sheet. Editor loading uses a quiet code gutter and lines; preview loading reserves its idle controls and empty area rather than an ungenerated frame.
+Learning tools load as a separate local bundle when opened, keeping the initial app within its existing JavaScript budget. `LoadingStates.tsx` owns page-specific pending layouts and renders the same `PageHeader`, including the Journal switch on Notebook; `learning-pages.ts` shares headings with the loaded pages; `loading.css` owns their presentation. Skeleton fields use `--control-height`. Keep the loaded and pending first working surface aligned on desktop and narrow screens.
 
-Place page-loading status within the existing top padding, outside document flow, so its removal does not move the working surface. Skeleton shapes stay still; one small status dot acknowledges real pending work and respects reduced motion. Profile operations and saves use the same inline indicator. Keep the loaded and pending first working surface aligned on desktop and narrow screens. Pending placeholders remain noninteractive and never replace or clear a draft.
+Place page-loading status within the existing top padding, outside document flow, so its removal does not move the working surface. Skeleton shapes stay still; one small status dot acknowledges real pending work and respects reduced motion. Pending placeholders remain noninteractive and never replace or clear a draft. Never show invented learner records, counts, results, or percentage progress.
 
-The startup shell in `index.html` loads the local stylesheet before JavaScript starts. It uses the original logo and a light workbook while local progress initializes. Loading silhouettes are hidden from assistive technology; a short status explains the real pending work. Respect reduced motion and never show invented learner records, counts, results, or percentage progress. Failed loads retain the existing recovery actions without replacing learner storage.
+## Startup first paint
+
+The initial workbook in `index.html` includes scoped critical styles so its logo header, sage background, white skeleton sheet, and narrow layout render before external styles or JavaScript load. Its title uses the page-title size. Keep this small first-paint subset aligned with `src/loading.css`. Verify it with external scripts and styles blocked, as well as delayed progress loading.
+
+## Colour schemes and dark mode
+
+The header Appearance control opens the shared dialog with Sage (original), Ocean, and Plum choices alongside dark mode. Every scheme uses the same semantic surface, text, accent, action, and feature tokens in light and dark variants. Palette definitions live in `index.html` so they also style first paint. Dark mode uses deep surfaces, pale readable text, and the same logo-derived actions; the coding desk stays dark and follows the selected scheme. Appearance is a device-scoped session UI preference, survives refresh, and never enters learner backups.
+
+The logo has Sage, Ocean, and Plum colour variants using the original geometry; the header, loading screen, and favicon follow the selected scheme. Monaco and the coding desk follow the active scheme together and update in place without replacing the model, draft, or view state.
+
+## Checklist for a new or changed page
+
+1. Use `PageHeader` inside the shared frame; one `h1`; no per-page `main` width.
+2. Use type tokens for headings and `--control-height` for controls.
+3. Put caveats and evidence rules in an `InfoNote`; keep body copy about the task.
+4. Group long lists with `ListGroup`/`ListRow`; give empty lists an `EmptyState` with a recovery action.
+5. Show status with `StatusChip` and text, not colour alone.
+6. Use a trailing rotating chevron for disclosure; never plus/minus.
+7. Provide a matching pending layout if the page loads lazily.
+8. Give each new interactive element one interaction from the motion table, contained in its own box, with a reduced-motion fallback.
+9. Check light and dark, Sage/Ocean/Plum, 1440px and 320–390px widths, keyboard focus, and reduced motion.
 
 ## Verification
 
-Check Home, the exercise library, paths, lessons and prediction/review views, notebook, practice plan, projects, interview, progress, histories, assessment, profiles, and workspace steps. Include controls, empty states, runner errors, failed checks, save recovery, and the editor fallback. Use fresh browser contexts and temporary server data; never seed the learner's real database.
-
-The browser suite covers step-indicator alignment after resizing, retained writing across animated steps, and usable reduced-motion controls/dialogs alongside the existing editor, navigation, profile, and persistence flows. These checks do not establish visual fidelity, assistive-technology support, other browser engines, disconnected operation, or cross-platform behavior. See [UI guide](./UI_GUIDE.md) and [accessibility review](./ACCESSIBILITY_REVIEW.md).
-
-## Icons
-
-Use `Icon.tsx` for decorative control icons. `icons.css` is the single geometry source for both components and native disclosure markers: a 24px view box, 1.8px rounded outline strokes, and an 18px display size. Icons inherit the control color. Use the same arrow for forward actions, chevron for menus and directional navigation, plus/minus for expansion, check for success and selection, and close for dismissal or failed checks. Do not substitute Unicode glyphs or separate inline SVG drawings. Keep visible action labels and accessible names on controls; icons are hidden from assistive technology. Keyboard shortcut notation and authored code/content remain text. Preserve the original logo as its own brand asset.
-
-Profile access uses a restrained 1px lift with 130ms feedback. Tooltips use compact white surfaces, a quiet shadow, and 110ms entry/exit transitions; pointer exit dismisses after 60ms while keyboard focus retains the hint. Avoid applying the deeper primary-action hover to compact header utilities.
-
-Tab bars share an in-place hover wash with 140ms color/opacity feedback and a 180ms expansion. Main navigation, practice steps, lesson sections, and project file tabs keep their hit areas and selected indicators stable. Secondary navigation previews its underline on hover. Keyboard focus gets the same wash plus the existing focus outline; touch does not depend on hover, and reduced motion switches states immediately.
-
-Practice step tabs are direct buttons without tooltips. Keep status feedback in the workspace and review checklist so tab hover never covers the brief or editor.
-
-Practice checks occupy a separate full-width feedback sheet below the brief and coding desk. Use light semantic surfaces for running, failed, and passed states. Keep passed cases visible with a status at the right; failed cases reveal one diagnostic at a time. The outer sheet can collapse, and results navigation scrolls and focuses it without replacing the editor or learner draft.
-
-Practice gives the working surfaces priority: a compact optional session strip, five step tabs, and a resizable 40/60 reading/code split by default. Existing divider preferences remain in effect. Run and Stop share one action bar below the editor. On narrow screens it stays at the bottom of the coding desk while the step tabs stay above the selected pane. Session reflection stays mounted behind an explicit Reflect and end session control; starting a session does not open the reflection form or complete the rep.
-
-Across learning and progress pages, lesson feedback and notebook save messages use the same light semantic feedback surfaces as practice. Small view switches use a shared segmented control with a visible selected state and the tab hover treatment. Path badge cards expose one accessible path action across the whole card, with aligned progress and action rows. Commands and Glossary close natively, retain their exit transition before unmounting, and restore focus; reduced motion closes immediately.
-# Startup first paint
-
-The initial workbook in `index.html` includes scoped critical styles so its logo header, sage background, white skeleton sheet, and narrow layout render before external styles or JavaScript load. Keep this small first-paint subset aligned with `src/loading.css`. Verify it with external scripts and styles blocked, as well as delayed progress loading. Preserve reduced-motion support.
-
-## Colour schemes
-
-The header Appearance control opens the shared dialog with Sage (original), Ocean, and Plum choices alongside dark mode. Every scheme uses the same semantic surface, text, accent, action, and feature tokens in light and dark variants. Palette definitions live in `index.html` so they also style first paint before app assets arrive. Keep status colours semantic and preserve the original logo geometry and dark coding-desk structure. The palette uses device-scoped session UI preferences, survives refresh, and stays out of learner backups.
-
-The logo has Sage, Ocean, and Plum colour variants using the original geometry. The header, initial loading screen, and favicon follow the selected scheme in both display modes. Sage retains `public/favicon.svg`; the alternate local SVG assets are `public/favicon-ocean.svg` and `public/favicon-plum.svg`.
-
-Monaco and the coding desk follow the active scheme together, including editor background, gutter, selection, cursor, suggestions, keyword accents, and Run checks. Scheme changes update editor colours in place without replacing the model, draft, or view state.
+The browser suite asserts that every page shares the frame (title aligned with section tabs), the 32px page title, and 40px standalone controls, alongside step-indicator alignment, retained writing across animated steps, reduced-motion controls and dialogs, pending-layout alignment, and the editor, navigation, profile, and persistence flows. Use fresh browser contexts and temporary server data; never seed the learner's real database. These checks do not establish visual fidelity, assistive-technology support, other browser engines, disconnected operation, or cross-platform behavior. See [UI guide](./UI_GUIDE.md) and [accessibility review](./ACCESSIBILITY_REVIEW.md).

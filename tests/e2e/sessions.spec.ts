@@ -27,7 +27,9 @@ for (const width of [1280, 320]) {
     expect(await page.evaluate(() => JSON.parse(localStorage.getItem('code-reps:profile:default:history:v1') || '[]'))).toEqual([])
     await page.getByRole('button', { name: 'Back to Home', exact: true }).click()
     await page.getByRole('button', { name: 'Progress', exact: true }).click()
-    await page.getByRole('button', { name: 'Practice history', exact: true }).click()
+    await page.getByRole('navigation', { name: 'Progress pages' }).getByRole('button', { name: 'Journal', exact: true }).click()
+    await page.getByRole('group', { name: 'Journal' }).getByRole('button', { name: 'Practice sessions', exact: true }).click()
+    await expect(page).toHaveURL(/#\/sessions$/)
     await expect(page.getByText('I need to trace empty input before coding.', { exact: true })).toBeVisible()
     await page.getByRole('button', { name: 'Edit reflection' }).click()
     await page.getByLabel('Session reflection').fill('I traced the empty case and will retry tomorrow.')
@@ -193,8 +195,8 @@ test('ending a recall session leaves due dates and independent evidence unchange
   await page.getByRole('button', { name: 'Back to Home', exact: true }).click()
   await expect(page.locator('.continue-panel')).toContainText('Count values above a limit')
   await page.goto('/#/progress')
-  await expect(page.locator('[aria-label="Skill evidence summary"]')).toContainText('Independent skills1')
-  await expect(page.locator('[aria-label="Skill evidence summary"]')).toContainText('Retained skills0')
+  await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Independent skills1')
+  await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Retained skills0')
 })
 
 test('short-screen practice keeps sessions compact and reflection survives closing', async ({ page }) => {

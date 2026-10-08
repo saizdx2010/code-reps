@@ -30,7 +30,8 @@ export function useAppMotion() {
       const detail = event.target
       if (!(detail instanceof HTMLElement) || detail.tagName !== 'DETAILS' || !(detail as HTMLDetailsElement).open) return
       Array.from(detail.children).forEach(child => {
-        if (child instanceof HTMLElement && child.tagName !== 'SUMMARY') revealElement(child)
+        // Trail stages and topic groups cascade their own rows instead.
+        if (child instanceof HTMLElement && child.tagName !== 'SUMMARY' && !child.matches('.trail-nodes, .list-rows')) revealElement(child)
       })
     }
     const preference = typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-reduced-motion: reduce)') : null

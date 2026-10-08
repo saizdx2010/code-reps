@@ -1,21 +1,24 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
+import { PageHeader } from './Layout'
 import { useSessionPreference } from './useSessionPreference'
 import { Button } from './Button'
+import { StepIndicator } from './StepIndicator'
 import { Textarea } from './Input'
 import { reps } from './rep'
 import type { PracticeSession } from './practice-sessions'
 import type { PortableRecord } from './portability'
 
-export function PracticeHistory({ hasDraft, records, activeId, reflection, setReflection, remove, resume, openDraft, openAttempt, history }: {
-  hasDraft: (repId: string) => boolean; records: PracticeSession[]; activeId: string | null; reflection: (id: string) => string; setReflection: (id: string, value: string) => void
+export function PracticeHistory({ journalTabs, hasDraft, records, activeId, reflection, setReflection, remove, resume, openDraft, openAttempt, history }: {
+  journalTabs?: ReactNode; hasDraft: (repId: string) => boolean; records: PracticeSession[]; activeId: string | null; reflection: (id: string) => string; setReflection: (id: string, value: string) => void
   remove: (id: string) => void; resume: (repId: string) => void; openDraft: (repId: string) => void; openAttempt: (record: PortableRecord) => void; history: PortableRecord[]
 }) {
   const [tab, setTab] = useSessionPreference<'ended' | 'unfinished'>('session-history-view', 'ended')
   const [deleting, setDeleting] = useState<string | null>(null)
   const [editing, setEditing] = useState<string | null>(null)
   const visible = records.filter(record => Boolean(record.endedAt) === (tab === 'ended'))
-  return <main className="progress-main"><div className="home-heading"><h1 tabIndex={-1}>Practice history</h1><p>Sessions record effort and reflection. Completed-attempt History holds code snapshots and skill evidence.</p></div>
-    <div className="segmented-control" role="group" aria-label="Session history view"><Button aria-pressed={tab === 'ended'} onClick={() => setTab('ended')}>Ended</Button><Button aria-pressed={tab === 'unfinished'} onClick={() => setTab('unfinished')}>Unfinished</Button></div>
+  return <main className="progress-main"><PageHeader eyebrow="Journal" title="Practice history" description="Sessions record effort and reflection. Completed attempts hold code snapshots and skill evidence." actions={journalTabs} />
+    <div className="segmented-control" role="group" aria-label="Session history view"><StepIndicator active={tab} selector="button[aria-pressed=true]" /><Button aria-pressed={tab === 'ended'} onClick={() => setTab('ended')}>Ended</Button><Button aria-pressed={tab === 'unfinished'} onClick={() => setTab('unfinished')}>Unfinished</Button></div>
     {!visible.length && <p>No {tab} sessions yet. Start practice explicitly from Home or a rep.</p>}
     <ul className="session-history">{visible.map(record => {
       const rep = reps.find(rep => rep.id === record.repId)!
