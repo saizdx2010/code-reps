@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from 'react'
 
-/** Follows the real active button without replacing it or changing its focus behavior. */
+/** Follows the real active button without replacing it or changing its focus behavior. It measures both axes, so the same indicator serves the horizontal bar and the vertical desktop rail. */
 export function StepIndicator({ active }: { active: string }) {
   const indicator = useRef<HTMLSpanElement>(null)
   useLayoutEffect(() => {

@@ -9,7 +9,7 @@ export function PracticeSessionPanel({ active, reflection, setReflection, busy, 
   onStart: () => void; onEnd: () => void; explanation: string; ended?: PracticeSession; onHome: () => void; onAnother: () => void
 }) {
   const [reflectionOpen, setReflectionOpen] = useState(false)
-  return <section className="session-panel" aria-labelledby="session-title">
+  return <section className="session-panel" data-state={ended ? 'ended' : active ? 'active' : 'idle'} aria-labelledby="session-title">
     <div className="session-strip">
       <div><h2 id="session-title">{ended ? 'Session saved' : active ? 'Your practice session' : 'Optional practice record'}</h2><span>{ended ? 'Your work is saved; completion is separate.' : active ? 'Practice is active. Your work saves as you go.' : 'Start a session to record your practice.'}</span></div>
       {ended ? <div className="session-actions"><Button variant="text" onClick={onHome}>Back to Home</Button><Button onClick={onAnother}>Start another rep</Button></div> : active ? <Button aria-expanded={reflectionOpen} aria-controls="session-ending" onClick={() => setReflectionOpen(!reflectionOpen)}>Reflect and end session<Icon name={reflectionOpen ? 'minus' : 'plus'} /></Button> : <Button disabled={busy} onClick={onStart}>Start practice</Button>}

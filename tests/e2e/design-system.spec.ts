@@ -11,7 +11,7 @@ test('moving practice indicator follows the selected step across layouts without
     await expect.poll(() => page.locator('.practice-steps').evaluate(element => {
       const selected = element.querySelector('button[aria-current=step]')!.getBoundingClientRect()
       const indicator = element.querySelector('.step-indicator')!.getBoundingClientRect()
-      return Math.abs(selected.left - indicator.left) < 1 && Math.abs(selected.top - indicator.top) < 1 && Math.abs(selected.width - indicator.width) < 1
+      return Math.abs(selected.left - indicator.left) < 1 && Math.abs(selected.top - indicator.top) < 1 && Math.abs(selected.width - indicator.width) < 1 && Math.abs(selected.height - indicator.height) < 1
     })).toBe(true)
   }
   await page.getByRole('button', { name: 'Plan', exact: true }).click()
