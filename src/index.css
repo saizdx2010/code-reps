@@ -23,7 +23,7 @@
   --border: #c4d1c1;
   --border-strong: #83977b;
   --text: #293e33;
-  --muted: #607465;
+  --muted: #5a6d5f;
   --accent: #456833;
   --accent-soft: #e7f0e0;
   --action: #303f38;
@@ -46,6 +46,15 @@
   --radius: 12px;
   --radius-control: 8px;
   --control-height: 40px;
+  /* One page frame: section tabs, page headers, and content share the same left edge. */
+  --page-width: 1224px;
+  --page-gutter: 28px;
+  /* Type scale: page title, reading title, feature title, section title, card title. */
+  --type-page: clamp(26px, 2.6vw, 32px);
+  --type-reading: 26px;
+  --type-feature: 22px;
+  --type-section: 20px;
+  --type-card: 17px;
   --motion-fast: 180ms;
   --motion-panel: 320ms;
   --motion-ease: cubic-bezier(.2, .8, .2, 1);

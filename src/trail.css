@@ -5,7 +5,7 @@
 .trail .path-stage-heading { display: flex; align-items: center; gap: 16px; padding: 16px 4px; list-style: none; cursor: pointer; }
 .trail .path-stage-heading::-webkit-details-marker { display: none; }
 .trail .path-stage-heading > div { flex: 1; min-width: 0; }
-.trail .path-stage-heading h3 { margin: 0; font-size: 17px; }
+.trail .path-stage-heading h3 { margin: 0; font-size: var(--type-card); }
 .trail .path-stage-heading p { margin: 3px 0 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
 .trail .path-stage-heading::after { content: ''; width: 18px; height: 18px; flex: none; background: var(--muted); mask: var(--icon-chevron) center / contain no-repeat; transition: rotate var(--motion-fast) var(--motion-ease); }
 .trail .path-stage[open] > .path-stage-heading::after { rotate: 180deg; mask-image: var(--icon-chevron); }
@@ -45,14 +45,12 @@
 }
 
 /* Trail home: the trail on the left, the next action beside it. On narrow screens the next action comes first. */
-.trail-home { max-width: 1184px; }
 .trail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px 44px; align-items: start; }
 .trail-column { grid-column: 1; grid-row: 1; min-width: 0; }
 .trail-column.home-goal { display: block; padding: 0; border: 0; }
 .trail-column .path-progress { margin: -8px 0 8px; }
 .trail-aside { grid-column: 2; grid-row: 1; display: grid; gap: 18px; min-width: 0; }
 .trail-aside .continue-panel { flex-direction: column; align-items: stretch; gap: 18px; padding: 22px; }
-.trail-aside .continue-panel h2 { font-size: 22px; }
 .trail-aside .continue-panel p { margin: 8px 0 12px; font-size: 15px; }
 .trail-aside .continue-panel .primary-button { align-self: flex-start; }
 .trail-aside > .text-button { margin-top: -8px; }

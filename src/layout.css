@@ -1,6 +1,6 @@
 /* Shared page structure: compact headers, secondary notes, status chips, grouped rows, and empty states. */
 .page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap; margin-bottom: 24px; }
-.page-header h1 { margin: 0; font-size: clamp(26px, 2.6vw, 32px); }
+.page-header h1 { margin: 0; font-size: var(--type-page); }
 .page-header p { max-width: 65ch; margin: 6px 0 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
 .page-eyebrow { display: block; margin-bottom: 4px; color: var(--muted); font-size: 13px; font-weight: 550; }
 .page-header-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
@@ -52,3 +52,12 @@
 .list-group > summary::before, .list-group > summary::after,
 .info-note > summary::before, .info-note > summary::after { content: none; }
 .list-row-text { overflow-wrap: anywhere; }
+
+/* Expand/collapse controls share one rotating chevron: down to open, up when open. The checks drawer opens upward. */
+button[aria-expanded] > .icon-chevron, button[aria-expanded] > span > .icon-chevron { transition: rotate var(--motion-fast) var(--motion-ease); }
+button[aria-expanded=true] > .icon-chevron, button[aria-expanded=true] > span > .icon-chevron { rotate: 180deg; }
+.checks-toggle[aria-expanded=false] .icon-chevron { rotate: 180deg; }
+.checks-toggle[aria-expanded=true] .icon-chevron { rotate: 0deg; }
+@media (prefers-reduced-motion: reduce) {
+  button[aria-expanded] .icon-chevron { transition: none; }
+}

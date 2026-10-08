@@ -331,3 +331,24 @@ test('utility drawers retain their exit and restore keyboard focus', async ({ pa
   await expect(page).toHaveURL(/#\/home$/)
   await expect(page.locator('.utility-dialog')).toHaveCount(0)
 })
+
+test('every page shares one frame, type scale, and control height', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  for (const route of ['home', 'paths', 'plan', 'practice', 'knowledge', 'projects', 'interview', 'progress', 'history', 'sessions', 'notebook', 'assessment', 'learn']) {
+    await page.goto(`/#/${route}`)
+    const heading = page.getByRole('heading', { level: 1 })
+    await expect(heading).toBeVisible()
+    const frame = await page.evaluate(() => {
+      const h1 = document.querySelector('main h1')!
+      const tab = document.querySelector('.section-nav button')!
+      const controls = [...document.querySelectorAll<HTMLElement>('main .ui-input:not(textarea), main .ui-select, main .primary-button, main .reset-button')]
+        // Rows and tab bars reuse button styles with their own geometry; only standalone controls share the height.
+        .filter(element => element.getBoundingClientRect().height > 0 && !element.closest('nav, .knowledge-topic-list, .lesson-navigation'))
+        .map(element => Math.round(element.getBoundingClientRect().height))
+      return { h1Left: Math.round(h1.getBoundingClientRect().left), tabLeft: Math.round(tab.getBoundingClientRect().left), size: getComputedStyle(h1).fontSize, controls }
+    })
+    expect(frame.h1Left, `${route} heading aligns with section tabs`).toBe(frame.tabLeft)
+    expect(frame.size, `${route} page title size`).toBe('32px')
+    for (const height of frame.controls) expect(height, `${route} control height`).toBe(40)
+  }
+})

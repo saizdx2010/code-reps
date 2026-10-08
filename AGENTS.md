@@ -43,7 +43,9 @@ For a focused test, use `node --experimental-strip-types --test tests/<name>.tes
 | --- | --- |
 | Startup and local profiles | `src/main.tsx`, `src/ProfileApp.tsx`, `src/profiles.ts` |
 | Practice workspace and attempts | `src/App.tsx`, `src/practice.ts` |
-| Navigation and session UI state | `src/ui-navigation.ts`, `src/useNavigation.ts`, `src/useSessionPreference.ts`, `src/Experience.tsx` |
+| Navigation and session UI state | `src/ui-navigation.ts`, `src/AppNavigation.tsx`, `src/useNavigation.ts`, `src/useSessionPreference.ts`, `src/Experience.tsx` |
+| Trail, tracks, and Journal | `src/HomePage.tsx`, `src/PathsPage.tsx`, `src/Trail.tsx`, `src/trail-map.ts`, `src/curriculum.ts`, `src/Journal.tsx` |
+| Shared page components and styles | `src/Layout.tsx`, `src/ui-status.ts`, `src/layout.css`, `src/trail.css`, `src/index.css` (tokens) |
 | Editors and previews | `src/CodeEditor.tsx`, `src/SolutionEditor.tsx`, `src/ProjectEditor.tsx`, `src/editor-loader.ts`, `src/FrontendPreview.tsx` |
 | Check orchestration and execution | `src/check-run.ts`, `src/runner.worker.ts`, `src/runner.ts`, `src/runner.types.ts`, `src/compile-solution.ts`, `src/frontend-run.ts`, `src/frontend-frame.ts`, `src/project-files.ts` |
 | Reps and paths | `src/rep.ts`, `src/path.ts`, and focused `*-reps.ts` / content modules |
@@ -60,6 +62,13 @@ Use the relevant guide rather than guessing: `docs/CONTENT_AUTHORING.md`, `docs/
 - Keep content, assessment rules, persistence, and runners separate from React presentation. Prefer extending an existing owner over creating a second source of truth.
 - Reuse the existing controls and CSS tokens. Inspect `src/Input.tsx`, `src/Button.tsx`, and the relevant stylesheets before adding UI. Do not introduce a component library merely because the project plan mentions one.
 - Follow `docs/DESIGN_SYSTEM.md` for Code Reps' logo-based palette, shared control geometry, page hierarchy, and motion. Extend the existing visual and motion owners; retain the original logo and reduced-motion behavior.
+- Keep the redesigned design language consistent (details and the new-page checklist are in `docs/DESIGN_SYSTEM.md`):
+  - Three main areas only: Trail, Library, and Progress. New pages join an existing area's section tabs; Journal views switch with `JournalTabs`.
+  - Every page uses the shared frame (`--page-width`, `--page-gutter`) and starts with `PageHeader` and exactly one `h1`. Do not set per-page `main` widths or add hero headings.
+  - Use the type tokens (`--type-page`, `--type-reading`, `--type-feature`, `--type-section`, `--type-card`) and `--control-height` (40px) instead of ad hoc sizes.
+  - Draw structure instead of explaining it: paths render with `Trail`, long lists with `ListGroup`/`ListRow`, status with `StatusChip` plus text, empty results with `EmptyState`. Evidence caveats go in `InfoNote`, not repeated body paragraphs.
+  - Disclosure uses a rotating chevron; plus/minus is only for adding or subtracting values. Supporting text on selected or recommended surfaces keeps 4.5:1 contrast.
+  - In practice, keep the single compact header row, the step rail, and the checks drawer inside the coding desk; the work surfaces own the screen.
 - Preserve the calm, readable workspace: clear hierarchy, visible focus, semantic controls, keyboard operation, and reduced-motion support.
 - Cover loading, empty, error, saved, and recovery states. A failed editor load must leave a usable fallback and preserve the draft.
 - Keep narrow and short screens usable. Preserve pane selection, scroll position, editor state, and save feedback when navigation or layout changes.

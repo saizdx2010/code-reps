@@ -1,10 +1,9 @@
 /* Learning tools share the Code Reps practice-sheet and control tokens. */
-.learning-hub { max-width: 1160px; }
 .learning-hub label { display: block; margin: 14px 0; color: var(--muted); font-size: 14px; }
 .learning-hub label > input, .learning-hub label > select, .learning-hub label > textarea { margin-top: 7px; }
 .learning-hub p, .learning-hub li { font-size: 16px; line-height: 1.75; color: var(--muted); }
-.learning-hub h2 { font-size: 26px; }
-.learning-hub h3 { font-size: 21px; }
+.learning-hub h2 { font-size: var(--type-section); }
+.learning-hub h3 { font-size: var(--type-card); }
 .hub-heading { display: flex; justify-content: space-between; align-items: start; gap: 24px; margin-bottom: 24px; }
 .hub-heading h2 { margin: 0; }
 .hub-heading p { max-width: 62ch; margin: 8px 0 0; }
@@ -22,8 +21,8 @@
 .knowledge-group { border-bottom: 1px solid var(--border); }
 .knowledge-group > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 12px 0; color: var(--muted); font-size: 13px; font-weight: 550; list-style: none; cursor: pointer; }
 .knowledge-group > summary::-webkit-details-marker { display: none; }
-.knowledge-group > summary::before { content: ''; display: inline-block; width: 18px; height: 18px; flex: none; background: currentColor; mask: var(--icon-plus) center / contain no-repeat; font-size: 16px; }
-.knowledge-group[open] > summary::before { mask-image: var(--icon-minus); }
+.knowledge-group > summary::before { content: ''; display: inline-block; width: 18px; height: 18px; flex: none; background: currentColor; mask: var(--icon-chevron) center / contain no-repeat; transition: rotate var(--motion-fast) var(--motion-ease); font-size: 16px; }
+.knowledge-group:not([open]) > summary::before { rotate: -90deg; }
 .knowledge-group summary > span { margin-left: auto; font-size: 12px; font-weight: 400; }
 .knowledge-topic-list { display: grid; gap: 4px; margin-bottom: 12px; }
 .knowledge-topic-list button { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 10px 12px; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--text); text-align: left; line-height: 1.5; }
@@ -42,8 +41,9 @@
 .knowledge-topic-list button[aria-current=page] { background: var(--accent-soft); color: var(--accent); }
 .knowledge-reading { min-width: 0; scroll-margin-top: 24px; }
 .knowledge-article { border: 1px solid var(--border); padding: 32px; border-radius: var(--radius); background: var(--surface); }
-.knowledge-article .hub-heading h2 { font-size: 29px; }
+.knowledge-article .hub-heading h2 { font-size: var(--type-reading); }
 .knowledge-article .hub-heading p { font-size: 16px; }
+.knowledge-article h3 { font-size: var(--type-section); }
 .knowledge-article section { margin: 28px 0; }
 .knowledge-article section:last-child { margin-bottom: 0; }
 .knowledge-article p, .knowledge-article li { max-width: 72ch; }
@@ -78,8 +78,8 @@
 .rubric-grid legend { font-size: 15px; font-weight: 600; text-transform: capitalize; }
 .rubric-grid li { font-size: 14px; }
 .hub-panel { border: 1px solid var(--border); padding: 28px; margin-bottom: 24px; border-radius: var(--radius); background: var(--surface); }
-.hub-panel h2 { font-size: 23px; }
-.hub-panel h3 { font-size: 21px; }
+.hub-panel h2 { font-size: var(--type-section); }
+.hub-panel h3 { font-size: var(--type-card); }
 .hub-panel p { max-width: 70ch; }
 .hub-panel .home-label { color: var(--muted); }
 .hub-form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 18px; }
@@ -101,9 +101,9 @@
 .evidence-card { border: 0; padding: 0; border-radius: 0; background: transparent; border-bottom: 1px solid var(--border); }
 .evidence-card > summary { display: flex; align-items: center; gap: 24px; min-height: 70px; padding: 18px 0; cursor: pointer; list-style: none; }
 .evidence-card > summary::-webkit-details-marker { display: none; }
-.evidence-card > summary h3 { flex: 1; margin: 0; font-size: 19px; }
-.evidence-card > summary::after { content: ''; display: inline-block; width: 18px; height: 18px; flex: none; background: currentColor; mask: var(--icon-plus) center / contain no-repeat; color: var(--muted); }
-.evidence-card[open] > summary::after { mask-image: var(--icon-minus); }
+.evidence-card > summary h3 { flex: 1; margin: 0; font-size: var(--type-card); }
+.evidence-card > summary::after { content: ''; display: inline-block; width: 18px; height: 18px; flex: none; background: currentColor; mask: var(--icon-chevron) center / contain no-repeat; transition: rotate var(--motion-fast) var(--motion-ease); color: var(--muted); }
+.evidence-card[open] > summary::after { rotate: 180deg; }
 .evidence-stage { color: var(--muted); font-size: 13px; }
 .evidence-card-body { padding: 0 0 20px; }
 .evidence-card-body p { font-size: 14px; }
@@ -126,7 +126,6 @@
   .knowledge-article { padding: 28px; }
 }
 @media (max-width: 600px) {
-  .learning-hub { padding: 26px 18px 42px; }
   .knowledge-article { padding: 24px 20px; }
   .knowledge-article .hub-heading h2 { font-size: 25px; }
   .hub-heading { gap: 12px; }
@@ -134,7 +133,7 @@
   .lesson-navigation { gap: 8px; }
   .lesson-navigation button { font-size: 14px; }
   .knowledge-article p, .knowledge-article li { font-size: 15px; }
-  .knowledge-article h3 { font-size: 20px; }
+  .knowledge-article h3 { font-size: var(--type-card); }
   .rubric-grid, .hub-cards { grid-template-columns: 1fr; }
   .hub-panel { padding: 22px; }
   .hub-panel p { font-size: 15px; }
@@ -152,22 +151,21 @@
 .project-overview > summary h2, .project-overview > summary h3 { margin: 0 0 10px; }
 .project-overview > summary p { margin: 0 0 12px; font-size: 15px; }
 .project-overview > summary > span { color: var(--muted); font-size: 13px; }
-.project-overview > summary::after { content: ''; display: inline-block; width: 18px; height: 18px; flex: none; background: currentColor; mask: var(--icon-plus) center / contain no-repeat; position: absolute; top: 28px; right: 0; font-size: 22px; color: var(--accent); }
-.project-overview[open] > summary::after { mask-image: var(--icon-minus); }
+.project-overview > summary::after { content: ''; display: inline-block; width: 18px; height: 18px; flex: none; background: currentColor; mask: var(--icon-chevron) center / contain no-repeat; transition: rotate var(--motion-fast) var(--motion-ease); position: absolute; top: 28px; right: 0; font-size: 22px; color: var(--accent); }
+.project-overview[open] > summary::after { rotate: 180deg; }
 .project-overview .milestone-list { margin-top: 0; }
 .project-review { padding: 8px 0 24px; }
 .project-review > summary { min-height: 44px; padding: 10px 0; color: var(--accent); cursor: pointer; font-size: 15px; }
 
 /* Browsing pages disclose secondary explanations and supporting evidence. */
-.learning-hub { padding-top: 32px; }
 .learning-hub .page-header p { font-size: 15px; line-height: 1.5; }
 .learning-hub .info-note p { font-size: 14px; line-height: 1.6; }
 .learning-hub .hub-panel:not(.evidence-card):not(.project-overview) { padding: 20px; margin-bottom: 16px; }
-.learning-hub .hub-panel > h2 { margin-top: 0; font-size: 21px; }
+.learning-hub .hub-panel > h2 { margin-top: 0; font-size: var(--type-section); }
 .hub-evidence .list-rows > li { list-style: none; }
 .hub-evidence .evidence-card { margin: 0; }
 .hub-evidence .evidence-card > summary { min-height: 52px; padding: 8px 12px; gap: 12px; }
-.hub-evidence .evidence-card > summary h3 { font-size: 15px; }
+.hub-evidence .evidence-card > summary h3 { font-size: var(--type-card); }
 .hub-evidence .evidence-card-body { padding: 0 12px 16px; }
 .knowledge-controls { display: grid; gap: 8px; }
 .knowledge-controls > label { margin: 0; }
@@ -175,7 +173,7 @@
 .knowledge-controls .utility-note { margin: 0; }
 .learning-hub .project-overview { margin-bottom: 0; }
 .learning-hub .project-overview > summary { padding: 14px 30px 14px 0; }
-.learning-hub .project-overview > summary h2, .learning-hub .project-overview > summary h3 { font-size: 18px; margin-bottom: 4px; }
+.learning-hub .project-overview > summary h2, .learning-hub .project-overview > summary h3 { font-size: var(--type-card); margin-bottom: 4px; }
 .learning-hub .project-overview > summary p { margin-bottom: 4px; font-size: 14px; line-height: 1.5; }
 .learning-hub .project-overview > summary::after { top: 18px; }
 .learning-hub .milestone-list li { padding: 12px 0; }

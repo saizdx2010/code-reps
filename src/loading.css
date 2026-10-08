@@ -13,7 +13,7 @@
 .skeleton-label { width: 100px; max-width: 50%; height: 12px; margin-bottom: 8px; }
 .loading-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 20px; margin: 14px 0 24px; }
 .loading-fields-stacked { grid-template-columns: minmax(0, 1fr); }
-.skeleton-field { height: 44px; }
+.skeleton-field { height: var(--control-height); }
 .skeleton-action { width: 120px; height: 40px; margin-top: 24px; }
 .loading-fields > .skeleton-action { margin: 0; }
 .loading-rows { margin-top: 24px; }
@@ -56,7 +56,7 @@
 .startup-loading { min-height: 100dvh; background: var(--bg); color: var(--text); }
 .startup-brand { display: flex; align-items: center; gap: 10px; height: 68px; padding: 0 max(28px, calc((100vw - 1280px) / 2)); border-bottom: 1px solid var(--border); background: var(--surface); font-size: 21px; font-weight: 650; letter-spacing: -.05em; }
 .startup-workbook { max-width: 984px; margin: 0 auto; padding: 64px 28px; }
-.startup-workbook h1 { font-size: clamp(30px, 4vw, 44px); }
+.startup-workbook h1 { font-size: clamp(26px, 2.6vw, 32px); }
 .startup-sheet { margin-top: 36px; }
 .startup-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 32px; }
 .startup-columns .loading-sheet { background: var(--bg); margin-bottom: 0; }
