@@ -310,7 +310,14 @@ test('path completion row navigates and session history selection stays visible'
   await unfinished.press('Enter')
   await expect(unfinished).toHaveAttribute('aria-pressed', 'true')
   await unfinished.hover()
-  await expect(unfinished).toHaveCSS('background-color', 'rgb(48, 63, 56)')
+  // The selected fill is the sliding indicator; it must settle exactly behind the hovered selection.
+  const fill = group.locator('.step-indicator')
+  await expect(fill).toHaveCSS('background-color', 'rgb(48, 63, 56)')
+  await expect.poll(async () => {
+    const [selected, indicator] = await Promise.all([unfinished.boundingBox(), fill.boundingBox()])
+    return Math.abs(selected!.x - indicator!.x) < 1 && Math.abs(selected!.width - indicator!.width) < 1 && Math.abs(selected!.y - indicator!.y) < 1
+  }).toBe(true)
+  await expect(unfinished).toHaveCSS('color', 'rgb(188, 229, 123)')
   await expect(unfinished).toHaveCSS('transform', 'none')
 })
 
@@ -336,8 +343,9 @@ test('every page shares one frame, type scale, and control height', async ({ pag
   await page.setViewportSize({ width: 1440, height: 900 })
   for (const route of ['home', 'paths', 'plan', 'practice', 'knowledge', 'projects', 'interview', 'progress', 'history', 'sessions', 'notebook', 'assessment', 'learn']) {
     await page.goto(`/#/${route}`)
-    const heading = page.getByRole('heading', { level: 1 })
-    await expect(heading).toBeVisible()
+    // Wait past the startup shell and any lazy page placeholder for the loaded page header.
+    await expect(page.locator('main .page-header h1')).toBeVisible()
+    await expect(page.locator('.page-loading')).toHaveCount(0)
     const frame = await page.evaluate(() => {
       const h1 = document.querySelector('main h1')!
       const tab = document.querySelector('.section-nav button')!

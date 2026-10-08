@@ -6,11 +6,12 @@
 :is(.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button) { position: relative; isolation: isolate; overflow: hidden; border-radius: var(--radius-control); transition: transform 260ms var(--motion-spring), box-shadow 260ms var(--motion-ease), background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease); }
 :is(.primary-button, .finish-button)::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(110deg, transparent 20%, #ffffff22 46%, #ffffff08 55%, transparent 75%); transform: translateX(-130%); opacity: 0; }
 @media (hover: hover) and (pointer: fine) {
-  :is(.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button):hover:not(:disabled):not([aria-disabled=true]) { transform: translateY(-3px) scale(1.025); box-shadow: 0 3px 0 #293e3322, 0 8px 16px #293e3318; }
+  :is(.primary-button, .finish-button):hover:not(:disabled):not([aria-disabled=true]) { transform: translateY(-2px); box-shadow: 0 2px 0 #293e3322, 0 8px 18px #293e331f; }
+  :is(.reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button):hover:not(:disabled):not([aria-disabled=true]) { transform: translateY(-1px); border-color: var(--accent); box-shadow: 0 3px 10px #293e3314; }
   :is(.primary-button, .finish-button):hover:not(:disabled)::after { animation: button-shine 650ms ease-out both; }
   :is(.primary-button, .reset-button, .hint-button):hover:not(:disabled) > .icon-arrow:not(.icon-down) { transform: translateX(2px); }
 }
-:is(.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button):active:not(:disabled) { transform: translateY(1px) scale(.96); box-shadow: none; transition-duration: 90ms; }
+:is(.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button):active:not(:disabled) { transform: translateY(0) scale(.97); box-shadow: none; transition-duration: 90ms; }
 :is(.primary-button, .finish-button, .reset-button, .hint-button):focus-visible { box-shadow: 0 3px 0 #293e3320, 0 6px 14px #293e3316; }
 .button-ripple { position: absolute; pointer-events: none; width: 18px; height: 18px; border-radius: 50%; background: currentColor; opacity: 0; transform: translate(-50%, -50%); }
 @keyframes button-shine { 0% { transform: translateX(-130%); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateX(130%); opacity: 0; } }
@@ -34,7 +35,7 @@
 @keyframes success-arrive { from { scale: .65; opacity: 0; } to { scale: 1; opacity: 1; } }
 
 /* Rows and small controls respond in place; cards use a softer depth than actions. */
-.rep-list-row, .path-stage li button, .section-nav button, .text-button, summary,
+.section-nav button, .text-button, summary,
 .day-picker label, .ui-number-buttons button, .ui-search-clear, .ui-calendar-icon,
 .checks-toggle, .project-file-tabs button, .commands-trigger, .breadcrumb-link,
 .local-data-actions button, .storage-recovery button, .reset-dialog-actions button,
@@ -42,23 +43,21 @@
 .utility-heading button, .command-results button {
   transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease), text-decoration-color var(--motion-fast) var(--motion-ease);
 }
-.starting-options button, .path-choices button, .profile-badge-list li {
+.starting-options button, .path-choices button {
   transition: transform 260ms var(--motion-spring), border-color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease), box-shadow 260ms var(--motion-ease);
 }
 .continue-panel, .hub-cards > .hub-panel { transition: border-color var(--motion-fast) var(--motion-ease), box-shadow 260ms var(--motion-ease); }
 .text-button { text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px; }
-.profile-badge-list li:focus-within { border-color: var(--accent); box-shadow: 0 3px 12px #293e330d; }
 @media (hover: hover) and (pointer: fine) {
-  .starting-options button:hover:not(:disabled), .path-choices button:hover:not(:disabled), .profile-badge-list li:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 5px 16px #293e3310; }
+  .starting-options button:hover:not(:disabled), .path-choices button:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 5px 16px #293e3310; }
   .path-choices button:hover:not(:disabled) { background: var(--surface); }
-  .profile-badge-list li:hover .text-button { text-decoration-color: currentColor; }
   .continue-panel:hover, .hub-cards > .hub-panel:hover { border-color: var(--accent); }
   .section-nav button:hover, .commands-trigger:hover, .breadcrumb-link:hover { color: var(--accent); }
   .ui-choice:hover:not(:disabled), .storage-recovery button:hover:not(:disabled), .reset-dialog-actions button:hover:not(:disabled) { border-color: var(--accent); }
   .reset-dialog-actions .reset-dialog-confirm:hover:not(:disabled) { border-color: var(--error); }
   .project-file-tabs button:hover:not(:disabled), .command-results button:hover { background: var(--accent-soft); color: var(--accent); }
   .workspace-toolbar-links button:hover:not(:disabled), .workspace-knowledge button:hover, .mistake-help button:hover, .utility-heading button:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 4px; }
-  summary:hover, .path-stage li button:hover:not(:disabled), .day-picker label:hover, .checks-toggle:hover { background-color: color-mix(in srgb, var(--accent-soft) 65%, transparent); }
+  summary:hover, .day-picker label:hover, .checks-toggle:hover { background-color: color-mix(in srgb, var(--accent-soft) 65%, transparent); }
   .text-button:hover:not(:disabled) { text-decoration-color: currentColor; }
 }
 
@@ -75,7 +74,7 @@
   :is(.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button):hover,
   :is(.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button):active,
   .ui-icon { transform: none !important; }
-  .starting-options button:hover, .path-choices button:hover, .profile-badge-list li:hover { transform: none !important; }
+  .starting-options button:hover, .path-choices button:hover { transform: none !important; }
   .button-ripple, .primary-button::after, .finish-button::after { display: none; }
 }
 
@@ -140,4 +139,107 @@
 
 /* A view switch responds in place, including while its selected item is hovered. */
 .segmented-control button:hover:not(:disabled):not([aria-disabled=true]), .segmented-control button:active:not(:disabled):not([aria-disabled=true]), .segmented-control button:focus-visible { transform: none; box-shadow: none; }
-.segmented-control button[aria-pressed=true]:hover:not(:disabled), .segmented-control button[aria-pressed=true]:active:not(:disabled) { background: var(--action); color: var(--action-text); }
+.segmented-control button[aria-pressed=true]:hover:not(:disabled), .segmented-control button[aria-pressed=true]:active:not(:disabled) { background: transparent; color: var(--action-text); }
+
+/* Redesign components: each element has its own small, clean interaction. Movement stays inside the element's box. */
+
+/* Text links: the underline fades in while rising toward the text. */
+.text-button { text-underline-offset: 7px; transition: color var(--motion-fast) var(--motion-ease), text-decoration-color var(--motion-fast) var(--motion-ease), text-underline-offset 220ms var(--motion-spring); }
+@media (hover: hover) and (pointer: fine) {
+  .text-button:hover:not(:disabled) { text-underline-offset: 4px; }
+}
+.text-button:focus-visible { text-decoration-color: currentColor; text-underline-offset: 4px; }
+
+/* Segmented switches: the selected fill slides between options. */
+.segmented-control .step-indicator { transition: transform 260ms var(--motion-spring), width 260ms var(--motion-spring); }
+
+/* Trail nodes: the marker grows and takes an accent ring; the row washes in place. */
+.trail-marker { transition: transform 220ms var(--motion-spring), border-color var(--motion-fast) var(--motion-ease), box-shadow 220ms var(--motion-ease), background-color var(--motion-fast) var(--motion-ease); }
+.trail-node > button { transition: background-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease); }
+.trail-node-title { transition: color var(--motion-fast) var(--motion-ease); }
+@media (hover: hover) and (pointer: fine) {
+  .trail-node:has(> button:hover) .trail-marker { transform: scale(1.14); border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-soft) 80%, transparent); }
+  .trail-node > button:hover .trail-node-title { color: var(--accent); }
+  .trail .path-stage-heading:hover .trail-stage-index { border-color: var(--accent); }
+}
+.trail-node:has(> button:focus-visible) .trail-marker { transform: scale(1.14); border-color: var(--accent); }
+.trail-node > button:active { background: var(--accent-soft); }
+.trail-stage-index { transition: border-color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease); }
+/* The next node announces itself once when the trail arrives, then stays still. */
+.trail-node.is-next .trail-marker { animation: next-ring 1100ms var(--motion-ease) 420ms 2 both; }
+@keyframes next-ring { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--feature-border) 70%, transparent); } 70%, 100% { box-shadow: 0 0 0 10px transparent; } }
+
+/* Opened groups cascade their rows in: trail stages, exercise topics, and check results. */
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li { animation: row-arrive 280ms var(--motion-ease) both; }
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(2) { animation-delay: 30ms; }
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(3) { animation-delay: 60ms; }
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(4) { animation-delay: 90ms; }
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(5) { animation-delay: 120ms; }
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(6) { animation-delay: 150ms; }
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(n + 7) { animation-delay: 180ms; }
+@keyframes row-arrive { from { opacity: 0; translate: -6px 0; } to { opacity: 1; translate: 0 0; } }
+
+/* List rows keep their place on hover (the arrow slides in) and give a gentle press. */
+.list-row > button { transition: background-color var(--motion-fast) var(--motion-ease), transform 120ms var(--motion-ease); }
+.list-row > button:active { transform: scale(.995); background: var(--accent-soft); }
+.list-group > summary .list-group-count { transition: color var(--motion-fast) var(--motion-ease); }
+.list-group > summary:hover .list-group-count { color: var(--accent); }
+
+/* Track and starting cards lift on hover and settle on press. */
+.starting-options button:active:not(:disabled), .path-choices button:active:not(:disabled) { transform: translateY(0) scale(.99); transition-duration: 90ms; }
+
+/* Progress fills grow from the left when a page arrives. */
+.path-progress span { transform-origin: left center; animation: fill-grow 720ms var(--motion-ease) 160ms both; }
+.compact-path-list progress { transform-origin: left center; animation: fill-grow 720ms var(--motion-ease) 160ms both; }
+@keyframes fill-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* Choices pop their mark in; the info note tilts its icon on hover and takes the accent when open. */
+.ui-choice:checked::before { animation: mark-pop 260ms var(--motion-spring); }
+@keyframes mark-pop { from { scale: .3; opacity: 0; } to { scale: 1; opacity: 1; } }
+.info-note .ui-icon { transition: rotate 220ms var(--motion-spring), color var(--motion-fast) var(--motion-ease); }
+.info-note summary:hover .ui-icon { rotate: -12deg; }
+.info-note[open] summary { color: var(--accent); }
+
+/* Header details: the logo tilts, the appearance symbol half-turns. */
+.brand-mark { transition: rotate 320ms var(--motion-spring); }
+.theme-symbol { transition: rotate 420ms var(--motion-spring); }
+@media (hover: hover) and (pointer: fine) {
+  .brand:hover .brand-mark { rotate: -8deg; }
+  .theme-trigger:hover .theme-symbol { rotate: 180deg; }
+}
+
+/* Status chips settle in when a status changes. */
+.status-chip { animation: chip-settle 240ms var(--motion-spring); }
+@keyframes chip-settle { from { scale: .88; opacity: 0; } to { scale: 1; opacity: 1; } }
+
+/* Progress statistics and track cards arrive in a short cascade. */
+.progress-summary > div, .path-picker[open] .path-choices > button { animation: rise-arrive 320ms var(--motion-ease) both; }
+.progress-summary > div:nth-child(2), .path-picker[open] .path-choices > button:nth-child(2) { animation-delay: 35ms; }
+.progress-summary > div:nth-child(3), .path-picker[open] .path-choices > button:nth-child(3) { animation-delay: 70ms; }
+.progress-summary > div:nth-child(n + 4) { animation-delay: 105ms; }
+@keyframes rise-arrive { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
+
+/* Small icon gestures: close and clear turn a quarter, play nudges forward, steppers press. */
+.icon-close, .icon-play { transition: rotate 220ms var(--motion-spring), translate 220ms var(--motion-spring); }
+@media (hover: hover) and (pointer: fine) {
+  button:hover:not(:disabled) > .icon-close, .ui-search-clear:hover .ui-icon { rotate: 90deg; }
+  .primary-button:hover:not(:disabled) > .icon-play { translate: 2px 0; }
+}
+.ui-number-buttons button { transition: scale 120ms var(--motion-ease), background-color var(--motion-fast) var(--motion-ease); }
+.ui-number-buttons button:active:not(:disabled) { scale: .88; }
+
+/* The workspace divider grip lengthens while it is hovered or focused. */
+.workspace-split span { transition: height 220ms var(--motion-spring), background-color var(--motion-fast) var(--motion-ease); }
+.workspace-split:hover span, .workspace-split:focus-visible span { height: 64px; }
+
+/* Light/dark and colour-scheme changes crossfade instead of snapping. */
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 260ms; animation-timing-function: var(--motion-ease); }
+
+@media (prefers-reduced-motion: reduce) {
+  .trail-node:has(> button:hover) .trail-marker, .trail-node:has(> button:focus-visible) .trail-marker, .list-row > button:active, .starting-options button:active, .path-choices button:active { transform: none !important; }
+  .brand:hover .brand-mark, .theme-trigger:hover .theme-symbol, .info-note summary:hover .ui-icon, button:hover > .icon-close, .ui-search-clear:hover .ui-icon { rotate: none !important; }
+  .primary-button:hover > .icon-play { translate: none !important; }
+  .ui-number-buttons button:active { scale: none !important; }
+  .text-button { transition: none; text-underline-offset: 4px; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
+}

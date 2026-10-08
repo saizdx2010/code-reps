@@ -114,14 +114,41 @@ Use `Icon.tsx` for decorative control icons. `icons.css` is the single geometry 
 
 ## Motion
 
-- Page changes arrive over 380ms. Practice and lesson indicators move over 420ms with the shared spring easing. Practice steps select immediately; the indicator glides for 160ms without spring overshoot or animated width/height, and new pane content fades from 80% opacity for 120ms without translating. Rapid selections must leave focus on the latest pane.
-- Buttons lift on precise-pointer hover, respond on press, and show a brief click ripple. Disabled controls remain still; text fields and code do not move on hover.
-- Rows (exercise, lesson, trail node, path completion), secondary navigation, disclosure headings, and small field controls respond in place with color and border transitions and the shared arrow fading into its reserved space. Rows never inherit raised button shadows. Starting-point and path-choice cards lift by 2px. Reading sheets and editable forms stay stable.
-- Menus enter over 240ms; tooltips use 110ms entry and exit. Dialogs enter over 380ms and use native close/focus behavior. Native disclosures expand and collapse over 420ms with matching opacity timing, so closing remains visible; chevrons rotate over 180ms.
-- Hints and real check feedback reveal over 320ms. Checks display real results as soon as they arrive: there are no simulated checks, delayed acknowledgements, or artificial progress stages.
-- Tab bars share an in-place hover wash with 140ms color/opacity feedback. Secondary navigation previews its underline on hover. Profile access uses a restrained 1px lift with 130ms feedback.
+Motion acknowledges interaction and shows where something came from; it never decorates idle screens. Each kind of element has one recognizable interaction, all built from the shared tokens (`--motion-fast` 180ms, `--motion-panel` 320ms, `--motion-ease`, `--motion-spring`). Movement stays inside the element's own box, so hovering never shifts neighbours, and nothing animates continuously: the only repeating motion is the next trail node's ring, which plays twice on arrival and stops.
 
-`StepIndicator` measures the existing active button. `ui-motion.ts` and `useAppMotion.ts` add presentation without owning learner state. Animations must never remount editors, replace drafts, block an action, or change cancellation and stale-result handling. Honor `prefers-reduced-motion` for CSS and JavaScript motion, including hover/press movement, chevron rotation, and ripple creation. Keyboard focus uses a thin 1px green outline (fields add a 1px offset) and stays visible on both white sheets and the dark coding desk.
+| Element | Interaction |
+| --- | --- |
+| Primary action | Lifts 2px with a soft shadow and a single shine sweep; arrow and play icons nudge forward; press compresses to 97%; a ripple marks the press point |
+| Secondary action | Lifts 1px and takes an accent border; no shine |
+| Text link | Underline fades in while rising toward the text |
+| Main navigation tab | Sage wash scales in behind the label |
+| Section tab | Underline grows from the centre; the current tab keeps it |
+| Practice steps, lesson sections, segmented switches, Journal | Selected fill glides between options (`StepIndicator`); first placement and layout resizes snap |
+| Trail node | Marker grows to 114% with an accent ring; title takes the accent; press washes the row |
+| Next trail node | Lime ring pulses twice when the trail arrives, then stays still |
+| Trail stage, topic group, check results | Rows cascade in (30ms apart, capped at 180ms) when the group opens or results arrive |
+| List row | Stays in place; the arrow slides into its reserved space; press settles to 99.5% |
+| Track and starting cards | Lift 2px on hover; settle on press |
+| Progress bars | Fill grows from the left when the page arrives |
+| Progress statistics, track cards | Rise in a short cascade |
+| Status chip | Settles in (scale and fade) when it appears or its status changes; an unchanged status stays still |
+| Checkbox and radio | Mark pops in |
+| Info note | Icon tilts on hover; the note takes the accent when open |
+| Disclosure | Native content expands and collapses over 420ms; chevron rotates over 180ms |
+| Close and clear icons | Quarter-turn on hover |
+| Number stepper | Presses down |
+| Workspace divider | Grip lengthens on hover and focus |
+| Logo, appearance symbol | Logo tilts slightly; the light/dark symbol half-turns |
+| Dark mode toggle | The page crossfades over 260ms (View Transitions where supported). Colour-scheme radios apply immediately so their checked state never lags |
+| Menus, tooltips, dialogs | Menus enter over 240ms; tooltips 110ms; dialogs 380ms with native close and focus |
+| Page change | The page arrives over 380ms |
+| Hints and real check feedback | Reveal over 320ms. Results appear as soon as they arrive: no simulated checks, delayed acknowledgements, or artificial progress |
+
+Practice steps select immediately; new pane content fades from 80% opacity for 120ms without translating, and rapid selections leave focus on the latest pane. Lesson rows, reading sheets, and editable forms stay stable: text fields and code never move on hover, and rows never inherit raised button shadows. Disabled controls stay still.
+
+`StepIndicator` measures the existing active button. `ui-motion.ts` and `useAppMotion.ts` add presentation without owning learner state; groups that cascade their own rows are excluded from the generic disclosure reveal. Animations must never remount editors, replace drafts, block an action, or change cancellation and stale-result handling. Animate children rather than page containers, so loading and page surfaces settle with no running animations.
+
+Honor `prefers-reduced-motion` for CSS and JavaScript motion: hover and press movement, icon rotation, cascades, progress fills, ripples, the dark-mode crossfade, and indicator glides all switch to immediate state changes. Keyboard focus uses a thin 1px green outline (fields add a 1px offset), stays visible on both white sheets and the dark coding desk, and receives the same cue as hover where one exists.
 
 ## Loading language
 
@@ -148,7 +175,8 @@ The logo has Sage, Ocean, and Plum colour variants using the original geometry; 
 5. Show status with `StatusChip` and text, not colour alone.
 6. Use a trailing rotating chevron for disclosure; never plus/minus.
 7. Provide a matching pending layout if the page loads lazily.
-8. Check light and dark, Sage/Ocean/Plum, 1440px and 320–390px widths, keyboard focus, and reduced motion.
+8. Give each new interactive element one interaction from the motion table, contained in its own box, with a reduced-motion fallback.
+9. Check light and dark, Sage/Ocean/Plum, 1440px and 320–390px widths, keyboard focus, and reduced motion.
 
 ## Verification
 

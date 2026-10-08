@@ -69,6 +69,7 @@ Use the relevant guide rather than guessing: `docs/CONTENT_AUTHORING.md`, `docs/
   - Draw structure instead of explaining it: paths render with `Trail`, long lists with `ListGroup`/`ListRow`, status with `StatusChip` plus text, empty results with `EmptyState`. Evidence caveats go in `InfoNote`, not repeated body paragraphs.
   - Disclosure uses a rotating chevron; plus/minus is only for adding or subtracting values. Supporting text on selected or recommended surfaces keeps 4.5:1 contrast.
   - In practice, keep the single compact header row, the step rail, and the checks drawer inside the coding desk; the work surfaces own the screen.
+  - Give each interactive element its one interaction from the motion table in `docs/DESIGN_SYSTEM.md`, built in `src/motion.css` from the shared motion tokens. Keep movement inside the element's box, avoid continuous animation, and provide a reduced-motion fallback.
 - Preserve the calm, readable workspace: clear hierarchy, visible focus, semantic controls, keyboard operation, and reduced-motion support.
 - Cover loading, empty, error, saved, and recovery states. A failed editor load must leave a usable fallback and preserve the draft.
 - Keep narrow and short screens usable. Preserve pane selection, scroll position, editor state, and save feedback when navigation or layout changes.

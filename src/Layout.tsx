@@ -24,7 +24,8 @@ export function InfoNote({ label = 'How evidence works', children }: { label?: s
 }
 
 export function StatusChip({ tone = 'neutral', children }: { tone?: ChipTone; children: ReactNode }) {
-  return <span className={`status-chip chip-${tone}`}>{children}</span>
+  // A new status remounts the chip so it settles in; an unchanged status stays still.
+  return <span key={typeof children === 'string' ? children : tone} className={`status-chip chip-${tone}`}>{children}</span>
 }
 
 export function EmptyState({ title, children, action }: { title: ReactNode; children?: ReactNode; action?: ReactNode }) {
