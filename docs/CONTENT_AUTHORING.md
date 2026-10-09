@@ -81,6 +81,16 @@ of `{id, value, note?, children?}` nodes with unique ids, an optional `current` 
 optional `events` and the `eventIndex` being processed, for event-by-event policies. The
 viewer marks changed `state` rows by itself. Each structure also has a screen-reader
 description, and the viewer tests check these snapshots against the real reference code.
+A `table` snapshot uses rectangular, non-empty `cells` rows, with `null` for
+not-yet-filled cells. Optional `rowLabels` and `colLabels` must match the dimensions;
+`name` labels the table in read descriptions. `current` and `reads` use zero-based
+`[row, column]` coordinates. Reads must refer to filled cells and cannot include the
+current cell. Show the value after each update and explain its dependencies in the
+step note. Single rows wrap at narrow widths; multiple rows scroll together to keep
+columns aligned. Border styles and explicit labels distinguish current, read, filled,
+and empty cells without relying on colour. Keep new traces to at most ten snapshots.
+Run the trace's code against the rep checks and compare its final displayed result
+with execution on the traced input in `tests/trace-content.test.mjs`.
 These authored snapshots appear only in the post-check comparison reveal after
 all checks pass. They describe the reference approach, not the learner's live
 execution, and must never be copied into independent or recall prompts.
@@ -96,6 +106,6 @@ The Trail has one root, Foundations (`typescript`), and three tracks: Problem so
 
 ## Advanced algorithm function reps
 
-`src/dsa-advanced-reps.ts` owns the guided prefix-sum, interval, linked-list, heap, subset, and dynamic-programming reps plus their depth and reflection guides. Register its exports alongside the existing DSA exports in `src/rep.ts`, `src/rep-depth.ts`, and `src/learning.ts`. Independent references live in `tests/fixtures/dsa-solutions.mjs`; `tests/dsa-advanced.test.mjs` checks common mistakes and the taught heap repair.
+`src/dsa-advanced-reps.ts` owns the guided prefix-sum, interval, linked-list, heap, subset, and dynamic-programming reps. Their depth and reflection guides live in `src/review-dsa-advanced.ts`. Register its exports alongside the existing DSA exports in `src/rep.ts`, `src/rep-depth.ts`, and `src/learning.ts`. Independent references live in `tests/fixtures/dsa-solutions.mjs`; `tests/dsa-advanced.test.mjs` checks common mistakes and the taught heap repair.
 
 The linked-list contract requires fresh output nodes. Value comparisons and input-mutation checks cannot establish output identity; fresh allocation remains a learner self-review point. The authoring test checks reference-node identity separately. These guided reps alone do not establish independent or retained fluency.

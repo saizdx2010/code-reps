@@ -36,6 +36,19 @@ export function validateContentDepth(repIds: Set<string>, skillIds: Set<string>,
         if (structure.event === 'return' && structure.frames.at(-1)?.returns === undefined) errors.push(`${id}: trace step ${index} returning frame needs a return value`)
       }
       if (structure?.kind === 'state' && structure.events && structure.eventIndex !== undefined && !(Number.isInteger(structure.eventIndex) && structure.eventIndex >= 0 && structure.eventIndex < structure.events.length)) errors.push(`${id}: trace step ${index} event index is out of bounds`)
+      if (structure?.kind === 'table') {
+        const width = structure.cells[0]?.length ?? 0
+        if (!width || structure.cells.some(row => row.length !== width)) errors.push(`${id}: trace step ${index} table needs equal, non-empty rows`)
+        if (structure.colLabels && structure.colLabels.length !== width) errors.push(`${id}: trace step ${index} table column labels must match the columns`)
+        if (structure.rowLabels && structure.rowLabels.length !== structure.cells.length) errors.push(`${id}: trace step ${index} table row labels must match the rows`)
+        const inside = (cell: [number, number]) => Number.isInteger(cell[0]) && Number.isInteger(cell[1]) && cell[0] >= 0 && cell[0] < structure.cells.length && cell[1] >= 0 && cell[1] < width
+        const refs = [...(structure.current ? [structure.current] : []), ...(structure.reads ?? [])]
+        if (refs.some(cell => !inside(cell))) errors.push(`${id}: trace step ${index} table cell is out of bounds`)
+        else {
+          if (structure.current && structure.reads?.some(cell => cell[0] === structure.current![0] && cell[1] === structure.current![1])) errors.push(`${id}: trace step ${index} table cell cannot read itself`)
+          if (structure.reads?.some(cell => structure.cells[cell[0]][cell[1]] === null)) errors.push(`${id}: trace step ${index} table reads an unfilled cell`)
+        }
+      }
       if (step.structure?.kind === 'array') {
         for (const pointer of Object.values(step.structure.pointers ?? {})) {
           if (!Number.isInteger(pointer) || pointer < 0 || pointer >= step.structure.values.length) errors.push(`${id}: trace step ${index} pointer is out of bounds`)

@@ -9,7 +9,21 @@ const nodeValue = (root: TraceTreeNode, id?: string): string | undefined => {
 }
 const nodeValues = (root: TraceTreeNode, ids: string[] = []) => ids.map(id => nodeValue(root, id)).filter(Boolean).join(', ') || 'none'
 
+type TableStructure = Extract<TraceStructure, { kind: 'table' }>
+const tableName = (table: TableStructure, [row, col]: [number, number]) => {
+  const column = table.colLabels?.[col] ?? col
+  return `${table.name ?? 'cell'}[${table.cells.length > 1 ? `${table.rowLabels?.[row] ?? row}][${column}` : column}]`
+}
+const joinAnd = (items: string[]) => items.length < 3 ? items.join(' and ') : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`
+const tableFocus = (table: TableStructure) => {
+  const reads = table.reads ?? []
+  if (!table.current) return reads.length ? `Reading ${joinAnd(reads.map(cell => tableName(table, cell)))}.` : 'No cell is being filled.'
+  return `Filling ${tableName(table, table.current)}${reads.length ? `, which reads ${joinAnd(reads.map(cell => tableName(table, cell)))}` : ', which reads no other cell'}.`
+}
+const isCell = (cells: [number, number][] | undefined, row: number, col: number) => Boolean(cells?.some(cell => cell[0] === row && cell[1] === col))
+
 function describe(structure: TraceStructure) {
+  if (structure.kind === 'table') return `Table with ${structure.cells.length} ${structure.cells.length === 1 ? 'row' : 'rows'}: ${structure.cells.map((row, r) => `${structure.rowLabels ? `row ${structure.rowLabels[r]}: ` : ''}${row.map((value, c) => `${structure.colLabels?.[c] ?? c} = ${value ?? 'not filled yet'}`).join(', ')}`).join('; ')}. ${tableFocus(structure)}`
   if (structure.kind === 'map') return `Map entries: ${structure.entries.map(([key, value]) => `${key}: ${value}`).join(', ') || 'empty'}.`
   if (structure.kind === 'tree') return `Tree, root first: ${outline(structure.root)}. Current node: ${nodeValue(structure.root, structure.current) ?? 'none'}. Visited nodes: ${nodeValues(structure.root, structure.visited)}.`
   if (structure.kind === 'calls') {
@@ -83,7 +97,31 @@ function StatePanel({ structure, previous }: { structure: Extract<TraceStructure
   </div>
 }
 
+function TableView({ structure }: { structure: TableStructure }) {
+  const grid = structure.cells.length > 1
+  const rows = structure.cells.map((row, r) => <div key={r} className="trace-table-row">
+    {structure.rowLabels && <span className="trace-table-rowlabel">{structure.rowLabels[r]}</span>}
+    {row.map((value, c) => {
+      const now = structure.current?.[0] === r && structure.current[1] === c
+      const read = isCell(structure.reads, r, c)
+      const kind = now ? 'trace-cell-now' : read ? 'trace-cell-read' : value === null ? 'trace-cell-empty' : 'trace-cell-filled'
+      return <div key={c} className={`trace-cell ${kind}`}>
+        <span className="trace-cell-index">{structure.colLabels?.[c] ?? c}</span>
+        <span className="trace-cell-value">{value ?? '–'}</span>
+        <span className="trace-cell-tag">{now ? 'now' : read ? '↑ reads' : value === null ? 'empty' : ''}</span>
+      </div>
+    })}
+  </div>)
+  return <div className="trace-structure trace-table">
+    {grid ? <div className="trace-table-scroll" role="group" aria-label="Table cells, scroll sideways if clipped" tabIndex={0}><div aria-hidden="true">{rows}</div></div> : <div className="trace-table-wrap" aria-hidden="true">{rows}</div>}
+    <p className="trace-table-focus" aria-hidden="true">{tableFocus(structure)}</p>
+    <p className="trace-legend" aria-hidden="true">Solid: filled. Dashed “empty”: not filled yet. Thick outline “now”: cell being filled. Double outline “↑ reads”: cells it uses.</p>
+    <p className="sr-only">{describe(structure)}</p>
+  </div>
+}
+
 function Structure({ structure, previous }: { structure: TraceStructure; previous?: TraceStep }) {
+  if (structure.kind === 'table') return <TableView structure={structure} />
   if (structure.kind === 'tree') return <div className="trace-structure trace-tree"><TreeView structure={structure} /><p className="trace-legend" aria-hidden="true">Filled outline: current node. Dashed: visited.</p><p className="sr-only">{describe(structure)}</p></div>
   if (structure.kind === 'calls') return <div className="trace-structure"><CallStack structure={structure} /><p className="sr-only">{describe(structure)}</p></div>
   if (structure.kind === 'state') return <div className="trace-structure"><StatePanel structure={structure} previous={previous} /><p className="sr-only">{describe(structure)}</p></div>
@@ -116,6 +154,7 @@ export function TraceViewer({ trace }: { trace: RepTrace }) {
   const move = (delta: number) => setIndex(current => Math.max(0, Math.min(trace.steps.length - 1, current + delta)))
   return <section className="trace-viewer" aria-label="Step trace" tabIndex={0} onKeyDown={event => {
     if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
+    if (event.target instanceof Element && event.target.closest('.trace-table-scroll')) return
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       event.preventDefault()
       event.stopPropagation()
