@@ -39,7 +39,7 @@ Implemented features do not establish learner comprehension, full accessibility,
 **Goal:** Know what a task expects before starting and stay oriented while working.
 
 - [ ] Show concrete prerequisites and a rough effort range before opening a rep. Label estimates as guidance; do not infer proficiency from speed.
-- [ ] Make the exercise library easier to sample with a few relevant reps or a useful initially expanded group, while retaining search and filters.
+- [x] Make the exercise library easier to sample with a few relevant reps or a useful initially expanded group, while retaining search and filters.
 - [ ] Add brief readiness checkpoints before significant difficulty jumps. Offer an optional bridge rep or prerequisite lesson without locking access.
 - [ ] Scale plan and explanation prompts to the task: one useful sentence for a small syntax exercise, deeper reasoning for a larger problem. Preserve self-review and avoid automated prose scoring.
 - [ ] Keep the current step, completion requirements, saved state, and next action clear without adding another toolbar or navigation layer.
