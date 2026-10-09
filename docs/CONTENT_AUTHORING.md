@@ -74,3 +74,9 @@ use new IDs after their option wording changed in the October 2026 audit.
 ## Paths
 
 The Trail has one root, Foundations (`typescript`), and three tracks: Problem solving (`algorithms-data-structures`), Frontend (`frontend`), and Backend (`backend`). Add a rep to the stage it belongs to in `src/path.ts`; avoid listing it in two tracks except interview rounds and project capstones (`pathApplications` in `src/curriculum.ts`). A track stage made only of Foundations reps renders as a link back to Foundations. Retired path ids (`typescript-browser`, `practical-concepts`, `real-world`, `ai-era`, `interviews`) are mapped to current ids by `migratePathId`, which saved learning goals pass through when loaded; `tests/path-structure.test.mjs` checks that no previously placed rep is dropped.
+
+## Advanced algorithm function reps
+
+`src/dsa-advanced-reps.ts` owns the guided prefix-sum, interval, linked-list, heap, subset, and dynamic-programming reps plus their depth and reflection guides. Register its exports alongside the existing DSA exports in `src/rep.ts`, `src/rep-depth.ts`, and `src/learning.ts`. Independent references live in `tests/fixtures/dsa-solutions.mjs`; `tests/dsa-advanced.test.mjs` checks common mistakes and the taught heap repair.
+
+The linked-list contract requires fresh output nodes. Value comparisons and input-mutation checks cannot establish output identity; fresh allocation remains a learner self-review point. The authoring test checks reference-node identity separately. These guided reps alone do not establish independent or retained fluency.

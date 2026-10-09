@@ -1,3 +1,4 @@
+import { dsaAdvancedReps } from './dsa-advanced-reps.ts'
 import { browserStateReps } from './browser-state-reps.ts'
 import { dsaReps } from './dsa-reps.ts'
 import { practicalReps } from './practical-concepts.ts'
@@ -27,6 +28,7 @@ export const reps: Rep[] = [
   ...practicalReps,
   ...foundationReps,
   ...dsaReps,
+  ...dsaAdvancedReps,
   ...aiEraReps,
   {
     id: 'most-frequent-number',

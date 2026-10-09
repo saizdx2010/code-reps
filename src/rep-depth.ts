@@ -1,3 +1,4 @@
+import { dsaAdvancedDepth } from './dsa-advanced-reps.ts'
 import { browserStateDepth } from './browser-state-reps.ts'
 import { dsaDepth } from './dsa-reps.ts'
 import { practicalRepDepth } from './practical-concepts.ts'
@@ -16,6 +17,7 @@ export type RepDepth = { reasoning: string; trace: string; traceSteps?: RepTrace
 export const repDepth: Record<string, RepDepth> = {
   ...practicalRepDepth,
   ...dsaDepth,
+  ...dsaAdvancedDepth,
   ...validationDepth,
   ...appDepth,
   ...browserStateDepth,

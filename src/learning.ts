@@ -1,3 +1,4 @@
+import { dsaAdvancedGuides } from './dsa-advanced-reps.ts'
 import { browserStateGuides } from './browser-state-reps.ts'
 import { dsaGuides } from './dsa-reps.ts'
 import { practicalGuides } from './practical-concepts.ts'
@@ -59,6 +60,7 @@ export const stageLabels: Record<JourneyStage, string> = {
 export const reflectionGuides: Record<string, { plan: string[]; explanation: string[]; example: string }> = {
   ...practicalGuides,
   ...dsaGuides,
+  ...dsaAdvancedGuides,
   ...fluencyGuides,
   ...validationGuides,
   ...appGuides,
