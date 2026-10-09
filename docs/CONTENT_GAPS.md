@@ -103,7 +103,7 @@ Verified by reading `src/learning.ts` (`journeys`), `src/knowledge.ts` and `src/
 | Queues | `queues` (`src/dsa-knowledge.ts:43`) | Missing | Missing | Missing | Yes (`queues` in `src/dsa-knowledge.ts`) |
 | Two pointers | `array-techniques` (`src/dsa-knowledge.ts:79`) | Missing | Missing | Missing | Yes (`array-techniques` in `src/dsa-knowledge.ts`) |
 | Sliding windows | `array-techniques` (`src/dsa-knowledge.ts:79`) | Missing | Missing | Missing | Yes (`array-techniques` in `src/dsa-knowledge.ts`) |
-| Binary search | `array-techniques` (`src/dsa-knowledge.ts:79`) | Missing | Missing | Missing | Yes (`array-techniques` in `src/dsa-knowledge.ts`) |
+| Binary search | `array-techniques` (`src/dsa-knowledge.ts:79`) | `algo-binary-search` (`src/learning.ts`) | `first-insertion-point` | `smallest-daily-capacity` | Yes (`array-techniques` in `src/dsa-knowledge.ts`) |
 | DOM interactions | `frontend` (`src/knowledge.ts:107`) | Missing | Missing | Missing | Yes (`frontend`) |
 | Sorting | No skill/lesson ID | `algo-insertion-sort` (`src/learning.ts:23`) | `sort-score-records` | `kth-smallest-copy` | No |
 | Recursion | No skill/lesson ID | `algo-recursive-sum` (`src/learning.ts:24`) | `flatten-nested-numbers` | `count-object-leaves` | No |

@@ -143,6 +143,8 @@ test('DSA application checks reject changed order, deduplication, leaf rules, an
   const incorrect = {
     'sort-score-records': 'function orderRecords(records: {id:string;score:number;name:string}[]) { return [...records].sort((a,b)=>a.name.localeCompare(b.name)||a.score-b.score) }',
     'kth-smallest-copy': 'function kthSmallest(numbers:number[],k:number) { return [...new Set(numbers)].sort((a,b)=>a-b)[k-1] ?? null }',
+    'first-insertion-point': 'function insertionPoint(numbers:number[],target:number) { return numbers.indexOf(target) }',
+    'smallest-daily-capacity': 'function smallestCapacity(weights:number[],days:number) { return weights.length ? Math.max(...weights) : 0 }',
     'flatten-nested-numbers': 'function flattenNumbers(items:unknown[]) { return items.flat(10).filter(Boolean) }',
     'count-object-leaves': 'function countLeaves(input:Record<string,unknown>):number { return Object.values(input).reduce<number>((sum,value)=>sum+(value ? typeof value === "object" ? countLeaves(value as Record<string,unknown>) : 1 : 0),0) }',
     'tree-depth-sum': 'function sumAtDepth(root:{value:number;children:any[]}|null,depth:number):number { if(!root)return 0; if(!depth)return root.value; return Math.max(0,...root.children.map(child=>sumAtDepth(child,depth-1))) }',

@@ -333,6 +333,20 @@ export const dsaDepth: Record<string, RepDepth> = {
     'counterexample': 'Deduplicating [2,2,9] makes rank 2 equal 9 instead of 2.',
     'transfer': 'Self-review: request the kth distinct value. Define absent-rank behavior again.'
   },
+  'first-insertion-point': {
+    'reasoning': 'Because the array is ordered, "is this value at least target?" is false for a prefix and true for the rest. Keeping the middle when it answers true, and discarding it when false, converges on the first true position, which is the first of any duplicates. Cost is O(log n) comparisons and O(1) extra space.',
+    'trace': '[1, 3, 3, 7], target 3: the interval is 0 to 4. Middle 2 has 3, which is at least 3, so the answer is at index 2 or earlier and the end moves to 2. Middle 1 has 3, so the end moves to 1. Middle 0 has 1, which is below 3, so the start moves to 1. The interval is empty at index 1.',
+    'alternative': 'A linear scan for the first value at least target is O(n) and simpler. Binary search needs the sorted precondition but takes O(log n) comparisons.',
+    'counterexample': 'Returning as soon as a middle value equals target gives index 2 for [3, 3, 3] instead of 0, and indexOf gives -1 for an absent target where an insertion index is required.',
+    'transfer': 'Return how many values are less than or equal to target. Explain which boundary you search for and how it relates to this one.'
+  },
+  'smallest-daily-capacity': {
+    'reasoning': 'The answer is not an index, but feasibility is monotonic: if a capacity ships everything in time, any larger capacity does too. The answer therefore lies between the heaviest package and the total weight, and testing the middle capacity with a greedy day count discards half of that range each time.',
+    'trace': '[1, 2, 3, 4, 5], 2 days: capacities run from 5 to 15. Capacity 10 needs 2 days (1+2+3+4, then 5), so try lower. Capacity 7 needs 3 days (1+2+3, 4, 5), so go higher. Capacity 8 needs 3 days, capacity 9 needs 2 days (1+2+3, 4+5), so 9 is the smallest.',
+    'alternative': 'Trying each capacity from the heaviest package upward is simple but can test up to the total weight. Binary searching the answer space needs only about log of that range, each test costing O(n).',
+    'counterexample': 'Using the heaviest package alone fails for [7, 2, 5, 10, 8] over 2 days, which needs 18, and using total divided by days fails the same input because packages cannot be split or reordered.',
+    'transfer': 'Self-review: allow each truck to carry at most m packages as well as a weight limit. Which part of the feasibility test changes, and does the monotonic property still hold?'
+  },
   'flatten-nested-numbers': {
     'reasoning': 'Visiting children in their stored order and appending only numbers preserves the full left-to-right sequence. Empty arrays append nothing. Work is O(e) for all entries, with output and nesting storage.',
     'trace': '[0,[-1,0]] appends 0, then -1, then 0; repeated values survive.',
@@ -1793,6 +1807,28 @@ export const dsaGuides = {
       'State time and storage costs; passing checks does not prove the implementation approach.'
     ],
     'example': 'Sorting a copy puts every occurrence at its numeric rank; position k minus one is therefore the requested occurrence. The copy preserves caller order. [2,2,9] has ranks 1=2, 2=2, 3=9; rank 4 returns null.'
+  },
+  'first-insertion-point': {
+    'plan': [
+      'Which yes/no question about one value tells you which side of the answer it is on? What index is returned when the answer is "no" everywhere?',
+      'Name a boundary before coding.'
+    ],
+    'explanation': [
+      'Explain why your result matches the contract and preserves input.',
+      'State time and storage costs; passing checks does not prove the implementation approach.'
+    ],
+    'example': 'Because the array is ordered, "is this value at least target?" is false for a prefix and true for the rest, so the first true position is the first of any duplicates. [1, 3, 3, 7], target 3 gives index 1, and target 8 gives 4.'
+  },
+  'smallest-daily-capacity': {
+    'plan': [
+      'What are the smallest and largest capacities worth considering? If one capacity works, what does that tell you about larger ones?',
+      'Name a boundary before coding.'
+    ],
+    'explanation': [
+      'Explain why your result matches the contract and preserves input.',
+      'State time and storage costs; passing checks does not prove the implementation approach.'
+    ],
+    'example': 'If a capacity ships everything in time, any larger capacity does too, so the smallest working capacity can be found by halving the range from the heaviest package to the total weight. [1, 2, 3, 4, 5] over 2 days: capacity 8 needs 3 days and 9 needs 2, so the answer is 9.'
   },
   'flatten-nested-numbers': {
     'plan': [
