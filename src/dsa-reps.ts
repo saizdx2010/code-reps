@@ -360,9 +360,857 @@ export const dsaReps: Rep[] = [{
         'input': [[1, 3], 4],
         'expected': -1
       }]
+  },
+  {
+    'id': 'algo-insertion-sort',
+    'title': 'Insert numbers into sorted order',
+    'category': 'Algorithm techniques',
+    'prompt': 'Return a new array containing every number in ascending numeric order, including duplicates. Practise insertion sort: grow an ordered portion by placing each next value where it belongs.',
+    'example': {
+      'input': 'insertionSort([3, 1, 3, -2])',
+      'output': '[-2, 1, 3, 3]'
+    },
+    'note': 'At most 100 integers from -1000 to 1000. Do not change numbers, even if already sorted. Empty input returns a new empty array. Equal values are all retained; their order is indistinguishable for numbers. Review insertion sort and the separate returned array yourself; checks verify values and visible input mutation.',
+    'vocabulary': [
+      {
+        'term': 'Insertion',
+        'meaning': 'placing an item into its correct position'
+      },
+      {
+        'term': 'Sorted prefix',
+        'meaning': 'the beginning portion already in order'
+      }
+    ],
+    'planPrompt': 'What stays ordered after each insertion? How will you keep duplicates and preserve the caller array?',
+    'starter': 'function insertionSort(numbers: number[]): number[] {\n  // Write your solution here.\n  return []\n}\n',
+    'functionName': 'insertionSort',
+    'preserveInput': true,
+    'hints': [
+      'Start by identifying which part of the array is already ordered.',
+      'Compare the next value with values before it; decide which values need more room.',
+      'Keep the value being inserted safe while moving larger values in a copy. Check where it belongs when it is smaller than every earlier value.'
+    ],
+    'checks': [
+      {
+        'name': 'Mixed order and duplicates',
+        'input': [[3, 1, 3, -2]],
+        'expected': [-2, 1, 3, 3]
+      },
+      {
+        'name': 'Empty input',
+        'input': [[]],
+        'expected': []
+      },
+      {
+        'name': 'Single zero',
+        'input': [[0]],
+        'expected': [0]
+      },
+      {
+        'name': 'Already sorted',
+        'input': [[-2, 0, 4]],
+        'expected': [-2, 0, 4]
+      },
+      {
+        'name': 'Reverse order',
+        'input': [[4, 3, 2, 1]],
+        'expected': [1, 2, 3, 4]
+      },
+      {
+        'name': 'All equal',
+        'input': [[2, 2, 2]],
+        'expected': [2, 2, 2]
+      },
+      {
+        'name': 'Numeric not text order',
+        'input': [[10, 2, -1000, 1000]],
+        'expected': [-1000, 2, 10, 1000]
+      },
+      {
+        'name': 'Maximum length',
+        'input': [Array.from({ length: 100 }, (_, i) => 99 - i)],
+        'expected': Array.from({ length: 100 }, (_, i) => i)
+      }
+    ]
+  },
+  {
+    'id': 'algo-merge-sorted',
+    'title': 'Merge two ordered lists',
+    'category': 'Algorithm techniques',
+    'prompt': 'Return a new ascending array containing every value from left and right. Both inputs are already sorted. Practise comparing the next unused value in each list instead of sorting again.',
+    'example': {
+      'input': 'mergeSorted([1, 3], [2, 3, 4])',
+      'output': '[1, 2, 3, 3, 4]'
+    },
+    'note': 'Each input has at most 100 integers from -1000 to 1000 in nondecreasing order. Preserve both arrays. Empty lists contribute no values; two empty lists return a new empty array. Keep all duplicates. On equality, take the left value first in your practice approach; numeric output checks cannot distinguish equal-value order.',
+    'vocabulary': [
+      {
+        'term': 'Merge',
+        'meaning': 'combine ordered lists into one ordered list'
+      },
+      {
+        'term': 'Cursor',
+        'meaning': 'an index pointing to the next unused item'
+      }
+    ],
+    'planPrompt': 'Why is the next unused value enough to compare? What happens when one list runs out?',
+    'starter': 'function mergeSorted(left: number[], right: number[]): number[] {\n  // Write your solution here.\n  return []\n}\n',
+    'functionName': 'mergeSorted',
+    'preserveInput': true,
+    'hints': [
+      'The inputs already provide useful ordering.',
+      'Track the unused portion of each list and consider its smallest remaining item.',
+      'Once one list is exhausted, decide how to keep every item in the other list without reading beyond an end.'
+    ],
+    'checks': [
+      {
+        'name': 'Interleaved with a tie',
+        'input': [[1, 3], [2, 3, 4]],
+        'expected': [1, 2, 3, 3, 4]
+      },
+      {
+        'name': 'Both empty',
+        'input': [[], []],
+        'expected': []
+      },
+      {
+        'name': 'Left empty',
+        'input': [[], [-2, 0]],
+        'expected': [-2, 0]
+      },
+      {
+        'name': 'Right empty',
+        'input': [[1, 2], []],
+        'expected': [1, 2]
+      },
+      {
+        'name': 'Left finishes first',
+        'input': [[1], [2, 3, 4]],
+        'expected': [1, 2, 3, 4]
+      },
+      {
+        'name': 'Right finishes first',
+        'input': [[2, 3, 4], [1]],
+        'expected': [1, 2, 3, 4]
+      },
+      {
+        'name': 'Repeated limits',
+        'input': [[-1000, 0, 1000], [-1000, 1000]],
+        'expected': [-1000, -1000, 0, 1000, 1000]
+      },
+      {
+        'name': 'Both maximum lengths',
+        'input': [Array(100).fill(0), Array(100).fill(0)],
+        'expected': Array(200).fill(0)
+      }
+    ]
+  },
+  {
+    'id': 'algo-recursive-sum',
+    'title': 'Sum numbers inside nested lists',
+    'category': 'Algorithm techniques',
+    'prompt': 'Return the sum of every number inside items, including numbers in nested arrays. Practise recursion: let a smaller nested list solve the same task. Give an empty list a clear base case.',
+    'example': {
+      'input': 'recursiveSum([1, [2, [], [-3]], 4])',
+      'output': '4'
+    },
+    'note': 'items contains only integers from -1000 to 1000 and nested arrays, with no cycles or shared arrays. At most 100 entries across all arrays and at most 10 array levels including items. Preserve every array. Empty arrays contribute 0. Repeated numbers each contribute; cancellation and zero are valid. Checks do not prove recursion; review the base case and smaller calls yourself.',
+    'vocabulary': [
+      {
+        'term': 'Recursion',
+        'meaning': 'solving a task by calling the same function on a smaller part'
+      },
+      {
+        'term': 'Base case',
+        'meaning': 'a case that finishes without another recursive call'
+      }
+    ],
+    'planPrompt': 'What ends a call? How do a number and a nested array contribute differently?',
+    'starter': 'type NestedNumber = number | NestedNumber[]\n\nfunction recursiveSum(items: NestedNumber[]): number {\n  // Write your solution here.\n  return 0\n}\n',
+    'functionName': 'recursiveSum',
+    'preserveInput': true,
+    'hints': [
+      'Trace an empty list before a list containing numbers.',
+      'A nested list has the same kind of task as the outer list.',
+      'Make sure each smaller result contributes once, and that a number is handled without making another recursive call.'
+    ],
+    'checks': [
+      {
+        'name': 'Mixed nesting',
+        'input': [[1, [2, [], [-3]], 4]],
+        'expected': 4
+      },
+      {
+        'name': 'Empty outer list',
+        'input': [[]],
+        'expected': 0
+      },
+      {
+        'name': 'Only nested empties',
+        'input': [[[], [[]]]],
+        'expected': 0
+      },
+      {
+        'name': 'Repeated and zero values',
+        'input': [[2, [2, 0]]],
+        'expected': 4
+      },
+      {
+        'name': 'Negative total',
+        'input': [[-2, [-3]]],
+        'expected': -5
+      },
+      {
+        'name': 'Cancellation',
+        'input': [[1000, [-1000]]],
+        'expected': 0
+      },
+      {
+        'name': 'Flat list',
+        'input': [[1, 2, 3]],
+        'expected': 6
+      },
+      {
+        'name': 'Ten array levels',
+        'input': [[[[[[[[[[7]]]]]]]]]],
+        'expected': 7
+      },
+      {
+        'name': 'Maximum entries',
+        'input': [Array(100).fill(1000)],
+        'expected': 100000
+      }
+    ]
+  },
+  {
+    'id': 'algo-tree-depth',
+    'title': 'Find the deepest tree level',
+    'category': 'Algorithm techniques',
+    'prompt': 'Return the maximum number of nodes on a route from the root to a leaf. A leaf has no children. A missing tree (null) has depth 0; a root alone has depth 1. Practise solving the same depth task for each child.',
+    'example': {
+      'input': 'treeDepth({value: 5, children: [{value: 0, children: []}]})',
+      'output': '2'
+    },
+    'note': 'A node has {value: number, children: TreeNode[]}. Trees have at most 100 nodes, at most 10 levels, integer values from -1000 to 1000, no cycles, and no shared nodes. Preserve all nodes and child arrays. Values do not affect depth. Equal-depth branches give the same numeric result; return the depth, not a chosen branch. Checks do not prove recursion.',
+    'vocabulary': [
+      {
+        'term': 'Root',
+        'meaning': 'the starting node of a tree'
+      },
+      {
+        'term': 'Leaf',
+        'meaning': 'a node with no children'
+      },
+      {
+        'term': 'Depth',
+        'meaning': 'the number of nodes on the longest root-to-leaf route here'
+      }
+    ],
+    'planPrompt': 'What does an empty tree return? How do child depths determine the parent depth?',
+    'starter': 'type TreeNode = { value: number; children: TreeNode[] }\n\nfunction treeDepth(root: TreeNode | null): number {\n  // Write your solution here.\n  return 0\n}\n',
+    'functionName': 'treeDepth',
+    'preserveInput': true,
+    'hints': [
+      'Draw a root alone and then a root with one child.',
+      'Only one child route is followed at a time when measuring depth.',
+      'Compare child results rather than adding them; remember the current node also occupies a level.'
+    ],
+    'checks': [
+      {
+        'name': 'No tree',
+        'input': [null],
+        'expected': 0
+      },
+      {
+        'name': 'Root alone',
+        'input': [
+          {
+            'value': 0,
+            'children': []
+          }
+        ],
+        'expected': 1
+      },
+      {
+        'name': 'One child',
+        'input': [
+          {
+            'value': 5,
+            'children': [
+              {
+                'value': 0,
+                'children': []
+              }
+            ]
+          }
+        ],
+        'expected': 2
+      },
+      {
+        'name': 'Unequal branches',
+        'input': [
+          {
+            'value': 1,
+            'children': [
+              {
+                'value': 9,
+                'children': []
+              },
+              {
+                'value': -2,
+                'children': [
+                  {
+                    'value': 3,
+                    'children': []
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        'expected': 3
+      },
+      {
+        'name': 'Tied branches',
+        'input': [
+          {
+            'value': 1000,
+            'children': [
+              {
+                'value': -1000,
+                'children': []
+              },
+              {
+                'value': 1000,
+                'children': []
+              }
+            ]
+          }
+        ],
+        'expected': 2
+      },
+      {
+        'name': 'Ten levels',
+        'input': [
+          {
+            'value': 0,
+            'children': [
+              {
+                'value': 0,
+                'children': [
+                  {
+                    'value': 0,
+                    'children': [
+                      {
+                        'value': 0,
+                        'children': [
+                          {
+                            'value': 0,
+                            'children': [
+                              {
+                                'value': 0,
+                                'children': [
+                                  {
+                                    'value': 0,
+                                    'children': [
+                                      {
+                                        'value': 0,
+                                        'children': [
+                                          {
+                                            'value': 0,
+                                            'children': [
+                                              {
+                                                'value': 0,
+                                                'children': []
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        'expected': 10
+      },
+      {
+        'name': 'Wide maximum node count',
+        'input': [
+          {
+            'value': 0,
+            'children': Array.from({ length: 99 }, () => ({ value: 0, children: [] }))
+          }
+        ],
+        'expected': 2
+      }
+    ]
+  },
+  {
+    'id': 'algo-graph-reachable',
+    'title': 'Follow connections to a destination',
+    'category': 'Algorithm techniques',
+    'prompt': 'Return whether target can be reached from start by following directed connections in graph. graph is an adjacency list: graph[i] lists the nodes you can visit directly from node i. Practise breadth-first search (BFS), visiting pending nodes in the order they were discovered.',
+    'example': {
+      'input': 'graphReachable([[1], [2], []], 0, 2)',
+      'output': 'true'
+    },
+    'note': 'graph contains 0 to 100 nodes identified by indices 0 to graph.length - 1. Each list contains at most 100 valid node indices; duplicates, self-links, and cycles are allowed. start and target are integers from -1 to 100. Return false if either is outside the graph, including an empty graph. A valid node reaches itself without any connection. Preserve graph and its nested arrays. Route ties do not matter: return only a boolean. Checks do not prove BFS or queue order.',
+    'vocabulary': [
+      {
+        'term': 'Adjacency list',
+        'meaning': 'a list of outgoing neighbors for each node'
+      },
+      {
+        'term': 'BFS',
+        'meaning': 'exploring discovered nodes in first-in, first-out order'
+      },
+      {
+        'term': 'Visited',
+        'meaning': 'a node already discovered, which need not be queued again'
+      }
+    ],
+    'planPrompt': 'What makes a node valid? How will you avoid repeating work around a cycle and handle start equal to target?',
+    'starter': 'function graphReachable(graph: number[][], start: number, target: number): boolean {\n  // Write your solution here.\n  return false\n}\n',
+    'functionName': 'graphReachable',
+    'preserveInput': true,
+    'hints': [
+      'Trace a valid start equal to target, then an invalid start equal to target.',
+      'Keep track of discovered nodes so a cycle cannot cause endless work.',
+      'A queue separates discovering a neighbor from exploring its connections; decide when to mark a neighbor discovered.'
+    ],
+    'checks': [
+      {
+        'name': 'Indirect route',
+        'input': [[[1], [2], []], 0, 2],
+        'expected': true
+      },
+      {
+        'name': 'Empty graph',
+        'input': [[], 0, 0],
+        'expected': false
+      },
+      {
+        'name': 'Valid node reaches itself',
+        'input': [[[]], 0, 0],
+        'expected': true
+      },
+      {
+        'name': 'Invalid equal endpoints',
+        'input': [[[]], 1, 1],
+        'expected': false
+      },
+      {
+        'name': 'Negative start',
+        'input': [[[]], -1, 0],
+        'expected': false
+      },
+      {
+        'name': 'Invalid target',
+        'input': [[[]], 0, 1],
+        'expected': false
+      },
+      {
+        'name': 'Direction matters',
+        'input': [[[1], []], 1, 0],
+        'expected': false
+      },
+      {
+        'name': 'Disconnected cycle',
+        'input': [[[1], [0], []], 0, 2],
+        'expected': false
+      },
+      {
+        'name': 'Self links and repeated neighbors',
+        'input': [[[0, 1, 1], [0, 2], []], 0, 2],
+        'expected': true
+      },
+      {
+        'name': 'Branch beyond dead end',
+        'input': [[[1, 2], [], [3], []], 0, 3],
+        'expected': true
+      },
+      {
+        'name': 'Maximum length chain',
+        'input': [Array.from({ length: 100 }, (_, i) => i < 99 ? [i + 1] : []), 0, 99],
+        'expected': true
+      },
+      {
+        'name': 'Maximum repeated neighbors',
+        'input': [[Array(100).fill(1), []], 0, 1],
+        'expected': true
+      }
+    ]
   }]
 
 export const dsaDepth: Record<string, RepDepth> = {
+
+  'algo-insertion-sort': {
+    'reasoning': 'Before each insertion, the prefix is sorted and contains all earlier items. Shifting only larger values makes room without losing duplicates. A copy preserves the input.',
+    'trace': 'For [3, 1, 3], save 1, shift the first 3 right, and insert 1 at index 0: [1, 3, 3]. The next 3 needs no shift because equality is allowed.',
+    'alternative': 'A numeric sort on a copy is shorter and passes behavior checks but skips insertion practice. Insertion sort takes O(n²) worst-case time, O(n) time when already sorted, and O(n) space for the required copy.',
+    'counterexample': 'Shifting equal values is unnecessary; dropping them is incorrect. [2, 2] must return [2, 2]. A default text sort also puts 10 before 2.',
+    'transfer': 'Self-review: sort records by score while keeping equal-score records in original order. Which comparison preserves that order?',
+    'traceSteps': {
+      'code': [
+        'function insertionSort(numbers: number[]): number[] {',
+        '  const sorted = [...numbers]',
+        '  for (let i = 1; i < sorted.length; i++) {',
+        '    const value = sorted[i]',
+        '    let j = i - 1',
+        '    while (j >= 0 && sorted[j] > value) { sorted[j + 1] = sorted[j]; j-- }',
+        '    sorted[j + 1] = value',
+        '  }',
+        '  return sorted',
+        '}'
+      ],
+      'input': 'numbers = [3, 1, 3]',
+      'steps': [
+        {
+          'line': 1,
+          'vars': {
+            'sorted': '[3, 1, 3]'
+          },
+          'note': 'Copy the input; the first item is already an ordered prefix.'
+        },
+        {
+          'line': 3,
+          'vars': {
+            'i': 1,
+            'value': 1
+          },
+          'note': 'Save the next value before shifting.'
+        },
+        {
+          'line': 5,
+          'vars': {
+            'j': -1,
+            'sorted': '[3, 3, 3]'
+          },
+          'note': 'Move 3 right; the saved 1 is still available.'
+        },
+        {
+          'line': 6,
+          'vars': {
+            'sorted': '[1, 3, 3]'
+          },
+          'note': 'Insert 1 at the start.'
+        },
+        {
+          'line': 6,
+          'vars': {
+            'i': 2,
+            'value': 3,
+            'sorted': '[1, 3, 3]'
+          },
+          'note': 'Equality needs no shift; keep the duplicate.'
+        },
+        {
+          'line': 8,
+          'vars': {
+            'result': '[1, 3, 3]'
+          },
+          'note': 'Return the separate sorted array.'
+        }
+      ]
+    }
+  },
+  'algo-merge-sorted': {
+    'reasoning': 'The smaller unused head is no greater than any remaining value in either list. Appending it preserves output order. Advancing only its cursor uses each position once.',
+    'trace': 'For [1, 3] and [2, 3, 4], append 1, then 2, then the left 3 on equality. The left list is empty, so append the remaining right 3 and 4.',
+    'alternative': 'Concatenate and numeric-sort is simple but ignores existing order. A two-cursor merge takes O(n + m) time and O(n + m) output space; sorting usually takes more comparisons.',
+    'counterexample': 'Stopping when either list ends loses leftovers: [1] and [2, 3] must yield [1, 2, 3]. A Set would also wrongly remove duplicates.',
+    'transfer': 'Self-review: merge timestamped records with left-first ties. Define and inspect the order of equal timestamps, which numeric checks cannot establish.',
+    'traceSteps': {
+      'code': [
+        'function mergeSorted(left: number[], right: number[]): number[] {',
+        '  const result: number[] = []',
+        '  let a = 0, b = 0',
+        '  while (a < left.length || b < right.length) {',
+        '    if (b === right.length || (a < left.length && left[a] <= right[b])) result.push(left[a++])',
+        '    else result.push(right[b++])',
+        '  }',
+        '  return result',
+        '}'
+      ],
+      'input': 'left = [1, 3], right = [2, 3, 4]',
+      'steps': [
+        {
+          'line': 2,
+          'vars': {
+            'a': 0,
+            'b': 0
+          },
+          'note': 'Both cursors start at the first unused position.'
+        },
+        {
+          'line': 4,
+          'vars': {
+            'a': 1,
+            'b': 0,
+            'output': '[1]'
+          },
+          'note': 'Take the smaller left head.'
+        },
+        {
+          'line': 5,
+          'vars': {
+            'a': 1,
+            'b': 1,
+            'output': '[1, 2]'
+          },
+          'note': 'Take the smaller right head.'
+        },
+        {
+          'line': 4,
+          'vars': {
+            'a': 2,
+            'b': 1,
+            'output': '[1, 2, 3]'
+          },
+          'note': 'Take the left head on equality.'
+        },
+        {
+          'line': 5,
+          'vars': {
+            'a': 2,
+            'b': 3,
+            'output': '[1, 2, 3, 3, 4]'
+          },
+          'note': 'The left list is exhausted; consume the right remainder.'
+        },
+        {
+          'line': 7,
+          'vars': {
+            'result': '[1, 2, 3, 3, 4]'
+          },
+          'note': 'Return every value, including both equal threes.'
+        }
+      ]
+    }
+  },
+  'algo-recursive-sum': {
+    'reasoning': 'An empty call returns 0. Each number contributes itself; each array contributes its recursively computed sum. Calls descend a finite acyclic structure, so every number is included once and calls terminate.',
+    'trace': 'For [1, [2, [], [-3]], 4], [] returns 0 and [-3] returns -3. The middle list returns 2 + 0 - 3 = -1; the outer list returns 1 - 1 + 4 = 4.',
+    'alternative': 'An explicit stack avoids recursive calls but requires managing pending items. Both visit O(e) entries; recursion uses O(d) call depth, while a stack can hold O(e) pending entries.',
+    'counterexample': 'Adding only top-level numbers returns 5 instead of 4 for the trace. Returning on the first nested list also skips later siblings.',
+    'transfer': 'Self-review: count numbers rather than sum them. What should zero and an empty nested array contribute under the new contract?',
+    'traceSteps': {
+      'code': [
+        'type NestedNumber = number | NestedNumber[]; function recursiveSum(items: NestedNumber[]): number {',
+        '  let total = 0',
+        '  for (const item of items) {',
+        '    if (Array.isArray(item)) total += recursiveSum(item)',
+        '    else total += item',
+        '  }',
+        '  return total',
+        '}'
+      ],
+      'input': 'items = [1, [2, [], [-3]], 4]',
+      'steps': [
+        {
+          'line': 1,
+          'vars': {
+            'total': 0
+          },
+          'note': 'Start the outer call with an empty total.'
+        },
+        {
+          'line': 4,
+          'vars': {
+            'total': 1
+          },
+          'note': 'The outer number 1 contributes directly.'
+        },
+        {
+          'line': 6,
+          'vars': {
+            'total': 0,
+            'call': '[]'
+          },
+          'note': 'An empty nested list has no iterations and returns 0.'
+        },
+        {
+          'line': 6,
+          'vars': {
+            'total': -3,
+            'call': '[-3]'
+          },
+          'note': 'The deepest number contributes -3.'
+        },
+        {
+          'line': 3,
+          'vars': {
+            'total': 0,
+            'nestedSum': -1
+          },
+          'note': 'The middle call returns -1; the outer total becomes 1 + -1 = 0.'
+        },
+        {
+          'line': 6,
+          'vars': {
+            'result': 4,
+            'total': 4
+          },
+          'note': 'Add the final outer 4 and return 4.'
+        }
+      ]
+    }
+  },
+  'algo-tree-depth': {
+    'reasoning': 'A leaf contributes one node. Each parent contributes one plus its largest child depth because a route follows a single child, not all siblings. Null has no nodes and returns zero.',
+    'trace': 'For a root with a leaf child and another child containing a leaf, child depths are 1 and 2. The root returns 1 + max(1, 2) = 3, even if its value is zero.',
+    'alternative': 'A breadth-first traversal can count whole levels instead. Both visit O(n) nodes; recursive traversal needs O(d) call depth, while a level queue may hold O(n) nodes in a wide tree.',
+    'counterexample': 'Adding sibling depths measures something else: a root with two leaves has depth 2, not 3. Counting edges gives 0 for a leaf, but this contract counts nodes.',
+    'transfer': 'Self-review: return the values along a deepest route. Define a tie rule for equal-depth routes before changing the implementation.',
+    'traceSteps': {
+      'code': [
+        'type TreeNode = {value: number; children: TreeNode[]}; function treeDepth(root: TreeNode | null): number {',
+        '  if (root === null) return 0',
+        '  let deepest = 0',
+        '  for (const child of root.children) {',
+        '    deepest = Math.max(deepest, treeDepth(child))',
+        '  }',
+        '  return 1 + deepest',
+        '}'
+      ],
+      'input': 'root = {value: 0, children: [{value: 7, children: []}, {value: 2, children: [{value: 3, children: []}]}]}',
+      'steps': [
+        {
+          'line': 2,
+          'vars': {
+            'deepest': 0,
+            'node': 0
+          },
+          'note': 'The root begins with no child depth.'
+        },
+        {
+          'line': 6,
+          'vars': {
+            'node': 7,
+            'depth': 1
+          },
+          'note': 'The first child is a leaf and returns 1.'
+        },
+        {
+          'line': 4,
+          'vars': {
+            'node': 0,
+            'deepest': 1
+          },
+          'note': 'The root records the first child depth.'
+        },
+        {
+          'line': 6,
+          'vars': {
+            'node': 3,
+            'depth': 1
+          },
+          'note': 'The grandchild is also a leaf.'
+        },
+        {
+          'line': 6,
+          'vars': {
+            'node': 2,
+            'depth': 2
+          },
+          'note': 'The second child adds itself to the grandchild depth.'
+        },
+        {
+          'line': 6,
+          'vars': {
+            'result': 3,
+            'node': 0,
+            'deepest': 2
+          },
+          'note': 'The root adds one to the larger child depth.'
+        }
+      ]
+    }
+  },
+  'algo-graph-reachable': {
+    'reasoning': 'Validate endpoints before accepting equality. Every queued node is reachable from start. Marking nodes when queued prevents repeated discovery; exploring all reachable nodes finds target or exhausts the queue.',
+    'trace': 'For [[1], [0], []], start 0, target 2: queue [0], discover 1, then explore 1. Its neighbor 0 is already seen. The queue ends without 2, so return false.',
+    'alternative': 'Depth-first search with a stack also answers reachability but explores in a different order. BFS with a head index visits O(V + E) reachable nodes and listed edges, using O(V) extra space; repeatedly shifting an array can add copying work.',
+    'counterexample': 'Returning true for start === target before validation accepts an empty graph with 0, 0. Treating connections as undirected incorrectly allows node 1 to reach 0 in [[1], []].',
+    'transfer': 'Self-review: return the minimum number of connections instead of a boolean. Explain why BFS order matters and define the unreachable result.',
+    'traceSteps': {
+      'code': [
+        'function graphReachable(graph: number[][], start: number, target: number): boolean {',
+        '  if (start < 0 || target < 0 || start >= graph.length || target >= graph.length) return false',
+        '  const queue = [start], seen = new Set([start])',
+        '  let found = false',
+        '  for (let head = 0; head < queue.length; head++) {',
+        '    const node = queue[head]',
+        '    if (node === target) { found = true; break }',
+        '    for (const next of graph[node]) if (!seen.has(next)) { seen.add(next); queue.push(next) }',
+        '  }',
+        '  return found',
+        '}'
+      ],
+      'input': 'graph = [[1], [0], []], start = 0, target = 2',
+      'steps': [
+        {
+          'line': 1,
+          'vars': {
+            'start': 0,
+            'target': 2
+          },
+          'note': 'Both endpoints are valid.'
+        },
+        {
+          'line': 2,
+          'vars': {
+            'queue': '[0]',
+            'seen': '{0}'
+          },
+          'note': 'Discover the start before exploring it.'
+        },
+        {
+          'line': 5,
+          'vars': {
+            'head': 0,
+            'node': 0
+          },
+          'note': 'Explore node 0.'
+        },
+        {
+          'line': 7,
+          'vars': {
+            'queue': '[0, 1]',
+            'seen': '{0, 1}'
+          },
+          'note': 'Discover and enqueue node 1 once.'
+        },
+        {
+          'line': 7,
+          'vars': {
+            'head': 1,
+            'node': 1,
+            'queue': '[0, 1]'
+          },
+          'note': 'Node 1 points back to seen node 0; enqueue nothing.'
+        },
+        {
+          'line': 9,
+          'vars': {
+            'result': false
+          },
+          'note': 'The queue is exhausted; node 2 is unreachable.'
+        }
+      ]
+    }
+  },
   'ds-array-operations': {
     'reasoning': 'Copying preserves the caller’s array; appending creates a last item even for empty input.',
     'trace': '[] becomes [0] when extra is 0. Length is 1, so index 0 returns 0.',
@@ -491,6 +1339,47 @@ export const dsaDepth: Record<string, RepDepth> = {
 }
 
 export const dsaGuides = {
+
+  'algo-insertion-sort': {
+    'plan': ['What stays ordered after each insertion? How will you keep duplicates and preserve the caller array?', 'Name a boundary case before coding.'],
+    'explanation': [
+      'Trace a boundary case and explain why the input stays unchanged.',
+      'Review the requested approach and time/space costs yourself; behavior checks do not prove the approach.'
+    ],
+    'example': 'Before each insertion, the prefix is sorted and contains all earlier items. Shifting only larger values makes room without losing duplicates. A copy preserves the input. For [3, 1, 3], save 1, shift the first 3 right, and insert 1 at index 0: [1, 3, 3]. The next 3 needs no shift because equality is allowed.'
+  },
+  'algo-merge-sorted': {
+    'plan': ['Why is the next unused value enough to compare? What happens when one list runs out?', 'Name a boundary case before coding.'],
+    'explanation': [
+      'Trace a boundary case and explain why the input stays unchanged.',
+      'Review the requested approach and time/space costs yourself; behavior checks do not prove the approach.'
+    ],
+    'example': 'The smaller unused head is no greater than any remaining value in either list. Appending it preserves output order. Advancing only its cursor uses each position once. For [1, 3] and [2, 3, 4], append 1, then 2, then the left 3 on equality. The left list is empty, so append the remaining right 3 and 4.'
+  },
+  'algo-recursive-sum': {
+    'plan': ['What ends a call? How do a number and a nested array contribute differently?', 'Name a boundary case before coding.'],
+    'explanation': [
+      'Trace a boundary case and explain why the input stays unchanged.',
+      'Review the requested approach and time/space costs yourself; behavior checks do not prove the approach.'
+    ],
+    'example': 'An empty call returns 0. Each number contributes itself; each array contributes its recursively computed sum. Calls descend a finite acyclic structure, so every number is included once and calls terminate. For [1, [2, [], [-3]], 4], [] returns 0 and [-3] returns -3. The middle list returns 2 + 0 - 3 = -1; the outer list returns 1 - 1 + 4 = 4.'
+  },
+  'algo-tree-depth': {
+    'plan': ['What does an empty tree return? How do child depths determine the parent depth?', 'Name a boundary case before coding.'],
+    'explanation': [
+      'Trace a boundary case and explain why the input stays unchanged.',
+      'Review the requested approach and time/space costs yourself; behavior checks do not prove the approach.'
+    ],
+    'example': 'A leaf contributes one node. Each parent contributes one plus its largest child depth because a route follows a single child, not all siblings. Null has no nodes and returns zero. For a root with a leaf child and another child containing a leaf, child depths are 1 and 2. The root returns 1 + max(1, 2) = 3, even if its value is zero.'
+  },
+  'algo-graph-reachable': {
+    'plan': ['What makes a node valid? How will you avoid repeating work around a cycle and handle start equal to target?', 'Name a boundary case before coding.'],
+    'explanation': [
+      'Trace a boundary case and explain why the input stays unchanged.',
+      'Review the requested approach and time/space costs yourself; behavior checks do not prove the approach.'
+    ],
+    'example': 'Validate endpoints before accepting equality. Every queued node is reachable from start. Marking nodes when queued prevents repeated discovery; exploring all reachable nodes finds target or exhausts the queue. For [[1], [0], []], start 0, target 2: queue [0], discover 1, then explore 1. Its neighbor 0 is already seen. The queue ends without 2, so return false.'
+  },
   'ds-array-operations': {
     'plan': ['Which array can you change safely? What is the last index after appending?', 'Name an empty or missing-value case before coding.'],
     'explanation': ['Trace a boundary case and explain why the input stays unchanged.', 'Review your chosen operations and time/space costs yourself; output checks do not prove an implementation approach.'],
