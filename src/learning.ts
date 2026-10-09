@@ -20,6 +20,7 @@ export const journeys: Journey[] = [
   { id: 'control-flow', title: 'Repeat work and choose by condition', guided: 'loop-with-for', independent: 'shipping-cost-tiers', recall: 'countdown-labels', delayDays: 3 },
   { id: 'interface-logic', title: 'Derive what the interface shows', guided: 'frontend-sort-table', independent: 'group-items-by-heading', recall: 'filter-chip-summary', delayDays: 3 },
   { id: 'request-response', title: 'Read requests and shape responses', guided: 'backend-query-filters', independent: 'parse-sort-param', recall: 'page-response-envelope', delayDays: 3 },
+  { id: 'two-pointers', title: 'Coordinate positions in sorted data', guided: 'algo-sorted-pair', independent: 'sorted-offset-squares', recall: 'reading-run-summary', delayDays: 3 },
   { id: 'sorting', title: 'Order and rank values', guided: 'algo-insertion-sort', independent: 'sort-score-records', recall: 'kth-smallest-copy', delayDays: 3 },
   { id: 'recursion', title: 'Work through nested structures', guided: 'algo-recursive-sum', independent: 'flatten-nested-numbers', recall: 'count-object-leaves', delayDays: 3 },
   { id: 'trees', title: 'Explore tree routes and levels', guided: 'algo-tree-depth', independent: 'tree-depth-sum', recall: 'tree-value-path', delayDays: 3 },

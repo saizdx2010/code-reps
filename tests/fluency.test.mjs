@@ -82,6 +82,7 @@ test('retired adjacent-ID recall stays playable but cannot advance scheduled sta
 
 test('new DSA journeys schedule recurring recall without accepting early or hinted success', () => {
   const chains = [
+    ['two-pointers', 'algo-sorted-pair', 'sorted-offset-squares', 'reading-run-summary'],
     ['sorting', 'algo-insertion-sort', 'sort-score-records', 'kth-smallest-copy'],
     ['recursion', 'algo-recursive-sum', 'flatten-nested-numbers', 'count-object-leaves'],
     ['trees', 'algo-tree-depth', 'tree-depth-sum', 'tree-value-path'],
