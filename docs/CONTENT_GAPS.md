@@ -100,7 +100,7 @@ Verified by reading `src/learning.ts` (`journeys`), `src/knowledge.ts` and `src/
 
 | Topic | Skill / lesson ID(s) | Guided rep | Independent rep | Delayed-recall rep | Lesson in `src/knowledge.ts`? |
 | --- | --- | --- | --- | --- | --- |
-| Queues | `queues` (`src/dsa-knowledge.ts:43`) | Missing | Missing | Missing | Yes (`queues` in `src/dsa-knowledge.ts`) |
+| Queues | `queues` (`src/dsa-knowledge.ts`) | `ds-queue-operations` | `ticket-service-times` | `parcel-loading-turns` | Yes (`queues` in `src/dsa-knowledge.ts`) |
 | Two pointers | `array-techniques` (`src/dsa-knowledge.ts:79`) | Missing | Missing | Missing | Yes (`array-techniques` in `src/dsa-knowledge.ts`) |
 | Sliding windows | `array-techniques` (`src/dsa-knowledge.ts:79`) | Missing | Missing | Missing | Yes (`array-techniques` in `src/dsa-knowledge.ts`) |
 | Binary search | `array-techniques` (`src/dsa-knowledge.ts:79`) | Missing | Missing | Missing | Yes (`array-techniques` in `src/dsa-knowledge.ts`) |
@@ -110,10 +110,10 @@ Verified by reading `src/learning.ts` (`journeys`), `src/knowledge.ts` and `src/
 | Trees | No skill/lesson ID | `algo-tree-depth` (`src/learning.ts:25`) | `tree-depth-sum` | `tree-value-path` | No |
 | Graphs | No skill/lesson ID | `algo-graph-reachable` (`src/learning.ts:26`) | `graph-shortest-hops` | `graph-connected-groups` | No |
 
-Notes on linked reps that are not journey stages: queues has `ds-stack-operations`, `ds-queue-operations`, and `remaining-actions` (`src/dsa-knowledge.ts:76`); the array-techniques topic has `algo-sorted-pair`, `algo-window-sum`, `algo-binary-search` (`src/dsa-knowledge.ts:115`); DOM interactions has `dom-disclosure`, `dom-accessible-form`, `dom-live-search`, `dom-tabs` (`src/knowledge.ts`, `frontend` lesson). All path placements are in the Problem solving path (`src/path.ts:39-51`) and Frontend path (`src/path.ts:54-75`). All rep IDs above were verified to exist in `src/rep.ts`.
+Notes on linked reps that are not journey stages: queues also has `ds-stack-operations` and `remaining-actions` (`src/dsa-knowledge.ts:76`); the array-techniques topic has `algo-sorted-pair`, `algo-window-sum`, `algo-binary-search` (`src/dsa-knowledge.ts:115`); DOM interactions has `dom-disclosure`, `dom-accessible-form`, `dom-live-search`, `dom-tabs` (`src/knowledge.ts`, `frontend` lesson). All path placements are in the Problem solving path (`src/path.ts:39-51`) and Frontend path (`src/path.ts:54-75`). All rep IDs above were verified to exist in `src/rep.ts`.
 
 Thin areas:
 
-- No journey (guided → independent → delayed-recall) exists for queues, two pointers, sliding windows, binary search, or DOM interactions; their reps are linked to lessons but carry no stage evidence rules.
+- No journey (guided → independent → delayed-recall) exists for two pointers, sliding windows, binary search, or DOM interactions; their reps are linked to lessons but carry no stage evidence rules.
 - Sorting, recursion, trees, and graphs have complete journeys but no skill or knowledge lesson: their reps appear in no `Skill.repIds`, so they also have no lesson questions or authored knowledge depth.
 - DOM interactions is the only topic above whose practice reps (`dom-*`) run in the sandboxed frontend frame rather than the function worker, while its lesson (`frontend`) covers broader frontend state, not interactions specifically.

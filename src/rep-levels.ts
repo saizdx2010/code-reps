@@ -118,6 +118,8 @@ export const repLevels: Record<string, RepLevel> = {
   'filter-chip-summary': 2,
   'parse-sort-param': 2,
   'page-response-envelope': 2,
+  'ticket-service-times': 2,
+  'parcel-loading-turns': 2,
   'sort-score-records': 2,
   'kth-smallest-copy': 2,
   'simplify-file-path': 2,

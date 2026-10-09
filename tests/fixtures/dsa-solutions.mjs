@@ -1,5 +1,7 @@
 // Independent reference implementations; intentionally differ from several taught approaches.
 export const dsaSolutions = {
+  'ticket-service-times': 'function ticketTimes(tickets) { let available=0; return tickets.map(ticket => { const start=Math.max(available,ticket.arrival); available=start+ticket.minutes; return {id:ticket.id,start,finish:available} }) }',
+  'parcel-loading-turns': 'function loadingTurn(parcels,targetIndex) { const k=parcels[targetIndex]; return parcels.reduce((turns,count,index)=>turns+Math.min(count,index<=targetIndex?k:k-1),0) }',
   'algo-prefix-sums': 'function rangeSums(numbers, queries) { return queries.map(([l,r]) => numbers.slice(l,r+1).reduce((a,b)=>a+b,0)) }',
   'algo-merge-intervals': 'function mergeIntervals(intervals) { const pending=intervals.map(x=>[...x]); let changed=true; while(changed) { changed=false; outer: for(let i=0;i<pending.length;i++) for(let j=i+1;j<pending.length;j++) if(pending[i][0]<=pending[j][1] && pending[j][0]<=pending[i][1]) { pending[i]=[Math.min(pending[i][0],pending[j][0]),Math.max(pending[i][1],pending[j][1])]; pending.splice(j,1); changed=true; break outer } } return pending.sort((a,b)=>a[0]-b[0]) }',
   'algo-linked-list-reverse': 'function reverseList(head) { const values=[]; for(let p=head;p;p=p.next) values.push(p.value); let result=null; for(const value of values) result={value,next:result}; return result }',

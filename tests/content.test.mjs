@@ -141,6 +141,8 @@ test('control-flow journey reps reject boundary and padding mistakes', () => {
 
 test('DSA application checks reject changed order, deduplication, leaf rules, and route semantics', () => {
   const incorrect = {
+    'ticket-service-times': 'function ticketTimes(tickets) { return tickets.map(t=>({id:t.id,start:t.arrival,finish:t.arrival+t.minutes})) }',
+    'parcel-loading-turns': 'function loadingTurn(parcels,targetIndex) { return parcels.length*parcels[targetIndex] }',
     'sort-score-records': 'function orderRecords(records: {id:string;score:number;name:string}[]) { return [...records].sort((a,b)=>a.name.localeCompare(b.name)||a.score-b.score) }',
     'kth-smallest-copy': 'function kthSmallest(numbers:number[],k:number) { return [...new Set(numbers)].sort((a,b)=>a-b)[k-1] ?? null }',
     'flatten-nested-numbers': 'function flattenNumbers(items:unknown[]) { return items.flat(10).filter(Boolean) }',
