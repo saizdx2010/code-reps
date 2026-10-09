@@ -2,7 +2,9 @@ import type { PracticeSession } from './practice-sessions'
 import type { ReactNode } from 'react'
 import { preloadEditor } from './editor-loader'
 import { Icon } from './Icon'
-import { InfoNote, PageHeader } from './Layout'
+import { Button } from './Button'
+import { repPracticeContext } from './curriculum'
+import { InfoNote, ListGroup, ListRow, PageHeader, StatusChip } from './Layout'
 import { Trail } from './Trail'
 import type { buildTrail } from './trail-map'
 import { reps } from './rep'
@@ -43,6 +45,12 @@ export function HomePage({ sessionBusy, startPractice, unfinishedSessions, resum
   const goal = paths.find(path => path.id === goalPathId) ?? paths[0]
   const recommendation = practicePlan.next
   const recommendedRep = recommendation && reps.find(rep => rep.id === recommendation.repId)
+  const context = recommendation && repPracticeContext(recommendation.repId)
+  const choices = [
+    practicePlan.unfinished[0] && { label: 'Continue saved draft', action: practicePlan.unfinished[0] },
+    practicePlan.recommended && { label: 'Recommended next rep', action: practicePlan.recommended },
+    practicePlan.due[0] && { label: 'Due review', action: practicePlan.due[0] },
+  ].filter(item => item !== null && item !== undefined)
   const sessions = [...new Map(unfinishedSessions.map(record => [record.repId, record])).values()].slice(0, 3)
   return <main className="home-main trail-home" id="top">
     {!learnerStart && <div className="first-run-start">{startingPoint}</div>}
@@ -52,10 +60,11 @@ export function HomePage({ sessionBusy, startPractice, unfinishedSessions, resum
           <div>
             <span className="home-label">{recommendation.mode === 'review' ? 'Ready to review' : recommendation.mode === 'resume' ? 'Your saved draft' : 'Next practice'}</span>
             <h2 id="continue-heading">{recommendedRep.title}</h2>
-            <p>{recommendation.reason}</p>
+            <p>{recommendation.reason} {!recommendation.reason.includes(context!.reason) && context!.reason}</p>
+            <p>{context!.afterward}</p>
             <span className="continue-status">{recommendedRep.category}<span>{repStatus(recommendedRep)}</span></span>
           </div>
-          <button className="primary-button" type="button" onMouseEnter={preloadEditor} onFocus={preloadEditor} onClick={() => openPracticeAction(recommendation)}>{actionLabel(recommendation.mode)}<Icon name="arrow" /></button>
+          <Button variant="primary" onMouseEnter={preloadEditor} onFocus={preloadEditor} onClick={() => openPracticeAction(recommendation)}>{actionLabel(recommendation.mode)}<Icon name="arrow" /></Button>
         </section> : <section className="continue-panel" aria-labelledby="continue-heading">
           <div>
             <span className="home-label">Caught up for now</span>
@@ -65,6 +74,9 @@ export function HomePage({ sessionBusy, startPractice, unfinishedSessions, resum
           <button className="primary-button" type="button" onClick={onProgress}>See progress</button>
         </section>}
         {recommendation && <button type="button" className="text-button" disabled={sessionBusy} onClick={() => startPractice(recommendation)}>Start practice</button>}
+        {choices.length > 0 && <ListGroup title="Choose today's practice" open>
+          {choices.map(({ label, action }) => <ListRow key={label} title={title(action.repId)} meta={label} status={<StatusChip tone={action.mode === 'resume' ? 'progress' : action.mode === 'review' ? 'attention' : 'neutral'}>{action.mode === 'resume' ? 'Saved' : label === 'Due review' ? 'Due' : 'Next'}</StatusChip>} onOpen={() => openPracticeAction(action)} onPreview={preloadEditor} />)}
+        </ListGroup>}
         {sessions.length > 0 && <section className="home-sessions trail-queue" aria-labelledby="unfinished-sessions-title"><h2 id="unfinished-sessions-title">Unfinished sessions</h2><ul>{sessions.map(record => <li key={record.id}><span>{title(record.repId)}</span><button type="button" className="text-button" disabled={sessionBusy} onClick={() => resumeSession(record.repId)}>Resume practice</button></li>)}</ul><button type="button" className="text-button" onClick={onPracticeHistory}>View practice history</button></section>}
         {practicePlan.unfinished.length > 0 && <section className="practice-queue trail-queue" aria-labelledby="unfinished-heading">
           <h2 id="unfinished-heading">Your unfinished work <span>{practicePlan.unfinished.length}</span></h2>
@@ -90,7 +102,8 @@ export function HomePage({ sessionBusy, startPractice, unfinishedSessions, resum
         {learnerStart && <details className="starting-point-settings"><summary>Change starting point</summary>{startingPoint}</details>}
       </aside>
       <section className="trail-column home-goal" aria-label="Learning goal">
-        <PageHeader eyebrow="Your trail" title={goal.title} description={`${trail.done} of ${trail.total} reps completed. Lessons appear just before the reps that use them.`} actions={<button type="button" className="text-button" onClick={() => onPath(goal.id)}>View or choose goal path</button>} />
+        <PageHeader eyebrow="Your trail · Active learning goal" title={goal.title} description={`${trail.done} of ${trail.total} reps completed. Lessons appear just before the reps that use them.`} actions={<button type="button" className="text-button" onClick={() => onPath(goal.id)}>View or choose goal path</button>} />
+        <p className="goal-browsing-note">Browsing another track does not change your learning goal.</p>
         <div className="path-progress" role="progressbar" aria-label="Trail progress" aria-valuenow={trail.done} aria-valuemin={0} aria-valuemax={trail.total}><span style={{ width: `${trail.total ? trail.done / trail.total * 100 : 0}%` }} /></div>
         <Trail stages={trail.stages} evidence={evidence} onOpenRep={openRep} onOpenLesson={openLesson} onOpenFoundations={() => onPath('typescript')} />
       </section>

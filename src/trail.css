@@ -92,3 +92,5 @@
 @media (max-width: 900px) {
   .path-overview-action { justify-items: start; }
 }
+
+.goal-browsing-note { margin: 0 0 24px; color: var(--muted); font-size: 14px; }

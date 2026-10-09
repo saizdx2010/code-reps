@@ -83,7 +83,9 @@ test('a finished catalog without due work has no arbitrary recommendation', () =
   // Complete independent and recall evidence in order, beyond the review delay.
   for (const item of history) if (journeys.some(journey => journey.independent === item.repId)) item.completedAt = '2026-09-21T12:00:00Z'
   for (const item of history) if (journeys.some(journey => journey.recall === item.repId)) item.completedAt = '2026-09-25T12:00:00Z'
-  assert.equal(getPracticePlan(drafts, history, 'new', '', now).next, null)
+  const plan = getPracticePlan(drafts, history, 'new', '', now)
+  assert.equal(plan.next, null)
+  assert.equal(plan.recommended, null)
 })
 
 test('a selected backend goal changes new practice without hiding saved work', () => {
@@ -116,4 +118,25 @@ test('goal-path drafts outrank other drafts, while due recall still leads', () =
   const plan = getPracticePlan(outsideOnly, [], 'returning', '', now, 'backend')
   assert.equal(plan.next.repId, 'backend-validate-user')
   assert.equal(plan.unfinished[0].repId, 'sum-positive-numbers')
+})
+
+test('daily new-rep choice stays available alongside saved drafts and due recall', () => {
+  const drafts = { 'backend-page-results': draft('backend-page-results', { plan: 'Saved work' }) }
+  const history = [record('sum-positive-numbers'), record('count-even-numbers')]
+  const before = structuredClone(drafts)
+  const plan = getPracticePlan(drafts, history, 'returning', '', now, 'backend')
+  assert.equal(plan.next.repId, 'count-above-threshold')
+  assert.equal(plan.recommended.repId, 'backend-validate-user')
+  assert.match(plan.recommended.reason, /Validate data at a boundary/)
+  assert.equal(plan.unfinished[0].repId, 'backend-page-results')
+  assert.deepEqual(drafts, before)
+})
+
+test('daily recommendation advances past a saved goal draft without hiding it', () => {
+  const drafts = { 'declare-variables': draft('declare-variables', { plan: 'Keep this draft' }) }
+  const plan = getPracticePlan(drafts, [], 'new', '', now)
+  assert.equal(plan.next.repId, 'declare-variables')
+  assert.notEqual(plan.recommended.repId, 'declare-variables')
+  assert.equal(plan.recommended.mode, 'start')
+  assert.equal(plan.unfinished[0].repId, 'declare-variables')
 })

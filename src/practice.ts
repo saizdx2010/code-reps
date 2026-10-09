@@ -1,3 +1,4 @@
+import { repPracticeContext } from './curriculum.ts'
 import { migratePathId, paths } from './path.ts'
 import { recurringReviews } from './fluency.ts'
 import { reps } from './rep.ts'
@@ -62,11 +63,15 @@ export function getPracticePlan(drafts: Record<string, PortableAttempt>, history
   const goalIds: readonly string[] = goalPath.stages.flatMap(stage => stage.repIds).filter(id => learnerStart !== 'returning' || goalPath.id !== 'typescript' || !foundations.some(lesson => lesson.repId === id))
   const goalDraft = unfinished.find(action => goalIds.includes(action.repId))
   const goalRepId = goalIds.find(id => status(id) !== 'Completed' && recallAvailable(id))
-  const goalAction: PracticeAction | undefined = goalRepId ? { repId: goalRepId, mode: status(goalRepId) === 'In progress' ? 'resume' : 'start', reason: `Build toward your selected learning goal: ${goalPath.title}.` } : undefined
+  const goalAction: PracticeAction | undefined = goalRepId ? { repId: goalRepId, mode: status(goalRepId) === 'In progress' ? 'resume' : 'start', reason: `${repPracticeContext(goalRepId).reason} Build toward your selected learning goal: ${goalPath.title}.` } : undefined
   const goalJourney = progress.find(state => state.nextRepId === state.journey.independent && goalIds.includes(state.nextRepId) && status(state.nextRepId) === 'Completed')
   const independenceAction: PracticeAction | undefined = goalJourney?.nextRepId ? { repId: goalJourney.nextRepId, mode: 'retry', reason: 'This completion has not established independence. Try again without hints after guided practice.' } : undefined
   const next: PracticeAction | null = recalls[0] ?? recurring[0] ?? goalDraft ?? reviews[0] ?? independenceAction ?? goalAction ??
     unfinished[0] ?? (foundation ? { repId: foundation.repId, mode: 'start', reason: 'Build a TypeScript foundation before the problem-solving journeys.' } : undefined) ??
     journeyAction ?? (available ? { repId: available.id, mode: 'start', reason: 'Try a new application of your skills. Start with a plan, then write and check your solution.' } : null)
-  return { next, unfinished, due, progress }
+  const newGoalRepId = goalIds.find(id => status(id) === 'Not started' && recallAvailable(id))
+  const recommended: PracticeAction | null = independenceAction ?? (newGoalRepId ? {
+    repId: newGoalRepId, mode: 'start', reason: `${repPracticeContext(newGoalRepId).reason} Build toward your selected learning goal: ${goalPath.title}.`,
+  } : undefined) ?? (available ? { repId: available.id, mode: 'start', reason: repPracticeContext(available.id).reason } : null)
+  return { next, recommended, unfinished, due, progress }
 }
