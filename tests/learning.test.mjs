@@ -64,3 +64,16 @@ test('every path and new lesson points to playable content', () => {
     assert.ok(rep.checks.length >= 3, lesson.repId)
   }
 })
+
+test('DSA applications require unhinted independence and delayed unhinted recall', () => {
+  for (const id of ['sorting', 'recursion', 'trees', 'graphs', 'stacks']) {
+    const journey = journeys.find(item => item.id === id)
+    assert.ok(journey, id)
+    const guided = record(journey.guided, 20)
+    const independent = record(journey.independent, 21)
+    assert.equal(getJourney(journey, [guided, record(journey.independent, 21, 1)], at(25)).stage, 'practising')
+    assert.equal(getJourney(journey, [guided, independent, record(journey.recall, 23)], at(25)).stage, 'independent')
+    assert.equal(getJourney(journey, [guided, independent, record(journey.recall, 24, 1)], at(25)).stage, 'independent')
+    assert.equal(getJourney(journey, [guided, independent, record(journey.recall, 24)], at(25)).stage, 'retained')
+  }
+})

@@ -29,3 +29,20 @@ For each new structure, introduce its representation and operations before a gui
 ## Verification limits
 
 Reference and regression tests validate authored behavior and important mistakes. Content validation checks coverage and links. Browser tests exercise discovery and a new rep through the existing editor/worker loop. These checks do not establish learner comprehension, retention effectiveness, assistive-technology support, or cross-platform/offline behavior.
+
+## Independent applications and delayed recall
+
+Sorting, recursion, trees, and graphs now have authored three-stage journeys in
+`src/learning.ts`, with recurring variants in `src/fluency.ts`. Independent tasks
+apply the skill to record ordering, flattening, level totals, and shortest routes.
+After at least three days, recall uses ranked selection, object leaf counting,
+tree routes, and connected groups. Hinted independence and early or hinted recall
+remain practice evidence rather than retention.
+
+The stacks journey now uses `simplify-file-path` for its distinct delayed
+application. `cancel-adjacent-ids` remains playable for saved-attempt compatibility
+but no longer advances recurring stack recall. Earlier adjacent-pair journey
+completions remain saved; the current retention rule requires the new path task.
+These registrations do not place new reps into track stages; path wiring is
+maintained separately. Automated checks verify contracts and evidence timing,
+not learner transfer or learning effectiveness.
