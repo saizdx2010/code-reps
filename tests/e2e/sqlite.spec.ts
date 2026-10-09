@@ -177,7 +177,7 @@ test('cold local-server editing, worker checks, and previews need no external re
 test('session endings replay after SQLite failure and restore through learner backup', async ({ page, service }) => {
   const sessionKey = 'code-reps:profile:default:sessions:v1'
   await page.goto(service.url + '/#/practice/sum-positive-numbers')
-  await page.getByRole('button', { name: 'Start practice', exact: true }).click()
+  await page.getByRole('button', { name: 'Record a session', exact: true }).click()
   await page.getByRole('button', { name: 'Reflect and end session', exact: true }).click()
   let failWrites = true
   await page.route('**/api/entries', request => failWrites ? request.fulfill({ status: 503, json: { error: 'Test session save failure' } }) : request.continue())

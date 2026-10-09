@@ -5,10 +5,19 @@ const repId = 'sum-positive-numbers'
 const sessionKey = 'code-reps:profile:default:sessions:v1'
 async function start(page: import('@playwright/test').Page) {
   await page.goto(`/#/practice/${repId}`)
-  await page.getByRole('button', { name: 'Start practice', exact: true }).click()
+  await page.getByRole('button', { name: 'Record a session', exact: true }).click()
   await page.getByRole('button', { name: 'Reflect and end session', exact: true }).click()
   await expect(page.getByLabel('What did you learn or where did you get stuck?')).toBeVisible()
 }
+
+test('opening a rep records no session until Record a session is chosen', async ({ page }) => {
+  await page.goto(`/#/practice/${repId}`)
+  await expect(page.getByRole('button', { name: 'Record a session', exact: true })).toBeVisible()
+  expect(await page.evaluate(key => localStorage.getItem(key), sessionKey)).toBeNull()
+  await page.getByRole('button', { name: 'Record a session', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Your practice session' })).toBeVisible()
+  await expect.poll(() => page.evaluate(key => JSON.parse(localStorage.getItem(key)!).records.length, sessionKey)).toBe(1)
+})
 
 for (const width of [1280, 320]) {
   test(`unfinished rep can end a session without changing evidence at ${width}px`, async ({ page }) => {
@@ -46,7 +55,7 @@ test('reload keeps reflection and explicit resume creates a new session', async 
   await page.getByLabel('What did you learn or where did you get stuck?').fill('Still working on my plan.')
   await page.getByRole('button', { name: 'Save and leave', exact: true }).click()
   await page.reload()
-  await page.getByRole('button', { name: 'Resume practice', exact: true }).click()
+  await page.getByRole('button', { name: 'Resume session', exact: true }).click()
   await page.getByRole('button', { name: 'Reflect and end session', exact: true }).click()
   await expect(page.getByLabel('What did you learn or where did you get stuck?')).toHaveValue('')
   const data = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!), sessionKey)
@@ -186,7 +195,7 @@ test('ending a recall session leaves due dates and independent evidence unchange
   })
   await page.goto('/#/practice/count-above-threshold')
   const before = await page.evaluate(() => localStorage.getItem('code-reps:profile:default:history:v1'))
-  await page.getByRole('button', { name: 'Start practice', exact: true }).click()
+  await page.getByRole('button', { name: 'Record a session', exact: true }).click()
   await page.getByRole('button', { name: 'Reflect and end session', exact: true }).click()
   await page.getByLabel('What did you learn or where did you get stuck?').fill('I need another independent try before asking for help.')
   await page.getByRole('button', { name: 'End session', exact: true }).click()
@@ -205,7 +214,7 @@ test('short-screen practice keeps sessions compact and reflection survives closi
   const workspace = page.locator('.workspace-layout')
   expect((await workspace.boundingBox())!.y).toBeLessThan(350)
   await expect(page.getByRole('separator', { name: 'Resize brief and editor' })).toHaveAttribute('aria-valuenow', '40')
-  await page.getByRole('button', { name: 'Start practice', exact: true }).click()
+  await page.getByRole('button', { name: 'Record a session', exact: true }).click()
   const reflection = page.getByLabel('What did you learn or where did you get stuck?')
   await expect(reflection).toBeHidden()
   expect((await workspace.boundingBox())!.y).toBeLessThan(350)
@@ -226,7 +235,7 @@ test('short-screen practice keeps sessions compact and reflection survives closi
   await page.getByRole('separator', { name: 'Resize brief and editor' }).press('ArrowRight')
   await page.reload()
   await expect(page.getByRole('separator', { name: 'Resize brief and editor' })).toHaveAttribute('aria-valuenow', '42')
-  await expect(page.getByRole('button', { name: 'Start practice', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Record a session', exact: true })).toBeVisible()
   await page.goto('/#/sessions')
   await page.getByRole('button', { name: 'Unfinished', exact: true }).click()
   await page.getByRole('button', { name: 'Edit reflection', exact: true }).click()

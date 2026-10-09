@@ -498,7 +498,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     const fresh = mode === 'review' || mode === 'retry'
     const next = fresh ? { plan: '', code: item.starter, explanation: '', hintCount: 0 } : source
     const saved = await sessions.start(id, next.hintCount, () => {
-      if (latestWork.current.repId !== repId || latestWork.current.attempt !== attempt) throw new Error('Your draft changed while starting practice. Try Start practice again; your work is kept.')
+      if (latestWork.current.repId !== repId || latestWork.current.attempt !== attempt) throw new Error('Your draft changed while recording this session. Try Record a session again; your work is kept.')
       return { [storageKey(repId)]: JSON.stringify(attempt), [storageKey(id)]: JSON.stringify(next) }
     })
     if (saved) {
