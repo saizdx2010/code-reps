@@ -101,6 +101,61 @@ export const asyncRepDepth: Record<string, RepDepth> = {
     alternative: 'A reducer returning a new state per event makes transitions explicit; a loop with local state is shorter for a final-only trace. Both take O(n) event processing plus copying accepted item arrays, and storage for the accepted items. A mounted flag cannot separate A from B.',
     counterexample: 'Keeping B as owner after B resolves lets a duplicate rejection erase valid results. Using items.length to infer loading mislabels a successful empty response.',
     transfer: 'Add pagination while a query changes. Decide whether ownership belongs to one page, one query, or both; define whether previous pages remain visible. This extension is self-reviewed.',
+    traceSteps: {
+      code: [
+        'function searchState(events: SearchEvent[]): SearchState {',
+        "  let state: SearchState = {status: 'idle', items: [], error: null}, current: string | null = null",
+        '  for (const e of events) {',
+        "    if (e.kind === 'start') { current = e.id; state = {status: 'loading', items: [], error: null}; continue }",
+        '    if (e.id !== current) continue',
+        '    current = null',
+        "    if (e.kind === 'resolve') state = {status: 'ready', items: e.items, error: null}",
+        "    else if (e.kind === 'reject') state = {status: 'error', items: [], error: e.message}",
+        "    else state = {status: 'idle', items: [], error: null}",
+        '  }',
+        '  return state',
+        '}'
+      ],
+      input: 'events = [{kind: "start", id: "A"}, {kind: "start", id: "B"}, {kind: "resolve", id: "B", items: ["Bo"]}, {kind: "reject", id: "A", message: "Offline"}]',
+      steps: [
+        {
+          line: 1,
+          vars: { status: 'idle' },
+          structure: { kind: 'state', entries: [['current id', 'none'], ['status', 'idle'], ['items', '[]'], ['error', 'null']], events: ['start A', 'start B', 'resolve B [Bo]', 'reject A "Offline"'] },
+          note: 'Nothing is pending and the screen is idle. The four events are still to come.'
+        },
+        {
+          line: 3,
+          vars: { event: 'start A' },
+          structure: { kind: 'state', entries: [['current id', 'A'], ['status', 'loading'], ['items', '[]'], ['error', 'null']], events: ['start A', 'start B', 'resolve B [Bo]', 'reject A "Offline"'], eventIndex: 0 },
+          note: 'start A makes A the current request and shows loading.'
+        },
+        {
+          line: 3,
+          vars: { event: 'start B' },
+          structure: { kind: 'state', entries: [['current id', 'B'], ['status', 'loading'], ['items', '[]'], ['error', 'null']], events: ['start A', 'start B', 'resolve B [Bo]', 'reject A "Offline"'], eventIndex: 1 },
+          note: 'start B replaces A as the current request. A is now obsolete.'
+        },
+        {
+          line: 6,
+          vars: { event: 'resolve B' },
+          structure: { kind: 'state', entries: [['current id', 'none'], ['status', 'ready'], ['items', '["Bo"]'], ['error', 'null']], events: ['start A', 'start B', 'resolve B [Bo]', 'reject A "Offline"'], eventIndex: 2 },
+          note: 'B is current, so its result is shown. The request ends, so no id is current.'
+        },
+        {
+          line: 4,
+          vars: { event: 'reject A' },
+          structure: { kind: 'state', entries: [['current id', 'none'], ['status', 'ready'], ['items', '["Bo"]'], ['error', 'null']], events: ['start A', 'start B', 'resolve B [Bo]', 'reject A "Offline"'], eventIndex: 3 },
+          note: 'A is not the current id, so the failure is ignored. The screen is unchanged.'
+        },
+        {
+          line: 10,
+          vars: { result: '{"status":"ready","items":["Bo"],"error":null}' },
+          structure: { kind: 'state', entries: [['current id', 'none'], ['status', 'ready'], ['items', '["Bo"]'], ['error', 'null']], events: ['start A', 'start B', 'resolve B [Bo]', 'reject A "Offline"'], eventIndex: 3 },
+          note: 'Return the final display state: ready with ["Bo"].'
+        }
+      ]
+    },
   },
   'preview-slot-results': {
     reasoning: 'Ownership and completion are scoped to each slot. Insertion order is a separate requirement: replacing a slot changes its contents, while deleting and reinserting changes its position.',

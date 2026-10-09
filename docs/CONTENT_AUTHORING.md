@@ -62,6 +62,15 @@ Use a non-empty `code` array, an `input` description, and at least two snapshots
 an optional array, stack (bottom to top), or map `structure`. Array `pointers`
 use in-bounds zero-based indices; `dimmed` marks visited or inactive indices.
 Keep variable names and values concise so diagram labels remain readable.
+Three more structures suit recursion and event traces. A `tree` has a nested `root`
+of `{id, value, note?, children?}` nodes with unique ids, an optional `current` id, and
+`visited` ids; the optional `note` is a short per-node annotation such as `depth 2`. A
+`calls` snapshot lists `frames` bottom to top (`call`, optional `locals`, optional
+`returns` on the top frame only); set `event` to `call` for a just-pushed top frame or
+`return` for one about to be popped. A `state` snapshot lists labelled `entries`, with
+optional `events` and the `eventIndex` being processed, for event-by-event policies. The
+viewer marks changed `state` rows by itself. Each structure also has a screen-reader
+description, and the viewer tests check these snapshots against the real reference code.
 These authored snapshots appear only in the post-check comparison reveal after
 all checks pass. They describe the reference approach, not the learner's live
 execution, and must never be copied into independent or recall prompts.

@@ -3115,7 +3115,67 @@ export const practicalRepDepth: Record<string, RepDepth> = {
     "trace": "A subscribes to x, receives x:1, then unsubscribes. Publishing x:2 adds no delivery. Remove and re-add A after B produces B:v,A:v.",
     "alternative": "A direct observer list is enough for one subject; topic routing is useful for multiple event names. Processing cost includes every delivery, O(n+d) expected with maps/sets, and output storage is O(d).",
     "counterexample": "One global listener set sends x events to y listeners. Allowing duplicate registration emits A:0 twice.",
-    "transfer": "Let a callback unsubscribe another callback during publication. Define snapshot versus live delivery before implementing it."
+    "transfer": "Let a callback unsubscribe another callback during publication. Define snapshot versus live delivery before implementing it.",
+    "traceSteps": {
+      "code": [
+        "function deliveries(events: BusEvent[]): string[] {",
+        "  const topics = new Map<string, string[]>(), out: string[] = []",
+        "  for (const e of events) {",
+        "    const list = topics.get(e.topic) ?? []",
+        "    topics.set(e.topic, list)",
+        "    if (e.kind === 'subscribe' && !list.includes(e.listener)) list.push(e.listener)",
+        "    else if (e.kind === 'unsubscribe') { const i = list.indexOf(e.listener); if (i >= 0) list.splice(i, 1) }",
+        "    else if (e.kind === 'publish') for (const l of list) out.push(`${l}:${e.value}`)",
+        "  }",
+        "  return out",
+        "}"
+      ],
+      "input": "events = [{kind: \"subscribe\", topic: \"x\", listener: \"A\"}, {kind: \"subscribe\", topic: \"x\", listener: \"B\"}, {kind: \"unsubscribe\", topic: \"x\", listener: \"A\"}, {kind: \"subscribe\", topic: \"x\", listener: \"A\"}, {kind: \"publish\", topic: \"x\", value: \"1\"}]",
+      "steps": [
+        {
+          "line": 1,
+          "vars": {},
+          "structure": { "kind": "state", "entries": [["listeners on x", "[]"], ["deliveries", "[]"]], "events": ["subscribe x A", "subscribe x B", "unsubscribe x A", "subscribe x A", "publish x \"1\""] },
+          "note": "No topics and no deliveries yet. Five events are still to come."
+        },
+        {
+          "line": 5,
+          "vars": { "event": "subscribe A" },
+          "structure": { "kind": "state", "entries": [["listeners on x", "[A]"], ["deliveries", "[]"]], "events": ["subscribe x A", "subscribe x B", "unsubscribe x A", "subscribe x A", "publish x \"1\""], "eventIndex": 0 },
+          "note": "A joins topic x."
+        },
+        {
+          "line": 5,
+          "vars": { "event": "subscribe B" },
+          "structure": { "kind": "state", "entries": [["listeners on x", "[A, B]"], ["deliveries", "[]"]], "events": ["subscribe x A", "subscribe x B", "unsubscribe x A", "subscribe x A", "publish x \"1\""], "eventIndex": 1 },
+          "note": "B joins after A, so the order is A then B."
+        },
+        {
+          "line": 6,
+          "vars": { "event": "unsubscribe A" },
+          "structure": { "kind": "state", "entries": [["listeners on x", "[B]"], ["deliveries", "[]"]], "events": ["subscribe x A", "subscribe x B", "unsubscribe x A", "subscribe x A", "publish x \"1\""], "eventIndex": 2 },
+          "note": "A is removed from x."
+        },
+        {
+          "line": 5,
+          "vars": { "event": "subscribe A" },
+          "structure": { "kind": "state", "entries": [["listeners on x", "[B, A]"], ["deliveries", "[]"]], "events": ["subscribe x A", "subscribe x B", "unsubscribe x A", "subscribe x A", "publish x \"1\""], "eventIndex": 3 },
+          "note": "Re-subscribing places A last, behind B."
+        },
+        {
+          "line": 7,
+          "vars": { "event": "publish 1" },
+          "structure": { "kind": "state", "entries": [["listeners on x", "[B, A]"], ["deliveries", "[\"B:1\",\"A:1\"]"]], "events": ["subscribe x A", "subscribe x B", "unsubscribe x A", "subscribe x A", "publish x \"1\""], "eventIndex": 4 },
+          "note": "Publishing walks the current listeners in order: B first, then A."
+        },
+        {
+          "line": 9,
+          "vars": { "result": "[\"B:1\",\"A:1\"]" },
+          "structure": { "kind": "state", "entries": [["listeners on x", "[B, A]"], ["deliveries", "[\"B:1\",\"A:1\"]"]], "events": ["subscribe x A", "subscribe x B", "unsubscribe x A", "subscribe x A", "publish x \"1\""], "eventIndex": 4 },
+          "note": "Return the deliveries in registration order."
+        }
+      ]
+    }
   },
   "injected-clock": {
     "reasoning": "A single clock read per decision gives the comparison one defined timestamp. Injection makes equality and call count observable without real time.",
@@ -3129,7 +3189,66 @@ export const practicalRepDepth: Record<string, RepDepth> = {
     "trace": "At 60, A’s deadline 100 has not arrived, so replace it with B at 160. At 200, emit B and schedule C at 300.",
     "alternative": "A real implementation uses a replaceable timer; this trace uses timestamps to test the policy deterministically. A scan costs O(n) time and O(1) working state apart from output.",
     "counterexample": "Using > at the deadline drops A when B arrives exactly at 100; the contract requires A first.",
-    "transfer": "Add a cancel event or a maximum wait. Specify whether an event at that boundary is processed before or after a scheduled emission."
+    "transfer": "Add a cancel event or a maximum wait. Specify whether an event at that boundary is processed before or after a scheduled emission.",
+    "traceSteps": {
+      "code": [
+        "function debounceSchedule(events: {at: number; value: string}[], wait: number): {at: number; value: string}[] {",
+        "  const out: {at: number; value: string}[] = []",
+        "  let pending: {at: number; value: string} | null = null",
+        "  for (const e of events) {",
+        "    if (pending && e.at >= pending.at) out.push(pending)",
+        "    pending = {at: e.at + wait, value: e.value}",
+        "  }",
+        "  if (pending) out.push(pending)",
+        "  return out",
+        "}"
+      ],
+      "input": "events = [{at: 0, value: \"A\"}, {at: 60, value: \"B\"}, {at: 160, value: \"C\"}], wait = 100",
+      "steps": [
+        {
+          "line": 2,
+          "vars": { "wait": 100 },
+          "structure": { "kind": "state", "entries": [["pending", "none"], ["emitted", "[]"]], "events": ["0: A", "60: B", "160: C"] },
+          "note": "Nothing is pending. This example has an event exactly at a deadline."
+        },
+        {
+          "line": 5,
+          "vars": { "event": "0: A" },
+          "structure": { "kind": "state", "entries": [["pending", "A due at 100"], ["emitted", "[]"]], "events": ["0: A", "60: B", "160: C"], "eventIndex": 0 },
+          "note": "A arrives at 0, so it is pending and due at 0 + 100."
+        },
+        {
+          "line": 5,
+          "vars": { "event": "60: B" },
+          "structure": { "kind": "state", "entries": [["pending", "B due at 160"], ["emitted", "[]"]], "events": ["0: A", "60: B", "160: C"], "eventIndex": 1 },
+          "note": "B arrives at 60, before A is due at 100, so B replaces A. A is never emitted."
+        },
+        {
+          "line": 4,
+          "vars": { "event": "160: C" },
+          "structure": { "kind": "state", "entries": [["pending", "B due at 160"], ["emitted", "[{\"at\":160,\"value\":\"B\"}]"]], "events": ["0: A", "60: B", "160: C"], "eventIndex": 2 },
+          "note": "C arrives at 160, exactly when B is due. The rule is >=, so B is emitted first."
+        },
+        {
+          "line": 5,
+          "vars": { "event": "160: C" },
+          "structure": { "kind": "state", "entries": [["pending", "C due at 260"], ["emitted", "[{\"at\":160,\"value\":\"B\"}]"]], "events": ["0: A", "60: B", "160: C"], "eventIndex": 2 },
+          "note": "Then C starts a new wait, due at 160 + 100."
+        },
+        {
+          "line": 7,
+          "vars": { "event": "end" },
+          "structure": { "kind": "state", "entries": [["pending", "none"], ["emitted", "[{\"at\":160,\"value\":\"B\"},{\"at\":260,\"value\":\"C\"}]"]], "events": ["0: A", "60: B", "160: C"], "eventIndex": 2 },
+          "note": "After the last event, the pending C is emitted at 260."
+        },
+        {
+          "line": 8,
+          "vars": { "result": "[{\"at\":160,\"value\":\"B\"},{\"at\":260,\"value\":\"C\"}]" },
+          "structure": { "kind": "state", "entries": [["pending", "none"], ["emitted", "[{\"at\":160,\"value\":\"B\"},{\"at\":260,\"value\":\"C\"}]"]], "events": ["0: A", "60: B", "160: C"], "eventIndex": 2 },
+          "note": "Return both emissions."
+        }
+      ]
+    }
   },
   "leading-throttle": {
     "reasoning": "The last accepted timestamp anchors the suppression window, so each emitted pair is separated by at least window.",
