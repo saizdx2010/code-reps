@@ -20,19 +20,20 @@ type Props = {
   dueIds: Set<string>
   repStatus: (rep: Rep) => string
   openRep: (id: string) => void
+  goalPathId?: string
 }
 
 const formatLabels: Record<string, string> = { algorithm: 'Algorithm / TypeScript', debug: 'Debugging', read: 'Code reading', transform: 'Data transformation', frontend: 'Frontend', backend: 'Backend', refactor: 'Refactoring' }
-const foundationsRepIds = paths.find(path => path.id === foundationsPathId)?.stages.flatMap(stage => stage.repIds) ?? []
+const pathRepIds = (id: string): string[] => paths.find(path => path.id === id)?.stages.flatMap(stage => [...stage.repIds]) ?? []
 
-export function PracticeCatalog({ filters, onFilter, clearFilters, categories, visibleReps, dueIds, repStatus, openRep }: Props) {
+export function PracticeCatalog({ filters, onFilter, clearFilters, categories, visibleReps, dueIds, repStatus, openRep, goalPathId = foundationsPathId }: Props) {
   const [filterPanel, setFilterPanel] = useSessionPreference<'open' | 'closed'>('catalog-filters', matchMedia('(min-width: 901px)').matches ? 'open' : 'closed')
   const activeFilters = [filters.skill, filters.format, filters.status].filter(Boolean).length
   const [openGroups, setOpenGroups] = useSessionPreference<string>('catalog-groups', '[]')
   let expanded: string[] = []
   try { const saved: unknown = JSON.parse(openGroups); if (Array.isArray(saved)) expanded = saved.filter((value): value is string => typeof value === 'string') } catch { /* Start collapsed if the session preference is unavailable. */ }
   const filtering = Boolean(filters.query.trim() || activeFilters)
-  const startHere = startHereReps(visibleReps, { pathRepIds: foundationsRepIds, isDone: item => repStatus(item) === 'Completed', level: repLevel })
+  const startHere = startHereReps(visibleReps, { pathRepIds: pathRepIds(goalPathId), isDone: item => repStatus(item) === 'Completed', level: repLevel })
   const renderRow = (item: Rep) => <ListRow key={item.id} title={item.title} meta={<>{formatLabels[item.format ?? 'algorithm']}{dueIds.has(item.id) && ' · Review due'}</>} status={<>{repLevelLabel(item.id) && <StatusChip>{repLevelLabel(item.id)}</StatusChip>}<StatusChip tone={statusTone(repStatus(item))}>{repStatus(item)}</StatusChip></>} onPreview={preloadEditor} onOpen={() => openRep(item.id)} />
   return <main className="catalog-main">
     <PageHeader title="Find your next rep." description="Choose a skill to practise. Pick up saved work at any time." actions={<div className="catalog-search"><label htmlFor="catalog-query">Find a rep</label><Input id="catalog-query" type="search" value={filters.query} onChange={event => onFilter('query', event.target.value)} placeholder="Try arrays, strings, debugging…" /></div>} />
