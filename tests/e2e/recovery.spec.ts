@@ -109,3 +109,32 @@ test('frontend preview states, keyboard modal exit, and frame checks use authore
   await preview.getByRole('button', { name: 'Close preview', exact: true }).click()
   await expect(page.locator('iframe[title="Your directory implementation"]')).toHaveCount(0)
 })
+
+test('DOM accessibility rep previews its authored props and passes frame checks', async ({ page }) => {
+  const { domSolutions } = await import('../fixtures/dom-solutions.mjs')
+  await page.goto('/#/practice/dom-tabs')
+  await replaceCode(page, domSolutions['dom-tabs'], 'dom-tabs')
+  const preview = page.getByRole('region', { name: 'Interactive preview', exact: true })
+  await expect(preview.getByRole('combobox', { name: 'Request state', exact: true })).toHaveCount(0)
+  await preview.getByRole('button', { name: 'Update preview', exact: true }).click()
+  const frame = page.frameLocator('iframe[title="Your tabs implementation"]')
+  await frame.getByRole('tab', { name: 'Profile' }).focus()
+  await page.keyboard.press('ArrowRight')
+  await expect(frame.getByRole('tab', { name: 'Security' })).toBeFocused()
+  await expect(frame.getByRole('tab', { name: 'Security', selected: true })).toBeVisible()
+  await expect(frame.getByText('Change your password.', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Run checks', exact: true }).click()
+  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+})
+
+for (const id of ['dom-accessible-form', 'dom-disclosure', 'dom-tabs', 'dom-live-search']) {
+  test(`${id} reference solution passes every check in real Chromium`, async ({ page }) => {
+    const { domSolutions } = await import('../fixtures/dom-solutions.mjs')
+    await page.goto(`/#/practice/${id}`)
+    await replaceCode(page, domSolutions[id], id)
+    await page.getByRole('button', { name: 'Run checks', exact: true }).click()
+    await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+    // Focus checks move focus into the offscreen frame; it must come back to the page afterwards.
+    expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('IFRAME')
+  })
+}

@@ -17,6 +17,7 @@ import { reflectionGuides } from '../src/reflection-guides.ts'
 import { richSolutions } from './fixtures/rich-solutions.mjs'
 import { validationSolutions } from './fixtures/validation-solutions.mjs'
 import { appSolutions } from './fixtures/app-solutions.mjs'
+import { domSolutions } from './fixtures/dom-solutions.mjs'
 
 // These independent implementations check authored expected results, not learner prose.
 const solutions = {
@@ -59,7 +60,7 @@ const solutions = {
 }
 
 test('every rep has reference-solution coverage and a complete learning brief', () => {
-  const covered = new Set([...Object.keys(solutions), ...Object.keys(richSolutions), ...Object.keys(capstoneSolutions), ...aiEraReps.map(rep => rep.id)])
+  const covered = new Set([...Object.keys(solutions), ...Object.keys(richSolutions), ...Object.keys(capstoneSolutions), ...Object.keys(domSolutions), ...aiEraReps.map(rep => rep.id)])
   assert.equal(new Set(reps.map(rep => rep.id)).size, reps.length, 'Rep IDs must be unique')
   assert.deepEqual([...covered].sort(), reps.map(rep => rep.id).sort())
   for (const rep of reps) {

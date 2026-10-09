@@ -22,6 +22,12 @@ Both preview and checks use an iframe with `sandbox="allow-scripts"`, without sa
 
 The frontend frame has a five-second response timeout, but browser-frame code does not have the worker's independent termination guarantee. A synchronous endless loop can block the browser before Stop or Close can act. This remains a personal-practice runner, not a supported boundary for imported third-party exercise code. The checks do not prove visual quality, full accessibility, or honest independent reasoning.
 
+### DOM and accessibility reps
+
+Reps that set `domPreview` (see `src/dom-reps.ts`) reuse the same frame, token, timeout, and cleanup, but check an authored attribute-and-behavior contract instead of the directory contract. A check supplies `props` and ordered `steps` (`type`, `click`, `focus`, `key`, `submit`, `mark`) and lists observations by `data-testid` (text, attributes, properties, label, `aria-describedby` targets, focus, element identity). Steps run against the learner's real DOM inside the sandbox; keys are dispatched as `keydown` events on the focused element and `submit` dispatches a submit event on the form.
+
+These checks establish the stated ARIA, focus, and behavior contract only. They do not prove screen-reader announcements, visual design, or native key handling in other browsers; every rep says so and lists manual review steps. The checks frame is rendered offscreen (not `display:none`) because browsers cannot focus elements in a non-rendered frame.
+
 ## Backend runtime
 
 The ticket exercise tests a pure request handler with parsed request objects in the existing worker. It does not start an HTTP service, parse URL query strings, or create a database. This makes the stated handler contract playable offline while keeping network/service setup outside this rep's scope.

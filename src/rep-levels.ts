@@ -134,6 +134,11 @@ export const repLevels: Record<string, RepLevel> = {
   'algo-min-heap': 3,
   'algo-subsets': 3,
   'algo-coin-change': 3,
+  // Accessible DOM interactions.
+  'dom-disclosure': 2,
+  'dom-accessible-form': 2,
+  'dom-live-search': 2,
+  'dom-tabs': 3,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

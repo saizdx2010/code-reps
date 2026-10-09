@@ -4,6 +4,7 @@ import { practicalRepDepth } from './review-practical.ts'
 import { validationDepth } from './review-validation.ts'
 import { appDepth } from './review-app.ts'
 import { dsaAdvancedDepth } from './review-dsa-advanced.ts'
+import { domDepth } from './review-dom.ts'
 export type TraceStructure =
   | { kind: 'array'; values: (string | number)[]; pointers?: Record<string, number>; dimmed?: number[] }
   | { kind: 'stack'; values: (string | number)[] }
@@ -26,6 +27,7 @@ export const repDepth: Record<string, RepDepth> = {
   ...dsaAdvancedDepth,
   ...validationDepth,
   ...appDepth,
+  ...domDepth,
   ...browserStateDepth,
   "declare-variables": {
     "reasoning": "A name and its value are different: const protects the binding, not every value reachable through it.",

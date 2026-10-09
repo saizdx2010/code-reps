@@ -4,6 +4,7 @@ import { dsaReps } from './dsa-reps.ts'
 import { practicalReps } from './practical-concepts.ts'
 import { validationReps } from './validation-reps.ts'
 import { appReps } from './app-reps.ts'
+import { domReps } from './dom-reps.ts'
 export type Check = { name: string; input: unknown[]; expected: unknown }
 export type Rep = {
   id: string
@@ -20,6 +21,8 @@ export type Rep = {
   starter: string
   functionName: string
   preserveInput?: boolean
+  /** Frontend reps that check authored DOM and ARIA contracts. Without it the rep uses the directory scenarios. */
+  domPreview?: { title: string; description: string; props: Record<string, unknown>; review: string[] }
   hints: string[]
   checks: Check[]
 }
@@ -228,6 +231,7 @@ export const reps: Rep[] = [
   ...validationReps,
   ...appReps,
   ...browserStateReps,
+  ...domReps,
 ]
 import { foundationReps } from './foundations.ts'
 import { aiEraReps } from './ai-era-reps.ts'
