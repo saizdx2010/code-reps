@@ -1,6 +1,51 @@
 import type { Rep } from './rep.ts'
 
-export const dsaReps: Rep[] = [{
+export const dsaReps: Rep[] = [
+  {
+    id: 'ticket-service-times',
+    title: 'Report ticket service times',
+    category: 'Stacks & queues',
+    prompt: 'A single desk serves tickets in input order, first arrival first served. Tickets are already ordered by nondecreasing arrival minute; equal arrivals keep input order. Each ticket starts when it has arrived and the previous ticket has finished. Return one {id, start, finish} record per ticket in input order, where finish is start plus minutes. The desk is available at minute 0. Keep IDs exactly as supplied, without trimming or case changes. Do not change the array or its records.',
+    example: {'input': 'ticketTimes([{id:"A",arrival:2,minutes:3},{id:"B",arrival:3,minutes:1}])', 'output': '[{id:"A",start:2,finish:5},{id:"B",start:5,finish:6}]'},
+    note: 'At most 100 tickets. IDs are 1 to 20 ASCII characters; duplicates are allowed and remain separate tickets. arrival is an integer from 0 to 1000; minutes is an integer from 1 to 100. Inputs satisfy these rules; no validation is required. Empty input returns []. This is a deterministic schedule, not a live timer.',
+    vocabulary: [{'term': 'Arrival', 'meaning': 'the minute a ticket becomes available for service'}, {'term': 'Service interval', 'meaning': 'the time from starting a ticket to finishing it'}],
+    planPrompt: 'What determines a start when the desk is busy? What changes when no ticket is waiting?',
+    starter: 'type Ticket = { id: string; arrival: number; minutes: number }\n\nfunction ticketTimes(tickets: Ticket[]): { id: string; start: number; finish: number }[] {\n  // Write your solution here.\n  return []\n}\n',
+    functionName: 'ticketTimes',
+    preserveInput: true,
+    hints: ['Trace two tickets that arrive before the first finishes.', 'Compare a gap between arrivals with two equal arrivals.', 'Check that each start respects both arrival and the preceding finish.'],
+    checks: [
+      {'name': 'Busy desk', 'input': [[{'id': 'A', 'arrival': 2, 'minutes': 3}, {'id': 'B', 'arrival': 3, 'minutes': 1}]], 'expected': [{'id': 'A', 'start': 2, 'finish': 5}, {'id': 'B', 'start': 5, 'finish': 6}]},
+      {'name': 'Empty', 'input': [[]], 'expected': []},
+      {'name': 'Arrives exactly as desk frees', 'input': [[{'id': 'A', 'arrival': 0, 'minutes': 4}, {'id': 'B', 'arrival': 4, 'minutes': 2}]], 'expected': [{'id': 'A', 'start': 0, 'finish': 4}, {'id': 'B', 'start': 4, 'finish': 6}]},
+      {'name': 'Backlog clears then desk idles', 'input': [[{'id': 'A', 'arrival': 1, 'minutes': 5}, {'id': 'B', 'arrival': 2, 'minutes': 5}, {'id': 'C', 'arrival': 30, 'minutes': 1}]], 'expected': [{'id': 'A', 'start': 1, 'finish': 6}, {'id': 'B', 'start': 6, 'finish': 11}, {'id': 'C', 'start': 30, 'finish': 31}]},
+      {'name': 'Ties gaps and exact IDs', 'input': [[{'id': ' a ', 'arrival': 0, 'minutes': 2}, {'id': ' a ', 'arrival': 0, 'minutes': 1}, {'id': 'A', 'arrival': 10, 'minutes': 1}]], 'expected': [{'id': ' a ', 'start': 0, 'finish': 2}, {'id': ' a ', 'start': 2, 'finish': 3}, {'id': 'A', 'start': 10, 'finish': 11}]},
+      { name: 'Maximum input and limits', input: [Array.from({ length: 100 }, () => ({ id: 'x'.repeat(20), arrival: 1000, minutes: 100 }))], expected: Array.from({ length: 100 }, (_, i) => ({ id: 'x'.repeat(20), start: 1000 + i * 100, finish: 1100 + i * 100 })) }
+    ]
+  },
+  {
+    id: 'parcel-loading-turns',
+    title: 'Count turns until a parcel load finishes',
+    category: 'Stacks & queues',
+    prompt: 'Load parcels from carts initially lined up in input order. Each turn removes one parcel from the front cart. If that cart still has parcels, it joins the back of the line; otherwise it leaves. Return the one-based turn on which the cart originally at targetIndex leaves. targetIndex refers to the original input position, even as the line changes. Do not change parcels.',
+    example: {'input': 'loadingTurn([2, 1, 3], 0)', 'output': '4'},
+    note: 'parcels contains 1 to 100 integers from 1 to 100. targetIndex is an integer from 0 to parcels.length - 1. All inputs satisfy the contract; there is no empty or invalid-input case to validate. Values are exact counts with no normalization. Turns count parcel removals, including the target cart’s final removal.',
+    vocabulary: [{'term': 'Turn', 'meaning': 'one opportunity to remove a single parcel'}, {'term': 'Original position', 'meaning': 'a cart’s identity before any cart moves or leaves'}],
+    planPrompt: 'How will you distinguish carts with equal counts? Which event ends the counting?',
+    starter: 'function loadingTurn(parcels: number[], targetIndex: number): number {\n  // Write your solution here.\n  return 0\n}\n',
+    functionName: 'loadingTurn',
+    preserveInput: true,
+    hints: ['Trace all turns for a target that needs more than one parcel removed.', 'A cart that finishes no longer takes turns.', 'Track the target by its original identity rather than its current place in line.'],
+    checks: [
+      {'name': 'Rejoining after one removal', 'input': [[2, 1, 3], 0], 'expected': 4},
+      {'name': 'Single minimum', 'input': [[1], 0], 'expected': 1},
+      {'name': 'Single maximum', 'input': [[100], 0], 'expected': 100},
+      {'name': 'Target last and equal counts', 'input': [[2, 2, 2], 2], 'expected': 6},
+      {'name': 'Earlier carts finish', 'input': [[1, 3, 2], 1], 'expected': 6},
+      {'name': 'Target first stops before later carts', 'input': [[1, 100], 0], 'expected': 1},
+      { name: 'Maximum length and counts', input: [Array(100).fill(100), 99], expected: 10000 }
+    ]
+  }, {
     'id': 'ds-array-operations',
     'title': 'Copy, append, and read an array',
     'category': 'Collection basics',

@@ -100,7 +100,7 @@ Verified by reading `src/learning.ts` (`journeys`), `src/knowledge.ts` and `src/
 
 | Topic | Skill / lesson ID(s) | Guided rep | Independent rep | Delayed-recall rep | Lesson in `src/knowledge.ts`? |
 | --- | --- | --- | --- | --- | --- |
-| Queues | `queues` (`src/dsa-knowledge.ts:43`) | Missing | Missing | Missing | Yes (`queues` in `src/dsa-knowledge.ts`) |
+| Queues | `queues` (`src/dsa-knowledge.ts`) | `ds-queue-operations` | `ticket-service-times` | `parcel-loading-turns` | Yes (`queues` in `src/dsa-knowledge.ts`) |
 | Two pointers | `array-techniques` (`src/dsa-knowledge.ts:79`) | Missing | Missing | Missing | Yes (`array-techniques` in `src/dsa-knowledge.ts`) |
 | Sliding windows | `array-techniques` (`src/dsa-knowledge.ts:79`) | `algo-window-sum` (`src/learning.ts`, journey `windows`) | `count-unique-windows` | `shortest-run-reaching-target` | Yes (`array-techniques` in `src/dsa-knowledge.ts`) |
 | Binary search | `array-techniques` (`src/dsa-knowledge.ts:79`) | `algo-binary-search` (`src/learning.ts`) | `first-insertion-point` | `smallest-daily-capacity` | Yes (`array-techniques` in `src/dsa-knowledge.ts`) |

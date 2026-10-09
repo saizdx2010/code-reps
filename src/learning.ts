@@ -20,6 +20,7 @@ export const journeys: Journey[] = [
   { id: 'control-flow', title: 'Repeat work and choose by condition', guided: 'loop-with-for', independent: 'shipping-cost-tiers', recall: 'countdown-labels', delayDays: 3 },
   { id: 'interface-logic', title: 'Derive what the interface shows', guided: 'frontend-sort-table', independent: 'group-items-by-heading', recall: 'filter-chip-summary', delayDays: 3 },
   { id: 'request-response', title: 'Read requests and shape responses', guided: 'backend-query-filters', independent: 'parse-sort-param', recall: 'page-response-envelope', delayDays: 3 },
+  { id: 'queues', title: 'Apply first-in-first-out order', guided: 'ds-queue-operations', independent: 'ticket-service-times', recall: 'parcel-loading-turns', delayDays: 3 },
   { id: 'sorting', title: 'Order and rank values', guided: 'algo-insertion-sort', independent: 'sort-score-records', recall: 'kth-smallest-copy', delayDays: 3 },
   { id: 'windows', title: 'Slide a window across a sequence', guided: 'algo-window-sum', independent: 'count-unique-windows', recall: 'shortest-run-reaching-target', delayDays: 3 },
   { id: 'binary-search', title: 'Search ordered values and answers', guided: 'algo-binary-search', independent: 'first-insertion-point', recall: 'smallest-daily-capacity', delayDays: 3 },
