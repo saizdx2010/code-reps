@@ -5,6 +5,7 @@ import { preloadEditor } from './editor-loader'
 import { useSessionPreference } from './useSessionPreference'
 import { reps } from './rep'
 import type { Rep } from './rep'
+import { repLevelLabel } from './rep-levels.ts'
 
 type Filter = 'query' | 'skill' | 'format' | 'status'
 type Props = {
@@ -51,7 +52,7 @@ export function PracticeCatalog({ filters, onFilter, clearFilters, categories, v
     <div className="catalog-list" data-filtering={filtering} role="region" aria-label="Exercise list">{visibleReps.length ? categories.map(category => {
       const items = visibleReps.filter(item => item.category === category)
       return items.length > 0 && <ListGroup key={category} title={category} count={items.length} open={filtering || expanded.includes(category)} onToggle={open => { if (!filtering) setOpenGroups(JSON.stringify(open ? [...new Set([...expanded, category])] : expanded.filter(value => value !== category))) }}>
-        {items.map(item => <ListRow key={item.id} title={item.title} meta={<>{formatLabels[item.format ?? 'algorithm']}{dueIds.has(item.id) && ' · Review due'}</>} status={<StatusChip tone={statusTone(repStatus(item))}>{repStatus(item)}</StatusChip>} onPreview={preloadEditor} onOpen={() => openRep(item.id)} />)}
+        {items.map(item => <ListRow key={item.id} title={item.title} meta={<>{formatLabels[item.format ?? 'algorithm']}{dueIds.has(item.id) && ' · Review due'}</>} status={<>{repLevelLabel(item.id) && <StatusChip>{repLevelLabel(item.id)}</StatusChip>}<StatusChip tone={statusTone(repStatus(item))}>{repStatus(item)}</StatusChip></>} onPreview={preloadEditor} onOpen={() => openRep(item.id)} />)}
       </ListGroup>
     }) : <EmptyState title="No reps match these filters." action={<button type="button" className="text-button" onClick={clearFilters}>Clear filters</button>}>Try a shorter search.</EmptyState>}</div>
   </main>

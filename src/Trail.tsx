@@ -1,5 +1,7 @@
 import { Icon } from './Icon'
+import { StatusChip } from './Layout'
 import { preloadEditor } from './editor-loader'
+import { repLevelLabel, stageLevelRange } from './rep-levels.ts'
 import type { TrailNode, TrailStage } from './trail-map'
 
 type Props = {
@@ -12,6 +14,7 @@ type Props = {
 
 const stateLabels: Record<string, string> = { done: 'Completed', next: 'Next on your trail', draft: 'In progress', later: 'Recall available later', open: 'Not started' }
 const markerIcon = (node: TrailNode) => node.state === 'done' ? 'check' : node.kind === 'lesson' ? 'book' : node.kind === 'project' ? 'flag' : node.role === 'Recall' ? 'repeat' : 'circle'
+const levelRange = (stage: TrailStage) => stageLevelRange(stage.nodes.flatMap(node => node.kind === 'lesson' ? [] : [node.repId]))
 
 /** A path drawn as stages of connected nodes: lessons before the reps that use them, then recall and projects. */
 export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenFoundations }: Props) {
@@ -22,6 +25,7 @@ export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenFoundat
         <div>
           <h3>{stage.title}</h3>
           <p>{stage.covered ? 'Covered in Foundations. Open it to revisit these reps here.' : stage.description}</p>
+          {levelRange(stage) && <StatusChip>{levelRange(stage)}</StatusChip>}
         </div>
         <span className="trail-stage-count">{stage.done}/{stage.total}</span>
       </summary>
@@ -31,9 +35,9 @@ export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenFoundat
         {node.kind === 'lesson'
           ? <button type="button" onClick={() => onOpenLesson(node.skillId)}><span className="trail-node-title">Lesson: {node.title}</span><small>{node.state === 'done' ? 'Predictions checked' : 'Read and predict before practising'}</small></button>
           : node.kind === 'project'
-            ? <div className="trail-project"><span className="trail-node-title">{node.title}</span><small>{node.reason}</small><button type="button" className="text-button" onClick={() => onOpenRep(node.repId)}>Open project milestone</button></div>
+            ? <div className="trail-project"><span className="trail-node-title">{node.title}</span>{repLevelLabel(node.repId) && <StatusChip>{repLevelLabel(node.repId)}</StatusChip>}<small>{node.reason}</small><button type="button" className="text-button" onClick={() => onOpenRep(node.repId)}>Open project milestone</button></div>
             : <button type="button" aria-current={node.state === 'next' ? 'step' : undefined} onMouseEnter={preloadEditor} onFocus={preloadEditor} onClick={() => onOpenRep(node.repId)}>
-              <span className="trail-node-title">{node.title}</span>
+              <span className="trail-node-title">{node.title}</span>{repLevelLabel(node.repId) && <StatusChip>{repLevelLabel(node.repId)}</StatusChip>}
               <small><span className="path-role">{node.role === 'Application' ? '' : `${node.role} · `}{stateLabels[node.state]}</span>{evidence(node.repId) && <span className="path-evidence">{evidence(node.repId)}</span>}</small>
             </button>}
       </li>)}</ol>

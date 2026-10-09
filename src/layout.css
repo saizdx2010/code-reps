@@ -39,7 +39,7 @@
 .list-row-text { display: grid; gap: 2px; min-width: 0; flex: 1; }
 .list-row-text strong { font-size: 15px; font-weight: 600; }
 .list-row-text small { color: var(--muted); font-size: 13px; }
-.list-row-status { flex: none; }
+.list-row-status { display: flex; flex: none; align-items: center; gap: 6px; }
 @media (max-width: 640px) {
   .list-row > button, .list-row > div { flex-wrap: wrap; }
   .list-row > button > .ui-icon { display: none; }
