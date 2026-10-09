@@ -13,6 +13,8 @@ import type { LearnerStart } from './learning'
 import type { getPracticePlan, PracticeAction } from './practice'
 
 type Props = {
+  walkthroughSeen: boolean
+  launchWalkthrough: () => void
   sessionBusy: boolean
   startPractice: (action: PracticeAction) => void
   unfinishedSessions: PracticeSession[]
@@ -41,7 +43,7 @@ type Props = {
 const title = (id: string) => reps.find(item => item.id === id)?.title
 
 /** Home is the learner's trail: the goal path drawn as connected stages, with the next useful action beside it. */
-export function HomePage({ sessionBusy, startPractice, unfinishedSessions, resumeSession, onPracticeHistory, goalPathId, onPath, learnerStart, startingPoint, practicePlan, draftQueue, setDraftQueue, reviewQueue, setReviewQueue, repStatus, openPracticeAction, actionLabel, onProgress, onPlan, trail, evidence, openRep, openLesson }: Props) {
+export function HomePage({ walkthroughSeen, launchWalkthrough, sessionBusy, startPractice, unfinishedSessions, resumeSession, onPracticeHistory, goalPathId, onPath, learnerStart, startingPoint, practicePlan, draftQueue, setDraftQueue, reviewQueue, setReviewQueue, repStatus, openPracticeAction, actionLabel, onProgress, onPlan, trail, evidence, openRep, openLesson }: Props) {
   const goal = paths.find(path => path.id === goalPathId) ?? paths[0]
   const recommendation = practicePlan.next
   const recommendedRep = recommendation && reps.find(rep => rep.id === recommendation.repId)
@@ -74,6 +76,7 @@ export function HomePage({ sessionBusy, startPractice, unfinishedSessions, resum
           <button className="primary-button" type="button" onClick={onProgress}>See progress</button>
         </section>}
         {recommendation && <button type="button" className="text-button" disabled={sessionBusy} onClick={() => startPractice(recommendation)}>Start practice</button>}
+        <section className="trail-queue" aria-label="First rep walkthrough"><h2>Try the practice loop</h2><p>A short, optional guide through Declare a value. Your saved work stays in place.</p><Button onMouseEnter={preloadEditor} onFocus={preloadEditor} onClick={launchWalkthrough}>{walkthroughSeen ? 'Replay walkthrough' : 'Try first rep walkthrough'}</Button></section>
         {choices.length > 0 && <ListGroup title="Choose today's practice" open>
           {choices.map(({ label, action }) => <ListRow key={label} title={title(action.repId)} meta={label} status={<StatusChip tone={action.mode === 'resume' ? 'progress' : action.mode === 'review' ? 'attention' : 'neutral'}>{action.mode === 'resume' ? 'Saved' : label === 'Due review' ? 'Due' : 'Next'}</StatusChip>} onOpen={() => openPracticeAction(action)} onPreview={preloadEditor} />)}
         </ListGroup>}
