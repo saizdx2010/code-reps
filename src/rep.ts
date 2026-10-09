@@ -2,6 +2,7 @@ import { browserStateReps } from './browser-state-reps.ts'
 import { dsaReps } from './dsa-reps.ts'
 import { practicalReps } from './practical-concepts.ts'
 import { validationReps } from './validation-reps.ts'
+import { appReps } from './app-reps.ts'
 export type Check = { name: string; input: unknown[]; expected: unknown }
 export type Rep = {
   id: string
@@ -223,6 +224,7 @@ export const reps: Rep[] = [
   ...fluencyReps,
   ...capstoneReps,
   ...validationReps,
+  ...appReps,
   ...browserStateReps,
 ]
 import { foundationReps } from './foundations.ts'

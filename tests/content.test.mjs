@@ -16,11 +16,13 @@ import { runRep } from '../src/runner.ts'
 import { reflectionGuides } from '../src/learning.ts'
 import { richSolutions } from './fixtures/rich-solutions.mjs'
 import { validationSolutions } from './fixtures/validation-solutions.mjs'
+import { appSolutions } from './fixtures/app-solutions.mjs'
 
 // These independent implementations check authored expected results, not learner prose.
 const solutions = {
   ...browserStateSolutions,
   ...validationSolutions,
+  ...appSolutions,
   ...dsaSolutions,
   ...asyncSolutions,
   ...practicalSolutions,
