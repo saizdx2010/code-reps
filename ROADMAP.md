@@ -1,94 +1,133 @@
 # Code Reps roadmap
 
-Code Reps' core learning loop is always free and runs on each learner's laptop. A release is useful when it helps someone practise, understand a miss, or demonstrate that a skill lasted.
+Code Reps helps you practise independently through **understand → plan → solve → explain → review**. It stays free and local-first.
 
-## 0.1 — First playable journey (shipped)
+The immediate audience is its owner using it for personal practice. The immediate problem is feeling lost: knowing where to start, what to do next, and how today's work connects to a useful goal. Prioritize that experience before expanding the catalog or preparing a public release.
 
-- [x] TypeScript reps, local editor and checks, plans, explanations, and saved history.
-- [x] Beginner and returning starting points.
-- [x] An array journey with guided, independent, and delayed recall reps.
-- [x] Evidence-based progress and self-review prompts.
+This roadmap uses ordered phases rather than promised dates or release numbers. Unchecked items are proposals, not implemented behavior. Finish a small, usable improvement and evaluate it in ordinary practice before starting the next batch.
 
-## 0.2 — Reliable local app
+## What already exists
 
-- [x] Replace the development preview with a loopback-only app server and SQLite store.
-- [x] Migrate existing browser attempts from the same origin without overwriting data; use JSON import for other ports.
-- [x] Add automatic local backups and a JSON restore path.
-- [x] Give learners a clear first-run and update guide.
+- [x] A practice workspace with plans, code, checks, explanations, hints, authored reviews, and saved attempts.
+- [x] Trail, Library, and Progress, with Foundations plus Problem solving, Frontend, and Backend tracks.
+- [x] Lessons, interactive predictions, glossary help, and guided → independent → delayed-recall skill journeys.
+- [x] Debugging, code reading, refactoring, DOM interactions, multi-file projects, and optional timed interviews.
+- [x] Problem-solving content covering collections, sorting, recursion, trees, graphs, linked structures, heaps, backtracking, and dynamic programming.
+- [x] Recommendations, resumable drafts, due reviews, weekly planning, a Journal, and explicit practice-session records.
+- [x] Local profiles, browser persistence, a loopback SQLite service, backups, imports, and portable web bundles.
+- [x] Profile summaries with streaks and path completion rows. Existing path badges are derived from completed attempts; the more recognizable badge presentation below is still planned.
+- [x] Automated content checks, Node tests, Chromium flows, and build budgets.
 
-## 0.3 — More skill journeys
+Implemented features do not establish learner comprehension, full accessibility, disconnected operation, or support across every platform. See the [UI guide](./docs/UI_GUIDE.md), [fluency guide](./docs/FLUENCY_PLATFORM.md), and [browser testing guide](./docs/BROWSER_TESTING.md) for current behavior and limits.
 
-- [x] Add three more authored journeys with distinct guided, independent, and recall reps.
-- [x] Give beginners and returning developers separate suggested sequences.
-- [x] Validate every journey's rep IDs, checks, and review timing.
+## 1. Make daily practice easy to enter
 
-## 0.4 — Better feedback
+**Goal:** Open Code Reps and immediately understand what to do, why it matters, and how to continue saved work.
 
-- [x] Make failed checks actionable without giving away the solution.
-- [x] Add authored approach comparisons for the new journeys.
-- [x] Show changes between a learner's attempts without scoring prose automatically.
+- [ ] Make Trail's primary action answer three questions: what should I practise, why this rep, and what comes afterward?
+- [ ] Give first use a short walkthrough built around a real tiny rep. Introduce checks, hints, writing, and completion when they become relevant; keep it skippable and available again.
+- [ ] Make the selected learning goal obvious, with an easy way to change it and a clear explanation that browsing another track does not change the goal.
+- [ ] Clarify opening a rep versus recording a practice session. Evaluate a label such as “Record a session”; explain that completing a rep and ending a session are separate actions.
+- [ ] Offer a small daily choice: continue saved work, take the recommended next rep, or choose a due review. Keep other tools reachable through existing sections.
+- [ ] Improve recommendation reasons with the specific skill or prerequisite involved, rather than only naming the selected track.
+- [ ] Keep advanced planning, assessment, and management controls secondary so they do not compete with the next useful action.
 
-## 0.5 — Useful review
+**Done when:** During your own normal use, you can start or resume without browsing multiple pages, identify the active goal, and explain why the recommended rep comes next. Verify fresh and returning profiles, including drafts and due reviews; preserve work and Back/Forward behavior.
 
-- [x] Recommend due recall, incomplete independent work, and difficult attempts with a clear reason.
-- [x] Keep review dates and evidence visible in Progress.
-- [ ] Check scheduling and learner understanding with real users before tuning intervals.
+## 2. Make each rep feel manageable
 
-## 0.6 — Real-world transfer
+**Goal:** Know what a task expects before starting and stay oriented while working.
 
-- [x] Add a small debugging, code-reading, and data-transformation task using familiar skills.
-- [x] Keep tests and self-review suited to each format.
+- [ ] Show concrete prerequisites and a rough effort range before opening a rep. Label estimates as guidance; do not infer proficiency from speed.
+- [ ] Make the exercise library easier to sample with a few relevant reps or a useful initially expanded group, while retaining search and filters.
+- [ ] Add brief readiness checkpoints before significant difficulty jumps. Offer an optional bridge rep or prerequisite lesson without locking access.
+- [ ] Scale plan and explanation prompts to the task: one useful sentence for a small syntax exercise, deeper reasoning for a larger problem. Preserve self-review and avoid automated prose scoring.
+- [ ] Keep the current step, completion requirements, saved state, and next action clear without adding another toolbar or navigation layer.
+- [ ] After completion, offer one clear next step and make stopping for the day understandable too.
+- [ ] Walk through desktop, narrow, short, and zoomed layouts with keyboard navigation. Check editor exit, focus, checks, writing fields, and preserved drafts.
 
-## 1.0 — Easy local web distribution
+**Done when:** A small rep can be completed without disproportionate form filling, and a harder rep makes prerequisites and missing completion requirements clear. Navigation, pane changes, reloads, and failed editor loads preserve work.
 
-- [x] Build portable local web bundles for macOS, Windows, and Linux with a bundled Node runtime. No desktop installer or signing is planned.
-- [ ] Test first run, upgrades, backup restore, and offline use on each platform before public release.
-- [x] Publish a plain-language local guide and internal content authoring guide. Source rights remain reserved; public contributions are deferred.
+## 3. Make completion visible in the profile
 
-## Next — Platform quality and richer exercises
+**Goal:** Recognize finished work with satisfying badges that remain honest about what was assessed.
 
-Complete an internal quality pass before inviting learners. Learner validation remains pending and will follow this work.
+- [ ] Turn existing path completion rows into recognizable badges within the local profile on Progress. Reuse the logo palette, shared geometry, and reduced-motion behavior.
+- [ ] Add smaller milestones, starting with a first completed rep and a completed path stage, so recognition does not require finishing an entire track.
+- [ ] Give each badge a name, clear earning rule, earned or unearned state, progress where useful, and a link to supporting work. Show an earned date when it can be derived reliably.
+- [ ] Show earned badges prominently and keep upcoming badges compact. Use text alongside artwork so status is understandable without color.
+- [ ] Offer a restrained acknowledgement when a milestone is reached. Avoid repeated celebrations on reload and preserve keyboard focus.
+- [ ] Derive completion from the active profile's existing completed attempts where possible. Repeated attempts must not inflate distinct-rep milestones; unfinished drafts and ended sessions must not count as rep completion.
+- [ ] Keep completion badges separate from independent and retained skill evidence. Hinted completions may earn completion badges; they must not imply mastery.
+- [ ] Decide how badges behave when a path gains or replaces required reps before introducing durable awards. Preserve rep IDs and define any storage or migration change explicitly.
+- [ ] Verify profile separation, imported history, repeat attempts, invalid or future dates, reloads, and narrow layouts.
 
-- [x] Audit all 29 reps for plain wording, examples, checks, hints, explanations, and path ordering; add reference-solution and self-review coverage. See `docs/CONTENT_AUDIT.md` for findings and verification limits.
-- [x] Improve the daily practice flow: explain the next recommendation, resume unfinished work, and surface difficult attempts and due reviews. Scheduling tests cover prioritization, latest attempts, and saved recall/retry drafts; manual browser verification remains pending.
-- [x] Polish workspace run/stop controls, stale-result handling, editor recovery, keyboard access, narrow/short layouts, and visible save feedback. Worker lifecycle tests pass; manual browser and assistive-technology verification remain pending.
-- [x] Ship one complete debugging rep with a bug report, failing tests, hints, and solution review.
-- [x] Ship one complete frontend rep with a local preview and checks for loading, empty, error, and success states.
-- [x] Add a code-reading rep with behavior predictions, an edge case, and an authored self-review rubric.
-- [x] Add a backend rep covering validation, filtering, pagination, and consistent errors.
-- [x] Add a refactoring rep with behavior-preserving regression checks and an approach comparison.
-- [x] Harden pending-save recovery, atomic imports, snapshot creation/restore, missing assets, and shutdown; verify the macOS arm64 portable bundle. See `docs/LOCAL_RELIABILITY.md`.
-- [ ] Complete disconnected-browser testing and Windows/Linux first-run, upgrade, restore, and launcher checks before public release.
-- [ ] After the internal pass, invite learners to check comprehension, recommendations, and independent delayed recall.
+**Done when:** You can see what you have finished, understand exactly how each badge was earned, and open the relevant work. Badge behavior stays consistent across profiles and backups without changing fluency rules.
 
-## Release gates
+## 4. Connect small exercises to working software
 
-Each version needs a clean build, lint, focused tests, a real local-server smoke test, and a manual pass through its learner flow. The next development phase may add the small richer-exercise set above before learner validation. After the internal quality pass, ask a small group of learners whether they can solve a later related problem independently and understand why their progress state changed before expanding the catalog broadly or tuning review intervals.
+**Goal:** Move from isolated functions to building and maintaining a complete feature.
 
-## Local fluency platform — implemented foundations
+Start with one connected plain TypeScript browser feature using the existing DOM and multi-file owners. Keep it inside the Frontend track rather than adding a new main area.
 
-- [x] Local profiles with legacy migration, save-before-switch, rename, separate imports, full exports, and confirmed deletion.
-- [x] Searchable skill reference: 14 lessons with objectives, prerequisites, worked examples, walkthroughs, common mistakes, related concepts, and bookmarks.
-- [x] Interactive prediction and missing-code checks; separate knowledge-check evidence from coding evidence.
-- [x] Optional dated starting assessment and transparent four-dimension self-review.
-- [x] Eleven more application/recall exercises and recurring review variants with visible scheduling reasons.
-- [x] Personal weekly plans and searchable notes, mistakes, questions, and saved notebook drafts.
-- [x] Frontend/backend project milestones and multi-file integration exercises with local module imports.
-- [x] Optional interview timers, saved clarification, and post-round debrief.
-- [x] Knowledge references attached to workspace tasks and failed-check concepts.
-- [x] Content validation command, independent reference checks, profile/backup tests, and React flow coverage.
-- [x] Prepared learner observation and delayed-transfer protocol in `docs/LEARNER_VALIDATION.md`.
-- [x] Add pull-request checks for lint, Node tests, content validation, build/bundle budgets, and Chromium flows; run portable smoke checks in the release matrix. Remote CI results remain unverified locally.
-- [x] Add real-browser worker cancellation/timeouts, editor fallback, preview interactions, and isolated SQLite failure/retry/reload/restore coverage. Selected local-server flows block external requests; full disconnected and platform validation remains pending.
-- [x] Add a validation journey with fresh stock-adjustment independence, conditional delivery-window recall, and normalized batch-import transfer. Scheduling checks do not establish learning effectiveness.
-- [ ] Complete real visual, keyboard, assistive-technology, zoom, and disconnected-browser walkthroughs.
-- [ ] Execute release checks on Windows/Linux and observe real learners before claiming learning effectiveness.
-- [x] Add a complete request-ownership journey with search-state practice, delayed multi-slot recall, refresh transfer, and compact content discovery. See `docs/CONTENT_GAPS.md` for the remaining coverage gaps.
-- [x] Add a combined beginner-friendly Algorithms & Data Structures path with collection operations, stack/queue introductions, and initial array techniques. See `docs/ALGORITHMS_DATA_STRUCTURES.md` for the playable scope and expansion order.
-- [ ] Add distinct independent/recall tasks for queue and algorithm techniques, then complete linked-list, recursion, sorting, tree, graph, and dynamic-programming stages.
-- [x] Add a plain TypeScript browser path, a state-modeling lesson and guided/independent/delayed-recall journey, and three external project levels with detailed requirements and notebook self-review. External work remains learner-reported.
-- [ ] Validate the three-level browser progression with learners, then add equivalent project choices and deepen dedicated DOM, persistence, generics, and learner-written-test practice.
-- [ ] Deepen async, React, and database practice beyond the introductory reference lessons; introduce real service/database runners when those tasks need them.
-- [ ] Add externally distributable content-pack tooling after an isolation and content-migration design.
+- [ ] Sequence a feature through modeling state → rendering → handling input → saving → recovering from invalid data → testing.
+- [ ] Provide integration checkpoints and a final independent brief that combines familiar skills without supplying the implementation approach.
+- [ ] Add a learner-written testing journey: choose boundary cases, expose a plausible faulty implementation, repair it, and apply the skill in a fresh delayed task.
+- [ ] Add actual asynchronous practice using deterministic local fixtures: awaiting work, parallel operations, partial failure, cancellation, and cleanup. Distinguish policy traces from runtime behavior.
+- [ ] Add a maintenance journey: read unfamiliar code, reproduce a bug, write a regression test, fix it, and adapt to a changed requirement.
+- [ ] Use existing external browser project briefs as transfer options. External self-reviews remain learner-reported rather than checked fluency evidence.
 
-No accounts, certificates, leaderboards, video courses, or AI tutoring will be added. Learning effectiveness and cross-platform validation remain evidence gates, not automatic consequences of shipping features.
+**Done when:** One complete feature can be built, tested, explained, and repaired through the existing practice loop. Behavioral checks, type checks, visual review, accessibility review, and self-reviewed reasoning remain distinct.
+
+## 5. Deepen the paths you actually use
+
+**Goal:** Build confidence through different applications of the same skill before adding more topics.
+
+- [ ] Record where you get stuck during ordinary practice: wording, missing prerequisite, approach, syntax, boundaries, or integration. Use those notes to select the next content batch.
+- [ ] Add distinct independent and recall tasks for thin areas, starting with queues, two pointers, windows, binary search, and DOM interactions. Inspect current journey coverage before adding duplicates.
+- [ ] Review existing sorting, recursion, tree, and graph journeys for difficulty transitions and unfamiliar transfer; these topics and journeys already exist.
+- [ ] Deepen TypeScript through narrowing unknown input, discriminated unions, exhaustive handling, generics, and reusable typed APIs. Separate compile-time guarantees from behavioral checks.
+- [ ] Strengthen debugging and frontend practice with fresh contexts instead of cosmetic variants of the same problem.
+- [ ] Keep batches small and complete: a lesson where needed, guided practice, an independent application, delayed recall, reference solutions, boundaries, hints, and authored review.
+
+**Done when:** Each chosen batch addresses a difficulty observed in your own use and includes a fresh application that cannot be solved merely by recalling the previous answer. Later attempts support only the evidence the task actually establishes.
+
+See [content authoring](./docs/CONTENT_AUTHORING.md) for requirements and the [content gap map](./docs/CONTENT_GAPS.md) for editorial context. Check documentation snapshots against current source before selecting work.
+
+## Later, when there is a concrete need
+
+- [ ] Introduce one complete React task with actual rendering and effect cleanup before expanding React content.
+- [ ] Introduce one local SQLite task with real queries and transaction behavior before expanding database content. Use temporary learner-independent data.
+- [ ] Add alternative external projects after the existing browser progression is useful in practice.
+- [ ] Consider distributable content packs only after defining executable-content isolation, versioning, and evidence migration.
+
+These options should not delay making daily personal practice clear and enjoyable.
+
+## Reliability and verification throughout
+
+Keep browser development and the local SQLite mode usable. Protect profile separation, stable content IDs, pending writes, drafts, backups, cancellation, and rejection of stale results.
+
+- Source changes: run relevant focused tests, then `yarn lint`, `yarn test`, and `yarn build`.
+- Content, assessment, or content-model changes: also run `yarn content:check`.
+- Practice, editor, navigation, profile, or browser-persistence changes: also run `yarn test:e2e` using its dedicated server and fresh contexts.
+- UI changes: inspect the affected flow at representative sizes, with keyboard access and work preservation. Automated flows do not establish visual fidelity or assistive-technology support.
+- Packaging or local-service changes: run `yarn package` and `node scripts/verify-portable.mjs` as appropriate, using temporary data directories.
+- Documentation changes: review links, paths, and commands. Finish every change with `git diff --check` and review the final diff.
+
+Record failures and unavailable checks explicitly. See [local reliability](./docs/LOCAL_RELIABILITY.md), [accessibility review](./docs/ACCESSIBILITY_REVIEW.md), and [portable bundles](./docs/PORTABLE_BUNDLE.md).
+
+## Before sharing more widely
+
+Public release is a separate milestone, not the current priority.
+
+- [ ] Complete disconnected-browser, first-run, upgrade, backup/restore, and launcher checks on each supported platform.
+- [ ] Complete visual, keyboard, zoom, and assistive-technology walkthroughs.
+- [ ] Observe a small group using the first session, recommendations, and delayed transfer, following the [learner validation protocol](./docs/LEARNER_VALIDATION.md).
+- [ ] Use observations before tuning review intervals or claiming learning effectiveness.
+- [ ] Refresh behavior and coverage documentation so release claims match current implementation and recorded verification.
+
+## Scope boundaries
+
+Keep three main areas: Trail, Library, and Progress. Extend existing owners and controls before adding abstractions or dependencies.
+
+Accounts, cloud sync, leaderboards, certificates, video courses, and AI tutoring remain outside scope. Completion badges recognize personal work; they are not credentials or an overall coding score.
