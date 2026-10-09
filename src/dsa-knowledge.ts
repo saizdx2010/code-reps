@@ -74,7 +74,7 @@ export const dsaSkills: Skill[] = [{
         'answer': 2,
         'explanation': 'The read is undefined; the explicit fallback converts absence to null.'
       }],
-    'repIds': ['ds-stack-operations', 'ds-queue-operations', 'balanced-brackets', 'remaining-actions'],
+    'repIds': ['ds-stack-operations', 'ds-queue-operations', 'remaining-actions'],
     'related': ['collection-operations', 'stacks', 'complexity']
   }, {
     'id': 'array-techniques',

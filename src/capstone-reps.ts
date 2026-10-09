@@ -16,7 +16,7 @@ export const capstoneReps: Rep[] = [
   {
     ...tickets, id: 'project-ticket-api', title: 'Integrate a multi-file ticket API',
     context: 'Project integration: separate query validation from request handling. Keep the request and response contract from the ticket exercise and verify the integrated modules.',
-    planPrompt: 'Decide what parseQuery returns for malformed input. Trace filtering, matching total, and page slice in the handler. Explain which checks cover the boundary between the modules.',
+    planPrompt: 'parseQuery returns null for any invalid query. Decide which inputs count as invalid. Trace filtering, matching total, and page slice in the handler. Explain which checks cover the boundary between the modules.',
     starter: encodeFiles({ entry: 'handler.ts', files: {
       'query.ts': 'export type Query = { status?: "open" | "closed"; search: string; page: number; size: number }\n\nexport function parseQuery(input: unknown): Query | null {\n  // Validate the query contract in the brief; use page 1 and size 2 defaults.\n  return null\n}\n',
       'handler.ts': 'import { parseQuery } from "./query"\nexport type Ticket = { id: string; title: string; status: "open" | "closed" }\n\nexport function handleTickets(request: { method: string; query: unknown }, tickets: Ticket[]): unknown {\n  // Check request.method, then parseQuery(request.query), filter and page matching tickets.\n  return { status: 400, body: { error: "INVALID_QUERY" } }\n}\n',
