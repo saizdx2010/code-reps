@@ -48,6 +48,7 @@ export function parseFluency(raw: unknown): FluencyState {
 export const recallVariants: Record<string, string[]> = {
   windows: ['shortest-run-reaching-target', 'count-unique-windows', 'algo-window-sum'],
   sorting: ['kth-smallest-copy', 'sort-score-records', 'algo-merge-sorted'],
+  'binary-search': ['smallest-daily-capacity', 'first-insertion-point', 'algo-binary-search'],
   recursion: ['count-object-leaves', 'flatten-nested-numbers', 'algo-recursive-sum'],
   trees: ['tree-value-path', 'tree-depth-sum', 'algo-tree-depth'],
   graphs: ['graph-connected-groups', 'graph-shortest-hops', 'algo-graph-reachable'],

@@ -145,6 +145,8 @@ test('DSA application checks reject changed order, deduplication, leaf rules, an
     'kth-smallest-copy': 'function kthSmallest(numbers:number[],k:number) { return [...new Set(numbers)].sort((a,b)=>a-b)[k-1] ?? null }',
     'count-unique-windows': 'function countUniqueWindows(labels:string[],k:number) { return labels.length>=k && new Set(labels).size===labels.length ? labels.length-k+1 : 0 }',
     'shortest-run-reaching-target': 'function shortestRun(numbers:number[],target:number) { let best=0; for(let i=0;i<numbers.length;i++) if(numbers[i]>=target) return 1; let total=numbers.reduce((a,b)=>a+b,0); return total>target?numbers.length:0 }',
+    'first-insertion-point': 'function insertionPoint(numbers:number[],target:number) { return numbers.indexOf(target) }',
+    'smallest-daily-capacity': 'function smallestCapacity(weights:number[],days:number) { return weights.length ? Math.max(...weights) : 0 }',
     'flatten-nested-numbers': 'function flattenNumbers(items:unknown[]) { return items.flat(10).filter(Boolean) }',
     'count-object-leaves': 'function countLeaves(input:Record<string,unknown>):number { return Object.values(input).reduce<number>((sum,value)=>sum+(value ? typeof value === "object" ? countLeaves(value as Record<string,unknown>) : 1 : 0),0) }',
     'tree-depth-sum': 'function sumAtDepth(root:{value:number;children:any[]}|null,depth:number):number { if(!root)return 0; if(!depth)return root.value; return Math.max(0,...root.children.map(child=>sumAtDepth(child,depth-1))) }',

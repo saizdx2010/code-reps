@@ -122,6 +122,8 @@ export const repLevels: Record<string, RepLevel> = {
   'kth-smallest-copy': 2,
   'count-unique-windows': 2,
   'shortest-run-reaching-target': 2,
+  'first-insertion-point': 2,
+  'smallest-daily-capacity': 2,
   'simplify-file-path': 2,
   'algo-prefix-sums': 2,
   'algo-merge-intervals': 2,

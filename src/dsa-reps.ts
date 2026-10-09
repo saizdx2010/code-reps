@@ -1171,6 +1171,92 @@ export const dsaReps: Rep[] = [{
     ]
   },
   {
+    'id': 'first-insertion-point',
+    'title': 'Find an insertion point',
+    'category': 'Algorithm applications',
+    'prompt': 'Return the lowest index where target could be inserted so numbers stays in non-decreasing order. That is the index of the first value that is greater than or equal to target, or numbers.length when every value is smaller. Duplicates are allowed, and the answer is the first index among equal values. Do not change numbers.',
+    'example': {
+      'input': 'insertionPoint([1, 3, 3, 7], 3)',
+      'output': '1'
+    },
+    'note': 'numbers is already in non-decreasing order, with at most 100 integers from -1000 to 1000; target is an integer in the same range. Empty input returns 0. Checks verify the index, not logarithmic time or a particular search approach.',
+    'vocabulary': [
+      {
+        'term': 'Insertion point',
+        'meaning': 'the lowest index where a value can be placed without breaking order'
+      },
+      {
+        'term': 'Boundary',
+        'meaning': 'the position where a yes/no condition changes from false to true'
+      }
+    ],
+    'planPrompt': 'Which yes/no question about one value tells you which side of the answer it is on? What index is returned when the answer is "no" everywhere?',
+    'starter': 'function insertionPoint(numbers: number[], target: number): number {\n  // Write your solution here.\n  return 0\n}\n',
+    'functionName': 'insertionPoint',
+    'preserveInput': true,
+    'hints': [
+      'Write a small ordered array and mark each value with the answer to one question about target.',
+      'Because the array is ordered, that answer changes at most once. The result is where it changes.',
+      'Decide what an equal value tells you, and check a target below every value and one above every value.'
+    ],
+    'checks': [
+      { name: 'Maximum length of duplicates', input: [Array(100).fill(1000), 1000], expected: 0 },
+      { name: 'Maximum length, target above all', input: [Array.from({ length: 100 }, (_, i) => i * 2 - 100), 1000], expected: 100 },
+      { name: 'First of several duplicates', input: [[1, 3, 3, 3, 7], 3], expected: 1 },
+      { name: 'All values equal target', input: [[2, 2, 2], 2], expected: 0 },
+      { name: 'Absent between values', input: [[1, 3, 5, 7], 4], expected: 2 },
+      { name: 'Below every value', input: [[-5, 0, 4], -1000], expected: 0 },
+      { name: 'Above every value', input: [[-5, 0, 4], 5], expected: 3 },
+      { name: 'Empty input', input: [[], 3], expected: 0 },
+      { name: 'Single smaller value', input: [[1], 2], expected: 1 },
+      { name: 'Duplicates before a larger value', input: [[0, 2, 2, 2, 2, 9], 5], expected: 5 },
+      { name: 'Equal at the end', input: [[1, 4, 4], 4], expected: 1 }
+    ]
+  },
+  {
+    'id': 'smallest-daily-capacity',
+    'title': 'Find the smallest workable limit',
+    'category': 'Algorithm applications',
+    'prompt': 'Packages must be shipped in the given order. Each day a truck carries a run of consecutive packages whose total weight is at most the truck capacity; a package cannot be split. Return the smallest capacity that ships every package within days days. Return 0 when there are no packages. Do not change weights.',
+    'example': {
+      'input': 'smallestCapacity([1, 2, 3, 4, 5], 2)',
+      'output': '9'
+    },
+    'note': 'At most 100 packages, each an integer weight from 1 to 1000. days is an integer from 1 to 100 and may exceed the number of packages. Order must not be changed. Checks verify the capacity, not a particular search approach.',
+    'vocabulary': [
+      {
+        'term': 'Feasible',
+        'meaning': 'a capacity that ships everything within the allowed days'
+      },
+      {
+        'term': 'Answer space',
+        'meaning': 'the range of candidate answers, rather than positions in the input'
+      }
+    ],
+    'planPrompt': 'What are the smallest and largest capacities worth considering? If one capacity works, what does that tell you about larger ones?',
+    'starter': 'function smallestCapacity(weights: number[], days: number): number {\n  // Write your solution here.\n  return 0\n}\n',
+    'functionName': 'smallestCapacity',
+    'preserveInput': true,
+    'hints': [
+      'First write a way to answer "does this capacity finish within the days?" for one capacity.',
+      'If a capacity works, every larger capacity works too. Name the lowest and highest capacities you need to consider.',
+      'Use the yes/no answer to discard half of the candidate capacities each time.'
+    ],
+    'checks': [
+      { name: 'Maximum input, one day', input: [Array(100).fill(1000), 1], expected: 100000 },
+      { name: 'Maximum input, one package per day', input: [Array.from({ length: 100 }, (_, i) => i + 1), 100], expected: 100 },
+      { name: 'Two days', input: [[1, 2, 3, 4, 5], 2], expected: 9 },
+      { name: 'Order matters', input: [[7, 2, 5, 10, 8], 2], expected: 18 },
+      { name: 'One day carries everything', input: [[3, 4, 5], 1], expected: 12 },
+      { name: 'More days than packages', input: [[4, 9, 2], 10], expected: 9 },
+      { name: 'Heaviest package sets the floor', input: [[1, 1, 50, 1, 1], 3], expected: 50 },
+      { name: 'Single package', input: [[6], 1], expected: 6 },
+      { name: 'No packages', input: [[], 3], expected: 0 },
+      { name: 'Equal weights', input: [[5, 5, 5, 5], 2], expected: 10 },
+      { name: 'Alternating heavy and light', input: [[1, 5, 1, 5, 1], 3], expected: 6 }
+    ]
+  },
+  {
     'id': 'flatten-nested-numbers',
     'title': 'Flatten nested number lists',
     'category': 'Algorithm applications',
