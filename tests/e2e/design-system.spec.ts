@@ -139,7 +139,7 @@ test('rapid practice tab selection settles on the last pane without losing a pla
   await page.getByLabel('Your plan', { exact: true }).fill('Count each value and resolve ties in encounter order.')
   await tabs.evaluate(element => {
     for (const name of ['Understand', 'Explain', 'Review', 'Plan']) {
-      Array.from(element.querySelectorAll('button')).find(button => button.textContent?.trim() === name)?.click()
+      Array.from(element.querySelectorAll('button')).find(button => button.getAttribute('aria-label') === name)?.click()
     }
   })
   await expect(tabs.getByRole('button', { name: 'Plan', exact: true })).toHaveAttribute('aria-current', 'step')

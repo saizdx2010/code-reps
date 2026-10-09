@@ -15,7 +15,8 @@ async function finish(page: Page, id: string, code: string) {
   await chooseOption(page.getByLabel('What was hardest?', { exact: true }), 'none')
   await chooseOption(page.getByLabel('How confident do you feel?', { exact: true }), 'confident')
   await page.getByRole('button', { name: 'Complete rep', exact: false }).click()
-  await expect(page.getByText('Completed and saved on this device.', { exact: true })).toBeVisible()
+  await expect(page.getByText('Attempt recorded in History.', { exact: true })).toBeVisible()
+  await expect(page.locator('.workspace-save-status')).toHaveText('Saved in browser')
 }
 
 test('validation journey requires a fresh delayed recall and remains discoverable', async ({ page }) => {

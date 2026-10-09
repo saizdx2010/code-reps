@@ -1,6 +1,8 @@
 import { repPracticeContext } from './curriculum.ts'
 import { migratePathId, paths } from './path.ts'
 import { recurringReviews } from './fluency.ts'
+import type { Rep } from './rep.ts'
+import { repLevel } from './rep-levels.ts'
 import { reps } from './rep.ts'
 import { foundations } from './foundations.ts'
 import { getAllJourneys } from './learning.ts'
@@ -83,4 +85,18 @@ export function getPracticePlan(drafts: Record<string, PortableAttempt>, history
     repId: newGoalRepId, mode: 'start', reason: `${repPracticeContext(newGoalRepId).reason} Build toward your selected learning goal: ${goalPath.title}.`,
   } : undefined) ?? (available ? { repId: available.id, mode: 'start', reason: repPracticeContext(available.id).reason } : null)
   return { next, recommended, unfinished, due, progress }
+}
+
+/** Guidance only: writing remains self-reviewed, with no length or prose scoring. */
+export function practiceWritingPrompts(rep: Pick<Rep, 'id' | 'format' | 'planPrompt'>) {
+  const scale = !rep.format && foundations.some(lesson => lesson.repId === rep.id)
+    ? 'sentence' : repLevel(rep.id) === 1 ? 'focused' : 'reasoned'
+  const brief = scale === 'sentence'
+  return {
+    scale,
+    plan: rep.planPrompt,
+    planHelp: brief ? 'One useful sentence is enough.' : scale === 'focused' ? 'Name your approach and one boundary.' : 'Explain your approach, boundaries, and tradeoffs.',
+    explanation: brief ? 'In one useful sentence, explain what your code does and why.' : scale === 'focused' ? 'Explain your code and trace one boundary.' : 'Explain why it works, trace a boundary, and discuss tradeoffs and time or space costs.',
+    rows: brief ? 2 : scale === 'focused' ? 3 : 5,
+  }
 }

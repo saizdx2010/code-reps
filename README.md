@@ -30,6 +30,8 @@ The workspace follows five steps:
 4. **Explain** your decisions, tradeoffs, and complexity in plain English.
 5. **Review** the result, reflect on difficulties, and return for fresh practice.
 
+Practice writing scales with the task: one useful sentence for a small Foundations rep, a focused approach and boundary for other beginner reps, and deeper reasoning for larger problems. The step rail shows missing writing, checks, and reflection; the header keeps save status visible. Completion offers one next action, with a quiet option to stop for today. Ending a recorded session remains a separate action. Existing drafts keep their format.
+
 > Passing checks establishes behavior. Plans and explanations use a self-review rubric; independent fluency and retention need evidence from unhinted work and later recall.
 
 ## What you can practise
