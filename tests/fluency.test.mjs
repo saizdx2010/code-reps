@@ -50,3 +50,20 @@ test('failure references connect boundary checks to authored knowledge',()=>{
   assert.equal(relatedHelp('backend-ticket-handler',['Rejects invalid query'])[0].id,'validation')
   assert.equal(relatedHelp('count-words',['Handles whitespace'])[0].id,'text')
 })
+
+test('retired lesson answers remain readable without completing replacement questions', () => {
+  const state = emptyFluency()
+  for (const id of ['frontend:derive', 'event-loop:prediction-2']) {
+    state.answers[id] = { choice: 0, correct: true, answeredAt: day(1) }
+  }
+  assert.deepEqual(parseFluency(state), state)
+  for (const id of ['frontend', 'event-loop']) {
+    assert.equal(skillEvidence(id, [], state).lessonCorrect, 0)
+  }
+  assert.throws(() => parseFluency({ ...state, answers: {
+    'event-loop:prediction-2': { choice: 1, correct: true, answeredAt: day(1) },
+  } }), /answer/i)
+  assert.throws(() => parseFluency({ ...state, answers: {
+    'frontend:unknown': { choice: 0, correct: true, answeredAt: day(1) },
+  } }), /answer/i)
+})

@@ -65,3 +65,8 @@ Keep variable names and values concise so diagram labels remain readable.
 These authored snapshots appear only in the post-check comparison reveal after
 all checks pass. They describe the reference approach, not the learner's live
 execution, and must never be copied into independent or recall prompts.
+
+Retired checked questions can keep their old answer contracts in `src/fluency.ts`.
+This lets older local data and backups load. Retired answers do not count toward
+replacement questions. The frontend derived-list and event-loop follow-up checks
+use new IDs after their option wording changed in the October 2026 audit.

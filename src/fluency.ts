@@ -25,13 +25,18 @@ const date = (x: unknown) => text(x, 100) && Number.isFinite(Date.parse(x))
 const judgments = ['not-yet', 'with-help', 'independent']
 const pathIds = new Set<string>(paths.map(path => path.id))
 const skillIds = new Set(skills.map(s => s.id))
+// Keep old answer contracts readable without counting them as current lesson evidence.
+const retiredQuestions = new Map([
+  ['frontend:derive', { options: ['Source items and the current query', 'An unrelated saved copy', 'A mutation of the source array'], answer: 0, completion: false }],
+  ['event-loop:prediction-2', { options: ['It runs during the draining checkpoint', 'It always waits behind the next timer', 'It runs synchronously inside queueMicrotask'], answer: 0, completion: false }],
+])
 const questionIds = new Set(skills.flatMap(s => s.questions.map(q => `${s.id}:${q.id}`)))
 export function parseFluency(raw: unknown): FluencyState {
   if (JSON.stringify(raw)?.length > 900_000) throw new Error('Learning data is full. Export your profile and remove older notes or rounds before adding more.')
   if (!obj(raw) || raw.version !== 1 || !obj(raw.goal) || !text(raw.goal.pathId, 60) || !pathIds.has(raw.goal.pathId) || !Number.isInteger(raw.goal.minutes) || Number(raw.goal.minutes) < 5 || Number(raw.goal.minutes) > 120 || !Array.isArray(raw.goal.days) || raw.goal.days.length > 7 || raw.goal.days.some(d => !Number.isInteger(d) || d < 0 || d > 6) || new Set(raw.goal.days).size !== raw.goal.days.length || !obj(raw.answers) || !obj(raw.reviews) || !Array.isArray(raw.notes) || raw.notes.length > 1000 || !Array.isArray(raw.bookmarks) || raw.bookmarks.some(id => !skillIds.has(id)) || !Array.isArray(raw.rounds) || raw.rounds.length > 1000 || (raw.diagnosticStartedAt !== undefined && !date(raw.diagnosticStartedAt))) throw new Error('Learning data is invalid. Your saved copy has been kept.')
   for (const [id, answer] of Object.entries(raw.answers)) {
-    const [sid, qid] = id.split(':'); const question = skills.find(s => s.id === sid)?.questions.find(q => q.id === qid)
-    if (!questionIds.has(id) || !obj(answer) || (answer.response !== undefined && !text(answer.response, 300)) || !Number.isInteger(answer.choice) || Number(answer.choice) < 0 || Number(answer.choice) >= question!.options.length || answer.correct !== (question!.completion ? typeof answer.response === 'string' && answer.response.trim() === question!.options[question!.answer] : answer.choice === question!.answer) || !date(answer.answeredAt)) throw new Error('Invalid lesson answer.')
+    const [sid, qid] = id.split(':'); const question = skills.find(s => s.id === sid)?.questions.find(q => q.id === qid) ?? retiredQuestions.get(id)
+    if ((!questionIds.has(id) && !retiredQuestions.has(id)) || !obj(answer) || (answer.response !== undefined && !text(answer.response, 300)) || !Number.isInteger(answer.choice) || Number(answer.choice) < 0 || Number(answer.choice) >= question!.options.length || answer.correct !== (question!.completion ? typeof answer.response === 'string' && answer.response.trim() === question!.options[question!.answer] : answer.choice === question!.answer) || !date(answer.answeredAt)) throw new Error('Invalid lesson answer.')
   }
   for (const [id, review] of Object.entries(raw.reviews)) if (!skillIds.has(id) || !obj(review) || !['understanding', 'approach', 'implementation', 'explanation'].every(k => judgments.includes(String(review[k]))) || !text(review.evidence) || !date(review.updatedAt)) throw new Error('Invalid self-review.')
   for (const note of [...raw.notes, ...(raw.noteDraft === undefined ? [] : [raw.noteDraft])]) if (!obj(note) || !text(note.id, 80) || !text(note.title, 120) || !text(note.body) || !text(note.skillId, 60) || (note.skillId && !skillIds.has(note.skillId)) || !text(note.repId, 100) || !['note', 'mistake', 'question'].includes(String(note.kind)) || !date(note.updatedAt)) throw new Error('Invalid notebook entry.')

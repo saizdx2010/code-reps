@@ -44,7 +44,7 @@ export const skills: Skill[] = [
     example: 'function countPositive(numbers: number[]) {\n  let count = 0\n  for (const n of numbers) {\n    if (n > 0) count++\n  }\n  return count\n}\ncountPositive([-2, 4, 0, 3]) // 2',
     walkthrough: ['Before the loop, count is 0.', '-2 does not qualify: count stays 0.', '4 qualifies: count becomes 1.', '0 does not qualify: count stays 1.', '3 qualifies: count becomes 2. Empty input would leave count at 0.'],
     mistakes: ['Using >= when the contract says strictly greater.', 'Returning inside the loop before all items are visited.', 'Mutating the source while deriving a result.'],
-    questions: [q('scan', 'What is the final count?', 'let count = 0\nfor (const n of [0, -2, 3, 4]) {\n  if (n % 2 === 0) count++\n}', ['2', '3', '4'], 1, 'Zero, -2, and 4 are even. Negative values and zero still satisfy remainder zero.'), { ...q('boundary', 'Complete the condition: type n > limit, n >= limit, or n !== limit.', 'if (___) count++', ['n >= limit', 'n > limit', 'n !== limit'], 1, 'Strictly above excludes values equal to the limit. !== also includes smaller values.'), completion: true }],
+    questions: [q('scan', 'What is the final count?', 'let count = 0\nfor (const n of [0, -2, 3, 4]) {\n  if (n % 2 === 0) count++\n}', ['2', '3', '4'], 1, 'Zero, -2, and 4 are even. Negative values and zero still satisfy remainder zero.'), { ...q('boundary', 'Complete the condition: type n >= limit, n > limit, or n !== limit.', 'if (___) count++', ['n >= limit', 'n > limit', 'n !== limit'], 1, 'Strictly above excludes values equal to the limit. !== also includes smaller values.'), completion: true }],
     repIds: ['sum-positive-numbers', 'count-even-numbers', 'count-above-threshold', 'sum-matching-prices', 'count-open-tickets'], related: ['text', 'lookup', 'complexity'],
   },
   {
@@ -72,7 +72,7 @@ export const skills: Skill[] = [
     example: 'const seen = new Set<number>()\nfor (const n of [5, 2, 2, 5]) {\n  if (seen.has(n)) { /* first repeat is 2 */ break }\n  seen.add(n)\n}',
     walkthrough: ['5 is new: seen becomes {5}.', '2 is new: seen becomes {5, 2}.', 'The next 2 is already present, so it is the first repeat.', 'The later 5 does not change which repeat happened first.'],
     mistakes: ['Adding before checking membership.', 'Forgetting the tie rule.', 'Comparing separate object keys as if equal fields imply equal identity.'],
-    questions: [q('repeat', 'Which value repeats first during the scan?', '[8, 3, 3, 8]', ['8', '3', 'Neither'], 1, 'The second 3 occurs before the second 8.'), { ...q('count', 'Complete the update: use (counts.get(key) ?? 0) + 1 for an initial zero.', 'counts.set(key, ___)', ['counts.get(key) + 1', '(counts.get(key) ?? 0) + 1', '1'], 1, 'Missing counts are undefined. Use zero as the initial count, then increment.'), completion: true }],
+    questions: [q('repeat', 'Which value repeats first during the scan?', '[8, 3, 3, 8]', ['8', '3', 'Neither'], 1, 'The second 3 occurs before the second 8.'), { ...q('count', 'Complete the update so a key seen for the first time starts from zero.', 'counts.set(key, ___)', ['counts.get(key) + 1', '(counts.get(key) ?? 0) + 1', '1'], 1, 'Missing counts are undefined. Use zero as the initial count, then increment.'), completion: true }],
     repIds: ['has-duplicate', 'most-frequent-number', 'first-repeated-number', 'first-duplicate-label', 'count-statuses'], related: ['text', 'complexity'],
   },
   {
@@ -114,7 +114,7 @@ export const skills: Skill[] = [
     example: 'const query = " AD ".trim().toLowerCase()\nconst visible = people.filter(person =>\n  person.name.toLowerCase().includes(query)\n)',
     walkthrough: ['Normalize the query once.', 'Compare each name using the same case rule.', 'Keep matching original objects in their original order.', 'Render an empty message only after the request has resolved.'],
     mistakes: ['Showing empty content during loading.', 'Lowercasing the displayed label.', 'Using clickable divs instead of buttons.', 'Rendering names as HTML.'],
-    questions: [q('precedence', 'Which state should this exercise display?', '{ loading: true, error: "Offline", count: 0 }', ['Empty', 'Error', 'Loading'], 2, 'Loading has priority under the authored contract.'), q('derive', 'Where should the filtered list come from?', '', ['Source items and the current query', 'An unrelated saved copy', 'A mutation of the source array'], 0, 'Deriving output avoids maintaining conflicting copies of the same information.')],
+    questions: [q('precedence', 'Which state should this exercise display?', '{ loading: true, error: "Offline", count: 0 }', ['Empty', 'Error', 'Loading'], 2, 'Loading has priority under the authored contract.'), q('derive-source-v2', 'Where should the filtered list come from?', '', ['Source items and the current query', 'An unrelated saved copy', 'The list from the previous query'], 0, 'Deriving output avoids maintaining conflicting copies of the same information.')],
     repIds: ['frontend-visible-items', 'frontend-view-state', 'frontend-directory', 'project-team-directory', 'interview-frontend', 'derive-task-summary'], related: ['react', 'async', 'testing'],
   },
   {
