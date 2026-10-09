@@ -177,9 +177,9 @@ test('lesson and path completion rows respond in place without moving their layo
   await expect.poll(() => page.locator('main').evaluate(element => element.getAnimations().length)).toBe(0)
   const card = page.locator('.compact-path-list .list-row > button').first()
   const next = page.locator('.compact-path-list .list-row > button').nth(1)
-  // The upcoming disclosure animates open; measure once its rows stop moving.
-  let settled = await next.boundingBox()
-  await expect.poll(async () => { const box = await next.boundingBox(); const same = box?.y === settled?.y; settled = box; return same }).toBe(true)
+  // The upcoming list sits below the earned badges; bring both rows into view so focus does not scroll the page.
+  await next.scrollIntoViewIfNeeded()
+  await expect.poll(() => page.locator('main').evaluate(element => element.getAnimations().length)).toBe(0)
   const nextPosition = await next.boundingBox()
   await card.hover()
   await expect.poll(() => card.evaluate(element => getComputedStyle(element).transform)).toBe('none')
