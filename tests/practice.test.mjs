@@ -2,7 +2,7 @@ import { paths } from '../src/path.ts'
 import { journeys } from '../src/learning.ts'
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { getPracticePlan, attemptStatus, nextRepInPath } from '../src/practice.ts'
+import { getPracticePlan, attemptStatus, nextRepInPath, practiceWritingPrompts } from '../src/practice.ts'
 import { reps } from '../src/rep.ts'
 
 const now = Date.parse('2026-09-30T12:00:00Z')
@@ -148,4 +148,20 @@ test('nextRepInPath follows path order and skips completed reps', () => {
   assert.equal(nextRepInPath('typescript', 'write-functions', none), 'use-conditions')
   assert.equal(nextRepInPath('typescript', 'event-loop-order', none), undefined)
   assert.equal(nextRepInPath('typescript', 'not-in-this-path', none), undefined)
+})
+
+
+test('writing guidance scales from existing metadata without changing authored prompts', () => {
+  for (const [id, scale, rows] of [['declare-variables', 'sentence', 2], ['sum-positive-numbers', 'focused', 3], ['most-frequent-number', 'reasoned', 5], ['project-team-directory', 'reasoned', 5], ['dom-disclosure', 'reasoned', 5]]) {
+    const rep = reps.find(item => item.id === id)
+    const before = structuredClone(rep)
+    const prompts = practiceWritingPrompts(rep)
+    assert.equal(prompts.scale, scale)
+    assert.equal(prompts.rows, rows)
+    assert.equal(prompts.plan, rep.planPrompt)
+    assert.deepEqual(rep, before)
+  }
+  assert.match(practiceWritingPrompts(reps.find(rep => rep.id === 'declare-variables')).explanation, /one useful sentence/)
+  assert.equal(practiceWritingPrompts({ id: 'future-rep', planPrompt: 'Make a plan' }).scale, 'reasoned')
+  assert.equal(practiceWritingPrompts({ id: 'declare-variables', format: 'frontend', planPrompt: 'Make a plan' }).scale, 'focused')
 })

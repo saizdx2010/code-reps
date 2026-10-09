@@ -785,3 +785,8 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 .trace-cell-now .trace-cell-index { color: var(--feature-text); }
 .trace-table-focus { margin: 8px 0 0; font-weight: 700; overflow-wrap: anywhere; }
 @container (max-width: 500px) { .trace-panes { grid-template-columns: minmax(0, 1fr); } }
+
+/* Requirement labels belong to the existing step rail and narrow step bar. */
+.practice-steps button { flex-direction: column; gap: 2px; }
+.practice-steps button small { font-size: 10px; line-height: 1.2; color: inherit; }
+.completion-panel .stop-for-today { margin-bottom: 0; }
