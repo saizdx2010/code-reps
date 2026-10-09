@@ -2813,7 +2813,7 @@ export const practicalReps: Rep[] = [
       "input": "listenerCounts([{\"kind\": \"listen\", \"owner\": \"A\", \"topic\": \"x\"}, {\"kind\": \"listen\", \"owner\": \"B\", \"topic\": \"x\"}, {\"kind\": \"listen\", \"owner\": \"A\", \"topic\": \"y\"}, {\"kind\": \"dispose\", \"owner\": \"A\"}])",
       "output": "[1, 2, 3, 1]"
     },
-    "note": "Inputs are valid under the stated contract. Do not change supplied arrays or objects.",
+    "note": "Every event has a kind of listen or dispose, and owner and topic (listen only) are nonempty strings. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
         "term": "Ownership",
@@ -2937,7 +2937,7 @@ export const practicalReps: Rep[] = [
       "input": "emptyRooms([{\"kind\": \"enter\", \"room\": \"x\", \"user\": \"A\"}, {\"kind\": \"enter\", \"room\": \"x\", \"user\": \"B\"}, {\"kind\": \"enter\", \"room\": \"y\", \"user\": \"A\"}, {\"kind\": \"leave\", \"room\": \"x\", \"user\": \"A\"}, {\"kind\": \"leave\", \"room\": \"y\", \"user\": \"A\"}, {\"kind\": \"leave\", \"room\": \"x\", \"user\": \"B\"}])",
       "output": "[\"y\", \"x\"]"
     },
-    "note": "Inputs are valid under the stated contract. Do not change supplied arrays or objects.",
+    "note": "Every event has a kind of enter or leave, and room and user are nonempty strings. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
         "term": "Ownership",

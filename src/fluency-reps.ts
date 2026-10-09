@@ -827,6 +827,21 @@ export const fluencyReps: Rep[] = [
         "expected": [
           4
         ]
+      },
+      {
+        "name": "Keeps nonadjacent matches",
+        "input": [
+          [
+            1,
+            2,
+            1
+          ]
+        ],
+        "expected": [
+          1,
+          2,
+          1
+        ]
       }
     ]
   },
@@ -1102,7 +1117,7 @@ export const fluencyReps: Rep[] = [
     "title": "Repair a page offset",
     "category": "Real-world debugging",
     "format": "debug",
-    "prompt": "Repair the starter so page is one-based: page 1 starts at index 0, page 2 at size. Return up to size IDs without changing input.",
+    "prompt": "Repair the starter so page is one-based: page 1 starts at index 0, page 2 at size. Return up to size IDs without changing input. Check both the start and the end of the slice.",
     "note": "page and size are positive integers. A page beyond the end returns an empty array.",
     "example": {
       "input": "pageWindow([\"a\",\"b\",\"c\",\"d\",\"e\"], 2, 2)",
