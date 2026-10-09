@@ -20,6 +20,20 @@ export const skills: Skill[] = [
     repIds: ['declare-variables', 'basic-types', 'create-objects', 'make-arrays', 'write-functions'], related: ['arrays', 'validation'],
   },
   {
+    id: 'control-flow', title: 'Making decisions and repeating work', summary: 'Choose a branch from explicit boundaries, repeat work until a condition ends it, and return a new value instead of changing the input.', prerequisites: ['values'],
+    objectives: ['Order if and else branches so each boundary belongs to one case.', 'Choose between a for loop and a while loop from the stopping rule.', 'Explain why returning a new object avoids changing the input.'],
+    sections: [
+      { title: 'Branches follow order', body: 'An if statement runs its block when its condition is true. When a branch returns, the rest of the function does not run. So a check such as score >= 90 must come before score >= 80 when you want 90 to belong to the higher band. Test the boundary itself and the value just below it.' },
+      { title: 'Loops need progress', body: 'A for loop suits a known range of values. A while loop suits a stopping rule that depends on changing data. Both need a starting value, a condition that can become false, and a change on each pass. Write the stopping condition before the loop body so you know what should change.' },
+      { title: 'Return a new value', body: 'Some code must keep the value it received. Create a new object or string instead of assigning to the received object. Spread syntax copies fields into a new object, and string methods such as trim return new strings. The original value still belongs to the caller.' },
+    ],
+    example: 'function label(score: number) {\n  if (score >= 90) return "A"\n  if (score >= 80) return "B"\n  return "C or lower"\n}\n\nlet n = 3\nlet count = 0\nwhile (n > 0) {\n  n = n - 1\n  count++\n}',
+    walkthrough: ['For 85, the 90 check fails and the 80 check passes, so the label is B.', 'The return stops the function before the lower checks run.', 'In the while loop, n starts at 3 and goes down by one on each pass.', 'When n is 0 the condition is false, so count stays at 3.'],
+    mistakes: ['Checking a lower boundary first, so a high score matches the wrong band.', 'Writing a loop whose condition never changes, so it never ends.', 'Assigning to a received object and then returning it, which changes the caller\'s data.'],
+    questions: [q('branch', 'Which label does 80 receive?', 'if (score >= 90) return "A"\nif (score >= 80) return "B"\nreturn "C"', ['A', 'B', 'C'], 1, '80 is not at least 90, so the second branch returns B. The lower bound of each band is included.'), { ...q('loop-test', 'Complete the loop condition so it repeats while value is above 1.', 'while (___) { value = Math.floor(value / 2) }', ['value >= 1', 'value > 1', 'value < 1'], 1, 'Using >= 1 would run one extra halving when value is 1, turning it into 0 and counting an extra step.'), completion: true }],
+    repIds: ['use-conditions', 'loop-with-for', 'loop-while', 'string-basics', 'object-update'], related: ['values', 'arrays'],
+  },
+  {
     id: 'arrays', title: 'Arrays and one-pass reasoning', summary: 'Follow an ordered collection, keep a useful invariant, and handle boundaries.', prerequisites: ['values'],
     objectives: ['Trace every iteration, including empty input.', 'Distinguish selection, counting, and transformation.', 'Explain time and extra storage for a single scan.'],
     sections: [
@@ -211,7 +225,7 @@ export const contentVersion = 7
 
 // Discovery categories only; these do not change skill identity or learner evidence.
 export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[] = [
-  { id: 'language', title: 'Language & problem solving', skillIds: ['values', 'state-modeling', 'arrays', 'text', 'lookup', 'stacks', 'complexity'] },
+  { id: 'language', title: 'Language & problem solving', skillIds: ['values', 'control-flow', 'state-modeling', 'arrays', 'text', 'lookup', 'stacks', 'complexity'] },
   { id: 'dsa', title: 'Algorithms & data structures', skillIds: ['collection-operations', 'queues', 'array-techniques'] },
   { id: 'frontend', title: 'Frontend', skillIds: ['frontend', 'react'] },
   { id: 'backend', title: 'Backend & data', skillIds: ['validation', 'http', 'databases'] },

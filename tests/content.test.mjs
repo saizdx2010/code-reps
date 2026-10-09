@@ -30,6 +30,11 @@ const solutions = {
   'create-objects': 'type Person = {name: string; age: number}; function introduce(name: string, age: number) { const person: Person = {name, age}; return `${person.name} is ${person.age} years old` }',
   'make-arrays': 'function firstName(names: string[]) { return names.length ? names[0] : null }',
   'write-functions': 'function totalPrice(price: number, quantity: number) { return price * quantity }',
+  'use-conditions': "function gradeLabel(score: number) { if (score < 0 || score > 100) return 'Invalid'; if (score >= 90) return 'A'; if (score >= 80) return 'B'; if (score >= 70) return 'C'; if (score >= 60) return 'D'; return 'F' }",
+  'loop-with-for': 'function sumUpTo(n: number) { let total = 0; for (let i = 1; i <= n; i++) total += i; return total }',
+  'loop-while': 'function stepsToOne(n: number) { let value = n; let steps = 0; while (value > 1) { value = Math.floor(value / 2); steps++ } return steps }',
+  'string-basics': 'function initials(fullName: string) { return fullName.trim().split(/\\s+/).map(word => word.slice(0, 1).toUpperCase()).join("") }',
+  'object-update': 'type Task = { title: string; done: boolean; priority: number }; function setDone(task: Task, done: boolean) { return { ...task, done } }',
   'most-frequent-number': 'function mostFrequent(numbers: number[]) { if (!numbers.length) return null; const counts = new Map<number, number>(); for (const n of numbers) counts.set(n, (counts.get(n) ?? 0) + 1); return [...counts.keys()].sort((a,b) => counts.get(b)! - counts.get(a)! || a - b)[0] }',
   'first-unique-character': 'function firstUnique(text: string) { for (let i = 0; i < text.length; i++) if (text.indexOf(text[i]) === text.lastIndexOf(text[i])) return i; return -1 }',
   'balanced-brackets': 'function isBalanced(text: string) { const stack: string[] = []; const pairs: Record<string,string> = { ")": "(", "]": "[", "}": "{" }; for (const c of text) { if ("([{".includes(c)) stack.push(c); else if (stack.pop() !== pairs[c]) return false } return stack.length === 0 }',
@@ -88,6 +93,13 @@ test('behavioral success does not hide prohibited input mutation', () => {
   assert.ok(failures.some(result => result.message.includes('changed its input')))
   const sorting = 'function taskTitles(tasks: {title: string; done: boolean; priority: number}[]) { tasks.sort((a,b) => b.priority - a.priority); return tasks.filter(task => !task.done).map(task => task.title) }'
   assert.ok(runRep(sorting, 'interview-frontend').some(result => result.message?.includes('changed its input')))
+})
+
+test('object-update rejects an in-place change even when the returned value is right', () => {
+  const code = 'type Task = { title: string; done: boolean; priority: number }; function setDone(task: Task, done: boolean) { task.done = done; return task }'
+  const failures = runRep(code, 'object-update').filter(result => !result.passed)
+  assert.ok(failures.length > 0)
+  assert.ok(failures.every(result => result.message?.includes('changed its input')))
 })
 
 test('running a mutating attempt does not corrupt authored inputs', () => {

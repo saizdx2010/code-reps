@@ -113,6 +113,31 @@ export const reflectionGuides: Record<string, { plan: string[]; explanation: str
     explanation: ["Explain the difference between returning and printing.", "Describe zero quantity."],
     example: "I return price multiplied by quantity. Zero quantity gives zero. This uses a fixed number of arithmetic operations and O(1) extra space.",
   },
+  'use-conditions': {
+    plan: ["Handle scores outside 0 through 100 first.", "Check the highest grade band first, then each lower band."],
+    explanation: ["Explain why 90 is A while 89.9 is B.", "Describe which branch handles scores below 60."],
+    example: "I return Invalid for scores outside 0 through 100 before any grade check. Then I test 90, 80, 70, and 60 in that order, so each band is one branch. Scores below 60 reach the final return. The checks verify labels at the boundaries; I review my branch order myself.",
+  },
+  'loop-with-for': {
+    plan: ["Start the total at zero.", "Decide where the loop starts and whether it includes n."],
+    explanation: ["Explain why the loop includes n itself.", "Explain what happens when n is zero."],
+    example: "I start total at 0 and count i from 1 through n, adding each value. For 0 the loop body never runs, so total stays 0. The loop does n additions, which is O(n) time and O(1) extra space. A formula would also work, but this rep practises the loop.",
+  },
+  'loop-while': {
+    plan: ["Write the condition that keeps the loop running.", "Predict the steps for 9 by hand."],
+    explanation: ["Explain why Math.floor keeps each value whole.", "Explain why an input of 1 returns 0 without special handling."],
+    example: "I keep steps at 0 and loop while value is greater than 1. Each pass sets value to Math.floor(value / 2) and adds one step. For 9 the values are 4, 2, and 1, so there are three steps. Each pass lowers the value, so the loop ends in O(log n) time with O(1) extra space.",
+  },
+  'string-basics': {
+    plan: ["Trim the name before splitting it.", "Decide what an empty name returns."],
+    explanation: ["Explain why one or more spaces separate words.", "Explain how slice(0, 1) behaves on an empty word."],
+    example: "I trim the name, split it on runs of whitespace, take the first character of each word, uppercase it, and join the letters. An empty name becomes one empty word, so the result is an empty string. The checks verify the output; I review the splitting rule myself.",
+  },
+  'object-update': {
+    plan: ["Name the one field that changes.", "Decide how the received task stays unchanged."],
+    explanation: ["Explain why the spread creates a new object.", "Explain what the input check detects."],
+    example: "I create updated with { ...task, done }, so every existing field is copied and done is replaced. I return updated and never assign to task. The checks compare the returned object and also detect changes to the supplied object. This copy is shallow, which is enough for these primitive fields.",
+  },
   'first-unique-character': {
     plan: ["Count occurrences or compare first and last positions.", "Search in original order.", "Handle empty input and repeated characters."],
     explanation: ["Explain zero-based indices and case-sensitive comparison.", "State the cost of your chosen approach."],
