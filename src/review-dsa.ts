@@ -336,6 +336,229 @@ export const dsaDepth: Record<string, RepDepth> = {
   'flatten-nested-numbers': {
     'reasoning': 'Visiting children in their stored order and appending only numbers preserves the full left-to-right sequence. Empty arrays append nothing. Work is O(e) for all entries, with output and nesting storage.',
     'trace': '[0,[-1,0]] appends 0, then -1, then 0; repeated values survive.',
+    'traceSteps': {
+      code: ['type NestedNumber = number | NestedNumber[]; function flattenNumbers(items: NestedNumber[]): number[] {', '  const flat: number[] = []', '  for (const item of items) {', '    if (Array.isArray(item)) flat.push(...flattenNumbers(item))', '    else flat.push(item)', '  }', '  return flat', '}'],
+      input: 'items = [4, [2, [], [5]]]',
+      steps: [
+        {
+          line: 1,
+          vars: {
+            flat: '[]'
+          },
+          structure: {
+            kind: 'calls',
+            frames: [
+              {
+                call: 'flattenNumbers([4, [2, [], [5]]])',
+                locals: 'flat = []'
+              }
+            ],
+            event: 'call'
+          },
+          note: 'The outer call starts with an empty result list.'
+        },
+        {
+          line: 4,
+          vars: {
+            flat: '[4]'
+          },
+          structure: {
+            kind: 'calls',
+            frames: [
+              {
+                call: 'flattenNumbers([4, [2, [], [5]]])',
+                locals: 'flat = [4]'
+              }
+            ]
+          },
+          note: '4 is a number, so it is pushed directly. No new frame.'
+        },
+        {
+          line: 3,
+          vars: {
+            flat: '[]'
+          },
+          structure: {
+            kind: 'calls',
+            frames: [
+              {
+                call: 'flattenNumbers([4, [2, [], [5]]])',
+                locals: 'flat = [4]'
+              },
+              {
+                call: 'flattenNumbers([2, [], [5]])',
+                locals: 'flat = []'
+              }
+            ],
+            event: 'call'
+          },
+          note: 'The next item is a list, so a new call handles it. The outer call waits on the stack.'
+        },
+        {
+          line: 4,
+          vars: {
+            flat: '[2]'
+          },
+          structure: {
+            kind: 'calls',
+            frames: [
+              {
+                call: 'flattenNumbers([4, [2, [], [5]]])',
+                locals: 'flat = [4]'
+              },
+              {
+                call: 'flattenNumbers([2, [], [5]])',
+                locals: 'flat = [2]'
+              }
+            ]
+          },
+          note: 'In the middle call, 2 is a number and is pushed.'
+        },
+        {
+          line: 3,
+          vars: {
+            flat: '[]'
+          },
+          structure: {
+            kind: 'calls',
+            frames: [
+              {
+                call: 'flattenNumbers([4, [2, [], [5]]])',
+                locals: 'flat = [4]'
+              },
+              {
+                call: 'flattenNumbers([2, [], [5]])',
+                locals: 'flat = [2]'
+              },
+              {
+                call: 'flattenNumbers([])',
+                locals: 'flat = []'
+              }
+            ],
+            event: 'call'
+          },
+          note: 'The empty list gets its own call.'
+        },
+        {
+          line: 6,
+          vars: {
+            flat: '[]'
+          },
+          structure: {
+            kind: 'calls',
+            frames: [
+              {
+                call: 'flattenNumbers([4, [2, [], [5]]])',
+                locals: 'flat = [4]'
+              },
+              {
+                call: 'flattenNumbers([2, [], [5]])',
+                locals: 'flat = [2]'
+              },
+              {
+                call: 'flattenNumbers([])',
+                locals: 'flat = []',
+                returns: '[]'
+              }
+            ],
+            event: 'return'
+          },
+          note: 'Nothing to loop over: it returns [], which adds nothing to the caller. The frame is popped.'
+        },
+        {
+          line: 3,
+          vars: {
+            flat: '[]'
+          },
+          structure: {
+            kind: 'calls',
+            frames: [
+              {
+                call: 'flattenNumbers([4, [2, [], [5]]])',
+                locals: 'flat = [4]'
+              },
+              {
+                call: 'flattenNumbers([2, [], [5]])',
+                locals: 'flat = [2]'
+              },
+              {
+                call: 'flattenNumbers([5])',
+                locals: 'flat = []'
+              }
+            ],
+            event: 'call'
+          },
+          note: 'The last item, [5], gets a call too.'
+        },
+        {
+          line: 6,
+          vars: {
+            flat: '[5]'
+          },
+          structure: {
+            kind: 'calls',
+            frames: [
+              {
+                call: 'flattenNumbers([4, [2, [], [5]]])',
+                locals: 'flat = [4]'
+              },
+              {
+                call: 'flattenNumbers([2, [], [5]])',
+                locals: 'flat = [2]'
+              },
+              {
+                call: 'flattenNumbers([5])',
+                locals: 'flat = [5]',
+                returns: '[5]'
+              }
+            ],
+            event: 'return'
+          },
+          note: '5 is pushed, then [5] is returned and its frame is popped.'
+        },
+        {
+          line: 6,
+          vars: {
+            flat: '[2,5]'
+          },
+          structure: {
+            kind: 'calls',
+            frames: [
+              {
+                call: 'flattenNumbers([4, [2, [], [5]]])',
+                locals: 'flat = [4]'
+              },
+              {
+                call: 'flattenNumbers([2, [], [5]])',
+                locals: 'flat = [2,5]',
+                returns: '[2,5]'
+              }
+            ],
+            event: 'return'
+          },
+          note: 'The middle call spreads [5] onto [2] and returns [2, 5]. Popped.'
+        },
+        {
+          line: 6,
+          vars: {
+            result: '[4,2,5]',
+            flat: '[4,2,5]'
+          },
+          structure: {
+            kind: 'calls',
+            frames: [
+              {
+                call: 'flattenNumbers([4, [2, [], [5]]])',
+                locals: 'flat = [4,2,5]',
+                returns: '[4,2,5]'
+              }
+            ],
+            event: 'return'
+          },
+          note: 'The outer call spreads [2, 5] after 4 and returns [4, 2, 5].'
+        }
+      ]
+    },
     'alternative': 'An explicit work stack avoids recursive calls but must reverse pushes to preserve order. Both inspect every entry.',
     'counterexample': 'Pushing children in forward order then popping yields [2,1] for [1,2].',
     'transfer': 'Self-review: return each value with its nesting level. Decide the outer level.'
@@ -343,6 +566,174 @@ export const dsaDepth: Record<string, RepDepth> = {
   'count-object-leaves': {
     'reasoning': 'Each property is either one primitive occurrence or a container whose contributions are combined. Null must be classified before other objects. Every property is visited once, O(p) time.',
     'trace': '{a:0,b:null,c:{}} contributes 1+1+0=2.',
+    'traceSteps': {
+      code: ['type NestedObject = { [key: string]: number | string | boolean | null | NestedObject }; function countLeaves(input: NestedObject): number {', '  let leaves = 0', '  for (const value of Object.values(input)) {', '    if (typeof value === \'object\' && value !== null) leaves += countLeaves(value)', '    else leaves++', '  }', '  return leaves', '}'],
+      input: 'input = {user: {name: "Ada", note: null}, empty: {}}',
+      steps: [
+        {
+          line: 1,
+          vars: {
+            leaves: 0
+          },
+          structure: {
+            kind: 'calls',
+            frames: [
+              {
+                call: 'countLeaves({user: {name: "Ada", note: null}, empty: {}})',
+                locals: 'leaves = 0'
+              }
+            ],
+            event: 'call'
+          },
+          note: 'The outer call starts with zero leaves and walks its two values.'
+        },
+        {
+          line: 3,
+          vars: {
+            leaves: 0
+          },
+          structure: {
+            kind: 'calls',
+            frames: [
+              {
+                call: 'countLeaves({user: {name: "Ada", note: null}, empty: {}})',
+                locals: 'leaves = 0'
+              },
+              {
+                call: 'countLeaves({name: "Ada", note: null})',
+                locals: 'leaves = 0'
+              }
+            ],
+            event: 'call'
+          },
+          note: 'The value of user is an object, so it is not a leaf. A new call counts inside it.'
+        },
+        {
+          line: 4,
+          vars: {
+            leaves: 1
+          },
+          structure: {
+            kind: 'calls',
+            frames: [
+              {
+                call: 'countLeaves({user: {name: "Ada", note: null}, empty: {}})',
+                locals: 'leaves = 0'
+              },
+              {
+                call: 'countLeaves({name: "Ada", note: null})',
+                locals: 'leaves = 1'
+              }
+            ]
+          },
+          note: '"Ada" is a string: a leaf. Count 1.'
+        },
+        {
+          line: 4,
+          vars: {
+            leaves: 2
+          },
+          structure: {
+            kind: 'calls',
+            frames: [
+              {
+                call: 'countLeaves({user: {name: "Ada", note: null}, empty: {}})',
+                locals: 'leaves = 0'
+              },
+              {
+                call: 'countLeaves({name: "Ada", note: null})',
+                locals: 'leaves = 2'
+              }
+            ]
+          },
+          note: 'null looks like an object to typeof, but the null check makes it a leaf. Count 2.'
+        },
+        {
+          line: 6,
+          vars: {
+            leaves: 2
+          },
+          structure: {
+            kind: 'calls',
+            frames: [
+              {
+                call: 'countLeaves({user: {name: "Ada", note: null}, empty: {}})',
+                locals: 'leaves = 0'
+              },
+              {
+                call: 'countLeaves({name: "Ada", note: null})',
+                locals: 'leaves = 2',
+                returns: 2
+              }
+            ],
+            event: 'return'
+          },
+          note: 'The inner object is finished: return 2. Popped.'
+        },
+        {
+          line: 3,
+          vars: {
+            leaves: 2
+          },
+          structure: {
+            kind: 'calls',
+            frames: [
+              {
+                call: 'countLeaves({user: {name: "Ada", note: null}, empty: {}})',
+                locals: 'leaves = 2'
+              },
+              {
+                call: 'countLeaves({})',
+                locals: 'leaves = 0'
+              }
+            ],
+            event: 'call'
+          },
+          note: 'Back in the outer call, 2 is added. The next value, empty, is an object, so it gets its own call.'
+        },
+        {
+          line: 6,
+          vars: {
+            leaves: 0
+          },
+          structure: {
+            kind: 'calls',
+            frames: [
+              {
+                call: 'countLeaves({user: {name: "Ada", note: null}, empty: {}})',
+                locals: 'leaves = 2'
+              },
+              {
+                call: 'countLeaves({})',
+                locals: 'leaves = 0',
+                returns: 0
+              }
+            ],
+            event: 'return'
+          },
+          note: 'An empty object has no values to count: return 0. Popped.'
+        },
+        {
+          line: 6,
+          vars: {
+            result: 2,
+            leaves: 2
+          },
+          structure: {
+            kind: 'calls',
+            frames: [
+              {
+                call: 'countLeaves({user: {name: "Ada", note: null}, empty: {}})',
+                locals: 'leaves = 2',
+                returns: 2
+              }
+            ],
+            event: 'return'
+          },
+          note: 'The outer call adds 0 and returns 2.'
+        }
+      ]
+    },
     'alternative': 'An explicit stack avoids recursive call depth while using pending-object storage; recursion mirrors the object shape.',
     'counterexample': 'typeof null is object; treating null as a container throws instead of counting it.',
     'transfer': 'Self-review: also allow arrays. Decide whether array positions and empty arrays contribute.'
@@ -350,6 +741,370 @@ export const dsaDepth: Record<string, RepDepth> = {
   'tree-depth-sum': {
     'reasoning': 'A node contributes only at the requested depth. Combining all children at one less remaining depth includes each qualifying node once, O(n) time at worst with O(h) recursive depth.',
     'trace': 'Root 9 with children 2 and -3 gives -1 at depth 1; depth 2 has no nodes and gives 0.',
+    'traceSteps': {
+      code: ['type TreeNode = { value: number; children: TreeNode[] }; function sumAtDepth(root: TreeNode | null, depth: number): number {', '  if (root === null) return 0', '  if (depth === 0) return root.value', '  let total = 0', '  for (const child of root.children) total += sumAtDepth(child, depth - 1)', '  return total', '}'],
+      input: 'root = {value: 5, children: [{value: 3, children: [{value: 1, children: []}, {value: 6, children: []}]}, {value: 4, children: [{value: 2, children: []}]}]}, depth = 2',
+      steps: [
+        {
+          line: 2,
+          vars: {
+            node: 5,
+            depth: 2
+          },
+          structure: {
+            kind: 'tree',
+            root: {
+              id: 'r',
+              value: 5,
+              children: [
+                {
+                  id: 'a',
+                  value: 3,
+                  children: [
+                    {
+                      id: 'c',
+                      value: 1
+                    },
+                    {
+                      id: 'd',
+                      value: 6
+                    }
+                  ]
+                },
+                {
+                  id: 'b',
+                  value: 4,
+                  children: [
+                    {
+                      id: 'e',
+                      value: 2
+                    }
+                  ]
+                }
+              ]
+            },
+            current: 'r',
+            visited: []
+          },
+          note: 'Start at the root, node 5, asking for depth 2. The depth is not 0, so pass the question to each child with depth 1.'
+        },
+        {
+          line: 2,
+          vars: {
+            node: 3,
+            depth: 1
+          },
+          structure: {
+            kind: 'tree',
+            root: {
+              id: 'r',
+              value: 5,
+              children: [
+                {
+                  id: 'a',
+                  value: 3,
+                  children: [
+                    {
+                      id: 'c',
+                      value: 1
+                    },
+                    {
+                      id: 'd',
+                      value: 6
+                    }
+                  ]
+                },
+                {
+                  id: 'b',
+                  value: 4,
+                  children: [
+                    {
+                      id: 'e',
+                      value: 2
+                    }
+                  ]
+                }
+              ]
+            },
+            current: 'a',
+            visited: []
+          },
+          note: 'Node 3 is asked for depth 1. Still not 0, so ask its children with depth 0.'
+        },
+        {
+          line: 2,
+          vars: {
+            node: 1,
+            depth: 0
+          },
+          structure: {
+            kind: 'tree',
+            root: {
+              id: 'r',
+              value: 5,
+              children: [
+                {
+                  id: 'a',
+                  value: 3,
+                  children: [
+                    {
+                      id: 'c',
+                      value: 1,
+                      note: 'adds 1'
+                    },
+                    {
+                      id: 'd',
+                      value: 6
+                    }
+                  ]
+                },
+                {
+                  id: 'b',
+                  value: 4,
+                  children: [
+                    {
+                      id: 'e',
+                      value: 2
+                    }
+                  ]
+                }
+              ]
+            },
+            current: 'c',
+            visited: ['c']
+          },
+          note: 'Node 1 gets depth 0: it is exactly two levels below the root, so it returns its own value, 1.'
+        },
+        {
+          line: 2,
+          vars: {
+            node: 6,
+            depth: 0
+          },
+          structure: {
+            kind: 'tree',
+            root: {
+              id: 'r',
+              value: 5,
+              children: [
+                {
+                  id: 'a',
+                  value: 3,
+                  children: [
+                    {
+                      id: 'c',
+                      value: 1,
+                      note: 'adds 1'
+                    },
+                    {
+                      id: 'd',
+                      value: 6,
+                      note: 'adds 6'
+                    }
+                  ]
+                },
+                {
+                  id: 'b',
+                  value: 4,
+                  children: [
+                    {
+                      id: 'e',
+                      value: 2
+                    }
+                  ]
+                }
+              ]
+            },
+            current: 'd',
+            visited: ['c', 'd']
+          },
+          note: 'Node 6 also gets depth 0 and returns 6.'
+        },
+        {
+          line: 5,
+          vars: {
+            node: 3,
+            total: 7
+          },
+          structure: {
+            kind: 'tree',
+            root: {
+              id: 'r',
+              value: 5,
+              children: [
+                {
+                  id: 'a',
+                  value: 3,
+                  note: 'sum 7',
+                  children: [
+                    {
+                      id: 'c',
+                      value: 1,
+                      note: 'adds 1'
+                    },
+                    {
+                      id: 'd',
+                      value: 6,
+                      note: 'adds 6'
+                    }
+                  ]
+                },
+                {
+                  id: 'b',
+                  value: 4,
+                  children: [
+                    {
+                      id: 'e',
+                      value: 2
+                    }
+                  ]
+                }
+              ]
+            },
+            current: 'a',
+            visited: ['c', 'd']
+          },
+          note: 'Node 3 adds what its children returned: 1 + 6 = 7, and returns that.'
+        },
+        {
+          line: 2,
+          vars: {
+            node: 2,
+            depth: 0
+          },
+          structure: {
+            kind: 'tree',
+            root: {
+              id: 'r',
+              value: 5,
+              children: [
+                {
+                  id: 'a',
+                  value: 3,
+                  note: 'sum 7',
+                  children: [
+                    {
+                      id: 'c',
+                      value: 1
+                    },
+                    {
+                      id: 'd',
+                      value: 6
+                    }
+                  ]
+                },
+                {
+                  id: 'b',
+                  value: 4,
+                  children: [
+                    {
+                      id: 'e',
+                      value: 2,
+                      note: 'adds 2'
+                    }
+                  ]
+                }
+              ]
+            },
+            current: 'e',
+            visited: ['c', 'd', 'a', 'e']
+          },
+          note: 'Back at the root, the second child, 4, asks node 2 with depth 0. Node 2 returns its value, 2.'
+        },
+        {
+          line: 5,
+          vars: {
+            node: 4,
+            total: 2
+          },
+          structure: {
+            kind: 'tree',
+            root: {
+              id: 'r',
+              value: 5,
+              children: [
+                {
+                  id: 'a',
+                  value: 3,
+                  note: 'sum 7',
+                  children: [
+                    {
+                      id: 'c',
+                      value: 1
+                    },
+                    {
+                      id: 'd',
+                      value: 6
+                    }
+                  ]
+                },
+                {
+                  id: 'b',
+                  value: 4,
+                  note: 'sum 2',
+                  children: [
+                    {
+                      id: 'e',
+                      value: 2,
+                      note: 'adds 2'
+                    }
+                  ]
+                }
+              ]
+            },
+            current: 'b',
+            visited: ['c', 'd', 'a', 'e']
+          },
+          note: 'Node 4 has only that one child, so its total is 2.'
+        },
+        {
+          line: 5,
+          vars: {
+            result: 9,
+            total: 9
+          },
+          structure: {
+            kind: 'tree',
+            root: {
+              id: 'r',
+              value: 5,
+              note: 'sum 9',
+              children: [
+                {
+                  id: 'a',
+                  value: 3,
+                  note: 'sum 7',
+                  children: [
+                    {
+                      id: 'c',
+                      value: 1
+                    },
+                    {
+                      id: 'd',
+                      value: 6
+                    }
+                  ]
+                },
+                {
+                  id: 'b',
+                  value: 4,
+                  note: 'sum 2',
+                  children: [
+                    {
+                      id: 'e',
+                      value: 2
+                    }
+                  ]
+                }
+              ]
+            },
+            current: 'r',
+            visited: ['c', 'd', 'a', 'e', 'b']
+          },
+          note: 'The root adds the answers from its children: 7 + 2 = 9. Nodes outside depth 2 never add their own value.'
+        }
+      ]
+    },
     'alternative': 'Level-order traversal stores a whole frontier but makes depth boundaries explicit; recursive traversal stores only a call path.',
     'counterexample': 'Returning the largest child value for children 2 and -3 gives 2 instead of -1.',
     'transfer': 'Self-review: total every level into an array. Define the null-tree result.'
@@ -357,6 +1112,322 @@ export const dsaDepth: Record<string, RepDepth> = {
   'tree-value-path': {
     'reasoning': 'A successful child route can be prefixed with the current value; failed children contribute no route. Uniqueness removes tie-breaking. Each node is inspected at most once; path copying can add O(nh) work.',
     'trace': 'Searching 4 under root -1 explores 2→3 unsuccessfully, then returns [-1,4]; 2 and 3 never enter the successful route.',
+    'traceSteps': {
+      code: ['type TreeNode = { value: number; children: TreeNode[] }; function pathToValue(root: TreeNode | null, target: number): number[] | null {', '  if (root === null) return null', '  if (root.value === target) return [root.value]', '  for (const child of root.children) {', '    const rest = pathToValue(child, target)', '    if (rest) return [root.value, ...rest]', '  }', '  return null', '}'],
+      input: 'root = {value: 5, children: [{value: 3, children: [{value: 1, children: []}, {value: 6, children: []}]}, {value: 4, children: [{value: 2, children: []}]}]}, target = 6',
+      steps: [
+        {
+          line: 2,
+          vars: {
+            node: 5,
+            target: 6
+          },
+          structure: {
+            kind: 'tree',
+            root: {
+              id: 'r',
+              value: 5,
+              children: [
+                {
+                  id: 'a',
+                  value: 3,
+                  children: [
+                    {
+                      id: 'c',
+                      value: 1
+                    },
+                    {
+                      id: 'd',
+                      value: 6
+                    }
+                  ]
+                },
+                {
+                  id: 'b',
+                  value: 4,
+                  children: [
+                    {
+                      id: 'e',
+                      value: 2
+                    }
+                  ]
+                }
+              ]
+            },
+            current: 'r',
+            visited: []
+          },
+          note: 'Is the root, 5, the target 6? No, so search its children, left to right.'
+        },
+        {
+          line: 2,
+          vars: {
+            node: 3,
+            target: 6
+          },
+          structure: {
+            kind: 'tree',
+            root: {
+              id: 'r',
+              value: 5,
+              children: [
+                {
+                  id: 'a',
+                  value: 3,
+                  children: [
+                    {
+                      id: 'c',
+                      value: 1
+                    },
+                    {
+                      id: 'd',
+                      value: 6
+                    }
+                  ]
+                },
+                {
+                  id: 'b',
+                  value: 4,
+                  children: [
+                    {
+                      id: 'e',
+                      value: 2
+                    }
+                  ]
+                }
+              ]
+            },
+            current: 'a',
+            visited: []
+          },
+          note: 'Child 3 is not the target either; search its children.'
+        },
+        {
+          line: 2,
+          vars: {
+            node: 1,
+            target: 6
+          },
+          structure: {
+            kind: 'tree',
+            root: {
+              id: 'r',
+              value: 5,
+              children: [
+                {
+                  id: 'a',
+                  value: 3,
+                  children: [
+                    {
+                      id: 'c',
+                      value: 1
+                    },
+                    {
+                      id: 'd',
+                      value: 6
+                    }
+                  ]
+                },
+                {
+                  id: 'b',
+                  value: 4,
+                  children: [
+                    {
+                      id: 'e',
+                      value: 2
+                    }
+                  ]
+                }
+              ]
+            },
+            current: 'c',
+            visited: []
+          },
+          note: 'Child 1 is not the target.'
+        },
+        {
+          line: 7,
+          vars: {
+            node: 1,
+            rest: null
+          },
+          structure: {
+            kind: 'tree',
+            root: {
+              id: 'r',
+              value: 5,
+              children: [
+                {
+                  id: 'a',
+                  value: 3,
+                  children: [
+                    {
+                      id: 'c',
+                      value: 1,
+                      note: 'dead end'
+                    },
+                    {
+                      id: 'd',
+                      value: 6
+                    }
+                  ]
+                },
+                {
+                  id: 'b',
+                  value: 4,
+                  children: [
+                    {
+                      id: 'e',
+                      value: 2
+                    }
+                  ]
+                }
+              ]
+            },
+            current: 'c',
+            visited: ['c']
+          },
+          note: 'Node 1 has no children, so the loop ends and it returns null. This branch does not contain 6.'
+        },
+        {
+          line: 2,
+          vars: {
+            node: 6,
+            target: 6
+          },
+          structure: {
+            kind: 'tree',
+            root: {
+              id: 'r',
+              value: 5,
+              children: [
+                {
+                  id: 'a',
+                  value: 3,
+                  children: [
+                    {
+                      id: 'c',
+                      value: 1,
+                      note: 'dead end'
+                    },
+                    {
+                      id: 'd',
+                      value: 6,
+                      note: '[6]'
+                    }
+                  ]
+                },
+                {
+                  id: 'b',
+                  value: 4,
+                  children: [
+                    {
+                      id: 'e',
+                      value: 2
+                    }
+                  ]
+                }
+              ]
+            },
+            current: 'd',
+            visited: ['c']
+          },
+          note: 'Back in node 3, the next child is 6, which is the target: return the one-item path [6].'
+        },
+        {
+          line: 5,
+          vars: {
+            node: 3,
+            rest: '[6]'
+          },
+          structure: {
+            kind: 'tree',
+            root: {
+              id: 'r',
+              value: 5,
+              children: [
+                {
+                  id: 'a',
+                  value: 3,
+                  note: '[3,6]',
+                  children: [
+                    {
+                      id: 'c',
+                      value: 1,
+                      note: 'dead end'
+                    },
+                    {
+                      id: 'd',
+                      value: 6,
+                      note: '[6]'
+                    }
+                  ]
+                },
+                {
+                  id: 'b',
+                  value: 4,
+                  children: [
+                    {
+                      id: 'e',
+                      value: 2
+                    }
+                  ]
+                }
+              ]
+            },
+            current: 'a',
+            visited: ['c']
+          },
+          note: 'Node 3 received a path, so it puts its own value in front: [3, 6].'
+        },
+        {
+          line: 5,
+          vars: {
+            result: '[5,3,6]',
+            node: 5
+          },
+          structure: {
+            kind: 'tree',
+            root: {
+              id: 'r',
+              value: 5,
+              note: '[5,3,6]',
+              children: [
+                {
+                  id: 'a',
+                  value: 3,
+                  note: '[3,6]',
+                  children: [
+                    {
+                      id: 'c',
+                      value: 1,
+                      note: 'dead end'
+                    },
+                    {
+                      id: 'd',
+                      value: 6
+                    }
+                  ]
+                },
+                {
+                  id: 'b',
+                  value: 4,
+                  children: [
+                    {
+                      id: 'e',
+                      value: 2
+                    }
+                  ]
+                }
+              ]
+            },
+            current: 'r',
+            visited: ['c']
+          },
+          note: 'The root does the same and returns [5, 3, 6]. The unexplored node 4 is never visited.'
+        }
+      ]
+    },
     'alternative': 'An iterative frontier with copied paths avoids recursive calls but stores multiple paths. Parent links reduce copying at the cost of bookkeeping.',
     'counterexample': 'Keeping a global route without removing failed nodes yields [-1,2,3,4] instead of [-1,4].',
     'transfer': 'Self-review: allow duplicate values and return the first route in child order. Define first precisely.'
@@ -364,6 +1435,114 @@ export const dsaDepth: Record<string, RepDepth> = {
   'graph-shortest-hops': {
     'reasoning': 'Breadth-first discovery processes nondecreasing hop counts, so a node’s first discovered distance is minimal. Marking on discovery avoids cycles. Time O(V+E), storage O(V).',
     'trace': 'From 0 in [[1,3],[2],[3],[]], both 1 and 3 have distance 1; the longer 0→1→2→3 route cannot improve 3.',
+    'traceSteps': {
+      code: ['function shortestHops(graph: number[][], start: number, target: number): number | null {', '  if (start < 0 || target < 0 || start >= graph.length || target >= graph.length) return null', '  const hops = new Map([[start, 0]]), queue = [start]', '  for (const node of queue) {', '    if (node === target) return hops.get(node)!', '    for (const next of graph[node]) if (!hops.has(next)) { hops.set(next, hops.get(node)! + 1); queue.push(next) }', '  }', '  return null', '}'],
+      input: 'graph = [[1, 2], [3], [3], [4], []], start = 0, target = 4',
+      steps: [
+        {
+          line: 1,
+          vars: {
+            start: 0,
+            target: 4
+          },
+          note: 'Both endpoints are nodes in the graph. Edges: 0→1, 0→2, 1→3, 2→3, 3→4. Each queue cell reads "node: hops from start".'
+        },
+        {
+          line: 2,
+          vars: {
+            start: 0
+          },
+          structure: {
+            kind: 'array',
+            values: ['0: 0'],
+            pointers: {
+              node: 0
+            }
+          },
+          note: 'Start at node 0 with 0 hops. The queue holds just that.'
+        },
+        {
+          line: 5,
+          vars: {
+            node: 0,
+            hops: 0
+          },
+          structure: {
+            kind: 'array',
+            values: ['0: 0', '1: 1', '2: 1'],
+            pointers: {
+              node: 0
+            },
+            dimmed: []
+          },
+          note: 'Explore node 0 (0 hops). Newly reached: 1 at 1 hops and 2 at 1 hops.'
+        },
+        {
+          line: 5,
+          vars: {
+            node: 1,
+            hops: 1
+          },
+          structure: {
+            kind: 'array',
+            values: ['0: 0', '1: 1', '2: 1', '3: 2'],
+            pointers: {
+              node: 1
+            },
+            dimmed: [0]
+          },
+          note: 'Explore node 1 (1 hops). Newly reached: 3 at 2 hops.'
+        },
+        {
+          line: 5,
+          vars: {
+            node: 2,
+            hops: 1
+          },
+          structure: {
+            kind: 'array',
+            values: ['0: 0', '1: 1', '2: 1', '3: 2'],
+            pointers: {
+              node: 2
+            },
+            dimmed: [0, 1]
+          },
+          note: 'Explore node 2 (1 hops). Its neighbours already have hop counts, so nothing is added.'
+        },
+        {
+          line: 5,
+          vars: {
+            node: 3,
+            hops: 2
+          },
+          structure: {
+            kind: 'array',
+            values: ['0: 0', '1: 1', '2: 1', '3: 2', '4: 3'],
+            pointers: {
+              node: 3
+            },
+            dimmed: [0, 1, 2]
+          },
+          note: 'Explore node 3 (2 hops). Newly reached: 4 at 3 hops.'
+        },
+        {
+          line: 4,
+          vars: {
+            node: 4,
+            result: 3
+          },
+          structure: {
+            kind: 'array',
+            values: ['0: 0', '1: 1', '2: 1', '3: 2', '4: 3'],
+            pointers: {
+              node: 4
+            },
+            dimmed: [0, 1, 2, 3]
+          },
+          note: 'Node 4 is the target, reached in 3 hops. Breadth-first order means no shorter route exists. Return 3.'
+        }
+      ]
+    },
     'alternative': 'Repeated edge relaxation can also find distances but revisits edges; plain depth-first first-match search does not guarantee shortest routes.',
     'counterexample': 'First-match depth-first traversal may report 3 for the direct-edge example, whose answer is 1.',
     'transfer': 'Self-review: edges now have positive costs. Decide whether discovery order still guarantees the cheapest route.'
@@ -371,6 +1550,133 @@ export const dsaDepth: Record<string, RepDepth> = {
   'graph-connected-groups': {
     'reasoning': 'Starting a traversal only from an unseen node counts one new component. Traversal marks exactly its connected group, preventing duplicate counts. Time O(V+E), storage O(V).',
     'trace': '[[0,1,1],[0,0],[2]] visits 0 and 1 together despite repeated edges, then counts isolated self-linked 2: total 2.',
+    'traceSteps': {
+      code: ['function connectedGroups(graph: number[][]): number {', '  const seen = new Set<number>()', '  let groups = 0', '  for (let start = 0; start < graph.length; start++) {', '    if (seen.has(start)) continue', '    groups++', '    const queue = [start]; seen.add(start)', '    for (const node of queue) for (const next of graph[node]) if (!seen.has(next)) { seen.add(next); queue.push(next) }', '  }', '  return groups', '}'],
+      input: 'graph = [[1], [0], [3], [2], []]',
+      steps: [
+        {
+          line: 1,
+          vars: {
+            groups: 0
+          },
+          structure: {
+            kind: 'array',
+            values: [0, 1, 2, 3, 4],
+            dimmed: []
+          },
+          note: 'Nodes 0 to 4. Edges: 0–1 and 2–3; node 4 has none. Dimmed nodes are already seen. Nothing is seen yet.'
+        },
+        {
+          line: 6,
+          vars: {
+            start: 0,
+            groups: 1
+          },
+          structure: {
+            kind: 'array',
+            values: [0, 1, 2, 3, 4],
+            pointers: {
+              start: 0
+            },
+            dimmed: [0]
+          },
+          note: 'Start at 0. It is unseen, so it begins a new group: groups = 1.'
+        },
+        {
+          line: 7,
+          vars: {
+            start: 0,
+            groups: 1
+          },
+          structure: {
+            kind: 'array',
+            values: [0, 1, 2, 3, 4],
+            pointers: {
+              start: 0
+            },
+            dimmed: [0, 1]
+          },
+          note: 'Flood outward from 0: its neighbour 1 is marked seen. Node 1 only points back at 0, so this group is finished.'
+        },
+        {
+          line: 4,
+          vars: {
+            start: 1,
+            groups: 1
+          },
+          structure: {
+            kind: 'array',
+            values: [0, 1, 2, 3, 4],
+            pointers: {
+              start: 1
+            },
+            dimmed: [0, 1]
+          },
+          note: 'Start = 1 is already seen, so it belongs to an existing group and is skipped.'
+        },
+        {
+          line: 6,
+          vars: {
+            start: 2,
+            groups: 2
+          },
+          structure: {
+            kind: 'array',
+            values: [0, 1, 2, 3, 4],
+            pointers: {
+              start: 2
+            },
+            dimmed: [0, 1, 2]
+          },
+          note: 'Start = 2 is unseen: a new group, groups = 2.'
+        },
+        {
+          line: 7,
+          vars: {
+            start: 2,
+            groups: 2
+          },
+          structure: {
+            kind: 'array',
+            values: [0, 1, 2, 3, 4],
+            pointers: {
+              start: 2
+            },
+            dimmed: [0, 1, 2, 3]
+          },
+          note: 'Flood outward from 2 and mark 3 as seen. Start = 3 will then be skipped.'
+        },
+        {
+          line: 6,
+          vars: {
+            start: 4,
+            groups: 3
+          },
+          structure: {
+            kind: 'array',
+            values: [0, 1, 2, 3, 4],
+            pointers: {
+              start: 4
+            },
+            dimmed: [0, 1, 2, 3, 4]
+          },
+          note: 'Start = 4 is unseen with no neighbours: an isolated node is its own group, groups = 3.'
+        },
+        {
+          line: 9,
+          vars: {
+            result: 3,
+            groups: 3
+          },
+          structure: {
+            kind: 'array',
+            values: [0, 1, 2, 3, 4],
+            dimmed: [0, 1, 2, 3, 4]
+          },
+          note: 'Every node is seen. Return the number of groups: 3.'
+        }
+      ]
+    },
     'alternative': 'Union-find combines endpoints and counts distinct representatives; traversal is easier to trace for this small adjacency contract.',
     'counterexample': 'Counting neighborless nodes alone misses a separate pair: [[1],[0],[3],[2]] has 2 groups despite no empty lists.',
     'transfer': 'Self-review: allow directed edges. Define weak versus strong connectivity before changing checks.'
