@@ -17,6 +17,8 @@ export const dsaReps: Rep[] = [
     checks: [
       {'name': 'Busy desk', 'input': [[{'id': 'A', 'arrival': 2, 'minutes': 3}, {'id': 'B', 'arrival': 3, 'minutes': 1}]], 'expected': [{'id': 'A', 'start': 2, 'finish': 5}, {'id': 'B', 'start': 5, 'finish': 6}]},
       {'name': 'Empty', 'input': [[]], 'expected': []},
+      {'name': 'Arrives exactly as desk frees', 'input': [[{'id': 'A', 'arrival': 0, 'minutes': 4}, {'id': 'B', 'arrival': 4, 'minutes': 2}]], 'expected': [{'id': 'A', 'start': 0, 'finish': 4}, {'id': 'B', 'start': 4, 'finish': 6}]},
+      {'name': 'Backlog clears then desk idles', 'input': [[{'id': 'A', 'arrival': 1, 'minutes': 5}, {'id': 'B', 'arrival': 2, 'minutes': 5}, {'id': 'C', 'arrival': 30, 'minutes': 1}]], 'expected': [{'id': 'A', 'start': 1, 'finish': 6}, {'id': 'B', 'start': 6, 'finish': 11}, {'id': 'C', 'start': 30, 'finish': 31}]},
       {'name': 'Ties gaps and exact IDs', 'input': [[{'id': ' a ', 'arrival': 0, 'minutes': 2}, {'id': ' a ', 'arrival': 0, 'minutes': 1}, {'id': 'A', 'arrival': 10, 'minutes': 1}]], 'expected': [{'id': ' a ', 'start': 0, 'finish': 2}, {'id': ' a ', 'start': 2, 'finish': 3}, {'id': 'A', 'start': 10, 'finish': 11}]},
       { name: 'Maximum input and limits', input: [Array.from({ length: 100 }, () => ({ id: 'x'.repeat(20), arrival: 1000, minutes: 100 }))], expected: Array.from({ length: 100 }, (_, i) => ({ id: 'x'.repeat(20), start: 1000 + i * 100, finish: 1100 + i * 100 })) }
     ]
