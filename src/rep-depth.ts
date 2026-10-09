@@ -3,6 +3,7 @@ import { dsaDepth } from './review-dsa.ts'
 import { practicalRepDepth } from './review-practical.ts'
 import { validationDepth } from './review-validation.ts'
 import { appDepth } from './review-app.ts'
+import { dsaAdvancedDepth } from './review-dsa-advanced.ts'
 export type TraceStructure =
   | { kind: 'array'; values: (string | number)[]; pointers?: Record<string, number>; dimmed?: number[] }
   | { kind: 'stack'; values: (string | number)[] }
@@ -16,6 +17,7 @@ export type RepDepth = { reasoning: string; trace: string; traceSteps?: RepTrace
 export const repDepth: Record<string, RepDepth> = {
   ...practicalRepDepth,
   ...dsaDepth,
+  ...dsaAdvancedDepth,
   ...validationDepth,
   ...appDepth,
   ...browserStateDepth,
