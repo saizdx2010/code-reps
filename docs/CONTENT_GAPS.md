@@ -93,3 +93,27 @@ Lint, the full Node suite, content validation, and the TypeScript/Vite build pas
 Lint, 154 Node tests, content validation, build/bundle budgets, and 21 Chromium flows passed on macOS. The browser suite includes the new guided/independent/delayed-recall flow, an early solve that does not establish retention, fresh recall reset, complete batch checks, and a 320px layout with editor keyboard exit and preserved work. A follow-up narrow-flow check verifies step labels stay inside their buttons. Desktop and phone content renders were inspected separately. The macOS arm64 portable bundle smoke passed using temporary data directories.
 
 This does not establish human comprehension or delayed transfer, assistive-technology support, browser zoom, Windows/Linux execution, or remote GitHub Actions results. The remaining manual protocol is in `docs/ACCESSIBILITY_REVIEW.md` and `docs/LEARNER_VALIDATION.md`.
+
+## Journey coverage snapshot (2026-10-09)
+
+Verified by reading `src/learning.ts` (`journeys`), `src/knowledge.ts` and `src/dsa-knowledge.ts` (skill/lesson definitions with `repIds`), `src/path.ts` (path stages), and `src/rep.ts` (rep existence). "Missing" means the stage was verified absent: no rep with that role exists for the topic, and the topic has no entry in `src/learning.ts` `journeys`.
+
+| Topic | Skill / lesson ID(s) | Guided rep | Independent rep | Delayed-recall rep | Lesson in `src/knowledge.ts`? |
+| --- | --- | --- | --- | --- | --- |
+| Queues | `queues` (`src/dsa-knowledge.ts:43`) | Missing | Missing | Missing | Yes (`queues` in `src/dsa-knowledge.ts`) |
+| Two pointers | `array-techniques` (`src/dsa-knowledge.ts:79`) | Missing | Missing | Missing | Yes (`array-techniques` in `src/dsa-knowledge.ts`) |
+| Sliding windows | `array-techniques` (`src/dsa-knowledge.ts:79`) | Missing | Missing | Missing | Yes (`array-techniques` in `src/dsa-knowledge.ts`) |
+| Binary search | `array-techniques` (`src/dsa-knowledge.ts:79`) | Missing | Missing | Missing | Yes (`array-techniques` in `src/dsa-knowledge.ts`) |
+| DOM interactions | `frontend` (`src/knowledge.ts:107`) | Missing | Missing | Missing | Yes (`frontend`) |
+| Sorting | No skill/lesson ID | `algo-insertion-sort` (`src/learning.ts:23`) | `sort-score-records` | `kth-smallest-copy` | No |
+| Recursion | No skill/lesson ID | `algo-recursive-sum` (`src/learning.ts:24`) | `flatten-nested-numbers` | `count-object-leaves` | No |
+| Trees | No skill/lesson ID | `algo-tree-depth` (`src/learning.ts:25`) | `tree-depth-sum` | `tree-value-path` | No |
+| Graphs | No skill/lesson ID | `algo-graph-reachable` (`src/learning.ts:26`) | `graph-shortest-hops` | `graph-connected-groups` | No |
+
+Notes on linked reps that are not journey stages: queues has `ds-stack-operations`, `ds-queue-operations`, and `remaining-actions` (`src/dsa-knowledge.ts:76`); the array-techniques topic has `algo-sorted-pair`, `algo-window-sum`, `algo-binary-search` (`src/dsa-knowledge.ts:115`); DOM interactions has `dom-disclosure`, `dom-accessible-form`, `dom-live-search`, `dom-tabs` (`src/knowledge.ts`, `frontend` lesson). All path placements are in the Problem solving path (`src/path.ts:39-51`) and Frontend path (`src/path.ts:54-75`). All rep IDs above were verified to exist in `src/rep.ts`.
+
+Thin areas:
+
+- No journey (guided → independent → delayed-recall) exists for queues, two pointers, sliding windows, binary search, or DOM interactions; their reps are linked to lessons but carry no stage evidence rules.
+- Sorting, recursion, trees, and graphs have complete journeys but no skill or knowledge lesson: their reps appear in no `Skill.repIds`, so they also have no lesson questions or authored knowledge depth.
+- DOM interactions is the only topic above whose practice reps (`dom-*`) run in the sandboxed frontend frame rather than the function worker, while its lesson (`frontend`) covers broader frontend state, not interactions specifically.
