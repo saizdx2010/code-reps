@@ -148,12 +148,12 @@ export const fluencyReps: Rep[] = [
     },
     "vocabulary": [
       {
-        "term": "Contract",
-        "meaning": "the input rules and observable result this function promises"
+        "term": "Accumulator",
+        "meaning": "A running total updated as items are visited."
       },
       {
-        "term": "Boundary",
-        "meaning": "a value at the edge of an allowed range or condition"
+        "term": "Available item",
+        "meaning": "An item whose available flag is true."
       }
     ],
     "planPrompt": "What does your accumulator mean after each item?",
@@ -231,12 +231,12 @@ export const fluencyReps: Rep[] = [
     },
     "vocabulary": [
       {
-        "term": "Contract",
-        "meaning": "the input rules and observable result this function promises"
+        "term": "Threshold",
+        "meaning": "The smallest priority that qualifies."
       },
       {
-        "term": "Boundary",
-        "meaning": "a value at the edge of an allowed range or condition"
+        "term": "Inclusive comparison",
+        "meaning": "A comparison that includes equality."
       }
     ],
     "planPrompt": "State the two conditions and an equality boundary.",
@@ -318,12 +318,12 @@ export const fluencyReps: Rep[] = [
     },
     "vocabulary": [
       {
-        "term": "Contract",
-        "meaning": "the input rules and observable result this function promises"
+        "term": "Normalization",
+        "meaning": "Changing text into a form used for comparison."
       },
       {
-        "term": "Boundary",
-        "meaning": "a value at the edge of an allowed range or condition"
+        "term": "Suffix",
+        "meaning": "Text at the end of a string."
       }
     ],
     "planPrompt": "How will you separate comparison from display?",
@@ -401,12 +401,12 @@ export const fluencyReps: Rep[] = [
     },
     "vocabulary": [
       {
-        "term": "Contract",
-        "meaning": "the input rules and observable result this function promises"
+        "term": "Prefix",
+        "meaning": "Text at the beginning of a string."
       },
       {
-        "term": "Boundary",
-        "meaning": "a value at the edge of an allowed range or condition"
+        "term": "Blank text",
+        "meaning": "Text with nothing left after trimming."
       }
     ],
     "planPrompt": "What happens when the prefix or label is blank?",
@@ -477,12 +477,12 @@ export const fluencyReps: Rep[] = [
     },
     "vocabulary": [
       {
-        "term": "Contract",
-        "meaning": "the input rules and observable result this function promises"
+        "term": "Set",
+        "meaning": "A collection of distinct values."
       },
       {
-        "term": "Boundary",
-        "meaning": "a value at the edge of an allowed range or condition"
+        "term": "Repeated occurrence",
+        "meaning": "A value encountered again after it was seen earlier."
       }
     ],
     "planPrompt": "Trace the second occurrence, not the first position.",
@@ -560,12 +560,12 @@ export const fluencyReps: Rep[] = [
     },
     "vocabulary": [
       {
-        "term": "Contract",
-        "meaning": "the input rules and observable result this function promises"
+        "term": "Initial value",
+        "meaning": "The value a count starts with."
       },
       {
-        "term": "Boundary",
-        "meaning": "a value at the edge of an allowed range or condition"
+        "term": "Key",
+        "meaning": "A name used to look up a count."
       }
     ],
     "planPrompt": "Which fields must exist even for empty input?",
@@ -641,12 +641,12 @@ export const fluencyReps: Rep[] = [
     },
     "vocabulary": [
       {
-        "term": "Contract",
-        "meaning": "the input rules and observable result this function promises"
+        "term": "Undo",
+        "meaning": "Remove the most recent saved action."
       },
       {
-        "term": "Boundary",
-        "meaning": "a value at the edge of an allowed range or condition"
+        "term": "Saved action",
+        "meaning": "An action kept until it is undone."
       }
     ],
     "planPrompt": "Trace saved actions and an undo when none remain.",
@@ -748,12 +748,12 @@ export const fluencyReps: Rep[] = [
     },
     "vocabulary": [
       {
-        "term": "Contract",
-        "meaning": "the input rules and observable result this function promises"
+        "term": "Adjacent pair",
+        "meaning": "Two equal values next to each other."
       },
       {
-        "term": "Boundary",
-        "meaning": "a value at the edge of an allowed range or condition"
+        "term": "Stack",
+        "meaning": "A collection where the latest saved value is removed first."
       }
     ],
     "planPrompt": "Trace the cascade in [1,2,2,1,3].",
@@ -843,12 +843,12 @@ export const fluencyReps: Rep[] = [
     },
     "vocabulary": [
       {
-        "term": "Contract",
-        "meaning": "the input rules and observable result this function promises"
+        "term": "Integer",
+        "meaning": "A whole number without a fractional part."
       },
       {
-        "term": "Boundary",
-        "meaning": "a value at the edge of an allowed range or condition"
+        "term": "Validation",
+        "meaning": "Checking whether input follows the required rules."
       }
     ],
     "planPrompt": "Separate shape, type, and boundary validation.",
@@ -1010,12 +1010,12 @@ export const fluencyReps: Rep[] = [
     },
     "vocabulary": [
       {
-        "term": "Contract",
-        "meaning": "the input rules and observable result this function promises"
+        "term": "Derived value",
+        "meaning": "A result calculated from source data."
       },
       {
-        "term": "Boundary",
-        "meaning": "a value at the edge of an allowed range or condition"
+        "term": "Substring",
+        "meaning": "Text found within a longer string."
       }
     ],
     "planPrompt": "Distinguish all unfinished tasks from visible unfinished tasks.",
@@ -1110,12 +1110,12 @@ export const fluencyReps: Rep[] = [
     },
     "vocabulary": [
       {
-        "term": "Contract",
-        "meaning": "the input rules and observable result this function promises"
+        "term": "Zero-based index",
+        "meaning": "A position where zero means the first item."
       },
       {
-        "term": "Boundary",
-        "meaning": "a value at the edge of an allowed range or condition"
+        "term": "Slice end",
+        "meaning": "The first position excluded from a slice."
       }
     ],
     "planPrompt": "Write expected and actual positions before repairing the offset.",

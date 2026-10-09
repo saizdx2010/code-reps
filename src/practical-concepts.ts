@@ -183,11 +183,11 @@ export const practicalSkills: Skill[] = [
         "explanation": "Synchronous work finishes, then the microtask, then the timer."
       },
       {
-        "id": "prediction-2",
+        "id": "microtask-followup-v2",
         "prompt": "What happens to a microtask queued by a microtask?",
         "code": "",
         "options": [
-          "It runs during the draining checkpoint",
+          "It runs after the current script finishes",
           "It always waits behind the next timer",
           "It runs synchronously inside queueMicrotask"
         ],
@@ -1101,11 +1101,11 @@ export const practicalReps: Rep[] = [
     "note": "Starts are finite integers; call indices are valid. Empty calls return []. The checks inspect outputs; review your code to confirm state belongs to the returned closure. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
-        "term": "Closures and private state",
-        "meaning": "Keep a function connected to the variables where it was created."
+        "term": "Closure",
+        "meaning": "A returned function that keeps variables from the place where it was created."
       }
     ],
-    "planPrompt": "State the required behavior, trace a boundary case, and describe the state you need before coding.",
+    "planPrompt": "Where does each counter keep its count? After calling the first counter, what does the second return?",
     "starter": "function makeCounter(start: number): () => number {\n  return () => start\n}\nfunction counterTrace(starts: number[], calls: number[]): number[] {\n  // Create and call the counters.\n  return []\n}",
     "functionName": "counterTrace",
     "preserveInput": true,
@@ -1184,11 +1184,11 @@ export const practicalReps: Rep[] = [
     "note": "Pool values are finite integers; indices are valid. Construct the objects inside the function because the exercise runner copies inputs. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
-        "term": "Reference equality and shallow copies",
-        "meaning": "Distinguish the same object from different objects with equal fields."
+        "term": "Reference",
+        "meaning": "A link to one particular object."
       }
     ],
-    "planPrompt": "State the required behavior, trace a boundary case, and describe the state you need before coding.",
+    "planPrompt": "Which selections point to the same object? How do equal IDs differ from equal references?",
     "starter": "function referenceGroups(pool: number[], indices: number[]): number {\n  return 0\n}",
     "functionName": "referenceGroups",
     "preserveInput": true,
@@ -1259,11 +1259,11 @@ export const practicalReps: Rep[] = [
     "note": "This is a simplified queue model: callbacks do not enqueue more work; timers have the same delay and none is cancelled. Do not use actual timers. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
-        "term": "Event loop and microtasks",
-        "meaning": "Predict synchronous work, promise callbacks, and timer tasks."
+        "term": "Microtask",
+        "meaning": "Work queued to run after the current script and before the next timer task."
       }
     ],
-    "planPrompt": "State the required behavior, trace a boundary case, and describe the state you need before coding.",
+    "planPrompt": "Which labels belong to each kind of work? What order must each group keep?",
     "starter": "function turnOrder(entries: {kind: 'sync' | 'micro' | 'timer'; label: string}[]): string[] {\n  return []\n}",
     "functionName": "turnOrder",
     "preserveInput": true,
@@ -1366,11 +1366,11 @@ export const practicalReps: Rep[] = [
     "note": "Values are finite numbers; reasons are strings. This synchronous exercise handles settled records, not promises or network requests. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
-        "term": "Promises and asynchronous work",
-        "meaning": "Handle fulfilled and rejected outcomes explicitly."
+        "term": "Fulfilled",
+        "meaning": "A promise that finished with a value."
       }
     ],
-    "planPrompt": "State the required behavior, trace a boundary case, and describe the state you need before coding.",
+    "planPrompt": "Where will fulfilled values and rejected reasons go? How will each list keep its input order?",
     "starter": "type Outcome = {status: 'fulfilled'; value: number} | {status: 'rejected'; reason: string}\nfunction settledSummary(outcomes: Outcome[]): {values: number[]; errors: string[]} {\n  return {values: [], errors: []}\n}",
     "functionName": "settledSummary",
     "preserveInput": true,
@@ -1454,11 +1454,11 @@ export const practicalReps: Rep[] = [
     "note": "ownerCount is a nonnegative integer and access indices are valid. Each owner must have its own cache. Output checks cannot prove a particular pattern: inspect makeOwner in self-review. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
-        "term": "Singleton and scoped shared instances",
-        "meaning": "Share one instance within an explicitly chosen owner and lifetime."
+        "term": "Singleton",
+        "meaning": "One shared instance within a chosen scope."
       }
     ],
-    "planPrompt": "State the required behavior, trace a boundary case, and describe the state you need before coding.",
+    "planPrompt": "Which getter calls must return the same object? When should a new identity number be assigned?",
     "starter": "function makeOwner(): () => object {\n  return () => ({})\n}\nfunction ownerTrace(ownerCount: number, accesses: number[]): number[] {\n  return []\n}",
     "functionName": "ownerTrace",
     "preserveInput": true,
@@ -1536,11 +1536,15 @@ export const practicalReps: Rep[] = [
     "note": "Topic and listener names are nonempty strings; values are strings. Different topics may use the same listener name. Delivery is synchronous and has no replay. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
-        "term": "Observer, pub/sub, and subscriptions",
-        "meaning": "Deliver events to current subscribers without coupling every producer to every consumer."
+        "term": "Topic",
+        "meaning": "A named channel for messages."
+      },
+      {
+        "term": "Listener",
+        "meaning": "A function registered to receive messages on a topic."
       }
     ],
-    "planPrompt": "State the required behavior, trace a boundary case, and describe the state you need before coding.",
+    "planPrompt": "After an unsubscribe and a re-subscribe, which listener receives the next publish first?",
     "starter": "type BusEvent = {kind: 'subscribe' | 'unsubscribe'; topic: string; listener: string} | {kind: 'publish'; topic: string; value: string}\nfunction deliveries(events: BusEvent[]): string[] {\n  return []\n}",
     "functionName": "deliveries",
     "preserveInput": true,
@@ -1685,11 +1689,11 @@ export const practicalReps: Rep[] = [
     "note": "Arrays have equal lengths and finite nonnegative numbers. Empty arrays produce {expired:[], calls:0}. Use the injected callback; do not read the actual clock. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
-        "term": "Dependency injection",
-        "meaning": "Pass a service or policy into the code that needs it."
+        "term": "Dependency",
+        "meaning": "A function or value supplied for another function to use."
       }
     ],
-    "planPrompt": "State the required behavior, trace a boundary case, and describe the state you need before coding.",
+    "planPrompt": "How will you count clock reads? What should happen when the clock equals the deadline?",
     "starter": "function isExpired(deadline: number, now: () => number): boolean {\n  return false\n}\nfunction deadlineTrace(deadlines: number[], clockValues: number[]): {expired: boolean[]; calls: number} {\n  return {expired: [], calls: 0}\n}",
     "functionName": "deadlineTrace",
     "preserveInput": true,
@@ -1764,11 +1768,11 @@ export const practicalReps: Rep[] = [
     "note": "Times are nonnegative finite integers in nondecreasing order; wait is a positive finite integer. This is a deterministic scheduling model, not real timers. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
-        "term": "Debouncing",
+        "term": "Debounce",
         "meaning": "Wait for a quiet period before using the latest event."
       }
     ],
-    "planPrompt": "State the required behavior, trace a boundary case, and describe the state you need before coding.",
+    "planPrompt": "What pending value and deadline must you track? What happens when an event arrives exactly at that deadline?",
     "starter": "function debounceSchedule(events: {at: number; value: string}[], wait: number): {at: number; value: string}[] {\n  return []\n}",
     "functionName": "debounceSchedule",
     "preserveInput": true,
@@ -1878,11 +1882,11 @@ export const practicalReps: Rep[] = [
     "note": "Times are nonnegative finite integers in nondecreasing order; window is a positive finite integer. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
-        "term": "Throttling",
-        "meaning": "Limit execution frequency while a stream of events continues."
+        "term": "Throttle",
+        "meaning": "Limit how often events are accepted."
       }
     ],
-    "planPrompt": "State the required behavior, trace a boundary case, and describe the state you need before coding.",
+    "planPrompt": "Which accepted timestamp starts the next window? Does a rejected timestamp change it?",
     "starter": "function throttleTimes(times: number[], window: number): number[] {\n  return []\n}",
     "functionName": "throttleTimes",
     "preserveInput": true,
@@ -1962,11 +1966,11 @@ export const practicalReps: Rep[] = [
     "note": "Events are start/cancel with id, or resolve with id and value. IDs are unique per start; cancelled IDs are not reused. Events may include late responses for obsolete requests. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
-        "term": "Cancellation and race conditions",
-        "meaning": "Apply a response only while its request still owns the current state."
+        "term": "Request ID",
+        "meaning": "A label used to identify one request."
       }
     ],
-    "planPrompt": "State the required behavior, trace a boundary case, and describe the state you need before coding.",
+    "planPrompt": "Which request may change visible data? Trace a cancellation followed by a late response.",
     "starter": "type RequestEvent = {kind: 'start' | 'cancel'; id: string} | {kind: 'resolve'; id: string; value: string}\nfunction visibleResponse(events: RequestEvent[]): string | null {\n  return null\n}",
     "functionName": "visibleResponse",
     "preserveInput": true,
@@ -2090,11 +2094,11 @@ export const practicalReps: Rep[] = [
     "note": "Events are open, close, or send with text. A send while disconnected is dropped, not queued. This model does not create a real WebSocket or establish server delivery. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
-        "term": "WebSockets and connection state",
-        "meaning": "Exchange messages over a persistent two-way connection with explicit lifecycle state."
+        "term": "Connection state",
+        "meaning": "Whether a connection is open or disconnected."
       }
     ],
-    "planPrompt": "State the required behavior, trace a boundary case, and describe the state you need before coding.",
+    "planPrompt": "When can a send be recorded? Trace a send before opening and another after closing.",
     "starter": "type SocketEvent = {kind: 'open' | 'close'} | {kind: 'send'; text: string}\nfunction socketMessages(events: SocketEvent[]): string[] {\n  return []\n}",
     "functionName": "socketMessages",
     "preserveInput": true,
@@ -2207,11 +2211,11 @@ export const practicalReps: Rep[] = [
     "note": "This is a capability-selection exercise, not a universal production recommendation. twoWay means both directions must use the same persistent connection. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
-        "term": "Polling and server-sent events",
-        "meaning": "Choose between periodic requests, one-way server updates, and bidirectional messages."
+        "term": "Server push",
+        "meaning": "The server sends updates without waiting for a new request."
       }
     ],
-    "planPrompt": "State the required behavior, trace a boundary case, and describe the state you need before coding.",
+    "planPrompt": "Which requirement takes priority when both flags are true? What is chosen when both are false?",
     "starter": "function chooseTransport(twoWay: boolean, serverPush: boolean): 'websocket' | 'sse' | 'polling' {\n  return 'polling'\n}",
     "functionName": "chooseTransport",
     "preserveInput": true,
@@ -2267,11 +2271,11 @@ export const practicalReps: Rep[] = [
     "note": "Consumer IDs are nonempty strings. Start with no consumers. An unfinished trace may leave the connection open; do not invent a final close. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
-        "term": "Cleanup, reference counting, and shared connections",
-        "meaning": "Keep a shared resource alive while consumers own it and release it after the last consumer leaves."
+        "term": "Consumer",
+        "meaning": "A named user of a shared resource."
       }
     ],
-    "planPrompt": "State the required behavior, trace a boundary case, and describe the state you need before coding.",
+    "planPrompt": "Which consumers are active after each event? Which changes should open or close the resource?",
     "starter": "function resourceActions(events: {kind: 'acquire' | 'release'; id: string}[]): string[] {\n  return []\n}",
     "functionName": "resourceActions",
     "preserveInput": true,
@@ -2384,11 +2388,11 @@ export const practicalReps: Rep[] = [
     "note": "Entries have unique exact string keys, finite numeric values, and nonnegative finite expiry times. now is nonnegative and finite. A cached zero is valid. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
-        "term": "Caching and freshness",
-        "meaning": "Reuse a stored result only while its key and freshness policy permit it."
+        "term": "Expiry",
+        "meaning": "The time when a cached value stops being usable."
       }
     ],
-    "planPrompt": "State the required behavior, trace a boundary case, and describe the state you need before coding.",
+    "planPrompt": "How will you distinguish a missing entry from a value of zero? What happens exactly at expiry?",
     "starter": "function freshValue(entries: {key: string; value: number; expiresAt: number}[], key: string, now: number): number | null {\n  return null\n}",
     "functionName": "freshValue",
     "preserveInput": true,
@@ -2481,11 +2485,11 @@ export const practicalReps: Rep[] = [
     "note": "failures is an integer from 0 to 30; base and cap are positive finite integers with base <= cap and cap <= 1000000. This exercise excludes jitter and does not decide which failures are eligible. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
-        "term": "Retries and reconnect backoff",
-        "meaning": "Retry eligible failures with a bound and an increasing delay."
+        "term": "Backoff",
+        "meaning": "A delay that grows between failed attempts."
       }
     ],
-    "planPrompt": "State the required behavior, trace a boundary case, and describe the state you need before coding.",
+    "planPrompt": "What delay belongs to failure index zero? When does growth reach the cap?",
     "starter": "function retryDelays(failures: number, base: number, cap: number): number[] {\n  return []\n}",
     "functionName": "retryDelays",
     "preserveInput": true,
@@ -2557,11 +2561,11 @@ export const practicalReps: Rep[] = [
     "note": "Keys are nonempty exact strings; amounts are integers from -1000 to 1000. The first amount for each key remains authoritative. This local model does not validate atomic server persistence. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
-        "term": "Idempotency and safe repeated requests",
-        "meaning": "Prevent repeated delivery of one logical operation from repeating its effect."
+        "term": "Idempotency key",
+        "meaning": "A label that identifies repeated deliveries of the same operation."
       }
     ],
-    "planPrompt": "State the required behavior, trace a boundary case, and describe the state you need before coding.",
+    "planPrompt": "What amount must you remember for each key? How do matching and conflicting repeats affect the total?",
     "starter": "function ledger(requests: {key: string; amount: number}[]): {total: number; conflicts: string[]} {\n  return {total: 0, conflicts: []}\n}",
     "functionName": "ledger",
     "preserveInput": true,
@@ -2675,11 +2679,11 @@ export const practicalReps: Rep[] = [
     "note": "Amounts are finite integers. Operation IDs are nonempty exact strings and may never represent a new operation after settlement. This additive model excludes server-adjusted values and noncommutative edits. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
-        "term": "Optimistic updates and rollback",
-        "meaning": "Show a tentative change while preserving a correct confirmed baseline."
+        "term": "Pending operation",
+        "meaning": "A change that has not yet succeeded or failed."
       }
     ],
-    "planPrompt": "State the required behavior, trace a boundary case, and describe the state you need before coding.",
+    "planPrompt": "How do pending changes affect the displayed balance? What changes when one succeeds or fails?",
     "starter": "type ChangeEvent = {kind: 'begin'; id: string; delta: number} | {kind: 'succeed' | 'fail'; id: string}\nfunction optimisticBalance(initial: number, events: ChangeEvent[]): {confirmed: number; displayed: number} {\n  return {confirmed: initial, displayed: initial}\n}",
     "functionName": "optimisticBalance",
     "preserveInput": true,
@@ -2816,11 +2820,15 @@ export const practicalReps: Rep[] = [
     "note": "Inputs are valid under the stated contract. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
-        "term": "Ownership",
-        "meaning": "the responsibility for keeping work active and disposing it"
+        "term": "Owner",
+        "meaning": "The named user responsible for a registration."
+      },
+      {
+        "term": "Registration",
+        "meaning": "A stored link between an owner and a topic."
       }
     ],
-    "planPrompt": "Describe who owns the work and trace a duplicate or absent operation before coding.",
+    "planPrompt": "Which registrations belong to each owner? After disposing one owner, which registrations remain?",
     "starter": "type ListenerEvent = {kind: 'listen'; owner: string; topic: string} | {kind: 'dispose'; owner: string}\nfunction listenerCounts(events: ListenerEvent[]): number[] {\n  return []\n}",
     "functionName": "listenerCounts",
     "preserveInput": true,
@@ -2940,11 +2948,15 @@ export const practicalReps: Rep[] = [
     "note": "Inputs are valid under the stated contract. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
-        "term": "Ownership",
-        "meaning": "the responsibility for keeping work active and disposing it"
+        "term": "Owner",
+        "meaning": "A named user who occupies a room."
+      },
+      {
+        "term": "Registration",
+        "meaning": "A stored link between a user and a room."
       }
     ],
-    "planPrompt": "Describe who owns the work and trace a duplicate or absent operation before coding.",
+    "planPrompt": "Which users remain in each room after a leave? When should an empty room be reported?",
     "starter": "function emptyRooms(events: {kind: 'enter' | 'leave'; room: string; user: string}[]): string[] {\n  return []\n}",
     "functionName": "emptyRooms",
     "preserveInput": true,
@@ -3064,7 +3076,7 @@ export const practicalReps: Rep[] = [
 export const practicalRepDepth: Record<string, RepDepth> = {
   ...asyncRepDepth,
   "closure-counters": {
-    "reasoning": "Each factory invocation owns a binding that survives through its returned function. The trace wrapper preserves call order.",
+    "reasoning": "Each call to the factory creates its own count. The returned function keeps that count between calls. The trace calls counters in the supplied order.",
     "trace": "Starts [0,10] create two environments. Calls [0,0,1,0] produce [1,2,11,3]; counter 1 does not affect counter 0.",
     "alternative": "A class can also encapsulate a count; a closure needs no public object field. A global variable would share state unintentionally. Creating k counters and processing n calls takes O(k+n) time and O(k) working state.",
     "counterexample": "A global count produces 12 for the final call instead of 3. Recreating a counter on every call loses its previous value.",
@@ -3078,7 +3090,7 @@ export const practicalRepDepth: Record<string, RepDepth> = {
     "transfer": "Group records by business ID instead. Explain why equality rules now differ."
   },
   "event-loop-order": {
-    "reasoning": "The model represents the current script finishing before its microtask checkpoint and the later timer tasks.",
+    "reasoning": "The current script finishes first. Queued microtasks run next, followed by timer tasks.",
     "trace": "Encounter A,T,P,B: A and B execute now, P at the checkpoint, T in a later task, producing A,B,P,T.",
     "alternative": "Three filter passes are clear and O(n); three queues also take O(n) and avoid repeated scans. A priority sort may cost more and must preserve within-kind order.",
     "counterexample": "Returning encounter order puts T before B. Sorting labels alphabetically loses queue order.",
@@ -3134,7 +3146,7 @@ export const practicalRepDepth: Record<string, RepDepth> = {
     "transfer": "Keep stale data while reloading and display an error only for the current request. Specify the precedence rules."
   },
   "websocket-gate": {
-    "reasoning": "Every accepted send is preceded by an unmatched open under this model. The state guard prevents disconnected sends from entering the output.",
+    "reasoning": "A send is accepted only while the connection is open. The state guard prevents disconnected sends from entering the output.",
     "trace": "early arrives disconnected and is dropped; open permits ok; close makes late ineligible.",
     "alternative": "Queuing sends is possible but needs bounds and replay semantics. This dropping model has O(n) processing time and O(1) state plus sent-message output.",
     "counterexample": "Accepting sends after construction assumes connection completion. Recording send output still does not prove server receipt.",
@@ -3200,112 +3212,112 @@ export const practicalRepDepth: Record<string, RepDepth> = {
 
 export const practicalLessonDepth: Record<string, LessonDepth> = {
   "closures": {
-    "title": "Closures and private state: a boundary to explain",
+    "title": "A returned function keeps its own variables.",
     "code": "function makeCounter() {\n  let count = 0\n  return () => ++count\n}\nconst a = makeCounter(), b = makeCounter()\na() // 1\na() // 2\nb() // 1",
-    "reasoning": "Each factory invocation owns a binding that survives through its returned function. The trace wrapper preserves call order.",
+    "reasoning": "Each call to the factory creates its own count. The returned function keeps that count between calls. The trace calls counters in the supplied order.",
     "challenge": "If two callbacks returned by one factory both read count, do they share it? What changes when the factory runs twice?",
-    "answer": "Callbacks from one invocation share its environment; a second invocation creates a separate local count."
+    "answer": "Functions returned by one factory call share its count. Calling the factory again creates a separate count."
   },
   "reference-identity": {
-    "title": "Reference equality and shallow copies: a boundary to explain",
+    "title": "Equal fields do not make objects the same.",
     "code": "const original = { meta: { score: 1 } }\nconst alias = original\nconst copy = { ...original }\nalias === original // true\ncopy === original // false\ncopy.meta === original.meta // true",
     "reasoning": "Identity is preserved when each selection reuses an object created once for its pool position.",
     "challenge": "After copy.meta.score = 9 in the example, what is original.meta.score?",
     "answer": "It is 9 because the nested meta object is shared. Copy meta too before changing it."
   },
   "event-loop": {
-    "title": "Event loop and microtasks: a boundary to explain",
+    "title": "Microtasks run before the next timer task.",
     "code": "console.log(\"A\")\nsetTimeout(() => console.log(\"timer\"), 0)\nPromise.resolve().then(() => console.log(\"promise\"))\nconsole.log(\"B\")\n// A, B, promise, timer",
-    "reasoning": "The model represents the current script finishing before its microtask checkpoint and the later timer tasks.",
+    "reasoning": "The current script finishes first. Queued microtasks run next, followed by timer tasks.",
     "challenge": "Can a long chain of microtasks make a zero-delay timer wait?",
-    "answer": "Yes. Microtasks queued during draining are processed before the next task, so an unbounded chain can starve other work."
+    "answer": "Yes. Each new microtask runs before the next timer task. A chain that never ends can keep the timer waiting."
   },
   "singleton": {
-    "title": "Singleton and scoped shared instances: a boundary to explain",
+    "title": "Each owner shares its own instance.",
     "code": "function createOwner() {\n  let shared: object | undefined\n  return () => shared ??= {}\n}\nconst get = createOwner()\nget() === get() // true\ncreateOwner()() === get() // false",
     "reasoning": "Each owner caches one reference. Reference-keyed bookkeeping assigns the same identity number to repeated access and distinct numbers across owners.",
     "challenge": "What breaks if two accounts share a socket whose URL was captured for the first account?",
     "answer": "The second account uses the wrong resource. Scope ownership by account and dispose the old instance when that boundary changes."
   },
   "events": {
-    "title": "Observer, pub/sub, and subscriptions: a boundary to explain",
+    "title": "Only current listeners receive a publish.",
     "code": "const stop = bus.subscribe(\"stock\", value => console.log(value))\nbus.publish(\"stock\", 3) // listener receives 3\nstop()\nbus.publish(\"stock\", 4) // no delivery to this registration",
     "reasoning": "A topic-specific ordered registration set represents exactly the current subscribers; publishing reads only that set.",
     "challenge": "Should a subscriber added during publish receive that same event?",
     "answer": "It depends on the authored policy. Snapshot delivery excludes registrations added mid-publication; document and test that choice."
   },
   "dependency-injection": {
-    "title": "Dependency injection: a boundary to explain",
+    "title": "A supplied clock makes time decisions testable.",
     "code": "function expired(deadline: number, now: () => number) {\n  return now() >= deadline\n}\nexpired(100, () => 100) // true\nexpired(100, Date.now) // uses a real clock",
     "reasoning": "A single clock read per decision gives the comparison one defined timestamp. Injection makes equality and call count observable without real time.",
     "challenge": "Can an injected dependency still mutate state?",
     "answer": "Yes. Injection makes dependency choice explicit; side effects depend on the supplied implementation."
   },
   "debouncing": {
-    "title": "Debouncing: a boundary to explain",
+    "title": "Debounce waits for a quiet period.",
     "code": "// Quiet period: 100 ms; trailing only.\n// Events: A at 0, B at 60, C at 200.\n// Emit B at 160, C at 300.\n// A is replaced before its deadline.",
     "reasoning": "The pending record is always the latest event not yet emitted. Testing its deadline before replacement preserves the explicit equality policy.",
     "challenge": "How would a leading debounce differ from this example?",
     "answer": "It may invoke immediately at the beginning of a burst. Combining leading and trailing behavior needs a separate contract and checks."
   },
   "throttling": {
-    "title": "Throttling: a boundary to explain",
+    "title": "Throttle measures from the last accepted event.",
     "code": "// Leading throttle, window 100 ms.\n// Inputs at 0, 60, 100, 150, 200.\n// Accepted at 0, 100, 200.\n// Rejected events do not move the window.",
     "reasoning": "The last accepted timestamp anchors the suppression window, so each emitted pair is separated by at least window.",
     "challenge": "Why might a debounce never run during continuous typing while a throttle does?",
     "answer": "The debounce keeps resetting its quiet-period deadline. A throttle permits new executions once the previous accepted window ends."
   },
   "request-ownership": {
-    "title": "Cancellation and race conditions: a boundary to explain",
+    "title": "Only the current request may update its screen.",
     "code": "let current = 0\nasync function load(url: string) {\n  const mine = ++current\n  const data = await fetch(url).then(r => r.json())\n  if (mine === current) show(data)\n}\n// Also handle HTTP errors, failures, and cleanup in real code.",
     "reasoning": "Ownership, rather than arrival time, controls which result can update state. A pending owner ends on settlement. Ownership is scoped to the surface: one search screen can have one owner, while several preview slots need separate owners. Clearing data on start and preserving it during refresh are different display contracts.",
     "challenge": "Cover starts load A, then detail starts load B. Can one global current token safely allow both previews to complete? Explain how removal and duplicate completion should affect ownership.",
     "answer": "No: B would obsolete A even though the slots are independent. Each slot needs its own pending identity. Removing a slot removes that ownership; accepting its result ends the load so duplicates are ignored. Unsupported cancellation may leave work running, but the ownership check can still reject its obsolete result."
   },
   "websockets": {
-    "title": "WebSockets and connection state: a boundary to explain",
+    "title": "A send needs an open connection.",
     "code": "const socket = new WebSocket(\"wss://example.test/live\")\nsocket.addEventListener(\"open\", () => {\n  socket.send(JSON.stringify({ type: \"subscribe\", room: \"stock\" }))\n})\n// Dispose the connection and listeners when its owner ends.",
-    "reasoning": "Every accepted send is preceded by an unmatched open under this model. The state guard prevents disconnected sends from entering the output.",
+    "reasoning": "A send is accepted only while the connection is open. The state guard prevents disconnected sends from entering the output.",
     "challenge": "If send returns, has the server necessarily processed the message?",
     "answer": "No. Local transport acceptance is not an application-level acknowledgment; design a reply or acknowledgment when required."
   },
   "live-transports": {
-    "title": "Polling and server-sent events: a boundary to explain",
+    "title": "Choose a transport from the required directions.",
     "code": "const stream = new EventSource(\"/updates\")\nstream.addEventListener(\"message\", event => {\n  console.log(event.data)\n})\n// stream.close() stops this owner’s stream.\n// A separate POST can send a user action.",
     "reasoning": "The precedence matches the strongest required capability; the serverPush flag must not override twoWay.",
     "challenge": "If an SSE stream reconnects with a last event ID, are missed messages always recovered?",
     "answer": "No. Recovery requires a server that retains and replays events for that ID; IDs alone do not create a replay store."
   },
   "resource-ownership": {
-    "title": "Cleanup, reference counting, and shared connections: a boundary to explain",
+    "title": "Close a shared resource when its last consumer leaves.",
     "code": "// acquire A: 0 → 1, open resource\n// acquire B: 1 → 2, keep resource\n// release A: 2 → 1, keep resource\n// release B: 1 → 0, close resource",
     "reasoning": "The set equals current ownership, so duplicate operations cannot corrupt a numeric count. Only transitions across zero change the resource lifetime.",
-    "challenge": "Why does a singleton getter alone fail to solve connection cleanup?",
-    "answer": "It controls instance creation but does not record who still uses it, remove their subscriptions, or cancel its reconnect work."
+    "challenge": "Why should closing a shared connection intentionally cancel a pending reconnect?",
+    "answer": "The owner has ended. Reconnecting would create work without a live consumer and can reopen a logged-out session."
   },
   "caching": {
-    "title": "Caching and freshness: a boundary to explain",
+    "title": "A cached value is usable only before expiry.",
     "code": "const entry = { value: 0, expiresAt: 100 }\nconst now = 100\nconst hit = now < entry.expiresAt // false\n// value 0 is valid data, not a cache miss.",
     "reasoning": "An entry must satisfy both identity and freshness; neither alone establishes a hit.",
     "challenge": "Can a fresh TTL entry still differ from the server?",
     "answer": "Yes. The server may change before expiry. TTL is a freshness policy, not a guarantee of immediate consistency."
   },
   "retries": {
-    "title": "Retries and reconnect backoff: a boundary to explain",
+    "title": "Retry delays grow only up to the cap.",
     "code": "// Base 100 ms, cap 500 ms, no jitter.\n// Failure indices 0,1,2,3 produce 100,200,400,500.\n// Success resets the next index to 0.",
     "reasoning": "Each delay is the exponential sequence clamped at cap, so growth cannot produce a scheduled delay above the permitted limit.",
-    "challenge": "Why should closing a shared connection intentionally cancel a pending reconnect?",
-    "answer": "The owner has ended. Reconnecting would create work without a live consumer and can reopen a logged-out session."
+    "challenge": "With base 100 ms and cap 500 ms, what are the delays for failure indices 3 and 4? Why do they stop growing?",
+    "answer": "Both delays are 500 ms. The cap limits each delay even when doubling would produce a larger value."
   },
   "idempotency": {
-    "title": "Idempotency and safe repeated requests: a boundary to explain",
+    "title": "Repeating the same request must not repeat its effect.",
     "code": "// key K, amount 5: apply +5 and store result\n// retry key K, amount 5: return stored outcome, add nothing\n// key K, amount 9: conflict, add nothing\n// key L, amount 5: a different operation, apply +5",
     "reasoning": "The first recorded payload fixes each key’s operation. Subsequent matching deliveries have no additional effect and mismatches cannot replace it.",
     "challenge": "Why can a timeout still require an idempotency key on retry?",
     "answer": "The server may have committed the first request before the client timed out. The same logical key lets the retry reuse that result."
   },
   "optimistic-updates": {
-    "title": "Optimistic updates and rollback: a boundary to explain",
+    "title": "Failed changes remove only their own pending contribution.",
     "code": "// Confirmed balance 10.\n// Pending A:+2 and B:+3 → display 15.\n// B succeeds → confirmed 13, pending A:+2 → display 15.\n// A fails → confirmed 13, pending empty → display 13.",
     "reasoning": "Each operation contributes at most once: either tentatively in pending or permanently in confirmed. Failure removes only its own tentative contribution.",
     "challenge": "Why is a ledger of deltas insufficient for two concurrent edits replacing the same title?",
@@ -3321,7 +3333,7 @@ export const practicalGuides = {
       "Choose state with a meaning you can trace."
     ],
     "explanation": [
-      "Each factory invocation owns a binding that survives through its returned function. The trace wrapper preserves call order.",
+      "Each call to the factory creates its own count. The returned function keeps that count between calls. The trace calls counters in the supplied order.",
       "A class can also encapsulate a count; a closure needs no public object field. A global variable would share state unintentionally. Creating k counters and processing n calls takes O(k+n) time and O(k) working state.",
       "Explain the limits of these deterministic checks."
     ],
@@ -3345,7 +3357,7 @@ export const practicalGuides = {
       "Choose state with a meaning you can trace."
     ],
     "explanation": [
-      "The model represents the current script finishing before its microtask checkpoint and the later timer tasks.",
+      "The current script finishes first. Queued microtasks run next, followed by timer tasks.",
       "Three filter passes are clear and O(n); three queues also take O(n) and avoid repeated scans. A priority sort may cost more and must preserve within-kind order.",
       "Explain the limits of these deterministic checks."
     ],
@@ -3441,7 +3453,7 @@ export const practicalGuides = {
       "Choose state with a meaning you can trace."
     ],
     "explanation": [
-      "Every accepted send is preceded by an unmatched open under this model. The state guard prevents disconnected sends from entering the output.",
+      "A send is accepted only while the connection is open. The state guard prevents disconnected sends from entering the output.",
       "Queuing sends is possible but needs bounds and replay semantics. This dropping model has O(n) processing time and O(1) state plus sent-message output.",
       "Explain the limits of these deterministic checks."
     ],
