@@ -39,3 +39,9 @@ Native Zen automation reached the isolated local app, but its screenshot/accessi
 ## Current browser and portable follow-up
 
 On macOS, 21 Chromium flows passed, including the isolated SQLite recovery and backup cases described in `docs/BROWSER_TESTING.md`. The latest arm64 portable bundle smoke passed with 24 local assets, bundled-runtime startup from a path containing spaces, save, restart, snapshot, and clean shutdown. Data directories were temporary. This updates the earlier asset-count snapshots above; it does not establish Windows/Linux execution or the Windows `.cmd` launcher.
+
+## Layout walkthrough
+
+`tests/e2e/layout-walkthrough.spec.ts` walks the practice desk with keyboard navigation at four viewport profiles: desktop 1280x800, narrow 390x844, short 1280x560, and a 640x400 viewport at deviceScaleFactor 2 approximating 200% zoom. Each pass tabs through the workspace (every focus target must be visible), types in the real Monaco editor, exits the editor with the keyboard, runs checks, writes a plan field, and reloads to confirm the code draft and written plan persist, with the focused element visible at each stage.
+
+This covers Chromium only. It does not establish assistive-technology support, other browser engines, cross-platform behavior, or visual fidelity; the zoomed profile approximates zoom but is not a real OS/browser zoom setting.
