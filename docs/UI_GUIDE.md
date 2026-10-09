@@ -32,6 +32,12 @@
 - Quick lessons inside the lesson index opens short introductions. The existing `#/learn` bookmark still works.
 - Home previews up to three saved drafts and three due reviews. Show all exposes the complete queue without changing drafts, priorities, or review dates; Show fewer restores the compact view. Expansion is a session preference.
 
+## First rep walkthrough
+
+Trail offers **Try first rep walkthrough** (then **Replay walkthrough**) around the real Declare a value rep. Inline help follows Understand, Plan, Solve, Explain, and Review; normal step navigation remains available. The guide introduces saved writing, behavioral checks, optional recorded hints, and the existing completion checklist without inserting a solution, completing an attempt, or granting mastery. Skip or Finish dismisses the help; replay opens the existing draft without resetting it.
+
+Walkthrough visibility is a profile-scoped session UI preference through `useSessionPreference`, survives refresh in that browser session, and stays out of learner backups. Leaving the rep hides help until returning; Back/Forward and reload use the existing routes and draft owners. The editor remains mounted while changing steps. Focused Chromium flows cover skip/replay, real checks and completion, and narrow-screen draft preservation; they do not establish visual fidelity or assistive-technology support.
+
 ## Arrange the workspace
 
 - Drag the divider between brief and editor. Focus the divider and use Left/Right to resize, Home/End for the limits, or double-click to restore the default split. The split preference is saved locally.
