@@ -23,6 +23,9 @@ export const journeys: Journey[] = [
   { id: 'resource-ownership', title: 'Own and clean up shared resources', guided: 'shared-resource', independent: 'subscription-cleanup', recall: 'room-leases', delayDays: 3 },
   { id: 'validation', title: 'Validate data at a boundary', guided: 'backend-validate-user', independent: 'validate-stock-adjustment', recall: 'parse-delivery-window', delayDays: 3 },
   { id: 'state-modeling', title: 'Model valid browser states', guided: 'task-state-label', independent: 'saved-record-status', recall: 'catalog-request-summary', delayDays: 3 },
+  { id: 'control-flow', title: 'Repeat work and choose by condition', guided: 'loop-with-for', independent: 'shipping-cost-tiers', recall: 'countdown-labels', delayDays: 3 },
+  { id: 'interface-logic', title: 'Derive what the interface shows', guided: 'frontend-sort-table', independent: 'group-items-by-heading', recall: 'filter-chip-summary', delayDays: 3 },
+  { id: 'request-response', title: 'Read requests and shape responses', guided: 'backend-query-filters', independent: 'parse-sort-param', recall: 'page-response-envelope', delayDays: 3 },
 ]
 
 export const arrayJourney = journeys[0]
@@ -254,6 +257,16 @@ export const reflectionGuides: Record<string, { plan: string[]; explanation: str
     plan: ['Read what the loop adds to names.', 'Check what slice(1) returns.', 'Preserve the loop and return the complete result.'],
     explanation: ['Describe what the set and array each do.', 'Explain why the first name was lost.'],
     example: 'The set prevents duplicates while names preserves first-seen order. slice(1) removed the first kept name, so I return names directly. The loop uses O(n) expected time and O(n) space.',
+  },
+  'shipping-cost-tiers': {
+    plan: ['Add weight times quantity for every line.', 'Choose one tier from the total, checking the upper edges in order.', 'Set a flag for bulky lines and add the handling charge once.'],
+    explanation: ['Trace an order that crosses the 2000 gram edge and has two bulky lines.', 'Explain why the handling charge is added once, not per line.', 'Explain why an empty order costs zero rather than the lightest tier.'],
+    example: 'I loop over each line, adding weight times quantity to total and turning on bulky when a quantity is above 10. After the loop I choose 300, 600, or 1200 cents from total and add 200 once if bulky is set. Two bulky lines of 110 and 240 grams give a total of 350 and a charge of 500. The loop does one pass, so the work is O(n) time and O(1) extra space.',
+  },
+  'countdown-labels': {
+    plan: ['Start the value at the starting seconds.', 'Stop before the value would drop below zero.', 'Format minutes without padding and seconds with two digits.'],
+    explanation: ['Trace 130 seconds with a 60-second step through each pass.', 'Explain why a step that lands exactly on zero includes 0:00.', 'Explain why a zero start gives one label.'],
+    example: 'I start value at startSeconds and loop while value is at least zero, subtracting stepSeconds each pass. Each label is Math.floor(value / 60), a colon, and the remainder padded to two digits. For 130 with a 60-second step the values are 130, 70, and 10, so the labels are 2:10, 1:10, and 0:10. The work is one pass per label, O(n) time for n labels, with O(1) extra space beyond the output.',
   },
   'transform-active-labels': {
     plan: ['Skip inactive users.', 'Trim each active name and skip an empty result.', 'Uppercase names and keep the input order.'],

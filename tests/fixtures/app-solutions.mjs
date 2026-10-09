@@ -86,4 +86,46 @@ function errorResponse(error: unknown) {
   }
   return {status: 500, body: {error: 'INTERNAL', message: 'Something went wrong. Please try again later.'}}
 }`,
+  'group-items-by-heading': `
+function groupByHeading(items: {heading: string; title: string}[]) {
+  const groups = new Map<string, string[]>()
+  for (const item of items) {
+    const heading = item.heading.trim()
+    if (!heading) continue
+    if (!groups.has(heading)) groups.set(heading, [])
+    groups.get(heading)!.push(item.title)
+  }
+  return [...groups].map(([heading, titles]) => ({heading, titles}))
+}`,
+  'filter-chip-summary': `
+function chipSummary(selected: string[], maxChips: number) {
+  const seen = new Set<string>()
+  const distinct: string[] = []
+  for (const raw of selected) {
+    const name = raw.trim()
+    if (!name || seen.has(name.toLowerCase())) continue
+    seen.add(name.toLowerCase())
+    distinct.push(name)
+  }
+  return {chips: distinct.slice(0, maxChips), hiddenCount: Math.max(0, distinct.length - maxChips)}
+}`,
+  'parse-sort-param': `
+function parseSort(value: unknown) {
+  const fields = ['title', 'createdAt', 'priority']
+  if (value === undefined) return {ok: true, sort: {field: 'title', direction: 'asc'}}
+  if (typeof value !== 'string') return {ok: false, error: 'INVALID_SORT'}
+  const text = value.trim()
+  if (!text) return {ok: true, sort: {field: 'title', direction: 'asc'}}
+  const descending = text.startsWith('-')
+  const field = descending ? text.slice(1) : text
+  if (!fields.includes(field)) return {ok: false, error: 'INVALID_SORT'}
+  return {ok: true, sort: {field, direction: descending ? 'desc' : 'asc'}}
+}`,
+  'page-response-envelope': `
+function pageEnvelope(totalItems: number, page: number, pageSize: number, path: string) {
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
+  if (page > totalPages) return {ok: false, error: 'PAGE_NOT_FOUND'}
+  const link = (target: number) => path + '?page=' + target + '&pageSize=' + pageSize
+  return {ok: true, body: {totalItems, totalPages, page, pageSize, links: {self: link(page), prev: page > 1 ? link(page - 1) : null, next: page < totalPages ? link(page + 1) : null}}}
+}`,
 }

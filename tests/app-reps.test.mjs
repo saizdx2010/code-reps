@@ -39,3 +39,18 @@ test('app rep checks reject common contract mistakes', () => {
 test('app reps are not solved by their starter code', () => {
   for (const rep of appReps) assert.ok(runRep(rep.starter, rep.id).some(result => !result.passed), `${rep.id}: starter passes`)
 })
+
+test('journey app reps reject common contract mistakes', () => {
+  const s = appSolutions
+  const mutants = [
+    ['group-items-by-heading', s['group-items-by-heading'].replace('item.heading.trim()', 'item.heading.trim().toLowerCase()')],
+    ['group-items-by-heading', s['group-items-by-heading'].replace('if (!heading) continue', '')],
+    ['filter-chip-summary', s['filter-chip-summary'].replace('seen.has(name.toLowerCase())', 'seen.has(name)').replace('seen.add(name.toLowerCase())', 'seen.add(name)')],
+    ['filter-chip-summary', s['filter-chip-summary'].replace('distinct.length - maxChips', 'selected.length - maxChips')],
+    ['parse-sort-param', s['parse-sort-param'].replace("if (!text) return {ok: true, sort: {field: 'title', direction: 'asc'}}", "if (!text) return {ok: false, error: 'INVALID_SORT'}")],
+    ['parse-sort-param', s['parse-sort-param'].replace("fields.includes(field)", "fields.includes(field.toLowerCase())")],
+    ['page-response-envelope', s['page-response-envelope'].replace('Math.ceil(totalItems / pageSize)', 'Math.floor(totalItems / pageSize)')],
+    ['page-response-envelope', s['page-response-envelope'].replace('page < totalPages ? link(page + 1)', 'true ? link(page + 1)')],
+  ]
+  for (const [index, [id, code]] of mutants.entries()) assert.ok(runRep(code, id).some(result => !result.passed), `mutant ${index} of ${id} escaped the checks`)
+})

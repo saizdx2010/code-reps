@@ -54,6 +54,9 @@ export const recallVariants: Record<string, string[]> = {
   text: ['first-label-ending', 'count-label-prefix', 'count-long-words'],
   lookup: ['first-duplicate-label', 'count-statuses', 'first-repeated-number'],
   stacks: ['remaining-actions', 'cancel-adjacent-ids', 'remove-adjacent-pairs'],
+  'control-flow': ['countdown-labels'],
+  'interface-logic': ['filter-chip-summary'],
+  'request-response': ['page-response-envelope'],
 }
 export function recurringReviews(history: PortableRecord[], now = Date.now()) {
   return getAllJourneys(history, now).flatMap(state => {
