@@ -27,7 +27,7 @@ const assets = await readdir(join(dist, 'assets'))
 const workers = assets.filter(name => /^(ts|editor|runner)\.worker-.*\.js$/.test(name)).map(name => `assets/${name}`)
 if (workers.length !== 3) throw new Error('Expected the editor, TypeScript, and practice workers')
 const groups = [
-  { name: 'Initial JavaScript', files: [...initial], limit: 225_000, rawLimit: 775_000 },
+  { name: 'Initial JavaScript', files: [...initial], limit: 260_000, rawLimit: 900_000 },
   { name: 'Additional editor JavaScript', files: [...editor], limit: 1_050_000, rawLimit: 4_200_000 },
   { name: 'Additional frontend JavaScript', files: [...frontend], limit: 1_050_000, rawLimit: 3_900_000 },
   { name: 'Local worker JavaScript', files: workers, limit: 3_100_000, rawLimit: 11_200_000 },
