@@ -6,7 +6,7 @@ This is stage 2 of [the daily practice plan](./DAILY_PRACTICE_PLAN.md). It serve
 
 ## Lifecycle
 
-- Opening or browsing a rep does not create a session. Home and the workspace offer explicit Start practice.
+- Opening or browsing a rep does not create a session. Home and the workspace offer explicit Record a session.
 - A profile has at most one active session, attached to one rep. Browsing elsewhere preserves it. Starting practice elsewhere leaves the previous session unfinished without requiring reflection or claiming it ended.
 - Starting practice again creates a new session using the existing draft. An active session crossing midnight remains one session.
 - Returning after closing the app shows Home and a fresh recommendation. Previously active work is unfinished and available for explicit resume; resuming starts a new session.

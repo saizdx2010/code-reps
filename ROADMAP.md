@@ -25,9 +25,9 @@ Implemented features do not establish learner comprehension, full accessibility,
 **Goal:** Open Code Reps and immediately understand what to do, why it matters, and how to continue saved work.
 
 - [x] Make Trail's primary action answer three questions: what should I practise, why this rep, and what comes afterward. The Home “Up next” panel shows the rep, its reason, and an afterward line.
-- [ ] Give first use a short walkthrough built around a real tiny rep. Introduce checks, hints, writing, and completion when they become relevant; keep it skippable and available again. (Not implemented: first use offers only a starting-point choice.)
+- [x] Offer a short, optional walkthrough around the real “Declare a value” rep. Introduce checks, hints, writing, and completion at the relevant steps; allow skipping and replay from Trail without replacing saved work.
 - [x] Make the selected learning goal obvious, with an easy way to change it and a clear explanation that browsing another track does not change the goal.
-- [ ] Clarify opening a rep versus recording a practice session. Evaluate a label such as “Record a session”; explain that completing a rep and ending a session are separate actions. (The session panel already says ending a session does not complete the rep; the “Optional practice record” label is still open.)
+- [x] Clarify opening a rep versus recording a practice session with “Record a session” and “Resume session” actions. Completing a rep and ending a session remain separate actions.
 - [x] Offer a small daily choice: continue saved work, take the recommended next rep, or choose a due review. Keep other tools reachable through existing sections.
 - [ ] Improve recommendation reasons with the specific skill or prerequisite involved, rather than only naming the selected track. (Reasons already name the journey or skill; prerequisite-specific wording is not implemented.)
 - [x] Keep advanced planning, assessment, and management controls secondary so they do not compete with the next useful action. Planning and evidence are text links below the primary action, and changing the starting point is under a disclosure.
