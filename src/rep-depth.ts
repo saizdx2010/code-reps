@@ -52,6 +52,41 @@ export const repDepth: Record<string, RepDepth> = {
     "counterexample": "Hardcoding 15 passes the example but fails price 2.5 and quantity 2.",
     "transfer": "Use the returned total in a second calculation and explain why console.log cannot supply that value."
   },
+  "use-conditions": {
+    "reasoning": "Checking the invalid range first keeps out-of-range scores away from the grade bands. Each grade test assumes every higher band has already failed, so the order defines the boundaries.",
+    "trace": "For 90, the 90 test passes first and returns A. For 89.9 that test fails, the 80 test fails, the 70 test fails, the 60 test passes, and the result is B only if 89.9 is at least 80. For 101 the range guard returns Invalid before any grade test runs.",
+    "alternative": "A table of score ranges is compact, but each inclusive or exclusive edge must be written correctly. Separate if statements make each boundary visible when you trace a value.",
+    "counterexample": "Writing score > 90 for A sends exactly 90 to B, which breaks the contract. The boundary value is where this mistake appears.",
+    "transfer": "Add a plus band for 97 and above, and explain which branch must come first and what 96.5 returns."
+  },
+  "loop-with-for": {
+    "reasoning": "The total is the sum of the values already visited. It starts at zero, so the empty range is correct, and each pass adds the next value until i passes n.",
+    "trace": "For n = 4 the total becomes 1, 3, 6, and 10 as i takes 1, 2, 3, and 4. For n = 0 the condition 1 <= 0 is false, so the loop never runs and 0 is returned.",
+    "alternative": "The formula n * (n + 1) / 2 returns the same result without visiting each value. The loop is easier to change when the rule adds only selected values.",
+    "counterexample": "Using i < n omits n. For n = 4 it returns 6 instead of 10.",
+    "transfer": "Sum only the odd numbers from 1 through n. Decide the starting value and the step size before you write the loop body."
+  },
+  "loop-while": {
+    "reasoning": "The loop tests the current value before each halving. When the value reaches 1 no further halving is needed, so the count equals the number of halvings performed.",
+    "trace": "Starting with 9, the value is greater than 1, so it becomes 4 and steps becomes 1. Then 4 becomes 2 and steps becomes 2. Then 2 becomes 1 and steps becomes 3. The value 1 fails the condition, so the result is 3.",
+    "alternative": "A for loop with a manual break can work, but the while condition states the stopping rule directly. Bit operations count bit length, but they hide the halving rule this rep asks you to practise.",
+    "counterexample": "Using value / 2 without Math.floor gives 9 four steps: 4.5, 2.25, 1.125, and 0.5625. The value stays fractional, so the count is wrong.",
+    "transfer": "Repeat the halving rule until the value is 0 instead. Explain why an input of 1 never reaches 0 under floor division, and what this means for the loop."
+  },
+  "string-basics": {
+    "reasoning": "Trimming removes display padding before words are split. Each initial comes from the first character of an actual word, so the empty name gives an empty result rather than a special error.",
+    "trace": "For '  grace   hopper ', trim gives 'grace   hopper'. Splitting on whitespace runs gives grace and hopper, so the first letters give GH. For an empty name the split result is one empty word, and slice(0, 1) gives an empty string.",
+    "alternative": "A regular expression that matches word starts can extract initials in one step. Splitting is easier to trace, but it still needs a rule for repeated separators.",
+    "counterexample": "Splitting '  grace   hopper' on single spaces creates empty words. Calling word[0].toUpperCase() on an empty word throws an error. slice(0, 1) returns an empty string for those words instead.",
+    "transfer": "Return the first letter of the first and last words only. Decide what a one-word name should return before you change the code."
+  },
+  "object-update": {
+    "reasoning": "The caller keeps its original task. Returning a new object makes the change explicit, and code that still holds the old value sees no surprise.",
+    "trace": "For { title: 'Write', done: false, priority: 2 } with done true, the spread copies title and priority, then done replaces false. The supplied object still has done false afterward.",
+    "alternative": "Object.assign({}, task, { done }) gives the same result and is more verbose. Assigning task.done directly is shorter but changes the caller's object.",
+    "counterexample": "task.done = done; return task can return the right value. It fails because the supplied object changed, which the input check detects.",
+    "transfer": "Update one field inside a nested settings object. Explain why one spread is no longer enough and which nested objects must be copied."
+  },
   "verify-generated-code": {
     "reasoning": "A proposed implementation is a claim to verify against the contract.",
     "trace": "For [blank, Ada with spaces], the first trim is empty so continue; the next trim is Ada so return it. Only blanks produce null.",

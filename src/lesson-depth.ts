@@ -14,6 +14,13 @@ export const lessonDepth: Record<string, LessonDepth> = {
     "challenge": "Predict what happens after const copy = { ...first }; copy.score = 9. Explain the value of first.score.",
     "answer": "first.score remains 2: the spread creates a separate object for these primitive properties. Nested objects would still share references unless copied too."
   },
+  "control-flow": {
+    "title": "Order the branches and make the loop progress",
+    "code": "function label(score: number) {\n  if (score >= 90) return 'A'\n  if (score >= 80) return 'B'\n  return 'C or lower'\n}\n\nlet value = 9\nlet steps = 0\nwhile (value > 1) {\n  value = Math.floor(value / 2)\n  steps++\n}",
+    "reasoning": "A return ends the function, so the first matching branch wins. Its order therefore sets the boundaries: 85 reaches B only because it failed the 90 test. A loop needs three things: a starting value, a condition that can become false, and a change on each pass that moves toward that end. Without progress, the same condition stays true forever.",
+    "challenge": "A learner writes while (value > 1) { value = value / 2; steps++ } for 9. Predict the step count, then explain the repair.",
+    "answer": "The loop counts 4 steps instead of 3. The value becomes fractional (4.5, 2.25, 1.125, 0.5625), so an extra pass runs while it is still above 1. Math.floor keeps each halving a whole number, so the loop reaches 1 after three steps."
+  },
   "arrays": {
     "title": "Build a loop from its invariant",
     "code": "// Invariant: total is the sum of positive values already visited.\nlet total = 0;\nfor (const n of [-2, 4, 0, 3]) {\n  if (n > 0) total += n;\n}",
