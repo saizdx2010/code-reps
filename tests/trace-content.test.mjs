@@ -7,9 +7,9 @@ import { runRep } from '../src/runner.ts'
 
 const traced = Object.entries(repDepth).filter(([, depth]) => depth.traceSteps)
 
-test('the pilot traces cover one two-pointer, one sliding-window, and one stack rep', () => {
+test('traces cover collection operations and the authored algorithm techniques', () => {
   const ids = traced.map(([id]) => id)
-  assert.deepEqual(ids.sort(), ['algo-sorted-pair', 'algo-window-sum', 'ds-stack-operations'])
+  assert.deepEqual(ids.sort(), ['algo-graph-reachable', 'algo-insertion-sort', 'algo-merge-sorted', 'algo-recursive-sum', 'algo-sorted-pair', 'algo-tree-depth', 'algo-window-sum', 'ds-stack-operations'])
 })
 
 // Parses "name = value, ..." by declaring the input as constants, then reads each binding.
@@ -48,6 +48,9 @@ for (const [id, depth] of traced) {
     const solve = new Function(`${compileSolution(source, rep.functionName)}\nreturn ${rep.functionName}`)()
     const args = traceArguments(depth.traceSteps.input)
     const expected = solve(...structuredClone(args))
-    assert.deepEqual(depth.traceSteps.steps.at(-1).vars.result, expected)
+    // Snapshot variables render scalar labels, including array outputs as JSON text.
+    const displayed = depth.traceSteps.steps.at(-1).vars.result
+    const result = Array.isArray(expected) ? JSON.parse(displayed) : displayed
+    assert.deepEqual(result, expected)
   })
 }
