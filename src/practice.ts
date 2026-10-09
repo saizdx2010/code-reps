@@ -1,4 +1,4 @@
-import { paths } from './path.ts'
+import { migratePathId, paths } from './path.ts'
 import { recurringReviews } from './fluency.ts'
 import { reps } from './rep.ts'
 import { foundations } from './foundations.ts'
@@ -58,7 +58,7 @@ export function getPracticePlan(drafts: Record<string, PortableAttempt>, history
   const available = reps.find(rep => status(rep.id) === 'Not started' && (learnerStart !== 'returning' || !foundations.some(lesson => lesson.repId === rep.id)) &&
     !progress.some(state => state.journey.recall === rep.id && !state.recallDue && !state.retained))
   const recallAvailable = (id: string) => !progress.some(state => state.journey.recall === id && !state.recallDue && !state.retained)
-  const goalPath = paths.find(path => path.id === goalPathId) ?? paths[0]
+  const goalPath = paths.find(path => path.id === migratePathId(goalPathId)) ?? paths[0]
   const goalIds: readonly string[] = (learnerStart === 'returning' && goalPath.id === 'typescript' ? goalPath.stages.slice(1) : goalPath.stages).flatMap(stage => stage.repIds)
   const goalDraft = unfinished.find(action => goalIds.includes(action.repId))
   const goalRepId = goalIds.find(id => status(id) !== 'Completed' && recallAvailable(id))

@@ -1,3 +1,4 @@
+import { paths } from '../src/path.ts'
 import { journeys } from '../src/learning.ts'
 import assert from 'node:assert/strict'
 import test from 'node:test'
@@ -87,21 +88,21 @@ test('a finished catalog without due work has no arbitrary recommendation', () =
 
 test('a selected backend goal changes new practice without hiding saved work', () => {
   const plan = getPracticePlan({}, [], 'returning', 'sum-positive-numbers', Date.now(), 'backend')
-  assert.equal(plan.next.repId, 'basic-types')
+  assert.equal(plan.next.repId, 'backend-validate-user')
   assert.match(plan.next.reason, /goal/)
   const saved = { 'sum-positive-numbers': { plan: 'Resume my plan', code: '', explanation: '', hintCount: 0 } }
   const withOtherDraft = getPracticePlan(saved, [], 'returning', 'sum-positive-numbers', Date.now(), 'backend')
-  assert.equal(withOtherDraft.next.repId, 'basic-types')
+  assert.equal(withOtherDraft.next.repId, 'backend-validate-user')
   assert.equal(withOtherDraft.unfinished[0].mode, 'resume')
 })
 
 
 test('selected practical path cannot recommend recall before its independent evidence and delay', () => {
   const journey = journeys.find(journey => journey.id === 'request-ownership')
-  const preceding = ['closure-counters', 'reference-groups', 'promise-outcomes', 'event-loop-order', 'singleton-owner', 'pubsub-trace', 'injected-clock', 'debounce-schedule', 'leading-throttle', 'latest-request', 'search-request-state', 'websocket-gate', 'choose-live-transport', 'shared-resource', 'subscription-cleanup', 'cache-freshness', 'retry-backoff', 'idempotent-ledger', 'optimistic-balance']
+  const preceding = paths.find(path => path.id === 'frontend').stages.flatMap(stage => stage.repIds).filter(id => !['preview-slot-results', 'refresh-report-state'].includes(id))
   const drafts = Object.fromEntries(preceding.map(id => [id, draft(id, {completedAt: old})]))
   const history = [record(journey.guided), record(journey.independent, {completedAt: '2026-09-29T12:00:00Z'})]
-  const plan = getPracticePlan(drafts, history, 'returning', '', now, 'practical-concepts')
+  const plan = getPracticePlan(drafts, history, 'returning', '', now, 'frontend')
   assert.equal(plan.next.repId, 'refresh-report-state')
   assert.notEqual(plan.next.repId, journey.recall)
 })
@@ -113,6 +114,6 @@ test('goal-path drafts outrank other drafts, while due recall still leads', () =
   assert.equal(getPracticePlan(drafts, history, 'returning', '', now, 'backend').next.repId, 'count-above-threshold')
   const outsideOnly = { 'sum-positive-numbers': drafts['sum-positive-numbers'] }
   const plan = getPracticePlan(outsideOnly, [], 'returning', '', now, 'backend')
-  assert.equal(plan.next.repId, 'basic-types')
+  assert.equal(plan.next.repId, 'backend-validate-user')
   assert.equal(plan.unfinished[0].repId, 'sum-positive-numbers')
 })

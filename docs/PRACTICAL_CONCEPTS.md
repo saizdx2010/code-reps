@@ -1,6 +1,6 @@
 # Practical Concepts
 
-A free path for specialized concepts used in application code. Start with values, functions, arrays, and maps in the TypeScript path; lesson prerequisites identify the next useful reading. Each new lesson has an example trace, two interactive predictions, common mistakes, and a separately revealed reasoning challenge. Coding reps include progressive hints, boundary checks, input preservation, and post-attempt reasoning, alternatives, counterexamples, and transfer prompts.
+Specialized concepts used in application code, spread across Foundations (How JavaScript runs), Frontend, and Backend. Start with values, functions, arrays, and maps in the TypeScript path; lesson prerequisites identify the next useful reading. Each new lesson has an example trace, two interactive predictions, common mistakes, and a separately revealed reasoning challenge. Coding reps include progressive hints, boundary checks, input preservation, and post-attempt reasoning, alternatives, counterexamples, and transfer prompts.
 
 ## Coverage
 

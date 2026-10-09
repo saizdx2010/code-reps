@@ -42,10 +42,10 @@ test('returning learners skip the opening Foundations stage', () => {
 
 test('language refreshers in other tracks are shown as covered by Foundations', () => {
   const dsa = paths.find(path => path.id === 'algorithms-data-structures')
-  assert.equal(stageCoveredByFoundations(dsa.id, dsa.stages[0].repIds), true)
-  assert.equal(stageCoveredByFoundations(dsa.id, dsa.stages[1].repIds), false)
+  assert.equal(stageCoveredByFoundations(dsa.id, dsa.stages[1].repIds), true)
+  assert.equal(stageCoveredByFoundations(dsa.id, dsa.stages[0].repIds), false)
   assert.equal(stageCoveredByFoundations(foundationsPathId, paths[0].stages[0].repIds), false)
-  assert.equal(buildTrail(dsa.id, fresh).stages[0].covered, true)
+  assert.equal(buildTrail(dsa.id, fresh).stages[1].covered, true)
 })
 
 test('project applications end the trail without changing path completion counts', () => {

@@ -44,7 +44,7 @@ The source of truth remains `src/knowledge.ts`, `src/learning.ts`, and `src/flue
 
 ## Request ownership batch
 
-Request ownership now has four applications within the existing Practical Concepts path:
+Request ownership now has four applications within the Frontend track:
 
 | Role | Rep | Decision practised |
 | --- | --- | --- |
@@ -57,7 +57,7 @@ Independent and recall prompts state the observable contract without providing a
 
 ## Validation and data-boundary batch
 
-Content version 5 adds a journey to the existing Backend core path and validation lesson:
+Content version 5 adds a journey to the Backend track and validation lesson:
 
 | Role | Rep | Decision practised |
 | --- | --- | --- |

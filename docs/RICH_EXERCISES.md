@@ -1,6 +1,6 @@
 # Richer exercises
 
-The catalog now contains 34 reps, including five complete small tasks in the **Apply skills in real code** path. Existing rep IDs and saved-attempt formats are unchanged.
+The catalog now contains 34 reps, including five complete small tasks across the Frontend and Backend tracks. Existing rep IDs and saved-attempt formats are unchanged.
 
 | Rep | Learner work | Checks |
 | --- | --- | --- |
@@ -10,7 +10,7 @@ The catalog now contains 34 reps, including five complete small tasks in the **A
 | Implement a ticket list handler | Validate parsed requests, filter tickets, count, and page a response. | Method and query errors, defaults, boundaries, filtering, total-before-pagination, empty results, and input preservation. |
 | Refactor a stock summary | Improve working code while preserving order, duplicates, zero units, and totals. | Regression checks; readability and structure remain self-reviewed. |
 
-Every task has a context, contract, starter, progressive hints, planning prompts, and an authored post-check comparison. The directory and ticket handler also appear in the frontend and backend core paths.
+Every task has a context, contract, starter, progressive hints, planning prompts, and an authored post-check comparison. The directory and ticket handler also appear in the Frontend and Backend tracks.
 
 ## Frontend runtime
 

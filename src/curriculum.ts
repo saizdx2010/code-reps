@@ -5,10 +5,6 @@ import type { JourneyProgress } from './learning.ts'
 export const pathApplications: Partial<Record<(typeof paths)[number]['id'], { repId: string; reason: string }[]>> = {
   frontend: [{ repId: 'project-team-directory', reason: 'Combine visible data, request states, and browser interaction in a team directory.' }],
   backend: [{ repId: 'project-ticket-api', reason: 'Combine validation, filtering, and paging in a ticket API.' }],
-  'real-world': [
-    { repId: 'project-team-directory', reason: 'Extend the focused directory feature into a multi-file implementation.' },
-    { repId: 'project-ticket-api', reason: 'Extend the request handler into a multi-file API implementation.' },
-  ],
 }
 
 export function repCurriculumRole(repId: string) {
@@ -31,9 +27,7 @@ type PathId = (typeof paths)[number]['id']
 /** Foundations is the shared root; every other track builds on it. Paths keep their own rep lists for badges and goals. */
 export const foundationsPathId: PathId = 'typescript'
 export const trackGroups: { title: string; pathIds: PathId[] }[] = [
-  { title: 'Problem solving', pathIds: ['algorithms-data-structures', 'interviews'] },
-  { title: 'Build for the browser and server', pathIds: ['typescript-browser', 'frontend', 'backend'] },
-  { title: 'Work in real code', pathIds: ['practical-concepts', 'real-world', 'ai-era'] },
+  { title: 'Choose a track', pathIds: ['algorithms-data-structures', 'frontend', 'backend'] },
 ]
 
 const foundationsRepIds = new Set<string>(paths.find(path => path.id === foundationsPathId)!.stages.flatMap(stage => stage.repIds))

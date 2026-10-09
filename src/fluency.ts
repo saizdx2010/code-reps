@@ -1,4 +1,4 @@
-import { paths } from './path.ts'
+import { migratePathId, paths } from './path.ts'
 import { skills, knowledgeGroups } from './knowledge.ts'
 import { journeys, getAllJourneys } from './learning.ts'
 import type { PortableRecord } from './portability.ts'
@@ -33,6 +33,7 @@ const retiredQuestions = new Map([
 const questionIds = new Set(skills.flatMap(s => s.questions.map(q => `${s.id}:${q.id}`)))
 export function parseFluency(raw: unknown): FluencyState {
   if (JSON.stringify(raw)?.length > 900_000) throw new Error('Learning data is full. Export your profile and remove older notes or rounds before adding more.')
+  if (obj(raw) && obj(raw.goal) && typeof raw.goal.pathId === 'string' && migratePathId(raw.goal.pathId) !== raw.goal.pathId) raw = { ...raw, goal: { ...raw.goal, pathId: migratePathId(raw.goal.pathId) } }
   if (!obj(raw) || raw.version !== 1 || !obj(raw.goal) || !text(raw.goal.pathId, 60) || !pathIds.has(raw.goal.pathId) || !Number.isInteger(raw.goal.minutes) || Number(raw.goal.minutes) < 5 || Number(raw.goal.minutes) > 120 || !Array.isArray(raw.goal.days) || raw.goal.days.length > 7 || raw.goal.days.some(d => !Number.isInteger(d) || d < 0 || d > 6) || new Set(raw.goal.days).size !== raw.goal.days.length || !obj(raw.answers) || !obj(raw.reviews) || !Array.isArray(raw.notes) || raw.notes.length > 1000 || !Array.isArray(raw.bookmarks) || raw.bookmarks.some(id => !skillIds.has(id)) || !Array.isArray(raw.rounds) || raw.rounds.length > 1000 || (raw.diagnosticStartedAt !== undefined && !date(raw.diagnosticStartedAt))) throw new Error('Learning data is invalid. Your saved copy has been kept.')
   for (const [id, answer] of Object.entries(raw.answers)) {
     const [sid, qid] = id.split(':'); const question = skills.find(s => s.id === sid)?.questions.find(q => q.id === qid) ?? retiredQuestions.get(id)
