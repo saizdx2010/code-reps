@@ -34,7 +34,7 @@
 
 ## First rep walkthrough
 
-Trail offers **Try first rep walkthrough** (then **Replay walkthrough**) around the real Declare a value rep. Inline help follows Understand, Plan, Solve, Explain, and Review; normal step navigation remains available. The guide introduces saved writing, behavioral checks, optional recorded hints, and the existing completion checklist without inserting a solution, completing an attempt, or granting mastery. Skip or Finish dismisses the help; replay opens the existing draft without resetting it.
+Trail offers **Try first rep walkthrough** around the real Declare a value rep. After starting it, **Replay walkthrough** stays available under **How a rep works**, keeping the daily choices prominent. Inline help follows Understand, Plan, Solve, Explain, and Review; normal step navigation remains available. The guide introduces saved writing, behavioral checks, optional recorded hints, and the existing completion checklist without inserting a solution, completing an attempt, or granting mastery. Skip or Finish dismisses the help; replay opens the existing draft without resetting it.
 
 Walkthrough visibility is a profile-scoped session UI preference through `useSessionPreference`, survives refresh in that browser session, and stays out of learner backups. The guide appears only on its rep and resumes on return until dismissed; Back/Forward and reload use the existing routes and draft owners. The editor remains mounted while changing steps. Focused Chromium flows cover skip/replay, real checks and completion, and narrow-screen draft preservation; they do not establish visual fidelity or assistive-technology support.
 
