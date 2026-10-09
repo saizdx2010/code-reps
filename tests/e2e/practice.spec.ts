@@ -1,4 +1,3 @@
-import { paths } from '../../src/path'
 import { expect, test } from '@playwright/test'
 import { expectChecksFinished, chooseOption, editor, replaceCode, route, saved, solution } from './helpers'
 
@@ -200,11 +199,12 @@ test('local profile progress is readable on narrow screens and links to paths', 
   await page.goto('/#/progress')
   await expect(page.getByRole('heading', { name: 'My learning', exact: true })).toBeVisible()
   await expect(page.getByRole('definition').filter({ hasText: /^0 days$/ })).toHaveCount(2)
-  await expect(page.getByRole('heading', { name: 'Path completion badges' })).toBeVisible()
-  await expect(page.locator('.compact-path-list li')).toHaveCount(paths.length)
+  await expect(page.getByRole('heading', { name: 'Completion badges' })).toBeVisible()
+  await page.getByText(/Upcoming badges/).click()
+  await expect(page.locator('.compact-path-list li').first()).toBeVisible()
   await expect(page.locator('.profile-summary')).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  await page.locator('.compact-path-list').getByRole('button').first().focus()
+  await page.locator('.compact-path-list li').filter({ hasText: 'Foundations path' }).getByRole('button').focus()
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/#\/paths/)
   await page.goBack()

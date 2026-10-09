@@ -52,13 +52,13 @@ Implemented features do not establish learner comprehension, full accessibility,
 
 **Goal:** Recognize finished work with satisfying badges that remain honest about what was assessed.
 
-- [ ] Turn existing path completion rows into recognizable badges within the local profile on Progress. Reuse the logo palette, shared geometry, and reduced-motion behavior.
-- [ ] Add smaller milestones, starting with a first completed rep and a completed path stage, so recognition does not require finishing an entire track.
-- [ ] Give each badge a name, clear earning rule, earned or unearned state, progress where useful, and a link to supporting work. Show an earned date when it can be derived reliably.
-- [ ] Show earned badges prominently and keep upcoming badges compact. Use text alongside artwork so status is understandable without color.
+- [x] Turn existing path completion rows into recognizable badges within the local profile on Progress. Reuse the logo palette, shared geometry, and reduced-motion behavior.
+- [x] Add smaller milestones, starting with a first completed rep and a completed path stage, so recognition does not require finishing an entire track.
+- [x] Give each badge a name, clear earning rule, earned or unearned state, progress where useful, and a link to supporting work. Show an earned date when it can be derived reliably.
+- [x] Show earned badges prominently and keep upcoming badges compact. Use text alongside artwork so status is understandable without color.
 - [ ] Offer a restrained acknowledgement when a milestone is reached. Avoid repeated celebrations on reload and preserve keyboard focus.
-- [ ] Derive completion from the active profile's existing completed attempts where possible. Repeated attempts must not inflate distinct-rep milestones; unfinished drafts and ended sessions must not count as rep completion.
-- [ ] Keep completion badges separate from independent and retained skill evidence. Hinted completions may earn completion badges; they must not imply mastery.
+- [x] Derive completion from the active profile's existing completed attempts where possible. Repeated attempts must not inflate distinct-rep milestones; unfinished drafts and ended sessions must not count as rep completion.
+- [x] Keep completion badges separate from independent and retained skill evidence. Hinted completions may earn completion badges; they must not imply mastery.
 - [ ] Decide how badges behave when a path gains or replaces required reps before introducing durable awards. Preserve rep IDs and define any storage or migration change explicitly.
 - [ ] Verify profile separation, imported history, repeat attempts, invalid or future dates, reloads, and narrow layouts.
 

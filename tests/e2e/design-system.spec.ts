@@ -173,9 +173,13 @@ test('lesson and path completion rows respond in place without moving their layo
   await expect.poll(() => row.evaluate(element => getComputedStyle(element).transform)).toBe('none')
   expect(await row.evaluate(element => getComputedStyle(element).boxShadow)).toBe('none')
   await page.goto('/#/progress')
+  await page.getByText(/Upcoming badges/).click()
   await expect.poll(() => page.locator('main').evaluate(element => element.getAnimations().length)).toBe(0)
   const card = page.locator('.compact-path-list .list-row > button').first()
   const next = page.locator('.compact-path-list .list-row > button').nth(1)
+  // The upcoming disclosure animates open; measure once its rows stop moving.
+  let settled = await next.boundingBox()
+  await expect.poll(async () => { const box = await next.boundingBox(); const same = box?.y === settled?.y; settled = box; return same }).toBe(true)
   const nextPosition = await next.boundingBox()
   await card.hover()
   await expect.poll(() => card.evaluate(element => getComputedStyle(element).transform)).toBe('none')
@@ -301,7 +305,8 @@ test('notebook loading reserves an existing writing draft and preserves it after
 
 test('path completion row navigates and session history selection stays visible', async ({ page }) => {
   await page.goto('/#/progress')
-  await page.locator('.compact-path-list .list-row > button').first().click()
+  await page.getByText(/Upcoming badges/).click()
+  await page.locator('.compact-path-list .list-row').filter({ hasText: 'Foundations path' }).locator('> button').click()
   await expect(page).toHaveURL(/#\/paths$/)
   await page.goto('/#/sessions')
   const group = page.getByRole('group', { name: 'Session history view' })
