@@ -59,7 +59,7 @@ export function getPracticePlan(drafts: Record<string, PortableAttempt>, history
     !progress.some(state => state.journey.recall === rep.id && !state.recallDue && !state.retained))
   const recallAvailable = (id: string) => !progress.some(state => state.journey.recall === id && !state.recallDue && !state.retained)
   const goalPath = paths.find(path => path.id === migratePathId(goalPathId)) ?? paths[0]
-  const goalIds: readonly string[] = (learnerStart === 'returning' && goalPath.id === 'typescript' ? goalPath.stages.slice(1) : goalPath.stages).flatMap(stage => stage.repIds)
+  const goalIds: readonly string[] = goalPath.stages.flatMap(stage => stage.repIds).filter(id => learnerStart !== 'returning' || goalPath.id !== 'typescript' || !foundations.some(lesson => lesson.repId === id))
   const goalDraft = unfinished.find(action => goalIds.includes(action.repId))
   const goalRepId = goalIds.find(id => status(id) !== 'Completed' && recallAvailable(id))
   const goalAction: PracticeAction | undefined = goalRepId ? { repId: goalRepId, mode: status(goalRepId) === 'In progress' ? 'resume' : 'start', reason: `Build toward your selected learning goal: ${goalPath.title}.` } : undefined
