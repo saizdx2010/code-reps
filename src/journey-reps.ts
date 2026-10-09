@@ -43,7 +43,7 @@ export const journeyReps: Rep[] = [
     id: 'remove-adjacent-pairs', title: 'Remove adjacent pairs', category: 'Stacks & strings',
     prompt: 'Remove adjacent equal characters repeatedly until no such pair remains, then return the remaining text.',
     example: { input: "removePairs('abbaca')", output: "'ca'" },
-    note: 'Removing one pair can create a new pair. Preserve the order of characters that remain. Comparison is case-sensitive. Inputs contain basic Latin characters; emoji are outside this exercise.',
+    note: 'Removing one pair can create a new pair. Keep the order of characters that remain. Comparison is case-sensitive. Inputs contain basic Latin characters; emoji are outside this exercise.',
     vocabulary: [{ term: 'Adjacent', meaning: 'next to each other' }, { term: 'Stack', meaning: 'a collection where the last item added is the first one removed' }],
     planPrompt: 'What must you compare each character with? What happens when two match?',
     starter: 'function removePairs(text: string): string {\n  // Write your solution here\n  return text\n}\n',

@@ -47,6 +47,7 @@ function parseFilters(query: unknown) {
   const read = (key: string): string | null | undefined => {
     const v = q[key]
     if (v === undefined) return null
+    if (v === null) return undefined // Explicit null is invalid, not a missing field.
     if (typeof v !== 'string') return undefined
     return v.trim() === '' ? null : v.trim()
   }
