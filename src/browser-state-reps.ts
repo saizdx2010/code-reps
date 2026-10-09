@@ -1,7 +1,5 @@
 import type { Rep } from './rep.ts'
-import type { RepDepth } from './rep-depth.ts'
 import type { Skill } from './knowledge.ts'
-import type { LessonDepth } from './lesson-depth.ts'
 
 export const browserStateReps: Rep[] = [
   {
@@ -85,18 +83,6 @@ function requestSummary(requests: CatalogRequest[]): {pending: string[]; empty: 
   },
 ]
 
-export const browserStateGuides = {
-  'task-state-label': { plan: ['Identify the tag and fields for each variant.', 'Normalize only the draft title.'], explanation: ['Trace blank and saved labels.', 'Separate output evidence from type-check evidence.'], example: 'Checking kind narrows the state before I access its fields. Draft trimming is a contract rule, not a rule for saved labels. Worker output checks do not prove narrowing; I also run a strict compiler check outside the app.' },
-  'saved-record-status': { plan: ['Restate all result shapes.', 'Preserve zero, false, and literal reason text.'], explanation: ['Explain why saved and failed fields differ.', 'Distinguish a supplied result from a real write acknowledgement.'], example: 'I use status to decide which payload exists, preserving recoverable rather than inferring it from reason text. Zero saved books is still success. This rep consumes a result and cannot prove the storage operation happened.' },
-  'catalog-request-summary': { plan: ['Predict separate output sequences.', 'Distinguish empty titles from a blank title.'], explanation: ['Trace repeated IDs and mixed variants.', 'Explain why summary checks do not test real async ownership.'], example: 'Each request contributes according to status. A ready request contributes an empty ID only when titles has length zero. Appending preserves encounter order and duplicates. The supplied snapshots do not establish promise execution.' },
-}
-
-export const browserStateDepth: Record<string, RepDepth> = {
-  'task-state-label': { reasoning: 'The tag chooses the only valid payload. Each branch returns the exact prefix and applies normalization only where specified.', trace: 'A draft title containing a tab and space trims to empty and becomes Untitled draft. A saved title with those characters retains them after Open: .', alternative: 'A single object with optional done, title, and message permits contradictory combinations. A union encodes which fields belong together; compiler analysis, not output checks, assesses that difference.', counterexample: 'Trimming every title changes saved title " Read " into "Read", violating presentation preservation.', transfer: 'Self-review: add an archived variant with a date. Which callers and branches require updating, and how would exhaustive checking expose omissions?' },
-  'saved-record-status': { reasoning: 'The status separates acknowledgement from failure. retry is a supplied policy, not guessed from count or reason.', trace: 'Saved count zero produces Saved 0 books and retry false. Failed reason empty with recoverable true produces empty text and retry true.', alternative: 'Separate helper functions can format each payload, but callers still need a trustworthy discriminator. Truthiness shortcuts lose zero and empty-string cases.', counterexample: 'Using Boolean(reason) to allow retry rejects an empty recoverable reason and accepts a nonrecoverable nonempty reason.', transfer: 'Self-review: introduce a saving state while retaining the previous saved count. Define what is acknowledged versus pending before changing the type.' },
-  'catalog-request-summary': { reasoning: 'After each visit, each output contains exactly the qualifying entries from the visited prefix in their original order. Different variants cannot contribute fields they do not have.', trace: 'Ready x with [] adds x to empty; ready x with [""] adds nothing; a later pending x adds x to pending. Duplicate identity does not collapse supplied snapshots.', alternative: 'Three filter/map passes are still O(n) for bounded per-record work, but repeat traversal. A single traversal uses O(n) output space and preserves each order explicitly.', counterexample: 'A Set collapses repeated pending IDs. Testing titles.every(t => !t) falsely classifies [""] as empty.', transfer: 'Self-review: summarize only the last snapshot for each ID. Specify order and conflict rules before choosing storage; the original checks do not validate this new contract.' },
-}
-
 export const browserStateSkill: Skill = {
   id: 'state-modeling', title: 'Model states with TypeScript unions', summary: 'Keep valid states distinct and narrow before reading their payloads.', prerequisites: ['values'],
   objectives: ['Describe related fields using discriminated unions.', 'Narrow uncertain values rather than assert them.', 'Separate compiler evidence, runtime validation, and behavior.'],
@@ -114,11 +100,4 @@ export const browserStateSkill: Skill = {
     { id: 'assertion-v1', prompt: 'What does a type assertion do to unknown JSON?', code: 'const state = JSON.parse(text) as Load<string[]>', options: ['Validates every field', 'Changes compiler assumptions without validating data', 'Removes extra fields'], answer: 1, explanation: 'An assertion does not inspect or transform runtime data. Validate the parsed value before trusting it.' },
   ],
   repIds: browserStateReps.map(rep => rep.id), related: ['validation', 'frontend', 'async'],
-}
-
-export const browserStateLessonDepth: LessonDepth = {
-  title: 'Make contradictions visible', code: "type Loose = {loading: boolean; data?: string[]; error?: string}\nconst contradictory: Loose = {loading: true, data: ['Old'], error: 'Failed'}",
-  reasoning: 'This type permits all three fields together without defining precedence. A union can make mutually exclusive phases explicit; a refresh policy that retains old data requires a deliberately different model.',
-  challenge: 'Describe a union for pending, ready, and failed. Then decide how refreshing with old data differs. Which cases must the DOM render?',
-  answer: 'Pending needs a tag, ready requires data, and failed requires an error. Refreshing can require previous data and a distinct tag. Failed refresh may also retain previous data if the authored policy says so. There is no universal model independent of the display contract.',
 }

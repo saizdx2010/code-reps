@@ -1,8 +1,8 @@
-import { browserStateDepth } from './browser-state-reps.ts'
-import { dsaDepth } from './dsa-reps.ts'
-import { practicalRepDepth } from './practical-concepts.ts'
-import { validationDepth } from './validation-reps.ts'
-import { appDepth } from './app-reps.ts'
+import { browserStateDepth } from './review-browser-state.ts'
+import { dsaDepth } from './review-dsa.ts'
+import { practicalRepDepth } from './review-practical.ts'
+import { validationDepth } from './review-validation.ts'
+import { appDepth } from './review-app.ts'
 export type TraceStructure =
   | { kind: 'array'; values: (string | number)[]; pointers?: Record<string, number>; dimmed?: number[] }
   | { kind: 'stack'; values: (string | number)[] }
