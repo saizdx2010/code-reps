@@ -209,4 +209,14 @@ export const reflectionGuides: Record<string, { plan: string[]; explanation: str
     explanation: ['Explain why trim comes before the empty check.', 'Describe the output and scan cost.'],
     example: 'I visit each user, skip inactive ones, trim the name, and add its uppercase form only when it is nonempty. This preserves order and takes O(n) visits plus the work to process each name.',
   },
+  'shipping-cost-tiers': {
+    plan: ['Add weight times quantity for every line.', 'Choose one tier from the total, checking the upper edges in order.', 'Set a flag for bulky lines and add the handling charge once.'],
+    explanation: ['Trace an order that crosses the 2000 gram edge and has two bulky lines.', 'Explain why the handling charge is added once, not per line.', 'Explain why an empty order costs zero rather than the lightest tier.'],
+    example: 'I loop over each line, adding weight times quantity to total and turning on bulky when a quantity is above 10. After the loop I choose 300, 600, or 1200 cents from total and add 200 once if bulky is set. Two bulky lines of 110 and 240 grams give a total of 350 and a charge of 500. The loop does one pass, so the work is O(n) time and O(1) extra space.',
+  },
+  'countdown-labels': {
+    plan: ['Start the value at the starting seconds.', 'Stop before the value would drop below zero.', 'Format minutes without padding and seconds with two digits.'],
+    explanation: ['Trace 130 seconds with a 60-second step through each pass.', 'Explain why a step that lands exactly on zero includes 0:00.', 'Explain why a zero start gives one label.'],
+    example: 'I start value at startSeconds and loop while value is at least zero, subtracting stepSeconds each pass. Each label is Math.floor(value / 60), a colon, and the remainder padded to two digits. For 130 with a 60-second step the values are 130, 70, and 10, so the labels are 2:10, 1:10, and 0:10. The work is one pass per label, O(n) time for n labels, with O(1) extra space beyond the output.',
+  },
 }

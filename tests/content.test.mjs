@@ -54,6 +54,8 @@ const solutions = {
   'repair-visible-count': 'function countVisible(items: {active: boolean}[]) { return items.filter(item => item.active).length }',
   'read-unique-names': 'function uniqueNames(input: string[]) { return [...new Set(input.filter(name => name !== ""))] }',
   'transform-active-labels': 'function activeLabels(users: {name: string; active: boolean}[]) { return users.filter(user => user.active).map(user => user.name.trim()).filter(Boolean).map(name => name.toUpperCase()) }',
+  'shipping-cost-tiers': 'function shippingCost(lines: {weightGrams: number; quantity: number}[]) { if (lines.length === 0) return 0; let total = 0; let bulky = false; for (const line of lines) { total += line.weightGrams * line.quantity; if (line.quantity > 10) bulky = true } let cost = total <= 500 ? 300 : total <= 2000 ? 600 : 1200; if (bulky) cost += 200; return cost }',
+  'countdown-labels': 'function countdownLabels(startSeconds: number, stepSeconds: number) { const labels: string[] = []; for (let value = startSeconds; value >= 0; value -= stepSeconds) { const minutes = Math.floor(value / 60); const seconds = value % 60; labels.push(`${minutes}:${String(seconds).padStart(2, "0")}`) } return labels }',
 }
 
 test('every rep has reference-solution coverage and a complete learning brief', () => {
@@ -121,4 +123,17 @@ test('every rep and lesson meets the content depth standard', () => {
   delete missingLesson.async
   assert.ok(validateContentDepth(repIds, skillIds, repDepth, missingLesson).includes('async: missing lesson depth challenge'))
   assert.ok(validateContentDepth(repIds, skillIds, { ...repDepth, orphan: repDepth['sum-positive-numbers'] }).includes('orphan: unknown rep review target'))
+})
+
+test('control-flow journey reps reject boundary and padding mistakes', () => {
+  const s = solutions
+  const mutants = [
+    ['shipping-cost-tiers', s['shipping-cost-tiers'].replace('total <= 500', 'total < 500')],
+    ['shipping-cost-tiers', s['shipping-cost-tiers'].replace('line.quantity > 10', 'line.quantity >= 10')],
+    ['shipping-cost-tiers', s['shipping-cost-tiers'].replace('if (lines.length === 0) return 0; ', '')],
+    ['countdown-labels', s['countdown-labels'].replace('value >= 0', 'value > 0')],
+    ['countdown-labels', s['countdown-labels'].replace('String(seconds).padStart(2, "0")', 'String(seconds)')],
+    ['countdown-labels', s['countdown-labels'].replace('Math.floor(value / 60)', 'Math.round(value / 60)')],
+  ]
+  for (const [index, [id, code]] of mutants.entries()) assert.ok(runRep(code, id).some(result => !result.passed), `mutant ${index} of ${id} escaped the checks`)
 })

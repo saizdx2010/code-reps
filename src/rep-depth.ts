@@ -480,5 +480,19 @@ export const repDepth: Record<string, RepDepth> = {
     "alternative": "A query module centralizes defaults and validation. Keeping parsing in the handler is simpler initially but easier to duplicate across endpoints.",
     "counterexample": "Using separate search rules for count and page makes total inconsistent with returned items.",
     "transfer": "Add a second endpoint using the same query contract and identify what should remain handler-specific."
+  },
+  "shipping-cost-tiers": {
+    "reasoning": "The loop only gathers two facts, the total weight and whether any line is bulky. The tier is chosen once from the total, and the handling charge is added once from the flag, so each fact is decided after the loop has seen every line.",
+    "trace": "Lines 1000g x 3 and 5g x 11: total is 3000 + 55 = 3055, which is above 2000, so the base is 1200. The second line has quantity 11, so bulky is true and 200 is added once for a total of 1400. A second bulky line in the same order would not add another 200.",
+    "alternative": "Adding the handling charge inside the loop is shorter to type but charges once per bulky line. Choosing the tier per line would price each line as its own shipment, which changes the contract.",
+    "counterexample": "Returning 300 for an empty order because the total is zero treats no items as the lightest parcel. Checking the lower edge with 500 > total instead of total <= 500 shifts the boundary for exactly 500 grams.",
+    "transfer": "Add a surcharge for lines heavier than 1000 grams each, charged once per line. Decide whether the surcharge is per line or per order before coding. This changed contract is self-reviewed, not checked by the original cases."
+  },
+  "countdown-labels": {
+    "reasoning": "The value itself is the loop state. Looping while the value is at least zero means the last label is the last non-negative value the countdown reaches, and formatting is a separate step applied to each value.",
+    "trace": "Start 130 with step 60: values 130, 70, 10 are labelled 2:10, 1:10, 0:10. The next value, -50, fails the test and stops the loop. Start 120 with step 60 reaches 0 exactly, so 0:00 appears.",
+    "alternative": "Counting the number of labels first and then computing each value is also correct, but it adds a division that the countdown does not need. A while loop with the same condition reads the same way.",
+    "counterexample": "Using value > 0 drops the 0:00 label for starts that land exactly on zero. Padding minutes as well as seconds turns 2:10 into 02:10, which the format does not ask for.",
+    "transfer": "Count up from zero to a limit in steps and format each value as h:mm:ss. Decide the stop condition and how hours appear before coding. This changed contract is self-reviewed, not checked by the original cases."
   }
 }

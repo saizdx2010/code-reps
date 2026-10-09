@@ -31,6 +31,26 @@ export const appGuides = {
     explanation: ['Trace a known code with extra fields and an unknown code.', 'Explain what could leak if the thrown message were copied.', 'Explain why inherited property names need care.'],
     example: 'I check the error is an object with an own string code, look that code up in a table I wrote, and return the table\'s status and message. Anything else gets the generic 500 response. Thrown text never reaches the body. The lookup is O(1). This tests the mapping only, not logging or real HTTP responses.',
   },
+  'group-items-by-heading': {
+    plan: ['Decide what text marks a group and trim it.', 'Keep titles in a list for each heading as you meet it.', 'Skip blank headings before creating a group.'],
+    explanation: ['Trace two headings that interleave and say which group appears first.', 'Explain why "tips" and "Tips" stay separate.', 'Say why titles keep their spacing while headings are trimmed.'],
+    example: 'I trim each heading and skip the blank ones. A map keeps one titles list per heading, and its insertion order gives first-appearance order. For Billing, Account, Billing, Account the groups are Billing then Account, with titles kept in input order. Each item is visited once, so the time is O(n) and the extra space is O(n). The checks do not show how headings are announced or styled.',
+  },
+  'filter-chip-summary': {
+    plan: ['Clean each name and drop blanks first.', 'Keep only the first spelling of each case-insensitive name.', 'Split the distinct names into visible chips and a hidden count.'],
+    explanation: ['Trace duplicate names that differ only by case.', 'Explain why the hidden count counts distinct filters.', 'Say what this does not decide, such as the chip layout.'],
+    example: 'I trim each name, skip blanks, and remember lowercase keys I have already kept. Distinct names go in order; the first maxChips become chips and the remainder are counted as hidden. For A, a, B, C, c with a limit of two, the chips are A and B and one filter is hidden. Work is linear in the number of names, with a set of kept keys as extra space.',
+  },
+  'parse-sort-param': {
+    plan: ['Check the type before reading text.', 'Trim the text and read the dash as direction.', 'Accept only the three exact field names.'],
+    explanation: ['Trace "- title" and explain why the space makes it invalid.', 'Explain why a repeated parameter is rejected by type.', 'Explain why blank text uses the default while an unknown field is an error.'],
+    example: 'I return the default for undefined or blank text. Any other non-string is invalid. Otherwise I trim, check for a leading dash, and compare the remaining text exactly with the three allowed fields. "--title" leaves "-title" after the first dash, which is not allowed. The work is constant for each value and no data is stored.',
+  },
+  'page-response-envelope': {
+    plan: ['Count the pages with a minimum of one.', 'Reject a page past the end before any link.', 'Build the three links from one pattern and null the ends.'],
+    explanation: ['Trace 21 items at 10 per page through the last page.', 'Explain why an empty collection still has one page.', 'Explain why the envelope must not contain the items.'],
+    example: 'I compute totalPages as the rounded-up quotient, at least one. If the requested page is larger, I return PAGE_NOT_FOUND. Otherwise I build self from the page and size, prev only when the page is above one, and next only before the last page. For 21 items at 10 per page, page 3 has no next link. The work is constant apart from the link text.',
+  },
 }
 
 export const appDepth: Record<string, RepDepth> = {
@@ -75,5 +95,33 @@ export const appDepth: Record<string, RepDepth> = {
     alternative: 'A switch on the code is explicit and avoids inherited-property traps; a Map or an object with Object.hasOwn is shorter for many codes. Returning error.message would be convenient but exposes internals.',
     counterexample: 'Looking up table[error.code] on a plain object finds inherited names such as toString or constructor and returns a function instead of a response. Spreading the error into the body copies stack and sql fields.',
     transfer: 'Add a validation error that carries field names the client may see. Decide which parts of the thrown error are safe and how the table stays the only source of text. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'group-items-by-heading': {
+    reasoning: 'Grouping is a single pass that keys each title by its normalized heading. Insertion order of the keyed structure records first appearance, so the output order follows from the data rather than from a separate sort.',
+    trace: 'Items Billing/Invoices, Account/Password, Billing/Refunds: Billing is created first and receives Invoices, then Refunds is appended to it. Account is second. A blank heading at the front of the list would be skipped without creating a group.',
+    alternative: 'Sorting the items by heading would group them too, but it would reorder the groups alphabetically instead of by first appearance and would need a stable sort to keep titles in input order. A plain object keyed by heading works, but it puts numeric-looking headings in their own order, so a Map is safer here.',
+    counterexample: 'Creating the group before the blank check gives a group with an empty heading. Lowercasing keys while storing the original spelling would merge "tips" and "Tips" under one heading the contract keeps separate.',
+    transfer: 'Add a count to each group and sort groups by that count, breaking ties by first appearance. Decide whether the sort changes the grouping logic or only the final output. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'filter-chip-summary': {
+    reasoning: 'Distinctness is decided by a case-folded key, while display uses the first trimmed spelling. The visible chips are a prefix of the distinct list, so the hidden count is the length difference.',
+    trace: 'For [" Red", "red", "Large", "  ", "Cotton"] with a limit of two: " Red" is kept as Red; "red" matches its key and is dropped; "Large" is kept; the blank is dropped; Cotton is the third distinct name, so it is hidden. Result: chips Red and Large, hiddenCount 1.',
+    alternative: 'Deduplicating after slicing would let repeats consume chip slots and undercount the hidden filters. Keeping the last spelling would change what the learner sees for names they typed first.',
+    counterexample: 'Counting raw entries makes ["A", "a", "B"] show two hidden filters with a limit of one, when only B is hidden. Using toUpperCase for the key is fine here, but comparing only the untrimmed text lets " Red" and "Red" count as two filters.',
+    transfer: 'Add a removed-filter list that keeps each name visible after a user deletes its chip, while the summary keeps counting only active filters. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'parse-sort-param': {
+    reasoning: 'Each rule reads the value once, from the most general to the most specific: type, then blank, then direction, then the exact allow list. The allow list is the only place a field name can come from, so client text never becomes a sort key by accident.',
+    trace: 'For "--title": it is a string and not blank; the leading dash sets desc and leaves "-title"; that is not in the allow list, so INVALID_SORT. For "  -createdAt  ": trimming gives "-createdAt", direction desc, field createdAt.',
+    alternative: 'A schema library would validate the same allow list for several endpoints. A regular expression could match the whole format, but it would be harder to read and to extend with a new field. Mapping an unknown field to the default would hide mistakes the client needs to fix.',
+    counterexample: 'Lowercasing before comparing accepts "CREATEDAT" and "Title" as fields, which the contract forbids. Stripping every dash with replace would accept "title-" and "--title" as valid.',
+    transfer: 'Allow two sort fields at once, such as -priority,title, and decide how invalid parts affect the whole parameter. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'page-response-envelope': {
+    reasoning: 'The page count is fixed by the data size and page size, and every link is produced from one pattern. Rejecting a page past the end first means no link ever points at a page that does not exist.',
+    trace: 'For 21 items with page size 10, totalPages is 3. Page 3 gives self "?page=3&pageSize=10", prev "?page=2&pageSize=10", and next null because 3 is the last page. Page 4 would fail with PAGE_NOT_FOUND before any link is built.',
+    alternative: 'Returning the last page silently for an out-of-range request is friendlier, but then the client cannot tell its page number was wrong. Using floor instead of ceiling loses the partial final page.',
+    counterexample: 'Computing totalPages as floor(21 / 10) gives 2 and drops the last item from navigation. Setting next to the page after the last one for every page sends clients to an empty page.',
+    transfer: 'Switch to cursor pagination, where the response returns the id of the last item instead of a page number. Decide which links remain and how an empty result is represented. This changed contract is self-reviewed, not checked by the original cases.',
   },
 }
