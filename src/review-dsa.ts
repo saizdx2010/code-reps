@@ -369,7 +369,7 @@ export const dsaDepth: Record<string, RepDepth> = {
     'trace': '[1, 3, 3, 7], target 3: the interval is 0 to 4. Middle 2 has 3, which is at least 3, so the answer is at index 2 or earlier and the end moves to 2. Middle 1 has 3, so the end moves to 1. Middle 0 has 1, which is below 3, so the start moves to 1. The interval is empty at index 1.',
     'alternative': 'A linear scan for the first value at least target is O(n) and simpler. Binary search needs the sorted precondition but takes O(log n) comparisons.',
     'counterexample': 'Returning as soon as a middle value equals target gives index 2 for [3, 3, 3] instead of 0, and indexOf gives -1 for an absent target where an insertion index is required.',
-    'transfer': 'Return how many values are less than or equal to target. Explain which boundary you search for and how it relates to this one.'
+    'transfer': 'Self-review: return how many values are less than or equal to target. Explain which boundary you search for and how it relates to this one; the original checks do not validate the changed question.'
   },
   'smallest-daily-capacity': {
     'reasoning': 'The answer is not an index, but feasibility is monotonic: if a capacity ships everything in time, any larger capacity does too. The answer therefore lies between the heaviest package and the total weight, and testing the middle capacity with a greedy day count discards half of that range each time.',
