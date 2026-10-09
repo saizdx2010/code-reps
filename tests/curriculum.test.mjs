@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { pathApplications, repCurriculumRole, repCurriculumEvidence } from '../src/curriculum.ts'
+import { repPracticeContext, pathApplications, repCurriculumRole, repCurriculumEvidence } from '../src/curriculum.ts'
 import { getAllJourneys } from '../src/learning.ts'
 import { paths } from '../src/path.ts'
 import { capstones } from '../src/fluency.ts'
@@ -30,4 +30,13 @@ test('curriculum roles and recall availability preserve evidence distinctions', 
   const progress = getAllJourneys(history, now)
   assert.match(repCurriculumEvidence('count-above-threshold', progress), /Recall available/)
   assert.equal(progress[0].stage, 'independent')
+})
+
+test('daily recommendation context names a skill and a concrete journey successor', () => {
+  assert.match(repPracticeContext('sum-positive-numbers').reason, /Work through arrays/)
+  assert.match(repPracticeContext('sum-positive-numbers').afterward, /Count even numbers/)
+  assert.match(repPracticeContext('count-even-numbers').afterward, /unhinted.*3 days/)
+  assert.match(repPracticeContext('backend-validate-user').reason, /Validate data at a boundary/)
+  assert.match(repPracticeContext('declare-variables').reason, /Values, types, and functions/)
+  assert.match(repPracticeContext('count-above-threshold').afterward, /skill evidence/)
 })
