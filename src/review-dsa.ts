@@ -3,6 +3,21 @@ import type { RepDepth } from './rep-depth.ts'
 export const dsaDepth: Record<string, RepDepth> = {
 'parcel-loading-turns': {'reasoning': 'Each waiting cart retains its original identity. Removing one parcel and returning unfinished carts to the back preserves the service order. Stop only when the target reaches zero; other carts can remain.', 'trace': '[2,1,3], target 0: turn 1 leaves cart 0 with 1; turn 2 finishes cart 1; turn 3 leaves cart 2 with 2; turn 4 finishes cart 0. Return 4 even though cart 2 is unfinished.', 'alternative': 'For target count k, earlier or target carts contribute min(count,k) turns and later carts min(count,k-1). Summing is O(n), but requires proving the asymmetric final round. Direct simulation uses O(sum of counts) turns and O(n) storage with a head index; shifting arrays adds movement cost.', 'counterexample': 'Counting complete rounds overcounts later carts: [1,100], target 0 finishes on turn 1, before cart 1 gets a turn. Looking up a count instead of identity confuses equal carts: [2,2,2], target 2 finishes on turn 6.', 'transfer': 'Self-reviewed: let carts remove up to two parcels each turn. Decide whether a turn or a parcel is counted and derive new boundaries; original checks do not validate the changed policy.'},
 'ticket-service-times': {'reasoning': 'The desk finish time is the earliest availability for the next ticket. Taking the later of that time and arrival respects both constraints while preserving FIFO order, including ties.', 'trace': 'For arrivals 0,0,10 and durations 2,1,1, starts are 0,2,10 and finishes 2,3,11. The third ticket waits for its arrival, not an invented continuous backlog.', 'alternative': 'An explicit waiting queue and minute-by-minute simulation can reproduce service, but adds idle iterations. One pass uses O(n) time and O(n) output storage with O(1) extra state.', 'counterexample': 'Starting every ticket at arrival overlaps service: arrivals [2,3] with durations [3,1] must start at [2,5], not [2,3]. Sorting equal arrivals by ID also breaks input-order precedence.', 'transfer': 'Self-reviewed: allow unsorted arrivals and choose a tie policy. Explain how you would order tickets and restore output to original input order; current checks do not cover that contract.'},
+  'sorted-offset-squares': {
+    'reasoning': 'The largest remaining square must come from an endpoint: every interior magnitude is bounded by one of the endpoint magnitudes. Compare their squares, place the larger at the last unfilled output position, and discard only that occurrence. The unfilled prefix then contains exactly the remaining squares. This takes O(n) time and O(n) output storage.',
+    'trace': 'For [-3,-1,3], equal endpoint squares are both 9. Write the left 9 at position 2, then the right 9 at position 1, then 1 at position 0. The result is [1,9,9]; equality never removes an occurrence.',
+    'alternative': 'Mapping to squares then numerically sorting a new array is simpler to explain and satisfies the output contract. Sorting time depends on the implementation; endpoint selection guarantees linear work. Checks accept both approaches.',
+    'counterexample': 'Squaring in input order gives [16,1,0,9] for [-4,-1,0,3], which is not ascending. Dropping equal endpoint squares loses a duplicate for [-3,3].',
+    'transfer': 'Self-review: return original offsets ordered by absolute magnitude with ties retaining input order. Decide which endpoint wins a tie; original checks do not validate this variation.'
+},
+  'reading-run-summary': {
+    'reasoning': 'A read position visits each input once, while a write position identifies the last output record. After each visit, records describe exactly the visited prefix. Equal readings extend its final count; a different reading begins a fresh record. Sortedness guarantees all occurrences of one value are consecutive. Work is O(n), with O(d) output storage for d distinct values.',
+    'trace': 'For [-1,2,2], read index 0 writes {value:-1,count:1} at output index 0. Index 1 writes {value:2,count:1} at output index 1. Index 2 extends that record to count 2. No final run remains to flush.',
+    'alternative': 'A map of counts followed by records also works, but needs separate frequency state and attention to output order. Read/write positions can construct the ordered records directly. Behavioral checks do not establish which approach was used.',
+    'counterexample': 'Only emitting a run when its value changes drops the last run: [7,7,7] would return []. Testing the current value by truthiness mishandles [0,0].',
+    'transfer': 'Self-review: accept unsorted readings and retain first-seen value order. Explain which sortedness assumption breaks and what additional state you need; these checks do not assess the changed contract.'
+},
+
 
   'algo-insertion-sort': {
     'reasoning': 'Before each insertion, the prefix is sorted and contains all earlier items. Shifting only larger values makes room without losing duplicates. A copy preserves the input.',
@@ -1723,6 +1738,29 @@ export const dsaDepth: Record<string, RepDepth> = {
 export const dsaGuides = {
 'parcel-loading-turns': {'plan': ['How will you distinguish carts with equal counts? Which event ends the counting?', 'Name a boundary before coding.'], 'explanation': ['Explain the FIFO ordering and why your stopping or timing rule satisfies the contract.', 'State time and storage costs and explain input preservation; checks do not establish your approach.'], 'example': 'Each waiting cart retains its original identity. Removing one parcel and returning unfinished carts to the back preserves the service order. Stop only when the target reaches zero; other carts can remain. [2,1,3], target 0: turn 1 leaves cart 0 with 1; turn 2 finishes cart 1; turn 3 leaves cart 2 with 2; turn 4 finishes cart 0. Return 4 even though cart 2 is unfinished.'},
 'ticket-service-times': {'plan': ['What determines a start when the desk is busy? What changes when no ticket is waiting?', 'Name a boundary before coding.'], 'explanation': ['Explain the FIFO ordering and why your stopping or timing rule satisfies the contract.', 'State time and storage costs and explain input preservation; checks do not establish your approach.'], 'example': 'The desk finish time is the earliest availability for the next ticket. Taking the later of that time and arrival respects both constraints while preserving FIFO order, including ties. For arrivals 0,0,10 and durations 2,1,1, starts are 0,2,10 and finishes 2,3,11. The third ticket waits for its arrival, not an invented continuous backlog.'},
+  'sorted-offset-squares': {
+    'plan': [
+        'How do negative offsets affect output order? Which boundary will you check before coding?',
+        'Name a boundary before coding.'
+    ],
+    'explanation': [
+        'Explain why every occurrence is represented and why input stays unchanged.',
+        'Explain your pointer roles and time and storage costs. Passing checks does not prove two pointers or linear time.'
+    ],
+    'example': 'The largest remaining square must come from an endpoint: every interior magnitude is bounded by one of the endpoint magnitudes. Compare their squares, place the larger at the last unfilled output position, and discard only that occurrence. The unfilled prefix then contains exactly the remaining squares. This takes O(n) time and O(n) output storage. For [-3,-1,3], equal endpoint squares are both 9. Write the left 9 at position 2, then the right 9 at position 1, then 1 at position 0. The result is [1,9,9]; equality never removes an occurrence.'
+},
+  'reading-run-summary': {
+    'plan': [
+        'What information must each record retain? What should happen for one reading or for all equal readings?',
+        'Name a boundary before coding.'
+    ],
+    'explanation': [
+        'Explain why every occurrence is represented and why input stays unchanged.',
+        'Explain your pointer roles and time and storage costs. Passing checks does not prove two pointers or linear time.'
+    ],
+    'example': 'A read position visits each input once, while a write position identifies the last output record. After each visit, records describe exactly the visited prefix. Equal readings extend its final count; a different reading begins a fresh record. Sortedness guarantees all occurrences of one value are consecutive. Work is O(n), with O(d) output storage for d distinct values. For [-1,2,2], read index 0 writes {value:-1,count:1} at output index 0. Index 1 writes {value:2,count:1} at output index 1. Index 2 extends that record to count 2. No final run remains to flush.'
+},
+
 
   'algo-insertion-sort': {
     'plan': ['What stays ordered after each insertion? How will you keep duplicates and preserve the caller array?', 'Name a boundary case before coding.'],

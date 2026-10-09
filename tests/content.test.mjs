@@ -143,6 +143,8 @@ test('DSA application checks reject changed order, deduplication, leaf rules, an
   const incorrect = {
     'ticket-service-times': 'function ticketTimes(tickets) { return tickets.map(t=>({id:t.id,start:t.arrival,finish:t.arrival+t.minutes})) }',
     'parcel-loading-turns': 'function loadingTurn(parcels,targetIndex) { return parcels.length*parcels[targetIndex] }',
+    'sorted-offset-squares': 'function squareOffsets(offsets:number[]) { return offsets.map(n=>n*n) }',
+    'reading-run-summary': 'function summarizeReadings(readings:number[]) { return [...new Set(readings)].map(value=>({value,count:1})) }',
     'sort-score-records': 'function orderRecords(records: {id:string;score:number;name:string}[]) { return [...records].sort((a,b)=>a.name.localeCompare(b.name)||a.score-b.score) }',
     'kth-smallest-copy': 'function kthSmallest(numbers:number[],k:number) { return [...new Set(numbers)].sort((a,b)=>a-b)[k-1] ?? null }',
     'count-unique-windows': 'function countUniqueWindows(labels:string[],k:number) { return labels.length>=k && new Set(labels).size===labels.length ? labels.length-k+1 : 0 }',

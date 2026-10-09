@@ -84,6 +84,7 @@ test('new DSA journeys schedule recurring recall without accepting early or hint
   const chains = [
     ['windows', 'algo-window-sum', 'count-unique-windows', 'shortest-run-reaching-target'],
     ['queues', 'ds-queue-operations', 'ticket-service-times', 'parcel-loading-turns'],
+    ['two-pointers', 'algo-sorted-pair', 'sorted-offset-squares', 'reading-run-summary'],
     ['sorting', 'algo-insertion-sort', 'sort-score-records', 'kth-smallest-copy'],
     ['binary-search', 'algo-binary-search', 'first-insertion-point', 'smallest-daily-capacity'],
     ['recursion', 'algo-recursive-sum', 'flatten-nested-numbers', 'count-object-leaves'],

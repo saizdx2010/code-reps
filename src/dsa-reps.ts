@@ -2045,5 +2045,297 @@ export const dsaReps: Rep[] = [
         'expected': '/c'
       }
     ]
-  }
+  },
+{
+  'id': 'sorted-offset-squares',
+  'title': 'Order squared offsets',
+  'category': 'Algorithm applications',
+  'prompt': 'Return a new array containing the square of every supplied offset, in ascending order. offsets is already sorted in ascending order and may contain negative values, zero, and duplicates. Keep every occurrence. Do not change offsets.',
+  'example': {
+    'input': 'squareOffsets([-4, -1, 0, 3])',
+    'output': '[0, 1, 9, 16]'
+  },
+  'note': 'At most 100 integer offsets from -1000 to 1000. Empty input returns []. Unsorted inputs are outside the contract. Behavior checks do not establish an approach or linear time; review those separately.',
+  'vocabulary': [
+    {
+      'term': 'Square',
+      'meaning': 'a number multiplied by itself'
+    },
+    {
+      'term': 'Occurrence',
+      'meaning': 'one position containing a value, even when that value repeats'
+    }
+  ],
+  'planPrompt': 'How do negative offsets affect output order? Which boundary will you check before coding?',
+  'starter': 'function squareOffsets(offsets: number[]): number[] {\n  // Write your solution here.\n  return []\n}\n',
+  'functionName': 'squareOffsets',
+  'preserveInput': true,
+  'hints': [
+    'Compare the expected order for an all-negative input and a mixed input.',
+    'Where can the largest remaining squared value occur in sorted offsets?',
+    'Consider both ends of the remaining range and which output position should receive its largest square.'
+  ],
+  'checks': [
+    {
+      'name': 'Mixed offsets',
+      'input': [
+        [
+          -4,
+          -1,
+          0,
+          3
+        ]
+      ],
+      'expected': [
+        0,
+        1,
+        9,
+        16
+      ]
+    },
+    {
+      'name': 'Empty',
+      'input': [
+        []
+      ],
+      'expected': []
+    },
+    {
+      'name': 'Single negative',
+      'input': [
+        [
+          -7
+        ]
+      ],
+      'expected': [
+        49
+      ]
+    },
+    {
+      'name': 'All negative',
+      'input': [
+        [
+          -5,
+          -3,
+          -1
+        ]
+      ],
+      'expected': [
+        1,
+        9,
+        25
+      ]
+    },
+    {
+      'name': 'All nonnegative',
+      'input': [
+        [
+          0,
+          2,
+          4
+        ]
+      ],
+      'expected': [
+        0,
+        4,
+        16
+      ]
+    },
+    {
+      'name': 'Repeated magnitudes',
+      'input': [
+        [
+          -2,
+          -2,
+          0,
+          0,
+          2
+        ]
+      ],
+      'expected': [
+        0,
+        0,
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      'name': 'Equal endpoints',
+      'input': [
+        [
+          -3,
+          3
+        ]
+      ],
+      'expected': [
+        9,
+        9
+      ]
+    },
+    {
+      'name': 'Maximum length and magnitude',
+      'input': [
+        [...Array(50).fill(-1000), ...Array(50).fill(1000)]
+      ],
+      'expected': Array(100).fill(1000000)
+    }
+  ]
+},
+{
+  'id': 'reading-run-summary',
+  'title': 'Summarize repeated readings',
+  'category': 'Algorithm applications',
+  'prompt': 'Return a new array of {value, count} records describing each distinct reading and how many times it occurs. readings is sorted in ascending order; records must follow that same order. Include every distinct value exactly once. Do not change readings. Empty input returns [].',
+  'example': {
+    'input': 'summarizeReadings([-2, -2, 0, 4, 4, 4])',
+    'output': '[{value:-2,count:2},{value:0,count:1},{value:4,count:3}]'
+  },
+  'note': 'At most 100 integer readings from -1000 to 1000. Duplicates are allowed and contribute to count. Unsorted input is outside the contract. Checks establish output and unchanged input, not a particular approach or complexity.',
+  'vocabulary': [
+    {
+      'term': 'Run',
+      'meaning': 'consecutive positions containing the same value'
+    },
+    {
+      'term': 'Count',
+      'meaning': 'the number of occurrences represented by a record'
+    }
+  ],
+  'planPrompt': 'What information must each record retain? What should happen for one reading or for all equal readings?',
+  'starter': 'type ReadingRun = { value: number; count: number }\n\nfunction summarizeReadings(readings: number[]): ReadingRun[] {\n  // Write your solution here.\n  return []\n}\n',
+  'functionName': 'summarizeReadings',
+  'preserveInput': true,
+  'hints': [
+    'Write the expected records for an input whose last value repeats.',
+    'Sorted order means a value cannot return after a different value begins.',
+    'Consider a position reading input and a position identifying the current output record; decide when to extend that record or start another.'
+  ],
+  'checks': [
+    {
+      'name': 'Mixed runs',
+      'input': [
+        [
+          -2,
+          -2,
+          0,
+          4,
+          4,
+          4
+        ]
+      ],
+      'expected': [
+        {
+          'value': -2,
+          'count': 2
+        },
+        {
+          'value': 0,
+          'count': 1
+        },
+        {
+          'value': 4,
+          'count': 3
+        }
+      ]
+    },
+    {
+      'name': 'Empty',
+      'input': [
+        []
+      ],
+      'expected': []
+    },
+    {
+      'name': 'Single zero',
+      'input': [
+        [
+          0
+        ]
+      ],
+      'expected': [
+        {
+          'value': 0,
+          'count': 1
+        }
+      ]
+    },
+    {
+      'name': 'All equal',
+      'input': [
+        [
+          7,
+          7,
+          7
+        ]
+      ],
+      'expected': [
+        {
+          'value': 7,
+          'count': 3
+        }
+      ]
+    },
+    {
+      'name': 'All distinct',
+      'input': [
+        [
+          -3,
+          0,
+          8
+        ]
+      ],
+      'expected': [
+        {
+          'value': -3,
+          'count': 1
+        },
+        {
+          'value': 0,
+          'count': 1
+        },
+        {
+          'value': 8,
+          'count': 1
+        }
+      ]
+    },
+    {
+      'name': 'Final run',
+      'input': [
+        [
+          -1,
+          2,
+          2
+        ]
+      ],
+      'expected': [
+        {
+          'value': -1,
+          'count': 1
+        },
+        {
+          'value': 2,
+          'count': 2
+        }
+      ]
+    },
+    {
+      'name': 'Maximum length and bounds',
+      'input': [
+        [...Array(50).fill(-1000), ...Array(50).fill(1000)]
+      ],
+      'expected': [
+        {
+          'value': -1000,
+          'count': 50
+        },
+        {
+          'value': 1000,
+          'count': 50
+        }
+      ]
+    }
+  ]
+}
 ]

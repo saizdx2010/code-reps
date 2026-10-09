@@ -112,6 +112,6 @@ export const dsaSkills: Skill[] = [{
         'answer': 2,
         'explanation': 'The middle does not match and every value to its left is too small. Exclude it to guarantee progress.'
       }],
-    'repIds': ['algo-sorted-pair', 'algo-window-sum', 'count-unique-windows', 'shortest-run-reaching-target', 'algo-binary-search', 'first-insertion-point', 'smallest-daily-capacity'],
+    'repIds': ['algo-sorted-pair', 'sorted-offset-squares', 'reading-run-summary', 'algo-window-sum', 'count-unique-windows', 'shortest-run-reaching-target', 'algo-binary-search', 'first-insertion-point', 'smallest-daily-capacity'],
     'related': ['arrays', 'lookup', 'complexity']
   }]

@@ -120,6 +120,8 @@ export const repLevels: Record<string, RepLevel> = {
   'page-response-envelope': 2,
   'ticket-service-times': 2,
   'parcel-loading-turns': 2,
+  'sorted-offset-squares': 2,
+  'reading-run-summary': 2,
   'sort-score-records': 2,
   'kth-smallest-copy': 2,
   'count-unique-windows': 2,

@@ -100,20 +100,20 @@ Verified by reading `src/learning.ts` (`journeys`), `src/knowledge.ts` and `src/
 
 | Topic | Skill / lesson ID(s) | Guided rep | Independent rep | Delayed-recall rep | Lesson in `src/knowledge.ts`? |
 | --- | --- | --- | --- | --- | --- |
-| Queues | `queues` (`src/dsa-knowledge.ts`) | `ds-queue-operations` | `ticket-service-times` | `parcel-loading-turns` | Yes (`queues` in `src/dsa-knowledge.ts`) |
-| Two pointers | `array-techniques` (`src/dsa-knowledge.ts:79`) | Missing | Missing | Missing | Yes (`array-techniques` in `src/dsa-knowledge.ts`) |
-| Sliding windows | `array-techniques` (`src/dsa-knowledge.ts:79`) | `algo-window-sum` (`src/learning.ts`, journey `windows`) | `count-unique-windows` | `shortest-run-reaching-target` | Yes (`array-techniques` in `src/dsa-knowledge.ts`) |
-| Binary search | `array-techniques` (`src/dsa-knowledge.ts:79`) | `algo-binary-search` (`src/learning.ts`) | `first-insertion-point` | `smallest-daily-capacity` | Yes (`array-techniques` in `src/dsa-knowledge.ts`) |
+| Queues | `queues` (`src/dsa-knowledge.ts`) | `ds-queue-operations` (journey `queues`) | `ticket-service-times` | `parcel-loading-turns` | Yes (`queues` in `src/dsa-knowledge.ts`) |
+| Two pointers | `array-techniques` (`src/dsa-knowledge.ts`) | `algo-sorted-pair` (journey `two-pointers`) | `sorted-offset-squares` | `reading-run-summary` | Yes (`array-techniques` in `src/dsa-knowledge.ts`) |
+| Sliding windows | `array-techniques` (`src/dsa-knowledge.ts`) | `algo-window-sum` (journey `windows`) | `count-unique-windows` | `shortest-run-reaching-target` | Yes (`array-techniques` in `src/dsa-knowledge.ts`) |
+| Binary search | `array-techniques` (`src/dsa-knowledge.ts`) | `algo-binary-search` (journey `binary-search`) | `first-insertion-point` | `smallest-daily-capacity` | Yes (`array-techniques` in `src/dsa-knowledge.ts`) |
 | DOM interactions | `frontend` (`src/knowledge.ts:107`) | Missing | Missing | Missing | Yes (`frontend`) |
 | Sorting | No skill/lesson ID | `algo-insertion-sort` (`src/learning.ts:23`) | `sort-score-records` | `kth-smallest-copy` | No |
 | Recursion | No skill/lesson ID | `algo-recursive-sum` (`src/learning.ts:24`) | `flatten-nested-numbers` | `count-object-leaves` | No |
 | Trees | No skill/lesson ID | `algo-tree-depth` (`src/learning.ts:25`) | `tree-depth-sum` | `tree-value-path` | No |
 | Graphs | No skill/lesson ID | `algo-graph-reachable` (`src/learning.ts:26`) | `graph-shortest-hops` | `graph-connected-groups` | No |
 
-Notes on linked reps that are not journey stages: queues has `ds-stack-operations`, `ds-queue-operations`, and `remaining-actions` (`src/dsa-knowledge.ts:76`); the array-techniques topic has `algo-sorted-pair`, `algo-window-sum`, `algo-binary-search`, plus the new windows reps (`src/dsa-knowledge.ts:115`); DOM interactions has `dom-disclosure`, `dom-accessible-form`, `dom-live-search`, `dom-tabs` (`src/knowledge.ts`, `frontend` lesson). All path placements are in the Problem solving path (`src/path.ts:39-51`) and Frontend path (`src/path.ts:54-75`). All rep IDs above were verified to exist in `src/rep.ts`.
+Notes on linked reps that are not journey stages: queues also has `ds-stack-operations` and `remaining-actions`; DOM interactions has `dom-disclosure`, `dom-accessible-form`, `dom-live-search`, `dom-tabs` (`src/knowledge.ts`, `frontend` lesson). The queue, two-pointer, window, and binary-search journey reps are linked in their skill `repIds` and the Problem solving path. Their checks verify outputs and unchanged input; they do not establish that a learner used the named technique or its time bound.
 
 Thin areas:
 
-- No journey (guided → independent → delayed-recall) exists for queues, two pointers, binary search, or DOM interactions; their reps are linked to lessons but carry no stage evidence rules.
+- No journey (guided → independent → delayed-recall) exists for DOM interactions; its reps are linked to the `frontend` lesson but carry no stage evidence rules.
 - Sorting, recursion, trees, and graphs have complete journeys but no skill or knowledge lesson: their reps appear in no `Skill.repIds`, so they also have no lesson questions or authored knowledge depth.
 - DOM interactions is the only topic above whose practice reps (`dom-*`) run in the sandboxed frontend frame rather than the function worker, while its lesson (`frontend`) covers broader frontend state, not interactions specifically.
