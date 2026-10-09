@@ -22,7 +22,8 @@ test('frontend transport accepts only the matching frame and token, then cleans 
   const run = setup()
   try {
     assert.equal(run.frame.getAttribute('sandbox'), 'allow-scripts')
-    assert.equal(run.frame.hidden, true)
+    assert.equal(run.frame.getAttribute('aria-hidden'), 'true')
+    assert.equal(run.frame.tabIndex, -1)
     const results = rep.checks.map(check => ({ name: check.name, passed: true }))
     run.send({ token: 'correct-token', results }, run.window)
     run.send({ token: 'wrong-token', results })

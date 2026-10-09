@@ -8,7 +8,10 @@ export function startFrontendRun(code: string, rep: Rep, onResults: (results: Te
   const { document: frameDocument, window: frameWindow, token } = environment
   const frame = frameDocument.createElement('iframe')
   frame.title = 'Frontend interaction checks'
-  frame.hidden = true
+  // Rendered but offscreen: browsers cannot focus elements inside a display:none frame, and the focus checks need real focus.
+  frame.setAttribute('aria-hidden', 'true')
+  frame.tabIndex = -1
+  frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:800px;height:600px;border:0;opacity:0;pointer-events:none'
   frame.setAttribute('sandbox', 'allow-scripts')
   let timer: number | undefined
   let disposed = false

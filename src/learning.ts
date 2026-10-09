@@ -4,6 +4,7 @@ import { practicalGuides } from './practical-concepts.ts'
 import { fluencyGuides } from './fluency-reps.ts'
 import { validationGuides } from './validation-reps.ts'
 import { appGuides } from './app-reps.ts'
+import { domGuides } from './dom-reps.ts'
 export type LearnerStart = 'new' | 'returning'
 
 export type LearningRecord = {
@@ -62,6 +63,7 @@ export const reflectionGuides: Record<string, { plan: string[]; explanation: str
   ...fluencyGuides,
   ...validationGuides,
   ...appGuides,
+  ...domGuides,
   ...browserStateGuides,
   'project-team-directory': { plan: ['Separate selection from rendering.', 'Keep all request states explicit.', 'Use safe text and keyboard-operable controls.'], explanation: ['Trace an interaction across modules.', 'Review accessibility manually.', 'Explain why integration checks alone do not prove module design.'], example: 'I keep filtering in the data module and DOM work in the rendering module. The input listener obtains a fresh selection and renders original labels as text. I test all states and separately review focus and layout.' },
   'project-ticket-api': { plan: ['Validate the method before the query.', 'Normalize trusted fields in the query module.', 'Filter before calculating total and page.'], explanation: ['Trace invalid and valid requests across modules.', 'Explain response shapes and unchanged input.', 'Discuss where database integration would belong.'], example: 'I reject unsupported methods first, ask the query module for trusted values, then filter and slice tickets in the handler. Integration checks verify responses; I review module responsibilities separately.' },

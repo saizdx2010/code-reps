@@ -115,7 +115,7 @@ export const skills: Skill[] = [
     walkthrough: ['Normalize the query once.', 'Compare each name using the same case rule.', 'Keep matching original objects in their original order.', 'Render an empty message only after the request has resolved.'],
     mistakes: ['Showing empty content during loading.', 'Lowercasing the displayed label.', 'Using clickable divs instead of buttons.', 'Rendering names as HTML.'],
     questions: [q('precedence', 'Which state should this exercise display?', '{ loading: true, error: "Offline", count: 0 }', ['Empty', 'Error', 'Loading'], 2, 'Loading has priority under the authored contract.'), q('derive-source-v2', 'Where should the filtered list come from?', '', ['Source items and the current query', 'An unrelated saved copy', 'The list from the previous query'], 0, 'Deriving output avoids maintaining conflicting copies of the same information.')],
-    repIds: ['frontend-visible-items', 'frontend-view-state', 'frontend-directory', 'project-team-directory', 'interview-frontend', 'derive-task-summary'], related: ['react', 'async', 'testing'],
+    repIds: ['frontend-visible-items', 'frontend-view-state', 'frontend-directory', 'dom-accessible-form', 'dom-disclosure', 'dom-tabs', 'dom-live-search', 'project-team-directory', 'interview-frontend', 'derive-task-summary'], related: ['react', 'async', 'testing'],
   },
   {
     id: 'debugging', title: 'Debugging, reading, and safe refactoring', summary: 'Establish behavior before changing code and preserve evidence of the repair.', prerequisites: ['arrays'],
@@ -174,12 +174,12 @@ export const skills: Skill[] = [
     repIds: ['backend-ticket-handler', 'backend-page-results', 'validate-page-query', 'debug-page-offset'], related: ['async', 'databases', 'testing'],
   },
   {
-    id: 'react', title: 'React state and effects', summary: 'Keep source state minimal and synchronize with external systems deliberately.', prerequisites: ['frontend', 'async'],
-    objectives: ['Distinguish props, source state, and derived values.', 'Explain immutable state updates.', 'Recognize an effect that needs cleanup.'],
+    id: 'react', title: 'React state and effects', summary: 'Concepts for keeping source state minimal and synchronizing with external systems deliberately. The linked reps practise the same ideas in plain TypeScript and DOM code, not React APIs.', prerequisites: ['frontend', 'async'],
+    objectives: ['Distinguish props, source state, and derived values (practised in the linked reps as plain functions and DOM code).', 'Explain immutable state updates (concept check only).', 'Recognize an effect that needs cleanup (concept check only; no rep practises effects).'],
     sections: [
       { title: 'Source state versus derived output', body: 'Props are supplied by the parent. State records information that changes through interaction or external events. A filtered list can usually be derived from props and query while rendering; storing it separately can make it stale.' },
       { title: 'Updates and identity', body: 'Treat state objects and arrays as immutable. Create a new array when replacing one item. When an update depends on previous state, use the functional updater form. Stable keys identify list items across changes; position keys are risky when items reorder.' },
-      { title: 'Effects synchronize', body: 'An effect synchronizes with something outside rendering: a subscription, timer, or network operation. It is not needed for every calculation. Return cleanup for subscriptions and timers, and prevent obsolete requests from owning current state. Development Strict Mode helps expose incomplete cleanup.' },
+      { title: 'Effects synchronize', body: 'An effect synchronizes with something outside rendering: a subscription, timer, or network operation. It is not needed for every calculation. Return cleanup for subscriptions and timers, and prevent obsolete requests from owning current state. Development Strict Mode helps expose incomplete cleanup. No linked rep uses React or practises effects, so the checks below are the only assessment of this idea.' },
     ],
     example: 'const [query, setQuery] = useState("")\nconst visible = items.filter(item =>\n  item.name.toLowerCase().includes(query.toLowerCase())\n)\n// No second state variable is needed for visible.',
     walkthrough: ['items comes from the parent.', 'query is source state changed by typing.', 'visible is recalculated from the current inputs.', 'Rendering does not need an effect to derive this value.'],
