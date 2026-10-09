@@ -29,7 +29,7 @@ Implemented features do not establish learner comprehension, full accessibility,
 - [x] Make the selected learning goal obvious, with an easy way to change it and a clear explanation that browsing another track does not change the goal.
 - [x] Clarify opening a rep versus recording a practice session with “Record a session” and “Resume session” actions. Completing a rep and ending a session remain separate actions.
 - [x] Offer a small daily choice: continue saved work, take the recommended next rep, or choose a due review. Keep other tools reachable through existing sections.
-- [ ] Improve recommendation reasons with the specific skill or prerequisite involved, rather than only naming the selected track. (Reasons already name the journey or skill; prerequisite-specific wording is not implemented.)
+- [x] Improve recommendation reasons with the specific skill involved, rather than only naming the selected track. Concrete prerequisite and readiness guidance remains in section 2.
 - [x] Keep advanced planning, assessment, and management controls secondary so they do not compete with the next useful action. Planning and evidence are text links below the primary action, and changing the starting point is under a disclosure.
 
 **Done when:** During your own normal use, you can start or resume without browsing multiple pages, identify the active goal, and explain why the recommended rep comes next. Verify fresh and returning profiles, including drafts and due reviews; preserve work and Back/Forward behavior.
