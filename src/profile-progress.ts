@@ -1,4 +1,3 @@
-import { paths } from './path.ts'
 import type { PortableRecord } from './portability.ts'
 
 // Calendar dates use the learner's current local timezone, rather than 24-hour gaps.
@@ -24,10 +23,5 @@ export function profileProgress(history: PortableRecord[], now = new Date()) {
   let cursor = days.includes(today) ? today : today - 1
   const activeDays = new Set(days)
   while (activeDays.has(cursor)) { currentStreak++; cursor-- }
-  const badges = paths.map(path => {
-    const ids = [...new Set(path.stages.flatMap(stage => [...stage.repIds]))]
-    const count = ids.filter(id => completed.has(id)).length
-    return { id: path.id, title: path.title, completed: count, total: ids.length, earned: count === ids.length }
-  })
-  return { currentStreak, longestStreak, practiceDays: days.length, completedReps: completed.size, attempts: records.length, badges }
+  return { currentStreak, longestStreak, practiceDays: days.length, completedReps: completed.size, attempts: records.length }
 }

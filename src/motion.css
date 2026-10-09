@@ -191,6 +191,10 @@
 /* Progress fills grow from the left when a page arrives. */
 .path-progress span { transform-origin: left center; animation: fill-grow 720ms var(--motion-ease) 160ms both; }
 .compact-path-list progress { transform-origin: left center; animation: fill-grow 720ms var(--motion-ease) 160ms both; }
+/* A newly shown badge settles its artwork in once; the stroke check draws itself. */
+.badge-card .badge-art { animation: mark-pop 320ms var(--motion-spring) both; }
+.badge-check { stroke-dasharray: 24; animation: badge-draw 420ms var(--motion-ease) 200ms both; }
+@keyframes badge-draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
 @keyframes fill-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 /* Choices pop their mark in; the info note tilts its icon on hover and takes the accent when open. */
@@ -242,4 +246,5 @@
   .ui-number-buttons button:active { scale: none !important; }
   .text-button { transition: none; text-underline-offset: 4px; }
   ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
+  .badge-card .badge-art, .badge-check, .compact-path-list progress { animation: none !important; }
 }
