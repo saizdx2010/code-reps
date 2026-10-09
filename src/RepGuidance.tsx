@@ -8,7 +8,7 @@ type Props = { repId: string; history: readonly { repId: string }[]; openRep: (i
 export default function RepGuidance({ repId, history, openRep, openLesson }: Props) {
   const guidance = useMemo(() => getRepGuidance(repId, history.map(record => record.repId)), [repId, history])
   const { checkpoint } = guidance
-  return <InfoNote label="Before you start">
+  return <InfoNote label="Effort and prerequisites">
     <p><strong>Rough effort:</strong> {guidance.effort}. This is guidance for planning a first attempt, not a target; taking longer says nothing about your skill.</p>
     {guidance.lessons.length > 0 && <p><strong>Helpful to know:</strong> {guidance.lessons.map((lesson, index) => <span key={lesson.id}>{index > 0 && ', '}<button type="button" className="text-button" onClick={() => openLesson(lesson.id)}>{lesson.title}</button></span>)}</p>}
     {guidance.priorReps.length > 0 && <p><strong>Earlier in this stage:</strong> {guidance.priorReps.map((rep, index) => <span key={rep.id}>{index > 0 && ', '}<button type="button" className="text-button" onClick={() => openRep(rep.id)}>{rep.title}</button></span>)}</p>}

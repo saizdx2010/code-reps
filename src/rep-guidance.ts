@@ -67,7 +67,7 @@ export function getRepGuidance(repId: string, completedRepIds: Iterable<string>)
       .sort((a, b) => (repLevel(b) ?? 0) - (repLevel(a) ?? 0))[0]
     const lesson = [...lessons.values()].find(item => linked.every(skill => skill.id !== item.id)) ?? [...lessons.values()][0]
     checkpoint = {
-      message: `This is ${repLevelLabels[level]} work and you have not finished ${highest ? repLevelLabels[highest as RepLevel] : 'any'} reps yet. Skim the lesson or try a nearer step first if the task looks unfamiliar. You can also open this rep now.`,
+      message: `This is ${repLevelLabels[level]} work, ${highest ? `and the highest level you have finished is ${repLevelLabels[highest as RepLevel]}` : 'and you have not finished a rep yet'}. Skim the lesson or try a nearer step first if the task looks unfamiliar. You can also continue with this rep now.`,
       bridgeRep: bridgeId ? summary(bridgeId) : undefined,
       lesson,
     }
