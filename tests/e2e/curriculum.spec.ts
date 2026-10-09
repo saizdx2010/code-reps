@@ -43,7 +43,7 @@ for (const width of [1280, 390]) {
     await page.goto('/#/home')
     await page.getByRole('button', { name: /New to coding/ }).click()
     const trail = page.getByRole('region', { name: 'Learning goal' })
-    await expect(trail.getByRole('heading', { level: 1 })).toHaveText('TypeScript from the beginning')
+    await expect(trail.getByRole('heading', { level: 1 })).toHaveText('Foundations')
     const firstStage = trail.locator('.path-stage').first()
     const nodes = firstStage.locator('.trail-node')
     await expect(nodes.first()).toHaveClass(/node-lesson/)
@@ -63,6 +63,6 @@ for (const width of [1280, 390]) {
     await expect(covered).toContainText('Covered in Foundations')
     await covered.locator('summary').click()
     await covered.getByRole('button', { name: 'Open Foundations', exact: true }).click()
-    await expect(page.locator('#path-title')).toHaveText('TypeScript from the beginning')
+    await expect(page.locator('#path-title')).toHaveText('Foundations')
   })
 }

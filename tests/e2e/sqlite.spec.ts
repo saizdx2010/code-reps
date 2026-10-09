@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { startServer } from '../../server/index.mjs'
-import { editor, replaceCode, route, solution } from './helpers'
+import { expectChecksFinished, editor, replaceCode, route, solution } from './helpers'
 
 type Service = { url: string; restart: () => Promise<void> }
 const test = base.extend<{ service: Service }>({
@@ -147,7 +147,7 @@ test('browser backup validation preserves work and a valid restore reaches SQLit
   await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue('Exported plan')
   await expect(editor(page)).toBeVisible()
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await expect.poll(() => serverPlan(service.url)).toEqual(['Exported plan', 'Exported plan'])
 })
 
@@ -163,14 +163,14 @@ test('cold local-server editing, worker checks, and previews need no external re
   await page.goto(service.url + route)
   await replaceCode(page, solution)
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   const { richSolutions } = await import('../fixtures/rich-solutions.mjs')
   await page.goto(service.url + '/#/practice/frontend-directory')
   await replaceCode(page, richSolutions['frontend-directory'], 'frontend-directory')
   await page.getByRole('button', { name: 'Update preview', exact: true }).click()
   await expect(page.frameLocator('iframe[title="Your directory implementation"]').getByLabel('Search people')).toBeVisible()
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   expect(external).toEqual([])
 })
 

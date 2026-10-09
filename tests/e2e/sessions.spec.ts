@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { chooseOption, replaceCode } from './helpers'
+import { expectChecksFinished, chooseOption, replaceCode } from './helpers'
 
 const repId = 'sum-positive-numbers'
 const sessionKey = 'code-reps:profile:default:sessions:v1'
@@ -153,7 +153,7 @@ test('completed attempts stay separate from sessions and open immutable work', a
   await page.getByRole('button', { name: 'Solve', exact: true }).click()
   await replaceCode(page, 'function sumPositive(numbers: number[]): number { return numbers.filter(n => n > 0).reduce((sum, n) => sum + n, 0) }', repId)
   await page.keyboard.press('ControlOrMeta+Enter')
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await page.getByRole('button', { name: 'Explain', exact: true }).click()
   await page.getByLabel('Your explanation', { exact: true }).fill('I filter positive numbers and add them; empty input returns zero.')
   await page.getByRole('button', { name: 'Review', exact: true }).click()

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
-import { chooseOption, editor, replaceCode } from './helpers'
+import { expectChecksFinished, chooseOption, editor, replaceCode } from './helpers'
 import { validationSolutions } from '../fixtures/validation-solutions.mjs'
 
 async function finish(page: Page, id: string, code: string) {
@@ -8,7 +8,7 @@ async function finish(page: Page, id: string, code: string) {
   await page.getByLabel('Your plan', { exact: true }).fill('Restate the accepted values, name boundary cases, and preserve the input.')
   await replaceCode(page, code, id)
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await page.getByRole('button', { name: 'Explain', exact: true }).click()
   await page.getByLabel('Your explanation', { exact: true }).fill('I traced the boundary and conflicting invalid cases. I return a new object and keep the documented error order.')
   await page.getByRole('button', { name: 'Review', exact: true }).click()
@@ -82,7 +82,7 @@ test('validation prompts and catalogue remain usable at 320 CSS pixels', async (
   await page.keyboard.press('Tab')
   await expect(editor(page)).not.toBeFocused()
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await page.reload()
   await page.getByRole('button', { name: 'Plan', exact: true }).click()

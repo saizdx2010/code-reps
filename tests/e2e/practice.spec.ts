@@ -1,16 +1,16 @@
 import { paths } from '../../src/path'
 import { expect, test } from '@playwright/test'
-import { chooseOption, editor, replaceCode, route, saved, solution } from './helpers'
+import { expectChecksFinished, chooseOption, editor, replaceCode, route, saved, solution } from './helpers'
 
 test('real Monaco editing, keyboard checks, and obsolete feedback', async ({ page }) => {
   await page.goto(route)
   await replaceCode(page, solution)
   await page.keyboard.press('ControlOrMeta+Enter')
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await replaceCode(page, 'function mostFrequent(numbers: number[]): number | null { return null }')
   await expect(page.getByText('All checks passed', { exact: true })).toHaveCount(0)
   await page.locator('.workspace-toolbar').getByRole('button', { name: /Run checks/ }).click()
-  await expect(page.getByText('1 of 6 checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('1 of 6 checks passed', { exact: true }))
 })
 
 test('reload preserves code and planning drafts', async ({ page }) => {
@@ -24,7 +24,7 @@ test('reload preserves code and planning drafts', async ({ page }) => {
   await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue('Count values, then resolve ties with the smaller value.')
   await expect(editor(page)).toBeVisible()
   await page.locator('.workspace-toolbar').getByRole('button', { name: /Run checks/ }).click()
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
 })
 
 test('profile switching keeps drafts separate', async ({ page }) => {
@@ -54,7 +54,7 @@ test('profile switching keeps drafts separate', async ({ page }) => {
   await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue('Original profile plan')
   await expect(editor(page)).toBeVisible()
   await page.locator('.workspace-toolbar').getByRole('button', { name: /Run checks/ }).click()
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
 })
 
 test('narrow workspace preserves planning and supports keyboard exit', async ({ page }) => {
@@ -67,7 +67,7 @@ test('narrow workspace preserves planning and supports keyboard exit', async ({ 
   await page.keyboard.press('Tab')
   await expect(editor(page)).not.toBeFocused()
   await page.locator('.workspace-toolbar').getByRole('button', { name: /Run checks/ }).click()
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await saved(page)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   await page.getByRole('button', { name: 'Plan', exact: true }).click()
@@ -96,7 +96,7 @@ test('first-run choice precedes the recommendation and stays editable', async ({
 test('failed checks open one case at a time with keyboard access', async ({ page }) => {
   await page.goto(route)
   await page.locator('.workspace-toolbar').getByRole('button', { name: 'Run checks', exact: true }).click()
-  await expect(page.getByText('1 of 6 checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('1 of 6 checks passed', { exact: true }))
   const cases = page.locator('#checks-section .result-list').first().locator('details')
   await expect(cases).toHaveCount(5)
   await expect(page.locator('#checks-section .result-list details[open]')).toHaveCount(1)
@@ -132,7 +132,7 @@ test('practice steps preserve work, explain missing requirements, and record com
   await steps.getByRole('button', { name: 'Solve', exact: true }).click()
   await replaceCode(page, solution)
   await page.keyboard.press('ControlOrMeta+Enter')
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await page.getByRole('button', { name: 'Explain your solution', exact: false }).click()
   await expect(page.locator('#explain-section')).toBeFocused()
   await page.getByLabel('Your explanation', { exact: true }).fill('I count each value, compare counts, and use the smaller value to break ties. Empty input returns null.')
@@ -214,7 +214,7 @@ test('checks open as a bounded drawer inside the coding desk above the run toolb
   await replaceCode(page, solution)
   await page.keyboard.press('ControlOrMeta+Enter')
   const checks = page.locator('#checks-section')
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await expect(checks.locator('.passed-checks li')).toHaveCount(6)
   for (const width of [1280, 320]) {
     await page.setViewportSize({ width, height: 900 })
@@ -259,7 +259,7 @@ test('compact header shows the editor, first step, and an in-desk drawer without
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
   const checks = page.locator('#code-workspace #checks-section')
   await expect(checks.getByRole('button', { name: /^Checks/ })).toHaveAttribute('aria-expanded', 'true')
-  await expect(checks.getByText('1 of 6 checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(checks.getByText('1 of 6 checks passed', { exact: true }))
   await expect(checks).toBeInViewport({ ratio: 1 })
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true)
   expect(await page.evaluate(() => scrollY)).toBe(0)
@@ -280,7 +280,7 @@ test('desktop desk stays fixed while task and checks scroll', async ({ page }) =
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
     await replaceCode(page, solution)
     await page.locator('.workspace-toolbar').getByRole('button', { name: /Run checks/ }).click()
-    await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+    await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
     const run = page.locator('.workspace-toolbar').getByRole('button', { name: /Run checks/ })
     const bounds = await run.boundingBox()
     expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(height)

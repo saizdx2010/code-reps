@@ -12,6 +12,8 @@ On Linux CI, use `yarn playwright install --with-deps chromium` to install brows
 
 Playwright first builds current assets, including bundle-size checks, then starts its own loopback Vite server at `http://127.0.0.1:4175`. The port must be free: the suite deliberately refuses to reuse an existing server. Each test gets a fresh browser context. Practice tests use browser-local learner data. SQLite tests start the actual local service on a random loopback port with a unique temporary data directory per test, and cleanly stop it and remove that directory afterward. They never reuse a learner server or touch `~/.code-reps`.
 
+Use `E2E_PORT=4203 yarn test:e2e` to select another dedicated port. Ordinary assertions default to 10 seconds in local runs and CI; `E2E_EXPECT_TIMEOUT` can override that timeout in milliseconds (a positive integer). Exact check-result assertions use the shared `expectChecksFinished` helper with a named 30-second completion timeout for worker startup and Monaco compilation under load. Assertions still require the expected result text, and the suite has no retries. The overall test timeout remains 45 seconds.
+
 ## Coverage
 
 - Verify local TypeScript member suggestions and editor Find after narrowing imports.

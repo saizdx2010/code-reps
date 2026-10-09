@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { replaceCode } from './helpers'
+import { expectChecksFinished, replaceCode } from './helpers'
 
 test('post-solve trace supports scoped keyboard navigation and narrow review', async ({ page }) => {
   await page.goto('/#/practice/algo-sorted-pair')
@@ -7,7 +7,7 @@ test('post-solve trace supports scoped keyboard navigation and narrow review', a
   await expect(page.getByRole('region', { name: 'Step trace' })).toHaveCount(0)
   await replaceCode(page, 'function hasSortedPair(numbers: number[], target: number): boolean { let left = 0, right = numbers.length - 1; while (left < right) { const sum = numbers[left] + numbers[right]; if (sum === target) return true; if (sum < target) left++; else right-- } return false }', 'algo-sorted-pair')
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await page.getByRole('button', { name: 'Explain', exact: true }).click()
   await page.getByText('Compare your plan and explanation', { exact: true }).click()
   const viewer = page.getByRole('region', { name: 'Step trace' })
@@ -36,7 +36,7 @@ test('tree trace renders the current node and steps by keyboard at a narrow widt
   await page.goto('/#/practice/algo-tree-depth')
   await replaceCode(page, 'function treeDepth(root: TreeNode | null): number { if (root === null) return 0; let deepest = 0; for (const child of root.children) deepest = Math.max(deepest, treeDepth(child)); return 1 + deepest }', 'algo-tree-depth')
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await page.getByRole('button', { name: 'Explain', exact: true }).click()
   await page.getByText('Compare your plan and explanation', { exact: true }).click()
   await page.setViewportSize({ width: 320, height: 844 })
@@ -58,7 +58,7 @@ test('recursion trace shows a call stack that grows and shrinks', async ({ page 
   await page.goto('/#/practice/algo-recursive-sum')
   await replaceCode(page, 'type NestedNumber = number | NestedNumber[]; function recursiveSum(items: NestedNumber[]): number { let total = 0; for (const item of items) { if (Array.isArray(item)) total += recursiveSum(item); else total += item } return total }', 'algo-recursive-sum')
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await page.getByRole('button', { name: 'Explain', exact: true }).click()
   await page.getByText('Compare your plan and explanation', { exact: true }).click()
   const viewer = page.getByRole('region', { name: 'Step trace' })
