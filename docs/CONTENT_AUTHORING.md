@@ -8,13 +8,13 @@ This is an internal authoring guide. Source rights are reserved for now; public 
 
 1. Add a typed `Rep` in `src/rep.ts` or a focused content module.
 2. Give it a unique ID, concise prompt, example, starter function, plan prompt, progressive hints, and checks for normal and edge cases.
-3. Keep a hint from giving away the full answer until the final reveal. Write a self-review guide in `src/learning.ts` when the rep belongs to a journey.
+3. Keep a hint from giving away the full answer until the final reveal. Write a self-review guide in `src/reflection-guides.ts` (or the matching `src/review-*.ts` module) when the rep belongs to a journey.
 4. If it is guided, independent, or recall practice, add it to `journeys` in `src/learning.ts`. A recall rep must use a distinct problem; a hinted or early solve cannot count as retained.
 5. Run `yarn lint`, `yarn test`, and `yarn build`. Try the rep in the local app and read the prompt as someone new to the terminology.
 
 Function checks run authored TypeScript in a browser worker. The frontend implementation format instead runs DOM interaction checks in a sandboxed frame. See [Richer exercises](./RICH_EXERCISES.md) for the frame contract and verification limits. Do not import exercise packs from untrusted sources or treat this worker as a secure sandbox. Content review should include accessibility, clarity for English learners, and whether the checks match the prompt.
 
-Every rep should have an authored self-review guide in `src/learning.ts` and a reference solution covered by `tests/content.test.mjs`, `tests/ai-era.test.mjs`, or `tests/rich-reps.test.mjs`. Cover each stated boundary, precedence rule, and normalization rule. When the contract prohibits changing inputs, set `preserveInput: true`; the runner compares supplied values after each check and reports mutation separately from incorrect output. This detects changes visible after the function returns, not temporary mutations that are undone.
+Every rep should have an authored self-review guide in `src/reflection-guides.ts` and a reference solution covered by `tests/content.test.mjs`, `tests/ai-era.test.mjs`, or `tests/rich-reps.test.mjs`. Cover each stated boundary, precedence rule, and normalization rule. When the contract prohibits changing inputs, set `preserveInput: true`; the runner compares supplied values after each check and reports mutation separately from incorrect output. This detects changes visible after the function returns, not temporary mutations that are undone.
 
 Output checks do not prove a learner used a particular declaration, type, or approach. Make those requirements explicit self-review points. Keep implementation hints progressive, and leave the full approach comparison in the post-attempt self-review. State the supported character set when string indexing or character iteration could produce different answers.
 
@@ -34,9 +34,18 @@ Multi-file capstones use `encodeFiles` with an entry module and named `.ts` file
 
 Run `yarn content:check` before publishing an app/content update. Keep exercise IDs stable so saved attempts remain linked. If changing an interactive question's answer or option ordering, add a new question ID or migrate saved answers explicitly. Content version alone does not migrate learner evidence.
 
+## Where content lives: startup versus review modules
+
+The initial JavaScript chunk must stay small, so content is split by when it is needed:
+
+- **Startup (imported synchronously):** reps with their checks, hints, and starter code (`src/rep.ts` and the `*-reps.ts` modules), knowledge skills (`src/knowledge.ts`, `src/dsa-knowledge.ts`), paths, journeys (`src/learning.ts`), and fluency data. The Trail, planner, and badges read these.
+- **Review (loaded when a rep or lesson opens):** self-review guides, rep depth (including `traceSteps`), and lesson depth. They live in `src/review-*.ts` (one module per content area, for example `src/review-dsa.ts` exports `dsaDepth` and `dsaGuides`) and are aggregated by `src/rep-depth.ts`, `src/lesson-depth.ts`, and `src/reflection-guides.ts`. `src/load-review-content.ts` imports those aggregators dynamically; `useReviewContent` shows a loading state, and an error state with Retry that leaves the draft untouched.
+
+Add depth, trace, guide, and lesson-depth entries to the matching `src/review-*.ts` module, not to the rep module, and never import `src/review-*.ts`, `rep-depth.ts`, `lesson-depth.ts`, or `reflection-guides.ts` from startup code; tests and `yarn content:check` may import them directly. `yarn build` fails if the initial chunk exceeds its budget in `scripts/check-bundle.mjs`.
+
 ## Depth standard for every rep and lesson
 
-Every rep, including foundations, independent tasks, delayed recall, debugging, and project milestones, must have a task-specific entry in `src/rep-depth.ts`:
+Every rep, including foundations, independent tasks, delayed recall, debugging, and project milestones, must have a task-specific entry, registered through `src/rep-depth.ts`:
 
 - **Reasoning:** explain why the approach satisfies the contract, using an invariant, state precedence, or validation argument where relevant.
 - **Trace:** follow concrete values through a boundary or conflicting case, not just restate the happy-path example.
@@ -46,7 +55,7 @@ Every rep, including foundations, independent tasks, delayed recall, debugging, 
 
 These reviews appear in the existing post-check comparison reveal. Do not copy solution reasoning into independent or recall prompts. Scale depth to the skill: a foundational expression needs a clear value trace, not an artificially complicated algorithm.
 
-Every knowledge lesson must also have an entry in `src/lesson-depth.ts` with a concrete example, causal reasoning, a prediction/repair/counterexample challenge, and a separately revealed discussion. These challenges are self-review, not automated evidence of coding independence. Existing checked questions retain their identities and answer contracts.
+Every knowledge lesson must also have an entry registered through `src/lesson-depth.ts` with a concrete example, causal reasoning, a prediction/repair/counterexample challenge, and a separately revealed discussion. These challenges are self-review, not automated evidence of coding independence. Existing checked questions retain their identities and answer contracts.
 
 Run `yarn content:check`, `yarn lint`, `yarn test`, and `yarn build`. Coverage validation rejects missing fields and unknown targets; human review must still verify correctness, plain wording, progressive difficulty, and whether an alternative actually teaches a decision. Adding text volume alone does not meet the editorial standard.
 

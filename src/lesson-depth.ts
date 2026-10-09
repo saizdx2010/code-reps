@@ -1,6 +1,6 @@
-import { browserStateLessonDepth } from './browser-state-reps.ts'
-import { dsaLessonDepth } from './dsa-knowledge.ts'
-import { practicalLessonDepth } from './practical-concepts.ts'
+import { browserStateLessonDepth } from './review-browser-state.ts'
+import { dsaLessonDepth } from './review-dsa-lessons.ts'
+import { practicalLessonDepth } from './review-practical.ts'
 export type LessonDepth = { title: string; code: string; reasoning: string; challenge: string; answer: string }
 
 export const lessonDepth: Record<string, LessonDepth> = {
