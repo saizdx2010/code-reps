@@ -15,7 +15,7 @@ This roadmap uses ordered phases rather than promised dates or release numbers. 
 - [x] Problem-solving content covering collections, sorting, recursion, trees, graphs, linked structures, heaps, backtracking, and dynamic programming.
 - [x] Recommendations, resumable drafts, due reviews, weekly planning, a Journal, and explicit practice-session records.
 - [x] Local profiles, browser persistence, a loopback SQLite service, backups, imports, and portable web bundles.
-- [x] Profile summaries with streaks and path completion rows. Existing path badges are derived from completed attempts; the more recognizable badge presentation below is still planned.
+- [x] Profile summaries with streaks, path completion rows, and completion badges on Progress. Badges are derived from completed attempts; section 3 lists the remaining verification.
 - [x] Automated content checks, Node tests, Chromium flows, and build budgets.
 
 Implemented features do not establish learner comprehension, full accessibility, disconnected operation, or support across every platform. See the [UI guide](./docs/UI_GUIDE.md), [fluency guide](./docs/FLUENCY_PLATFORM.md), and [browser testing guide](./docs/BROWSER_TESTING.md) for current behavior and limits.
@@ -24,13 +24,13 @@ Implemented features do not establish learner comprehension, full accessibility,
 
 **Goal:** Open Code Reps and immediately understand what to do, why it matters, and how to continue saved work.
 
-- [ ] Make Trail's primary action answer three questions: what should I practise, why this rep, and what comes afterward?
-- [ ] Give first use a short walkthrough built around a real tiny rep. Introduce checks, hints, writing, and completion when they become relevant; keep it skippable and available again.
-- [ ] Make the selected learning goal obvious, with an easy way to change it and a clear explanation that browsing another track does not change the goal.
-- [ ] Clarify opening a rep versus recording a practice session. Evaluate a label such as “Record a session”; explain that completing a rep and ending a session are separate actions.
-- [ ] Offer a small daily choice: continue saved work, take the recommended next rep, or choose a due review. Keep other tools reachable through existing sections.
-- [ ] Improve recommendation reasons with the specific skill or prerequisite involved, rather than only naming the selected track.
-- [ ] Keep advanced planning, assessment, and management controls secondary so they do not compete with the next useful action.
+- [x] Make Trail's primary action answer three questions: what should I practise, why this rep, and what comes afterward. The Home “Up next” panel shows the rep, its reason, and an afterward line.
+- [x] Offer a short, optional walkthrough around the real “Declare a value” rep. Introduce checks, hints, writing, and completion at the relevant steps; allow skipping and replay from Trail without replacing saved work.
+- [x] Make the selected learning goal obvious, with an easy way to change it and a clear explanation that browsing another track does not change the goal.
+- [x] Clarify opening a rep versus recording a practice session with “Record a session” and “Resume session” actions. Completing a rep and ending a session remain separate actions.
+- [x] Offer a small daily choice: continue saved work, take the recommended next rep, or choose a due review. Keep other tools reachable through existing sections.
+- [x] Improve recommendation reasons with the specific skill involved, rather than only naming the selected track. Concrete prerequisite and readiness guidance remains in section 2.
+- [x] Keep advanced planning, assessment, and management controls secondary so they do not compete with the next useful action. Planning and evidence are text links below the primary action, and changing the starting point is under a disclosure.
 
 **Done when:** During your own normal use, you can start or resume without browsing multiple pages, identify the active goal, and explain why the recommended rep comes next. Verify fresh and returning profiles, including drafts and due reviews; preserve work and Back/Forward behavior.
 
@@ -60,7 +60,8 @@ Implemented features do not establish learner comprehension, full accessibility,
 - [x] Derive completion from the active profile's existing completed attempts where possible. Repeated attempts must not inflate distinct-rep milestones; unfinished drafts and ended sessions must not count as rep completion.
 - [x] Keep completion badges separate from independent and retained skill evidence. Hinted completions may earn completion badges; they must not imply mastery.
 - [ ] Decide how badges behave when a path gains or replaces required reps before introducing durable awards. Preserve rep IDs and define any storage or migration change explicitly.
-- [ ] Verify profile separation, imported history, repeat attempts, invalid or future dates, reloads, and narrow layouts.
+- [x] Cover badge derivation with unit tests: repeat attempts, hinted completions, invalid and future dates, earliest first completion, and separate profile histories (`tests/badges.test.mjs`).
+- [ ] Verify badges in the browser: switching profiles, importing backed-up history, reloading, and narrow layouts. A 390px Chromium check of Progress badges exists in `tests/e2e/practice.spec.ts`; the badge unit tests do not exercise imports or reloads.
 
 **Done when:** You can see what you have finished, understand exactly how each badge was earned, and open the relevant work. Badge behavior stays consistent across profiles and backups without changing fluency rules.
 
@@ -84,8 +85,9 @@ Start with one connected plain TypeScript browser feature using the existing DOM
 **Goal:** Build confidence through different applications of the same skill before adding more topics.
 
 - [ ] Record where you get stuck during ordinary practice: wording, missing prerequisite, approach, syntax, boundaries, or integration. Use those notes to select the next content batch.
-- [ ] Add distinct independent and recall tasks for thin areas, starting with queues, two pointers, windows, binary search, and DOM interactions. Inspect current journey coverage before adding duplicates.
-- [ ] Review existing sorting, recursion, tree, and graph journeys for difficulty transitions and unfamiliar transfer; these topics and journeys already exist.
+- [ ] Add a DOM interactions journey with guided, independent, and delayed-recall stages. Its `dom-*` reps (disclosure, tabs, accessible form, live search) exist, but no journey in `src/learning.ts` stages them.
+- [ ] Add knowledge lessons for sorting, recursion, trees, and graphs. Their journeys and reps already exist (`src/learning.ts`, `src/path.ts`), but `src/dsa-knowledge.ts` defines only collection operations, queues, and array techniques, so these topics have no lesson questions or authored knowledge depth. Then review their journeys for difficulty transitions and unfamiliar transfer.
+- [ ] Add independent or recall tasks to queues, two pointers, windows, or binary search only when learner observations show a specific gap. Each of those four already has guided, independent, and delayed-recall journey stages.
 - [ ] Deepen TypeScript through narrowing unknown input, discriminated unions, exhaustive handling, generics, and reusable typed APIs. Separate compile-time guarantees from behavioral checks.
 - [ ] Strengthen debugging and frontend practice with fresh contexts instead of cosmetic variants of the same problem.
 - [ ] Keep batches small and complete: a lesson where needed, guided practice, an independent application, delayed recall, reference solutions, boundaries, hints, and authored review.

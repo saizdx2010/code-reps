@@ -1,0 +1,11 @@
+.first-rep-walkthrough { flex: 0 0 auto; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); }
+.first-rep-walkthrough strong { font-size: var(--type-card); }
+.first-rep-walkthrough p { margin: 6px 0; font-size: 14px; }
+.first-rep-walkthrough > div { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Bound reading copy inside the desk; actions remain outside the scroll area. */
+.code-panel .first-rep-walkthrough p { max-height: 3lh; overflow-y: auto; }
+@media (max-height: 650px), (max-width: 900px) {
+  .code-panel .first-rep-walkthrough p { max-height: 2lh; }
+  .first-rep-walkthrough > div { gap: 4px; }
+}
