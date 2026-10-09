@@ -46,6 +46,10 @@ export function parseFluency(raw: unknown): FluencyState {
   return raw as unknown as FluencyState
 }
 export const recallVariants: Record<string, string[]> = {
+  sorting: ['kth-smallest-copy', 'sort-score-records', 'algo-merge-sorted'],
+  recursion: ['count-object-leaves', 'flatten-nested-numbers', 'algo-recursive-sum'],
+  trees: ['tree-value-path', 'tree-depth-sum', 'algo-tree-depth'],
+  graphs: ['graph-connected-groups', 'graph-shortest-hops', 'algo-graph-reachable'],
   'state-modeling': ['catalog-request-summary', 'saved-record-status', 'task-state-label'],
   validation: ['validate-import-batch', 'parse-delivery-window', 'validate-stock-adjustment'],
   'request-ownership': ['refresh-report-state', 'preview-slot-results', 'search-request-state'],
@@ -53,7 +57,7 @@ export const recallVariants: Record<string, string[]> = {
   arrays: ['sum-matching-prices', 'count-open-tickets', 'count-above-threshold'],
   text: ['first-label-ending', 'count-label-prefix', 'count-long-words'],
   lookup: ['first-duplicate-label', 'count-statuses', 'first-repeated-number'],
-  stacks: ['remaining-actions', 'cancel-adjacent-ids', 'remove-adjacent-pairs'],
+  stacks: ['remaining-actions', 'simplify-file-path', 'remove-adjacent-pairs'],
   'control-flow': ['countdown-labels'],
   'interface-logic': ['filter-chip-summary'],
   'request-response': ['page-response-envelope'],

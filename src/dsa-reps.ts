@@ -850,4 +850,983 @@ export const dsaReps: Rep[] = [{
         'expected': true
       }
     ]
-  }]
+  },
+  // Fresh applications; solution reasoning belongs in post-attempt reviews.
+  {
+    'id': 'sort-score-records',
+    'title': 'Order records by score and name',
+    'category': 'Algorithm applications',
+    'prompt': 'Return a new array of records ordered by ascending score, then ascending name. Records with equal score and name keep their original order.',
+    'example': {
+      'input': 'orderRecords([{id:"x",score:3,name:"Bo"},{id:"y",score:1,name:"Ada"}])',
+      'output': '[{id:"y",score:1,name:"Ada"},{id:"x",score:3,name:"Bo"}]'
+    },
+    'note': 'At most 100 records with {id: string, score: number, name: string}. Scores are integers -1000 to 1000. IDs and names contain 0 to 20 ASCII characters. Names use case-sensitive character-code order, with no trimming. Preserve the array and records. Stable means equal ordering keys keep input order.',
+    'vocabulary': [
+      {
+        'term': 'Stable order',
+        'meaning': 'equal ordering keys retain their original order'
+      },
+      {
+        'term': 'Ordering key',
+        'meaning': 'a field used to decide relative order'
+      }
+    ],
+    'planPrompt': 'Which rule wins when scores differ? What should happen when both keys match?',
+    'starter': 'type ScoreRecord = { id: string; score: number; name: string }\n\nfunction orderRecords(records: ScoreRecord[]): ScoreRecord[] {\n  // Write your solution here.\n  return []\n}\n',
+    'functionName': 'orderRecords',
+    'preserveInput': true,
+    'hints': [
+      'Compare the required output order for two records.',
+      'Separate a score tie from a complete tie.',
+      'Check a complete tie with different IDs; IDs do not decide the order.'
+    ],
+    'checks': [
+      { name: 'Maximum length and score limits', input: [Array.from({ length: 100 }, (_, i) => ({ id: String(i), score: i < 50 ? 1000 : -1000, name: 'abcdefghijklmnopqrst' }))], expected: Array.from({ length: 100 }, (_, i) => ({ id: String(i < 50 ? i + 50 : i - 50), score: i < 50 ? -1000 : 1000, name: 'abcdefghijklmnopqrst' })) },
+      {
+        'name': 'Score before name',
+        'input': [
+          [
+            {
+              'id': 'a',
+              'score': 10,
+              'name': 'A'
+            },
+            {
+              'id': 'b',
+              'score': 2,
+              'name': 'Z'
+            }
+          ]
+        ],
+        'expected': [
+          {
+            'id': 'b',
+            'score': 2,
+            'name': 'Z'
+          },
+          {
+            'id': 'a',
+            'score': 10,
+            'name': 'A'
+          }
+        ]
+      },
+      {
+        'name': 'Empty',
+        'input': [
+          []
+        ],
+        'expected': []
+      },
+      {
+        'name': 'Stable ties',
+        'input': [
+          [
+            {
+              'id': 'z',
+              'score': 0,
+              'name': ''
+            },
+            {
+              'id': 'a',
+              'score': 0,
+              'name': ''
+            }
+          ]
+        ],
+        'expected': [
+          {
+            'id': 'z',
+            'score': 0,
+            'name': ''
+          },
+          {
+            'id': 'a',
+            'score': 0,
+            'name': ''
+          }
+        ]
+      },
+      {
+        'name': 'ASCII and whitespace',
+        'input': [
+          [
+            {
+              'id': 'a',
+              'score': -1,
+              'name': 'a'
+            },
+            {
+              'id': 'b',
+              'score': -1,
+              'name': 'Z'
+            },
+            {
+              'id': 'c',
+              'score': -1,
+              'name': ' A'
+            }
+          ]
+        ],
+        'expected': [
+          {
+            'id': 'c',
+            'score': -1,
+            'name': ' A'
+          },
+          {
+            'id': 'b',
+            'score': -1,
+            'name': 'Z'
+          },
+          {
+            'id': 'a',
+            'score': -1,
+            'name': 'a'
+          }
+        ]
+      }
+    ]
+  },
+  {
+    'id': 'kth-smallest-copy',
+    'title': 'Find a ranked value',
+    'category': 'Algorithm applications',
+    'prompt': 'Return the kth smallest value, counting duplicate positions separately. k is one-based. Return null when k exceeds the number of values.',
+    'example': {
+      'input': 'kthSmallest([8, 3, 3, 1], 3)',
+      'output': '3'
+    },
+    'note': 'At most 100 integers from -1000 to 1000. Preserve the input. k is an integer from 1 to 101. Empty input returns null.',
+    'vocabulary': [
+      {
+        'term': 'Rank',
+        'meaning': 'a one-based position in ordered values'
+      }
+    ],
+    'planPrompt': 'How do duplicates affect rank? What should happen when the requested position is absent?',
+    'starter': 'function kthSmallest(numbers: number[], k: number): number | null {\n  // Write your solution here.\n  return null\n}\n',
+    'functionName': 'kthSmallest',
+    'preserveInput': true,
+    'hints': [
+      'Write the ranked positions for a small input.',
+      'A repeated value occupies more than one position.',
+      'Check the first and last valid rank as well as one past the end.'
+    ],
+    'checks': [
+      { name: 'Maximum rank and input', input: [Array.from({ length: 100 }, (_, i) => 99 - i), 100], expected: 99 },
+      { name: 'Rank beyond maximum input', input: [Array(100).fill(0), 101], expected: null },
+      {
+        'name': 'Interior rank',
+        'input': [
+          [
+            7,
+            -2,
+            10,
+            0
+          ],
+          3
+        ],
+        'expected': 7
+      },
+      {
+        'name': 'Empty',
+        'input': [
+          [],
+          1
+        ],
+        'expected': null
+      },
+      {
+        'name': 'Duplicates',
+        'input': [
+          [
+            2,
+            2,
+            9
+          ],
+          2
+        ],
+        'expected': 2
+      },
+      {
+        'name': 'First',
+        'input': [
+          [
+            1000,
+            -1000
+          ],
+          1
+        ],
+        'expected': -1000
+      },
+      {
+        'name': 'Last',
+        'input': [
+          [
+            10,
+            2
+          ],
+          2
+        ],
+        'expected': 10
+      },
+      {
+        'name': 'Too large',
+        'input': [
+          [
+            1
+          ],
+          2
+        ],
+        'expected': null
+      }
+    ]
+  },
+  {
+    'id': 'flatten-nested-numbers',
+    'title': 'Flatten nested number lists',
+    'category': 'Algorithm applications',
+    'prompt': 'Return all number values in left-to-right order in one new array, removing array nesting. Empty nested arrays contribute no values.',
+    'example': {
+      'input': 'flattenNumbers([4, [2, [], [5]]])',
+      'output': '[4, 2, 5]'
+    },
+    'note': 'At most 100 integers from -1000 to 1000. Preserve the input. Nested arrays are finite, acyclic, unshared, at most 10 levels deep, with at most 100 total array entries.',
+    'vocabulary': [
+      {
+        'term': 'Nested',
+        'meaning': 'contained inside another structure'
+      }
+    ],
+    'planPrompt': 'What is the output order across nested boundaries? What contribution does an empty list make?',
+    'starter': 'type NestedNumber = number | NestedNumber[]\n\nfunction flattenNumbers(items: NestedNumber[]): number[] {\n  // Write your solution here.\n  return []\n}\n',
+    'functionName': 'flattenNumbers',
+    'preserveInput': true,
+    'hints': [
+      'Trace the order of values without adding them together.',
+      'A list is a container rather than an output value.',
+      'Check whether the values before and after a nested list stay on the correct sides.'
+    ],
+    'checks': [
+      { name: 'Maximum entry count', input: [Array(100).fill(-1000)], expected: Array(100).fill(-1000) },
+      { name: 'Ten nested levels', input: [[[[[[[[[[[1000]]]]]]]]]]], expected: [1000] },
+      {
+        'name': 'Nested order',
+        'input': [
+          [
+            1,
+            [
+              3,
+              [
+                2
+              ]
+            ],
+            4
+          ]
+        ],
+        'expected': [
+          1,
+          3,
+          2,
+          4
+        ]
+      },
+      {
+        'name': 'Empty',
+        'input': [
+          []
+        ],
+        'expected': []
+      },
+      {
+        'name': 'Only empty nests',
+        'input': [
+          [
+            [],
+            [
+              []
+            ]
+          ]
+        ],
+        'expected': []
+      },
+      {
+        'name': 'Zero and duplicates',
+        'input': [
+          [
+            0,
+            [
+              -1,
+              0
+            ]
+          ]
+        ],
+        'expected': [
+          0,
+          -1,
+          0
+        ]
+      },
+      {
+        'name': 'Flat',
+        'input': [
+          [
+            1000,
+            -1000
+          ]
+        ],
+        'expected': [
+          1000,
+          -1000
+        ]
+      }
+    ]
+  },
+  {
+    'id': 'count-object-leaves',
+    'title': 'Count values in nested objects',
+    'category': 'Algorithm applications',
+    'prompt': 'Return the number of primitive leaf values in a nested object. A leaf is a number, string, boolean, or null. An empty object contributes zero. Count occurrences, regardless of their value.',
+    'example': {
+      'input': 'countLeaves({user:{name:"Ada",active:false},empty:{}})',
+      'output': '2'
+    },
+    'note': 'Input is a plain object whose values are leaves or further plain objects; arrays are not supplied. At most 100 properties total and 10 object levels. No cycles or shared objects. Keys and strings contain at most 20 ASCII characters; numbers are integers -1000 to 1000. Preserve input.',
+    'vocabulary': [
+      {
+        'term': 'Primitive leaf',
+        'meaning': 'a value that is not another object container'
+      }
+    ],
+    'planPrompt': 'Which supplied values count even when falsy? What does an empty nested object contribute?',
+    'starter': 'type NestedObject = { [key: string]: number | string | boolean | null | NestedObject }\n\nfunction countLeaves(input: NestedObject): number {\n  // Write your solution here.\n  return 0\n}\n',
+    'functionName': 'countLeaves',
+    'preserveInput': true,
+    'hints': [
+      'Distinguish a container from a value.',
+      'Null is a leaf under this contract.',
+      'Trace false, zero, and empty text separately from an empty object.'
+    ],
+    'checks': [
+      { name: 'Maximum properties', input: [Object.fromEntries(Array.from({ length: 100 }, (_, i) => [String(i), false]))], expected: 100 },
+      { name: 'Ten object levels', input: [{a:{a:{a:{a:{a:{a:{a:{a:{a:{a:null}}}}}}}}}}], expected: 1 },
+      {
+        'name': 'Mixed leaves',
+        'input': [
+          {
+            'a': 0,
+            'b': null,
+            'c': {
+              'd': '',
+              'e': true
+            }
+          }
+        ],
+        'expected': 4
+      },
+      {
+        'name': 'Empty',
+        'input': [
+          {}
+        ],
+        'expected': 0
+      },
+      {
+        'name': 'Nested empties',
+        'input': [
+          {
+            'a': {
+              'b': {}
+            }
+          }
+        ],
+        'expected': 0
+      },
+      {
+        'name': 'Repeated values',
+        'input': [
+          {
+            'a': 1,
+            'b': {
+              'c': 1
+            }
+          }
+        ],
+        'expected': 2
+      },
+      {
+        'name': 'Deep leaf',
+        'input': [
+          {
+            'a': {
+              'b': {
+                'c': -1000
+              }
+            }
+          }
+        ],
+        'expected': 1
+      }
+    ]
+  },
+  {
+    'id': 'tree-depth-sum',
+    'title': 'Total one level of a tree',
+    'category': 'Algorithm applications',
+    'prompt': 'Return the sum of values at exactly depth in a tree. The root is at depth zero. Return zero for a null root or a depth with no nodes.',
+    'example': {
+      'input': 'sumAtDepth({value:9,children:[{value:4,children:[]}]},1)',
+      'output': '4'
+    },
+    'note': 'Trees have at most 100 nodes and 10 levels, integer values from -1000 to 1000, no cycles or shared nodes. Preserve every node and child array. depth is an integer from 0 to 10.',
+    'vocabulary': [
+      {
+        'term': 'Level',
+        'meaning': 'all nodes at the same distance from the root'
+      }
+    ],
+    'planPrompt': 'Which nodes qualify at depth zero? How do absent branches affect the total?',
+    'starter': 'type TreeNode = { value: number; children: TreeNode[] }\n\nfunction sumAtDepth(root: TreeNode | null, depth: number): number {\n  // Write your solution here.\n  return 0\n}\n',
+    'functionName': 'sumAtDepth',
+    'preserveInput': true,
+    'hints': [
+      'Label the root and its children with their depths.',
+      'Include every qualifying sibling, not just one branch.',
+      'Compare a requested level beyond all leaves with a level whose values sum to zero.'
+    ],
+    'checks': [
+      { name: 'Maximum nodes', input: [{ value: 1000, children: Array.from({ length: 99 }, () => ({ value: -1000, children: [] })) }, 1], expected: -99000 },
+      {
+        'name': 'Sibling total',
+        'input': [
+          {
+            'value': 9,
+            'children': [
+              {
+                'value': 2,
+                'children': []
+              },
+              {
+                'value': -3,
+                'children': []
+              }
+            ]
+          },
+          1
+        ],
+        'expected': -1
+      },
+      {
+        'name': 'No tree',
+        'input': [
+          null,
+          0
+        ],
+        'expected': 0
+      },
+      {
+        'name': 'Root level',
+        'input': [
+          {
+            'value': -5,
+            'children': [
+              {
+                'value': 8,
+                'children': []
+              }
+            ]
+          },
+          0
+        ],
+        'expected': -5
+      },
+      {
+        'name': 'Beyond leaves',
+        'input': [
+          {
+            'value': 3,
+            'children': []
+          },
+          2
+        ],
+        'expected': 0
+      },
+      {
+        'name': 'Only requested level',
+        'input': [
+          {
+            'value': 1,
+            'children': [
+              {
+                'value': 2,
+                'children': [
+                  {
+                    'value': 7,
+                    'children': []
+                  }
+                ]
+              },
+              {
+                'value': 4,
+                'children': []
+              }
+            ]
+          },
+          2
+        ],
+        'expected': 7
+      },
+      {
+        'name': 'Zero value',
+        'input': [
+          {
+            'value': 0,
+            'children': []
+          },
+          0
+        ],
+        'expected': 0
+      }
+    ]
+  },
+  {
+    'id': 'tree-value-path',
+    'title': 'Find a route to a tree value',
+    'category': 'Algorithm applications',
+    'prompt': 'Return an array of node values on the root-to-target route, including both endpoints. Return null if target is absent or root is null. Values are unique, so at most one route qualifies.',
+    'example': {
+      'input': 'pathToValue({value:6,children:[{value:2,children:[]}]},2)',
+      'output': '[6, 2]'
+    },
+    'note': 'Trees have at most 100 nodes and 10 levels, integer values from -1000 to 1000, no cycles or shared nodes. Preserve every node and child array. Values are unique; target is an integer -1000 to 1000.',
+    'vocabulary': [
+      {
+        'term': 'Route',
+        'meaning': 'the sequence of connected nodes leading to a destination'
+      }
+    ],
+    'planPrompt': 'What should the route contain when root is target? How will absent targets differ from an empty route?',
+    'starter': 'type TreeNode = { value: number; children: TreeNode[] }\n\nfunction pathToValue(root: TreeNode | null, target: number): number[] | null {\n  // Write your solution here.\n  return null\n}\n',
+    'functionName': 'pathToValue',
+    'preserveInput': true,
+    'hints': [
+      'Draw the ancestors of a matching node.',
+      'An explored branch that has no match does not belong in the answer.',
+      'Check a match in a later sibling after exploring a deeper dead end.'
+    ],
+    'checks': [
+      { name: 'Maximum nodes and final child', input: [{ value: -1000, children: Array.from({ length: 99 }, (_, i) => ({ value: i, children: [] })) }, 98], expected: [-1000, 98] },
+      {
+        'name': 'Nested route',
+        'input': [
+          {
+            'value': 1,
+            'children': [
+              {
+                'value': 2,
+                'children': []
+              },
+              {
+                'value': 3,
+                'children': [
+                  {
+                    'value': 4,
+                    'children': []
+                  }
+                ]
+              }
+            ]
+          },
+          4
+        ],
+        'expected': [
+          1,
+          3,
+          4
+        ]
+      },
+      {
+        'name': 'Null',
+        'input': [
+          null,
+          0
+        ],
+        'expected': null
+      },
+      {
+        'name': 'Root target',
+        'input': [
+          {
+            'value': 0,
+            'children': [
+              {
+                'value': 2,
+                'children': []
+              }
+            ]
+          },
+          0
+        ],
+        'expected': [
+          0
+        ]
+      },
+      {
+        'name': 'Missing',
+        'input': [
+          {
+            'value': 1,
+            'children': [
+              {
+                'value': 2,
+                'children': []
+              }
+            ]
+          },
+          9
+        ],
+        'expected': null
+      },
+      {
+        'name': 'Later sibling after dead end',
+        'input': [
+          {
+            'value': -1,
+            'children': [
+              {
+                'value': 2,
+                'children': [
+                  {
+                    'value': 3,
+                    'children': []
+                  }
+                ]
+              },
+              {
+                'value': 4,
+                'children': []
+              }
+            ]
+          },
+          4
+        ],
+        'expected': [
+          -1,
+          4
+        ]
+      }
+    ]
+  },
+  {
+    'id': 'graph-shortest-hops',
+    'title': 'Measure the shortest route',
+    'category': 'Algorithm applications',
+    'prompt': 'Return the smallest number of directed edges needed to reach target from start. Return null if either endpoint is outside graph or no route exists. A valid node reaches itself in zero hops.',
+    'example': {
+      'input': 'shortestHops([[1],[2],[]],0,2)',
+      'output': '2'
+    },
+    'note': 'graph is an adjacency list of 0 to 100 nodes identified by array index; each list has at most 100 valid neighbor indices. Duplicate edges, cycles, and self-links are allowed. Preserve graph and its nested arrays. start and target are integers from -1 to 100.',
+    'vocabulary': [
+      {
+        'term': 'Hop',
+        'meaning': 'one edge followed from a node to a neighbor'
+      }
+    ],
+    'planPrompt': 'What is being minimized? Which endpoint rules apply before considering a zero-hop route?',
+    'starter': 'function shortestHops(graph: number[][], start: number, target: number): number | null {\n  // Write your solution here.\n  return null\n}\n',
+    'functionName': 'shortestHops',
+    'preserveInput': true,
+    'hints': [
+      'Compare two routes with different numbers of edges.',
+      'A cycle must not prevent the search from finishing.',
+      'Check an invalid start equal to target and a valid start equal to target.'
+    ],
+    'checks': [
+      { name: 'Maximum nodes', input: [Array.from({ length: 100 }, (_, i) => i < 99 ? [i + 1] : []), 0, 99], expected: 99 },
+      { name: 'Maximum repeated neighbors', input: [[Array(100).fill(1), []], 0, 1], expected: 1 },
+      {
+        'name': 'Choose shortest',
+        'input': [
+          [
+            [
+              1,
+              3
+            ],
+            [
+              2
+            ],
+            [
+              3
+            ],
+            []
+          ],
+          0,
+          3
+        ],
+        'expected': 1
+      },
+      {
+        'name': 'Empty invalid equality',
+        'input': [
+          [],
+          0,
+          0
+        ],
+        'expected': null
+      },
+      {
+        'name': 'Valid equality',
+        'input': [
+          [
+            []
+          ],
+          0,
+          0
+        ],
+        'expected': 0
+      },
+      {
+        'name': 'Directed unreachable',
+        'input': [
+          [
+            [
+              1
+            ],
+            []
+          ],
+          1,
+          0
+        ],
+        'expected': null
+      },
+      {
+        'name': 'Cycle and repeated edges',
+        'input': [
+          [
+            [
+              0,
+              1,
+              1
+            ],
+            [
+              0,
+              2
+            ],
+            []
+          ],
+          0,
+          2
+        ],
+        'expected': 2
+      },
+      {
+        'name': 'Invalid endpoint',
+        'input': [
+          [
+            []
+          ],
+          -1,
+          0
+        ],
+        'expected': null
+      },
+      {
+        'name': 'Upper invalid',
+        'input': [
+          [
+            []
+          ],
+          0,
+          1
+        ],
+        'expected': null
+      }
+    ]
+  },
+  {
+    'id': 'graph-connected-groups',
+    'title': 'Count separate connected groups',
+    'category': 'Algorithm applications',
+    'prompt': 'Return the number of connected groups in an undirected graph. Nodes belong to one group when connections link them directly or through other nodes. Count isolated nodes as separate groups; an empty graph has zero groups.',
+    'example': {
+      'input': 'connectedGroups([[1],[0],[]])',
+      'output': '2'
+    },
+    'note': 'graph is an adjacency list of 0 to 100 nodes identified by array index; each list has at most 100 valid neighbor indices. Duplicate edges, cycles, and self-links are allowed. Preserve graph and its nested arrays. Every edge is reciprocal: if j appears in graph[i], i appears in graph[j].',
+    'vocabulary': [
+      {
+        'term': 'Connected group',
+        'meaning': 'nodes linked through any number of undirected edges'
+      }
+    ],
+    'planPrompt': 'How are isolated nodes counted? When do two apparently separate routes belong to the same group?',
+    'starter': 'function connectedGroups(graph: number[][]): number {\n  // Write your solution here.\n  return 0\n}\n',
+    'functionName': 'connectedGroups',
+    'preserveInput': true,
+    'hints': [
+      'Draw all nodes, including those without neighbors.',
+      'Different starting nodes may lead to the same group.',
+      'Compare a cycle with three isolated nodes; both have three nodes but different group counts.'
+    ],
+    'checks': [
+      { name: 'Maximum isolated nodes', input: [Array.from({ length: 100 }, () => [])], expected: 100 },
+      { name: 'Maximum repeated self edges', input: [[Array(100).fill(0)]], expected: 1 },
+      {
+        'name': 'Two pairs',
+        'input': [
+          [
+            [
+              1
+            ],
+            [
+              0
+            ],
+            [
+              3
+            ],
+            [
+              2
+            ]
+          ]
+        ],
+        'expected': 2
+      },
+      {
+        'name': 'Empty',
+        'input': [
+          []
+        ],
+        'expected': 0
+      },
+      {
+        'name': 'Isolated nodes',
+        'input': [
+          [
+            [],
+            [],
+            []
+          ]
+        ],
+        'expected': 3
+      },
+      {
+        'name': 'Cycle',
+        'input': [
+          [
+            [
+              1,
+              2
+            ],
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              1
+            ]
+          ]
+        ],
+        'expected': 1
+      },
+      {
+        'name': 'Self and duplicate edges',
+        'input': [
+          [
+            [
+              0,
+              1,
+              1
+            ],
+            [
+              0,
+              0
+            ],
+            [
+              2
+            ]
+          ]
+        ],
+        'expected': 2
+      }
+    ]
+  },
+  {
+    'id': 'simplify-file-path',
+    'title': 'Simplify an absolute file path',
+    'category': 'Algorithm applications',
+    'prompt': 'Return the canonical absolute path. Slash separates segments. Ignore empty segments and exact . segments. An exact .. removes the most recent remaining segment, if any; going above root stays at root. All other segments are literal names. Return / when none remain.',
+    'example': {
+      'input': 'simplifyPath("/home/./notes/../work/")',
+      'output': '"/home/work"'
+    },
+    'note': 'Input starts with / and has 1 to 200 ASCII characters. Segment names are case-sensitive and are not trimmed; ... is a literal name. Repeated and trailing slashes are allowed. This is text processing, not filesystem access or symlink resolution.',
+    'vocabulary': [
+      {
+        'term': 'Canonical path',
+        'meaning': 'one normalized text representation of a path'
+      },
+      {
+        'term': 'Parent segment',
+        'meaning': 'the exact .. segment that removes one preceding name'
+      }
+    ],
+    'planPrompt': 'Which segments are special? What happens when a parent segment appears with no remaining name?',
+    'starter': 'function simplifyPath(path: string): string {\n  // Write your solution here.\n  return \'/\'\n}\n',
+    'functionName': 'simplifyPath',
+    'preserveInput': true,
+    'hints': [
+      'Distinguish exact special segments from names containing dots.',
+      'Trace several parent segments at the root.',
+      'Only the latest remaining name is affected by the next parent segment.'
+    ],
+    'checks': [
+      { name: 'Maximum path length', input: ['/' + 'a'.repeat(199)], expected: '/' + 'a'.repeat(199) },
+      {
+        'name': 'Parent and separators',
+        'input': [
+          '/a//b/../c/'
+        ],
+        'expected': '/a/c'
+      },
+      {
+        'name': 'Root',
+        'input': [
+          '/'
+        ],
+        'expected': '/'
+      },
+      {
+        'name': 'Above root',
+        'input': [
+          '/../../x/..'
+        ],
+        'expected': '/'
+      },
+      {
+        'name': 'Dot names',
+        'input': [
+          '/.../.hidden/./'
+        ],
+        'expected': '/.../.hidden'
+      },
+      {
+        'name': 'Case and spaces',
+        'input': [
+          '/A/a/../ b /'
+        ],
+        'expected': '/A/ b '
+      },
+      {
+        'name': 'Cascade',
+        'input': [
+          '/a/b/../../c'
+        ],
+        'expected': '/c'
+      }
+    ]
+  }
+]

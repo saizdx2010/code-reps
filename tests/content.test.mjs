@@ -137,3 +137,20 @@ test('control-flow journey reps reject boundary and padding mistakes', () => {
   ]
   for (const [index, [id, code]] of mutants.entries()) assert.ok(runRep(code, id).some(result => !result.passed), `mutant ${index} of ${id} escaped the checks`)
 })
+
+test('DSA application checks reject changed order, deduplication, leaf rules, and route semantics', () => {
+  const incorrect = {
+    'sort-score-records': 'function orderRecords(records: {id:string;score:number;name:string}[]) { return [...records].sort((a,b)=>a.name.localeCompare(b.name)||a.score-b.score) }',
+    'kth-smallest-copy': 'function kthSmallest(numbers:number[],k:number) { return [...new Set(numbers)].sort((a,b)=>a-b)[k-1] ?? null }',
+    'flatten-nested-numbers': 'function flattenNumbers(items:unknown[]) { return items.flat(10).filter(Boolean) }',
+    'count-object-leaves': 'function countLeaves(input:Record<string,unknown>):number { return Object.values(input).reduce<number>((sum,value)=>sum+(value ? typeof value === "object" ? countLeaves(value as Record<string,unknown>) : 1 : 0),0) }',
+    'tree-depth-sum': 'function sumAtDepth(root:{value:number;children:any[]}|null,depth:number):number { if(!root)return 0; if(!depth)return root.value; return Math.max(0,...root.children.map(child=>sumAtDepth(child,depth-1))) }',
+    'tree-value-path': 'function pathToValue(root:{value:number;children:any[]}|null,target:number):number[]|null { if(!root)return null; if(root.value===target)return [target]; for(const child of root.children){const path=pathToValue(child,target);if(path)return path}return null }',
+    'graph-shortest-hops': 'function shortestHops(graph:number[][],start:number,target:number) { if(start===target)return 0; return null }',
+    'graph-connected-groups': 'function connectedGroups(graph:number[][]) { return graph.filter(neighbors=>neighbors.length===0).length }',
+    'simplify-file-path': 'function simplifyPath(path:string) { return "/"+path.split("/").filter(part=>part && !part.startsWith(".")).join("/") }',
+  }
+  for (const [id, code] of Object.entries(incorrect)) {
+    assert.ok(runRep(code, id).some(result => !result.passed), `${id}: incorrect contract passed`)
+  }
+})

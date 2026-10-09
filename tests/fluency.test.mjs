@@ -67,3 +67,33 @@ test('retired lesson answers remain readable without completing replacement ques
     'frontend:unknown': { choice: 0, correct: true, answeredAt: day(1) },
   } }), /answer/i)
 })
+
+test('retired adjacent-ID recall stays playable but cannot advance scheduled stack evidence', () => {
+  assert.ok(reps.some(rep => rep.id === 'cancel-adjacent-ids'))
+  const base = [record('valid-parentheses', 1), record('balanced-brackets', 2), record('simplify-file-path', 5), record('remaining-actions', 12)]
+  const review = recurringReviews([...base, record('cancel-adjacent-ids', 26)], Date.parse(day(26))).find(item => item.skillId === 'stacks')
+  assert.equal(review.repId, 'simplify-file-path')
+  assert.equal(review.successes, 1)
+  assert.equal(review.due, true)
+  const next = recurringReviews([...base, record('simplify-file-path', 26)], Date.parse(day(26))).find(item => item.skillId === 'stacks')
+  assert.equal(next.successes, 2)
+  assert.equal(next.repId, 'remove-adjacent-pairs')
+})
+
+test('new DSA journeys schedule recurring recall without accepting early or hinted success', () => {
+  const chains = [
+    ['sorting', 'algo-insertion-sort', 'sort-score-records', 'kth-smallest-copy'],
+    ['recursion', 'algo-recursive-sum', 'flatten-nested-numbers', 'count-object-leaves'],
+    ['trees', 'algo-tree-depth', 'tree-depth-sum', 'tree-value-path'],
+    ['graphs', 'algo-graph-reachable', 'graph-shortest-hops', 'graph-connected-groups'],
+  ]
+  for (const [skill, guided, independent, recall] of chains) {
+    const base = [record(guided, 1), record(independent, 2), record(recall, 5)]
+    const review = history => recurringReviews(history, Date.parse(day(12))).find(item => item.skillId === skill)
+    assert.equal(review(base).repId, recall)
+    assert.equal(review([...base, record(recall, 11)]).successes, 0)
+    assert.equal(review([...base, record(recall, 12, 1)]).successes, 0)
+    assert.equal(review([...base, record(recall, 12)]).repId, independent)
+    assert.equal(review([...base, record(recall, 12)]).interval, 14)
+  }
+})

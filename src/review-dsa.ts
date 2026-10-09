@@ -506,7 +506,70 @@ export const dsaDepth: Record<string, RepDepth> = {
         { 'line': 4, 'vars': { 'left': 2, 'right': 3, 'middle': 2, 'result': 2 }, 'structure': { 'kind': 'array', 'values': [-3, 0, 4, 9], 'pointers': { 'left': 2, 'right': 3, 'middle': 2 }, 'dimmed': [0, 1] }, 'note': 'The value 4 matches the target, so the function returns index 2.' }
       ]
     }
-  }
+  },
+  'sort-score-records': {
+    'reasoning': 'Comparing score first and name only on a score tie implements precedence. Returning equality for both matching keys preserves order with a stable sort.',
+    'trace': 'Records z and a with score 0 and blank names remain z then a despite their IDs.',
+    'alternative': 'Insertion into a copied list can preserve ties explicitly but takes quadratic time; stable built-in sorting is shorter. Sorting cost depends on the implementation, plus name comparisons.',
+    'counterexample': 'Sorting scores as text puts 10 before 2. Using IDs as a third key reverses z and a on a complete tie.',
+    'transfer': 'Self-review: change score to descending while retaining ascending names. Which comparison changes?'
+  },
+  'kth-smallest-copy': {
+    'reasoning': 'Sorting a copy puts every occurrence at its numeric rank; position k minus one is therefore the requested occurrence. The copy preserves caller order.',
+    'trace': '[2,2,9] has ranks 1=2, 2=2, 3=9; rank 4 returns null.',
+    'alternative': 'Selection can avoid fully sorting but is more complex; sorting a copy uses O(n) storage with sorting time depending on the implementation.',
+    'counterexample': 'Deduplicating [2,2,9] makes rank 2 equal 9 instead of 2.',
+    'transfer': 'Self-review: request the kth distinct value. Define absent-rank behavior again.'
+  },
+  'flatten-nested-numbers': {
+    'reasoning': 'Visiting children in their stored order and appending only numbers preserves the full left-to-right sequence. Empty arrays append nothing. Work is O(e) for all entries, with output and nesting storage.',
+    'trace': '[0,[-1,0]] appends 0, then -1, then 0; repeated values survive.',
+    'alternative': 'An explicit work stack avoids recursive calls but must reverse pushes to preserve order. Both inspect every entry.',
+    'counterexample': 'Pushing children in forward order then popping yields [2,1] for [1,2].',
+    'transfer': 'Self-review: return each value with its nesting level. Decide the outer level.'
+  },
+  'count-object-leaves': {
+    'reasoning': 'Each property is either one primitive occurrence or a container whose contributions are combined. Null must be classified before other objects. Every property is visited once, O(p) time.',
+    'trace': '{a:0,b:null,c:{}} contributes 1+1+0=2.',
+    'alternative': 'An explicit stack avoids recursive call depth while using pending-object storage; recursion mirrors the object shape.',
+    'counterexample': 'typeof null is object; treating null as a container throws instead of counting it.',
+    'transfer': 'Self-review: also allow arrays. Decide whether array positions and empty arrays contribute.'
+  },
+  'tree-depth-sum': {
+    'reasoning': 'A node contributes only at the requested depth. Combining all children at one less remaining depth includes each qualifying node once, O(n) time at worst with O(h) recursive depth.',
+    'trace': 'Root 9 with children 2 and -3 gives -1 at depth 1; depth 2 has no nodes and gives 0.',
+    'alternative': 'Level-order traversal stores a whole frontier but makes depth boundaries explicit; recursive traversal stores only a call path.',
+    'counterexample': 'Returning the largest child value for children 2 and -3 gives 2 instead of -1.',
+    'transfer': 'Self-review: total every level into an array. Define the null-tree result.'
+  },
+  'tree-value-path': {
+    'reasoning': 'A successful child route can be prefixed with the current value; failed children contribute no route. Uniqueness removes tie-breaking. Each node is inspected at most once; path copying can add O(nh) work.',
+    'trace': 'Searching 4 under root -1 explores 2→3 unsuccessfully, then returns [-1,4]; 2 and 3 never enter the successful route.',
+    'alternative': 'An iterative frontier with copied paths avoids recursive calls but stores multiple paths. Parent links reduce copying at the cost of bookkeeping.',
+    'counterexample': 'Keeping a global route without removing failed nodes yields [-1,2,3,4] instead of [-1,4].',
+    'transfer': 'Self-review: allow duplicate values and return the first route in child order. Define first precisely.'
+  },
+  'graph-shortest-hops': {
+    'reasoning': 'Breadth-first discovery processes nondecreasing hop counts, so a node’s first discovered distance is minimal. Marking on discovery avoids cycles. Time O(V+E), storage O(V).',
+    'trace': 'From 0 in [[1,3],[2],[3],[]], both 1 and 3 have distance 1; the longer 0→1→2→3 route cannot improve 3.',
+    'alternative': 'Repeated edge relaxation can also find distances but revisits edges; plain depth-first first-match search does not guarantee shortest routes.',
+    'counterexample': 'First-match depth-first traversal may report 3 for the direct-edge example, whose answer is 1.',
+    'transfer': 'Self-review: edges now have positive costs. Decide whether discovery order still guarantees the cheapest route.'
+  },
+  'graph-connected-groups': {
+    'reasoning': 'Starting a traversal only from an unseen node counts one new component. Traversal marks exactly its connected group, preventing duplicate counts. Time O(V+E), storage O(V).',
+    'trace': '[[0,1,1],[0,0],[2]] visits 0 and 1 together despite repeated edges, then counts isolated self-linked 2: total 2.',
+    'alternative': 'Union-find combines endpoints and counts distinct representatives; traversal is easier to trace for this small adjacency contract.',
+    'counterexample': 'Counting neighborless nodes alone misses a separate pair: [[1],[0],[3],[2]] has 2 groups despite no empty lists.',
+    'transfer': 'Self-review: allow directed edges. Define weak versus strong connectivity before changing checks.'
+  },
+  'simplify-file-path': {
+    'reasoning': 'The saved names represent the normalized prefix. A name extends it; a parent removes its latest name; a current-directory or empty segment leaves it unchanged. O(c) time and storage for c characters.',
+    'trace': '/a/b/../../c saves a,b, removes b, removes a, then saves c, returning /c.',
+    'alternative': 'Repeated string replacement is harder to bound and can confuse literal dot names; a segment stack states the parent rule directly.',
+    'counterexample': 'Treating every dot-prefixed name as special loses .hidden and ... from /.../.hidden/.',
+    'transfer': 'Self-review: support relative paths. Decide whether unmatched parent segments must remain.'
+  },
 }
 
 export const dsaGuides = {
@@ -590,5 +653,104 @@ export const dsaGuides = {
     'plan': ['How does every iteration shrink the interval? What represents an exhausted interval?', 'Name an empty or missing-value case before coding.'],
     'explanation': ['Trace a boundary case and explain why the input stays unchanged.', 'Review your chosen operations and time/space costs yourself; output checks do not prove an implementation approach.'],
     'example': 'Sorted order proves that a target greater than the middle cannot occur to its left, and a smaller target cannot occur to its right. Excluding the middle guarantees progress. [1, 3, 5], target 4: middle index 1 has 3, so left becomes 2; index 2 has 5, so right becomes 1. The interval is empty: -1.'
-  }
+  },
+  'sort-score-records': {
+    'plan': [
+      'Which rule wins when scores differ? What should happen when both keys match?',
+      'Name a boundary before coding.'
+    ],
+    'explanation': [
+      'Explain why your result matches the contract and preserves input.',
+      'State time and storage costs; passing checks does not prove the implementation approach.'
+    ],
+    'example': 'Comparing score first and name only on a score tie implements precedence. Returning equality for both matching keys preserves order with a stable sort. Records z and a with score 0 and blank names remain z then a despite their IDs.'
+  },
+  'kth-smallest-copy': {
+    'plan': [
+      'How do duplicates affect rank? What should happen when the requested position is absent?',
+      'Name a boundary before coding.'
+    ],
+    'explanation': [
+      'Explain why your result matches the contract and preserves input.',
+      'State time and storage costs; passing checks does not prove the implementation approach.'
+    ],
+    'example': 'Sorting a copy puts every occurrence at its numeric rank; position k minus one is therefore the requested occurrence. The copy preserves caller order. [2,2,9] has ranks 1=2, 2=2, 3=9; rank 4 returns null.'
+  },
+  'flatten-nested-numbers': {
+    'plan': [
+      'What is the output order across nested boundaries? What contribution does an empty list make?',
+      'Name a boundary before coding.'
+    ],
+    'explanation': [
+      'Explain why your result matches the contract and preserves input.',
+      'State time and storage costs; passing checks does not prove the implementation approach.'
+    ],
+    'example': 'Visiting children in their stored order and appending only numbers preserves the full left-to-right sequence. Empty arrays append nothing. Work is O(e) for all entries, with output and nesting storage. [0,[-1,0]] appends 0, then -1, then 0; repeated values survive.'
+  },
+  'count-object-leaves': {
+    'plan': [
+      'Which supplied values count even when falsy? What does an empty nested object contribute?',
+      'Name a boundary before coding.'
+    ],
+    'explanation': [
+      'Explain why your result matches the contract and preserves input.',
+      'State time and storage costs; passing checks does not prove the implementation approach.'
+    ],
+    'example': 'Each property is either one primitive occurrence or a container whose contributions are combined. Null must be classified before other objects. Every property is visited once, O(p) time. {a:0,b:null,c:{}} contributes 1+1+0=2.'
+  },
+  'tree-depth-sum': {
+    'plan': [
+      'Which nodes qualify at depth zero? How do absent branches affect the total?',
+      'Name a boundary before coding.'
+    ],
+    'explanation': [
+      'Explain why your result matches the contract and preserves input.',
+      'State time and storage costs; passing checks does not prove the implementation approach.'
+    ],
+    'example': 'A node contributes only at the requested depth. Combining all children at one less remaining depth includes each qualifying node once, O(n) time at worst with O(h) recursive depth. Root 9 with children 2 and -3 gives -1 at depth 1; depth 2 has no nodes and gives 0.'
+  },
+  'tree-value-path': {
+    'plan': [
+      'What should the route contain when root is target? How will absent targets differ from an empty route?',
+      'Name a boundary before coding.'
+    ],
+    'explanation': [
+      'Explain why your result matches the contract and preserves input.',
+      'State time and storage costs; passing checks does not prove the implementation approach.'
+    ],
+    'example': 'A successful child route can be prefixed with the current value; failed children contribute no route. Uniqueness removes tie-breaking. Each node is inspected at most once; path copying can add O(nh) work. Searching 4 under root -1 explores 2→3 unsuccessfully, then returns [-1,4]; 2 and 3 never enter the successful route.'
+  },
+  'graph-shortest-hops': {
+    'plan': [
+      'What is being minimized? Which endpoint rules apply before considering a zero-hop route?',
+      'Name a boundary before coding.'
+    ],
+    'explanation': [
+      'Explain why your result matches the contract and preserves input.',
+      'State time and storage costs; passing checks does not prove the implementation approach.'
+    ],
+    'example': 'Breadth-first discovery processes nondecreasing hop counts, so a node’s first discovered distance is minimal. Marking on discovery avoids cycles. Time O(V+E), storage O(V). From 0 in [[1,3],[2],[3],[]], both 1 and 3 have distance 1; the longer 0→1→2→3 route cannot improve 3.'
+  },
+  'graph-connected-groups': {
+    'plan': [
+      'How are isolated nodes counted? When do two apparently separate routes belong to the same group?',
+      'Name a boundary before coding.'
+    ],
+    'explanation': [
+      'Explain why your result matches the contract and preserves input.',
+      'State time and storage costs; passing checks does not prove the implementation approach.'
+    ],
+    'example': 'Starting a traversal only from an unseen node counts one new component. Traversal marks exactly its connected group, preventing duplicate counts. Time O(V+E), storage O(V). [[0,1,1],[0,0],[2]] visits 0 and 1 together despite repeated edges, then counts isolated self-linked 2: total 2.'
+  },
+  'simplify-file-path': {
+    'plan': [
+      'Which segments are special? What happens when a parent segment appears with no remaining name?',
+      'Name a boundary before coding.'
+    ],
+    'explanation': [
+      'Explain why your result matches the contract and preserves input.',
+      'State time and storage costs; passing checks does not prove the implementation approach.'
+    ],
+    'example': 'The saved names represent the normalized prefix. A name extends it; a parent removes its latest name; a current-directory or empty segment leaves it unchanged. O(c) time and storage for c characters. /a/b/../../c saves a,b, removes b, removes a, then saves c, returning /c.'
+  },
 }
