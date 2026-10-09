@@ -1,5 +1,5 @@
 // Heavy review material (self-review guides, rep depth, lesson depth) is loaded when a rep or lesson opens.
-// Add new entries in src/review/*.ts; keep the startup modules to ids, titles, and checked content.
+// Add new entries in src/review-*.ts; keep the startup modules to ids, titles, and checked content.
 export type ReviewContent = {
   repDepth: typeof import('./rep-depth.ts').repDepth
   lessonDepth: typeof import('./lesson-depth.ts').lessonDepth
