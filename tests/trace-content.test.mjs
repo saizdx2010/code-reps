@@ -7,9 +7,9 @@ import { runRep } from '../src/runner.ts'
 
 const traced = Object.entries(repDepth).filter(([, depth]) => depth.traceSteps)
 
-test('traces cover collection operations, stacks, sets, and the authored algorithm techniques', () => {
+test('traces cover collection operations, stacks, sets, recursion, trees, and event-by-event state', () => {
   const ids = traced.map(([id]) => id)
-  assert.deepEqual(ids.sort(), ['algo-binary-search', 'algo-graph-reachable', 'algo-insertion-sort', 'algo-merge-sorted', 'algo-recursive-sum', 'algo-sorted-pair', 'algo-tree-depth', 'algo-window-sum', 'balanced-brackets', 'ds-stack-operations', 'first-repeated-number', 'remaining-actions', 'remove-adjacent-pairs'])
+  assert.deepEqual(ids.sort(), ['algo-binary-search', 'algo-graph-reachable', 'algo-insertion-sort', 'algo-merge-sorted', 'algo-recursive-sum', 'algo-sorted-pair', 'algo-tree-depth', 'algo-window-sum', 'balanced-brackets', 'debounce-schedule', 'ds-stack-operations', 'first-repeated-number', 'pubsub-trace', 'remaining-actions', 'remove-adjacent-pairs', 'search-request-state'])
 })
 
 // Parses "name = value, ..." by declaring the input as constants, then reads each binding.
@@ -37,6 +37,18 @@ for (const [id, depth] of traced) {
           assert.ok(Number.isInteger(index) && index >= 0 && index < size, `dimmed index ${index} is out of bounds`)
         }
       }
+      if (structure?.kind === 'tree') {
+        const ids = []
+        const walk = node => { ids.push(node.id); node.children?.forEach(walk) }
+        walk(structure.root)
+        assert.equal(new Set(ids).size, ids.length, 'tree node ids must be unique')
+        for (const ref of [structure.current, ...(structure.visited ?? [])].filter(Boolean)) assert.ok(ids.includes(ref), `unknown tree node ${ref}`)
+      }
+      if (structure?.kind === 'calls') {
+        assert.ok(structure.frames.length > 0)
+        assert.ok(structure.frames.slice(0, -1).every(frame => frame.returns === undefined), 'only the top frame may return')
+        if (structure.event === 'return') assert.notEqual(structure.frames.at(-1).returns, undefined)
+      }
     }
     assert.match(code[steps.at(-1).line], /\breturn\b/, 'the final step should be the return line')
   })
@@ -50,7 +62,20 @@ for (const [id, depth] of traced) {
     const expected = solve(...structuredClone(args))
     // Snapshot variables render scalar labels, including array outputs as JSON text.
     const displayed = depth.traceSteps.steps.at(-1).vars.result
-    const result = Array.isArray(expected) ? JSON.parse(displayed) : displayed
+    const result = typeof expected === 'object' && expected !== null ? JSON.parse(displayed) : displayed
     assert.deepEqual(result, expected)
   })
 }
+
+test('tree traces draw the tree of the traced input and call stacks end with the outermost return', () => {
+  const strip = node => ({ value: node.value, children: node.children.map(strip) })
+  const treeSteps = traced.flatMap(([, depth]) => depth.traceSteps.steps.filter(step => step.structure?.kind === 'tree'))
+  const input = traceArguments(repDepth['algo-tree-depth'].traceSteps.input)[0]
+  assert.ok(treeSteps.length > 0)
+  const shape = node => ({ value: node.value, children: (node.children ?? []).map(shape) })
+  for (const step of treeSteps) assert.deepEqual(shape(step.structure.root), strip(input))
+  const calls = repDepth['algo-recursive-sum'].traceSteps.steps.map(step => step.structure)
+  assert.equal(calls.at(-1).frames.length, 1)
+  assert.equal(calls.at(-1).event, 'return')
+  assert.ok(Math.max(...calls.map(structure => structure.frames.length)) >= 3, 'recursion should show nested frames')
+})

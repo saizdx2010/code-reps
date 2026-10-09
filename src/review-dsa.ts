@@ -152,67 +152,7 @@ export const dsaDepth: Record<string, RepDepth> = {
     'alternative': 'An explicit stack avoids recursive calls but requires managing pending items. Both visit O(e) entries; recursion uses O(d) call depth, while a stack can hold O(e) pending entries.',
     'counterexample': 'Adding only top-level numbers returns 5 instead of 4 for the trace. Returning on the first nested list also skips later siblings.',
     'transfer': 'Self-review: count numbers rather than sum them. What should zero and an empty nested array contribute under the new contract?',
-    'traceSteps': {
-      'code': [
-        'type NestedNumber = number | NestedNumber[]; function recursiveSum(items: NestedNumber[]): number {',
-        '  let total = 0',
-        '  for (const item of items) {',
-        '    if (Array.isArray(item)) total += recursiveSum(item)',
-        '    else total += item',
-        '  }',
-        '  return total',
-        '}'
-      ],
-      'input': 'items = [1, [2, [], [-3]], 4]',
-      'steps': [
-        {
-          'line': 1,
-          'vars': {
-            'total': 0
-          },
-          'note': 'Start the outer call with an empty total.'
-        },
-        {
-          'line': 4,
-          'vars': {
-            'total': 1
-          },
-          'note': 'The outer number 1 contributes directly.'
-        },
-        {
-          'line': 6,
-          'vars': {
-            'total': 0,
-            'call': '[]'
-          },
-          'note': 'An empty nested list has no iterations and returns 0.'
-        },
-        {
-          'line': 6,
-          'vars': {
-            'total': -3,
-            'call': '[-3]'
-          },
-          'note': 'The deepest number contributes -3.'
-        },
-        {
-          'line': 3,
-          'vars': {
-            'total': 0,
-            'nestedSum': -1
-          },
-          'note': 'The middle call returns -1; the outer total becomes 1 + -1 = 0.'
-        },
-        {
-          'line': 6,
-          'vars': {
-            'result': 4,
-            'total': 4
-          },
-          'note': 'Add the final outer 4 and return 4.'
-        }
-      ]
-    }
+    'traceSteps': {"code": ["type NestedNumber = number | NestedNumber[]; function recursiveSum(items: NestedNumber[]): number {", "  let total = 0", "  for (const item of items) {", "    if (Array.isArray(item)) total += recursiveSum(item)", "    else total += item", "  }", "  return total", "}"], "input": "items = [1, [2, [], [-3]], 4]", "steps": [{"line": 1, "vars": {"total": 0}, "structure": {"kind": "calls", "frames": [{"call": "recursiveSum([1, [2, [], [-3]], 4])", "locals": "total = 0"}], "event": "call"}, "note": "The first call starts on the whole list with an empty total."}, {"line": 4, "vars": {"total": 1}, "structure": {"kind": "calls", "frames": [{"call": "recursiveSum([1, [2, [], [-3]], 4])", "locals": "total = 1"}]}, "note": "The number 1 is not a list, so it is added directly. No new frame is pushed."}, {"line": 3, "vars": {"total": 0}, "structure": {"kind": "calls", "frames": [{"call": "recursiveSum([1, [2, [], [-3]], 4])", "locals": "total = 1"}, {"call": "recursiveSum([2, [], [-3]])", "locals": "total = 0"}], "event": "call"}, "note": "The nested list [2, [], [-3]] is a smaller version of the task, so a new frame is pushed on top."}, {"line": 3, "vars": {"total": 0}, "structure": {"kind": "calls", "frames": [{"call": "recursiveSum([1, [2, [], [-3]], 4])", "locals": "total = 1"}, {"call": "recursiveSum([2, [], [-3]])", "locals": "total = 2"}, {"call": "recursiveSum([])", "locals": "total = 0"}], "event": "call"}, "note": "The middle call has added 2, then pushes a frame for the empty list."}, {"line": 6, "vars": {"total": 0}, "structure": {"kind": "calls", "frames": [{"call": "recursiveSum([1, [2, [], [-3]], 4])", "locals": "total = 1"}, {"call": "recursiveSum([2, [], [-3]])", "locals": "total = 2"}, {"call": "recursiveSum([])", "locals": "total = 0", "returns": 0}], "event": "return"}, "note": "The base case: an empty list has nothing to loop over and returns 0. The frame is popped."}, {"line": 3, "vars": {"total": -3}, "structure": {"kind": "calls", "frames": [{"call": "recursiveSum([1, [2, [], [-3]], 4])", "locals": "total = 1"}, {"call": "recursiveSum([2, [], [-3]])", "locals": "total = 2"}, {"call": "recursiveSum([-3])", "locals": "total = 0"}], "event": "call"}, "note": "Back in the middle call, 0 is added, and the next list [-3] gets its own frame."}, {"line": 6, "vars": {"total": -3}, "structure": {"kind": "calls", "frames": [{"call": "recursiveSum([1, [2, [], [-3]], 4])", "locals": "total = 1"}, {"call": "recursiveSum([2, [], [-3]])", "locals": "total = 2"}, {"call": "recursiveSum([-3])", "locals": "total = -3", "returns": -3}], "event": "return"}, "note": "The deepest call adds -3 and returns it. The frame is popped."}, {"line": 6, "vars": {"total": -1}, "structure": {"kind": "calls", "frames": [{"call": "recursiveSum([1, [2, [], [-3]], 4])", "locals": "total = 1"}, {"call": "recursiveSum([2, [], [-3]])", "locals": "total = -1", "returns": -1}], "event": "return"}, "note": "The middle call finishes 2 + 0 + -3 = -1 and returns it. Its frame is popped."}, {"line": 6, "vars": {"result": 4, "total": 4}, "structure": {"kind": "calls", "frames": [{"call": "recursiveSum([1, [2, [], [-3]], 4])", "locals": "total = 4", "returns": 4}], "event": "return"}, "note": "The outer call adds -1, then 4, to reach 4 and returns the answer. The stack is empty again."}]}
   },
   'algo-tree-depth': {
     'reasoning': 'A leaf contributes one node. Each parent contributes one plus its largest child depth because a route follows a single child, not all siblings. Null has no nodes and returns zero.',
@@ -220,70 +160,7 @@ export const dsaDepth: Record<string, RepDepth> = {
     'alternative': 'A breadth-first traversal can count whole levels instead. Both visit O(n) nodes; recursive traversal needs O(d) call depth, while a level queue may hold O(n) nodes in a wide tree.',
     'counterexample': 'Adding sibling depths measures something else: a root with two leaves has depth 2, not 3. Counting edges gives 0 for a leaf, but this contract counts nodes.',
     'transfer': 'Self-review: return the values along a deepest route. Define a tie rule for equal-depth routes before changing the implementation.',
-    'traceSteps': {
-      'code': [
-        'type TreeNode = {value: number; children: TreeNode[]}; function treeDepth(root: TreeNode | null): number {',
-        '  if (root === null) return 0',
-        '  let deepest = 0',
-        '  for (const child of root.children) {',
-        '    deepest = Math.max(deepest, treeDepth(child))',
-        '  }',
-        '  return 1 + deepest',
-        '}'
-      ],
-      'input': 'root = {value: 0, children: [{value: 7, children: []}, {value: 2, children: [{value: 3, children: []}]}]}',
-      'steps': [
-        {
-          'line': 2,
-          'vars': {
-            'deepest': 0,
-            'node': 0
-          },
-          'note': 'The root begins with no child depth.'
-        },
-        {
-          'line': 6,
-          'vars': {
-            'node': 7,
-            'depth': 1
-          },
-          'note': 'The first child is a leaf and returns 1.'
-        },
-        {
-          'line': 4,
-          'vars': {
-            'node': 0,
-            'deepest': 1
-          },
-          'note': 'The root records the first child depth.'
-        },
-        {
-          'line': 6,
-          'vars': {
-            'node': 3,
-            'depth': 1
-          },
-          'note': 'The grandchild is also a leaf.'
-        },
-        {
-          'line': 6,
-          'vars': {
-            'node': 2,
-            'depth': 2
-          },
-          'note': 'The second child adds itself to the grandchild depth.'
-        },
-        {
-          'line': 6,
-          'vars': {
-            'result': 3,
-            'node': 0,
-            'deepest': 2
-          },
-          'note': 'The root adds one to the larger child depth.'
-        }
-      ]
-    }
+    'traceSteps': {"code": ["type TreeNode = {value: number; children: TreeNode[]}; function treeDepth(root: TreeNode | null): number {", "  if (root === null) return 0", "  let deepest = 0", "  for (const child of root.children) {", "    deepest = Math.max(deepest, treeDepth(child))", "  }", "  return 1 + deepest", "}"], "input": "root = {value: 0, children: [{value: 7, children: []}, {value: 2, children: [{value: 3, children: []}]}]}", "steps": [{"line": 2, "vars": {"node": 0, "deepest": 0}, "structure": {"kind": "tree", "root": {"id": "root", "value": 0, "children": [{"id": "a", "value": 7}, {"id": "b", "value": 2, "children": [{"id": "c", "value": 3}]}]}, "current": "root", "visited": []}, "note": "Start at the root, node 0, with no child depth yet."}, {"line": 4, "vars": {"node": 7}, "structure": {"kind": "tree", "root": {"id": "root", "value": 0, "children": [{"id": "a", "value": 7}, {"id": "b", "value": 2, "children": [{"id": "c", "value": 3}]}]}, "current": "a", "visited": []}, "note": "The first loop pass calls treeDepth on child 7."}, {"line": 6, "vars": {"node": 7, "depth": 1}, "structure": {"kind": "tree", "root": {"id": "root", "value": 0, "children": [{"id": "a", "value": 7, "note": "depth 1"}, {"id": "b", "value": 2, "children": [{"id": "c", "value": 3}]}]}, "current": "a", "visited": ["a"]}, "note": "Node 7 has no children, so deepest stays 0 and it returns 1 + 0 = 1."}, {"line": 4, "vars": {"node": 0, "deepest": 1}, "structure": {"kind": "tree", "root": {"id": "root", "value": 0, "children": [{"id": "a", "value": 7, "note": "depth 1"}, {"id": "b", "value": 2, "children": [{"id": "c", "value": 3}]}]}, "current": "root", "visited": ["a"]}, "note": "Back at the root, deepest becomes max(0, 1) = 1."}, {"line": 4, "vars": {"node": 3}, "structure": {"kind": "tree", "root": {"id": "root", "value": 0, "children": [{"id": "a", "value": 7, "note": "depth 1"}, {"id": "b", "value": 2, "children": [{"id": "c", "value": 3}]}]}, "current": "c", "visited": ["a"]}, "note": "The second child, node 2, calls treeDepth on its own child, node 3."}, {"line": 6, "vars": {"node": 3, "depth": 1}, "structure": {"kind": "tree", "root": {"id": "root", "value": 0, "children": [{"id": "a", "value": 7, "note": "depth 1"}, {"id": "b", "value": 2, "children": [{"id": "c", "value": 3, "note": "depth 1"}]}]}, "current": "c", "visited": ["a", "c"]}, "note": "Node 3 is a leaf and returns 1."}, {"line": 6, "vars": {"node": 2, "depth": 2}, "structure": {"kind": "tree", "root": {"id": "root", "value": 0, "children": [{"id": "a", "value": 7, "note": "depth 1"}, {"id": "b", "value": 2, "note": "depth 2", "children": [{"id": "c", "value": 3, "note": "depth 1"}]}]}, "current": "b", "visited": ["a", "c", "b"]}, "note": "Node 2 adds itself to its deepest child: 1 + 1 = 2."}, {"line": 6, "vars": {"result": 3, "node": 0, "deepest": 2}, "structure": {"kind": "tree", "root": {"id": "root", "value": 0, "note": "depth 3", "children": [{"id": "a", "value": 7, "note": "depth 1"}, {"id": "b", "value": 2, "note": "depth 2", "children": [{"id": "c", "value": 3, "note": "depth 1"}]}]}, "current": "root", "visited": ["a", "c", "b"]}, "note": "The root takes the larger child depth, max(1, 2) = 2, and adds itself: 3."}]}
   },
   'algo-graph-reachable': {
     'reasoning': 'Validate endpoints before accepting equality. Every queued node is reachable from start. Marking nodes when queued prevents repeated discovery; exploring all reachable nodes finds target or exhausts the queue.',
@@ -291,72 +168,7 @@ export const dsaDepth: Record<string, RepDepth> = {
     'alternative': 'Depth-first search with a stack also answers reachability but explores in a different order. BFS with a head index visits O(V + E) reachable nodes and listed edges, using O(V) extra space; repeatedly shifting an array can add copying work.',
     'counterexample': 'Returning true for start === target before validation accepts an empty graph with 0, 0. Treating connections as undirected incorrectly allows node 1 to reach 0 in [[1], []].',
     'transfer': 'Self-review: return the minimum number of connections instead of a boolean. Explain why BFS order matters and define the unreachable result.',
-    'traceSteps': {
-      'code': [
-        'function graphReachable(graph: number[][], start: number, target: number): boolean {',
-        '  if (start < 0 || target < 0 || start >= graph.length || target >= graph.length) return false',
-        '  const queue = [start], seen = new Set([start])',
-        '  let found = false',
-        '  for (let head = 0; head < queue.length; head++) {',
-        '    const node = queue[head]',
-        '    if (node === target) { found = true; break }',
-        '    for (const next of graph[node]) if (!seen.has(next)) { seen.add(next); queue.push(next) }',
-        '  }',
-        '  return found',
-        '}'
-      ],
-      'input': 'graph = [[1], [0], []], start = 0, target = 2',
-      'steps': [
-        {
-          'line': 1,
-          'vars': {
-            'start': 0,
-            'target': 2
-          },
-          'note': 'Both endpoints are valid.'
-        },
-        {
-          'line': 2,
-          'vars': {
-            'queue': '[0]',
-            'seen': '{0}'
-          },
-          'note': 'Discover the start before exploring it.'
-        },
-        {
-          'line': 5,
-          'vars': {
-            'head': 0,
-            'node': 0
-          },
-          'note': 'Explore node 0.'
-        },
-        {
-          'line': 7,
-          'vars': {
-            'queue': '[0, 1]',
-            'seen': '{0, 1}'
-          },
-          'note': 'Discover and enqueue node 1 once.'
-        },
-        {
-          'line': 7,
-          'vars': {
-            'head': 1,
-            'node': 1,
-            'queue': '[0, 1]'
-          },
-          'note': 'Node 1 points back to seen node 0; enqueue nothing.'
-        },
-        {
-          'line': 9,
-          'vars': {
-            'result': false
-          },
-          'note': 'The queue is exhausted; node 2 is unreachable.'
-        }
-      ]
-    }
+    'traceSteps': {"code": ["function graphReachable(graph: number[][], start: number, target: number): boolean {", "  if (start < 0 || target < 0 || start >= graph.length || target >= graph.length) return false", "  const queue = [start], seen = new Set([start])", "  let found = false", "  for (let head = 0; head < queue.length; head++) {", "    const node = queue[head]", "    if (node === target) { found = true; break }", "    for (const next of graph[node]) if (!seen.has(next)) { seen.add(next); queue.push(next) }", "  }", "  return found", "}"], "input": "graph = [[1], [0], []], start = 0, target = 2", "steps": [{"line": 1, "vars": {"start": 0, "target": 2}, "note": "Both endpoints are valid nodes, so the search can begin."}, {"line": 2, "vars": {"seen": "{0}"}, "structure": {"kind": "array", "values": [0]}, "note": "Discover the start before exploring it. The queue holds [0]."}, {"line": 5, "vars": {"head": 0, "node": 0, "seen": "{0}"}, "structure": {"kind": "array", "values": [0], "pointers": {"head": 0}}, "note": "Explore node 0, the front of the queue. It is not the target."}, {"line": 7, "vars": {"head": 0, "node": 0, "seen": "{0, 1}"}, "structure": {"kind": "array", "values": [0, 1], "pointers": {"head": 0}}, "note": "Node 0 links to unseen node 1, so mark it seen and add it to the back of the queue."}, {"line": 5, "vars": {"head": 1, "node": 1, "seen": "{0, 1}"}, "structure": {"kind": "array", "values": [0, 1], "pointers": {"head": 1}, "dimmed": [0]}, "note": "Node 0 is finished (dimmed). Explore node 1 next; it is not the target."}, {"line": 7, "vars": {"head": 1, "node": 1, "seen": "{0, 1}"}, "structure": {"kind": "array", "values": [0, 1], "pointers": {"head": 1}, "dimmed": [0]}, "note": "Node 1 links back to node 0, which is already seen, so nothing is queued. This stops the cycle."}, {"line": 9, "vars": {"result": false, "seen": "{0, 1}"}, "structure": {"kind": "array", "values": [0, 1], "dimmed": [0, 1]}, "note": "Every queued node has been explored without meeting node 2, so return false."}]}
   },
   'ds-array-operations': {
     'reasoning': 'Copying preserves the caller’s array; appending creates a last item even for empty input.',
