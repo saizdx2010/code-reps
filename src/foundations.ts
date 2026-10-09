@@ -208,7 +208,7 @@ export const foundationReps: Rep[] = [
     hints: [
       'Keep a steps counter that starts at 0.',
       'A while loop can keep going as long as the value is greater than 1.',
-      'Inside the loop, set value to Math.floor(value / 2) and add 1 to steps. Return steps after the loop.',
+      'Keep the current value and the count separate. Check that the starting value 1 needs no steps.',
     ],
     checks: [
       { name: 'Counts the example', input: [9], expected: 3 },
@@ -224,14 +224,14 @@ export const foundationReps: Rep[] = [
     prompt: 'Return the initials of a full name as uppercase letters with no spaces between them. Ignore spaces at the start and end of the name. Words are separated by one or more spaces. Use the first letter of each word. Inputs use basic Latin letters and spaces only. An empty name, or a name with only spaces, returns an empty string.',
     example: { input: "initials('ada lovelace')", output: "'AL'" },
     note: 'Checks cover extra spaces, a middle name, and empty input. Review how you split the words yourself.',
-    vocabulary: [{ term: 'Trim', meaning: 'remove spaces from the start and end of text' }, { term: 'Slice', meaning: 'copy part of a string by its positions' }],
+    vocabulary: [{ term: 'Trim', meaning: 'remove spaces from the start and end of text' }, { term: 'Slice', meaning: 'copy part of a string by its positions' }, { term: 'Split', meaning: 'turn text into an array of parts using a separator' }, { term: 'Join', meaning: 'combine array items into text with a chosen separator' }],
     planPrompt: 'Which spaces should you remove first? How will you split words when spaces appear more than once in a row?',
     starter: 'function initials(fullName: string): string {\n  // Trim, split into words, then take each first letter.\n  return ""\n}\n',
     functionName: 'initials',
     hints: [
-      'Start with fullName.trim() so spaces at the ends do not create extra words.',
-      'Split on one or more whitespace characters with split(/\\s+/).',
-      'For each word, use word.slice(0, 1).toUpperCase(), then join the letters with join("").',
+      'Remove spaces at the ends first so they do not create extra words.',
+      'Split into words while treating repeated spaces as one separator.',
+      'Build one initial per word. Check that a blank name does not add a letter.',
     ],
     checks: [
       { name: 'Uses the example', input: ['ada lovelace'], expected: 'AL' },
@@ -294,7 +294,7 @@ export const foundationReps: Rep[] = [
   },
   {
     id: 'countdown-labels', title: 'Format a countdown timer', category: 'TypeScript basics',
-    prompt: 'Return the labels a countdown timer shows. Start at startSeconds and subtract stepSeconds each time, stopping before the value would drop below 0. Format each value as minutes, a colon, and two-digit seconds, such as 2:05 or 0:30. Minutes are not padded. Return the labels in the order shown, starting with the largest value. Inputs are whole numbers: startSeconds from 0 to 3600 and stepSeconds from 1 to 600. When startSeconds is 0, return ["0:00"].',
+    prompt: 'Return the labels a countdown timer shows. Start at startSeconds and subtract stepSeconds each time, stopping before the value would drop below 0. Format each value as minutes, a colon, and two-digit seconds, such as 2:05 or 0:30. Minutes are not padded. Keep counting whole minutes past 59; there are no hours (3600 seconds is 60:00). Return the labels in the order shown, starting with the largest value. Inputs are whole numbers: startSeconds from 0 to 3600 and stepSeconds from 1 to 600. When startSeconds is 0, return ["0:00"].',
     example: { input: 'countdownLabels(130, 60)', output: "['2:10', '1:10', '0:10']" },
     note: 'The example stops at 0:10 because the next value would be negative. Checks cover steps that land exactly on zero, steps that do not, and the largest input. Review your stopping condition yourself.',
     vocabulary: [{ term: 'Countdown', meaning: 'a sequence of values that gets smaller until it reaches a limit' }, { term: 'Padding', meaning: 'adding leading characters so text has a fixed width' }],

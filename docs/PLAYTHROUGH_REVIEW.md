@@ -2,7 +2,7 @@
 
 Date: 2026-10-09 · Branch: `content/playthrough-review` · Scope: 45 reps added or recently reworked (Foundations, algorithm, sorting/tree/graph, app-level frontend/backend, and DOM accessibility reps).
 
-This is a read-only review. No source or content file changed. The findings below are suggestions for later content work.
+The original review was read-only. The implementation status below records follow-up fixes on `content/playthrough-fixes`; original observations and verification limits remain historical.
 
 ## Method and limits
 
@@ -117,23 +117,61 @@ Spelling: the `Practise` verb form appears 24 times in `src/*.ts`, and `Practice
 ## Ranked fix list
 
 1. **`backend-query-filters` contract (prompt).** Replace "Any other non-string value, such as an array from a repeated parameter, is invalid." with: "Any other value for a field, including null, a number, or an array from a repeated parameter, returns that field's error code (INVALID_STATUS, INVALID_LIMIT, or INVALID_TAG)." Add the same rule to `acceptanceCriteria`. Also state how `null` is handled explicitly; it is currently unspecified. Move the per-field rules into `acceptanceCriteria` to shorten the prompt.
+
+   **Status:** Fixed: null and all other non-string field values return field-specific codes; added null, number, and array checks for all three fields, plus a null-default regression mutant. The reference explicitly rejects null.
+
 2. **`dom-accessible-form` (prompt).** Move the note's sentence into the prompt: "In the submit handler, set form.noValidate = true and call preventDefault so the browser does not block the submit." Also replace "Give every input a visible label tied to it" with "Give every input a label element whose for attribute matches the input id."
+
+   **Status:** Fixed: form setup disables browser validation before submission; the handler prevents navigation. The prompt specifies label/for/id association.
+
 3. **`parse-sort-param` (prompt).** Replace "The text after a leading dash must exactly match one of title, createdAt, or priority, with the same letter case and no extra spaces." with: "Whether or not there is a leading dash, the field name must exactly match one of title, createdAt, or priority, with the same letter case and no extra spaces. A leading dash only sets the direction to desc."
+
+   **Status:** Fixed: the allowlist applies with or without a leading dash; direction remains separate from validation.
+
 4. **`countdown-labels` (prompt).** After "Minutes are not padded." add: "Keep counting whole minutes past 59; there are no hours (3600 seconds is 60:00)."
+
+   **Status:** Fixed: minutes continue past 59, with 3600 seconds explicitly shown as 60:00.
+
 5. **Level and category labels.** The authoring guide (`docs/CONTENT_AUTHORING.md`, step 4) puts recursion, trees, graphs, batch validation, harder async state, projects, and interviews at Advanced. It puts techniques and frontend/backend reps at Intermediate. Three shipped Advanced reps (`algo-coin-change`, `algo-linked-list-reverse`, `dom-tabs`) are not in the Advanced list. Either re-level them to 2 or add the category to the guide and say why. Separately, `algo-prefix-sums`, `algo-merge-intervals`, and `algo-climb-stairs` (Intermediate) use the category "Advanced problem solving", and so do `algo-linked-list-reverse`, `algo-min-heap`, `algo-subsets`, and `algo-coin-change`. Rename the category to something like "Problem solving techniques" so the category and level do not contradict each other.
+
+   **Status:** Fixed: retained reasonable levels; Advanced guidance now includes dynamic programming, linked-list node identity, and coordinated ARIA keyboard/focus state. Renamed all seven categories to Problem-solving patterns.
+
 6. **Move contract rules from notes into prompts.** `algo-graph-reachable`: add "Return false if start or target is outside the graph; a valid node reaches itself." `sort-score-records`: change "ascending name" to "ascending name, compared case-sensitively by character code, with no trimming". `graph-shortest-hops` already does this in its prompt, which is the pattern to follow.
+
+   **Status:** Fixed: graph endpoints/self-reach and score-name comparison rules are in prompts. DOM data-testid contracts and input-mutation rules are also in prompts.
+
 7. **Rewrite misleading or confusing hints.**
+
+   **Status:** Fixed: rewrote all four listed hints; each rep retains at most three non-code progressive hints.
+
    - `algo-tree-depth` hint 2: "Only one child route is followed at a time when measuring depth." → "Find each child's depth separately. The answer uses the deepest child, not the sum."
    - `tree-depth-sum` hint 3: "Compare a requested level beyond all leaves with a level whose values sum to zero." → "A depth with no nodes gives a total of 0. Check that case as well as the deepest level."
    - `graph-connected-groups` hint 3: "Compare a cycle with three isolated nodes; both have three nodes but different group counts." → "A three-node cycle is one group. Three isolated nodes are three groups."
    - `algo-insertion-sort` hint 3: "Keep the value being inserted safe while moving larger values in a copy." → "Save the value you are inserting, shift larger values one place right, then put it in the gap."
 8. **Jargon sweep.** Replace "Preserve X." with "Do not change X." in the 15 reps listed above. Add vocabulary entries for "split", "join", "depth-first preorder", and "greedy". Replace "nondecreasing", "singleton", "acyclic", "symlink", "character-code order", and "normalized query" with plain words (see the jargon list).
+
+   **Status:** Fixed: replaced mutation-related Preserve wording with Do not change; added split/join, depth-first preorder, and greedy vocabulary and simplified the listed jargon.
+
 9. **Label self-reviewed contracts in the prompt.** `algo-min-heap`: add "The heap structure is self-reviewed; the checks compare pop results only." `algo-linked-list-reverse`: add "Freshly created nodes are self-reviewed; the checks compare values and input preservation only." The note already says something similar for other reps.
+
+   **Status:** Fixed: heap structure and fresh linked-list node identity are explicitly self-reviewed in the prompts; automated evidence limits remain visible.
+
 10. **Decide the hint policy for guided reps.** `loop-while` hint 3, `string-basics` hint 3, `algo-window-sum` hint 3, `algo-binary-search` hint 3, and `frontend-sort-table` hint 3 each give the whole solution in prose or code. That may be intended for guided practice. If it is, label those reps as guided. If not, thin the final hint so it stops one step earlier.
+
+   **Status:** Fixed: thinned final hints for all five listed reps rather than exposing a complete implementation; string splitting guidance is also non-code.
+
 11. **Dense prompts.** `dom-tabs`, `frontend-form-errors`, `backend-query-filters`, and `parse-sort-param` pack many rules into one paragraph. `acceptanceCriteria` is currently used only by the DOM reps. Moving the rule list there would make these easier to scan for English learners.
 
-## Verification
+   **Status:** Fixed: moved field/ARIA/sort rules into acceptance criteria for all four listed dense prompts, preserving their contracts.
+
+## Original review verification
 
 - Checks run: 41 executable reps through `runRep` (first attempt, all pass), plus 4 probe runs. Probe files are outside the repo under `/tmp/playthrough/`.
 - Not run: DOM reps (`format: 'frontend'`), browser flows, `yarn test`, `yarn build`, `yarn content:check`. This is a documentation-only change, so per `AGENTS.md` only `git diff --check` and a path/command review apply.
 - Learner validation: none. These are reviewer findings, not learner evidence.
+
+## Implementation verification
+
+Follow-up on `content/playthrough-fixes` (2026-10-09): `yarn install --frozen-lockfile`, `yarn lint`, `yarn build`, `yarn test` (309 passed), `yarn content:check`, and `git diff --check` passed. Build ran before tests. Installation initially failed under Node 24.7 because locked jsdom requires a newer runtime; installation and final checks succeeded with Node 24.15.0 and Yarn 1.22.22 without dependency or lockfile changes. Vite reported its chunk-size warning; all enforced bundle budgets passed.
+
+E2e was intentionally not run for this task. No browser, screen-reader, offline, cross-platform, or learner validation was performed. The Node/jsdom DOM checks do not establish those results. Rep, skill, and question IDs and checked knowledge answers/options are unchanged; `src/path.ts` and review `traceSteps` are untouched.

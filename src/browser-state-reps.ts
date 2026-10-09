@@ -17,7 +17,7 @@ function taskLabel(state: TaskState): string {
 }
 `,
     functionName: 'taskLabel', preserveInput: true,
-    hints: ['The kind field identifies the variant; not every variant has a title or done field.', 'Branch on kind before reading a variant-specific property. Only draft titles are normalized.', 'For draft use trimmed title or Untitled draft; for saved choose the prefix from done and preserve title; for failed preserve message after Error: .'],
+    hints: ['The kind field identifies the variant; not every variant has a title or done field.', 'Branch on kind before reading a variant-specific property. Only draft titles are normalized.', 'For draft use trimmed title or Untitled draft; for saved choose the prefix from done and keep title unchanged; for failed keep message unchanged after Error: .'],
     checks: [
       { name: 'Trims a draft title', input: [{kind: 'draft', title: '  Read  '}], expected: 'Draft: Read' },
       { name: 'Names a blank draft', input: [{kind: 'draft', title: '\t '}], expected: 'Untitled draft' },
@@ -43,7 +43,7 @@ function saveStatus(result: SaveResult): {text: string; retry: boolean} {
 }
 `,
     functionName: 'saveStatus', preserveInput: true,
-    hints: ['Each input variant has its own output rule. Preserve false and zero as valid values.', 'Use the status tag to determine which properties exist. Only failed results supply the retry decision.', 'Handle idle and saved before returning the failed reason and recoverable flag. Saved always uses the literal suffix books.'],
+    hints: ['Each input variant has its own output rule. Keep false and zero as valid values.', 'Use the status tag to determine which properties exist. Only failed results supply the retry decision.', 'Handle idle and saved before returning the failed reason and recoverable flag. Saved always uses the literal suffix books.'],
     checks: [
       { name: 'Describes no save attempt', input: [{status: 'idle'}], expected: {text: 'Not saved', retry: false} },
       { name: 'Reports a normal save', input: [{status: 'saved', count: 4}], expected: {text: 'Saved 4 books', retry: false} },
@@ -59,7 +59,7 @@ function saveStatus(result: SaveResult): {text: string; retry: boolean} {
   {
     id: 'catalog-request-summary', title: 'Summarize catalog request outcomes', category: 'TypeScript modeling',
     context: 'An inspection panel summarizes multiple catalog requests. Return later to apply state modeling to an ordered collection.',
-    prompt: 'Implement requestSummary(requests). Each request is {status: "pending", id: string}, {status: "ready", id: string, titles: string[]}, or {status: "failed", id: string, error: string}. Return {pending: string[], empty: string[], errors: {id: string, message: string}[]}. pending contains pending IDs, empty contains ready IDs whose titles array is empty, and errors contains each failed ID and its error as message. Preserve input order within each output array and repeated IDs. Ready requests with titles contribute nothing.',
+    prompt: 'Implement requestSummary(requests). Each request is {status: "pending", id: string}, {status: "ready", id: string, titles: string[]}, or {status: "failed", id: string, error: string}. Return {pending: string[], empty: string[], errors: {id: string, message: string}[]}. pending contains pending IDs, empty contains ready IDs whose titles array is empty, and errors contains each failed ID and its error as message. Keep input order within each output array and include repeated IDs. Ready requests with titles contribute nothing.',
     example: { input: 'requestSummary([{status: "ready", id: "b", titles: []}, {status: "pending", id: "a"}])', output: '{pending: ["a"], empty: ["b"], errors: []}' },
     note: 'At most 100 requests and 100 titles per ready request. Strings contain at most 100 basic Latin characters or whitespace, including empty strings. Inputs match the union type. Do not trim, deduplicate, mutate input, or interpret a blank title as an empty array. This checks a summary of supplied states, not promise execution or semantic typing.',
     vocabulary: [{ term: 'Variant', meaning: 'one permitted shape in a union' }, { term: 'Ordered collection', meaning: 'values whose relative positions matter to the contract' }],

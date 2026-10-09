@@ -11,6 +11,7 @@ test('app reps all have an independent reference solution', () => {
 test('app rep checks reject common contract mistakes', () => {
   const s = appSolutions
   const mutants = [
+    ['backend-query-filters', s['backend-query-filters'].replace('if (v === null) return undefined', 'if (v === null) return null')],
     ['frontend-sort-table', s['frontend-sort-table'].replace('rows.map(', 'rows.map(').replace('return keyed.map(item => item.row)', 'return direction === "desc" ? keyed.map(item => item.row) : keyed.map(item => item.row)').replace('a.index - b.index', 'sign * (a.index - b.index)')],
     ['frontend-sort-table', s['frontend-sort-table'].replace('row.name.toLowerCase()', 'row.name')],
     ['frontend-sort-table', s['frontend-sort-table'].replace('const keyed = rows.map', 'rows.sort(() => 0); const keyed = rows.map').replace('rows.map((row, index)', 'rows.reverse().map((row, index)')],

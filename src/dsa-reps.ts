@@ -4,12 +4,12 @@ export const dsaReps: Rep[] = [{
     'id': 'ds-array-operations',
     'title': 'Copy, append, and read an array',
     'category': 'Collection basics',
-    'prompt': 'Create a new number array containing all supplied values followed by extra. Return its last value. Practise declaring number[], copying with spread, appending with push, and reading by index.',
+    'prompt': 'Create a new number array containing all supplied values followed by extra. Return its last value. Practise declaring number[], copying with spread, appending with push, and reading by index. Do not change numbers.',
     'example': {
       'input': 'appendAndRead([4, 7], 0)',
       'output': '0'
     },
-    'note': 'numbers contains at most 100 integers from -1000 to 1000; extra has the same range. Do not change numbers. Checks verify the returned value and unchanged input; review the requested operations yourself.',
+    'note': 'numbers contains at most 100 integers from -1000 to 1000; extra has the same range. Checks verify the returned value and unchanged input; review the requested operations yourself.',
     'vocabulary': [{
         'term': 'Copy',
         'meaning': 'a separate array with the same values'
@@ -82,12 +82,12 @@ export const dsaReps: Rep[] = [{
     'id': 'ds-map-operations',
     'title': 'Set, overwrite, and read a map',
     'category': 'Collection basics',
-    'prompt': 'Create a Map<string, number> from entries in order. Set key to value, then return the value associated with query, or null when query is absent. Later entries overwrite earlier values for the same key.',
+    'prompt': 'Create a Map<string, number> from entries in order. Set key to value, then return the value associated with query, or null when query is absent. Later entries overwrite earlier values for the same key. Do not change entries.',
     'example': {
       'input': 'updateLookup([["a", 2]], "a", 0, "a")',
       'output': '0'
     },
-    'note': 'entries has at most 100 [string, integer] pairs. Strings contain at most 20 ASCII characters and are case-sensitive, with no trimming; empty strings are valid. Integers are -1000 to 1000. Preserve entries. Practise new Map, set, get, and has; API choice is self-reviewed.',
+    'note': 'entries has at most 100 [string, integer] pairs. Strings contain at most 20 ASCII characters and are case-sensitive, with no trimming; empty strings are valid. Integers are -1000 to 1000. Practise new Map, set, get, and has; API choice is self-reviewed.',
     'vocabulary': [{
         'term': 'Map',
         'meaning': 'a collection associating keys with values'
@@ -95,7 +95,7 @@ export const dsaReps: Rep[] = [{
         'term': 'Key',
         'meaning': 'the value used to look up an associated value'
       }],
-    'planPrompt': 'Which write wins for a repeated key? How will you preserve a stored zero?',
+    'planPrompt': 'Which write wins for a repeated key? How will you keep a stored zero?',
     'starter': 'function updateLookup(entries: [string, number][], key: string, value: number, query: string): number | null {\n  // Write your solution here.\n  return null\n}\n',
     'functionName': 'updateLookup',
     'preserveInput': true,
@@ -125,12 +125,12 @@ export const dsaReps: Rep[] = [{
     'id': 'ds-stack-operations',
     'title': 'Push, pop, and peek a stack',
     'category': 'Stacks & queues',
-    'prompt': 'Treat numbers as a stack whose top is its last item. Copy it, push extra, pop once, then return the remaining top without removing it. Return null if no item remains.',
+    'prompt': 'Treat numbers as a stack whose top is its last item. Copy it, push extra, pop once, then return the remaining top without removing it. Return null if no item remains. Do not change numbers.',
     'example': {
       'input': 'stackTop([4, 7], 9)',
       'output': '7'
     },
-    'note': 'At most 100 integers from -1000 to 1000; extra has the same range. Preserve numbers. Practise a typed array, push, pop, and peeking by index. Checks do not prove that you used a stack.',
+    'note': 'At most 100 integers from -1000 to 1000; extra has the same range. Practise a typed array, push, pop, and peeking by index. Checks do not prove that you used a stack.',
     'vocabulary': [{
         'term': 'Stack',
         'meaning': 'a collection where the last added item leaves first'
@@ -164,12 +164,12 @@ export const dsaReps: Rep[] = [{
     'id': 'ds-queue-operations',
     'title': 'Enqueue, dequeue, and peek a queue',
     'category': 'Stacks & queues',
-    'prompt': 'Treat numbers as a queue whose front is its first item. Copy it, enqueue extra at the back, dequeue once from the front, then return the remaining front without removing it. Return null when no item remains.',
+    'prompt': 'Treat numbers as a queue whose front is its first item. Copy it, enqueue extra at the back, dequeue once from the front, then return the remaining front without removing it. Return null when no item remains. Do not change numbers.',
     'example': {
       'input': 'queueFront([4, 7], 9)',
       'output': '7'
     },
-    'note': 'At most 100 integers from -1000 to 1000; extra has the same range. Preserve numbers. For this small introduction, use an array with push and shift. Checks verify behavior; operations are self-reviewed.',
+    'note': 'At most 100 integers from -1000 to 1000; extra has the same range. For this small introduction, use an array with push and shift. Checks verify behavior; operations are self-reviewed.',
     'vocabulary': [{
         'term': 'Queue',
         'meaning': 'a collection where the first added item leaves first'
@@ -210,12 +210,12 @@ export const dsaReps: Rep[] = [{
     'id': 'algo-sorted-pair',
     'title': 'Find a pair in sorted numbers',
     'category': 'Algorithm techniques',
-    'prompt': 'Return true if two different positions in numbers sum to target, otherwise false. numbers is sorted in ascending order; duplicate values are allowed. Practise moving a left and right pointer toward each other.',
+    'prompt': 'Return true if two different positions in numbers sum to target, otherwise false. numbers is sorted in ascending order; duplicate values are allowed. Practise moving a left and right pointer toward each other. Do not change numbers.',
     'example': {
       'input': 'hasSortedPair([1, 3, 5, 8], 11)',
       'output': 'true'
     },
-    'note': 'At most 100 integers from -1000 to 1000; target is -2000 to 2000. Preserve numbers. Empty and one-item inputs return false. Behavior checks do not prove two pointers or linear time; review those separately.',
+    'note': 'At most 100 integers from -1000 to 1000; target is -2000 to 2000. Empty and one-item inputs return false. Behavior checks do not prove two pointers or linear time; review those separately.',
     'vocabulary': [{
         'term': 'Pointer',
         'meaning': 'an index marking a current position'
@@ -257,12 +257,12 @@ export const dsaReps: Rep[] = [{
     'id': 'algo-window-sum',
     'title': 'Find the largest fixed-window sum',
     'category': 'Algorithm techniques',
-    'prompt': 'Return the largest sum of any k consecutive items. k is a positive integer. Return null if numbers has fewer than k items. Practise maintaining a running sum as a fixed-size window moves.',
+    'prompt': 'Return the largest sum of any k consecutive items. k is a positive integer. Return null if numbers has fewer than k items. Practise maintaining a running sum as a fixed-size window moves. Do not change numbers.',
     'example': {
       'input': 'largestWindowSum([2, -1, 4, 3], 2)',
       'output': '7'
     },
-    'note': 'numbers has at most 100 integers from -1000 to 1000; k is 1 to 101. Preserve numbers. Values may all be negative. Behavior checks do not prove a sliding-window approach or complexity.',
+    'note': 'numbers has at most 100 integers from -1000 to 1000; k is 1 to 101. Values may all be negative. Behavior checks do not prove a sliding-window approach or complexity.',
     'vocabulary': [{
         'term': 'Window',
         'meaning': 'a consecutive portion of a sequence'
@@ -274,7 +274,7 @@ export const dsaReps: Rep[] = [{
     'starter': 'function largestWindowSum(numbers: number[], k: number): number | null {\n  // Write your solution here.\n  return null\n}\n',
     'functionName': 'largestWindowSum',
     'preserveInput': true,
-    'hints': ['Form a complete first window before choosing a best sum.', 'Each move removes one outgoing item and adds one incoming item.', 'Sum the first k values, initialize best from that sum, then update sum += numbers[right] - numbers[right - k] and compare with best.'],
+    'hints': ['Form a complete first window before choosing a best sum.', 'Each move removes one outgoing item and adds one incoming item.', 'Check that the first window can win, including when every value is negative.'],
     'checks': [{
         'name': 'Moves the window',
         'input': [[2, -1, 4, 3], 2],
@@ -308,12 +308,12 @@ export const dsaReps: Rep[] = [{
     'id': 'algo-binary-search',
     'title': 'Search sorted numbers',
     'category': 'Algorithm techniques',
-    'prompt': 'Return the index of target in a strictly increasing number array, or -1 when it is absent. Practise binary search: inspect the middle of the remaining interval and discard the half that cannot contain target.',
+    'prompt': 'Return the index of target in a strictly increasing number array, or -1 when it is absent. Practise binary search: inspect the middle of the remaining interval and discard the half that cannot contain target. Do not change numbers.',
     'example': {
       'input': 'sortedIndex([-3, 0, 4, 9], 4)',
       'output': '2'
     },
-    'note': 'At most 100 distinct integers from -1000 to 1000 in ascending order; target uses the same range. Preserve numbers. Empty input returns -1. Checks verify the index, not logarithmic time or a particular search approach.',
+    'note': 'At most 100 distinct integers from -1000 to 1000 in ascending order; target uses the same range. Empty input returns -1. Checks verify the index, not logarithmic time or a particular search approach.',
     'vocabulary': [{
         'term': 'Binary search',
         'meaning': 'search by repeatedly discarding half a sorted interval'
@@ -325,7 +325,7 @@ export const dsaReps: Rep[] = [{
     'starter': 'function sortedIndex(numbers: number[], target: number): number {\n  // Write your solution here.\n  return 0\n}\n',
     'functionName': 'sortedIndex',
     'preserveInput': true,
-    'hints': ['Track the remaining interval with inclusive left and right indices.', 'Use Math.floor((left + right) / 2); discard the middle too when it does not match.', 'Keep going while the interval still has a position. Return the middle index when its value matches. If the middle value is less than target, set left to middle + 1; otherwise set right to middle - 1. Return -1 once the interval is empty.'],
+    'hints': ['Track the remaining interval with inclusive left and right indices.', 'Choose the middle position, rounding down; discard the middle too when it does not match.', 'After an unsuccessful comparison, the remaining interval must shrink. Check a target outside both ends.'],
     'checks': [{
         'name': 'Finds middle',
         'input': [[-3, 0, 4, 9], 4],
@@ -364,12 +364,12 @@ export const dsaReps: Rep[] = [{
     'id': 'algo-insertion-sort',
     'title': 'Insert numbers into sorted order',
     'category': 'Algorithm techniques',
-    'prompt': 'Return a new array containing every number in ascending numeric order, including duplicates. Practise insertion sort: grow an ordered portion by placing each next value where it belongs.',
+    'prompt': 'Return a new array containing every number in ascending numeric order, including duplicates. Practise insertion sort: grow an ordered portion by placing each next value where it belongs. Do not change numbers, even if already sorted.',
     'example': {
       'input': 'insertionSort([3, 1, 3, -2])',
       'output': '[-2, 1, 3, 3]'
     },
-    'note': 'At most 100 integers from -1000 to 1000. Do not change numbers, even if already sorted. Empty input returns a new empty array. Equal values are all retained; their order is indistinguishable for numbers. Review insertion sort and the separate returned array yourself; checks verify values and visible input mutation.',
+    'note': 'At most 100 integers from -1000 to 1000. Empty input returns a new empty array. Equal values are all retained; their order is indistinguishable for numbers. Review insertion sort and the separate returned array yourself; checks verify values and visible input mutation.',
     'vocabulary': [
       {
         'term': 'Insertion',
@@ -380,14 +380,14 @@ export const dsaReps: Rep[] = [{
         'meaning': 'the beginning portion already in order'
       }
     ],
-    'planPrompt': 'What stays ordered after each insertion? How will you keep duplicates and preserve the caller array?',
+    'planPrompt': 'What stays ordered after each insertion? How will you keep duplicates and avoid changing the caller array?',
     'starter': 'function insertionSort(numbers: number[]): number[] {\n  // Write your solution here.\n  return []\n}\n',
     'functionName': 'insertionSort',
     'preserveInput': true,
     'hints': [
       'Start by identifying which part of the array is already ordered.',
       'Compare the next value with values before it; decide which values need more room.',
-      'Keep the value being inserted safe while moving larger values in a copy. Check where it belongs when it is smaller than every earlier value.'
+      'Save the value you are inserting, shift larger values one place right, then put it in the gap.'
     ],
     'checks': [
       {
@@ -436,12 +436,12 @@ export const dsaReps: Rep[] = [{
     'id': 'algo-merge-sorted',
     'title': 'Merge two ordered lists',
     'category': 'Algorithm techniques',
-    'prompt': 'Return a new ascending array containing every value from left and right. Both inputs are already sorted. Practise comparing the next unused value in each list instead of sorting again.',
+    'prompt': 'Return a new ascending array containing every value from left and right. Both inputs are already sorted. Practise comparing the next unused value in each list instead of sorting again. Do not change either array.',
     'example': {
       'input': 'mergeSorted([1, 3], [2, 3, 4])',
       'output': '[1, 2, 3, 3, 4]'
     },
-    'note': 'Each input has at most 100 integers from -1000 to 1000 in nondecreasing order. Preserve both arrays. Empty lists contribute no values; two empty lists return a new empty array. Keep all duplicates. On equality, take the left value first in your practice approach; numeric output checks cannot distinguish equal-value order.',
+    'note': 'Each input has at most 100 integers from -1000 to 1000 in ascending order, allowing equal neighbors. Empty lists contribute no values; two empty lists return a new empty array. Keep all duplicates. On equality, take the left value first in your practice approach; numeric output checks cannot distinguish equal-value order.',
     'vocabulary': [
       {
         'term': 'Merge',
@@ -508,12 +508,12 @@ export const dsaReps: Rep[] = [{
     'id': 'algo-recursive-sum',
     'title': 'Sum numbers inside nested lists',
     'category': 'Algorithm techniques',
-    'prompt': 'Return the sum of every number inside items, including numbers in nested arrays. Practise recursion: let a smaller nested list solve the same task. Give an empty list a clear base case.',
+    'prompt': 'Return the sum of every number inside items, including numbers in nested arrays. Practise recursion: let a smaller nested list solve the same task. Give an empty list a clear base case. Do not change any array.',
     'example': {
       'input': 'recursiveSum([1, [2, [], [-3]], 4])',
       'output': '4'
     },
-    'note': 'items contains only integers from -1000 to 1000 and nested arrays, with no cycles or shared arrays. At most 100 entries across all arrays and at most 10 array levels including items. Preserve every array. Empty arrays contribute 0. Repeated numbers each contribute; cancellation and zero are valid. Checks do not prove recursion; review the base case and smaller calls yourself.',
+    'note': 'items contains only integers from -1000 to 1000 and nested arrays, with no cycles or shared arrays. At most 100 entries across all arrays and at most 10 array levels including items. Empty arrays contribute 0. Repeated numbers each contribute; cancellation and zero are valid. Checks do not prove recursion; review the base case and smaller calls yourself.',
     'vocabulary': [
       {
         'term': 'Recursion',
@@ -585,12 +585,12 @@ export const dsaReps: Rep[] = [{
     'id': 'algo-tree-depth',
     'title': 'Find the deepest tree level',
     'category': 'Algorithm techniques',
-    'prompt': 'Return the maximum number of nodes on a route from the root to a leaf. A leaf has no children. A missing tree (null) has depth 0; a root alone has depth 1. Practise solving the same depth task for each child.',
+    'prompt': 'Return the maximum number of nodes on a route from the root to a leaf. A leaf has no children. A missing tree (null) has depth 0; a root alone has depth 1. Practise solving the same depth task for each child. Do not change any node or child array.',
     'example': {
       'input': 'treeDepth({value: 5, children: [{value: 0, children: []}]})',
       'output': '2'
     },
-    'note': 'A node has {value: number, children: TreeNode[]}. Trees have at most 100 nodes, at most 10 levels, integer values from -1000 to 1000, no cycles, and no shared nodes. Preserve all nodes and child arrays. Values do not affect depth. Equal-depth branches give the same numeric result; return the depth, not a chosen branch. Checks do not prove recursion.',
+    'note': 'A node has {value: number, children: TreeNode[]}. Trees have at most 100 nodes, at most 10 levels, integer values from -1000 to 1000, no cycles, and no shared nodes. Values do not affect depth. Equal-depth branches give the same numeric result; return the depth, not a chosen branch. Checks do not prove recursion.',
     'vocabulary': [
       {
         'term': 'Root',
@@ -611,7 +611,7 @@ export const dsaReps: Rep[] = [{
     'preserveInput': true,
     'hints': [
       'Draw a root alone and then a root with one child.',
-      'Only one child route is followed at a time when measuring depth.',
+      'Find each child depth separately. The answer uses the deepest child, not the sum.',
       'Compare child results rather than adding them; remember the current node also occupies a level.'
     ],
     'checks': [
@@ -759,12 +759,12 @@ export const dsaReps: Rep[] = [{
     'id': 'algo-graph-reachable',
     'title': 'Follow connections to a destination',
     'category': 'Algorithm techniques',
-    'prompt': 'Return whether target can be reached from start by following directed connections in graph. graph is an adjacency list: graph[i] lists the nodes you can visit directly from node i. Practise breadth-first search (BFS), visiting pending nodes in the order they were discovered.',
+    'prompt': 'Return whether target can be reached from start by following directed connections in graph. Return false if start or target is outside the graph; a valid node reaches itself without any connection. graph is an adjacency list: graph[i] lists the nodes you can visit directly from node i. Practise breadth-first search (BFS), visiting pending nodes in the order they were discovered. Do not change graph or any of its nested arrays.',
     'example': {
       'input': 'graphReachable([[1], [2], []], 0, 2)',
       'output': 'true'
     },
-    'note': 'graph contains 0 to 100 nodes identified by indices 0 to graph.length - 1. Each list contains at most 100 valid node indices; duplicates, self-links, and cycles are allowed. start and target are integers from -1 to 100. Return false if either is outside the graph, including an empty graph. A valid node reaches itself without any connection. Preserve graph and its nested arrays. Route ties do not matter: return only a boolean. Checks do not prove BFS or queue order.',
+    'note': 'graph contains 0 to 100 nodes identified by indices 0 to graph.length - 1. Each list contains at most 100 valid node indices; duplicates, self-links, and cycles are allowed. start and target are integers from -1 to 100. Return false if either is outside the graph, including an empty graph. A valid node reaches itself without any connection. Route ties do not matter: return only a boolean. Checks do not prove BFS or queue order.',
     'vocabulary': [
       {
         'term': 'Adjacency list',
@@ -856,12 +856,12 @@ export const dsaReps: Rep[] = [{
     'id': 'sort-score-records',
     'title': 'Order records by score and name',
     'category': 'Algorithm applications',
-    'prompt': 'Return a new array of records ordered by ascending score, then ascending name. Records with equal score and name keep their original order.',
+    'prompt': 'Return a new array of records ordered by ascending score, then ascending name, compared case-sensitively using ASCII character codes (for example, A comes before a), with no trimming. Records with equal score and name keep their original order. Do not change the array or any record.',
     'example': {
       'input': 'orderRecords([{id:"x",score:3,name:"Bo"},{id:"y",score:1,name:"Ada"}])',
       'output': '[{id:"y",score:1,name:"Ada"},{id:"x",score:3,name:"Bo"}]'
     },
-    'note': 'At most 100 records with {id: string, score: number, name: string}. Scores are integers -1000 to 1000. IDs and names contain 0 to 20 ASCII characters. Names use case-sensitive character-code order, with no trimming. Preserve the array and records. Stable means equal ordering keys keep input order.',
+    'note': 'At most 100 records with {id: string, score: number, name: string}. Scores are integers -1000 to 1000. IDs and names contain 0 to 20 ASCII characters. Names use case-sensitive ASCII order (A comes before a), with no trimming. Stable means equal ordering keys keep input order.',
     'vocabulary': [
       {
         'term': 'Stable order',
@@ -993,12 +993,12 @@ export const dsaReps: Rep[] = [{
     'id': 'kth-smallest-copy',
     'title': 'Find a ranked value',
     'category': 'Algorithm applications',
-    'prompt': 'Return the kth smallest value, counting duplicate positions separately. k is one-based. Return null when k exceeds the number of values.',
+    'prompt': 'Return the kth smallest value, counting duplicate positions separately. k is one-based. Return null when k exceeds the number of values. Do not change the input.',
     'example': {
       'input': 'kthSmallest([8, 3, 3, 1], 3)',
       'output': '3'
     },
-    'note': 'At most 100 integers from -1000 to 1000. Preserve the input. k is an integer from 1 to 101. Empty input returns null.',
+    'note': 'At most 100 integers from -1000 to 1000. k is an integer from 1 to 101. Empty input returns null.',
     'vocabulary': [
       {
         'term': 'Rank',
@@ -1088,12 +1088,12 @@ export const dsaReps: Rep[] = [{
     'id': 'flatten-nested-numbers',
     'title': 'Flatten nested number lists',
     'category': 'Algorithm applications',
-    'prompt': 'Return all number values in left-to-right order in one new array, removing array nesting. Empty nested arrays contribute no values.',
+    'prompt': 'Return all number values in left-to-right order in one new array, removing array nesting. Empty nested arrays contribute no values. Do not change the input.',
     'example': {
       'input': 'flattenNumbers([4, [2, [], [5]]])',
       'output': '[4, 2, 5]'
     },
-    'note': 'At most 100 integers from -1000 to 1000. Preserve the input. Nested arrays are finite, acyclic, unshared, at most 10 levels deep, with at most 100 total array entries.',
+    'note': 'At most 100 integers from -1000 to 1000. Nested arrays are finite, with no cycles or shared arrays, at most 10 levels deep, with at most 100 total array entries.',
     'vocabulary': [
       {
         'term': 'Nested',
@@ -1188,12 +1188,12 @@ export const dsaReps: Rep[] = [{
     'id': 'count-object-leaves',
     'title': 'Count values in nested objects',
     'category': 'Algorithm applications',
-    'prompt': 'Return the number of primitive leaf values in a nested object. A leaf is a number, string, boolean, or null. An empty object contributes zero. Count occurrences, regardless of their value.',
+    'prompt': 'Return the number of primitive leaf values in a nested object. A leaf is a number, string, boolean, or null. An empty object contributes zero. Count occurrences, regardless of their value. Do not change input.',
     'example': {
       'input': 'countLeaves({user:{name:"Ada",active:false},empty:{}})',
       'output': '2'
     },
-    'note': 'Input is a plain object whose values are leaves or further plain objects; arrays are not supplied. At most 100 properties total and 10 object levels. No cycles or shared objects. Keys and strings contain at most 20 ASCII characters; numbers are integers -1000 to 1000. Preserve input.',
+    'note': 'Input is a plain object whose values are leaves or further plain objects; arrays are not supplied. At most 100 properties total and 10 object levels. No cycles or shared objects. Keys and strings contain at most 20 ASCII characters; numbers are integers -1000 to 1000.',
     'vocabulary': [
       {
         'term': 'Primitive leaf',
@@ -1275,12 +1275,12 @@ export const dsaReps: Rep[] = [{
     'id': 'tree-depth-sum',
     'title': 'Total one level of a tree',
     'category': 'Algorithm applications',
-    'prompt': 'Return the sum of values at exactly depth in a tree. The root is at depth zero. Return zero for a null root or a depth with no nodes.',
+    'prompt': 'Return the sum of values at exactly depth in a tree. The root is at depth zero. Return zero for a null root or a depth with no nodes. Do not change any node or child array.',
     'example': {
       'input': 'sumAtDepth({value:9,children:[{value:4,children:[]}]},1)',
       'output': '4'
     },
-    'note': 'Trees have at most 100 nodes and 10 levels, integer values from -1000 to 1000, no cycles or shared nodes. Preserve every node and child array. depth is an integer from 0 to 10.',
+    'note': 'Trees have at most 100 nodes and 10 levels, integer values from -1000 to 1000, no cycles or shared nodes. depth is an integer from 0 to 10.',
     'vocabulary': [
       {
         'term': 'Level',
@@ -1294,7 +1294,7 @@ export const dsaReps: Rep[] = [{
     'hints': [
       'Label the root and its children with their depths.',
       'Include every qualifying sibling, not just one branch.',
-      'Compare a requested level beyond all leaves with a level whose values sum to zero.'
+      'A depth with no nodes gives a total of 0. Check that case as well as the deepest level.'
     ],
     'checks': [
       { name: 'Maximum nodes', input: [{ value: 1000, children: Array.from({ length: 99 }, () => ({ value: -1000, children: [] })) }, 1], expected: -99000 },
@@ -1395,12 +1395,12 @@ export const dsaReps: Rep[] = [{
     'id': 'tree-value-path',
     'title': 'Find a route to a tree value',
     'category': 'Algorithm applications',
-    'prompt': 'Return an array of node values on the root-to-target route, including both endpoints. Return null if target is absent or root is null. Values are unique, so at most one route qualifies.',
+    'prompt': 'Return an array of node values on the root-to-target route, including both endpoints. Return null if target is absent or root is null. Values are unique, so at most one route qualifies. Do not change any node or child array.',
     'example': {
       'input': 'pathToValue({value:6,children:[{value:2,children:[]}]},2)',
       'output': '[6, 2]'
     },
-    'note': 'Trees have at most 100 nodes and 10 levels, integer values from -1000 to 1000, no cycles or shared nodes. Preserve every node and child array. Values are unique; target is an integer -1000 to 1000.',
+    'note': 'Trees have at most 100 nodes and 10 levels, integer values from -1000 to 1000, no cycles or shared nodes. Values are unique; target is an integer -1000 to 1000.',
     'vocabulary': [
       {
         'term': 'Route',
@@ -1523,12 +1523,12 @@ export const dsaReps: Rep[] = [{
     'id': 'graph-shortest-hops',
     'title': 'Measure the shortest route',
     'category': 'Algorithm applications',
-    'prompt': 'Return the smallest number of directed edges needed to reach target from start. Return null if either endpoint is outside graph or no route exists. A valid node reaches itself in zero hops.',
+    'prompt': 'Return the smallest number of directed edges needed to reach target from start. Return null if either endpoint is outside graph or no route exists. A valid node reaches itself in zero hops. Do not change graph or any of its nested arrays.',
     'example': {
       'input': 'shortestHops([[1],[2],[]],0,2)',
       'output': '2'
     },
-    'note': 'graph is an adjacency list of 0 to 100 nodes identified by array index; each list has at most 100 valid neighbor indices. Duplicate edges, cycles, and self-links are allowed. Preserve graph and its nested arrays. start and target are integers from -1 to 100.',
+    'note': 'graph is an adjacency list of 0 to 100 nodes identified by array index; each list has at most 100 valid neighbor indices. Duplicate edges, cycles, and self-links are allowed. start and target are integers from -1 to 100.',
     'vocabulary': [
       {
         'term': 'Hop',
@@ -1650,12 +1650,12 @@ export const dsaReps: Rep[] = [{
     'id': 'graph-connected-groups',
     'title': 'Count separate connected groups',
     'category': 'Algorithm applications',
-    'prompt': 'Return the number of connected groups in an undirected graph. Nodes belong to one group when connections link them directly or through other nodes. Count isolated nodes as separate groups; an empty graph has zero groups.',
+    'prompt': 'Return the number of connected groups in an undirected graph. Nodes belong to one group when connections link them directly or through other nodes. Count isolated nodes as separate groups; an empty graph has zero groups. Do not change graph or any of its nested arrays.',
     'example': {
       'input': 'connectedGroups([[1],[0],[]])',
       'output': '2'
     },
-    'note': 'graph is an adjacency list of 0 to 100 nodes identified by array index; each list has at most 100 valid neighbor indices. Duplicate edges, cycles, and self-links are allowed. Preserve graph and its nested arrays. Every edge is reciprocal: if j appears in graph[i], i appears in graph[j].',
+    'note': 'graph is an adjacency list of 0 to 100 nodes identified by array index; each list has at most 100 valid neighbor indices. Duplicate edges, cycles, and self-links are allowed. Every edge is reciprocal: if j appears in graph[i], i appears in graph[j].',
     'vocabulary': [
       {
         'term': 'Connected group',
@@ -1669,7 +1669,7 @@ export const dsaReps: Rep[] = [{
     'hints': [
       'Draw all nodes, including those without neighbors.',
       'Different starting nodes may lead to the same group.',
-      'Compare a cycle with three isolated nodes; both have three nodes but different group counts.'
+      'A three-node cycle is one group. Three isolated nodes are three groups.'
     ],
     'checks': [
       { name: 'Maximum isolated nodes', input: [Array.from({ length: 100 }, () => [])], expected: 100 },
@@ -1758,12 +1758,12 @@ export const dsaReps: Rep[] = [{
     'id': 'simplify-file-path',
     'title': 'Simplify an absolute file path',
     'category': 'Algorithm applications',
-    'prompt': 'Return the canonical absolute path. Slash separates segments. Ignore empty segments and exact . segments. An exact .. removes the most recent remaining segment, if any; going above root stays at root. All other segments are literal names. Return / when none remain.',
+    'prompt': 'Return the canonical absolute path. Slash separates segments. Ignore empty segments and exact . segments. An exact .. removes the most recent remaining segment, if any; going above root stays at root. All other segments are kept exactly as written. Return / when none remain.',
     'example': {
       'input': 'simplifyPath("/home/./notes/../work/")',
       'output': '"/home/work"'
     },
-    'note': 'Input starts with / and has 1 to 200 ASCII characters. Segment names are case-sensitive and are not trimmed; ... is a literal name. Repeated and trailing slashes are allowed. This is text processing, not filesystem access or symlink resolution.',
+    'note': 'Input starts with / and has 1 to 200 ASCII characters. Segment names are case-sensitive and are not trimmed; ... is kept as a name. Repeated and trailing slashes are allowed. This is text processing, without reading files or following filesystem links.',
     'vocabulary': [
       {
         'term': 'Canonical path',

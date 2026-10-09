@@ -17,7 +17,7 @@ export const fluencyReps: Rep[] = [
     "id": "sum-matching-prices",
     "title": "Total available prices",
     "category": "Arrays & maps",
-    "prompt": "Return the sum of prices for available items. Count duplicate entries separately. Preserve the input.",
+    "prompt": "Return the sum of prices for available items. Count duplicate entries separately. Do not change the input.",
     "note": "Prices are nonnegative integers. Empty input returns zero.",
     "example": {
       "input": "availableTotal([{price: 4, available: true}, {price: 7, available: false}])",
@@ -188,7 +188,7 @@ export const fluencyReps: Rep[] = [
     "title": "Find the first matching ending",
     "category": "Text",
     "prompt": "Return the first original label whose trimmed, lowercased form ends with the lowercased ending.",
-    "note": "ending is a nonempty string with no surrounding whitespace. Labels can be blank. Return null if no match; preserve the original label including spaces.",
+    "note": "ending is a nonempty string with no surrounding whitespace. Labels can be blank. Return null if no match; keep the original label unchanged, including spaces.",
     "example": {
       "input": "firstEnding([\" report.TXT \", \"photo.png\"], \".txt\")",
       "output": "\" report.TXT \""
@@ -617,8 +617,8 @@ export const fluencyReps: Rep[] = [
     "id": "cancel-adjacent-ids",
     "title": "Cancel adjacent matching IDs",
     "category": "Stacks",
-    "prompt": "Remove adjacent equal pairs as you scan. Removing a pair may expose a new pair. Return the remaining IDs.",
-    "note": "IDs are integers, including zero and negatives. Preserve input.",
+    "prompt": "Remove adjacent equal pairs as you scan. Removing a pair may expose a new pair. Return the remaining IDs. Do not change input.",
+    "note": "IDs are integers, including zero and negatives.",
     "example": {
       "input": "cancelIds([1, 2, 2, 1, 3])",
       "output": "[3]"
@@ -894,8 +894,8 @@ export const fluencyReps: Rep[] = [
     "title": "Derive a task panel summary",
     "category": "Frontend state",
     "format": "transform",
-    "prompt": "Return titles of unfinished tasks matching the trimmed, case-insensitive substring query, preserving labels and order. remaining counts all unfinished tasks, including those hidden by the query.",
-    "note": "A blank query matches all unfinished tasks. Preserve the source objects.",
+    "prompt": "Return titles of unfinished tasks matching the trimmed, case-insensitive substring query, preserving labels and order. remaining counts all unfinished tasks, including those hidden by the query. Do not change the source objects.",
+    "note": "A blank query matches all unfinished tasks.",
     "example": {
       "input": "taskSummary([{title:\"Write\",done:false},{title:\"Read\",done:false}], \"wr\")",
       "output": "{titles:[\"Write\"],remaining:2}"
@@ -917,7 +917,7 @@ export const fluencyReps: Rep[] = [
     "hints": [
       "Count unfinished tasks before search filtering.",
       "Normalize only comparison text.",
-      "Return original titles and preserve order."
+      "Return original titles and keep the original order."
     ],
     "checks": [
       {
