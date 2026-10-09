@@ -8,10 +8,10 @@ import { emptyFluency, parseFluency, recurringReviews } from '../src/fluency.ts'
 import { getJourney, journeys } from '../src/learning.ts'
 
 // Check the learner-facing path and saved evidence contracts, not only record presence.
-test('practical path includes every new rep and retains the beginner default', () => {
-  const path = paths.find(path => path.id === 'practical-concepts')
+test('tracks include every practical rep and retain the beginner default', () => {
+  const placed = new Set(paths.flatMap(path => path.stages.flatMap(stage => stage.repIds)))
   assert.equal(skills[0].id, 'values')
-  assert.deepEqual(path.stages.flatMap(stage => stage.repIds).sort(), practicalReps.map(rep => rep.id).sort())
+  for (const rep of practicalReps) assert.ok(placed.has(rep.id), rep.id)
   for (const skill of practicalSkills) {
     assert.equal(skill.questions.length, 2)
     assert.ok(skill.repIds.length)
@@ -22,7 +22,7 @@ test('practical path includes every new rep and retains the beginner default', (
 
 test('new goal, lesson answers, bookmarks, and self-review survive learning-state validation', () => {
   const state = emptyFluency()
-  state.goal.pathId = 'practical-concepts'
+  state.goal.pathId = 'frontend'
   const skill = practicalSkills.find(skill => skill.id === 'websockets')
   const question = skill.questions[0]
   const now = '2026-10-01T00:00:00Z'

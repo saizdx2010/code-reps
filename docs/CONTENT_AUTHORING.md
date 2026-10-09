@@ -65,3 +65,7 @@ Keep variable names and values concise so diagram labels remain readable.
 These authored snapshots appear only in the post-check comparison reveal after
 all checks pass. They describe the reference approach, not the learner's live
 execution, and must never be copied into independent or recall prompts.
+
+## Paths
+
+The Trail has one root, Foundations (`typescript`), and three tracks: Problem solving (`algorithms-data-structures`), Frontend (`frontend`), and Backend (`backend`). Add a rep to the stage it belongs to in `src/path.ts`; avoid listing it in two tracks except interview rounds and project capstones (`pathApplications` in `src/curriculum.ts`). A track stage made only of Foundations reps renders as a link back to Foundations. Retired path ids (`typescript-browser`, `practical-concepts`, `real-world`, `ai-era`, `interviews`) are mapped to current ids by `migratePathId`, which saved learning goals pass through when loaded; `tests/path-structure.test.mjs` checks that no previously placed rep is dropped.

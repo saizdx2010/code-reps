@@ -35,7 +35,7 @@ The workspace follows five steps:
 ## What you can practise
 
 - **TypeScript foundations:** 83 playable reps and 34 searchable knowledge lessons, with starting points for beginners and returning developers.
-- **Guided paths:** language basics, problem solving, AI-era coding habits, frontend core, backend core, and untimed interview practice.
+- **Guided paths:** Foundations (TypeScript basics, reading and repairing code, how JavaScript runs) plus three tracks: Problem solving, Frontend, and Backend. Interview rounds sit at the end of the tracks and are untimed.
 - **Real-world tasks:** checkout debugging, batch-pipeline predictions, an interactive browser directory, a ticket request handler, and behavior-preserving stock-report refactoring.
 - **Skill journeys:** arrays, words, lookups, stacks, request ownership, resource ownership, validation, and TypeScript state modeling. Each pairs guided work with an independent problem and fresh recall after three days.
 - **Algorithms & Data Structures:** collection operations before problem solving, stack and queue ordering, two pointers, fixed windows, and binary search. See the [path guide](./docs/ALGORITHMS_DATA_STRUCTURES.md) for scope and expansion.
@@ -43,7 +43,7 @@ The workspace follows five steps:
 - **Browser application journey:** a TypeScript state-modeling lesson and guided/independent/delayed-recall reps, plus three freely accessible external project levels using plain TypeScript and the DOM. Detailed requirements cover forms, persistence recovery, real promises, learner-written tests, and a runnable production build. External self-reviews are learner-reported and do not grant retained-skill status.
 - **Personal practice:** two multi-file projects, weekly plans, notes, recurring reviews, self-assessment, and optional timed interview rounds.
 
-Trail is home: your goal path drawn as stages, with lessons placed before the reps that use them, and your next rep, drafts, and due reviews beside it. All tracks shows Foundations and the tracks that build on it. Explicit practice sessions pair one rep with reflection; Progress → Journal keeps completed attempts, ended and unfinished sessions, and notes in one place. Library holds exercises, lessons, projects, and interviews; Progress includes your local profile, path completion badges, completed-rep calendar streaks, and the evidence behind **Learning**, **Practising**, **Independent**, and **Retained**.
+Trail is home: your goal path drawn as stages, with lessons placed before the reps that use them, and your next rep, drafts, and due reviews beside it. All tracks shows Foundations and the three tracks that build on it. Saved goals that name a retired path (typescript-browser, practical-concepts, real-world, ai-era, interviews) move to the track that absorbed it. Explicit practice sessions pair one rep with reflection; Progress → Journal keeps completed attempts, ended and unfinished sessions, and notes in one place. Library holds exercises, lessons, projects, and interviews; Progress includes your local profile, path completion badges, completed-rep calendar streaks, and the evidence behind **Learning**, **Practising**, **Independent**, and **Retained**.
 
 Practical-concept traces check authored application policies; they do not establish live network or timer behavior. See the [learning tools and verification boundaries](./docs/FLUENCY_PLATFORM.md) for details.
 
