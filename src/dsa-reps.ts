@@ -1085,6 +1085,92 @@ export const dsaReps: Rep[] = [{
     ]
   },
   {
+    'id': 'count-unique-windows',
+    'title': 'Count windows with no repeats',
+    'category': 'Algorithm applications',
+    'prompt': 'Count the windows of exactly k consecutive labels in which no label appears twice. Labels match only when they are identical strings (case-sensitive, no trimming, and the empty string is a label). Overlapping windows are counted separately. Return 0 when labels has fewer than k items. Do not change labels.',
+    'example': {
+      'input': 'countUniqueWindows(["a", "b", "a", "c"], 3)',
+      'output': '1'
+    },
+    'note': 'labels has at most 100 strings of 0 to 10 ASCII characters; k is an integer from 1 to 101. Empty input returns 0. Checks verify the count, not a particular approach or complexity.',
+    'vocabulary': [
+      {
+        'term': 'Window',
+        'meaning': 'k consecutive items of a sequence'
+      },
+      {
+        'term': 'Frequency count',
+        'meaning': 'how many times each label is currently inside the window'
+      }
+    ],
+    'planPrompt': 'What do you need to remember about the labels currently inside a window? What must change when the window moves one position?',
+    'starter': 'function countUniqueWindows(labels: string[], k: number): number {\n  // Write your solution here.\n  return 0\n}\n',
+    'functionName': 'countUniqueWindows',
+    'preserveInput': true,
+    'hints': [
+      'Write the windows of a short input and mark each one that has a repeat.',
+      'Moving by one position changes only two labels: one leaves and one enters.',
+      'Decide how you will know the window is repeat-free without re-reading all k labels. Check k = 1 and a window that is not yet complete.'
+    ],
+    'checks': [
+      { name: 'Maximum length windows', input: [Array.from({ length: 100 }, (_, i) => 'id' + i), 50], expected: 51 },
+      { name: 'Window longer than maximum input', input: [Array.from({ length: 100 }, (_, i) => 'id' + i), 101], expected: 0 },
+      { name: 'Repeat blocks some windows', input: [['a', 'b', 'a', 'c'], 3], expected: 1 },
+      { name: 'Empty', input: [[], 1], expected: 0 },
+      { name: 'Too few items', input: [['x', 'y'], 3], expected: 0 },
+      { name: 'One-item windows', input: [['a', 'a', 'a'], 1], expected: 3 },
+      { name: 'Case-sensitive labels', input: [['a', 'A', 'a'], 2], expected: 2 },
+      { name: 'Whole array', input: [['a', 'b', 'c'], 3], expected: 1 },
+      { name: 'Overlapping windows', input: [['a', 'b', 'a', 'b'], 2], expected: 3 },
+      { name: 'Empty-string labels repeat', input: [['', '', 'a'], 2], expected: 1 },
+      { name: 'Repeat leaves and window recovers', input: [['a', 'a', 'b', 'c', 'a'], 3], expected: 2 }
+    ]
+  },
+  {
+    'id': 'shortest-run-reaching-target',
+    'title': 'Find the shortest run reaching a total',
+    'category': 'Algorithm applications',
+    'prompt': 'Return the length of the shortest run of consecutive numbers whose sum is at least target. Return 0 when no run reaches target, including when numbers is empty. Every number is positive. Do not change numbers.',
+    'example': {
+      'input': 'shortestRun([2, 3, 1, 2, 4, 3], 7)',
+      'output': '2'
+    },
+    'note': 'numbers has at most 100 integers from 1 to 1000; target is an integer from 1 to 100000. A run has at least one item. Several runs may tie; only the length is returned. Checks verify the length, not a particular approach or complexity.',
+    'vocabulary': [
+      {
+        'term': 'Run',
+        'meaning': 'a consecutive portion of the numbers, of any length'
+      },
+      {
+        'term': 'Shrink',
+        'meaning': 'drop the oldest item while the run still reaches the target'
+      }
+    ],
+    'planPrompt': 'When should a run grow, and when may it give up its oldest item? Why does positivity make giving up safe?',
+    'starter': 'function shortestRun(numbers: number[], target: number): number {\n  // Write your solution here.\n  return 0\n}\n',
+    'functionName': 'shortestRun',
+    'preserveInput': true,
+    'hints': [
+      'Track where the current run starts and ends, and its total.',
+      'Add items until the total reaches target, then see how far the start can move while it still does.',
+      'Record a length each time the run qualifies. Check a single item that reaches target on its own, and a total that never does.'
+    ],
+    'checks': [
+      { name: 'Maximum input reaches target exactly', input: [Array(100).fill(1000), 100000], expected: 100 },
+      { name: 'Maximum input falls short', input: [Array(99).fill(1000), 100000], expected: 0 },
+      { name: 'Shrinks to the best run', input: [[2, 3, 1, 2, 4, 3], 7], expected: 2 },
+      { name: 'Empty', input: [[], 5], expected: 0 },
+      { name: 'Total too small', input: [[1, 2], 10], expected: 0 },
+      { name: 'Exact single item', input: [[5], 5], expected: 1 },
+      { name: 'Whole array needed', input: [[1, 1, 1, 1], 4], expected: 4 },
+      { name: 'Best run at the start', input: [[8, 1, 1], 8], expected: 1 },
+      { name: 'Best run at the end', input: [[1, 1, 9], 9], expected: 1 },
+      { name: 'Shorter run after a longer one', input: [[3, 1, 1, 4], 5], expected: 2 },
+      { name: 'Exact total is enough', input: [[2, 2, 2], 4], expected: 2 }
+    ]
+  },
+  {
     'id': 'flatten-nested-numbers',
     'title': 'Flatten nested number lists',
     'category': 'Algorithm applications',

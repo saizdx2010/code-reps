@@ -66,7 +66,7 @@ test('every path and new lesson points to playable content', () => {
 })
 
 test('DSA applications require unhinted independence and delayed unhinted recall', () => {
-  for (const id of ['sorting', 'recursion', 'trees', 'graphs', 'stacks']) {
+  for (const id of ['sorting', 'windows', 'recursion', 'trees', 'graphs', 'stacks']) {
     const journey = journeys.find(item => item.id === id)
     assert.ok(journey, id)
     const guided = record(journey.guided, 20)

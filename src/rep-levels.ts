@@ -120,6 +120,8 @@ export const repLevels: Record<string, RepLevel> = {
   'page-response-envelope': 2,
   'sort-score-records': 2,
   'kth-smallest-copy': 2,
+  'count-unique-windows': 2,
+  'shortest-run-reaching-target': 2,
   'simplify-file-path': 2,
   'algo-prefix-sums': 2,
   'algo-merge-intervals': 2,

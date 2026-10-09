@@ -333,6 +333,20 @@ export const dsaDepth: Record<string, RepDepth> = {
     'counterexample': 'Deduplicating [2,2,9] makes rank 2 equal 9 instead of 2.',
     'transfer': 'Self-review: request the kth distinct value. Define absent-rank behavior again.'
   },
+  'count-unique-windows': {
+    'reasoning': 'A window is repeat-free exactly when no label has a count above one. Moving it one step removes one count and adds one, so the number of repeated labels can be updated without re-reading all k items.',
+    'trace': '["a","a","b","c","a"], k=3: [a,a,b] repeats; slide: [a,b,c] is clean (count 1); slide: [b,c,a] is clean (count 2).',
+    'alternative': 'Building a fresh Set for each window takes O(nk) time and is easy to verify; a frequency map updated per step takes O(n) time with up to k stored labels. Both pass these checks.',
+    'counterexample': 'Counting distinct labels in the whole array treats [a,b,a,c], k=3 as having three distinct labels. Windows [a,b,a] and [b,a,c] differ, so the answer is 1, not 2.',
+    'transfer': 'Self-review: return the largest number of distinct labels in any window of k. What changes in the bookkeeping, and what no longer matters?'
+  },
+  'shortest-run-reaching-target': {
+    'reasoning': 'With positive numbers, extending a run only raises its total and dropping the oldest item only lowers it. Growing until the total reaches target, then shrinking while it still does, therefore tests every useful start exactly once.',
+    'trace': '[2,3,1,2,4,3], target 7: grow to [2,3,1,2] total 8, record 4; shrink to [3,1,2] total 6; grow to [3,1,2,4] total 10, shrink to [2,4] total 6 after recording 3; grow with 3 to [4,3] = 7, record 2.',
+    'alternative': 'Trying every start and extending until the target takes O(n squared) time; prefix sums with a search per start take O(n log n). The grow-and-shrink run takes O(n) time and O(1) storage.',
+    'counterexample': 'Using > instead of >= misses an exact total: [5] with target 5 returns 0 instead of 1. Shrinking only once per step misses [1,1,9] with target 9.',
+    'transfer': 'Self-review: allow zero or negative numbers. Why can giving up the oldest item then lose a better run, and what would you need instead?'
+  },
   'flatten-nested-numbers': {
     'reasoning': 'Visiting children in their stored order and appending only numbers preserves the full left-to-right sequence. Empty arrays append nothing. Work is O(e) for all entries, with output and nesting storage.',
     'trace': '[0,[-1,0]] appends 0, then -1, then 0; repeated values survive.',
@@ -1793,6 +1807,28 @@ export const dsaGuides = {
       'State time and storage costs; passing checks does not prove the implementation approach.'
     ],
     'example': 'Sorting a copy puts every occurrence at its numeric rank; position k minus one is therefore the requested occurrence. The copy preserves caller order. [2,2,9] has ranks 1=2, 2=2, 3=9; rank 4 returns null.'
+  },
+  'count-unique-windows': {
+    'plan': [
+      'What do you need to remember about the labels currently inside a window? What must change when the window moves one position?',
+      'Name a boundary before coding.'
+    ],
+    'explanation': [
+      'Explain why your result matches the contract and preserves input.',
+      'State time and storage costs; passing checks does not prove the implementation approach.'
+    ],
+    'example': 'A window is repeat-free exactly when no label has a count above one. Moving it one step removes one count and adds one. ["a","a","b","c","a"], k=3: [a,a,b] repeats; [a,b,c] and [b,c,a] are clean.'
+  },
+  'shortest-run-reaching-target': {
+    'plan': [
+      'When should a run grow, and when may it give up its oldest item? Why does positivity make giving up safe?',
+      'Name a boundary before coding.'
+    ],
+    'explanation': [
+      'Explain why your result matches the contract and preserves input.',
+      'State time and storage costs; passing checks does not prove the implementation approach.'
+    ],
+    'example': 'With positive numbers, extending a run only raises its total and dropping the oldest item only lowers it. Grow until the total reaches target, then shrink while it still does. [2,3,1,2,4,3], target 7: the shortest qualifying run is [4,3], length 2.'
   },
   'flatten-nested-numbers': {
     'plan': [
