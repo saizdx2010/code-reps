@@ -155,6 +155,30 @@ export const repDepth: Record<string, RepDepth> = {
   "balanced-brackets": {
     "reasoning": "Nested structure must close the latest unmatched opening first.",
     "trace": "For ([)], push (, push [, then ) expects ( but the top is [. Reject before reaching the final ].",
+    "traceSteps": {
+      "code": [
+        "function isBalanced(text: string): boolean {",
+        "  const stack: string[] = []",
+        "  const pairs: Record<string, string> = { ')': '(', ']': '[', '}': '{' }",
+        "  for (const character of text) {",
+        "    if (character === '(' || character === '[' || character === '{') stack.push(character)",
+        "    else if (stack.pop() !== pairs[character]) return false",
+        "  }",
+        "  return stack.length === 0",
+        "}"
+      ],
+      "input": "text = '([)]'",
+      "steps": [
+        { "line": 1, "vars": { "text": "([)]" }, "structure": { "kind": "stack", "values": [] }, "note": "Start with an empty stack for opening brackets that are still waiting for a closing bracket." },
+        { "line": 3, "vars": { "character": "(" }, "structure": { "kind": "stack", "values": [] }, "note": "Read the first character, an opening bracket." },
+        { "line": 4, "vars": { "character": "(" }, "structure": { "kind": "stack", "values": ["("] }, "note": "Save the opening bracket on the stack." },
+        { "line": 3, "vars": { "character": "[" }, "structure": { "kind": "stack", "values": ["("] }, "note": "Read the next character, another opening bracket." },
+        { "line": 4, "vars": { "character": "[" }, "structure": { "kind": "stack", "values": ["(", "["] }, "note": "The newer [ sits on top, so it must be closed before the (." },
+        { "line": 3, "vars": { "character": ")" }, "structure": { "kind": "stack", "values": ["(", "["] }, "note": "Read ). It must match the most recent unmatched opening bracket." },
+        { "line": 5, "vars": { "character": ")" }, "structure": { "kind": "stack", "values": ["("] }, "note": "Removing [ leaves ( on the stack. ) needs (, so the two do not match and the function rejects here." },
+        { "line": 5, "vars": { "character": ")", "result": false }, "structure": { "kind": "stack", "values": ["("] }, "note": "The function returns false before reading the final ]. Both bracket types appear twice, but the order is wrong." }
+      ]
+    },
     "alternative": "A stack handles several bracket types. A single counter suffices for one type but loses the opening type and nesting order here.",
     "counterexample": "([)] has matching counts for each type but is not balanced.",
     "transfer": "Allow non-bracket text to be ignored. State that new rule and test a mixed-text expression."
@@ -225,6 +249,31 @@ export const repDepth: Record<string, RepDepth> = {
   "first-repeated-number": {
     "reasoning": "The earliest second occurrence determines the result, not the earliest first occurrence.",
     "trace": "For [8,3,3,8], seen grows to {8,3}; the next 3 repeats before the final 8, so return 3.",
+    "traceSteps": {
+      "code": [
+        "function firstRepeated(numbers: number[]): number | null {",
+        "  const seen = new Set<number>()",
+        "  for (let index = 0; index < numbers.length; index++) {",
+        "    const value = numbers[index]",
+        "    if (seen.has(value)) return value",
+        "    seen.add(value)",
+        "  }",
+        "  return null",
+        "}"
+      ],
+      "input": "numbers = [8, 3, 3, 8]",
+      "steps": [
+        { "line": 1, "vars": { "seen": "{}" }, "structure": { "kind": "array", "values": [8, 3, 3, 8], "pointers": { "current": 0 } }, "note": "Start with an empty Set and the first position." },
+        { "line": 2, "vars": { "index": 0, "seen": "{}" }, "structure": { "kind": "array", "values": [8, 3, 3, 8], "pointers": { "current": 0 } }, "note": "Move to the first position." },
+        { "line": 3, "vars": { "index": 0, "value": 8, "seen": "{}" }, "structure": { "kind": "array", "values": [8, 3, 3, 8], "pointers": { "current": 0 } }, "note": "The value is 8. The Set is empty, so it is not a repeat." },
+        { "line": 5, "vars": { "index": 0, "value": 8, "seen": "{8}" }, "structure": { "kind": "array", "values": [8, 3, 3, 8], "pointers": { "current": 0 } }, "note": "Remember 8 for the positions after it." },
+        { "line": 2, "vars": { "index": 1, "seen": "{8}" }, "structure": { "kind": "array", "values": [8, 3, 3, 8], "pointers": { "current": 1 }, "dimmed": [0] }, "note": "Move to the second position." },
+        { "line": 3, "vars": { "index": 1, "value": 3, "seen": "{8}" }, "structure": { "kind": "array", "values": [8, 3, 3, 8], "pointers": { "current": 1 }, "dimmed": [0] }, "note": "The value is 3. It is not in the Set yet, so it is not a repeat." },
+        { "line": 5, "vars": { "index": 1, "value": 3, "seen": "{8, 3}" }, "structure": { "kind": "array", "values": [8, 3, 3, 8], "pointers": { "current": 1 }, "dimmed": [0] }, "note": "Remember 3." },
+        { "line": 2, "vars": { "index": 2, "seen": "{8, 3}" }, "structure": { "kind": "array", "values": [8, 3, 3, 8], "pointers": { "current": 2 }, "dimmed": [0, 1] }, "note": "Move to the third position." },
+        { "line": 4, "vars": { "index": 2, "value": 3, "seen": "{8, 3}", "result": 3 }, "structure": { "kind": "array", "values": [8, 3, 3, 8], "pointers": { "current": 2 }, "dimmed": [0, 1] }, "note": "3 is already in the Set, so this is its second occurrence. The later 8 is never reached because the function has returned 3." }
+      ]
+    },
     "alternative": "A Set scan can stop immediately. Computing frequencies then taking the first duplicated value selects a different notion of first.",
     "counterexample": "The frequency-first approach returns 8 on [8,3,3,8], violating second-occurrence ordering.",
     "transfer": "Return the index of the first repeated occurrence instead of its value."
@@ -232,6 +281,29 @@ export const repDepth: Record<string, RepDepth> = {
   "remove-adjacent-pairs": {
     "reasoning": "The stack holds the reduced visited prefix, so its top is the only possible match for the next character.",
     "trace": "For abba, save a, save b, remove b on the next b, then remove a. The result is empty.",
+    "traceSteps": {
+      "code": [
+        "function removePairs(text: string): string {",
+        "  const stack: string[] = []",
+        "  for (const character of text) {",
+        "    if (stack[stack.length - 1] === character) stack.pop()",
+        "    else stack.push(character)",
+        "  }",
+        "  return stack.join('')",
+        "}"
+      ],
+      "input": "text = 'abba'",
+      "steps": [
+        { "line": 1, "vars": { "text": "abba" }, "structure": { "kind": "stack", "values": [] }, "note": "Start with an empty stack of characters that have not been removed." },
+        { "line": 2, "vars": { "character": "a" }, "structure": { "kind": "stack", "values": [] }, "note": "Read the first a. Nothing is saved yet, so it cannot pair with anything." },
+        { "line": 4, "vars": { "character": "a" }, "structure": { "kind": "stack", "values": ["a"] }, "note": "Save a. The stack now has one saved character." },
+        { "line": 3, "vars": { "character": "b" }, "structure": { "kind": "stack", "values": ["a"] }, "note": "Compare the next b with the top, a. They differ, so b is not removed." },
+        { "line": 4, "vars": { "character": "b" }, "structure": { "kind": "stack", "values": ["a", "b"] }, "note": "Save b above a." },
+        { "line": 3, "vars": { "character": "b" }, "structure": { "kind": "stack", "values": ["a"] }, "note": "The second b matches the saved top b, so both are removed. a is on top again." },
+        { "line": 3, "vars": { "character": "a" }, "structure": { "kind": "stack", "values": [] }, "note": "The last a matches the saved a, so that pair is removed too." },
+        { "line": 6, "vars": { "result": "" }, "structure": { "kind": "stack", "values": [] }, "note": "Nothing remains, so the function returns an empty string." }
+      ]
+    },
     "alternative": "Repeated replacement is intuitive but can rescan the string many times; a stack processes each character once.",
     "counterexample": "One replacement pass can leave aa after removing bb from abba, even though another pair must vanish.",
     "transfer": "Explain the same process for numeric IDs, including zero and negative IDs."
@@ -337,6 +409,32 @@ export const repDepth: Record<string, RepDepth> = {
   "remaining-actions": {
     "reasoning": "The stack contains the surviving actions after processing the visited instructions.",
     "trace": "For [A,B,UNDO,C], save A, save B, remove B, save C; return [A,C]. UNDO on an empty stack does nothing.",
+    "traceSteps": {
+      "code": [
+        "function remainingActions(actions: string[]): string[] {",
+        "  const stack: string[] = []",
+        "  for (const action of actions) {",
+        "    if (action === 'UNDO') stack.pop()",
+        "    else stack.push(action)",
+        "  }",
+        "  return stack",
+        "}"
+      ],
+      "input": "actions = ['A', 'UNDO', 'UNDO', 'B', 'C', 'UNDO', 'D']",
+      "steps": [
+        { "line": 1, "vars": { "stack": "[]" }, "structure": { "kind": "stack", "values": [] }, "note": "Start with no saved actions." },
+        { "line": 2, "vars": { "action": "A", "stack": "[]" }, "structure": { "kind": "stack", "values": [] }, "note": "Read A. Nothing is saved yet." },
+        { "line": 4, "vars": { "action": "A", "stack": "[A]" }, "structure": { "kind": "stack", "values": ["A"] }, "note": "A is not UNDO, so it is saved." },
+        { "line": 2, "vars": { "action": "UNDO", "stack": "[A]" }, "structure": { "kind": "stack", "values": ["A"] }, "note": "Read the first UNDO." },
+        { "line": 3, "vars": { "action": "UNDO", "stack": "[]" }, "structure": { "kind": "stack", "values": [] }, "note": "UNDO removes the most recent saved action, A." },
+        { "line": 3, "vars": { "action": "UNDO", "stack": "[]" }, "structure": { "kind": "stack", "values": [] }, "note": "A second UNDO with nothing saved does nothing. The stack stays empty." },
+        { "line": 4, "vars": { "action": "B", "stack": "[B]" }, "structure": { "kind": "stack", "values": ["B"] }, "note": "B is saved." },
+        { "line": 4, "vars": { "action": "C", "stack": "[B, C]" }, "structure": { "kind": "stack", "values": ["B", "C"] }, "note": "C is saved above B." },
+        { "line": 3, "vars": { "action": "UNDO", "stack": "[B]" }, "structure": { "kind": "stack", "values": ["B"] }, "note": "UNDO removes C, the most recent saved action." },
+        { "line": 4, "vars": { "action": "D", "stack": "[B, D]" }, "structure": { "kind": "stack", "values": ["B", "D"] }, "note": "D is saved above B." },
+        { "line": 6, "vars": { "result": "[\"B\", \"D\"]" }, "structure": { "kind": "stack", "values": ["B", "D"] }, "note": "The stack holds the surviving actions in their original order, so the function returns B and D." }
+      ]
+    },
     "alternative": "A stack handles the latest action directly. Filtering UNDO tokens removes commands but fails to undo their targets.",
     "counterexample": "Treating a blank action as absent loses a legitimate saved action; only exact UNDO is a command.",
     "transfer": "Add REDO. Explain which additional history and invalidation rules are needed."

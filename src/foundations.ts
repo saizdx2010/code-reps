@@ -121,7 +121,7 @@ export const foundationReps: Rep[] = [
     planPrompt: 'How will you detect an empty array? Which index contains its first item?',
     starter: 'function firstName(names: string[]): string | null {\n  // Check whether the array is empty.\n  return null\n}\n',
     functionName: 'firstName',
-    hints: ['names.length is the number of items.', 'If names.length === 0, return null.', 'Otherwise return names[0].'],
+    hints: ['The length of the array tells you how many items it holds.', 'If that count is zero, the answer is null.', 'Otherwise, read the item at index zero, the first position.'],
     checks: [
       { name: 'Returns the first name', input: [['Ada', 'Sam']], expected: 'Ada' },
       { name: 'Handles an empty array', input: [[]], expected: null },
@@ -138,7 +138,7 @@ export const foundationReps: Rep[] = [
     planPrompt: 'What are the two inputs? What expression produces the output?',
     starter: 'function totalPrice(price: number, quantity: number): number {\n  // Return the total.\n  return 0\n}\n',
     functionName: 'totalPrice',
-    hints: ['Use the parameter names inside the function.', 'The multiplication operator is *.', 'Return price * quantity.'],
+    hints: ['Use the two parameter names inside the function.', 'Decide which operation turns a price and a quantity into a total.', 'Return the result of multiplying the two parameters so the caller receives it.'],
     checks: [
       { name: 'Calculates the example', input: [5, 3], expected: 15 },
       { name: 'Handles zero quantity', input: [8, 0], expected: 0 },

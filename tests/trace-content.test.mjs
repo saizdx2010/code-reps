@@ -1,15 +1,15 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { compileSolution } from '../src/compile-solution.ts'
-import { dsaReps } from '../src/dsa-reps.ts'
+import { reps } from '../src/rep.ts'
 import { repDepth } from '../src/rep-depth.ts'
 import { runRep } from '../src/runner.ts'
 
 const traced = Object.entries(repDepth).filter(([, depth]) => depth.traceSteps)
 
-test('traces cover collection operations and the authored algorithm techniques', () => {
+test('traces cover collection operations, stacks, sets, and the authored algorithm techniques', () => {
   const ids = traced.map(([id]) => id)
-  assert.deepEqual(ids.sort(), ['algo-graph-reachable', 'algo-insertion-sort', 'algo-merge-sorted', 'algo-recursive-sum', 'algo-sorted-pair', 'algo-tree-depth', 'algo-window-sum', 'ds-stack-operations'])
+  assert.deepEqual(ids.sort(), ['algo-binary-search', 'algo-graph-reachable', 'algo-insertion-sort', 'algo-merge-sorted', 'algo-recursive-sum', 'algo-sorted-pair', 'algo-tree-depth', 'algo-window-sum', 'balanced-brackets', 'ds-stack-operations', 'first-repeated-number', 'remaining-actions', 'remove-adjacent-pairs'])
 })
 
 // Parses "name = value, ..." by declaring the input as constants, then reads each binding.
@@ -42,7 +42,7 @@ for (const [id, depth] of traced) {
   })
 
   test(`authored trace code is a correct solution and ends on the executed result: ${id}`, () => {
-    const rep = dsaReps.find(rep => rep.id === id)
+    const rep = reps.find(rep => rep.id === id)
     const source = depth.traceSteps.code.join('\n')
     assert.ok(runRep(source, id).every(check => check.passed))
     const solve = new Function(`${compileSolution(source, rep.functionName)}\nreturn ${rep.functionName}`)()

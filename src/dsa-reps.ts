@@ -22,7 +22,7 @@ export const dsaReps: Rep[] = [{
     'starter': 'function appendAndRead(numbers: number[], extra: number): number {\n  // Write your solution here.\n  return 0\n}\n',
     'functionName': 'appendAndRead',
     'preserveInput': true,
-    'hints': ['An array declared with const can still receive items.', 'Spread into a new array before changing it.', 'Use const copy: number[] = [...numbers], copy.push(extra), then return copy[copy.length - 1].'],
+    'hints': ['An array declared with const can still receive items.', 'Make your own copy first, so the caller keeps the original numbers.', 'Add the extra value to the end of your copy. After adding, the last position is one less than the copy’s length.'],
     'checks': [{
         'name': 'Appends to an existing list',
         'input': [[4, 7], 9],
@@ -61,7 +61,7 @@ export const dsaReps: Rep[] = [{
     'starter': 'function updateDistinct(numbers: number[], extra: number, removed: number): number {\n  // Write your solution here.\n  return 0\n}\n',
     'functionName': 'updateDistinct',
     'preserveInput': true,
-    'hints': ['A Set keeps one copy of each numeric value.', 'Adding an existing value and deleting a missing value are allowed.', 'Use new Set<number>(numbers), then add(extra), delete(removed), and return size.'],
+    'hints': ['A Set keeps one copy of each numeric value.', 'Adding an existing value and deleting a missing value are allowed.', 'Build a Set from the input, add the extra value first, then remove the other value. Report how many distinct values remain.'],
     'checks': [{
         'name': 'Adds then removes',
         'input': [[2, 2, 3], 4, 2],
@@ -100,7 +100,7 @@ export const dsaReps: Rep[] = [{
     'starter': 'function updateLookup(entries: [string, number][], key: string, value: number, query: string): number | null {\n  // Write your solution here.\n  return null\n}\n',
     'functionName': 'updateLookup',
     'preserveInput': true,
-    'hints': ['A map associates a key with a value; setting a key again replaces its value.', 'Zero is a stored value, not a missing entry.', 'Create a Map from entries, set(key, value), then return map.get(query) ?? null. You can also check has(query) first.'],
+    'hints': ['A map associates a key with a value; setting a key again replaces its value.', 'Zero is a stored value, not a missing entry.', 'Build the map from the entries in order, apply the one write, then look up the query. Only a key that was never stored should give null.'],
     'checks': [{
         'name': 'Overwrites with zero',
         'input': [[['a', 2]], 'a', 0, 'a'],
@@ -143,7 +143,7 @@ export const dsaReps: Rep[] = [{
     'starter': 'function stackTop(numbers: number[], extra: number): number | null {\n  // Write your solution here.\n  return null\n}\n',
     'functionName': 'stackTop',
     'preserveInput': true,
-    'hints': ['Last in, first out means the most recently pushed item leaves first.', 'Copy before pushing and popping. Peek does not remove an item.', 'Use [...numbers], push(extra), pop(), then return stack[stack.length - 1] ?? null.'],
+    'hints': ['Last in, first out means the most recently pushed item leaves first.', 'Copy before pushing and popping. Peek does not remove an item.', 'Make a copy, put the extra value on top, take one value off the top, then read what is on top now. If the stack is empty, the answer is null.'],
     'checks': [{
         'name': 'Returns previous top',
         'input': [[4, 7], 9],
@@ -185,7 +185,7 @@ export const dsaReps: Rep[] = [{
     'starter': 'function queueFront(numbers: number[], extra: number): number | null {\n  // Write your solution here.\n  return null\n}\n',
     'functionName': 'queueFront',
     'preserveInput': true,
-    'hints': ['A queue removes the oldest item, rather than the newest.', 'push appends; shift removes the first item.', 'Copy, push(extra), shift(), then return queue[0] ?? null.'],
+    'hints': ['A queue removes the oldest item, rather than the newest.', 'Adding happens at the back of the line; removing happens at the front.', 'Make a copy, add the extra value at the back, remove one item from the front, then look at the new front. If no item remains, the answer is null.'],
     'checks': [{
         'name': 'First in leaves first',
         'input': [[4, 7], 9],
@@ -326,7 +326,7 @@ export const dsaReps: Rep[] = [{
     'starter': 'function sortedIndex(numbers: number[], target: number): number {\n  // Write your solution here.\n  return 0\n}\n',
     'functionName': 'sortedIndex',
     'preserveInput': true,
-    'hints': ['Track the remaining interval with inclusive left and right indices.', 'Use Math.floor((left + right) / 2); discard the middle too when it does not match.', 'While left <= right, return middle on equality; use left = middle + 1 for a smaller middle value, otherwise right = middle - 1. Return -1 after exhaustion.'],
+    'hints': ['Track the remaining interval with inclusive left and right indices.', 'Use Math.floor((left + right) / 2); discard the middle too when it does not match.', 'Keep going while the interval still has a position. Return the middle index when its value matches. If the middle value is less than target, set left to middle + 1; otherwise set right to middle - 1. Return -1 once the interval is empty.'],
     'checks': [{
         'name': 'Finds middle',
         'input': [[-3, 0, 4, 9], 4],
@@ -1334,7 +1334,31 @@ export const dsaDepth: Record<string, RepDepth> = {
     'trace': '[1, 3, 5], target 4: middle index 1 has 3, so left becomes 2; index 2 has 5, so right becomes 1. The interval is empty: -1.',
     'alternative': 'A linear indexOf is concise and O(n). Binary search takes O(log n) comparisons and O(1) extra space, but requires sorted input.',
     'counterexample': 'Using left = middle can stall on [1, 3], target 2 because the same middle repeats.',
-    'transfer': 'Allow duplicates and require the first matching index. Explain why finding any match is no longer enough.'
+    'transfer': 'Allow duplicates and require the first matching index. Explain why finding any match is no longer enough.',
+    'traceSteps': {
+      'code': [
+        'function sortedIndex(numbers: number[], target: number): number {',
+        '  let left = 0, right = numbers.length - 1',
+        '  while (left <= right) {',
+        '    const middle = Math.floor((left + right) / 2)',
+        '    if (numbers[middle] === target) return middle',
+        '    if (numbers[middle] < target) left = middle + 1',
+        '    else right = middle - 1',
+        '  }',
+        '  return -1',
+        '}'
+      ],
+      'input': 'numbers = [-3, 0, 4, 9], target = 4',
+      'steps': [
+        { 'line': 1, 'vars': { 'left': 0, 'right': 3 }, 'structure': { 'kind': 'array', 'values': [-3, 0, 4, 9], 'pointers': { 'left': 0, 'right': 3 } }, 'note': 'Both pointers start at the ends of the sorted array, so the interval covers indices 0 to 3.' },
+        { 'line': 2, 'vars': { 'left': 0, 'right': 3 }, 'structure': { 'kind': 'array', 'values': [-3, 0, 4, 9], 'pointers': { 'left': 0, 'right': 3 } }, 'note': 'The interval still has positions, so the loop runs.' },
+        { 'line': 3, 'vars': { 'left': 0, 'right': 3, 'middle': 1 }, 'structure': { 'kind': 'array', 'values': [-3, 0, 4, 9], 'pointers': { 'left': 0, 'right': 3, 'middle': 1 } }, 'note': 'The middle index is 1, and the value there is 0.' },
+        { 'line': 5, 'vars': { 'left': 2, 'right': 3, 'middle': 1 }, 'structure': { 'kind': 'array', 'values': [-3, 0, 4, 9], 'pointers': { 'left': 2, 'right': 3 }, 'dimmed': [0, 1] }, 'note': 'Zero is less than the target 4, so left moves to index 2. Indices 0 and 1 are out of the interval.' },
+        { 'line': 2, 'vars': { 'left': 2, 'right': 3 }, 'structure': { 'kind': 'array', 'values': [-3, 0, 4, 9], 'pointers': { 'left': 2, 'right': 3 }, 'dimmed': [0, 1] }, 'note': 'Indices 2 and 3 remain, so the loop continues.' },
+        { 'line': 3, 'vars': { 'left': 2, 'right': 3, 'middle': 2 }, 'structure': { 'kind': 'array', 'values': [-3, 0, 4, 9], 'pointers': { 'left': 2, 'right': 3, 'middle': 2 }, 'dimmed': [0, 1] }, 'note': 'The new middle index is 2, and the value there is 4.' },
+        { 'line': 4, 'vars': { 'left': 2, 'right': 3, 'middle': 2, 'result': 2 }, 'structure': { 'kind': 'array', 'values': [-3, 0, 4, 9], 'pointers': { 'left': 2, 'right': 3, 'middle': 2 }, 'dimmed': [0, 1] }, 'note': 'The value 4 matches the target, so the function returns index 2.' }
+      ]
+    }
   }
 }
 

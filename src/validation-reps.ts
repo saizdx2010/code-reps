@@ -16,7 +16,7 @@ export const validationReps: Rep[] = [
 }
 `,
     functionName: 'stockAdjustment', preserveInput: true,
-    hints: ['Separate request shape, field types, and allowed values. Reject invalid input rather than repairing numbers.', 'Exclude null and arrays before reading fields. Normalize string text before checking its permitted characters and length.', 'Require a nonzero integer in the inclusive range, and test normalized SKU with /^[A-Z0-9-]{1,12}$/. Return a new object only when all rules pass.'],
+    hints: ['Separate request shape, field types, and allowed values. Reject invalid input rather than repairing numbers.', 'Exclude null and arrays before reading fields. Normalize string text before checking its permitted characters and length.', 'Check that change is a whole number, not zero, and inside the inclusive range. Then check the normalized SKU: its length and every character must be allowed. Build the result object only after every rule passes.'],
     checks: [
       { name: 'Normalizes the example and ignores extra fields', input: [{sku: ' ab-2 ', change: -3, comment: 'counted'}], expected: {sku: 'AB-2', change: -3} },
       { name: 'Accepts the lower change bound', input: [{sku: 'a', change: -50}], expected: {sku: 'A', change: -50} },
