@@ -17,9 +17,10 @@ export function FirstRepWalkthrough({ step, completed, onNext, onDismiss }: {
   onDismiss: () => void
 }) {
   const help = steps[step] ?? steps.understand
+  const saved = completed && step === 'review'
   return <aside className="first-rep-walkthrough" aria-label="First rep walkthrough">
-    <strong>{completed ? 'Your attempt is saved' : help.title}</strong>
-    <p>{completed ? 'You can revisit your work or choose another rep. Independent fluency and retention need their own evidence.' : help.text}</p>
-    <div>{!completed && help.next && <Button variant="text" onClick={() => onNext(help.next!)}>{help.action}</Button>}<Button variant="text" onClick={onDismiss}>{completed || step === 'review' ? 'Finish walkthrough' : 'Skip walkthrough'}</Button></div>
+    <strong>{saved ? 'Your attempt is saved' : help.title}</strong>
+    <p tabIndex={step === 'solve' ? 0 : undefined}>{saved ? 'You can revisit your work or choose another rep. Independent fluency and retention need their own evidence.' : help.text}</p>
+    <div>{help.next && <Button variant="text" onClick={() => onNext(help.next!)}>{help.action}</Button>}<Button variant="text" onClick={onDismiss}>{step === 'review' ? 'Finish walkthrough' : 'Skip walkthrough'}</Button></div>
   </aside>
 }

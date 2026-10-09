@@ -76,7 +76,7 @@ export function HomePage({ walkthroughSeen, launchWalkthrough, sessionBusy, star
           <button className="primary-button" type="button" onClick={onProgress}>See progress</button>
         </section>}
         {recommendation && <button type="button" className="text-button" disabled={sessionBusy} onClick={() => startPractice(recommendation)}>Record a session</button>}
-        <section className="trail-queue" aria-label="First rep walkthrough"><h2>Try the practice loop</h2><p>A short, optional guide through Declare a value. Your saved work stays in place.</p><Button onMouseEnter={preloadEditor} onFocus={preloadEditor} onClick={launchWalkthrough}>{walkthroughSeen ? 'Replay walkthrough' : 'Try first rep walkthrough'}</Button></section>
+        {!walkthroughSeen && <section className="trail-queue" aria-label="First rep walkthrough"><h2>Try the practice loop</h2><p>An optional guide through Declare a value. Saved work stays in place.</p><Button onMouseEnter={preloadEditor} onFocus={preloadEditor} onClick={launchWalkthrough}>Try first rep walkthrough</Button></section>}
         {choices.length > 0 && <ListGroup title="Choose today's practice" open>
           {choices.map(({ label, action }) => <ListRow key={label} title={title(action.repId)} meta={label} status={<StatusChip tone={action.mode === 'resume' ? 'progress' : action.mode === 'review' ? 'attention' : 'neutral'}>{action.mode === 'resume' ? 'Saved' : label === 'Due review' ? 'Due' : 'Next'}</StatusChip>} onOpen={() => openPracticeAction(action)} onPreview={preloadEditor} />)}
         </ListGroup>}
@@ -101,7 +101,7 @@ export function HomePage({ walkthroughSeen, launchWalkthrough, sessionBusy, star
           <button type="button" className="text-button" onClick={onPlan}><Icon name="calendar" />Plan this week</button>
           <button type="button" className="text-button" onClick={onProgress}>View skill evidence</button>
         </nav>
-        <InfoNote label="How a rep works"><p>Each rep follows the same loop: understand the brief, plan, solve with checks, explain your solution, then review. Your work stays on this device.</p></InfoNote>
+        <InfoNote label="How a rep works"><p>Understand the brief, plan, solve with checks, explain, then review. Work stays on this device. Opening a rep records no session. Complete rep saves an attempt; Reflect and end session ends a session.</p>{walkthroughSeen && <Button variant="text" onClick={launchWalkthrough}>Replay walkthrough</Button>}</InfoNote>
         {learnerStart && <details className="starting-point-settings"><summary>Change starting point</summary>{startingPoint}</details>}
       </aside>
       <section className="trail-column home-goal" aria-label="Learning goal">
