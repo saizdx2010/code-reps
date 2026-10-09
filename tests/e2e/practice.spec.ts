@@ -141,6 +141,8 @@ test('practice steps preserve work, explain missing requirements, and record com
   await chooseOption(page.getByLabel('How confident do you feel?', { exact: true }), 'getting-there')
   await page.getByRole('button', { name: 'Complete rep', exact: false }).click()
   await expect(page.getByText('Completed and saved on this device.', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Next rep: / })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Done for today', exact: true })).toBeVisible()
   await page.reload()
   await expect(steps.getByRole('button', { name: 'Review', exact: true })).toHaveAttribute('aria-current', 'step')
   await page.getByRole('button', { name: 'Explain', exact: true }).click()

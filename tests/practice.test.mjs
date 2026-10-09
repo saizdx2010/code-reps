@@ -2,7 +2,7 @@ import { paths } from '../src/path.ts'
 import { journeys } from '../src/learning.ts'
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { getPracticePlan, attemptStatus } from '../src/practice.ts'
+import { getPracticePlan, attemptStatus, nextRepInPath } from '../src/practice.ts'
 import { reps } from '../src/rep.ts'
 
 const now = Date.parse('2026-09-30T12:00:00Z')
@@ -139,4 +139,13 @@ test('daily recommendation advances past a saved goal draft without hiding it', 
   assert.notEqual(plan.recommended.repId, 'declare-variables')
   assert.equal(plan.recommended.mode, 'start')
   assert.equal(plan.unfinished[0].repId, 'declare-variables')
+})
+
+test('nextRepInPath follows path order and skips completed reps', () => {
+  const none = () => false
+  assert.equal(nextRepInPath('typescript', 'basic-types', none), 'create-objects')
+  assert.equal(nextRepInPath('typescript', 'basic-types', id => id === 'create-objects'), 'make-arrays')
+  assert.equal(nextRepInPath('typescript', 'write-functions', none), 'use-conditions')
+  assert.equal(nextRepInPath('typescript', 'event-loop-order', none), undefined)
+  assert.equal(nextRepInPath('typescript', 'not-in-this-path', none), undefined)
 })

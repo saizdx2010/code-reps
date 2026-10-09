@@ -25,6 +25,15 @@ function difficultyReason(record: PortableRecord) {
   return reasons[record.difficulty ?? ''] ?? (record.hintCount > 0 ? 'You used hints on your last attempt.' : 'You wanted more practice on your last attempt.')
 }
 
+/** The first uncompleted rep that follows `repId` in its path's stage order, or undefined at the end of the path. */
+export function nextRepInPath(pathId: string, repId: string, completed: (id: string) => boolean) {
+  const path = paths.find(item => item.id === migratePathId(pathId))
+  const repIds: string[] = [...new Set(path?.stages.flatMap(stage => stage.repIds) ?? [])]
+  const index = repIds.indexOf(repId)
+  if (index < 0) return undefined
+  return repIds.slice(index + 1).find(id => reps.some(rep => rep.id === id) && !completed(id))
+}
+
 export function getPracticePlan(drafts: Record<string, PortableAttempt>, history: PortableRecord[], learnerStart: LearnerStart | null, selectedRepId: string, now = Date.now(), goalPathId = 'typescript') {
   const status = (id: string) => attemptStatus(id, drafts[id])
   const progress = getAllJourneys(history, now)
