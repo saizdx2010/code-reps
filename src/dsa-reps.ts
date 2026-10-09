@@ -1167,7 +1167,7 @@ export const dsaReps: Rep[] = [{
       { name: 'Single package', input: [[6], 1], expected: 6 },
       { name: 'No packages', input: [[], 3], expected: 0 },
       { name: 'Equal weights', input: [[5, 5, 5, 5], 2], expected: 10 },
-      { name: 'Greedy split is not enough', input: [[1, 5, 1, 5, 1], 3], expected: 6 }
+      { name: 'Alternating heavy and light', input: [[1, 5, 1, 5, 1], 3], expected: 6 }
     ]
   },
   {
