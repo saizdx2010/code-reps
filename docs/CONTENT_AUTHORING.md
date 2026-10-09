@@ -9,8 +9,9 @@ This is an internal authoring guide. Source rights are reserved for now; public 
 1. Add a typed `Rep` in `src/rep.ts` or a focused content module.
 2. Give it a unique ID, concise prompt, example, starter function, plan prompt, progressive hints, and checks for normal and edge cases.
 3. Keep a hint from giving away the full answer until the final reveal. Write a self-review guide in `src/learning.ts` when the rep belongs to a journey.
-4. If it is guided, independent, or recall practice, add it to `journeys` in `src/learning.ts`. A recall rep must use a distinct problem; a hinted or early solve cannot count as retained.
-5. Run `yarn lint`, `yarn test`, and `yarn build`. Try the rep in the local app and read the prompt as someone new to the terminology.
+4. Give it a difficulty level in `repLevels` in `src/rep-levels.ts`: 1 (Beginner) for language basics, control flow, and introductory collection operations; 2 (Intermediate) for typical journeys, frontend and backend reps, techniques, and validation; 3 (Advanced) for recursion, trees, graphs, batch validation, harder async or reliability state, projects, and interviews. The level appears in the library, on the trail, and in the practice header. `yarn test` names any rep that still lacks one.
+5. If it is guided, independent, or recall practice, add it to `journeys` in `src/learning.ts`. A recall rep must use a distinct problem; a hinted or early solve cannot count as retained.
+6. Run `yarn lint`, `yarn test`, and `yarn build`. Try the rep in the local app and read the prompt as someone new to the terminology.
 
 Function checks run authored TypeScript in a browser worker. The frontend implementation format instead runs DOM interaction checks in a sandboxed frame. See [Richer exercises](./RICH_EXERCISES.md) for the frame contract and verification limits. Do not import exercise packs from untrusted sources or treat this worker as a secure sandbox. Content review should include accessibility, clarity for English learners, and whether the checks match the prompt.
 
