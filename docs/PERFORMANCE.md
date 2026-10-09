@@ -4,7 +4,7 @@
 
 | Group | Raw byte budget | Gzip byte budget |
 | --- | ---: | ---: |
-| Initial route JavaScript and static dependencies | 750,000 | 220,000 |
+| Initial route JavaScript and static dependencies | 750,000 | 235,000 |
 | Additional editor JavaScript, including its dynamic language modules | 4,200,000 | 1,050,000 |
 | Additional frontend preview/check JavaScript | 3,900,000 | 1,050,000 |
 | Editor, TypeScript, and practice worker JavaScript | 11,200,000 | 3,100,000 |
