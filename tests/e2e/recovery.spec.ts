@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { chooseOption, editor, replaceCode, route, saved, solution } from './helpers'
+import { expectChecksFinished, chooseOption, editor, replaceCode, route, saved, solution } from './helpers'
 
 const endless = 'function mostFrequent(numbers: number[]): number | null { while (true) {} }'
 
@@ -41,7 +41,7 @@ test('stopping and editing cancel real worker checks without losing the draft', 
   await expect(page.locator('#checks-section .error-message')).toHaveCount(0)
   await expect(page.getByText('All checks passed', { exact: true })).toHaveCount(0)
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
 })
 
 test('a real worker timeout keeps the code editable and allows another run', async ({ page }) => {
@@ -53,7 +53,7 @@ test('a real worker timeout keeps the code editable and allows another run', asy
   await expect(page.getByRole('button', { name: 'Run checks', exact: true })).toBeEnabled()
   await replaceCode(page, solution)
   await page.keyboard.press('ControlOrMeta+Enter')
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
 })
 
 test('failed editor loading preserves a saved draft and offers working plain text checks', async ({ page }) => {
@@ -67,7 +67,7 @@ test('failed editor loading preserves a saved draft and offers working plain tex
   await expect(fallback).toHaveValue(solution)
   await fallback.fill(solution + '\n// Continued in the fallback editor')
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await saved(page)
   await page.unroute('**/src/CodeEditor.tsx*')
   await page.reload()
@@ -102,7 +102,7 @@ test('frontend preview states, keyboard modal exit, and frame checks use authore
   await page.keyboard.press('Escape')
   await expect(preview.getByRole('button', { name: 'Expand preview', exact: true })).toBeFocused()
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await expect(page.locator('iframe[title="Frontend interaction checks"]')).toHaveCount(0)
   await replaceCode(page, richSolutions['frontend-directory'] + '\n// A new draft', 'frontend-directory')
   await expect(preview.getByText('Your code changed. Update the preview to see this version.')).toBeVisible()
@@ -124,7 +124,7 @@ test('DOM accessibility rep previews its authored props and passes frame checks'
   await expect(frame.getByRole('tab', { name: 'Security', selected: true })).toBeVisible()
   await expect(frame.getByText('Change your password.', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
 })
 
 for (const id of ['dom-accessible-form', 'dom-disclosure', 'dom-tabs', 'dom-live-search']) {
@@ -133,7 +133,7 @@ for (const id of ['dom-accessible-form', 'dom-disclosure', 'dom-tabs', 'dom-live
     await page.goto(`/#/practice/${id}`)
     await replaceCode(page, domSolutions[id], id)
     await page.getByRole('button', { name: 'Run checks', exact: true }).click()
-    await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+    await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
     // Focus checks move focus into the offscreen frame; it must come back to the page afterwards.
     expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('IFRAME')
   })

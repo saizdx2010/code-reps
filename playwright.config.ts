@@ -3,6 +3,11 @@ import { defineConfig } from '@playwright/test'
 // E2E_PORT lets separate checkouts run the suite side by side without sharing a server.
 const port = Number(process.env.E2E_PORT) || 4175
 
+const expectTimeout = Number(process.env.E2E_EXPECT_TIMEOUT ?? 10_000)
+if (!Number.isInteger(expectTimeout) || expectTimeout <= 0) {
+  throw new Error('E2E_EXPECT_TIMEOUT must be a positive integer in milliseconds')
+}
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -10,7 +15,7 @@ export default defineConfig({
   retries: 0,
   workers: 2,
   timeout: 45_000,
-  expect: { timeout: 10_000 },
+  expect: { timeout: expectTimeout },
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: `http://127.0.0.1:${port}`,

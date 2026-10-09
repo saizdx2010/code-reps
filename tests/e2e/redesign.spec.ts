@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { reps } from '../../src/rep'
 import { diagnosticRepIds } from '../../src/fluency'
-import { chooseOption, editor, replaceCode, route, solution } from './helpers'
+import { expectChecksFinished, chooseOption, editor, replaceCode, route, solution } from './helpers'
 
 test('focused writing steps preserve the real editor and hide unrelated forms', async ({ page }) => {
   await page.goto(route)
@@ -31,11 +31,11 @@ test('focused writing steps preserve the real editor and hide unrelated forms', 
   await expect(page.getByLabel('Your explanation', { exact: true })).not.toBeVisible()
   expect(await page.locator('.monaco-editor .cursor').first().evaluate(element => ({ top: (element as HTMLElement).style.top, left: (element as HTMLElement).style.left }))).toEqual(cursor)
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await page.getByRole('button', { name: /^Checks/ }).click()
   await expect(page.getByText('All checks passed', { exact: true })).not.toBeVisible()
   await page.getByRole('button', { name: /^Checks/ }).click()
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await page.getByRole('button', { name: 'Plan', exact: true }).click()
   await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue(/Count values/)
 })

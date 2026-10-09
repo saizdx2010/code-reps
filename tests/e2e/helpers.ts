@@ -1,6 +1,14 @@
 import { expect } from '@playwright/test'
 import type { Locator, Page } from '@playwright/test'
 
+// Worker startup and Monaco compilation can take longer on a busy machine.
+export const CHECK_RUN_COMPLETION_TIMEOUT = 30_000
+
+/** Wait for the exact expected result; failures and partial results remain distinct. */
+export async function expectChecksFinished(result: Locator) {
+  await expect(result).toBeVisible({ timeout: CHECK_RUN_COMPLETION_TIMEOUT })
+}
+
 export const route = '/#/practice/most-frequent-number'
 export const solution = `function mostFrequent(numbers: number[]): number | null {
   const counts = new Map<number, number>()

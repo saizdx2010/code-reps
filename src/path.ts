@@ -1,6 +1,6 @@
 export const firstPath = {
   id: 'typescript',
-  title: 'TypeScript from the beginning',
+  title: 'Foundations',
   description: 'Learn the language basics, then build confidence with arrays, text, lookups, stacks, and reading other people\'s code.',
   introduction: {
     title: 'A gentle start with TypeScript',

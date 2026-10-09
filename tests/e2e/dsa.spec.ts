@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { replaceCode } from './helpers'
+import { expectChecksFinished, replaceCode } from './helpers'
 
 test('discover the combined path and complete a queue introduction', async ({ page }) => {
   await page.goto('/#/paths')
@@ -18,11 +18,11 @@ test('discover the combined path and complete a queue introduction', async ({ pa
     return queue[0] ?? null
   }`, 'ds-queue-operations')
   await page.keyboard.press('ControlOrMeta+Enter')
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await page.reload()
   await expect(page.getByRole('textbox', { name: /^TypeScript solution for/ })).toBeVisible()
   await page.locator('.workspace-toolbar').getByRole('button', { name: /Run checks/ }).click()
-  await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
 })
 
 for (const width of [1280, 320]) {

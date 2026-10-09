@@ -40,6 +40,8 @@ Verification: content validation, lint, build/typecheck, all 107 tests, and whit
 
 Read-only pass against [Content authoring](./CONTENT_AUTHORING.md). No source files changed. Every rep and knowledge lesson, with its depth entry, was read line by line. Reflection guides were checked by the existing coverage test (every rep has one) but not reviewed sentence by sentence. Evidence is cited as `file:line`. Counts in the earlier sections above are historical and no longer match the catalog.
 
+The findings and scores below preserve the original audit snapshot. **Status (updated)** notes were checked against the current implementation on 2026-10-09; historical line references may have moved. Fixed means the named editorial change is present, not that learner comprehension or retention has been validated.
+
 ### Method and verification
 
 - **Automated checks run on this branch:** `tests/content.test.mjs` 74/74 pass; `tests/trace-depth.test.mjs` and `tests/trace-content.test.mjs` 9/9 pass; `scripts/validate-content.mjs` (content:check) passes: 34 lessons, 68 interactive checks, 83 exercises. To run tests, the worktree's `node_modules` was symlinked to the main checkout (git-ignored).
@@ -245,49 +247,88 @@ Skill block at `src/knowledge.ts` (line of `id`), lesson depth at `src/lesson-de
 Ranked by learner impact. ID impact follows [Content authoring](./CONTENT_AUTHORING.md): changing a checked question's answer or option order needs a new question ID. A prompt-only edit does not.
 
 1. **`read-batch-labels` — remove the answer from the example and make learners trace.** `src/rich-reps.ts:62` shows the answer to check 1 (`src/rich-reps.ts:70`). Replace the example with a case that is not checked, for example `collectLabels([' Cy ', 'cy', ' Cy'])` → `['Cy', 'cy']`. Change the planning prompt (line 65) to require a row per input: raw value, trimmed label, Set contents, and output. ID impact: none; this is a rep, not an interactive question.
+   - **Status (updated):** Fixed — The Cy/cy example is separate from the checked cases, and the plan requires raw, trimmed, Set, and output columns (`src/rich-reps.ts`).
 2. **`backend-ticket-handler` and `project-ticket-api` — show the dataset.** Add to the prompt: "tickets: t1 'Login issue' (open), t2 'Invoice copy' (closed), t3 'Login on mobile' (open)." Replace the URL example (`src/rich-reps.ts:80`) with `handleTickets({method:'GET', query:{status:'open', page:2, size:1}}, tickets) => {status:200, body:{items:[t3], total:2, page:2, size:1}}`. In `src/capstone-reps.ts:17`, state what `parseQuery` returns for invalid input (`null`).
+   - **Status (updated):** Fixed — Both briefs expose the ticket dataset and paged example through the shared ticket contract; the project plan explicitly states that invalid parseQuery input returns null (`src/rich-reps.ts`, `src/capstone-reps.ts`).
 3. **`algo-binary-search` — add a visual trace and sharpen hint 3.** Add `traceSteps` in `src/dsa-reps.ts` next to the `algo-binary-search` depth key (line 484), following the sorted-pair pattern. Use `sortedIndex([-3, 0, 4, 9], 4)` with left, right, and middle pointers. Replace "use left = middle + 1 for a smaller middle value" with "if numbers[middle] is less than target, set left = middle + 1; otherwise set right = middle - 1."
+   - **Status (updated):** Fixed — Binary search has a pointer trace in `src/review-dsa.ts` and an explicit middle-value comparison in hint 3 (`src/dsa-reps.ts`).
 4. **`remove-adjacent-pairs` — turn the `abba` prose into a stack trace.** The prose is at `src/rep-depth.ts:195`: "save a, save b, remove b on the next b, then remove a." Move it into `traceSteps` with the stack shown bottom to top. This is the stacks journey's recall rep, so visual evidence matters most here.
+   - **Status (updated):** Fixed — The abba cascade has stack traceSteps (`src/rep-depth.ts`).
 5. **`balanced-brackets` — add `traceSteps` for `([)]`.** The prose at `src/rep-depth.ts:118` describes push, push, then a close that expects `(` but finds `[`. Convert it to steps and keep the hint text.
+   - **Status (updated):** Fixed — The mismatched ([)] case has stack traceSteps (`src/rep-depth.ts`).
 6. **`cancel-adjacent-ids` — make the recall distinct and test the counterexample it names.** Add `{ name: 'Keeps nonadjacent matches', input: [[1, 2, 1]], expected: [1, 2, 1] }` at `src/fluency-reps.ts:740`, which `src/rep-depth.ts:307` already relies on. Then either replace the task with a distinct application (for example, a Map-based "keep the last occurrence of each ID" task) or remove it from `recallVariants.stacks` in `src/fluency.ts:50`. ID impact: none.
+   - **Status (updated):** Fixed — The nonadjacent counterexample is checked, and the stack recall pool uses simplify-file-path in place of cancel-adjacent-ids (`src/fluency-reps.ts`, `src/fluency.ts`, `src/dsa-reps.ts`). The old rep remains available for existing evidence.
 7. **`search-request-state` — split the 90-word prompt into event bullets and add a trace.** Replace the paragraph at `src/async-reps.ts:8` with: "Start: {status:'idle', items:[], error:null}. start(id): make id current; return loading. resolve(id) for the current id: return ready with its items (an empty list is still ready); the request ends. reject(id) for the current id: return error with its message (an empty message is still an error); the request ends. cancel(id) for the current id: return idle; the request ends. Any other id, or any event after its request ended: no effect." Add a `traceSteps` for the example.
+   - **Status (updated):** Partly — The prompt now labels each event and states settled-request behavior, and an event trace exists (`src/async-reps.ts`, `src/review-async.ts`). The prompt remains one paragraph rather than event bullets.
 8. **`validate-import-batch` — number the rules and move the precedence rule into the prompt.** Replace the 116-word prompt at `src/validation-reps.ts:82` with numbered rules: (1) batch shape, (2) row shape, (3) id normalization and character set, (4) amount range, (5) duplicate check after a row passes, (6) output. Move "Validate the entire row before duplicate detection" from the note (line 85) into rule 5. Add `traceSteps` showing the accepted-ID Set and the row index for the example.
+   - **Status (updated):** Partly — The prompt numbers rules 1–6 and places row-before-duplicate precedence in rule 5 (`src/validation-reps.ts`). The review still has prose only; accepted-ID Set/index traceSteps remain open (`src/review-validation.ts`).
 9. **`parse-delivery-window` — separate the two address limits.** `src/validation-reps.ts:48` says "at most 200 characters" while the contract says trimmed length 1–80. Rewrite: "The contract allows a trimmed address of 1 to 80 characters. Authored test data never exceeds 200 characters." Then check that the "above its limit" check uses 81.
+   - **Status (updated):** Fixed — The note separates the trimmed 1–80 contract from the 200-character authored-input bound, and the over-limit check uses 81 characters (`src/validation-reps.ts`).
 10. **`interview-backend` — put the trim rule in the contract.** Add to the prompt at `src/ai-era-reps.ts:169`: "Trim the whole email first, then require exactly one @ and nonblank text on each side." Remove the rule from hint 2 (line 176), which currently introduces a rule the prompt does not state. State in the note that internal spaces are allowed, matching check 13.
+   - **Status (updated):** Fixed — Trimming and exactly one @ are in the prompt; internal spaces are explicitly allowed and checked (`src/ai-era-reps.ts`). Hint 2 repeats the stated rule rather than introducing it.
 11. **`interview-frontend` — remove the contradiction and add a clarification step.** Replace the note at `src/ai-era-reps.ts:154` ("Clarify the tie rule in your plan") with "Before coding, write one question you would ask an interviewer about ties, then answer it from the prompt." Add to the plan prompt (line 156): "What would you clarify before coding?"
+   - **Status (updated):** Fixed — The note asks for a clarification question answered from the tie contract, and the plan asks what to clarify (`src/ai-era-reps.ts`).
 12. **Practical reps — replace the generic plan prompts and title vocabulary (19 reps).** Use a rep-specific plan and a real term. Examples: `closure-counters` (`src/practical-concepts.ts:1108`): plan "Where does each counter's count live? After one call on the first counter, what does the second counter return?" Vocabulary (line 1102): "Closure: a returned function that keeps variables from the place where it was created." `pubsub-trace`: plan "After an unsubscribe and a re-subscribe, which listener receives the next publish first?" Vocabulary: "Topic: a named channel. Listener: a function registered on one topic." Apply the same pattern to the other 17.
+   - **Status (updated):** Fixed — All 19 practical reps now have task-specific plans and defined terms (`src/practical-concepts.ts`); the shared generic plan is gone.
 13. **Fluency reps — replace "Contract | Boundary" with terms (11 reps).** Examples: `count-statuses` (`src/fluency-reps.ts:552` area): "Initial value" and "Key". `remaining-actions` (line 633): "Undo" and "Saved action". `debug-page-offset` (line 1101): "Zero-based index" and "Slice end". For `subscription-cleanup` and `room-leases`, replace "Ownership" (`src/practical-concepts.ts:2819`, `:2943`) with "Owner" and "Registration".
+   - **Status (updated):** Fixed — All 11 fluency reps have specific terms, including Initial value/Key, Undo/Saved action, and Zero-based index/Slice end (`src/fluency-reps.ts`). The two ownership reps define Owner and Registration (`src/practical-concepts.ts`).
 14. **Knowledge questions that give away the answer, or whose prompt order does not match the choices.** `src/knowledge.ts:61`: change "Complete the update: use (counts.get(key) ?? 0) + 1 for an initial zero." to "Complete the update so a key seen for the first time starts from zero." `src/knowledge.ts:33`: reorder the prompt to "n >= limit, n > limit, or n !== limit" to match the options. Both are prompt-only edits, so no ID change. For `src/knowledge.ts:103`, replacing the distractor "A mutation of the source array" with a plausible wrong option keeps the answer position but changes option text. Per the strict reading of the authoring guide, give it a new question ID.
+   - **Status (updated):** Fixed — The lookup prompt no longer supplies the expression, array prompt order matches choices, and changed frontend options use derive-source-v2 (`src/knowledge.ts`).
 15. **Practical lesson titles and jargon.** Replace each generic title ("…: a boundary to explain", for example `src/practical-concepts.ts:3203`) with the claim the lesson makes. Example: closures becomes "A returned function keeps its own variables." Rewrite jargon: `src/practical-concepts.ts:3268` "Every accepted send is preceded by an unmatched open" becomes "A send is accepted only while the connection is open." Replace "draining checkpoint" (line 190, a checked option) with "after the current script finishes", which needs a new question ID. Move the retries challenge at line 3297 (about closing a shared connection) to `resource-ownership`, and write a retries challenge about the cap or jitter.
+   - **Status (updated):** Partly — All 16 titles state specific claims; closures, event-loop, and websocket reasoning are clearer; the changed microtask option uses microtask-followup-v2. The reconnect challenge belongs to resource ownership and retries asks about the cap (`src/review-practical.ts`, `src/practical-concepts.ts`). Some internal wording remains, including reference-keyed bookkeeping, topic-specific ordered registration set, and deadline replacement policy.
 
 ### Other findings, not in the top 15
 
 - **`debug-page-offset`** (`src/fluency-reps.ts:1101`): the prompt names only the one-based offset. Add "Check both the start and the end of the slice."
+  - **Status (updated):** Fixed — The prompt now explicitly asks learners to check both the start and end of the slice (`src/fluency-reps.ts`).
 - **`frontend-directory`** (`src/rich-reps.ts:37`): "Loading…" uses U+2026. Either use ASCII "Loading..." in the checks or state the exact character. Replace "use the manual review checklist" (line 39) with a pointer to the acceptance criteria (line 40).
+  - **Status (updated):** Fixed — The prompt specifies the single ellipsis character and the note points to acceptance criteria (`src/rich-reps.ts`).
 - **`react` lesson** (`src/knowledge.ts:163–176`): its linked reps are not React reps. Add a rep that practices effects and cleanup, or narrow the lesson's objectives.
+  - **Status (updated):** Fixed — Objectives label immutable updates and effects as concept checks and explicitly distinguish linked plain TypeScript/DOM practice from React API practice (`src/knowledge.ts`). No React effects rep has been added.
 - **`queues` skill** (`src/dsa-knowledge.ts:77`): `balanced-brackets` is linked to a queue lesson. Remove it from `repIds`.
+  - **Status (updated):** Fixed — repIds now contains stack operations, queue operations, and remaining-actions; balanced-brackets is removed (`src/dsa-knowledge.ts`).
 - **`valid-parentheses` and `balanced-brackets`** (`src/rep.ts:207`, `:81`): near-duplicate skill in one category. Keep both only if the second adds a multi-type extension; otherwise fold one into the other.
+  - **Status (updated):** Fixed — Both remain with the stated distinction: valid-parentheses checks one bracket type, while balanced-brackets extends matching to (), [], and {} (`src/rep.ts`).
 - **`sum-positive-numbers` and count reps**: the note does not say numbers may be decimals, though checks use decimals. Add a numeric-domain sentence to each.
+  - **Status (updated):** Fixed — sum-positive-numbers and count-above-threshold explicitly allow decimals; count-even-numbers states its integer domain (`src/rep.ts`).
 - **`first-duplicate-label` and `sum-matching-prices`**: weak as recall variants because they repeat the guided algorithm. Both should use a changed comparison or data shape.
+  - **Status (updated):** Open — These recall tasks still repeat the guided comparison/accumulation patterns (`src/fluency-reps.ts`).
 - **Systemic: final hints that are code.** Affects `ds-*` reps, `make-arrays`, `write-functions`, `algo-binary-search`, and `validate-stock-adjustment` (regex). Keep progressive hints to three non-code steps and move the code into the post-attempt reveal.
+  - **Status (updated):** Open — Algorithm/code-level final hints remain in foundations, DSA, and validation content.
 - **Systemic: "Inputs are valid under the stated contract."** Used in `subscription-cleanup` (`src/practical-concepts.ts:2816`) and `room-leases` (`:2940`). Say which inputs are valid.
+  - **Status (updated):** Fixed — Both ownership notes now enumerate valid event kinds and nonempty string fields (`src/practical-concepts.ts`).
 - **Systemic: examples repeat check 1.** Most reps do this. It is fine for foundations, but for recall reps, such as `remaining-actions`, the example already shows the answer shape.
+  - **Status (updated):** Open — Examples still duplicate checked cases in several reps; recall distinctness needs a separate pass.
 - **Authoring doc vs code**: `docs/CONTENT_AUTHORING.md` is accurate about recall variants in `src/fluency.ts`, but the rep definitions live in `src/fluency-reps.ts`. A short sentence would help new authors.
+  - **Status (updated):** Open — The guide still identifies src/fluency.ts for recall variants without a matching definition-file pointer.
 
 ## Where a visual step trace helps most
 
 Ranked. Trace types: array with pointers, stack, map or Set, or event-by-event state. Existing traces are in `src/dsa-reps.ts` for `ds-stack-operations`, `algo-sorted-pair`, and `algo-window-sum`.
 
 1. **`algo-binary-search`** (`src/dsa-reps.ts:309`) — array with `left`, `right`, and `middle` pointers. It is the most common array pattern and the only DSA pilot family member without a trace.
+   - **Status (updated):** Fixed — Structured traceSteps are present in the current depth owner.
 2. **`read-batch-labels`** (`src/rich-reps.ts:59`) — the rep is a prediction exercise. A row per iteration (raw, label, Set contents, output) is the content itself.
+   - **Status (updated):** Open — The current depth entry still has prose only; structured traceSteps remain absent.
 3. **`remove-adjacent-pairs`** (`src/journey-reps.ts:43`) — a stack cascade. For `abba`, the stack shows `a`, `ab`, `a`, empty.
+   - **Status (updated):** Fixed — Structured traceSteps are present in the current depth owner.
 4. **`balanced-brackets`** (`src/rep.ts:81`) — stack push and pop for `([)]`, showing the reject before the final `]`.
+   - **Status (updated):** Fixed — Structured traceSteps are present in the current depth owner.
 5. **`remaining-actions`** (`src/fluency-reps.ts:633`) — a stack with UNDO, including an UNDO on an empty stack.
+   - **Status (updated):** Fixed — Structured traceSteps are present in the current depth owner.
 6. **`search-request-state`** (`src/async-reps.ts:7`) — an event-by-event state object. Shows which events change the screen and which are ignored.
+   - **Status (updated):** Fixed — Structured traceSteps are present in the current depth owner.
 7. **`preview-slot-results`** (`src/async-reps.ts:38`) — an insertion-ordered slot map. Shows that replacement keeps position and reselection moves to the end.
+   - **Status (updated):** Open — The current depth entry still has prose only; structured traceSteps remain absent.
 8. **`validate-import-batch`** (`src/validation-reps.ts:81`) — an index pointer plus the accepted-ID Set. Shows duplicates detected only after a row passes.
+   - **Status (updated):** Open — The current depth entry still has prose only; structured traceSteps remain absent.
 9. **`debounce-schedule`** (`src/practical-concepts.ts:1756`) — a timeline of events and the pending deadline. Shows the equality case.
+   - **Status (updated):** Fixed — Structured traceSteps are present in the current depth owner.
 10. **`pubsub-trace`** (`src/practical-concepts.ts:1528`) — a map from topic to ordered listeners. Shows that re-subscribing moves a listener last.
+   - **Status (updated):** Fixed — Structured traceSteps are present in the current depth owner.
 11. **`first-repeated-number`** (`src/journey-reps.ts:24`) — the Set growing, with a pointer at the second occurrence.
+   - **Status (updated):** Fixed — Structured traceSteps are present in the current depth owner.
 12. **`debug-page-offset`** (`src/fluency-reps.ts:1101`) — start and end pointers on the array. Shows the off-by-one bug.
+   - **Status (updated):** Open — The current depth entry still has prose only; structured traceSteps remain absent.
 13. **`leading-throttle`** (`src/practical-concepts.ts:1870`) — the accepted list plus a last-accepted pointer. Shows that rejected events do not move the window.
+   - **Status (updated):** Open — The current depth entry still has prose only; structured traceSteps remain absent.
