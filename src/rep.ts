@@ -1,3 +1,4 @@
+import { connectedFeatureReps } from './connected-feature-reps.ts'
 import { dsaAdvancedReps } from './dsa-advanced-reps.ts'
 import { browserStateReps } from './browser-state-reps.ts'
 import { dsaReps } from './dsa-reps.ts'
@@ -232,6 +233,7 @@ export const reps: Rep[] = [
   ...appReps,
   ...browserStateReps,
   ...domReps,
+  ...connectedFeatureReps,
 ]
 import { foundationReps } from './foundations.ts'
 import { aiEraReps } from './ai-era-reps.ts'

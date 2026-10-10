@@ -37,3 +37,25 @@ The ticket exercise tests a pure request handler with parsed request objects in 
 Lint, build/typecheck, and all 65 tests pass. DOM tests use jsdom to exercise the same generated frame script; transport tests cover source/token matching, cleanup, cancellation, timeout, and malformed feedback.
 
 A Safari smoke test passed all nine directory checks, exercised live search and its empty result, invoked the preview Retry callback, and completed the rep. The completed attempt was verified through the local state API using a temporary test data directory. Broader browser, mobile, assistive-technology, and cross-platform verification remains pending.
+
+## Connected scratch-note feature
+
+The Frontend path includes seven ordered multi-file checkpoints: state modeling,
+rendering, input, saving, invalid-data recovery, learner-written reader tests, and
+an independent requirements-only brief. Each guided starter carries forward the
+previous checkpoint's completed files; drafts are not automatically copied between
+reps. Learners can compare or copy their own implementation before continuing.
+
+The feature uses the existing `encodeFiles` entry-module loader and generic DOM
+frame. Saving uses an injected, per-mount in-memory record (`props.raw`) because
+the sandbox has no browser-storage access. Save, failure, and reload checks establish
+this fixture's synchronous contract, not actual localStorage durability or offline
+operation. No new runner, dependency, network service, or main area is added.
+
+The testing checkpoint asks the learner to write a case table against a supplied
+reader and detect a version-accepting mutant and a throwing reader. It is one
+feature checkpoint, not a guided/independent/delayed testing journey. The independent
+brief combines the same feature requirements with an empty entry file and no module
+plan. Type modeling, module design, keyboard usability, visual quality, and
+assistive-technology behavior remain self-reviewed separately from DOM checks.
+Async and maintenance journeys remain planned in the roadmap.
