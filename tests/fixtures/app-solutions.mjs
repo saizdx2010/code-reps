@@ -129,4 +129,16 @@ function pageEnvelope(totalItems: number, page: number, pageSize: number, path: 
   const link = (target: number) => path + '?page=' + target + '&pageSize=' + pageSize
   return {ok: true, body: {totalItems, totalPages, page, pageSize, links: {self: link(page), prev: page > 1 ? link(page - 1) : null, next: page < totalPages ? link(page + 1) : null}}}
 }`,
+  'frontend-screen-message': `
+function screenMessage(status: string, name: string) {
+  if (status === 'loading') return 'Loading ' + name + '...'
+  if (status === 'error') return 'Could not load ' + name
+  return name
+}`,
+  'backend-check-quantity': `
+function checkQuantity(value: unknown) {
+  if (typeof value !== 'number') return null
+  if (!Number.isInteger(value)) return null
+  return value >= 1 && value <= 10 ? value : null
+}`,
 }

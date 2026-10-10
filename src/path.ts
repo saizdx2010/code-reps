@@ -65,6 +65,7 @@ export const paths = [
       next: 'Start with state labels, then derive what the screen shows. Return to the recall reps after three days. When you are ready, build the team directory project on your own.',
     },
     stages: [
+      { title: 'Show one state', description: 'Turn a single screen state into the words a person sees, before you model several states.', recap: 'You can now turn one screen state into the words a person sees.', repIds: ['frontend-screen-message'] },
       { title: 'Model valid states', description: 'Use unions so a screen can only be in states that make sense.', recap: 'You can now model screen states with unions that rule out invalid combinations.', repIds: ['task-state-label', 'saved-record-status', 'catalog-request-summary'] },
       { title: 'Decide what the screen shows', description: 'Filter items and choose between loading, error, empty, and ready.', recap: 'You can now choose what to show for loading, error, empty, and ready states.', repIds: ['frontend-visible-items', 'frontend-view-state'] },
       { title: 'Build interface logic', description: 'Sort a table, show form errors, choose page buttons, group items, and summarize filters.', recap: 'You can now derive table order, form errors, page buttons, groups, and filter labels.', repIds: ['frontend-sort-table', 'frontend-form-errors', 'frontend-pagination-controls', 'group-items-by-heading', 'filter-chip-summary'] },
@@ -88,6 +89,7 @@ export const paths = [
       next: 'Begin with validation, then paging and handlers. Reliability reps come next: caches, retries, and shared resources. Finish with the ticket API project.',
     },
     stages: [
+      { title: 'Check one value', description: 'Accept a value only when it is the right type and in range, using the conditions from Foundations.', recap: 'You can now check one value against a rule and reject the rest.', repIds: ['backend-check-quantity'] },
       { title: 'Handle untrusted input', description: 'Validate values at runtime, from a guided rep to a fresh recall task.', recap: 'You can now validate untrusted values before using them.', repIds: ['backend-validate-user', 'validate-stock-adjustment', 'parse-delivery-window'] },
       { title: 'Validate a whole batch', description: 'Normalize IDs, report conflicting errors, and accept all or nothing.', recap: 'You can now normalize a batch, report conflicting errors, and accept all or nothing.', repIds: ['validate-import-batch'] },
       { title: 'Return predictable results', description: 'Page a list without changing the original data, and handle a ticket request.', recap: 'You can now page data without changing it and handle a ticket request.', repIds: ['backend-page-results', 'backend-ticket-handler'] },

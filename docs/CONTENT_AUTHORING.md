@@ -39,7 +39,7 @@ Run `yarn content:check` before publishing an app/content update. Keep exercise 
 
 The initial JavaScript chunk must stay small, so content is split by when it is needed:
 
-- **Startup (imported synchronously):** `src/catalog-index.ts`, a generated index with each rep's id, title, category, format, starter code, hint count, and source module, plus each lesson's id, title, summary, prerequisites, related lessons, rep links, first common mistake, and question ids with their answer contracts. Paths, journeys (`src/learning.ts`), fluency data, the Trail, planner, and badges read these. Run `yarn content:index` after changing a rep or lesson; `tests/catalog-index.test.mjs` fails when the file is stale and when a startup module imports heavy content.
+- **Startup (imported synchronously):** `src/catalog-index.ts`, a generated index with each rep's id, title, category, format, starter code, hint count, brief word count, check count, and source module, plus each lesson's id, title, summary, prerequisites, related lessons, rep links, first common mistake, and question ids with their answer contracts. Paths, journeys (`src/learning.ts`), fluency data, the Trail, planner, and badges read these. Run `yarn content:index` after changing a rep or lesson; `tests/catalog-index.test.mjs` fails when the file is stale and when a startup module imports heavy content.
 - **Rep content (loaded when a rep opens):** the brief, example, notes, vocabulary, plan prompt, hints, checks, and the short lesson before a rep, loaded per source module by `src/rep-content.ts`. `useRepContent` shows a loading state, and an error state with Retry (then Reload app if Retry cannot recover) that leaves the draft untouched. Lesson bodies (`src/knowledge.ts`) load with the lesson views, and the glossary and quick lessons load on demand.
 - **Whole catalog (Node only):** tests, scripts, and the practice worker import `src/rep.ts` (all reps, through `src/rep-sources.ts`) and `src/knowledge.ts` (all lessons). The app never imports them directly.
 - **Review (loaded when a rep or lesson opens):** self-review guides, rep depth (including `traceSteps`), and lesson depth. They live in `src/review-*.ts` (one module per content area, for example `src/review-dsa.ts` exports `dsaDepth` and `dsaGuides`) and are aggregated by `src/rep-depth.ts`, `src/lesson-depth.ts`, and `src/reflection-guides.ts`. `src/load-review-content.ts` imports those aggregators dynamically; `useReviewContent` shows a loading state, and an error state with Retry that leaves the draft untouched.
@@ -101,6 +101,8 @@ Retired checked questions can keep their old answer contracts in `src/fluency.ts
 This lets older local data and backups load. Retired answers do not count toward
 replacement questions. The frontend derived-list and event-loop follow-up checks
 use new IDs after their option wording changed in the October 2026 audit.
+
+The effort estimate on a rep derives from the brief word count plus eight per check, in four bands per level (`effortRange` in `src/rep-guidance.ts`), so a long Beginner brief does not promise the lightest range. It is guidance, not a time limit. A readiness checkpoint also appears, without blocking, on an Intermediate or Advanced track rep when no Beginner rep of that track is finished; each of Frontend and Backend opens with a Beginner bridge rep for this reason.
 
 ## Paths
 

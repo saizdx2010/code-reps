@@ -3,6 +3,10 @@
 import { repSources } from '../src/rep-sources.ts'
 import { skills } from '../src/knowledge.ts'
 
+const words = text => text.split(/\s+/).filter(Boolean).length
+/** Words in the brief the learner reads: the structured brief when there is one, otherwise the prompt. */
+const briefWords = rep => rep.brief ? words(rep.brief.summary) + rep.brief.rules.reduce((sum, rule) => sum + words(rule), 0) + (rep.brief.edgeCases ?? []).reduce((sum, item) => sum + words(item), 0) : words(rep.prompt)
+
 const line = value => `  ${JSON.stringify(value)},`
 
 export function renderCatalogIndex() {
@@ -12,7 +16,7 @@ export function renderCatalogIndex() {
     for (const rep of source.reps) {
       if (seen.has(rep.id)) throw new Error(`Duplicate rep id ${rep.id}`)
       seen.add(rep.id)
-      repEntries.push({ id: rep.id, title: rep.title, category: rep.category, ...(rep.format ? { format: rep.format } : {}), starter: rep.starter, hintTotal: rep.hints.length, source: source.name })
+      repEntries.push({ id: rep.id, title: rep.title, category: rep.category, ...(rep.format ? { format: rep.format } : {}), starter: rep.starter, hintTotal: rep.hints.length, briefWords: briefWords(rep), checkTotal: rep.checks.length, source: source.name })
     }
   }
   const foundationRepIds = []
@@ -36,7 +40,7 @@ export function renderCatalogIndex() {
 import type { Rep } from './rep-types.ts'
 
 export type RepSourceName = ${names}
-export type RepSummary = { id: string; title: string; category: string; format?: Rep['format']; starter: string; hintTotal: number; source: RepSourceName }
+export type RepSummary = { id: string; title: string; category: string; format?: Rep['format']; starter: string; hintTotal: number; briefWords: number; checkTotal: number; source: RepSourceName }
 export type QuestionSummary = { id: string; optionCount: number; answer: number; completion?: true; answerText?: string }
 export type SkillSummary = { id: string; title: string; summary: string; prerequisites: string[]; related: string[]; repIds: string[]; firstMistake: string; questions: QuestionSummary[] }
 

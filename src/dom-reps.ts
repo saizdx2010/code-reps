@@ -138,6 +138,16 @@ export const domReps: Rep[] = [
     id: 'dom-live-search', title: 'Announce live search results politely', category: 'Frontend accessibility', format: 'frontend',
     context: 'A fruit filter updates the list as you type. A sighted person sees the list change; a screen reader user hears nothing unless a polite live region reports the new result count. The empty state also needs plain words.',
     prompt: 'Implement `mountLiveSearch(root, props)` with props.items (strings). Render a search input with a visible label "Filter items", a list (ul) with one li per visible item, and a status paragraph that is a polite live region (aria-live="polite"). Create the status paragraph during the first render, not after the first keystroke, and update its text in place. On every input event, filter items by a trimmed, case-insensitive substring of the input value, keeping original labels and order, and leave the typed value as entered. The status reads "<n> results", or "1 result" for exactly one. When nothing matches, also show a paragraph "No items match your search." in addition to the status; remove it when matches return. Use data-testid values: search on the input, item on each li, status on the live region, and empty on the empty-state paragraph.',
+    brief: {
+      summary: 'Implement `mountLiveSearch(root, props)` with props.items (strings).',
+      rules: [
+        'Render a search input with a visible label "Filter items", a list (ul) with one li per visible item, and a status paragraph that is a polite live region (aria-live="polite").',
+        'Create the status paragraph during the first render, not after the first keystroke, and update its text in place.',
+        'On every input event, filter items by a trimmed, case-insensitive substring of the input value, keeping original labels and order, and leave the typed value as entered.',
+        'The status reads "<n> results", or "1 result" for exactly one.',
+      ],
+      edgeCases: ['When nothing matches, also show a paragraph "No items match your search." in addition to the status; remove it when matches return.', 'Use data-testid values: search on the input, item on each li, status on the live region, and empty on the empty-state paragraph.'],
+    },
     example: { input: "items Apple, Banana, Pineapple, Apricot; typed ' AP '", output: "list: Apple, Pineapple, Apricot; status: '3 results'" },
     note: 'Use data-testid values: search on the input, item on each li, status on the live region, and empty on the empty-state paragraph. Render items with `textContent`. Do not replace the status or input elements on each keystroke: a live region that is recreated may not be announced, and a recreated input loses focus. ' + limits,
     acceptanceCriteria: ['Typing keeps focus in the input and the cursor position.', 'The count changes after each keystroke without moving focus.', 'The empty message is visible text, not only color or an icon.', 'Test with a real screen reader before claiming the count is announced well.'],
@@ -161,6 +171,16 @@ export const domReps: Rep[] = [
     id: 'dom-accordion', title: 'Build an accordion where one section stays open', category: 'Frontend accessibility', format: 'frontend',
     context: 'A help page lists Shipping, Returns, and Warranty. People read one answer at a time, so at most one section shows, and keyboard and screen reader users must be able to tell which.',
     prompt: 'Implement `mountAccordion(root, props)` with props.sections (id, title, content) and props.open, the id of the section that starts open or null. For each section render a header control and a panel. The header has type="button", the title as text, `aria-expanded` "true" or "false", and `aria-controls` naming its panel. The panel has role="region", aria-labelledby naming its header, the content as text, and is hidden unless its section is open. At most one section is open. Activating a closed header opens its section and closes the other. Activating the open header closes it, leaving none open. An open id that matches no section means none start open. Headers are not rebuilt, so they keep focus. Use data-testid header-<id> on each header and panel-<id> on each panel,, with matching element ids.',
+    brief: {
+      summary: 'Implement `mountAccordion(root, props)` with props.sections (id, title, content) and props.open, the id of the section that starts open or null.',
+      rules: [
+        'For each section render a header control and a panel.',
+        'The header has type="button", the title as text, `aria-expanded` "true" or "false", and `aria-controls` naming its panel.',
+        'The panel has role="region", aria-labelledby naming its header, the content as text, and is hidden unless its section is open.',
+        'At most one section is open. Activating a closed header opens its section and closes the other; activating the open header closes it, leaving none open.',
+      ],
+      edgeCases: ['An open id that matches no section means none start open.', 'Headers are not rebuilt, so they keep focus.', 'Use data-testid header-<id> on each header and panel-<id> on each panel, with matching element ids.'],
+    },
     example: { input: "open 'shipping', then click Returns", output: 'Returns is expanded and visible; Shipping is collapsed and hidden' },
     note: 'Use data-testid header-<id> and panel-<id> (the same strings as the element ids). Render titles and content with `textContent`. Checks click the headers. ' + limits,
     acceptanceCriteria: ['Tab reaches every header in order; Enter and Space activate the focused one in a real browser.', 'Focus stays visibly on the header you activated.', 'Try a screen reader to confirm that each header announces whether it is expanded.'],

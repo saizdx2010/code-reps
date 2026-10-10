@@ -123,6 +123,9 @@ export const repLevels: Record<string, RepLevel> = {
   // Added with recall chains and interview-level patterns.
   'shipping-cost-tiers': 1,
   'countdown-labels': 1,
+  // Bridge reps that open the Frontend and Backend tracks.
+  'frontend-screen-message': 1,
+  'backend-check-quantity': 1,
   'group-items-by-heading': 2,
   'filter-chip-summary': 2,
   'parse-sort-param': 2,

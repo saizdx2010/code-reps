@@ -51,6 +51,16 @@ export const appGuides = {
     explanation: ['Trace 21 items at 10 per page through the last page.', 'Explain why an empty collection still has one page.', 'Explain why the envelope must not contain the items.'],
     example: 'I compute totalPages as the rounded-up quotient, at least one. If the requested page is larger, I return PAGE_NOT_FOUND. Otherwise I build self from the page and size, prev only when the page is above one, and next only before the last page. For 21 items at 10 per page, page 3 has no next link. The work is constant apart from the link text.',
   },
+  'frontend-screen-message': {
+    plan: ['Write the words for each of the three states.', 'Decide what ready returns for an empty name.', 'Return from each condition so only one message is produced.'],
+    explanation: ['Trace one status through your conditions and say which line returns.', 'Explain why the name is never changed.', 'Say what these checks do not cover, such as how the words look on a screen.'],
+    example: 'I test the status with one condition per state and return its message as soon as it matches. Loading and error build text around the name; ready returns the name unchanged, so an empty name stays empty. The checks cover each state and an empty name; they do not show how the text looks on screen.',
+  },
+  'backend-check-quantity': {
+    plan: ['List the rules a value must meet: a number, whole, and in range.', 'Decide which test to run first so later tests are safe.', 'Name the values at each end of the range.'],
+    explanation: ['Trace "3", 2.5, and 11 and say which rule rejects each.', 'Explain why the value is returned unchanged instead of converted.', 'Say what this does not cover, such as a full request body.'],
+    example: 'I reject anything whose typeof is not number, then anything that is not a whole number, then return the value only when it is at least 1 and at most 10. Strings are rejected rather than converted. The checks cover both ends and the wrong-type cases; they do not validate a whole request.',
+  },
 }
 
 export const appDepth: Record<string, RepDepth> = {
@@ -123,5 +133,19 @@ export const appDepth: Record<string, RepDepth> = {
     alternative: 'Returning the last page silently for an out-of-range request is friendlier, but then the client cannot tell its page number was wrong. Using floor instead of ceiling loses the partial final page.',
     counterexample: 'Computing totalPages as floor(21 / 10) gives 2 and drops the last item from navigation. Setting next to the page after the last one for every page sends clients to an empty page.',
     transfer: 'Switch to cursor pagination, where the response returns the id of the last item instead of a page number. Decide which links remain and how an empty result is represented. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'frontend-screen-message': {
+    reasoning: 'The three statuses are mutually exclusive, so one condition per status produces exactly one message. Ready returns the name itself, which is why an empty name gives an empty string.',
+    trace: 'For ("error", "profile") the loading test fails, the error test matches, and the result is "Could not load profile". For ("ready", "") both tests fail and the name "" is returned.',
+    alternative: 'A lookup object of message builders keeps the three states together, but for three short messages plain if statements are easier to read and trace.',
+    counterexample: 'Returning "Loading " + name without the dots, or checking ready first and returning name for every status, passes the ready check but fails the loading and error checks.',
+    transfer: 'Add an "empty" status that shows "No profile yet". Decide where it goes among the conditions and what name it uses. This change is self-reviewed; the original checks do not cover it.',
+  },
+  'backend-check-quantity': {
+    reasoning: 'Each rule is tested before the next depends on it: the type first, then wholeness, then the range. The value is returned only when all three hold, so no invalid value reaches later code.',
+    trace: 'For "3" the type test fails and null returns. For 2.5 the type passes and the wholeness test fails. For 10 every rule holds, so 10 is returned; 11 fails the range.',
+    alternative: 'A single combined condition is shorter, but separate early returns make it clear which rule rejected a value. Coercing with Number("3") would accept text, which this contract forbids.',
+    counterexample: 'Checking only value >= 1 && value <= 10 accepts 2.5. Using < 10 rejects the valid value 10. Using typeof alone accepts NaN, though checks here never pass it.',
+    transfer: 'Allow a quantity of 0 only when a second argument says the cart is being cleared. Decide the new rule order and write the conflicting cases first. This is self-reviewed, not checked by the original cases.',
   },
 }

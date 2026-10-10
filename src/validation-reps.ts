@@ -80,6 +80,18 @@ function deliveryWindow(input: unknown): WindowResult {
     id: 'validate-import-batch', title: 'Validate a batch before importing', category: 'Backend core', format: 'backend',
     context: 'An import must accept every row or reject the whole batch. No partial successful output is returned.',
     prompt: 'Implement importBatch(input) using these rules in order. (1) Batch shape: input must be an array of 1–50 rows; otherwise return {ok: false, index: -1, error: "INVALID_BATCH"}. Then examine rows in input order and stop at the first error. (2) Row shape: a row must be a non-null object that is not an array, with a string id and an integer amount; otherwise return {ok: false, index, error: "INVALID_ROW"}. (3) Id: trim and lowercase it; the result must contain 1–10 ASCII lowercase letters or digits, or the row is INVALID_ROW. (4) Amount: an integer from 0 through 9999, or the row is INVALID_ROW. (5) Duplicates: only after a row passes rules 2–4, if its normalized id matches an earlier accepted row, return {ok: false, index, error: "DUPLICATE_ID"}. (6) Output: if every row passes, return {ok: true, rows} with only the normalized id and amount, in original order.',
+    brief: {
+      summary: 'Implement importBatch(input) by applying rules 1 to 6 in order. Examine rows in input order and stop at the first error.',
+      rules: [
+        'Batch shape: input must be an array of 1–50 rows; otherwise return {ok: false, index: -1, error: "INVALID_BATCH"}.',
+        'Row shape: a row must be a non-null object that is not an array, with a string id and an integer amount; otherwise return {ok: false, index, error: "INVALID_ROW"}.',
+        'Id: trim and lowercase it; the result must contain 1–10 ASCII lowercase letters or digits, or the row is INVALID_ROW.',
+        'Amount: an integer from 0 through 9999, or the row is INVALID_ROW.',
+        'Duplicates: only after a row passes rules 2–4, if its normalized id matches an earlier accepted row, return {ok: false, index, error: "DUPLICATE_ID"}.',
+        'Output: if every row passes, return {ok: true, rows} with only the normalized id and amount, in original order.',
+      ],
+      edgeCases: ['Rule 3 normalizes the id before rule 5 compares it, and rule 5 never runs for a row that already failed.'],
+    },
     example: { input: 'importBatch([{id: " A1 ", amount: 0}, {id: "a1", amount: 2}])', output: '{ok: false, index: 1, error: "DUPLICATE_ID"}' },
     note: 'index is zero-based. A duplicate id with an invalid amount gives INVALID_ROW, because rule 5 runs only after the row passes. Do not coerce fields or change the input. Ignore extra row properties. Authored rows have at most 20 properties and strings at most 200 characters. No data is actually imported; this function checks an all-or-nothing boundary policy.',
     vocabulary: [{ term: 'All-or-nothing', meaning: 'accepting the complete operation or rejecting it without returning partial success' }, { term: 'Duplicate', meaning: 'a value already present under the contract’s comparison rules' }],

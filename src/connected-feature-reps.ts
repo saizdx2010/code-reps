@@ -54,6 +54,34 @@ const contract3 = 'Add native type=button Save (save) and a stored paragraph (st
 const contract4 = 'At startup and on native Reload button (reload), read the fixture instead of props.text. Missing data gives empty text and Ready. Accept only a non-null non-array object with version exactly 1 and text a string of at most 80 code units; ignore extra keys. Invalid JSON or shape gives empty text and Recovered; never overwrite invalid stored data until a successful explicit Save. Reload discards unsaved input. '
 const contract6 = 'Add native Test reader button (test) and report paragraph (report). Export `verify(read)` from `tests.ts`. Return failing case names in this order: missing (null), valid ({version:1,text: Ada}), syntax ({), shape ([]), version ({version:2,text: Ada}), type ({version:1,text:5}), limit (81 a characters), boundary (80 a characters). Pass raw JSON strings except null. Expected text/status are empty/Ready for missing, Ada/Ready for valid, 80 a characters/Ready for boundary, and empty/Recovered for all invalid cases. A throw fails that case. Report All reader cases passed or Failures: followed by names joined with comma-space. The supplied main module injects a version-accepting mutant or a throwing reader via props.faulty. '
 
+// Structured briefs for the scratch-note reps. They restate the same contract in order; the prompt text above stays the full contract.
+const noteInputRules = [
+  'Build a single-line Note input (data-testid note) with an associated visible label Note, a paragraph output with literal text, and a status paragraph (role status). Initial status is Ready. Do not change props.',
+  'Preserve text exactly, including whitespace. The limit is 80 JavaScript UTF-16 code units.',
+  'On input, accept lengths 0–80: update the output and show Unsaved.',
+  'For longer values keep the last accepted output, leave the typed input visible, and show Too long.',
+  'Preserve the input element and focus.',
+]
+const noteSaveRules = [
+  'Add a native type=button Save (save) and a stored paragraph (stored). The fixture starts with props.raw, displaying (missing) for null.',
+  'Save accepted text as `JSON.stringify({version:1,text})` and show Saved.',
+  'If props.failSave, preserve the stored value and the draft and show Save failed.',
+]
+const noteSaveEdges = ['Save while the input is over the limit does nothing.', 'This is an in-memory storage fixture per mount, not actual browser persistence.']
+const noteRecoverRules = [
+  'At startup and on the native Reload button (reload), read the fixture instead of props.text.',
+  'Missing data gives empty text and Ready.',
+  'Accept only a non-null, non-array object with version exactly 1 and text a string of at most 80 code units; ignore extra keys.',
+  'Invalid JSON or shape gives empty text and Recovered.',
+]
+const noteRecoverEdges = ['Never overwrite invalid stored data until a successful explicit Save.', 'Reload discards unsaved input.']
+const noteTestRules = [
+  'Add a native Test reader button (test) and a report paragraph (report). Export `verify(read)` from `tests.ts`.',
+  'Return failing case names in this order: missing (null), valid ({version:1,text: Ada}), syntax ({), shape ([]), version ({version:2,text: Ada}), type ({version:1,text:5}), limit (81 a characters), boundary (80 a characters).',
+  'Pass raw JSON strings except null. Expected text/status are empty/Ready for missing, Ada/Ready for valid, 80 a characters/Ready for boundary, and empty/Recovered for all invalid cases.',
+  'Report All reader cases passed, or Failures: followed by the names joined with comma-space.',
+]
+
 export const connectedFeatureReps: Rep[] = [
   {
     id: 'connected-note-state',
@@ -197,6 +225,7 @@ export const connectedFeatureReps: Rep[] = [
     category: 'Connected browser feature',
     context: 'Build one local scratch-note feature across state, rendering, input, saving, recovery, and testing. This starter carries forward the completed files from the previous checkpoint; your earlier draft is not copied automatically. Compare it with your own files before continuing.',
     prompt: contract1 + contract2 + contract3,
+    brief: { summary: 'Add saving to the scratch note, using an in-memory storage fixture.', rules: [...noteInputRules, ...noteSaveRules], edgeCases: noteSaveEdges },
     example: {
       input: 'Edit Ada to Bo',
       output: 'Bo / Unsaved'
@@ -247,6 +276,7 @@ export const connectedFeatureReps: Rep[] = [
     category: 'Connected browser feature',
     context: 'Build one local scratch-note feature across state, rendering, input, saving, recovery, and testing. This starter carries forward the completed files from the previous checkpoint; your earlier draft is not copied automatically. Compare it with your own files before continuing.',
     prompt: contract1 + contract2 + contract3 + contract4,
+    brief: { summary: 'Make the scratch note recover from missing or invalid stored data.', rules: [...noteInputRules, ...noteSaveRules, ...noteRecoverRules], edgeCases: [...noteSaveEdges, ...noteRecoverEdges] },
     example: {
       input: 'Edit Ada to Bo, Save, edit again, Reload',
       output: 'Bo / Ready'
@@ -297,6 +327,7 @@ export const connectedFeatureReps: Rep[] = [
     category: 'Connected browser feature',
     context: 'Build one local scratch-note feature across state, rendering, input, saving, recovery, and testing. This starter carries forward the completed files from the previous checkpoint; your earlier draft is not copied automatically. Compare it with your own files before continuing.',
     prompt: contract1 + contract2 + contract3 + contract4 + contract6,
+    brief: { summary: 'Test the stored-note reader with your own verify function, and show the report.', rules: [...noteInputRules, ...noteSaveRules, ...noteRecoverRules, ...noteTestRules], edgeCases: [...noteSaveEdges, ...noteRecoverEdges, 'A throw fails that case.', 'The supplied main module injects a version-accepting mutant or a throwing reader via props.faulty.'] },
     example: {
       input: 'Edit Ada to Bo, Save, edit again, Reload',
       output: 'Bo / Ready'
@@ -347,6 +378,7 @@ export const connectedFeatureReps: Rep[] = [
     category: 'Connected browser feature',
     context: 'Build one local scratch-note feature across state, rendering, input, saving, recovery, and testing. Independent brief: start from the requirements and choose your own structure.',
     prompt: contract1 + contract2 + contract3.replace('as JSON.stringify({version:1,text})', 'as compact JSON with version then text fields, escaping text as JSON requires') + contract4 + contract6.replace('Export verify(read) from tests.ts. ', '').replace('The supplied main module injects a version-accepting mutant or a throwing reader via props.faulty.', 'When props.faulty is version, test a reader that incorrectly accepts version 2 with Ada but otherwise follows the contract. When it is throw, test a reader that throws for every input. Otherwise test the correct reader. Choose your own files, types, and implementation.'),
+    brief: { summary: 'Build the whole scratch note on your own: input, saving, recovery, and a reader test.', rules: [...noteInputRules, ...noteSaveRules, ...noteRecoverRules, ...noteTestRules, 'When props.faulty is version, test a reader that incorrectly accepts version 2 with Ada but otherwise follows the contract. When it is throw, test a reader that throws for every input. Otherwise test the correct reader.'], edgeCases: [...noteSaveEdges, ...noteRecoverEdges, 'A throw fails that case.', 'Choose your own files, types, and implementation.'] },
     example: {
       input: 'Edit Ada to Bo, Save, edit again, Reload',
       output: 'Bo / Ready'
