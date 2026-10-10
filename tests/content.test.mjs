@@ -20,6 +20,7 @@ import { richSolutions } from './fixtures/rich-solutions.mjs'
 import { validationSolutions } from './fixtures/validation-solutions.mjs'
 import { appSolutions } from './fixtures/app-solutions.mjs'
 import { domSolutions } from './fixtures/dom-solutions.mjs'
+import { testingJourneySolutions } from './fixtures/testing-journey-solutions.mjs'
 
 // These independent implementations check authored expected results, not learner prose.
 const solutions = {
@@ -31,6 +32,7 @@ const solutions = {
   ...asyncSolutions,
   ...practicalSolutions,
   ...fluencySolutions,
+  ...testingJourneySolutions,
   'declare-variables': 'function makeGreeting(name: string) { const greeting = "Hello, "; let message = greeting + name; return message }',
   'basic-types': 'function describePerson(name: string, age: number, active: boolean) { return `${name} is ${age}. Active: ${active}` }',
   'create-objects': 'type Person = {name: string; age: number}; function introduce(name: string, age: number) { const person: Person = {name, age}; return `${person.name} is ${person.age} years old` }',

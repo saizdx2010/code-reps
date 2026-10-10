@@ -74,7 +74,7 @@ Start with one connected plain TypeScript browser feature using the existing DOM
 
 - [x] Sequence a feature through modeling state → rendering → handling input → saving → recovering from invalid data → testing.
 - [x] Provide integration checkpoints and a final independent brief that combines familiar skills without supplying the implementation approach.
-- [ ] Add a learner-written testing journey: choose boundary cases, expose a plausible faulty implementation, repair it, and apply the skill in a fresh delayed task.
+- [x] Add a learner-written testing journey: choose boundary cases, expose a plausible faulty implementation, repair it, and apply the skill in a fresh delayed task. One journey ships (pagination cases, a range-label repair, and an interval-overlap transfer rep); checks show the learner's cases separate the supplied variants, not that a case table is complete. More journeys are authored with `docs/FIND_THE_BUG.md`.
 - [ ] Add actual asynchronous practice using deterministic local fixtures: awaiting work, parallel operations, partial failure, cancellation, and cleanup. Distinguish policy traces from runtime behavior.
 - [ ] Add a maintenance journey: read unfamiliar code, reproduce a bug, write a regression test, fix it, and adapt to a changed requirement.
 - [ ] Use existing external browser project briefs as transfer options. External self-reviews remain learner-reported rather than checked fluency evidence.

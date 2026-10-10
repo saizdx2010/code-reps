@@ -1,4 +1,5 @@
 import { connectedFeatureGuides } from './review-connected-feature.ts'
+import { testingJourneyGuides } from './review-testing-journey.ts'
 import { browserStateGuides } from './review-browser-state.ts'
 import { dsaGuides } from './review-dsa.ts'
 import { practicalGuides } from './review-practical.ts'
@@ -10,6 +11,7 @@ import { domGuides } from './review-dom.ts'
 
 export const reflectionGuides: Record<string, { plan: string[]; explanation: string[]; example: string }> = {
   ...connectedFeatureGuides,
+  ...testingJourneyGuides,
   ...practicalGuides,
   ...dsaGuides,
   ...fluencyGuides,

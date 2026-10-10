@@ -15,6 +15,7 @@ import { foundationReps, foundations } from './foundations.ts'
 import { journeyReps } from './journey-reps.ts'
 import { practicalReps } from './practical-concepts.ts'
 import { richReps } from './rich-reps.ts'
+import { testingJourneyReps } from './testing-journey-reps.ts'
 import { transferReps } from './transfer-reps.ts'
 import { validationReps } from './validation-reps.ts'
 import type { Rep } from './rep-types.ts'
@@ -37,4 +38,5 @@ export const repSources: { name: string; reps: Rep[]; lessons?: readonly RepSour
   { name: 'browser-state-reps', reps: browserStateReps },
   { name: 'dom-reps', reps: domReps },
   { name: 'connected-feature-reps', reps: connectedFeatureReps },
+  { name: 'testing-journey-reps', reps: testingJourneyReps },
 ]
