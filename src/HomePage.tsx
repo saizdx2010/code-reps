@@ -34,6 +34,7 @@ type Props = {
   openPracticeAction: (action: PracticeAction) => void
   actionLabel: (mode: string) => string
   onProgress: () => void
+  onSkillMap: () => void
   onPlan: () => void
   trail: ReturnType<typeof buildTrail>
   evidence: (repId: string) => string
@@ -44,7 +45,7 @@ type Props = {
 const title = (id: string) => reps.find(item => item.id === id)?.title
 
 /** Home is the learner's trail: the goal drawn as connected stages, with the next useful action beside it. */
-export function HomePage({ walkthroughSeen, hasCompletedRep, launchWalkthrough, sessionBusy, startPractice, unfinishedSessions, resumeSession, onPracticeHistory, goalPathId, onPath, learnerStart, startingPoint, practicePlan, draftQueue, setDraftQueue, reviewQueue, setReviewQueue, repStatus, openPracticeAction, actionLabel, onProgress, onPlan, trail, evidence, openRep, openLesson }: Props) {
+export function HomePage({ walkthroughSeen, hasCompletedRep, launchWalkthrough, sessionBusy, startPractice, unfinishedSessions, resumeSession, onPracticeHistory, goalPathId, onPath, learnerStart, startingPoint, practicePlan, draftQueue, setDraftQueue, reviewQueue, setReviewQueue, repStatus, openPracticeAction, actionLabel, onProgress, onSkillMap, onPlan, trail, evidence, openRep, openLesson }: Props) {
   const goal = paths.find(path => path.id === goalPathId) ?? paths[0]
   const recommendation = practicePlan.next
   const recommendedRep = recommendation && reps.find(rep => rep.id === recommendation.repId)
@@ -104,6 +105,7 @@ export function HomePage({ walkthroughSeen, hasCompletedRep, launchWalkthrough, 
         </section>}
         <nav className="trail-links" aria-label="Plan and progress">
           {hasCompletedRep && <button type="button" className="text-button" onClick={onPlan}><Icon name="calendar" />Plan this week</button>}
+          <button type="button" className="text-button" onClick={onSkillMap}>See your skill map</button>
           <button type="button" className="text-button" onClick={onProgress}>View skill evidence</button>
         </nav>
         <InfoNote label="How a rep works"><p>Understand the brief, plan, solve with checks, explain, then review. Work stays on this device. Opening a rep records no session. Complete rep saves an attempt; Reflect and end session ends a session.</p>{walkthroughSeen && <Button variant="text" onClick={launchWalkthrough}>Replay walkthrough</Button>}</InfoNote>

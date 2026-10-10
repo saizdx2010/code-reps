@@ -96,3 +96,19 @@
 }
 
 .goal-browsing-note { margin: 0 0 24px; color: var(--muted); font-size: 14px; }
+
+/* Skill map: each skill is a trail node; state shows in chip text, marker shape, and border style, never color alone. */
+.skill-map-main .info-note { margin-bottom: 16px; }
+.skill-legend { margin: 0 0 20px; }
+.skill-legend h2 { margin: 0 0 8px; font-size: var(--type-card); }
+.skill-legend ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 10px 20px; margin: 0; padding: 0; list-style: none; }
+.skill-legend li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 4px 10px; color: var(--muted); font-size: 13px; line-height: 1.45; }
+.skill-legend li b { color: var(--text); font-variant-numeric: tabular-nums; }
+.skill-node-body { display: grid; justify-items: start; gap: 4px; padding: 10px 12px; min-width: 0; }
+.skill-node-body small { color: var(--muted); font-size: 13px; line-height: 1.45; }
+.skill-node-body .text-button { min-height: 32px; }
+.is-skill-untouched .trail-marker { border-style: dashed; }
+.is-skill-practiced .trail-marker { border-color: var(--accent); color: var(--accent); }
+.is-skill-independent .trail-marker { border-color: var(--action); color: var(--action); }
+.is-skill-retained .trail-marker { border-color: var(--action); background: var(--action); color: var(--action-text); }
+.is-skill-due .trail-marker { border-color: var(--feature-border); background: var(--feature); color: var(--feature-text); }
