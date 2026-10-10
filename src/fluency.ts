@@ -46,14 +46,14 @@ export function parseFluency(raw: unknown): FluencyState {
   return raw as unknown as FluencyState
 }
 export const recallVariants: Record<string, string[]> = {
-  windows: ['shortest-run-reaching-target', 'count-unique-windows', 'algo-window-sum'],
+  windows: ['shortest-run-reaching-target', 'count-unique-windows', 'algo-window-sum', 'quiet-sensor-span'],
   queues: ['parcel-loading-turns', 'ticket-service-times', 'remaining-actions'],
-  'two-pointers': ['reading-run-summary', 'sorted-offset-squares', 'algo-sorted-pair'],
-  sorting: ['kth-smallest-copy', 'sort-score-records', 'algo-merge-sorted'],
-  'binary-search': ['smallest-daily-capacity', 'first-insertion-point', 'algo-binary-search'],
-  recursion: ['count-object-leaves', 'flatten-nested-numbers', 'algo-recursive-sum'],
-  trees: ['tree-value-path', 'tree-depth-sum', 'algo-tree-depth'],
-  graphs: ['graph-connected-groups', 'graph-shortest-hops', 'algo-graph-reachable'],
+  'two-pointers': ['reading-run-summary', 'sorted-offset-squares', 'algo-sorted-pair', 'shared-seat-occurrences'],
+  sorting: ['kth-smallest-copy', 'sort-score-records', 'algo-merge-sorted', 'dispatch-priority-order'],
+  'binary-search': ['smallest-daily-capacity', 'first-insertion-point', 'algo-binary-search', 'first-affordable-edition'],
+  recursion: ['count-object-leaves', 'flatten-nested-numbers', 'algo-recursive-sum', 'nested-parcel-load'],
+  trees: ['tree-value-path', 'tree-depth-sum', 'algo-tree-depth', 'terminal-folder-paths'],
+  graphs: ['graph-connected-groups', 'graph-shortest-hops', 'algo-graph-reachable', 'broadcast-unreached-stations'],
   'state-modeling': ['catalog-request-summary', 'saved-record-status', 'task-state-label'],
   validation: ['validate-import-batch', 'parse-delivery-window', 'validate-stock-adjustment'],
   'request-ownership': ['refresh-report-state', 'preview-slot-results', 'search-request-state'],

@@ -1,6 +1,56 @@
 import type { RepDepth } from './rep-depth.ts'
 
 export const dsaDepth: Record<string, RepDepth> = {
+'quiet-sensor-span': {
+  'reasoning': 'A sliding span tracks exactly its noisy readings. Shrinking until the count is allowed restores validity; the longest valid span ending at each right position includes every possible optimum. O(n) time and O(1) extra storage.',
+  'trace': 'For [5,5,6,5], threshold 5 and allowance 0, lengths grow to 2, then the 6 forces the left boundary past it; the final length is 1. Return 2.',
+  'alternative': 'Enumerate all starts and extend each span with a noise count: O(n²) time, O(1) storage. This is a useful independent oracle for the stated small limit.',
+  'counterexample': 'Using >= marks equality noisy: [5,5], threshold 5, allowance 0 should return 2. Counting all quiet readings ignores gaps.',
+  'transfer': 'Self-reviewed: give noisy readings different costs and bound total cost. Decide whether negative costs invalidate shrinking; original checks do not cover this variation.'
+},
+'shared-seat-occurrences': {
+  'reasoning': 'Two positions delimit unmatched suffixes. Discarding the smaller value is safe because the other suffix starts larger; equality consumes one occurrence from each. O(n+m) time with output storage only.',
+  'trace': 'Left [0,0,1], right [0]: emit 0 once and exhaust right. The extra left 0 has no matching occurrence.',
+  'alternative': 'A frequency map for one list then consumption by the other also works in O(n+m) time, but uses extra count storage.',
+  'counterexample': 'A set loses multiplicity: [2,2] and [2,2] require [2,2], not [2].',
+  'transfer': 'Self-reviewed: accept unsorted lists and preserve left occurrence order. Decide whether sorting remains appropriate; existing checks do not cover that contract.'
+},
+'dispatch-priority-order': {
+  'reasoning': 'Lexicographic comparison applies urgency before deadline and original position. Including position makes full ties explicit and preserves duplicate identities. Copying protects records and array. O(n log n) comparison-sort work and O(n) storage.',
+  'trace': 'A(1,0), B(2,9), C(2,3): urgency puts B and C before A; deadline puts C before B. Return C,B,A.',
+  'alternative': 'Repeatedly selecting the best unused index takes O(n²) time and O(n) storage, but provides an independent reference without relying on sort stability.',
+  'counterexample': 'Sorting deadline first puts A before C in the example, violating urgency precedence. An ID tie-breaker changes the order of fully tied requests.',
+  'transfer': 'Self-reviewed: allow missing deadlines and define their precedence. Explain the new comparator; original checks do not validate it.'
+},
+'first-affordable-edition': {
+  'reasoning': 'Affordability changes only from false to true as costs decrease. A lower-bound search preserves the first true position in its candidate interval; if it ends at length, none qualifies. O(log n) time and O(1) storage.',
+  'trace': 'For [9,7,7,3], budget 7: index 2 qualifies but index 1 also qualifies. The boundary is 1, not an arbitrary matching 7.',
+  'alternative': 'A left-to-right scan is O(n), O(1) storage and directly expresses the contract. Behavioral checks cannot establish binary search.',
+  'counterexample': 'Searching for exact budget fails on [9,3], budget 5: index 1 qualifies without equality. Returning the last qualifying index misses the first.',
+  'transfer': 'Self-reviewed: costs are no longer ordered. Explain why the monotone boundary disappears; current checks assume ordered costs.'
+},
+'nested-parcel-load': {
+  'reasoning': 'A call receives the correct depth for its parcel. Numbers contribute weight times depth; arrays sum calls at depth+1. Structural induction gives the total without changing input. O(nodes) time and O(depth) call storage.',
+  'trace': 'For [[1],2], the root array has depth 1. Inner array has depth 2, so 1 contributes 3; sibling 2 has depth 2 and contributes 4. Total 7.',
+  'alternative': 'An explicit stack of parcel/depth pairs avoids recursion, with O(nodes) work and potentially O(nodes) pending storage.',
+  'counterexample': 'A global incrementing depth leaks across siblings: [[1],2] must total 7. Flattening and summing loses all depth factors.',
+  'transfer': 'Self-reviewed: arrays carry their own multipliers. Define how ancestor multipliers combine before adapting traversal; original checks do not assess it.'
+},
+'terminal-folder-paths': {
+  'reasoning': 'Depth-first traversal in supplied child order emits terminal paths in the required order. Each branch extends its own prefix, preventing sibling contamination. Time and output storage scale with total returned path length; traversal stack depth is bounded by tree depth.',
+  'trace': 'Root r has terminal b and branch a→z. Emit [r,b], then [r,a,z]. No [r,a] is emitted because a has a child.',
+  'alternative': 'An explicit stack can carry paths; push children in reverse order to pop them in authored order. It avoids call recursion but retains pending branch state.',
+  'counterexample': 'Sorting children changes required order: children b,a must stay b,a. Deduplicating equal names loses distinct terminal paths.',
+  'transfer': 'Self-reviewed: only emit terminal paths whose total name length fits a limit. Decide whether pruning is safe; original checks do not cover filtering.'
+},
+'broadcast-unreached-stations': {
+  'reasoning': 'The reached set begins with every seed and is closed under outgoing links. Exploring each newly reached station once terminates despite cycles and reaches exactly the stations with a seed-to-station path. Enumerating all indices gives sorted missing stations. O(V+E) time and O(V) state.',
+  'trace': 'For links [[],[0]], seed 0 reaches only 0. Station 1 can send to 0 but cannot receive from it, so return [1].',
+  'alternative': 'Repeatedly scan all links from reached sources until no set growth occurs. This fixed-point reference is simpler to audit but may take O(VE) work.',
+  'counterexample': 'Treating links as undirected wrongly reaches 1 from seed 0 in [[],[0]]. Starting only from the first seed misses independent broadcast groups.',
+  'transfer': 'Self-reviewed: each forwarding hop consumes one minute and delivery has a deadline. Decide what extra distance state is required; original checks do not validate timing.'
+},
+
 'parcel-loading-turns': {'reasoning': 'Each waiting cart retains its original identity. Removing one parcel and returning unfinished carts to the back preserves the service order. Stop only when the target reaches zero; other carts can remain.', 'trace': '[2,1,3], target 0: turn 1 leaves cart 0 with 1; turn 2 finishes cart 1; turn 3 leaves cart 2 with 2; turn 4 finishes cart 0. Return 4 even though cart 2 is unfinished.', 'alternative': 'For target count k, earlier or target carts contribute min(count,k) turns and later carts min(count,k-1). Summing is O(n), but requires proving the asymmetric final round. Direct simulation uses O(sum of counts) turns and O(n) storage with a head index; shifting arrays adds movement cost.', 'counterexample': 'Counting complete rounds overcounts later carts: [1,100], target 0 finishes on turn 1, before cart 1 gets a turn. Looking up a count instead of identity confuses equal carts: [2,2,2], target 2 finishes on turn 6.', 'transfer': 'Self-reviewed: let carts remove up to two parcels each turn. Decide whether a turn or a parcel is counted and derive new boundaries; original checks do not validate the changed policy.'},
 'ticket-service-times': {'reasoning': 'The desk finish time is the earliest availability for the next ticket. Taking the later of that time and arrival respects both constraints while preserving FIFO order, including ties.', 'trace': 'For arrivals 0,0,10 and durations 2,1,1, starts are 0,2,10 and finishes 2,3,11. The third ticket waits for its arrival, not an invented continuous backlog.', 'alternative': 'An explicit waiting queue and minute-by-minute simulation can reproduce service, but adds idle iterations. One pass uses O(n) time and O(n) output storage with O(1) extra state.', 'counterexample': 'Starting every ticket at arrival overlaps service: arrivals [2,3] with durations [3,1] must start at [2,5], not [2,3]. Sorting equal arrivals by ID also breaks input-order precedence.', 'transfer': 'Self-reviewed: allow unsorted arrivals and choose a tie policy. Explain how you would order tickets and restore output to original input order; current checks do not cover that contract.'},
   'sorted-offset-squares': {
@@ -1736,6 +1786,84 @@ export const dsaDepth: Record<string, RepDepth> = {
 }
 
 export const dsaGuides = {
+'quiet-sensor-span': {
+  'plan': [
+    'Which spans qualify? What boundary would expose treating equality incorrectly?',
+    'Name a boundary before coding.'
+  ],
+  'explanation': [
+    'Explain why your result satisfies the ordering, equality, and empty-input rules.',
+    'State time and storage costs and explain input preservation. Checks do not prove the technique or independent understanding.'
+  ],
+  'example': 'A sliding span tracks exactly its noisy readings. Shrinking until the count is allowed restores validity; the longest valid span ending at each right position includes every possible optimum. O(n) time and O(1) extra storage. For [5,5,6,5], threshold 5 and allowance 0, lengths grow to 2, then the 6 forces the left boundary past it; the final length is 1. Return 2.'
+},
+'shared-seat-occurrences': {
+  'plan': [
+    'How will you account for repeated seats and an exhausted list?',
+    'Name a boundary before coding.'
+  ],
+  'explanation': [
+    'Explain why your result satisfies the ordering, equality, and empty-input rules.',
+    'State time and storage costs and explain input preservation. Checks do not prove the technique or independent understanding.'
+  ],
+  'example': 'Two positions delimit unmatched suffixes. Discarding the smaller value is safe because the other suffix starts larger; equality consumes one occurrence from each. O(n+m) time with output storage only. Left [0,0,1], right [0]: emit 0 once and exhaust right. The extra left 0 has no matching occurrence.'
+},
+'dispatch-priority-order': {
+  'plan': [
+    'What decides between two requests? Which ties must preserve order?',
+    'Name a boundary before coding.'
+  ],
+  'explanation': [
+    'Explain why your result satisfies the ordering, equality, and empty-input rules.',
+    'State time and storage costs and explain input preservation. Checks do not prove the technique or independent understanding.'
+  ],
+  'example': 'Lexicographic comparison applies urgency before deadline and original position. Including position makes full ties explicit and preserves duplicate identities. Copying protects records and array. O(n log n) comparison-sort work and O(n) storage. A(1,0), B(2,9), C(2,3): urgency puts B and C before A; deadline puts C before B. Return C,B,A.'
+},
+'first-affordable-edition': {
+  'plan': [
+    'What distinguishes the first qualifying edition from any qualifying edition?',
+    'Name a boundary before coding.'
+  ],
+  'explanation': [
+    'Explain why your result satisfies the ordering, equality, and empty-input rules.',
+    'State time and storage costs and explain input preservation. Checks do not prove the technique or independent understanding.'
+  ],
+  'example': 'Affordability changes only from false to true as costs decrease. A lower-bound search preserves the first true position in its candidate interval; if it ends at length, none qualifies. O(log n) time and O(1) storage. For [9,7,7,3], budget 7: index 2 qualifies but index 1 also qualifies. The boundary is 1, not an arbitrary matching 7.'
+},
+'nested-parcel-load': {
+  'plan': [
+    'How is depth defined at the root, and what do empty arrays contribute?',
+    'Name a boundary before coding.'
+  ],
+  'explanation': [
+    'Explain why your result satisfies the ordering, equality, and empty-input rules.',
+    'State time and storage costs and explain input preservation. Checks do not prove the technique or independent understanding.'
+  ],
+  'example': 'A call receives the correct depth for its parcel. Numbers contribute weight times depth; arrays sum calls at depth+1. Structural induction gives the total without changing input. O(nodes) time and O(depth) call storage. For [[1],2], the root array has depth 1. Inner array has depth 2, so 1 contributes 3; sibling 2 has depth 2 and contributes 4. Total 7.'
+},
+'terminal-folder-paths': {
+  'plan': [
+    'When does a path end, and how will sibling paths stay separate?',
+    'Name a boundary before coding.'
+  ],
+  'explanation': [
+    'Explain why your result satisfies the ordering, equality, and empty-input rules.',
+    'State time and storage costs and explain input preservation. Checks do not prove the technique or independent understanding.'
+  ],
+  'example': 'Depth-first traversal in supplied child order emits terminal paths in the required order. Each branch extends its own prefix, preventing sibling contamination. Time and output storage scale with total returned path length; traversal stack depth is bounded by tree depth. Root r has terminal b and branch a→z. Emit [r,b], then [r,a,z]. No [r,a] is emitted because a has a child.'
+},
+'broadcast-unreached-stations': {
+  'plan': [
+    'What counts as received, and what should happen when a broadcast returns to a station?',
+    'Name a boundary before coding.'
+  ],
+  'explanation': [
+    'Explain why your result satisfies the ordering, equality, and empty-input rules.',
+    'State time and storage costs and explain input preservation. Checks do not prove the technique or independent understanding.'
+  ],
+  'example': 'The reached set begins with every seed and is closed under outgoing links. Exploring each newly reached station once terminates despite cycles and reaches exactly the stations with a seed-to-station path. Enumerating all indices gives sorted missing stations. O(V+E) time and O(V) state. For links [[],[0]], seed 0 reaches only 0. Station 1 can send to 0 but cannot receive from it, so return [1].'
+},
+
 'parcel-loading-turns': {'plan': ['How will you distinguish carts with equal counts? Which event ends the counting?', 'Name a boundary before coding.'], 'explanation': ['Explain the FIFO ordering and why your stopping or timing rule satisfies the contract.', 'State time and storage costs and explain input preservation; checks do not establish your approach.'], 'example': 'Each waiting cart retains its original identity. Removing one parcel and returning unfinished carts to the back preserves the service order. Stop only when the target reaches zero; other carts can remain. [2,1,3], target 0: turn 1 leaves cart 0 with 1; turn 2 finishes cart 1; turn 3 leaves cart 2 with 2; turn 4 finishes cart 0. Return 4 even though cart 2 is unfinished.'},
 'ticket-service-times': {'plan': ['What determines a start when the desk is busy? What changes when no ticket is waiting?', 'Name a boundary before coding.'], 'explanation': ['Explain the FIFO ordering and why your stopping or timing rule satisfies the contract.', 'State time and storage costs and explain input preservation; checks do not establish your approach.'], 'example': 'The desk finish time is the earliest availability for the next ticket. Taking the later of that time and arrival respects both constraints while preserving FIFO order, including ties. For arrivals 0,0,10 and durations 2,1,1, starts are 0,2,10 and finishes 2,3,11. The third ticket waits for its arrival, not an invented continuous backlog.'},
   'sorted-offset-squares': {

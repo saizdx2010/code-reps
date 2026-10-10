@@ -38,6 +38,8 @@ The existing guided → independent → delayed recall evidence remains intact. 
 
 Dates and reasons remain visible. A review completion is evidence for the checked task, not a guarantee of permanent retention. These initial intervals need learner validation.
 
+The windows, two-pointers, sorting, binary-search, recursion, trees, and graphs review rotations also include fresh applications: sensor spans, reservation occurrence matching, dispatch ordering, affordable editions, nested parcel loads, terminal folder paths, and broadcast coverage. These variants are appended after existing entries so saved review indices keep their meaning. Checks establish the stated output and input-preservation behavior; they do not establish the chosen algorithm or independent understanding.
+
 The validation journey uses the existing user-request validator for guided work, a stock-adjustment contract for independence, and a delivery-window contract after three days for recall. After retention, scheduled reviews begin with batch import validation. Defaults, error precedence, and normalized duplicate detection require different applications; passing output checks does not assess the learner's reasoning or establish a live service.
 
 ## Content quality

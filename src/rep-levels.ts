@@ -7,6 +7,14 @@ export type RepLevelLabel = 'Beginner' | 'Intermediate' | 'Advanced'
 export const repLevelLabels: Record<RepLevel, RepLevelLabel> = { 1: 'Beginner', 2: 'Intermediate', 3: 'Advanced' }
 
 export const repLevels: Record<string, RepLevel> = {
+  'quiet-sensor-span': 2,
+  'shared-seat-occurrences': 2,
+  'dispatch-priority-order': 2,
+  'first-affordable-edition': 2,
+  'nested-parcel-load': 3,
+  'terminal-folder-paths': 3,
+  'broadcast-unreached-stations': 3,
+
   'expose-page-bugs': 2,
   'repair-range-label': 2,
   'expose-overlap-bugs': 2,

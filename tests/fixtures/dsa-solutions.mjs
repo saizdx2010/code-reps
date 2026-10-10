@@ -1,5 +1,13 @@
 // Independent reference implementations; intentionally differ from several taught approaches.
 export const dsaSolutions = {
+'quiet-sensor-span': 'function quietSpan(readings,threshold,allowance) { let best=0; for(let i=0;i<readings.length;i++) { let noise=0; for(let j=i;j<readings.length;j++) { noise+=Number(readings[j]>threshold); if(noise<=allowance) best=Math.max(best,j-i+1) } } return best }',
+'shared-seat-occurrences': 'function sharedSeats(left,right) { const counts=new Map(); for(const x of right) counts.set(x,(counts.get(x)||0)+1); return left.filter(x=>{ const n=counts.get(x)||0; if(!n) return false; counts.set(x,n-1); return true }) }',
+'dispatch-priority-order': 'function dispatchOrder(requests) { const pending=requests.map((r,i)=>({...r,i})), out=[]; while(pending.length) { let best=0; for(let i=1;i<pending.length;i++) { const a=pending[i],b=pending[best]; if(a.urgency>b.urgency || (a.urgency===b.urgency && a.deadline<b.deadline)) best=i } out.push(pending.splice(best,1)[0].id) } return out }',
+'first-affordable-edition': 'function firstAffordable(costs,budget) { return costs.findIndex(cost=>cost<=budget) }',
+'nested-parcel-load': 'function parcelLoad(parcel) { const pending=[[parcel,1]]; let total=0; while(pending.length) { const [item,depth]=pending.pop(); if(typeof item==="number") total+=item*depth; else for(const child of item) pending.push([child,depth+1]) } return total }',
+'terminal-folder-paths': 'function folderPaths(root) { if(!root) return []; const pending=[[root,[]]],out=[]; while(pending.length) { const [node,prefix]=pending.pop(), path=[...prefix,node.name]; if(!node.children.length) out.push(path); for(let i=node.children.length-1;i>=0;i--) pending.push([node.children[i],path]) } return out }',
+'broadcast-unreached-stations': 'function unreachedStations(links,seeds) { const reached=new Set(seeds); let changed=true; while(changed) { changed=false; for(let i=0;i<links.length;i++) if(reached.has(i)) for(const next of links[i]) if(!reached.has(next)) { reached.add(next); changed=true } } return links.map((_,i)=>i).filter(i=>!reached.has(i)) }',
+
   'ticket-service-times': 'function ticketTimes(tickets) { let available=0; return tickets.map(ticket => { const start=Math.max(available,ticket.arrival); available=start+ticket.minutes; return {id:ticket.id,start,finish:available} }) }',
   'parcel-loading-turns': 'function loadingTurn(parcels,targetIndex) { const k=parcels[targetIndex]; return parcels.reduce((turns,count,index)=>turns+Math.min(count,index<=targetIndex?k:k-1),0) }',
   'algo-prefix-sums': 'function rangeSums(numbers, queries) { return queries.map(([l,r]) => numbers.slice(l,r+1).reduce((a,b)=>a+b,0)) }',
