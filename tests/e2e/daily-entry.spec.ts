@@ -3,11 +3,14 @@ import { expect, test } from '@playwright/test'
 for (const width of [1280, 390]) {
   test(`daily entry names the goal and task and opens the next rep by keyboard at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
-    await page.goto('/#/home')
+    await page.goto('/#/paths')
     await page.locator('.starting-point-settings > summary').click()
     await page.getByRole('button', { name: /New to coding/ }).click()
+    await page.goto('/#/home')
     await expect(page.getByText('Your trail · Active learning goal')).toBeVisible()
-    await expect(page.getByText('Browsing another track does not change your learning goal.')).toBeVisible()
+    await expect(page.getByText('Browsing another track does not change your learning goal.')).toHaveCount(0)
+    await expect(page.getByText('Plan this week')).toHaveCount(0)
+    await expect(page.getByText('How a rep works', { exact: true })).toHaveCount(0)
     await expect(page.locator('.continue-panel')).toContainText('Skill: Values, types, and functions.')
     await expect(page.locator('.continue-panel')).toContainText('Afterward')
     const choices = page.locator('.list-group').filter({ hasText: "Choose today's practice" })

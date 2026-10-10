@@ -50,9 +50,9 @@ test('completing a guided rep marks its skill practiced and the route survives r
   await expect(page.getByRole('heading', { level: 1, name: 'Skill map.' })).toBeVisible()
 })
 
-test('the keyboard reaches a node link and opens its rep; Home links to the map', async ({ page }) => {
-  await page.goto('/')
-  await page.getByRole('button', { name: 'See your skill map' }).click()
+test('the keyboard reaches a node link and opens its rep; Progress links to the map', async ({ page }) => {
+  await page.goto('/#/progress')
+  await page.getByRole('navigation', { name: 'Progress pages' }).getByRole('button', { name: 'Skill map', exact: true }).click()
   await expect(page).toHaveURL(/#\/skillmap/)
   const first = page.locator('.skill-node .text-button').first()
   for (let presses = 0; presses < 60 && !(await first.evaluate(element => element === document.activeElement)); presses++) await page.keyboard.press('Tab')

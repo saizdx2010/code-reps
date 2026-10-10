@@ -40,9 +40,10 @@ test('early recall remains accessible without claiming retention', async ({ page
 for (const width of [1280, 390]) {
   test(`home trail interleaves lessons, marks the next rep, and links shared Foundations at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
-    await page.goto('/#/home')
+    await page.goto('/#/paths')
     await page.locator('.starting-point-settings > summary').click()
     await page.getByRole('button', { name: /New to coding/ }).click()
+    await page.goto('/#/home')
     const trail = page.getByRole('region', { name: 'Learning goal' })
     await expect(trail.getByRole('heading', { level: 1 })).toHaveText('Foundations')
     const firstStage = trail.locator('.path-stage').first()

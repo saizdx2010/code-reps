@@ -307,27 +307,11 @@ test('notebook loading reserves an existing writing draft and preserves it after
   await expect(page.getByRole('textbox', { name: 'What you learned', exact: true })).toHaveValue('A skeleton should reserve the real working surface.')
 })
 
-test('path completion row navigates and session history selection stays visible', async ({ page }) => {
+test('path completion row navigates', async ({ page }) => {
   await page.goto('/#/progress')
   await page.getByText(/Upcoming badges/).click()
   await page.locator('.badge-upcoming .list-row').filter({ hasText: 'Foundations track' }).locator('> button').click()
   await expect(page).toHaveURL(/#\/paths$/)
-  await page.goto('/#/sessions')
-  const group = page.getByRole('group', { name: 'Session history view' })
-  const unfinished = group.getByRole('button', { name: 'Unfinished', exact: true })
-  await unfinished.focus()
-  await unfinished.press('Enter')
-  await expect(unfinished).toHaveAttribute('aria-pressed', 'true')
-  await unfinished.hover()
-  // The selected fill is the sliding indicator; it must settle exactly behind the hovered selection.
-  const fill = group.locator('.step-indicator')
-  await expect(fill).toHaveCSS('background-color', 'rgb(48, 63, 56)')
-  await expect.poll(async () => {
-    const [selected, indicator] = await Promise.all([unfinished.boundingBox(), fill.boundingBox()])
-    return Math.abs(selected!.x - indicator!.x) < 1 && Math.abs(selected!.width - indicator!.width) < 1 && Math.abs(selected!.y - indicator!.y) < 1
-  }).toBe(true)
-  await expect(unfinished).toHaveCSS('color', 'rgb(188, 229, 123)')
-  await expect(unfinished).toHaveCSS('transform', 'none')
 })
 
 test('utility drawers retain their exit and restore keyboard focus', async ({ page }) => {

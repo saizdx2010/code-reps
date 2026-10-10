@@ -164,15 +164,12 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
       await click('Library')
     }
     await click('Trail')
-    assert.equal(document.querySelectorAll('#home-drafts>li').length,3)
-    const expand=[...document.querySelectorAll('button')].find(button=>/^Show all .* drafts$/.test(button.textContent))
-    assert.ok(expand)
-    await act(async()=>expand.click())
-    assert.equal(document.querySelectorAll('#home-drafts>li').length,5)
-    await click('Library');await click('Trail')
-    assert.equal(document.querySelectorAll('#home-drafts>li').length,5)
-    await click('Show fewer drafts')
-    assert.equal(document.querySelectorAll('#home-drafts>li').length,3)
+    // Home stays compact: one saved draft beside the primary card, with a pointer to the rest; no draft is discarded.
+    assert.equal(document.querySelectorAll('#home-drafts').length,0)
+    assert.ok(document.body.textContent.includes('more saved')||document.body.textContent.includes('Saved draft'))
+    assert.ok(document.body.textContent.includes('Find saved drafts in the Library'))
+    assert.ok(!document.body.textContent.includes('Record a session'))
+    assert.ok(!document.body.textContent.includes('Unfinished sessions'))
 
     await click('Manage profiles')
     let finishImport

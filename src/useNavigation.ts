@@ -2,14 +2,22 @@ import { useEffect, useEffectEvent, useState } from 'react'
 import { readRoute, routeHash } from './ui-navigation'
 import type { Route, View } from './ui-navigation'
 
+// Practice sessions no longer have a page; a bookmarked #/sessions opens the Journal instead.
+function currentRoute(repIds: string[]): Route {
+  const route = readRoute(location.hash, repIds)
+  if (route.view !== 'sessions') return route
+  history.replaceState(null, '', routeHash({ view: 'history' }))
+  return { view: 'history' }
+}
+
 export function useNavigation(repIds: string[], onRestore: (route: Route) => void) {
-  const [route, setRoute] = useState(() => readRoute(location.hash, repIds))
+  const [route, setRoute] = useState(() => currentRoute(repIds))
   const restore = useEffectEvent(onRestore)
   useEffect(() => {
     const previousRestoration = history.scrollRestoration
     history.scrollRestoration = 'manual'
     const receive = () => {
-      const next = readRoute(location.hash, repIds)
+      const next = currentRoute(repIds)
       restore(next)
       setRoute(next)
     }

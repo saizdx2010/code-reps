@@ -24,7 +24,7 @@ Main navigation has three areas. Each area's section tabs list only its own page
 | Library | Exercises (`#/practice`), Lessons (`#/knowledge`), Projects, Interview | Everything, browsable by topic |
 | Progress | Skills (`#/progress`), Journal, Mistakes (`#/mistakes`), Self-assessment | Evidence and records |
 
-Journal is one section with an Attempts / Practice sessions / Notebook switch (`JournalTabs`); each view keeps its own route (`#/history`, `#/sessions`, `#/notebook`). Quick lessons (`#/learn`) belongs to Lessons. `ui-navigation.ts` owns sections and the `sectionView` aliases; do not add a fourth main area or a second navigation row inside a page. Old bookmarks must keep resolving.
+Journal is one section with an Attempts / Notebook switch (`JournalTabs`); each view keeps its own route (`#/history`, `#/notebook`; the retired `#/sessions` redirects to `#/history`). Quick lessons (`#/learn`) belongs to Lessons. `ui-navigation.ts` owns sections and the `sectionView` aliases; do not add a fourth main area or a second navigation row inside a page. Old bookmarks must keep resolving.
 
 Foundations (`typescript`) is the shared root track. Other tracks are grouped in `curriculum.ts` (`trackGroups`) and declare it implicitly; a stage made only of Foundations reps is shown as covered by Foundations rather than repeated. Path IDs, rep lists, badges, and recommendations are unchanged by this presentation.
 
@@ -97,11 +97,11 @@ Home is the learner's trail: the chosen track drawn as stages of connected nodes
 
 ## Practice workspace
 
-Practice gives the working surfaces priority: one compact header row (back to Library, title, status chip, category, save status, session control, Glossary, Tools), a slim vertical step rail on the left edge of the brief pane, and a resizable 40/60 reading/code split by default. Existing divider preferences remain in effect. On narrow screens the same moving indicator and buttons become a horizontal step bar above the selected pane, and both panes stay mounted.
+Practice gives the working surfaces priority: one compact header row (back to Library, title, status chip, category, save status, Glossary, Tools), a slim vertical step rail on the left edge of the brief pane, and a resizable 40/60 reading/code split by default. Existing divider preferences remain in effect. On narrow screens the same moving indicator and buttons become a horizontal step bar above the selected pane, and both panes stay mounted.
 
 Check results open as a drawer inside the dark coding desk, anchored above the run toolbar and limited to about half the desk (about a third beside a frontend preview); the editor shrinks rather than being covered. Use the desk's semantic surfaces for running, failed, and passed states. Keep passed cases visible with a status at the right; failed cases reveal one diagnostic at a time. The inline frontend preview is padded like the desk's other panels and keeps its state, viewport, Update, and Expand controls in one compact row.
 
-Session reflection stays mounted behind an explicit Reflect and end session control; starting a session does not open the reflection form or complete the rep. Practice step tabs are direct buttons without tooltips. Active primary navigation uses a quiet sage surface; active practice and lesson steps use the stronger green fill with lime text. Do not make every navigation item a primary action. Written work and behavioral checks remain separate evidence.
+Practice step tabs are direct buttons without tooltips. Active primary navigation uses a quiet sage surface; active practice and lesson steps use the stronger green fill with lime text. Do not make every navigation item a primary action. Written work and behavioral checks remain separate evidence.
 
 ## Disclosures and icons
 

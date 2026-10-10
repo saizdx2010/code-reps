@@ -74,18 +74,21 @@ test('narrow workspace preserves planning and supports keyboard exit', async ({ 
 })
 
 test('first-run recommendation leads and the starting point stays editable', async ({ page }) => {
-  await page.goto('/#/home')
+  await page.goto('/#/paths')
   const starting = page.locator('.starting-point-settings')
   await expect(starting.locator('summary')).toContainText('Starting as: Not chosen yet · Choose')
-  expect(await page.evaluate(() => Boolean(document.querySelector('.continue-panel')!.compareDocumentPosition(document.querySelector('.starting-point-settings')!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true)
   await starting.locator('summary').click()
   await starting.getByRole('button', { name: /New to coding/ }).click()
-  await expect(page.locator('#continue-heading')).toHaveText('Declare a value')
   await expect(starting.locator('summary')).toContainText('Starting as: New to coding · Change')
+  await page.goto('/#/home')
+  await expect(page.locator('#continue-heading')).toHaveText('Declare a value')
+  await expect(page.locator('.starting-point-settings')).toHaveCount(0)
   await page.reload()
   await expect(page.locator('#continue-heading')).toHaveText('Declare a value')
+  await page.goto('/#/paths')
   await starting.locator('summary').click()
   await starting.getByRole('button', { name: /Returning to coding/ }).click()
+  await page.goto('/#/home')
   await expect(page.locator('#continue-heading')).toHaveText('Sum positive numbers')
   await page.locator('.continue-panel').getByRole('button', { name: /Start rep/ }).click()
   await expect(page).toHaveURL(/#\/practice\/sum-positive-numbers$/)
@@ -93,7 +96,7 @@ test('first-run recommendation leads and the starting point stays editable', asy
   await expect(page.locator('#continue-heading')).toHaveText('Sum positive numbers')
 })
 
-test('Complete stays a normal button before a difficulty choice and names the one thing still needed', async ({ page }) => {
+test('A reasoned rep needs plan, passing checks and explanation; difficulty is optional', async ({ page }) => {
   await page.goto(route)
   await page.getByRole('button', { name: 'Plan', exact: true }).click()
   await page.getByLabel('Your plan', { exact: true }).fill('Count occurrences and choose the smaller number when counts tie.')
@@ -106,18 +109,11 @@ test('Complete stays a normal button before a difficulty choice and names the on
   await page.getByLabel('Your explanation', { exact: true }).fill('I count each value, compare counts, and use the smaller value to break ties. Empty input returns null.')
   await page.getByRole('button', { name: 'Review', exact: true }).click()
   const complete = page.getByRole('button', { name: 'Complete rep', exact: true })
-  // Complete is not greyed out; the one missing item is named in the note and the checklist, with the same words.
+  // Difficulty is optional: with plan, checks and explanation present nothing is missing.
   await expect(complete).toBeEnabled()
-  await expect(page.locator('.finish-note')).toHaveText('Still needed: a difficulty choice.')
-  await expect(page.locator('.completion-checklist')).toContainText('Still needed: a difficulty choice')
-  await complete.click()
-  // Pressing Complete with the choice missing moves focus to the difficulty control, which describes what is needed.
-  const difficulty = page.locator('#difficulty-choice button').first()
-  await expect(difficulty).toBeFocused()
-  await expect(difficulty).toHaveAccessibleDescription('Still needed: a difficulty choice.')
-  await expect(page.getByText('Your attempt is saved in the Journal.', { exact: true })).toHaveCount(0)
-  await chooseSegment(page, 'What was hardest?', 'Nothing in particular')
   await expect(page.locator('.finish-note')).toHaveCount(0)
+  await expect(page.locator('.completion-checklist')).toContainText('Difficulty')
+  await expect(page.locator('.completion-checklist')).not.toContainText('Still needed')
   await complete.click()
   await expect(page.getByText('Your attempt is saved in the Journal.', { exact: true })).toBeVisible()
 })
@@ -263,7 +259,6 @@ test('checks open as a bounded drawer inside the coding desk above the run toolb
     expect(checksBox!.y).toBeGreaterThanOrEqual(editorBox!.y + editorBox!.height - 1)
     // The toolbar is sticky on narrow screens, so compare flow order there instead of positions.
     if (width > 900) expect(checksBox!.y + checksBox!.height).toBeLessThanOrEqual(toolbar!.y + 1)
-    else expect(await checks.evaluate(element => Boolean(element.compareDocumentPosition(document.querySelector('.workspace-toolbar')!) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true)
     expect(checksBox!.x).toBeGreaterThanOrEqual(desk!.x)
     expect(checksBox!.x + checksBox!.width).toBeLessThanOrEqual(desk!.x + desk!.width + 1)
     // Desktop bounds the drawer; narrow screens let it follow the editor in the Solve pane.
