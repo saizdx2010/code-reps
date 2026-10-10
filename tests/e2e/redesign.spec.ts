@@ -1,3 +1,4 @@
+import { catalogTopic } from '../../src/catalog-labels'
 import { expect, test } from '@playwright/test'
 import { reps } from '../../src/rep'
 import { diagnosticRepIds } from '../../src/fluency'
@@ -109,13 +110,13 @@ test('exercise topics start collapsed, remember expansion, and reveal search mat
   const groupCount = await groups.count()
   expect(groupCount).toBeGreaterThan(1)
   await expect(page.locator('.catalog-list .list-group[open]')).toHaveCount(0)
-  expect(await groups.locator('.list-group-title').allTextContents()).toEqual([...new Set(reps.map(rep => rep.category))].sort())
+  expect(await groups.locator('.list-group-title').allTextContents()).toEqual([...new Set(reps.map(catalogTopic))].sort())
   const first = groups.first()
   const topic = await first.locator('.list-group-title').innerText()
   await first.locator('summary').click()
   await expect(first).toHaveAttribute('open', '')
   await expect(first.locator('.list-row > button').first()).toBeVisible()
-  expect(await first.locator('.list-row-text strong').allTextContents()).toEqual(reps.filter(rep => rep.category === topic).map(rep => rep.title))
+  expect(await first.locator('.list-row-text strong').allTextContents()).toEqual(reps.filter(rep => catalogTopic(rep) === topic).map(rep => rep.title))
   await page.reload()
   await expect(groups.filter({ has: page.locator('.list-group-title', { hasText: topic }) }).first()).toHaveAttribute('open', '')
   await page.getByLabel('Find a rep', { exact: true }).fill('stock adjustment')
@@ -136,11 +137,11 @@ test('assessment topics disclose skill evidence and preserve the assessment flow
   await page.keyboard.press('Enter')
   const skill = group.locator('.evidence-card').first()
   await skill.locator('summary').click()
-  await expect(skill.getByRole('button', { name: 'Inspect evidence and assess' })).toBeVisible()
+  await expect(skill.getByRole('button', { name: 'Review your progress' })).toBeVisible()
   await page.getByRole('button', { name: 'Start assessment', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Start a new assessment', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Try from a fresh start' })).toHaveCount(diagnosticRepIds.length)
-  await skill.getByRole('button', { name: 'Inspect evidence and assess' }).click()
+  await skill.getByRole('button', { name: 'Review your progress' }).click()
   await expect(page).toHaveURL(/#\/knowledge/)
   await expect(page.locator('.knowledge-article h2').first()).toBeVisible()
 })

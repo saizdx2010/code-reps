@@ -82,7 +82,7 @@ export function HomePage({ walkthroughSeen, hasCompletedRep, launchWalkthrough, 
           {startingPoint}
         </details>
         {recommendation && hasCompletedRep && <button type="button" className="text-button" disabled={sessionBusy} onClick={() => startPractice(recommendation)}>Record a session</button>}
-        {choices.length > 0 && <ListGroup title="Choose today's practice" open>
+        {choices.some(item => item.action.repId !== recommendation?.repId) && <ListGroup title="Choose today's practice" open>
           {choices.map(({ label, action }) => <ListRow key={label} title={title(action.repId)} meta={label} status={<StatusChip tone={action.mode === 'resume' ? 'progress' : action.mode === 'review' ? 'attention' : 'neutral'}>{action.mode === 'resume' ? 'Saved' : label === 'Due review' ? 'Due' : 'Next'}</StatusChip>} onOpen={() => openPracticeAction(action)} onPreview={preloadEditor} />)}
         </ListGroup>}
         {sessions.length > 0 && <section className="home-sessions trail-queue" aria-labelledby="unfinished-sessions-title"><h2 id="unfinished-sessions-title">Unfinished sessions</h2><ul>{sessions.map(record => <li key={record.id}><span>{title(record.repId)}</span><button type="button" className="text-button" disabled={sessionBusy} onClick={() => resumeSession(record.repId)}>Resume session</button></li>)}</ul><button type="button" className="text-button" onClick={onPracticeHistory}>View practice history</button></section>}

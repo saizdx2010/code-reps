@@ -140,7 +140,7 @@ test('practice steps preserve work, explain missing requirements, and record com
   await chooseSegment(page, 'What was hardest?', 'Handling edge cases')
   await chooseSegment(page, 'How confident do you feel?', 'Getting there')
   await page.getByRole('button', { name: 'Complete rep', exact: false }).click()
-  await expect(page.getByText('Attempt recorded in History.', { exact: true })).toBeVisible()
+  await expect(page.getByText('Your attempt is saved in the Journal.', { exact: true })).toBeVisible()
   await expect(page.getByRole('status').filter({ hasText: 'Rep completed' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Complete rep' })).toHaveCount(0)
   await expect(page.locator('#checks-section').getByRole('button', { name: 'Explain your solution' })).toHaveCount(0)
@@ -155,11 +155,12 @@ test('practice steps preserve work, explain missing requirements, and record com
   await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue(/Count occurrences/)
   await page.locator('.site-menu > summary').click()
   await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name: 'Progress', exact: true }).click()
-  await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Completed reps1')
-  await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Current streak1 days')
+  await expect(page.locator('[aria-label="Practice summary"] > div').filter({ has: page.locator('dt', { hasText: 'Completed reps' }) }).locator('dd')).toHaveText('1')
+  await expect(page.locator('[aria-label="Practice summary"] > div').filter({ has: page.locator('dt', { hasText: 'Current streak' }) }).locator('dd')).toHaveText('1 day')
+  await expect(page.locator('.badge-progress').first()).toHaveText('1 of 1 rep')
   // An unhinted solve before its guided journey is not evidence of independence.
-  await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Independent skills0')
-  await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Retained skills0')
+  await expect(page.locator('[aria-label="Practice summary"] > div').filter({ has: page.locator('dt', { hasText: 'Independent skills' }) }).locator('dd')).toHaveText('0')
+  await expect(page.locator('[aria-label="Practice summary"] > div').filter({ has: page.locator('dt', { hasText: 'Retained skills' }) }).locator('dd')).toHaveText('0')
 })
 
 test('lesson section navigation preserves predictions and opens self-review', async ({ page }) => {

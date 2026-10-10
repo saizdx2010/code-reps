@@ -1,3 +1,4 @@
+import { catalogTopic, formatLabels } from './catalog-labels.ts'
 import { EmptyState, ListGroup, ListRow, PageHeader, StatusChip } from './Layout'
 import { statusTone } from './ui-status'
 import { Input, Select } from './Input'
@@ -23,7 +24,6 @@ type Props = {
   goalPathId?: string
 }
 
-const formatLabels: Record<string, string> = { algorithm: 'Algorithm / TypeScript', debug: 'Debugging', read: 'Code reading', transform: 'Data transformation', frontend: 'Frontend', backend: 'Backend', refactor: 'Refactoring' }
 const pathRepIds = (id: string): string[] => paths.find(path => path.id === id)?.stages.flatMap(stage => [...stage.repIds]) ?? []
 
 export function PracticeCatalog({ filters, onFilter, clearFilters, categories, visibleReps, dueIds, repStatus, openRep, goalPathId = foundationsPathId }: Props) {
@@ -40,14 +40,14 @@ export function PracticeCatalog({ filters, onFilter, clearFilters, categories, v
     <details className="catalog-filters" open={filterPanel === 'open'} onToggle={event => setFilterPanel(event.currentTarget.open ? 'open' : 'closed')}>
     <summary>Filters{activeFilters > 0 && <span>{activeFilters} active</span>}</summary>
     <div className="filter-bar" aria-label="Practice filters">
-      <label>Skill<Select aria-label="Skill" value={filters.skill} onChange={event => onFilter('skill', event.target.value)}>
-          <option value="">All skills</option>{categories.map(category => <option key={category}>{category}</option>)}</Select>
+      <label>Topic<Select aria-label="Topic" value={filters.skill} onChange={event => onFilter('skill', event.target.value)}>
+          <option value="">All topics</option>{categories.map(category => <option key={category}>{category}</option>)}</Select>
       </label>
-      <label>Format<Select aria-label="Format" value={filters.format} onChange={event => onFilter('format', event.target.value)}>
-          <option value="">All formats</option>{[...new Set(reps.map(item => item.format ?? 'algorithm'))].map(format => <option key={format} value={format}>{formatLabels[format]}</option>)}</Select>
+      <label>Type of rep<Select aria-label="Type of rep" value={filters.format} onChange={event => onFilter('format', event.target.value)}>
+          <option value="">All types</option>{[...new Set(reps.map(item => item.format ?? 'algorithm'))].map(format => <option key={format} value={format}>{formatLabels[format]}</option>)}</Select>
       </label>
-      <label>Status<Select aria-label="Status" value={filters.status} onChange={event => onFilter('status', event.target.value)}>
-          <option value="">All statuses</option>{['Not started', 'In progress', 'Completed'].map(status => <option key={status}>{status}</option>)}<option value="review">Review due</option>
+      <label>Your progress<Select aria-label="Your progress" value={filters.status} onChange={event => onFilter('status', event.target.value)}>
+          <option value="">Any progress</option>{['Not started', 'In progress', 'Completed'].map(status => <option key={status}>{status}</option>)}<option value="review">Review due</option>
         </Select>
       </label>
       <button type="button" className="text-button" onClick={clearFilters}>Clear filters</button>
@@ -58,7 +58,7 @@ export function PracticeCatalog({ filters, onFilter, clearFilters, categories, v
       <span aria-live="polite">{visibleReps.length} {visibleReps.length === 1 ? 'rep' : 'reps'}</span>
     </div>
     <div className="catalog-list" data-filtering={filtering} role="region" aria-label="Exercise list">{visibleReps.length ? categories.map(category => {
-      const items = visibleReps.filter(item => item.category === category)
+      const items = visibleReps.filter(item => catalogTopic(item) === category)
       return items.length > 0 && <ListGroup key={category} title={category} count={items.length} open={filtering || expanded.includes(category)} onToggle={open => { if (!filtering) setOpenGroups(JSON.stringify(open ? [...new Set([...expanded, category])] : expanded.filter(value => value !== category))) }}>
         {items.map(renderRow)}
       </ListGroup>

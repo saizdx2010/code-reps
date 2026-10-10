@@ -169,7 +169,7 @@ test('completed attempts stay separate from sessions and open immutable work', a
   await chooseSegment(page, 'What was hardest?', 'Nothing in particular')
   await chooseSegment(page, 'How confident do you feel?', 'Confident')
   await page.getByRole('button', { name: 'Complete rep', exact: true }).click()
-  await expect(page.getByText('Attempt recorded in History.', { exact: true })).toBeVisible()
+  await expect(page.getByText('Your attempt is saved in the Journal.', { exact: true })).toBeVisible()
   await expect(page.locator('.workspace-save-status')).toHaveText('Saved in browser')
   await expect(page.getByRole('heading', { name: 'Your practice session' })).toBeVisible()
   await page.getByLabel('What did you learn or where did you get stuck?').fill('I checked zero and negative values.')
@@ -205,8 +205,8 @@ test('ending a recall session leaves due dates and independent evidence unchange
   await page.getByRole('button', { name: 'Back to Home', exact: true }).click()
   await expect(page.locator('.continue-panel')).toContainText('Count values above a limit')
   await page.goto('/#/progress')
-  await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Independent skills1')
-  await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Retained skills0')
+  await expect(page.locator('[aria-label="Practice summary"] > div').filter({ has: page.locator('dt', { hasText: 'Independent skills' }) }).locator('dd')).toHaveText('1')
+  await expect(page.locator('[aria-label="Practice summary"] > div').filter({ has: page.locator('dt', { hasText: 'Retained skills' }) }).locator('dd')).toHaveText('0')
 })
 
 test('short-screen practice keeps sessions compact and reflection survives closing', async ({ page }) => {

@@ -29,7 +29,7 @@ for (const width of [1280, 320]) {
 
 test('early recall remains accessible without claiming retention', async ({ page }) => {
   await page.goto('/#/paths')
-  const stage = page.locator('.path-stage').filter({ hasText: 'Work through values' })
+  const stage = page.locator('.path-stage').filter({ hasText: 'Work through arrays' })
   await stage.locator('summary').click()
   const recall = stage.getByRole('button', { name: /Count values above a limit/ })
   await expect(recall).toContainText('Complete independent practice without hints to schedule recall.')

@@ -48,7 +48,7 @@ test('two-pointers journey is linked to its lesson and algorithm stage', () => {
   assert.deepEqual(journey, { id: 'two-pointers', title: 'Coordinate positions in sorted data', guided: 'algo-sorted-pair', independent: 'sorted-offset-squares', recall: 'reading-run-summary', delayDays: 3 })
   const ids = [journey.guided, journey.independent, journey.recall]
   const lesson = skills.find(skill => skill.id === 'array-techniques')
-  const stage = paths.flatMap(path => path.stages).find(stage => stage.title === 'Learn algorithm techniques')
+  const stage = paths.flatMap(path => path.stages).find(stage => stage.title === 'Search sorted data and scan windows')
   for (const id of ids) {
     assert.ok(lesson.repIds.includes(id), id)
     assert.ok(stage.repIds.includes(id), id)

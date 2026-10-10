@@ -16,7 +16,7 @@ async function finish(page: Page, id: string, code: string) {
   // Confidence is optional: completing without it must work.
   await expect(page.getByText('Still needed', { exact: false })).toHaveCount(0)
   await page.getByRole('button', { name: 'Complete rep', exact: false }).click()
-  await expect(page.getByText('Attempt recorded in History.', { exact: true })).toBeVisible()
+  await expect(page.getByText('Your attempt is saved in the Journal.', { exact: true })).toBeVisible()
   await expect(page.locator('.workspace-save-status')).toHaveText('Saved in browser')
 }
 
@@ -91,7 +91,7 @@ test('validation prompts and catalogue remain usable at 320 CSS pixels', async (
   await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue('Small-screen plan with precedence cases.')
   await page.goto('/#/practice')
   await page.locator('.catalog-filters > summary').click()
-  await chooseOption(page.getByLabel('Format', { exact: true }), 'backend')
+  await chooseOption(page.getByLabel('Type of rep', { exact: true }), 'backend')
   await page.getByLabel('Find a rep', { exact: true }).fill('stock adjustment')
   await expect(page.getByRole('button', { name: /Validate a stock adjustment/ })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)

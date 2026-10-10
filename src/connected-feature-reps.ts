@@ -47,12 +47,12 @@ const readerReferencePassesLearnerTests: Check = {expected: [{read: 'text', targ
 const exposeVersionMutant: Check = {expected: [{read: 'text', target: 'report', value: 'Failures: version'}], input: [{props: {failSave: false, faulty: 'version', raw: '{"version":1,"text":"Ada"}', text: 'Ada'}, steps: [{do: 'click', target: 'test'}]}], name: 'Expose version mutant'}
 const treatThrownReadersAsFailedCases: Check = {expected: [{read: 'text', target: 'report', value: 'Failures: missing, valid, syntax, shape, version, type, limit, boundary'}], input: [{props: {failSave: false, faulty: 'throw', raw: '{"version":1,"text":"Ada"}', text: 'Ada'}, steps: [{do: 'click', target: 'test'}]}], name: 'Treat thrown readers as failed cases'}
 
-const contract0 = 'Implement initial(text) returning {text,status: Ready} and edit(state,text) returning a fresh {text,status: Unsaved}. Keep state unchanged. Use a finite status union in your State type; review the type yourself because output checks cannot prove it. Inputs here are strings of at most 80 code units. The supplied inspect entry returns {before,after} for integration checks.'
+const contract0 = 'Implement `initial(text)` returning `{text,status: Ready}` and `edit(state,text)` returning a fresh `{text,status: Unsaved}`. Keep state unchanged. Use a finite status union in your `State` type. Inputs here are strings of at most 80 code units. The supplied inspect entry returns `{before,after}` for integration checks.'
 const contract1 = 'Use a single-line Note input (data-testid note), an associated visible label Note, a paragraph output with literal text, and a status paragraph (role status). Initial status is Ready. Do not change props. Text is preserved exactly, including whitespace; its limit is 80 JavaScript UTF-16 code units. '
 const contract2 = 'On input, accept lengths 0–80, update output and status Unsaved. For longer values keep the last accepted output, leave the typed input visible, and show Too long. Preserve the input element and focus. '
-const contract3 = 'Add native type=button Save (save) and a stored paragraph (stored). The fixture starts with props.raw, displaying (missing) for null. Save accepted text as JSON.stringify({version:1,text}) and show Saved. If props.failSave, preserve the stored value and draft and show Save failed. Save while input is over limit does nothing. This is an in-memory storage fixture per mount, not actual browser persistence. '
+const contract3 = 'Add native type=button Save (save) and a stored paragraph (stored). The fixture starts with props.raw, displaying (missing) for null. Save accepted text as `JSON.stringify({version:1,text})` and show Saved. If props.failSave, preserve the stored value and draft and show Save failed. Save while input is over limit does nothing. This is an in-memory storage fixture per mount, not actual browser persistence. '
 const contract4 = 'At startup and on native Reload button (reload), read the fixture instead of props.text. Missing data gives empty text and Ready. Accept only a non-null non-array object with version exactly 1 and text a string of at most 80 code units; ignore extra keys. Invalid JSON or shape gives empty text and Recovered; never overwrite invalid stored data until a successful explicit Save. Reload discards unsaved input. '
-const contract6 = 'Add native Test reader button (test) and report paragraph (report). Export verify(read) from tests.ts. Return failing case names in this order: missing (null), valid ({version:1,text: Ada}), syntax ({), shape ([]), version ({version:2,text: Ada}), type ({version:1,text:5}), limit (81 a characters), boundary (80 a characters). Pass raw JSON strings except null. Expected text/status are empty/Ready for missing, Ada/Ready for valid, 80 a characters/Ready for boundary, and empty/Recovered for all invalid cases. A throw fails that case. Report All reader cases passed or Failures: followed by names joined with comma-space. The supplied main module injects a version-accepting mutant or a throwing reader via props.faulty. '
+const contract6 = 'Add native Test reader button (test) and report paragraph (report). Export `verify(read)` from `tests.ts`. Return failing case names in this order: missing (null), valid ({version:1,text: Ada}), syntax ({), shape ([]), version ({version:2,text: Ada}), type ({version:1,text:5}), limit (81 a characters), boundary (80 a characters). Pass raw JSON strings except null. Expected text/status are empty/Ready for missing, Ada/Ready for valid, 80 a characters/Ready for boundary, and empty/Recovered for all invalid cases. A throw fails that case. Report All reader cases passed or Failures: followed by names joined with comma-space. The supplied main module injects a version-accepting mutant or a throwing reader via props.faulty. '
 
 export const connectedFeatureReps: Rep[] = [
   {
@@ -65,9 +65,9 @@ export const connectedFeatureReps: Rep[] = [
       input: 'Edit Ada to Bo',
       output: 'Ada / Ready'
     },
-    note: 'Checks establish observable behavior, not type quality, module design, visual fidelity, screen-reader output, or real persistent storage. Review those separately. No network or packages are available.',
+    note: 'Review your types, module design, appearance, accessibility, and real storage yourself. No network or packages are available.',
     acceptanceCriteria: [
-      'Self-review: explain module responsibilities and type guarantees separately from passing behavior checks.',
+      'Explain module responsibilities and type guarantees.',
       'Manually review keyboard access, visible focus, and narrow layouts.'
     ],
     vocabulary: [
@@ -101,9 +101,9 @@ export const connectedFeatureReps: Rep[] = [
       input: 'Edit Ada to Bo',
       output: 'Ada / Ready'
     },
-    note: 'Checks establish observable behavior, not type quality, module design, visual fidelity, screen-reader output, or real persistent storage. Review those separately. No network or packages are available.',
+    note: 'Review your types, module design, appearance, accessibility, and real storage yourself. No network or packages are available.',
     acceptanceCriteria: [
-      'Self-review: explain module responsibilities and type guarantees separately from passing behavior checks.',
+      'Explain module responsibilities and type guarantees.',
       'Manually review keyboard access, visible focus, and narrow layouts.'
     ],
     vocabulary: [
@@ -151,9 +151,9 @@ export const connectedFeatureReps: Rep[] = [
       input: 'Edit Ada to Bo',
       output: 'Bo / Unsaved'
     },
-    note: 'Checks establish observable behavior, not type quality, module design, visual fidelity, screen-reader output, or real persistent storage. Review those separately. No network or packages are available.',
+    note: 'Review your types, module design, appearance, accessibility, and real storage yourself. No network or packages are available.',
     acceptanceCriteria: [
-      'Self-review: explain module responsibilities and type guarantees separately from passing behavior checks.',
+      'Explain module responsibilities and type guarantees.',
       'Manually review keyboard access, visible focus, and narrow layouts.'
     ],
     vocabulary: [
@@ -201,9 +201,9 @@ export const connectedFeatureReps: Rep[] = [
       input: 'Edit Ada to Bo',
       output: 'Bo / Unsaved'
     },
-    note: 'Checks establish observable behavior, not type quality, module design, visual fidelity, screen-reader output, or real persistent storage. Review those separately. No network or packages are available.',
+    note: 'Review your types, module design, appearance, accessibility, and real storage yourself. No network or packages are available.',
     acceptanceCriteria: [
-      'Self-review: explain module responsibilities and type guarantees separately from passing behavior checks.',
+      'Explain module responsibilities and type guarantees.',
       'Manually review keyboard access, visible focus, and narrow layouts.'
     ],
     vocabulary: [
@@ -251,9 +251,9 @@ export const connectedFeatureReps: Rep[] = [
       input: 'Edit Ada to Bo, Save, edit again, Reload',
       output: 'Bo / Ready'
     },
-    note: 'Checks establish observable behavior, not type quality, module design, visual fidelity, screen-reader output, or real persistent storage. Review those separately. No network or packages are available.',
+    note: 'Review your types, module design, appearance, accessibility, and real storage yourself. No network or packages are available.',
     acceptanceCriteria: [
-      'Self-review: explain module responsibilities and type guarantees separately from passing behavior checks.',
+      'Explain module responsibilities and type guarantees.',
       'Manually review keyboard access, visible focus, and narrow layouts.'
     ],
     vocabulary: [
@@ -301,9 +301,9 @@ export const connectedFeatureReps: Rep[] = [
       input: 'Edit Ada to Bo, Save, edit again, Reload',
       output: 'Bo / Ready'
     },
-    note: 'Checks establish observable behavior, not type quality, module design, visual fidelity, screen-reader output, or real persistent storage. Review those separately. No network or packages are available.',
+    note: 'Review your types, module design, appearance, accessibility, and real storage yourself. No network or packages are available.',
     acceptanceCriteria: [
-      'Self-review: explain module responsibilities and type guarantees separately from passing behavior checks.',
+      'Explain module responsibilities and type guarantees.',
       'Manually review keyboard access, visible focus, and narrow layouts.'
     ],
     vocabulary: [
@@ -351,9 +351,9 @@ export const connectedFeatureReps: Rep[] = [
       input: 'Edit Ada to Bo, Save, edit again, Reload',
       output: 'Bo / Ready'
     },
-    note: 'Checks establish observable behavior, not type quality, module design, visual fidelity, screen-reader output, or real persistent storage. Review those separately. No network or packages are available.',
+    note: 'Review your types, module design, appearance, accessibility, and real storage yourself. No network or packages are available.',
     acceptanceCriteria: [
-      'Self-review: explain module responsibilities and type guarantees separately from passing behavior checks.',
+      'Explain module responsibilities and type guarantees.',
       'Manually review keyboard access, visible focus, and narrow layouts.'
     ],
     vocabulary: [

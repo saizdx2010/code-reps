@@ -59,7 +59,7 @@ test('walkthrough uses real checks, hints, writing and completion without granti
   await finish.focus()
   await finish.press('Enter')
   await expect(page.locator('#review-section')).toBeFocused()
-  await expect(page.getByText('Attempt recorded in History.', { exact: true })).toBeVisible()
+  await expect(page.getByText('Your attempt is saved in the Journal.', { exact: true })).toBeVisible()
   await expect(page.locator('.workspace-save-status')).toHaveText('Saved in browser')
   const work = await page.evaluate(() => Object.entries(localStorage).filter(([key]) => key.includes('declare-variables')))
   await page.goto('/#/home')
@@ -74,8 +74,8 @@ test('walkthrough uses real checks, hints, writing and completion without granti
   await expect(help(page)).toContainText('Your attempt is saved')
   expect(await page.evaluate(() => Object.entries(localStorage).filter(([key]) => key.includes('declare-variables')))).toEqual(work)
   await page.goto('/#/progress')
-  await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Independent skills0')
-  await expect(page.locator('[aria-label="Practice summary"]')).toContainText('Retained skills0')
+  await expect(page.locator('[aria-label="Practice summary"] > div').filter({ has: page.locator('dt', { hasText: 'Independent skills' }) }).locator('dd')).toHaveText('0')
+  await expect(page.locator('[aria-label="Practice summary"] > div').filter({ has: page.locator('dt', { hasText: 'Retained skills' }) }).locator('dd')).toHaveText('0')
 })
 
 test('walkthrough preference is session-only and separate for each profile', async ({ page }) => {

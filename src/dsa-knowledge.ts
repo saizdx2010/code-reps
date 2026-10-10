@@ -8,13 +8,13 @@ export const dsaSkills: Skill[] = [{
     'objectives': ['Create typed collections and read their contents.', 'Distinguish array order, set membership, and map associations.', 'Copy caller-owned arrays before updating them.'],
     'sections': [{
         'title': 'An ordered array',
-        'body': 'const values: number[] = [] declares an empty array of numbers. push adds at the end; pop removes and returns the last item, or undefined when empty. values.length counts items. values[index] reads a zero-based position. Spread, [...values], creates a separate shallow array: nested objects would still share references. const prevents reassignment of the name, not changes to the array.'
+        'body': 'The declaration `const values: number[] = []` creates an empty array of numbers. push adds at the end; pop removes and returns the last item, or undefined when empty. values.length counts items. values[index] reads a zero-based position. Spread, [...values], creates a separate shallow array: nested objects would still share references. const prevents reassignment of the name, not changes to the array.'
       }, {
         'title': 'Distinct values in a set',
-        'body': 'const seen = new Set<number>() creates an empty set. add(value) inserts a value; has(value) checks membership; delete(value) removes it; size counts distinct values. Adding the same number twice keeps one member. Deleting an absent member is allowed. Use for...of to visit values in insertion order. A set does not offer array-style indexing.'
+        'body': 'The declaration `const seen = new Set<number>()` creates an empty set. add(value) inserts a value; has(value) checks membership; delete(value) removes it; size counts distinct values. Adding the same number twice keeps one member. Deleting an absent member is allowed. Use for...of to visit values in insertion order. A set does not offer array-style indexing.'
       }, {
         'title': 'Associated values in a map',
-        'body': 'const counts = new Map<string, number>() associates text keys with numbers. set(key, value) creates or replaces an association; get(key) reads it; has(key) distinguishes presence; delete(key) removes it; size counts keys. for (const [key, value] of counts) visits entries in insertion order. A missing get returns undefined. A stored zero is still present: use ?? rather than || when defaulting only missing values.'
+        'body': 'The declaration `const counts = new Map<string, number>()` associates text keys with numbers. set(key, value) creates or replaces an association; get(key) reads it; has(key) distinguishes presence; delete(key) removes it; size counts keys. for (const [key, value] of counts) visits entries in insertion order. A missing get returns undefined. A stored zero is still present: use ?? rather than || when defaulting only missing values.'
       }, {
         'title': 'Choose by the question',
         'body': 'Use an array when position and repeated values matter, a set for distinct membership, and a map for values associated with keys. Copying n array items takes O(n) time and space. Sets and maps store their distinct members or keys; access is efficient on average, without a universal worst-case constant-time promise. Output checks cannot establish which API you used: inspect your implementation after checking.'

@@ -10,7 +10,7 @@ export const skills: Skill[] = [
     objectives: ['Distinguish a value from the name referring to it.', 'Choose a type for a function input and output.', 'Explain return versus printing and reassignment versus mutation.'],
     sections: [
       { title: 'Names and values', body: 'A variable names a value. const prevents assigning a different value to that name; it does not freeze an object. let allows reassignment. Choose names that describe the role of the value, such as quantity, rather than its type alone.' },
-      { title: 'Types describe expectations', body: 'string, number, and boolean describe common values. TypeScript checks your program before it runs, but its types do not validate data received over a network. A function signature describes expected inputs and the value it returns.' },
+      { title: 'Types describe expectations', body: 'The types `string`, `number`, and `boolean` describe common values. TypeScript checks your program before it runs, but its types do not validate data received over a network. A function signature describes expected inputs and the value it returns.' },
       { title: 'A function is a boundary', body: 'A function takes inputs and returns an output. console.log displays something for a person; return sends a value back to the caller. Keep calculation separate from display so you can check the calculation directly.' },
     ],
     example: 'function cost(price: number, quantity: number): number {\n  return price * quantity\n}\nconst subtotal = cost(250, 2) // 500',
@@ -39,7 +39,7 @@ export const skills: Skill[] = [
     sections: [
       { title: 'Order and position', body: 'An array stores ordered values. Position zero holds the first item. Reading past the end produces undefined. Before reading an item, decide what an empty array means for your contract: zero, null, an empty result, or an error.' },
       { title: 'Keep an invariant', body: 'An invariant is a fact that remains true while a loop runs. In a counting loop, count equals the number of qualifying values already visited. Start at zero, update only when the condition holds, and return after visiting all inputs.' },
-      { title: 'Choose the operation', body: 'filter selects existing items; map transforms every item; reduce accumulates a result. A plain loop is often easiest to trace. Use the clearest form for the task. One scan over n items is O(n); an output array can require O(n) space.' },
+      { title: 'Choose the operation', body: 'Use `filter` to select existing items, `map` to transform every item, and `reduce` to accumulate a result. A plain loop is often easiest to trace. Use the clearest form for the task. One scan over n items is O(n); an output array can require O(n) space.' },
     ],
     example: 'function countPositive(numbers: number[]) {\n  let count = 0\n  for (const n of numbers) {\n    if (n > 0) count++\n  }\n  return count\n}\ncountPositive([-2, 4, 0, 3]) // 2',
     walkthrough: ['Before the loop, count is 0.', '-2 does not qualify: count stays 0.', '4 qualifies: count becomes 1.', '0 does not qualify: count stays 1.', '3 qualifies: count becomes 2. Empty input would leave count at 0.'],
@@ -51,7 +51,7 @@ export const skills: Skill[] = [
     id: 'text', title: 'Text and normalization', summary: 'Separate comparison rules from display values and define what counts as a word.', prerequisites: ['arrays'],
     objectives: ['Explain trimming versus removing internal whitespace.', 'Preserve original text when normalizing a comparison.', 'State character and case assumptions explicitly.'],
     sections: [
-      { title: 'Normalization follows a contract', body: 'trim removes whitespace at the beginning and end. It does not remove spaces in the middle. Lowercasing can make a comparison case-insensitive, but should not silently change the text shown to a person. Decide whether blank text should be ignored, rejected, or kept.' },
+      { title: 'Normalization follows a contract', body: 'Use `trim` to remove whitespace at the beginning and end. It does not remove spaces in the middle. Lowercasing can make a comparison case-insensitive, but should not silently change the text shown to a person. Decide whether blank text should be ignored, rejected, or kept.' },
       { title: 'Words and characters', body: 'For a whitespace-separated word exercise, trim first, handle empty input, then split on one or more whitespace characters. JavaScript strings use UTF-16 code units; length and index access are not a general count of human-visible characters. State a restricted alphabet when the exercise depends on that distinction.' },
       { title: 'Cost includes string work', body: 'Trimming, searching, and changing case inspect text. A loop over n labels is not necessarily O(n) independent of their length. Explain work in terms of total text processed when that matters.' },
     ],

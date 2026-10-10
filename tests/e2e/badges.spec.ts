@@ -23,7 +23,7 @@ async function completeFirstRep(page: Page) {
   await chooseSegment(page, 'What was hardest?', 'Nothing in particular')
   await chooseSegment(page, 'How confident do you feel?', 'Confident')
   await page.getByRole('button', { name: 'Complete rep', exact: false }).click()
-  await expect(page.getByText('Attempt recorded in History.', { exact: true })).toBeVisible()
+  await expect(page.getByText('Your attempt is saved in the Journal.', { exact: true })).toBeVisible()
 }
 
 async function createProfile(page: Page, name: string) {

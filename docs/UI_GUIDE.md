@@ -104,4 +104,18 @@ Practice sessions are a compact control in the workspace header rather than a se
 
 Desktop practice uses a fixed split workspace: the task pane and editor scroll independently, while the step rail, save status, and Run checks stay visible. Checks expand into a bounded drawer in the coding desk with its own scrolling feedback. The divider remains resizable. Frontend previews scroll within their own bounded area and can still expand into a dialog. Session reflection stays accessible in a bounded row under the header. Narrow screens retain the existing pane navigation.
 
-Library and learning tools use the shared compact `PageHeader`, with secondary evidence guidance in native `InfoNote` disclosures. Exercises group by authored category; groups begin collapsed, remember expansion in the profile’s browser session, and open matching results during search or filtering. Search remains visible and skill, format, and status filters share one compact disclosure. Self-assessment groups skills by knowledge topic while retaining each skill’s supporting evidence and the optional assessment flow. Lessons keep their compact search, topic, and bookmark controls beside the Read, Predict, Practise, and Review views. Project summaries disclose milestones and final self-review. Progress uses one statistics row, thin path-completion bars, and expandable skill journeys with guided, independent, and recall markers; Home owns the next-practice recommendation. Backup and profile actions remain available. Pending pages use the same header and reserve the corresponding compact working surfaces.
+Library and learning tools use the shared compact `PageHeader`, with secondary evidence guidance in native `InfoNote` disclosures. Exercises group by primary topic; groups begin collapsed, remember expansion in the profile’s browser session, and open matching results during search or filtering. Search remains visible and topic, rep type, and progress filters share one compact disclosure. Self-assessment groups skills by knowledge topic while retaining each skill’s supporting evidence and the optional assessment flow. Lessons keep their compact search, topic, and bookmark controls beside the Read, Predict, Practise, and Review views. Project summaries disclose milestones and final self-review. Progress uses one statistics row, thin path-completion bars, and expandable skill journeys with guided, independent, and recall markers; Home owns the next-practice recommendation. Backup and profile actions remain available. Pending pages use the same header and reserve the corresponding compact working surfaces.
+
+### Interface wording
+
+Use short, friendly wording addressed to the learner. “Practise” is the verb;
+“practice” is the noun. Progress and Journal share readable local dates and
+singular/plural labels. A zero Progress stat explains which practice unlocks it.
+Library topics are presentation labels shared by filtering and grouping; authored
+categories, rep IDs, and checked answers stay unchanged.
+
+Briefs and lesson prose render paired backticks as inline code using the shared
+`InlineCode` component. All text stays escaped by React. Keep each rep's assessment
+limits in one “How this is checked” `InfoNote`: checks show tested behavior, while
+the learner reviews writing and variations. Task limits stay visible in the brief;
+only assessment sentences move into the disclosure. The checks drawer reports results.
