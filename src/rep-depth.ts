@@ -76,6 +76,14 @@ export const repDepth: Record<string, RepDepth> = {
     "transfer": "Change the rule so a score must be above 50 to pass, then name which check changes and what 50 returns."
   },
   "use-conditions": {
+    "traceSteps": {"code": ["function gradeLabel(score: number): string {", "  if (score < 0 || score > 100) return 'Invalid'", "  if (score >= 90) return 'A'", "  if (score >= 80) return 'B'", "  if (score >= 70) return 'C'", "  if (score >= 60) return 'D'", "  return 'F'", "}"], "input": "score = 60", "steps": [
+      {"line": 0, "vars": {}, "structure": {"kind": "state", "entries": [["score", 60], ["rules that did not match", "none"], ["grade", "not chosen"]]}, "note": "The score is 60. Check the invalid range first."},
+      {"line": 1, "vars": {}, "structure": {"kind": "state", "entries": [["score", 60], ["rules that did not match", "none"], ["grade", "not chosen"]]}, "note": "Is 60 below 0 or above 100? No, so the invalid rule does not match."},
+      {"line": 2, "vars": {}, "structure": {"kind": "state", "entries": [["score", 60], ["rules that did not match", "invalid range"], ["grade", "not chosen"]]}, "note": "60 is not 90 or more, so the A rule does not match."},
+      {"line": 3, "vars": {}, "structure": {"kind": "state", "entries": [["score", 60], ["rules that did not match", "invalid range, A"], ["grade", "not chosen"]]}, "note": "60 is not 80 or more, so the B rule does not match."},
+      {"line": 4, "vars": {}, "structure": {"kind": "state", "entries": [["score", 60], ["rules that did not match", "invalid range, A, B"], ["grade", "not chosen"]]}, "note": "60 is not 70 or more, so the C rule does not match."},
+      {"line": 5, "vars": {"result": "D"}, "structure": {"kind": "state", "entries": [["score", 60], ["rules that did not match", "invalid range, A, B, C"], ["grade", "D"]]}, "note": "60 is at least 60, so the grade is D. The lower edge belongs to D."}
+    ]},
     "reasoning": "Checking the invalid range first keeps out-of-range scores away from the grade bands. Each grade test assumes every higher band has already failed, so the order defines the boundaries.",
     "trace": "For 90, the 90 test passes first and returns A. For 89.9 that test fails, the 80 test fails, the 70 test fails, the 60 test passes, and the result is B only if 89.9 is at least 80. For 101 the range guard returns Invalid before any grade test runs.",
     "alternative": "A table of score ranges is compact, but each inclusive or exclusive edge must be written correctly. Separate if statements make each boundary visible when you trace a value.",
@@ -83,6 +91,17 @@ export const repDepth: Record<string, RepDepth> = {
     "transfer": "Add a plus band for 97 and above, and explain which branch must come first and what 96.5 returns."
   },
   "loop-with-for": {
+    "traceSteps": {"code": ["function sumUpTo(n: number): number {", "  let total = 0", "  for (let i = 1; i <= n; i++) {", "    total += i", "  }", "  return total", "}"], "input": "n = 4", "steps": [
+      {"line": 1, "vars": {"n": 4}, "note": "n is 4, so the loop counts from 1 up to 4. If n were 0, the loop would never run and the result would be 0."},
+      {"line": 2, "vars": {"n": 4, "total": 0, "i": 1}, "note": "i starts at 1. Since 1 is at most 4, the loop body runs."},
+      {"line": 3, "vars": {"n": 4, "total": 0, "i": 1}, "note": "Add 1: the total goes from 0 to 1."},
+      {"line": 2, "vars": {"n": 4, "total": 1, "i": 2}, "note": "i is now 2. It is still at most 4, so the body runs again."},
+      {"line": 3, "vars": {"n": 4, "total": 1, "i": 2}, "note": "Add 2: the total goes from 1 to 3."},
+      {"line": 3, "vars": {"n": 4, "total": 3, "i": 3}, "note": "i is now 3. Add 3: the total goes from 3 to 6."},
+      {"line": 3, "vars": {"n": 4, "total": 6, "i": 4}, "note": "i is now 4. Add 4: the total goes from 6 to 10."},
+      {"line": 2, "vars": {"n": 4, "total": 10, "i": 5}, "note": "i is 5, which is more than 4, so the loop stops."},
+      {"line": 5, "vars": {"n": 4, "total": 10, "result": 10}, "note": "Return the total, 10."}
+    ]},
     "reasoning": "The total is the sum of the values already visited. It starts at zero, so the empty range is correct, and each pass adds the next value until i passes n.",
     "trace": "For n = 4 the total becomes 1, 3, 6, and 10 as i takes 1, 2, 3, and 4. For n = 0 the condition 1 <= 0 is false, so the loop never runs and 0 is returned.",
     "alternative": "The formula n * (n + 1) / 2 returns the same result without visiting each value. The loop is easier to change when the rule adds only selected values.",
@@ -90,6 +109,17 @@ export const repDepth: Record<string, RepDepth> = {
     "transfer": "Sum only the odd numbers from 1 through n. Decide the starting value and the step size before you write the loop body."
   },
   "loop-while": {
+    "traceSteps": {"code": ["function stepsToOne(n: number): number {", "  let value = n", "  let steps = 0", "  while (value > 1) {", "    value = Math.floor(value / 2)", "    steps++", "  }", "  return steps", "}"], "input": "n = 9", "steps": [
+      {"line": 1, "vars": {"n": 9}, "note": "The starting number is 9. No halving has happened yet."},
+      {"line": 3, "vars": {"value": 9, "steps": 0}, "note": "9 is more than 1, so the loop body runs."},
+      {"line": 5, "vars": {"value": 4, "steps": 0}, "note": "9 halved and rounded down is 4. Count this step: steps goes from 0 to 1."},
+      {"line": 3, "vars": {"value": 4, "steps": 1}, "note": "4 is more than 1, so the loop runs again."},
+      {"line": 5, "vars": {"value": 2, "steps": 1}, "note": "4 halved is 2. Count this step: steps goes from 1 to 2."},
+      {"line": 3, "vars": {"value": 2, "steps": 2}, "note": "2 is more than 1, so one more halving is needed."},
+      {"line": 5, "vars": {"value": 1, "steps": 2}, "note": "2 halved is 1. Count this step: steps goes from 2 to 3."},
+      {"line": 3, "vars": {"value": 1, "steps": 3}, "note": "1 is not more than 1, so the loop stops."},
+      {"line": 7, "vars": {"value": 1, "steps": 3, "result": 3}, "note": "Return the step count, 3."}
+    ]},
     "reasoning": "The loop tests the current value before each halving. When the value reaches 1 no further halving is needed, so the count equals the number of halvings performed.",
     "trace": "Starting with 9, the value is greater than 1, so it becomes 4 and steps becomes 1. Then 4 becomes 2 and steps becomes 2. Then 2 becomes 1 and steps becomes 3. The value 1 fails the condition, so the result is 3.",
     "alternative": "A for loop with a manual break can work, but the while condition states the stopping rule directly. Bit operations count bit length, but they hide the halving rule this rep asks you to practice.",
@@ -104,6 +134,14 @@ export const repDepth: Record<string, RepDepth> = {
     "transfer": "Return the first letter of the first and last words only. Decide what a one-word name should return before you change the code."
   },
   "object-update": {
+    "traceSteps": {"code": ["type Task = { title: string; done: boolean; priority: number }", "function setDone(task: Task, done: boolean): Task {", "  const before = task.done", "  const copy: Task = { ...task }", "  copy.done = done", "  const changed = before !== done", "  return copy", "}"], "input": "task = { title: 'Write', done: false, priority: 2 }, done = true", "steps": [
+      {"line": 1, "vars": {}, "structure": {"kind": "state", "entries": [["original done", false], ["copy done", "not made"]]}, "note": "The function receives the task and the requested done value. The task must stay unchanged."},
+      {"line": 2, "vars": {}, "structure": {"kind": "state", "entries": [["original done", false], ["copy done", "not made"]]}, "note": "Save the original done flag, false, so it can be compared later."},
+      {"line": 3, "vars": {"before": false}, "structure": {"kind": "state", "entries": [["original done", false], ["copy done", "not made"]]}, "note": "Make a new object with the same title, done flag, and priority."},
+      {"line": 4, "vars": {"before": false}, "structure": {"kind": "state", "entries": [["original done", false], ["copy done", false]]}, "note": "The copy starts with done false. Next, set done on the copy only."},
+      {"line": 5, "vars": {"before": false}, "structure": {"kind": "state", "entries": [["original done", false], ["copy done", true]]}, "note": "Only the copy now has true. The original still has false."},
+      {"line": 6, "vars": {"before": false, "changed": true, "result": "{\"title\": \"Write\", \"done\": true, \"priority\": 2}"}, "structure": {"kind": "state", "entries": [["original done", false], ["copy done", true]]}, "note": "The flag changed, so changed is true. Return the new copy."}
+    ]},
     "reasoning": "The caller keeps its original task. Returning a new object makes the change explicit, and code that still holds the old value sees no surprise.",
     "trace": "For { title: 'Write', done: false, priority: 2 } with done true, the spread copies title and priority, then done replaces false. The supplied object still has done false afterward.",
     "alternative": "Object.assign({}, task, { done }) gives the same result and is more verbose. Assigning task.done directly is shorter but changes the caller's object.",
@@ -125,6 +163,14 @@ export const repDepth: Record<string, RepDepth> = {
     "transfer": "Add a second filter such as team. Explain which filters combine and whether output order changes."
   },
   "frontend-view-state": {
+    "traceSteps": {"code": ["function viewState(loading: boolean, error: string | null, count: number): string {", "  const hasError = error !== null && error !== ''", "  const isEmpty = count === 0", "  if (loading) return 'loading'", "  if (hasError) return 'error'", "  if (isEmpty) return 'empty'", "  return 'ready'", "}"], "input": "loading = false, error = '', count = 0", "steps": [
+      {"line": 0, "vars": {}, "structure": {"kind": "state", "entries": [["loading", false], ["error", "\"\""], ["count", 0], ["hasError", "not set"], ["isEmpty", "not set"]]}, "note": "The function receives loading, error text, and count. The checks run from top to bottom."},
+      {"line": 1, "vars": {}, "structure": {"kind": "state", "entries": [["loading", false], ["error", "\"\""], ["count", 0], ["hasError", "not set"], ["isEmpty", "not set"]]}, "note": "Empty error text is not an error, so hasError will be false."},
+      {"line": 2, "vars": {}, "structure": {"kind": "state", "entries": [["loading", false], ["error", "\"\""], ["count", 0], ["hasError", false], ["isEmpty", "not set"]]}, "note": "hasError is false. Count is 0, so isEmpty will be true."},
+      {"line": 3, "vars": {}, "structure": {"kind": "state", "entries": [["loading", false], ["error", "\"\""], ["count", 0], ["hasError", false], ["isEmpty", true]]}, "note": "Loading is false, so the loading rule does not match."},
+      {"line": 4, "vars": {}, "structure": {"kind": "state", "entries": [["loading", false], ["error", "\"\""], ["count", 0], ["hasError", false], ["isEmpty", true]]}, "note": "hasError is false, so the error rule does not match."},
+      {"line": 5, "vars": {"result": "empty"}, "structure": {"kind": "state", "entries": [["loading", false], ["error", "\"\""], ["count", 0], ["hasError", false], ["isEmpty", true]]}, "note": "isEmpty is true, so the screen shows the empty state. The ready state is never reached."}
+    ]},
     "reasoning": "State precedence prevents contradictory inputs from producing misleading UI.",
     "trace": "With loading true, an error and count zero still yield loading. When loading ends, a nonempty error wins; an empty error allows empty or ready.",
     "alternative": "Ordered guards express precedence clearly; independent assignments can accidentally overwrite a higher-priority state.",
@@ -205,6 +251,14 @@ export const repDepth: Record<string, RepDepth> = {
     "transfer": "Allow non-bracket text to be ignored. State that new rule and test a mixed-text expression."
   },
   "sum-positive-numbers": {
+    "traceSteps": {"code": ["function sumPositive(numbers: number[]): number {", "  let sum = 0", "  for (let i = 0; i < numbers.length; i++) {", "    if (numbers[i] > 0) sum += numbers[i]", "  }", "  return sum", "}"], "input": "numbers = [-2, 3, 0, 5]", "steps": [
+      {"line": 2, "vars": {"sum": 0}, "structure": {"kind": "array", "values": [-2, 3, 0, 5]}, "note": "The total starts at 0. No position has been checked yet."},
+      {"line": 3, "vars": {"sum": 0, "i": 0}, "structure": {"kind": "array", "values": [-2, 3, 0, 5], "pointers": {"i": 0}}, "note": "Index 0 holds -2. It is not above 0, so the total stays 0."},
+      {"line": 3, "vars": {"sum": 0, "i": 1}, "structure": {"kind": "array", "values": [-2, 3, 0, 5], "pointers": {"i": 1}, "dimmed": [0]}, "note": "Index 1 holds 3. It is above 0, so 3 will be added to the total."},
+      {"line": 3, "vars": {"sum": 3, "i": 2}, "structure": {"kind": "array", "values": [-2, 3, 0, 5], "pointers": {"i": 2}, "dimmed": [0, 1]}, "note": "Index 2 holds 0. Zero is not above 0, so the total stays 3."},
+      {"line": 3, "vars": {"sum": 3, "i": 3}, "structure": {"kind": "array", "values": [-2, 3, 0, 5], "pointers": {"i": 3}, "dimmed": [0, 1, 2]}, "note": "Index 3 holds 5. It is above 0, so 5 will be added to the total."},
+      {"line": 5, "vars": {"sum": 8, "result": 8}, "structure": {"kind": "array", "values": [-2, 3, 0, 5], "dimmed": [0, 1, 2, 3]}, "note": "Every index has been checked. Return the total, 8."}
+    ]},
     "reasoning": "After each visit, total equals the sum of positive values in the visited prefix.",
     "trace": "For [-2,4,0,3], totals are 0,4,4,7. Empty input leaves the initial zero untouched.",
     "alternative": "A loop keeps only a total; filter then reduce creates a selected array. A reducer without an initial value fails on empty input.",
@@ -233,6 +287,17 @@ export const repDepth: Record<string, RepDepth> = {
     "transfer": "Search records for the first available item at a price limit. Explain the stopping condition."
   },
   "count-words": {
+    "traceSteps": {"code": ["function countWords(text: string): number {", "  let count = 0", "  let inWord = false", "  for (let i = 0; i < text.length; i++) {", "    if (/\\s/.test(text[i])) inWord = false", "    else if (!inWord) { inWord = true; count++ }", "  }", "  return count", "}"], "input": "text = ' ab  c '", "steps": [
+      {"line": 3, "vars": {"count": 0, "inWord": false}, "structure": {"kind": "array", "values": ["␣", "a", "b", "␣", "␣", "c", "␣"]}, "note": "Each box is one character, and ␣ stands for a space. Start with zero words and no word open."},
+      {"line": 4, "vars": {"count": 0, "inWord": false, "i": 0}, "structure": {"kind": "array", "values": ["␣", "a", "b", "␣", "␣", "c", "␣"], "pointers": {"i": 0}}, "note": "The first character is a space. A space before a word does not start a word."},
+      {"line": 5, "vars": {"count": 0, "inWord": false, "i": 1}, "structure": {"kind": "array", "values": ["␣", "a", "b", "␣", "␣", "c", "␣"], "pointers": {"i": 1}, "dimmed": [0]}, "note": "a is not a space and no word is open, so a new word starts. Count will go from 0 to 1."},
+      {"line": 4, "vars": {"count": 1, "inWord": true, "i": 2}, "structure": {"kind": "array", "values": ["␣", "a", "b", "␣", "␣", "c", "␣"], "pointers": {"i": 2}, "dimmed": [0, 1]}, "note": "b is not a space and a word is already open, so count stays at 1."},
+      {"line": 4, "vars": {"count": 1, "inWord": true, "i": 3}, "structure": {"kind": "array", "values": ["␣", "a", "b", "␣", "␣", "c", "␣"], "pointers": {"i": 3}, "dimmed": [0, 1, 2]}, "note": "This space ends the word, so inWord becomes false."},
+      {"line": 4, "vars": {"count": 1, "inWord": false, "i": 4}, "structure": {"kind": "array", "values": ["␣", "a", "b", "␣", "␣", "c", "␣"], "pointers": {"i": 4}, "dimmed": [0, 1, 2, 3]}, "note": "Another space. Repeated spaces do not add words."},
+      {"line": 5, "vars": {"count": 1, "inWord": false, "i": 5}, "structure": {"kind": "array", "values": ["␣", "a", "b", "␣", "␣", "c", "␣"], "pointers": {"i": 5}, "dimmed": [0, 1, 2, 3, 4]}, "note": "c starts a second word. Count will go from 1 to 2."},
+      {"line": 4, "vars": {"count": 2, "inWord": true, "i": 6}, "structure": {"kind": "array", "values": ["␣", "a", "b", "␣", "␣", "c", "␣"], "pointers": {"i": 6}, "dimmed": [0, 1, 2, 3, 4, 5]}, "note": "The trailing space ends the second word. Count stays at 2."},
+      {"line": 7, "vars": {"count": 2, "inWord": false, "result": 2}, "structure": {"kind": "array", "values": ["␣", "a", "b", "␣", "␣", "c", "␣"], "dimmed": [0, 1, 2, 3, 4, 5, 6]}, "note": "Every character has been checked. Return the count, 2."}
+    ]},
     "reasoning": "Whitespace runs are separators, not words, and blank text needs an explicit zero result.",
     "trace": "Trim spaces around Ada followed by a tab and Bo; splitting the remaining text on whitespace yields [Ada,Bo], so return 2.",
     "alternative": "Splitting is clear but allocates words. A character scan can count transitions into words using constant working space.",
@@ -240,6 +305,14 @@ export const repDepth: Record<string, RepDepth> = {
     "transfer": "Count words without allocating a word array. Describe the state needed while scanning."
   },
   "has-duplicate": {
+    "traceSteps": {"code": ["function hasDuplicate(numbers: number[]): boolean {", "  const seen = new Map<number, number>()", "  for (let i = 0; i < numbers.length; i++) {", "    if (seen.has(numbers[i])) return true", "    seen.set(numbers[i], i)", "  }", "  return false", "}"], "input": "numbers = [4, 0, -1, 4]", "steps": [
+      {"line": 1, "vars": {}, "structure": {"kind": "map", "entries": []}, "note": "Start with an empty map. Each number seen so far is stored with the index where it first appeared."},
+      {"line": 3, "vars": {"i": 0}, "structure": {"kind": "map", "entries": []}, "note": "4 is not in the map, so it is not a duplicate. It is stored next."},
+      {"line": 3, "vars": {"i": 1}, "structure": {"kind": "map", "entries": [["4", 0]]}, "note": "0 is not in the map yet, so it is new. It is stored with index 1."},
+      {"line": 3, "vars": {"i": 2}, "structure": {"kind": "map", "entries": [["4", 0], ["0", 1]]}, "note": "-1 is new too. Negative numbers are stored the same way as any other number."},
+      {"line": 3, "vars": {"i": 3}, "structure": {"kind": "map", "entries": [["4", 0], ["0", 1], ["-1", 2]]}, "note": "4 is already in the map, stored at index 0. This is a repeat, so this line returns true."},
+      {"line": 3, "vars": {"i": 3, "result": true}, "structure": {"kind": "map", "entries": [["4", 0], ["0", 1], ["-1", 2]]}, "note": "The function returns true right away. Later numbers are not checked."}
+    ]},
     "reasoning": "Before each visit, seen contains exactly the values in the visited prefix.",
     "trace": "For [5,2,2], save 5, save 2, then find 2 already saved and return true.",
     "alternative": "A Set uses expected efficient lookup and O(k) space; nested comparisons avoid a Set but can take quadratic time.",
