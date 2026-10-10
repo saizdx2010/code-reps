@@ -127,7 +127,7 @@ test('daily new-rep choice stays available alongside saved drafts and due recall
   const plan = getPracticePlan(drafts, history, 'returning', '', now, 'backend')
   assert.equal(plan.next.repId, 'count-above-threshold')
   assert.equal(plan.recommended.repId, 'backend-validate-user')
-  assert.match(plan.recommended.reason, /Next: Validate a user request —/)
+  assert.match(plan.recommended.reason, /Validate data at a boundary/)
   assert.equal(plan.unfinished[0].repId, 'backend-page-results')
   assert.deepEqual(drafts, before)
 })

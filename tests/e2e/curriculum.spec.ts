@@ -73,7 +73,7 @@ for (const width of [1280, 390]) {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/#/home')
     const card = page.locator('.continue-panel')
-    await expect(card).toContainText('Next: Declare a value — Create a const named greeting')
+    await expect(card).toContainText('Skill: Values, types, and functions.')
     const firstStage = page.locator('.path-stage').first()
     await expect(firstStage.locator('summary')).not.toContainText('You can now')
     await card.screenshot({ path: `/tmp/code-reps-polish/6/next-practice-${width}.png` })

@@ -8,7 +8,7 @@ for (const width of [1280, 390]) {
     await page.getByRole('button', { name: /New to coding/ }).click()
     await expect(page.getByText('Your trail · Active learning goal')).toBeVisible()
     await expect(page.getByText('Browsing another track does not change your learning goal.')).toBeVisible()
-    await expect(page.locator('.continue-panel')).toContainText('Next: Declare a value — Create a const named greeting')
+    await expect(page.locator('.continue-panel')).toContainText('Skill: Values, types, and functions.')
     await expect(page.locator('.continue-panel')).toContainText('Afterward')
     const choices = page.locator('.list-group').filter({ hasText: "Choose today's practice" })
     await expect(choices).toHaveCount(0)
