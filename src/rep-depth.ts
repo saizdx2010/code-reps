@@ -36,7 +36,7 @@ export const repDepth: Record<string, RepDepth> = {
   "declare-variables": {
     "reasoning": "A name and its value are different: const protects the binding, not every value reachable through it.",
     "trace": "With name Ada, greeting remains Hello plus a space; message becomes Hello, Ada. With an empty name the space remains.",
-    "alternative": "Returning the concatenation directly is shorter but does not practise the requested declarations. let is justified when reassignment is needed, not merely because a value is calculated.",
+    "alternative": "Returning the concatenation directly is shorter but does not practice the requested declarations. let is justified when reassignment is needed, not merely because a value is calculated.",
     "counterexample": "Removing the trailing space produces HelloAda. Output checks still cannot prove which declarations you used.",
     "transfer": "Change the task to build a message in two assignments. Which binding now needs let?"
   },
@@ -92,7 +92,7 @@ export const repDepth: Record<string, RepDepth> = {
   "loop-while": {
     "reasoning": "The loop tests the current value before each halving. When the value reaches 1 no further halving is needed, so the count equals the number of halvings performed.",
     "trace": "Starting with 9, the value is greater than 1, so it becomes 4 and steps becomes 1. Then 4 becomes 2 and steps becomes 2. Then 2 becomes 1 and steps becomes 3. The value 1 fails the condition, so the result is 3.",
-    "alternative": "A for loop with a manual break can work, but the while condition states the stopping rule directly. Bit operations count bit length, but they hide the halving rule this rep asks you to practise.",
+    "alternative": "A for loop with a manual break can work, but the while condition states the stopping rule directly. Bit operations count bit length, but they hide the halving rule this rep asks you to practice.",
     "counterexample": "Using value / 2 without Math.floor gives 9 four steps: 4.5, 2.25, 1.125, and 0.5625. The value stays fractional, so the count is wrong.",
     "transfer": "Repeat the halving rule until the value is 0 instead. Explain why an input of 1 never reaches 0 under floor division, and what this means for the loop."
   },
@@ -511,7 +511,7 @@ export const repDepth: Record<string, RepDepth> = {
   },
   "countdown-labels": {
     "reasoning": "The value itself is the loop state. Looping while the value is at least zero means the last label is the last non-negative value the countdown reaches, and formatting is a separate step applied to each value.",
-    "trace": "Start 130 with step 60: values 130, 70, 10 are labelled 2:10, 1:10, 0:10. The next value, -50, fails the test and stops the loop. Start 120 with step 60 reaches 0 exactly, so 0:00 appears.",
+    "trace": "Start 130 with step 60: values 130, 70, 10 are labeled 2:10, 1:10, 0:10. The next value, -50, fails the test and stops the loop. Start 120 with step 60 reaches 0 exactly, so 0:00 appears.",
     "alternative": "Counting the number of labels first and then computing each value is also correct, but it adds a division that the countdown does not need. A while loop with the same condition reads the same way.",
     "counterexample": "Using value > 0 drops the 0:00 label for starts that land exactly on zero. Padding minutes as well as seconds turns 2:10 into 02:10, which the format does not ask for.",
     "transfer": "Count up from zero to a limit in steps and format each value as h:mm:ss. Decide the stop condition and how hours appear before coding. This changed contract is self-reviewed, not checked by the original cases."

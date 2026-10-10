@@ -199,7 +199,7 @@ export const dsaDepth: Record<string, RepDepth> = {
     'trace': 'For [], extra 5, removed 5: {} → {5} → {}; size is 0.',
     'alternative': 'An array with duplicate checks can work but repeatedly scans values. A Set stores O(k) distinct values and has efficient average access without a universal O(1) guarantee.',
     'counterexample': 'Deleting before adding returns 1 instead of 0 for [], 5, 5.',
-    'transfer': 'Return whether a requested number is present after the updates. Practise has and distinguish membership from size.'
+    'transfer': 'Return whether a requested number is present after the updates. Practice has and distinguish membership from size.'
   },
   'ds-map-operations': {
     'reasoning': 'Sequential writes leave the latest value for each key. Checking absence separately preserves zero.',

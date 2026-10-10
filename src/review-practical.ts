@@ -14,7 +14,7 @@ export const practicalRepDepth: Record<string, RepDepth> = {
   "reference-groups": {
     "reasoning": "Identity is preserved when each selection reuses an object created once for its pool position.",
     "trace": "Pool [7,7] creates A and B. Indices [0,1,0] select A,B,A; the Set contains two references.",
-    "alternative": "A Set of indices happens to give the same count here but does not practise object identity. A Set of IDs changes the contract. O(k+n) time and O(k+n) storage bounds include construction and selection.",
+    "alternative": "A Set of indices happens to give the same count here but does not practice object identity. A Set of IDs changes the contract. O(k+n) time and O(k+n) storage bounds include construction and selection.",
     "counterexample": "Deduplicating IDs returns 1 for [7,7] selected at [0,1]. Constructing an object per selection returns 3 for one repeated index.",
     "transfer": "Group records by business ID instead. Explain why equality rules now differ."
   },
@@ -71,7 +71,7 @@ export const practicalRepDepth: Record<string, RepDepth> = {
   },
   "latest-request": {
     "reasoning": "Ownership, rather than arrival time, controls which result can update state. Clearing on start is an explicit policy of this exercise.",
-    "trace": "A starts, B replaces A, B resolves to new, and A’s later old payload is ignored. Cancelling A afterward cannot clear B.",
+    "trace": "A starts, B replaces A, B resolves to new, and A’s later old payload is ignored. Canceling A afterward cannot clear B.",
     "alternative": "Abort saves supported work; an identity guard still protects visible state. Some products keep stale content while loading, but this exercise deliberately clears it. The scan uses O(n) time and O(1) state.",
     "counterexample": "Applying every resolve displays old after new. Clearing on any cancel erases a newer request’s result.",
     "transfer": "Keep stale data while reloading and display an error only for the current request. Specify the precedence rules."
@@ -277,7 +277,7 @@ export const practicalGuides = {
     ],
     "explanation": [
       "Identity is preserved when each selection reuses an object created once for its pool position.",
-      "A Set of indices happens to give the same count here but does not practise object identity. A Set of IDs changes the contract. O(k+n) time and O(k+n) storage bounds include construction and selection.",
+      "A Set of indices happens to give the same count here but does not practice object identity. A Set of IDs changes the contract. O(k+n) time and O(k+n) storage bounds include construction and selection.",
       "Explain the limits of these deterministic checks."
     ],
     "example": "Pool [7,7] creates A and B. Indices [0,1,0] select A,B,A; the Set contains two references."
@@ -376,7 +376,7 @@ export const practicalGuides = {
       "Abort saves supported work; an identity guard still protects visible state. Some products keep stale content while loading, but this exercise deliberately clears it. The scan uses O(n) time and O(1) state.",
       "Explain the limits of these deterministic checks."
     ],
-    "example": "A starts, B replaces A, B resolves to new, and A’s later old payload is ignored. Cancelling A afterward cannot clear B."
+    "example": "A starts, B replaces A, B resolves to new, and A’s later old payload is ignored. Canceling A afterward cannot clear B."
   },
   "websocket-gate": {
     "plan": [

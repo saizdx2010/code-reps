@@ -35,6 +35,18 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
       if(name==='CodeEditor.tsx')js='import {jsx} from "react/jsx-runtime"; export default function Editor(props){return jsx("textarea",{"aria-label":"Test code editor",value:props.value,onChange:e=>props.onChange(e.target.value)})}'
       await writeFile(join(rootDir,name.replace(/\.tsx?$/,'.js')),js)
     }
+    const { Trail } = await import(pathToFileURL(join(rootDir, 'Trail.js')))
+    const { renderToStaticMarkup } = await import('react-dom/server')
+    const { createElement } = await import('react')
+    const stage = { title: 'A stage', description: 'Work with values.', recap: 'You can now declare values.', nodes: [], covered: false, done: 0, total: 2, current: false }
+    const renderTrail = stage => renderToStaticMarkup(createElement(Trail, { stages: [stage], evidence: () => '', onOpenRep() {}, onOpenLesson() {} }))
+    assert.ok(!renderTrail(stage).includes(stage.recap))
+    assert.ok(!renderTrail({ ...stage, done: 1 }).includes(stage.recap))
+    const completedTrail = new JSDOM(renderTrail({ ...stage, done: 2 }))
+    assert.ok(completedTrail.window.document.querySelector('summary').textContent.includes(stage.recap))
+    assert.ok(!completedTrail.window.document.querySelector('summary').textContent.includes(stage.description))
+    assert.ok(!renderTrail({ ...stage, done: 2, recap: undefined }).includes('You can now'))
+    completedTrail.window.close()
     const {act}=await import('react');const {createRoot}=await import('react-dom/client')
     const {initializeStorage}=await import(pathToFileURL(join(rootDir,'local-store.js')))
     await initializeStorage()

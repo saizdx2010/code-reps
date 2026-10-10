@@ -8,8 +8,8 @@ The combined path teaches structures and the techniques that use them together. 
 2. **Use collections:** declare and copy arrays; add, delete, and read Set members; set, overwrite, and query Map entries. Read the collection-operations lesson first.
 3. **Apply arrays and text:** guided scanning, independent work, and distinct delayed recall through the existing journeys.
 4. **Apply maps and sets:** membership, counting, tie rules, and lookup recall.
-5. **Use stacks and queues:** read the operations lesson, practise LIFO and FIFO, then apply stacks to nesting and cancellation. Queue introductions use a small array-backed implementation and explain the cost of `shift`.
-6. **Learn algorithm techniques:** read the techniques lesson, then practise sorted two-pointer pair sums, fixed-size window sums, and binary search.
+5. **Use stacks and queues:** read the operations lesson, practice LIFO and FIFO, then apply stacks to nesting and cancellation. Queue introductions use a small array-backed implementation and explain the cost of `shift`.
+6. **Learn algorithm techniques:** read the techniques lesson, then practice sorted two-pointer pair sums, fixed-size window sums, and binary search.
 
 The three new Knowledge lessons contain worked traces, common mistakes, prediction questions, and separately revealed discussions. Each new rep has progressive hints, boundary checks, an independent reference implementation, and a task-specific post-attempt review.
 

@@ -34,7 +34,7 @@ test('validation journey requires a fresh delayed recall and remains discoverabl
   await page.goto('/#/progress')
   const journey = page.locator('.progress-journey').filter({ has: page.getByRole('heading', { name: 'Validate data at a boundary', exact: true }) })
   await journey.locator('summary').click()
-  await expect(journey.locator('.journey-markers')).toHaveAttribute('aria-label', 'Practising')
+  await expect(journey.locator('.journey-markers')).toHaveAttribute('aria-label', 'Practicing')
   await expect(journey.locator('.journey-markers [data-complete=true]')).toHaveCount(1)
   await journey.getByRole('button', { name: 'Try rep', exact: false }).click()
   await expect(page).toHaveURL(/validate-stock-adjustment$/)

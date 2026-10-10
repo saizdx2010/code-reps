@@ -24,7 +24,7 @@ export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenFoundat
         <span className="trail-stage-index" aria-hidden="true">{stage.total > 0 && stage.done === stage.total ? <Icon name="check" /> : String(index + 1).padStart(2, '0')}</span>
         <div>
           <h3>{stage.title}</h3>
-          <p>{stage.covered ? 'Covered in Foundations. Open it to revisit these reps here.' : stage.description}</p>
+          <p>{stage.total > 0 && stage.done === stage.total && stage.recap ? stage.recap : stage.covered ? 'Covered in Foundations. Open it to revisit these reps here.' : stage.description}</p>
           {levelRange(stage) && <StatusChip>{levelRange(stage)}</StatusChip>}
         </div>
         <span className="trail-stage-count">{stage.done}/{stage.total}</span>
@@ -33,7 +33,7 @@ export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenFoundat
       <ol className="trail-nodes">{stage.nodes.map(node => <li key={node.id} className={`trail-node node-${node.kind} is-${node.state}`}>
         <span className="trail-marker" aria-hidden="true"><Icon name={markerIcon(node)} /></span>
         {node.kind === 'lesson'
-          ? <button type="button" onClick={() => onOpenLesson(node.skillId)}><span className="trail-node-title">Lesson: {node.title}</span><small>{node.state === 'done' ? 'Predictions checked' : 'Read and predict before practising'}</small></button>
+          ? <button type="button" onClick={() => onOpenLesson(node.skillId)}><span className="trail-node-title">Lesson: {node.title}</span><small>{node.state === 'done' ? 'Predictions checked' : 'Read and predict before practicing'}</small></button>
           : node.kind === 'project'
             ? <div className="trail-project"><span className="trail-node-title">{node.title}</span>{repLevelLabel(node.repId) && <StatusChip>{repLevelLabel(node.repId)}</StatusChip>}<small>{node.reason}</small><button type="button" className="text-button" onClick={() => onOpenRep(node.repId)}>Open project milestone</button></div>
             : <button type="button" aria-current={node.state === 'next' ? 'step' : undefined} onMouseEnter={preloadEditor} onFocus={preloadEditor} onClick={() => onOpenRep(node.repId)}>

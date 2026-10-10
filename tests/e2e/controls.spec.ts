@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 test('custom select supports keyboard exploration, cancellation, typeahead, and Tab', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 })
   await page.goto('/#/plan')
-  const goal = page.getByRole('combobox', { name: 'Goal path', exact: true })
+  const goal = page.getByRole('combobox', { name: 'Goal', exact: true })
   const original = await goal.getAttribute('data-value')
   await page.locator('label').filter({ has: goal }).click({ position: { x: 8, y: 8 } })
   await expect(goal).toBeFocused()
@@ -12,7 +12,7 @@ test('custom select supports keyboard exploration, cancellation, typeahead, and 
   await goal.focus()
   await page.keyboard.press('ArrowDown')
   await page.keyboard.press('End')
-  const menu = page.getByRole('listbox', { name: 'Goal path options', exact: true })
+  const menu = page.getByRole('listbox', { name: 'Goal options', exact: true })
   await expect(menu).toBeVisible()
   const bounds = (await menu.boundingBox())!
   expect(bounds.x).toBeGreaterThanOrEqual(0)

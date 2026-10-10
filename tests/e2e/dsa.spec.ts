@@ -29,7 +29,7 @@ for (const width of [1280, 320]) {
   test(`visible path menu supports keyboard selection and reload at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/#/paths')
-    const menu = page.getByRole('combobox', { name: 'Choose path', exact: true })
+    const menu = page.getByRole('combobox', { name: 'Choose track', exact: true })
     await expect(menu).toBeVisible()
     await menu.focus()
     await page.keyboard.press('Enter')

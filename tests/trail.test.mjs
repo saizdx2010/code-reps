@@ -54,3 +54,14 @@ test('project applications end the trail without changing path completion counts
   assert.ok(last.nodes.every(node => node.kind === 'project'))
   assert.equal(trail.total, new Set(paths.find(path => path.id === 'frontend').stages.flatMap(stage => stage.repIds)).size)
 })
+
+test('every authored stage has a recap that survives trail derivation', () => {
+  for (const path of paths) {
+    const trail = buildTrail(path.id, { ...fresh, completed: () => true })
+    path.stages.forEach((stage, index) => {
+      assert.match(stage.recap, /^You can now .+\.$/)
+      assert.equal(trail.stages[index].recap, stage.recap)
+      assert.equal(trail.stages[index].done, trail.stages[index].total)
+    })
+  }
+})

@@ -110,7 +110,7 @@ test('selected practical path cannot recommend recall before its independent evi
 })
 
 test('goal-path drafts outrank other drafts, while due recall still leads', () => {
-  const drafts = { 'sum-positive-numbers': draft('sum-positive-numbers', { plan: 'Other path' }), 'backend-page-results': draft('backend-page-results', { plan: 'Goal path' }) }
+  const drafts = { 'sum-positive-numbers': draft('sum-positive-numbers', { plan: 'Other path' }), 'backend-page-results': draft('backend-page-results', { plan: 'Goal' }) }
   assert.equal(getPracticePlan(drafts, [], 'returning', 'sum-positive-numbers', now, 'backend').next.repId, 'backend-page-results')
   const history = [record('sum-positive-numbers'), record('count-even-numbers')]
   assert.equal(getPracticePlan(drafts, history, 'returning', '', now, 'backend').next.repId, 'count-above-threshold')
@@ -127,7 +127,7 @@ test('daily new-rep choice stays available alongside saved drafts and due recall
   const plan = getPracticePlan(drafts, history, 'returning', '', now, 'backend')
   assert.equal(plan.next.repId, 'count-above-threshold')
   assert.equal(plan.recommended.repId, 'backend-validate-user')
-  assert.match(plan.recommended.reason, /Validate data at a boundary/)
+  assert.match(plan.recommended.reason, /Next: Validate a user request —/)
   assert.equal(plan.unfinished[0].repId, 'backend-page-results')
   assert.deepEqual(drafts, before)
 })

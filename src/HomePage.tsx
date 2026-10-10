@@ -43,7 +43,7 @@ type Props = {
 
 const title = (id: string) => reps.find(item => item.id === id)?.title
 
-/** Home is the learner's trail: the goal path drawn as connected stages, with the next useful action beside it. */
+/** Home is the learner's trail: the goal drawn as connected stages, with the next useful action beside it. */
 export function HomePage({ walkthroughSeen, hasCompletedRep, launchWalkthrough, sessionBusy, startPractice, unfinishedSessions, resumeSession, onPracticeHistory, goalPathId, onPath, learnerStart, startingPoint, practicePlan, draftQueue, setDraftQueue, reviewQueue, setReviewQueue, repStatus, openPracticeAction, actionLabel, onProgress, onPlan, trail, evidence, openRep, openLesson }: Props) {
   const goal = paths.find(path => path.id === goalPathId) ?? paths[0]
   const recommendation = practicePlan.next
@@ -73,7 +73,7 @@ export function HomePage({ walkthroughSeen, hasCompletedRep, launchWalkthrough, 
           <div>
             <span className="home-label">Caught up for now</span>
             <h2 id="continue-heading">Your next review can wait.</h2>
-            <p>No unfinished reps or reviews are ready. Check your skill evidence or choose a rep to practise again.</p>
+            <p>No unfinished reps or reviews are ready. Check your skill evidence or choose a rep to practice again.</p>
           </div>
           <button className="primary-button" type="button" onClick={onProgress}>See progress</button>
         </section>}
@@ -109,7 +109,7 @@ export function HomePage({ walkthroughSeen, hasCompletedRep, launchWalkthrough, 
         <InfoNote label="How a rep works"><p>Understand the brief, plan, solve with checks, explain, then review. Work stays on this device. Opening a rep records no session. Complete rep saves an attempt; Reflect and end session ends a session.</p>{walkthroughSeen && <Button variant="text" onClick={launchWalkthrough}>Replay walkthrough</Button>}</InfoNote>
       </aside>
       <section className="trail-column home-goal" aria-label="Learning goal">
-        <PageHeader eyebrow="Your trail · Active learning goal" title={goal.title} description={`${trail.done} of ${trail.total} reps completed. Lessons appear just before the reps that use them.`} actions={<button type="button" className="text-button" onClick={() => onPath(goal.id)}>View or choose goal path</button>} />
+        <PageHeader eyebrow="Your trail · Active learning goal" title={goal.title} description={`${trail.done} of ${trail.total} reps completed. Lessons appear just before the reps that use them.`} actions={<button type="button" className="text-button" onClick={() => onPath(goal.id)}>View or choose goal</button>} />
         <p className="goal-browsing-note">Browsing another track does not change your learning goal.</p>
         <div className="path-progress" role="progressbar" aria-label="Trail progress" aria-valuenow={trail.done} aria-valuemin={0} aria-valuemax={trail.total}><span style={{ width: `${trail.total ? trail.done / trail.total * 100 : 0}%` }} /></div>
         <Trail stages={trail.stages} evidence={evidence} onOpenRep={openRep} onOpenLesson={openLesson} onOpenFoundations={() => onPath('typescript')} />

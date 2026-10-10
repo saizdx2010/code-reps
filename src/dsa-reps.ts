@@ -49,7 +49,7 @@ export const dsaReps: Rep[] = [
     'id': 'ds-array-operations',
     'title': 'Copy, append, and read an array',
     'category': 'Collection basics',
-    'prompt': 'Create a new number array containing all supplied values followed by extra. Return its last value. Practise declaring number[], copying with spread, appending with push, and reading by index. Do not change numbers.',
+    'prompt': 'Create a new number array containing all supplied values followed by extra. Return its last value. Practice declaring number[], copying with spread, appending with push, and reading by index. Do not change numbers.',
     'example': {
       'input': 'appendAndRead([4, 7], 0)',
       'output': '0'
@@ -93,7 +93,7 @@ export const dsaReps: Rep[] = [
       'input': 'updateDistinct([2, 2, 3], 4, 2)',
       'output': '2'
     },
-    'note': 'At most 100 integers, each from -1000 to 1000. extra and removed use the same range. Equality is numeric; do not change numbers. Practise new Set, add, delete, and size; checks verify behavior, not API choice.',
+    'note': 'At most 100 integers, each from -1000 to 1000. extra and removed use the same range. Equality is numeric; do not change numbers. Practice new Set, add, delete, and size; checks verify behavior, not API choice.',
     'vocabulary': [{
         'term': 'Set',
         'meaning': 'a collection of distinct values'
@@ -132,7 +132,7 @@ export const dsaReps: Rep[] = [
       'input': 'updateLookup([["a", 2]], "a", 0, "a")',
       'output': '0'
     },
-    'note': 'entries has at most 100 [string, integer] pairs. Strings contain at most 20 ASCII characters and are case-sensitive, with no trimming; empty strings are valid. Integers are -1000 to 1000. Practise new Map, set, get, and has; API choice is self-reviewed.',
+    'note': 'entries has at most 100 [string, integer] pairs. Strings contain at most 20 ASCII characters and are case-sensitive, with no trimming; empty strings are valid. Integers are -1000 to 1000. Practice new Map, set, get, and has; API choice is self-reviewed.',
     'vocabulary': [{
         'term': 'Map',
         'meaning': 'a collection associating keys with values'
@@ -175,7 +175,7 @@ export const dsaReps: Rep[] = [
       'input': 'stackTop([4, 7], 9)',
       'output': '7'
     },
-    'note': 'At most 100 integers from -1000 to 1000; extra has the same range. Practise a typed array, push, pop, and peeking by index. Checks do not prove that you used a stack.',
+    'note': 'At most 100 integers from -1000 to 1000; extra has the same range. Practice a typed array, push, pop, and peeking by index. Checks do not prove that you used a stack.',
     'vocabulary': [{
         'term': 'Stack',
         'meaning': 'a collection where the last added item leaves first'
@@ -255,7 +255,7 @@ export const dsaReps: Rep[] = [
     'id': 'algo-sorted-pair',
     'title': 'Find a pair in sorted numbers',
     'category': 'Algorithm techniques',
-    'prompt': 'Return true if two different positions in numbers sum to target, otherwise false. numbers is sorted in ascending order; duplicate values are allowed. Practise moving a left and right pointer toward each other. Do not change numbers.',
+    'prompt': 'Return true if two different positions in numbers sum to target, otherwise false. numbers is sorted in ascending order; duplicate values are allowed. Practice moving a left and right pointer toward each other. Do not change numbers.',
     'example': {
       'input': 'hasSortedPair([1, 3, 5, 8], 11)',
       'output': 'true'
@@ -302,7 +302,7 @@ export const dsaReps: Rep[] = [
     'id': 'algo-window-sum',
     'title': 'Find the largest fixed-window sum',
     'category': 'Algorithm techniques',
-    'prompt': 'Return the largest sum of any k consecutive items. k is a positive integer. Return null if numbers has fewer than k items. Practise maintaining a running sum as a fixed-size window moves. Do not change numbers.',
+    'prompt': 'Return the largest sum of any k consecutive items. k is a positive integer. Return null if numbers has fewer than k items. Practice maintaining a running sum as a fixed-size window moves. Do not change numbers.',
     'example': {
       'input': 'largestWindowSum([2, -1, 4, 3], 2)',
       'output': '7'
@@ -353,7 +353,7 @@ export const dsaReps: Rep[] = [
     'id': 'algo-binary-search',
     'title': 'Search sorted numbers',
     'category': 'Algorithm techniques',
-    'prompt': 'Return the index of target in a strictly increasing number array, or -1 when it is absent. Practise binary search: inspect the middle of the remaining interval and discard the half that cannot contain target. Do not change numbers.',
+    'prompt': 'Return the index of target in a strictly increasing number array, or -1 when it is absent. Practice binary search: inspect the middle of the remaining interval and discard the half that cannot contain target. Do not change numbers.',
     'example': {
       'input': 'sortedIndex([-3, 0, 4, 9], 4)',
       'output': '2'
@@ -409,7 +409,7 @@ export const dsaReps: Rep[] = [
     'id': 'algo-insertion-sort',
     'title': 'Insert numbers into sorted order',
     'category': 'Algorithm techniques',
-    'prompt': 'Return a new array containing every number in ascending numeric order, including duplicates. Practise insertion sort: grow an ordered portion by placing each next value where it belongs. Do not change numbers, even if already sorted.',
+    'prompt': 'Return a new array containing every number in ascending numeric order, including duplicates. Practice insertion sort: grow an ordered portion by placing each next value where it belongs. Do not change numbers, even if already sorted.',
     'example': {
       'input': 'insertionSort([3, 1, 3, -2])',
       'output': '[-2, 1, 3, 3]'
@@ -481,7 +481,7 @@ export const dsaReps: Rep[] = [
     'id': 'algo-merge-sorted',
     'title': 'Merge two ordered lists',
     'category': 'Algorithm techniques',
-    'prompt': 'Return a new ascending array containing every value from left and right. Both inputs are already sorted. Practise comparing the next unused value in each list instead of sorting again. Do not change either array.',
+    'prompt': 'Return a new ascending array containing every value from left and right. Both inputs are already sorted. Practice comparing the next unused value in each list instead of sorting again. Do not change either array.',
     'example': {
       'input': 'mergeSorted([1, 3], [2, 3, 4])',
       'output': '[1, 2, 3, 3, 4]'
@@ -553,7 +553,7 @@ export const dsaReps: Rep[] = [
     'id': 'algo-recursive-sum',
     'title': 'Sum numbers inside nested lists',
     'category': 'Algorithm techniques',
-    'prompt': 'Return the sum of every number inside items, including numbers in nested arrays. Practise recursion: let a smaller nested list solve the same task. Give an empty list a clear base case. Do not change any array.',
+    'prompt': 'Return the sum of every number inside items, including numbers in nested arrays. Practice recursion: let a smaller nested list solve the same task. Give an empty list a clear base case. Do not change any array.',
     'example': {
       'input': 'recursiveSum([1, [2, [], [-3]], 4])',
       'output': '4'
@@ -630,7 +630,7 @@ export const dsaReps: Rep[] = [
     'id': 'algo-tree-depth',
     'title': 'Find the deepest tree level',
     'category': 'Algorithm techniques',
-    'prompt': 'Return the maximum number of nodes on a route from the root to a leaf. A leaf has no children. A missing tree (null) has depth 0; a root alone has depth 1. Practise solving the same depth task for each child. Do not change any node or child array.',
+    'prompt': 'Return the maximum number of nodes on a route from the root to a leaf. A leaf has no children. A missing tree (null) has depth 0; a root alone has depth 1. Practice solving the same depth task for each child. Do not change any node or child array.',
     'example': {
       'input': 'treeDepth({value: 5, children: [{value: 0, children: []}]})',
       'output': '2'
@@ -804,7 +804,7 @@ export const dsaReps: Rep[] = [
     'id': 'algo-graph-reachable',
     'title': 'Follow connections to a destination',
     'category': 'Algorithm techniques',
-    'prompt': 'Return whether target can be reached from start by following directed connections in graph. Return false if start or target is outside the graph; a valid node reaches itself without any connection. graph is an adjacency list: graph[i] lists the nodes you can visit directly from node i. Practise breadth-first search (BFS), visiting pending nodes in the order they were discovered. Do not change graph or any of its nested arrays.',
+    'prompt': 'Return whether target can be reached from start by following directed connections in graph. Return false if start or target is outside the graph; a valid node reaches itself without any connection. graph is an adjacency list: graph[i] lists the nodes you can visit directly from node i. Practice breadth-first search (BFS), visiting pending nodes in the order they were discovered. Do not change graph or any of its nested arrays.',
     'example': {
       'input': 'graphReachable([[1], [2], []], 0, 2)',
       'output': 'true'

@@ -51,3 +51,24 @@ test('task limits stay in the brief and assessment sentences move without rewrit
     assert.deepEqual(sentences(`${notes.brief} ${notes.checking}`.trim()), sentences(rep.note))
   }
 })
+
+test('visible UI and authored content use US English and the shared term list', async () => {
+  const { readFile, readdir } = await import('node:fs/promises')
+  const { default: ts } = await import('typescript')
+  for (const name of await readdir('src')) {
+    if (!/\.tsx?$/.test(name)) continue
+    const source = ts.createSourceFile(name, await readFile(`src/${name}`, 'utf8'), ts.ScriptTarget.Latest, true)
+    const visit = node => {
+      if (ts.isStringLiteralLike(node) || ts.isJsxText(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) {
+        const text = node.text
+        // Existing evidence-state and lesson-section IDs are compatibility contracts.
+        const internalId = text === 'practising' && ['learning.ts', 'practice.ts'].includes(name)
+          || name === 'LearningHub.tsx' && (text === 'practise' && (ts.isArrayLiteralExpression(node.parent) || ts.isBinaryExpression(node.parent))
+            || text === 'lesson-practise' && ts.isJsxAttribute(node.parent) && node.parent.name.text === 'id')
+        if (!internalId) assert.doesNotMatch(text, /\bpractis(?:e[ds]?|ing)\b|\bgoal (?:trail|path)\b/i, `${name}: ${text}`)
+      }
+      ts.forEachChild(node, visit)
+    }
+    visit(source)
+  }
+})

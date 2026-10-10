@@ -3,7 +3,7 @@ import type { Skill } from './knowledge.ts'
 export const dsaSkills: Skill[] = [{
     'id': 'collection-operations',
     'title': 'Use collections before solving problems',
-    'summary': 'Declare arrays, sets, and maps; practise their operations and distinguish absence from stored values.',
+    'summary': 'Declare arrays, sets, and maps; practice their operations and distinguish absence from stored values.',
     'prerequisites': ['values'],
     'objectives': ['Create typed collections and read their contents.', 'Distinguish array order, set membership, and map associations.', 'Copy caller-owned arrays before updating them.'],
     'sections': [{

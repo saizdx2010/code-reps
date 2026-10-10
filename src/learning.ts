@@ -59,5 +59,5 @@ export const getAllJourneys = (records: LearningRecord[], now = Date.now()): Jou
   journeys.map((journey) => ({ journey, ...getJourney(journey, records, now) }))
 
 export const stageLabels: Record<JourneyStage, string> = {
-  learning: 'Learning', practising: 'Practising', independent: 'Independent', retained: 'Retained',
+  learning: 'Learning', practising: 'Practicing', independent: 'Independent', retained: 'Retained',
 }

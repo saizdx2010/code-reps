@@ -143,7 +143,7 @@ Systemic patterns, scored into the tables below:
 
 | Rep | File:line | Score | Missing or weak items |
 |---|---|---|---|
-| ds-array-operations | src/dsa-reps.ts:5 | 3 | Prompt prescribes the API: "Practise declaring number[], copying with spread, appending with push" (line 8). Hint 3 is the full code. |
+| ds-array-operations | src/dsa-reps.ts:5 | 3 | Prompt prescribes the API: "Practice declaring number[], copying with spread, appending with push" (line 8). Hint 3 is the full code. |
 | ds-set-operations | src/dsa-reps.ts:44 | 3 | Same prescriptive prompt. Hint 3 is the full code. |
 | ds-map-operations | src/dsa-reps.ts:83 | 3 | Hint 3 is the full code. The note honestly says "API choice is self-reviewed." |
 | ds-stack-operations | src/dsa-reps.ts:126 | 3 | Has `traceSteps` (`src/dsa-reps.ts:393`), the model for others. Hint 3 is the full code. Prompt prescribes push and pop. |

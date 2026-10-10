@@ -64,7 +64,7 @@ export function profileBadges(history: PortableRecord[], now = new Date(), catal
       badges.push(build(first, { id: `${path.id}:stage:${index}`, kind: 'stage', name: stage.title, rule: `Complete all ${ids.length} ${ids.length === 1 ? 'rep' : 'reps'} in “${stage.title}” (${path.title}).`, pathId: path.id }, ids))
     })
     const ids = [...new Set(path.stages.flatMap(stage => [...stage.repIds]))]
-    badges.push(build(first, { id: `${path.id}:path`, kind: 'path', name: `${path.title} path`, rule: `Complete every rep in the ${path.title} path.`, pathId: path.id }, ids))
+    badges.push(build(first, { id: `${path.id}:path`, kind: 'path', name: `${path.title} track`, rule: `Complete every rep in the ${path.title} track.`, pathId: path.id }, ids))
   }
   return badges
 }

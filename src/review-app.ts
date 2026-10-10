@@ -14,7 +14,7 @@ export const appGuides = {
   'frontend-pagination-controls': {
     plan: ['Decide which page numbers are always shown.', 'Order them without repeats.', 'Decide what fills each gap.'],
     explanation: ['Trace a middle page and a page near an end.', 'Explain why one hidden page is shown instead of an ellipsis.', 'State how out-of-range current values are handled.'],
-    example: 'I clamp current, collect the first, last, current and neighbor pages, sort them, and walk the list. A gap of two adds the hidden page, a larger gap adds "...". The work depends on a handful of pages, not on total. Passing checks does not prove the buttons are keyboard operable or labelled for assistive technology.',
+    example: 'I clamp current, collect the first, last, current and neighbor pages, sort them, and walk the list. A gap of two adds the hidden page, a larger gap adds "...". The work depends on a handful of pages, not on total. Passing checks does not prove the buttons are keyboard operable or labeled for assistive technology.',
   },
   'backend-query-filters': {
     plan: ['Write each field\'s default and rule.', 'Reject non-string values before normalizing.', 'Follow the stated error order.'],

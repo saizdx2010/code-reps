@@ -1,6 +1,6 @@
 # Code Reps roadmap
 
-Code Reps helps you practise independently through **understand → plan → solve → explain → review**. It stays free and local-first.
+Code Reps helps you practice independently through **understand → plan → solve → explain → review**. It stays free and local-first.
 
 The immediate audience is its owner using it for personal practice. The immediate problem is feeling lost: knowing where to start, what to do next, and how today's work connects to a useful goal. Prioritize that experience before expanding the catalog or preparing a public release.
 
@@ -24,7 +24,7 @@ Implemented features do not establish learner comprehension, full accessibility,
 
 **Goal:** Open Code Reps and immediately understand what to do, why it matters, and how to continue saved work.
 
-- [x] Make Trail's primary action answer three questions: what should I practise, why this rep, and what comes afterward. The Home “Up next” panel shows the rep, its reason, and an afterward line.
+- [x] Make Trail's primary action answer three questions: what should I practice, why this rep, and what comes afterward. The Home “Up next” panel shows the rep, its reason, and an afterward line.
 - [x] Offer a short, optional walkthrough around the real “Declare a value” rep. Introduce checks, hints, writing, and completion at the relevant steps; allow skipping and replay from Trail without replacing saved work.
 - [x] Make the selected learning goal obvious, with an easy way to change it and a clear explanation that browsing another track does not change the goal.
 - [x] Clarify opening a rep versus recording a practice session with “Record a session” and “Resume session” actions. Completing a rep and ending a session remain separate actions.

@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { chooseOption, chooseSegment, editor, expectChecksFinished, replaceCode, route, solution } from './helpers'
 
-// The first rep of the Foundations path earns the first-rep badge and the first stage's progress.
+// The first rep of the Foundations track earns the first-rep badge and the first stage's progress.
 const firstRep = 'most-frequent-number'
 const noticeText = /Badge earned: First rep/
 

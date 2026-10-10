@@ -26,9 +26,9 @@ export const reflectionGuides: Record<string, { plan: string[]; explanation: str
     example: "I count only available items at priceCents times quantity, subtract the discount once, then clamp to zero. This fixes the quantity, sold-out, and repeated-discount bugs. One pass uses O(n) time and O(1) extra space.",
   },
   'frontend-directory': {
-    plan: ["Choose loading before error before loaded content.", "Build labelled controls and a list using safe text insertion.", "Update the filtered list on input without mutating people."],
+    plan: ["Choose loading before error before loaded content.", "Build labeled controls and a list using safe text insertion.", "Update the filtered list on input without mutating people."],
     explanation: ["Explain state precedence, query normalization, and original-label preservation.", "Review keyboard focus and all four states in the preview yourself.", "Passing interaction checks does not establish visual or accessibility quality."],
-    example: "I render loading or error first, wiring Retry to the supplied callback. For loaded data I create a labelled input and rerender the list on input events, using textContent for names. Filtering visits the people and processes their name text; rendering work scales with the visible output. I separately review keyboard access and layout.",
+    example: "I render loading or error first, wiring Retry to the supplied callback. For loaded data I create a labeled input and rerender the list on input events, using textContent for names. Filtering visits the people and processes their name text; rendering work scales with the visible output. I separately review keyboard access and layout.",
   },
   'read-batch-labels': {
     plan: ["Write predictions before running checks.", "Trace raw, trimmed label, seen, and output for every iteration.", "Compare blank input and case-sensitive names."],
@@ -83,7 +83,7 @@ export const reflectionGuides: Record<string, { plan: string[]; explanation: str
   'loop-with-for': {
     plan: ["Start the total at zero.", "Decide where the loop starts and whether it includes n."],
     explanation: ["Explain why the loop includes n itself.", "Explain what happens when n is zero."],
-    example: "I start total at 0 and count i from 1 through n, adding each value. For 0 the loop body never runs, so total stays 0. The loop does n additions, which is O(n) time and O(1) extra space. A formula would also work, but this rep practises the loop.",
+    example: "I start total at 0 and count i from 1 through n, adding each value. For 0 the loop body never runs, so total stays 0. The loop does n additions, which is O(n) time and O(1) extra space. A formula would also work, but this rep practices the loop.",
   },
   'loop-while': {
     plan: ["Write the condition that keeps the loop running.", "Predict the steps for 9 by hand."],

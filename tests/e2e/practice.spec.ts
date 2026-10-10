@@ -239,7 +239,7 @@ test('local profile progress is readable on narrow screens and links to paths', 
   await expect(page.locator('.badge-upcoming .list-rows li').first()).toBeVisible()
   await expect(page.locator('.profile-summary')).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  await page.locator('.badge-upcoming .list-rows li').filter({ hasText: 'Foundations path' }).getByRole('button').focus()
+  await page.locator('.badge-upcoming .list-rows li').filter({ hasText: 'Foundations track' }).getByRole('button').focus()
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/#\/paths/)
   await page.goBack()

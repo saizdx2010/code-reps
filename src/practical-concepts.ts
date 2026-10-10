@@ -423,7 +423,7 @@ export const practicalSkills: Skill[] = [
       },
       {
         "title": "Boundary and cleanup",
-        "body": "Decide leading versus trailing behavior and what happens at exact timer boundaries. Cancelling a debounce on unmount prevents later work; flushing runs the pending work immediately. Debouncing reduces starts but does not stop older requests from completing, so response ownership still matters."
+        "body": "Decide leading versus trailing behavior and what happens at exact timer boundaries. Canceling a debounce on unmount prevents later work; flushing runs the pending work immediately. Debouncing reduces starts but does not stop older requests from completing, so response ownership still matters."
       }
     ],
     "example": "// Quiet period: 100 ms; trailing only.\n// Events: A at 0, B at 60, C at 200.\n// Emit B at 160, C at 300.\n// A is replaced before its deadline.",
@@ -1254,7 +1254,7 @@ export const practicalReps: Rep[] = [
       "input": "turnOrder([{\"kind\": \"sync\", \"label\": \"A\"}, {\"kind\": \"timer\", \"label\": \"T\"}, {\"kind\": \"micro\", \"label\": \"P\"}, {\"kind\": \"sync\", \"label\": \"B\"}])",
       "output": "[\"A\", \"B\", \"P\", \"T\"]"
     },
-    "note": "This is a simplified queue model: callbacks do not enqueue more work; timers have the same delay and none is cancelled. Do not use actual timers. Do not change supplied arrays or objects.",
+    "note": "This is a simplified queue model: callbacks do not enqueue more work; timers have the same delay and none is canceled. Do not use actual timers. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
         "term": "Microtask",
@@ -1961,7 +1961,7 @@ export const practicalReps: Rep[] = [
       "input": "visibleResponse([{\"kind\": \"start\", \"id\": \"A\"}, {\"kind\": \"start\", \"id\": \"B\"}, {\"kind\": \"resolve\", \"id\": \"B\", \"value\": \"new\"}, {\"kind\": \"resolve\", \"id\": \"A\", \"value\": \"old\"}])",
       "output": "\"new\""
     },
-    "note": "Events are start/cancel with id, or resolve with id and value. IDs are unique per start; cancelled IDs are not reused. Events may include late responses for obsolete requests. Do not change supplied arrays or objects.",
+    "note": "Events are start/cancel with id, or resolve with id and value. IDs are unique per start; canceled IDs are not reused. Events may include late responses for obsolete requests. Do not change supplied arrays or objects.",
     "vocabulary": [
       {
         "term": "Request ID",

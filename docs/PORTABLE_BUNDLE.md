@@ -4,7 +4,7 @@ This folder contains Code Reps and a Node.js runtime. It runs locally without an
 
 - macOS or Linux: run `./start-code-reps.sh` from a terminal.
 - Windows: run `Start Code Reps.cmd`.
-- Open `http://127.0.0.1:4173` in your browser. Keep the launcher running while you practise.
+- Open `http://127.0.0.1:4173` in your browser. Keep the launcher running while you practice.
 
 Progress is saved in `~/.code-reps/progress.sqlite` on macOS and Linux, or in the corresponding home directory on Windows. Use **Progress → Download backup** before moving to another computer. Daily SQLite backups are kept in the `backups` folder beside the database.
 

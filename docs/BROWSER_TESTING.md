@@ -32,7 +32,7 @@ Use `E2E_PORT=4203 yarn test:e2e` to select another dedicated port. Ordinary ass
 - Stop and edit an endless worker run, reject obsolete feedback after its deadline, recover from the real five-second timeout, and run a corrected draft.
 - Fail the editor module request, recover the existing draft through the plain text editor, run checks, and restore Monaco with the edited draft after reload.
 - Exercise frontend preview states, filtering, Retry, viewport selection, modal Escape/focus restoration, stale preview feedback, and real sandboxed-frame checks/cleanup.
-- Choose a goal path explicitly at 1280px and 320px, preserve it on reload, and keep early recall accessible without claiming retention.
+- Choose a track as your goal explicitly at 1280px and 320px, preserve it on reload, and keep early recall accessible without claiming retention.
 - End an unfinished rep with session reflection at 1280px and 320px without completing an attempt; reload history and resume explicitly into a new session.
 - Preserve session reflections across tab conflicts and quota failures; keep code after session deletion, reject invalid imports, isolate profiles, and round-trip full-profile exports.
 - Keep completed attempts separate from ended sessions, open immutable attempt snapshots with focus restoration, and preserve recall due dates and independent evidence after session end.

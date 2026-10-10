@@ -47,14 +47,14 @@ export function PathsPage({ goalPathId, setGoalPath, goalError, pathId, setPathI
     <small>{count(id)}{goalPathId === id ? ' · Your goal' : ''}</small>
   </button> }
   return <main className="paths-main">
-    <PageHeader title="Choose a track." description="Every track builds on Foundations. Follow one as your goal or browse any of them freely." actions={<label className="path-select">Choose path
+    <PageHeader title="Choose a track." description="Every track builds on Foundations. Follow one as your goal or browse any of them freely." actions={<label className="path-select">Choose track
       <Select value={selectedPath.id} onChange={event => setPathId(event.target.value as PathId)}>
         {paths.map(path => <option key={path.id} value={path.id}>{path.title}</option>)}
       </Select>
     </label>} />
     <details className="path-picker" open={pathPicker === 'open'} onToggle={event => setPathPicker(event.currentTarget.open ? 'open' : 'closed')}>
-      <summary>Explore paths <span>{paths.length} available</span></summary>
-      <div className="track-map" role="group" aria-label="Learning paths">
+      <summary>Explore tracks <span>{paths.length} available</span></summary>
+      <div className="track-map" role="group" aria-label="Learning tracks">
         <div className="path-choices track-foundations"><span className="home-label">Start here</span>{choice(foundationsPathId, true)}</div>
         {trackGroups.map(group => <div key={group.title} className="track-group"><span className="home-label">{group.title}</span><div className="path-choices">{group.pathIds.map(id => choice(id))}</div></div>)}
       </div>
@@ -64,17 +64,17 @@ export function PathsPage({ goalPathId, setGoalPath, goalError, pathId, setPathI
         <span className="home-label">{selectedPath.id === foundationsPathId ? 'Foundations' : 'Builds on Foundations'}</span>
         <h2 id="path-title" tabIndex={-1}>{refresher ? 'Return to problem solving' : selectedPath.title}</h2>
         <p>{refresher ? 'Start with guided problems, then revisit skills without hints after a break.' : selectedPath.description}</p>
-        <div className="path-goal"><p>{goalPathId === selectedPath.id ? 'Your current learning goal.' : 'Browsing this path does not change your learning goal.'}</p><button type="button" className="text-button" disabled={goalPathId === selectedPath.id} onClick={() => setGoalPath(selectedPath.id)}>Use this as my learning goal</button>{goalError && <p role="alert">{goalError}</p>}</div>
+        <div className="path-goal"><p>{goalPathId === selectedPath.id ? 'Your current learning goal.' : 'Browsing this track does not change your learning goal.'}</p><button type="button" className="text-button" disabled={goalPathId === selectedPath.id} onClick={() => setGoalPath(selectedPath.id)}>Use this as my learning goal</button>{goalError && <p role="alert">{goalError}</p>}</div>
       </div>
       <div className="path-overview-action">
         <span className="continue-status">{trail.done} of {trail.total} reps completed</span>
-        {trail.nextRepId && <button className="primary-button" type="button" onClick={() => openRep(trail.nextRepId!)}>{trail.done === 0 ? 'Start path' : 'Continue path'}<Icon name="arrow" /></button>}
+        {trail.nextRepId && <button className="primary-button" type="button" onClick={() => openRep(trail.nextRepId!)}>{trail.done === 0 ? 'Start track' : 'Continue track'}<Icon name="arrow" /></button>}
       </div>
     </section>
-    <div className="path-progress" role="progressbar" aria-label="Path progress" aria-valuenow={trail.done} aria-valuemin={0} aria-valuemax={trail.total}>
+    <div className="path-progress" role="progressbar" aria-label="Track progress" aria-valuenow={trail.done} aria-valuemin={0} aria-valuemax={trail.total}>
       <span style={{ width: `${trail.total ? trail.done / trail.total * 100 : 0}%` }} />
     </div>
-    <InfoNote><p>Path completion records finished reps, including hinted work. Independence and retention use separate skill evidence: a guided rep, a related rep without hints, then a fresh recall after a break.</p></InfoNote>
+    <InfoNote><p>Track completion records finished reps, including hinted work. Independence and retention use separate skill evidence: a guided rep, a related rep without hints, then a fresh recall after a break.</p></InfoNote>
     <details className="path-intro-details" open={trail.done === 0 && selectedPath.id === foundationsPathId}><summary>Introduction: {pathIntroduction.title}</summary><PathIntroduction introduction={pathIntroduction} onStart={() => firstRepId && openRep(firstRepId)} /></details>
     <Trail stages={trail.stages} evidence={evidence} onOpenRep={openRep} onOpenLesson={openLesson} onOpenFoundations={selectedPath.id === foundationsPathId ? undefined : () => choose(foundationsPathId)} />
   </main>

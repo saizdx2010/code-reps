@@ -40,7 +40,7 @@ Planned rep formats: algorithms and data structures, TypeScript, UI implementati
 
 Assessment keeps four dimensions separate: understanding, approach, implementation, and communication. Tests can check behavior and edge cases. Planning and explanation use a transparent rubric and learner reflection; automated feedback must not imply certainty it cannot provide.
 
-Save each attempt's code, result, duration, hints, explanation, notes, and difficulty tags such as wording, approach, TypeScript, or edge cases. Show skill states—learning, practising, independent, retained—based on fresh attempts and later recall. The Progress page should show the next useful rep, reviews due, skill history, and interview-round feedback without collapsing everything into one score.
+Save each attempt's code, result, duration, hints, explanation, notes, and difficulty tags such as wording, approach, TypeScript, or edge cases. Show skill states—learning, practicing, independent, retained—based on fresh attempts and later recall. The Progress page should show the next useful rep, reviews due, skill history, and interview-round feedback without collapsing everything into one score.
 
 ## Product areas
 

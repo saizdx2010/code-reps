@@ -161,7 +161,7 @@ test('lesson section tabs preserve scroll and keyboard focus', async ({ page }) 
   await expect(predict).toHaveAttribute('aria-current', 'location')
   await expect(predict).toBeFocused()
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(scroll)
-  const practise = tabs.getByRole('button', { name: 'Practise', exact: true })
+  const practise = tabs.getByRole('button', { name: 'Practice', exact: true })
   await practise.focus()
   await practise.press('Enter')
   await expect(practise).toHaveAttribute('aria-current', 'location')
@@ -253,7 +253,7 @@ test('each pending learning page keeps its own heading and working surface', asy
     ['plan', 'Make room for practice.', '.loading-week', '.loading-sheet', '.hub-panel'],
     ['assessment', 'Find your starting point.', '.loading-rows', '.loading-sheet', '.hub-panel'],
     ['projects', 'Put your skills together.', '.loading-rows', 'h2', '#browser-project-heading'],
-    ['interview', 'Practise an interview.', '.loading-interview-sheet', '.loading-sheet', '.hub-panel'],
+    ['interview', 'Practice an interview.', '.loading-interview-sheet', '.loading-sheet', '.hub-panel'],
   ]
   for (const [route, title, surface, pendingSurface, loadedSurface] of pages) {
     const page = await context.newPage()
@@ -310,7 +310,7 @@ test('notebook loading reserves an existing writing draft and preserves it after
 test('path completion row navigates and session history selection stays visible', async ({ page }) => {
   await page.goto('/#/progress')
   await page.getByText(/Upcoming badges/).click()
-  await page.locator('.badge-upcoming .list-row').filter({ hasText: 'Foundations path' }).locator('> button').click()
+  await page.locator('.badge-upcoming .list-row').filter({ hasText: 'Foundations track' }).locator('> button').click()
   await expect(page).toHaveURL(/#\/paths$/)
   await page.goto('/#/sessions')
   const group = page.getByRole('group', { name: 'Session history view' })

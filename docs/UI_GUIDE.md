@@ -1,5 +1,18 @@
 # Practice UI
 
+## Voice and terms
+
+Use US English: **practice** is both a noun and a verb. Write directly to the learner in plain English.
+
+- **Track:** a curriculum, such as Foundations or Frontend.
+- **Goal:** the track the learner chose to follow.
+- **Trail:** the visual path of stages on the Trail page.
+- **Stage:** a group of related reps within a track.
+- **Rep:** one coding exercise and its understand, plan, solve, explain, and review loop.
+- **Lesson:** an explanation with examples and knowledge checks.
+
+A completed stage replaces its description with a short recap of the work practiced. It does not establish independent fluency or retention. The editor header follows the active project file.
+
 ## Navigation and visual structure
 
 - Main navigation has Trail, Library, and Progress. The second row contains only the pages in the selected area: Your trail, All tracks, and This week; Exercises, Lessons, Projects, and Interview; or Skills, Journal, and Self-assessment. Journal switches between Attempts (`#/history`), Practice sessions (`#/sessions`), and Notebook (`#/notebook`) with a segmented control; each keeps its own bookmarkable route.
@@ -16,9 +29,9 @@
 
 - Home puts the starting-point choice before the first recommendation. After choosing, Change starting point keeps it available without interrupting the daily practice queue.
 - The header shows the active local profile and opens profile management. Switching is immediately available; creation/renaming and full-profile export/import open separately. Save feedback remains visible in the page navigation or workspace controls.
-- Home names the active learning goal and links to its chooser; browsing another track does not change it. The primary rep names its specific skill and the next learning step. A compact daily choice offers one saved draft, the recommended next rep, and one due review when available, while the full queues remain below. Opening a choice preserves the existing resume or fresh-review behavior and does not record a session.
-- Home (`#/home`) is the learner's trail: the goal path drawn as stages of connected nodes, with the next practice, unfinished sessions, drafts, and due reviews beside it (above it on narrow screens). Each lesson appears once, immediately before the first rep that uses it; reps show done, next, in progress, or recall-later states, and project milestones end the trail.
-- All tracks (`#/paths`) has an always-visible Choose path dropdown before the selected path and its next action. The menu supports keyboard selection and remembers the chosen path in the current session. Explore paths shows Foundations first, then the three tracks (Problem solving, Frontend, Backend), with completed-rep counts; it starts open on desktop, collapsed on narrow screens, and remembers expansion in the current session. Stages made only of Foundations reps are marked as covered by Foundations and link back to it. Selecting a path on a narrow screen closes the chooser and focuses the selected path heading.
+- Home names the active learning goal and links to its chooser; browsing another track does not change it. The primary rep names its task and the next learning step. A compact daily choice offers one saved draft, the recommended next rep, and one due review when available, while the full queues remain below. Opening a choice preserves the existing resume or fresh-review behavior and does not record a session.
+- Home (`#/home`) is the learner's trail: the chosen track drawn as stages of connected nodes, with the next practice, unfinished sessions, drafts, and due reviews beside it (above it on narrow screens). Each lesson appears once, immediately before the first rep that uses it; reps show done, next, in progress, or recall-later states, and project milestones end the trail.
+- All tracks (`#/paths`) has an always-visible Choose track dropdown before the selected track and its next action. The menu supports keyboard selection and remembers the chosen track in the current session. Explore tracks shows Foundations first, then the three tracks (Problem solving, Frontend, Backend), with completed-rep counts; it starts open on desktop, collapsed on narrow screens, and remembers expansion in the current session. Stages made only of Foundations reps are marked as covered by Foundations and link back to it. Selecting a track on a narrow screen closes the chooser and focuses the selected track heading.
 - Practice filters exercises by skill, format, and draft status or review due. Filters start expanded on desktop and collapsed on narrow screens; expansion is a session preference. Clear filters restores the full library. Search stays visible.
 - History filters completed attempts by rep or skill search, skill, difficulty, and local calendar date.
 - Exercise URLs use `#/practice/<rep-id>`. Pages and exercises support bookmarks, refresh, and browser Back/Forward.
@@ -27,7 +40,7 @@
 
 ## Browse learning content
 
-- Lessons have focused Read, Predict, Practise, and Review views. Review opens the evidence and self-assessment disclosure. Moving between views keeps predictions and written evidence mounted; the selected view survives refresh per lesson and profile. Predictions remain distinct from independent coding evidence.
+- Lessons have focused Read, Predict, Practice, and Review views. Review opens the evidence and self-assessment disclosure. Moving between views keeps predictions and written evidence mounted; the selected view survives refresh per lesson and profile. Predictions remain distinct from independent coding evidence.
 - Lessons opens full lessons. Its index groups lessons by topic, with search, a topic filter, and bookmarks. Search opens matching groups; Clear knowledge filters restores all topics. Filters survive refresh in the same profile and browser session. On narrow screens, Browse lessons starts collapsed and selecting a lesson closes the index and focuses the reader.
 - Quick lessons inside the lesson index opens short introductions. The existing `#/learn` bookmark still works.
 - Home previews up to three saved drafts and three due reviews. Show all exposes the complete queue without changing drafts, priorities, or review dates; Show fewer restores the compact view. Expansion is a session preference.
@@ -82,13 +95,13 @@ Home, path discovery, and the practice library render in `HomePage.tsx`, `PathsP
 
 See [the accessibility walkthrough](./ACCESSIBILITY_REVIEW.md) for manual screen-reader, zoom, contrast, and learner checks that automated keyboard and narrow-layout tests cannot establish. See [performance budgets](./PERFORMANCE.md) for local editor-loading measurements and verification limits.
 
-## Goal paths and curriculum connections
+## Goals and curriculum connections
 
-Home draws the current ordered goal path as a trail. Browsing another path does not change the goal; choose **Use this as my learning goal** to save that preference for the current profile. The existing TypeScript goal is the starting suggestion.
+Home draws the chosen track as a trail. Browsing another track does not change the goal; choose **Use this as my learning goal** to save that preference for the current profile. Foundations is the starting suggestion.
 
-Paths identify guided, independent, and recall reps from the authored skill journeys, show recall availability and evidence, and connect relevant the Frontend and Backend tracks to project integration milestones. Path completion includes hinted attempts and remains separate from independence and retention. Early recall can be opened freely, but existing timing and hint rules still govern retention evidence.
+Tracks identify guided, independent, and recall reps from the authored skill journeys, show recall availability and evidence, and connect the Frontend and Backend tracks to project integration milestones. Track completion includes hinted attempts and remains separate from independence and retention. Early recall can be opened freely, but existing timing and hint rules still govern retention evidence.
 
-Due recall remains first in recommendations. Drafts within the goal path take priority over new path work; other drafts remain visible for explicit resume. Existing difficult-review scheduling remains available. Completed attempts show the reason for the recommended next action. Daily session start/end and separate practice records are described below.
+Due recall remains first in recommendations. Drafts within the chosen track take priority over new reps in that track; other drafts remain visible for explicit resume. Existing difficult-review scheduling remains available. Completed attempts show the reason for the recommended next action. Daily session start/end and separate practice records are described below.
 
 ## Daily practice sessions
 
@@ -96,7 +109,7 @@ Choose **Record a session** from Home or the workspace to create a session aroun
 
 Progress → Practice history separates ended sessions from unfinished sessions. Resuming starts a new session using current saved work; the earlier record stays unfinished. You can edit reflection or explicitly remove a session after confirmation without deleting drafts or completed attempts. Draft links open current work; stable completed-attempt links display a snapshot without replacing your draft. Missing work is identified explicitly.
 
-Reload and profile changes preserve records but do not automatically resume a session. A session spanning midnight stays one session. These records do not contribute to completed-rep streaks, path completion, independence, retention, or recall scheduling.
+Reload and profile changes preserve records but do not automatically resume a session. A session spanning midnight stays one session. These records do not contribute to completed-rep streaks, track completion, independence, retention, or recall scheduling.
 
 Session recovery distinguishes browser saves awaiting the local service from failed local saves. For conflicting changes in another tab, reload session records, review preserved unsaved reflection, and retry saving. Recovery backups include the locally held reflection. Session writes require browser Web Locks; regular practice remains available if that capability is absent.
 
@@ -104,12 +117,11 @@ Practice sessions are a compact control in the workspace header rather than a se
 
 Desktop practice uses a fixed split workspace: the task pane and editor scroll independently, while the step rail, save status, and Run checks stay visible. Checks expand into a bounded drawer in the coding desk with its own scrolling feedback. The divider remains resizable. Frontend previews scroll within their own bounded area and can still expand into a dialog. Session reflection stays accessible in a bounded row under the header. Narrow screens retain the existing pane navigation.
 
-Library and learning tools use the shared compact `PageHeader`, with secondary evidence guidance in native `InfoNote` disclosures. Exercises group by primary topic; groups begin collapsed, remember expansion in the profile’s browser session, and open matching results during search or filtering. Search remains visible and topic, rep type, and progress filters share one compact disclosure. Self-assessment groups skills by knowledge topic while retaining each skill’s supporting evidence and the optional assessment flow. Lessons keep their compact search, topic, and bookmark controls beside the Read, Predict, Practise, and Review views. Project summaries disclose milestones and final self-review. Progress uses one statistics row, thin path-completion bars, and expandable skill journeys with guided, independent, and recall markers; Home owns the next-practice recommendation. Backup and profile actions remain available. Pending pages use the same header and reserve the corresponding compact working surfaces.
+Library and learning tools use the shared compact `PageHeader`, with secondary evidence guidance in native `InfoNote` disclosures. Exercises group by primary topic; groups begin collapsed, remember expansion in the profile’s browser session, and open matching results during search or filtering. Search remains visible and topic, rep type, and progress filters share one compact disclosure. Self-assessment groups skills by knowledge topic while retaining each skill’s supporting evidence and the optional assessment flow. Lessons keep their compact search, topic, and bookmark controls beside the Read, Predict, Practice, and Review views. Project summaries disclose milestones and final self-review. Progress uses one statistics row, thin track-completion bars, and expandable skill journeys with guided, independent, and recall markers; Home owns the next-practice recommendation. Backup and profile actions remain available. Pending pages use the same header and reserve the corresponding compact working surfaces.
 
 ### Interface wording
 
-Use short, friendly wording addressed to the learner. “Practise” is the verb;
-“practice” is the noun. Progress and Journal share readable local dates and
+Use short, friendly wording addressed to the learner. Use “practice” as both a verb and a noun. Progress and Journal share readable local dates and
 singular/plural labels. A zero Progress stat explains which practice unlocks it.
 Library topics are presentation labels shared by filtering and grouping; authored
 categories, rep IDs, and checked answers stay unchanged.

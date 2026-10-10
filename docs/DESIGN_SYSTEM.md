@@ -31,7 +31,7 @@ Foundations (`typescript`) is the shared root track. Other tracks are grouped in
 ## Page frame and layout
 
 - Every page uses one frame: `main` is `max-width: var(--page-width)` (1224px) with `var(--page-gutter)` side padding (28px, 22px at ≤900px, 18px at ≤600px). The section tabs use the same frame, so the page title, section tabs, and content share one left edge. Do not set per-page `max-width` on `main`; narrow a reading block inside the page instead (for example, 65ch prose).
-- Each page starts with `PageHeader`: an optional eyebrow, exactly one `h1`, one line of description, and optional actions on the right (search, a path chooser, `JournalTabs`). There are no hero headings.
+- Each page starts with `PageHeader`: an optional eyebrow, exactly one `h1`, one line of description, and optional actions on the right (search, a track chooser, `JournalTabs`). There are no hero headings.
 - The practice workspace is the one exception: it uses the full window width with its own compact header row.
 - Two-column pages (Trail) put the primary content on the left and the next action on the right; on narrow screens the next action comes first.
 
@@ -47,7 +47,7 @@ Foundations (`typescript`) is the shared root track. Other tracks are grouped in
 | `--type-section` | 20px | Section headings within a page |
 | `--type-card` | 17px | Card, row-group, trail-stage, and journey titles |
 
-The workspace title is a dense 22px (20px narrow). Body text is 15–16px; secondary text 13–14px. Text disclosures (Filters, Explore paths, Set up your local project, Change starting point) are 15px; disclosures that act as group headings use the card or section title; dense workspace disclosures are 14px, lesson-index group labels 13px, and `InfoNote` 13px.
+The workspace title is a dense 22px (20px narrow). Body text is 15–16px; secondary text 13–14px. Text disclosures (Filters, Explore tracks, Set up your local project, Change starting point) are 15px; disclosures that act as group headings use the card or section title; dense workspace disclosures are 14px, lesson-index group labels 13px, and `InfoNote` 13px.
 
 ## Tokens and colour
 
@@ -88,7 +88,7 @@ All components are app-owned. Extend these before writing page-specific markup.
 
 ## The trail
 
-Home is the learner's trail: the goal path drawn as stages of connected nodes on the reading background, with the recommended rep on a pale lime surface beside it. `trail-map.ts` derives node order and state from existing progress without storing anything.
+Home is the learner's trail: the chosen track drawn as stages of connected nodes on the reading background, with the recommended rep on a pale lime surface beside it. `trail-map.ts` derives node order and state from existing progress without storing anything.
 
 - Node shapes: square for a lesson (placed once, immediately before the first rep that uses it), circle for a rep, flag for a project milestone, repeat icon for a recall rep.
 - Node states: completed nodes use the dark action fill with a check; the single next rep uses the lime ring and `aria-current="step"`; drafts use the accent outline; recall that is not yet due uses a dashed outline and says when it becomes available.

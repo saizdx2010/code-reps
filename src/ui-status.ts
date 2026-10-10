@@ -4,6 +4,6 @@ export type ChipTone = 'neutral' | 'progress' | 'success' | 'attention'
 export function statusTone(status: string): ChipTone {
   if (/completed|retained|passed/i.test(status)) return 'success'
   if (/review|due|ready/i.test(status)) return 'attention'
-  if (/draft|progress|started|learning|practising|independent/i.test(status) && !/not started/i.test(status)) return 'progress'
+  if (/draft|progress|started|learning|practi[sc]ing|independent/i.test(status) && !/not started/i.test(status)) return 'progress'
   return 'neutral'
 }

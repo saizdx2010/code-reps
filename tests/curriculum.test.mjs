@@ -32,11 +32,11 @@ test('curriculum roles and recall availability preserve evidence distinctions', 
   assert.equal(progress[0].stage, 'independent')
 })
 
-test('daily recommendation context names a skill and a concrete journey successor', () => {
-  assert.match(repPracticeContext('sum-positive-numbers').reason, /Work through arrays/)
+test('daily recommendation context names the rep, its task, and a concrete journey successor', () => {
+  assert.match(repPracticeContext('sum-positive-numbers').reason, /Next: Sum positive numbers —/)
   assert.match(repPracticeContext('sum-positive-numbers').afterward, /Count even numbers/)
-  assert.match(repPracticeContext('count-even-numbers').afterward, /unhinted.*3 days/)
-  assert.match(repPracticeContext('backend-validate-user').reason, /Validate data at a boundary/)
-  assert.match(repPracticeContext('declare-variables').reason, /Values, types, and functions/)
+  assert.match(repPracticeContext('count-even-numbers').afterward, /without hints.*3 days/)
+  assert.match(repPracticeContext('backend-validate-user').reason, /Next: Validate a user request —/)
+  assert.match(repPracticeContext('declare-variables').reason, /Next: Declare a value — Create a const named greeting/)
   assert.match(repPracticeContext('count-above-threshold').afterward, /skill evidence/)
 })

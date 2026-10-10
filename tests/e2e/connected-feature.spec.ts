@@ -82,6 +82,7 @@ test('checkpoint files remain playable through Monaco, checks, and draft reload'
   const editor = page.getByRole('textbox', { name: /^TypeScript solution for/ })
   for (const filename of ['main.ts', 'storage.ts']) {
     await page.getByRole('group', { name: 'Project files' }).getByRole('button', { name: filename, exact: filename !== 'main.ts' }).click()
+    await expect(page.locator('.file-tab')).toContainText(filename)
     await expect(editor).toBeVisible()
     await editor.focus()
     await editor.press('ControlOrMeta+A')

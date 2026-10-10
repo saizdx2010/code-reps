@@ -18,7 +18,7 @@ The external project uses learner self-review; another person's review is not re
 
 Projects now exposes one detailed external task at each of the three levels, preparation links, local setup guidance, a self-review note template, and later transfer challenges. Reflections use the existing profile notebook and preserve unfinished note drafts. The TypeScript browser path links a new state-modeling lesson and guided, independent, and distinct delayed-recall reps. These function reps check behavior; semantic compiler analysis is required in the external projects, not added to the app runner.
 
-Additional equivalent project themes and deeper dedicated DOM, persistence, generic-type, and learner-test-authoring reps remain future content work. The external tasks practise these skills through their requirements, but their completion is self-reported. No external-project mastery tracking, new storage format, or real-service runner is introduced.
+Additional equivalent project themes and deeper dedicated DOM, persistence, generic-type, and learner-test-authoring reps remain future content work. The external tasks practice these skills through their requirements, but their completion is self-reported. No external-project mastery tracking, new storage format, or real-service runner is introduced.
 
 ## Current assessment
 

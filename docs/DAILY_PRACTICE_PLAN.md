@@ -18,7 +18,7 @@ Boot.dev is a reference for clear progression and momentum. The plan should exte
 ## Agreed experience
 
 - Today's practice is one rep plus reflection.
-- Due recall takes first priority in the daily recommendation, followed by unfinished drafts within the chosen goal path and then progression in that path. Other drafts remain secondary resume options.
+- Due recall takes first priority in the daily recommendation, followed by unfinished drafts within the chosen chosen track and then progression in that path. Other drafts remain secondary resume options.
 - An ordered path is the main curriculum view, with distinct completion and skill evidence.
 - A learner may end a session with saved unfinished work and reflection; the rep remains incomplete.
 - After a difficult recall, help is optional. Solution hints affect independence evidence, and independent retry remains available.
@@ -41,7 +41,7 @@ Boot.dev is a reference for clear progression and momentum. The plan should exte
 
 ### 1. Curriculum cohesion
 
-Extend the existing path, Home, and completion views rather than introducing parallel recommendation logic. Show the recommendation reason and how the current rep connects to the next action. Present guided, independent, and recall roles with evidence and availability dates. Add authored connections to relevant existing project milestones. Offer a suggested goal path with explicit selection and preserve free browsing.
+Extend the existing path, Home, and completion views rather than introducing parallel recommendation logic. Show the recommendation reason and how the current rep connects to the next action. Present guided, independent, and recall roles with evidence and availability dates. Add authored connections to relevant existing project milestones. Suggest a track to follow as a goal, with explicit selection and free browsing.
 
 Relevant owners: `src/path.ts`, `src/PathsPage.tsx`, `src/HomePage.tsx`, `src/practice.ts`, `src/App.tsx`, `src/learning.ts`, and project definitions in `src/fluency.ts`.
 
@@ -79,7 +79,7 @@ Scheduling changes and curriculum expansion remain deferred until evidence suppo
 ## Acceptance scenarios
 
 - A due recall from another path is recommended with a reason; the chosen goal remains unchanged.
-- With no recall due, a draft in the goal path takes priority; drafts outside that path remain available.
+- With no recall due, a draft in the chosen track takes priority; drafts outside that path remain available.
 - An unfinished rep can produce an ended practice record after reflection without becoming a completed attempt.
 - Saving and leaving without reflection preserves work without claiming an ended session.
 - Starting again reuses the draft in a new session; an active session crossing midnight remains one session.

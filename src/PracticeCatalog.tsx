@@ -36,7 +36,7 @@ export function PracticeCatalog({ filters, onFilter, clearFilters, categories, v
   const startHere = startHereReps(visibleReps, { pathRepIds: pathRepIds(goalPathId), isDone: item => repStatus(item) === 'Completed', level: repLevel })
   const renderRow = (item: Rep) => <ListRow key={item.id} title={item.title} meta={<>{formatLabels[item.format ?? 'algorithm']}{dueIds.has(item.id) && ' · Review due'}</>} status={<>{repLevelLabel(item.id) && <StatusChip>{repLevelLabel(item.id)}</StatusChip>}<StatusChip tone={statusTone(repStatus(item))}>{repStatus(item)}</StatusChip></>} onPreview={preloadEditor} onOpen={() => openRep(item.id)} />
   return <main className="catalog-main">
-    <PageHeader title="Find your next rep." description="Choose a skill to practise. Pick up saved work at any time." actions={<div className="catalog-search"><label htmlFor="catalog-query">Find a rep</label><Input id="catalog-query" type="search" value={filters.query} onChange={event => onFilter('query', event.target.value)} placeholder="Try arrays, strings, debugging…" /></div>} />
+    <PageHeader title="Find your next rep." description="Choose a skill to practice. Pick up saved work at any time." actions={<div className="catalog-search"><label htmlFor="catalog-query">Find a rep</label><Input id="catalog-query" type="search" value={filters.query} onChange={event => onFilter('query', event.target.value)} placeholder="Try arrays, strings, debugging…" /></div>} />
     <details className="catalog-filters" open={filterPanel === 'open'} onToggle={event => setFilterPanel(event.currentTarget.open ? 'open' : 'closed')}>
     <summary>Filters{activeFilters > 0 && <span>{activeFilters} active</span>}</summary>
     <div className="filter-bar" aria-label="Practice filters">

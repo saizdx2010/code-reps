@@ -349,7 +349,7 @@ export const foundationReps: Rep[] = [
     functionName: 'countdownLabels',
     hints: [
       'Keep one current value that starts at startSeconds and gets smaller by stepSeconds on each pass.',
-      'Decide when the loop must stop, so a value that would be negative is never labelled.',
+      'Decide when the loop must stop, so a value that would be negative is never labeled.',
       'Turn each value into whole minutes and remaining seconds. Pad only the seconds to two digits.',
     ],
     checks: [

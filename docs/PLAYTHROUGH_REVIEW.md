@@ -91,7 +91,7 @@ These expand on the table where a learner would most likely get stuck. Suggested
 - **countdown-labels.** The prompt says "Minutes are not padded" and the range goes up to 3600 seconds. A learner can reasonably produce `1:00:00`. The checks require `60:00`.
 - **dom-accessible-form.** The note says, "Set the form to novalidate (form.noValidate = true) so the browser does not block your submit handler, and call preventDefault." The prompt says only "On submit". The DOM preview's email field is `type="email"`, so a learner who submits `ada@site` may find the browser blocks the submit before the handler runs and read it as a bug.
 - **algo-tree-depth and tree-depth-sum hints.** Both are misleading or confusing (see table). They are the only hints I would rewrite on correctness grounds rather than wording.
-- **Unverifiable contracts.** `algo-min-heap` ("Practise an array-backed binary min-heap") and `algo-linked-list-reverse` ("Allocate every output node afresh") are stated as requirements. The checks cannot verify either one. The note says "the requested approach … self-reviewed" for some reps; these two should say the same thing explicitly in the prompt.
+- **Unverifiable contracts.** `algo-min-heap` ("Practice an array-backed binary min-heap") and `algo-linked-list-reverse` ("Allocate every output node afresh") are stated as requirements. The checks cannot verify either one. The note says "the requested approach … self-reviewed" for some reps; these two should say the same thing explicitly in the prompt.
 
 ## Jargon and vocabulary sweep
 
@@ -112,7 +112,7 @@ Terms used in learner text without a vocabulary entry or plain definition:
 - "gap" — `frontend-pagination-controls` hints.
 - "literal names" — `simplify-file-path` prompt.
 
-Spelling: the `Practise` verb form appears 24 times in `src/*.ts`, and `Practice` 7 times. Pick one for learner-facing text. This is low priority.
+Spelling: this audit found mixed US and UK spellings in learner-facing text. The UI guide now specifies US English, with “practice” as both noun and verb.
 
 ## Ranked fix list
 

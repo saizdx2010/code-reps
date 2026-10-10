@@ -55,7 +55,7 @@ Run this focused walkthrough before the broader knowledge and transfer protocol 
 
 Ask neutrally, without pointing to the intended control:
 
-1. “What would you practise next, and why?” Observe whether the learner identifies the recommendation and its reason. In the due-recall scenario, check whether they understand why it can come from another path without changing their goal.
+1. “What would you practice next, and why?” Observe whether the learner identifies the recommendation and its reason. In the due-recall scenario, check whether they understand why it can come from another path without changing their goal.
 2. “Choose the path you want to focus on. What changed?” Observe explicit goal choice versus browsing. With no due recall, inspect whether the learner can find the draft within that goal and other available work.
 3. “Start a short practice session. You can request help if you want it.” Observe explicit start, intentional help reveal, and the learner's explanation of its effect on independent evidence.
 4. “Stop before finishing the rep and write what you learned or where you got stuck.” Observe whether they can end with reflection and understand that the rep remains incomplete. Separately ask them to save and leave without reflection.

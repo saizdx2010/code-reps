@@ -46,7 +46,7 @@ The source of truth remains `src/knowledge.ts`, `src/learning.ts`, and `src/flue
 
 Request ownership now has four applications within the Frontend track:
 
-| Role | Rep | Decision practised |
+| Role | Rep | Decision practiced |
 | --- | --- | --- |
 | Guided, existing | `latest-request` | Reject obsolete results and cancellation by request identity. |
 | Independent, new | `search-request-state` | Distinguish idle, unresolved, ready-empty, and failure; ignore settled duplicates. |
@@ -59,7 +59,7 @@ Independent and recall prompts state the observable contract without providing a
 
 Content version 5 adds a journey to the Backend track and validation lesson:
 
-| Role | Rep | Decision practised |
+| Role | Rep | Decision practiced |
 | --- | --- | --- |
 | Guided, existing | `backend-validate-user` | Check unknown shape and field types, then normalize accepted input. |
 | Independent, new | `validate-stock-adjustment` | Apply a fresh character, length, integer, and nonzero boundary contract without hints. |
