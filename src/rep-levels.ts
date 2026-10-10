@@ -156,6 +156,9 @@ export const repLevels: Record<string, RepLevel> = {
   'algo-coin-change': 3,
   // Accessible DOM interactions.
   'dom-disclosure': 2,
+  'dom-form-fields': 2,
+  'dom-form-errors': 2,
+  'dom-form-submit': 2,
   'dom-accessible-form': 2,
   'dom-live-search': 2,
   'dom-tabs': 3,

@@ -48,6 +48,18 @@ test('previews mount the authored props without the directory scenarios', () => 
 })
 
 const mutants = [
+  ['dom-form-fields', 'browser validation left on', s => s.replace('form.noValidate = true', '')],
+  ['dom-form-fields', 'no label link', s => s.replace('label.htmlFor = field.id', '')],
+  ['dom-form-fields', 'label as html', s => s.replace('label.textContent = field.label', 'label.innerHTML = field.label')],
+  ['dom-form-errors', 'drop aria-describedby', s => s.replace("row.input.setAttribute('aria-describedby', row.error.id)", '')],
+  ['dom-form-errors', 'wrong error id', s => s.replace("row.error.id = row.field.id + '-error'", "row.error.id = row.field.id")],
+  ['dom-form-errors', 'untrimmed validation', s => s.replace("row.input.value.trim() === ''", "row.input.value === ''")],
+  ['dom-form-errors', 'stale invalid state', s => s.replace("row.input.removeAttribute('aria-invalid')", '')],
+  ['dom-form-errors', 'duplicate errors', s => s.replace('if (!row.error) {', 'if (true) {')],
+  ['dom-form-submit', 'focus last invalid', s => s.replace('if (invalid && !first) first = row.input', 'if (invalid) first = row.input')],
+  ['dom-form-submit', 'no focus', s => s.replace('first.focus()', '')],
+  ['dom-form-submit', 'status left after problem', s => s.replace('status.remove(); first.focus()', 'first.focus()')],
+  ['dom-form-submit', 'no success status', s => s.replace("status.textContent = 'Form accepted.'", "status.textContent = ''")],
   ['dom-accessible-form', 'drop aria-describedby', s => s.replace("row.input.setAttribute('aria-describedby', row.error.id)", '')],
   ['dom-accessible-form', 'wrong error id', s => s.replace("row.error.id = row.field.id + '-error'", "row.error.id = row.field.id")],
   ['dom-accessible-form', 'no label link', s => s.replace('label.htmlFor = field.id', '')],

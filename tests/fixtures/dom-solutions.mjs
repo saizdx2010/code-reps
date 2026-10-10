@@ -1,4 +1,139 @@
 export const domSolutions = {
+  'dom-form-fields': `
+function mountFormFields(root: HTMLElement, props: {fields: {id:string;label:string;type:string;message:string}[]}) {
+  root.replaceChildren()
+  const form = document.createElement('form')
+  form.noValidate = true
+  form.setAttribute('data-testid', 'form')
+  props.fields.forEach(field => {
+    const wrap = document.createElement('div')
+    wrap.className = 'field'
+    const label = document.createElement('label')
+    label.htmlFor = field.id
+    label.textContent = field.label
+    const input = document.createElement('input')
+    input.id = field.id
+    input.type = field.type
+    input.setAttribute('data-testid', 'field-' + field.id)
+    wrap.append(label, input)
+    form.append(wrap)
+  })
+  const button = document.createElement('button')
+  button.type = 'submit'
+  button.textContent = 'Submit'
+  button.setAttribute('data-testid', 'submit')
+  form.append(button)
+  form.addEventListener('submit', event => event.preventDefault())
+  root.append(form)
+}`,
+  'dom-form-errors': `
+function mountFormErrors(root: HTMLElement, props: {fields: {id:string;label:string;type:string;message:string}[]}) {
+  root.replaceChildren()
+  const form = document.createElement('form')
+  form.noValidate = true
+  form.setAttribute('data-testid', 'form')
+  const rows = props.fields.map(field => {
+    const wrap = document.createElement('div')
+    wrap.className = 'field'
+    const label = document.createElement('label')
+    label.htmlFor = field.id
+    label.textContent = field.label
+    const input = document.createElement('input')
+    input.id = field.id
+    input.type = field.type
+    input.setAttribute('data-testid', 'field-' + field.id)
+    wrap.append(label, input)
+    form.append(wrap)
+    return { field, wrap, input, error: null as HTMLElement | null }
+  })
+  const button = document.createElement('button')
+  button.type = 'submit'
+  button.textContent = 'Submit'
+  button.setAttribute('data-testid', 'submit')
+  form.append(button)
+  function setError(row: typeof rows[number], invalid: boolean) {
+    if (!invalid) {
+      row.error?.remove()
+      row.error = null
+      row.input.removeAttribute('aria-invalid')
+      row.input.removeAttribute('aria-describedby')
+      return
+    }
+    if (!row.error) {
+      row.error = document.createElement('p')
+      row.error.id = row.field.id + '-error'
+      row.error.setAttribute('data-testid', 'error-' + row.field.id)
+      row.wrap.append(row.error)
+    }
+    row.error.textContent = row.field.message
+    row.input.setAttribute('aria-invalid', 'true')
+    row.input.setAttribute('aria-describedby', row.error.id)
+  }
+  form.addEventListener('submit', event => {
+    event.preventDefault()
+    for (const row of rows) setError(row, row.input.value.trim() === '')
+  })
+  root.append(form)
+}`,
+  'dom-form-submit': `
+function mountFormSubmit(root: HTMLElement, props: {fields: {id:string;label:string;type:string;message:string}[]}) {
+  root.replaceChildren()
+  const form = document.createElement('form')
+  form.noValidate = true
+  form.setAttribute('data-testid', 'form')
+  const rows = props.fields.map(field => {
+    const wrap = document.createElement('div')
+    wrap.className = 'field'
+    const label = document.createElement('label')
+    label.htmlFor = field.id
+    label.textContent = field.label
+    const input = document.createElement('input')
+    input.id = field.id
+    input.type = field.type
+    input.setAttribute('data-testid', 'field-' + field.id)
+    wrap.append(label, input)
+    form.append(wrap)
+    return { field, wrap, input, error: null as HTMLElement | null }
+  })
+  const button = document.createElement('button')
+  button.type = 'submit'
+  button.textContent = 'Submit'
+  button.setAttribute('data-testid', 'submit')
+  form.append(button)
+  const status = document.createElement('p')
+  status.setAttribute('role', 'status')
+  status.setAttribute('data-testid', 'status')
+  function setError(row: typeof rows[number], invalid: boolean) {
+    if (!invalid) {
+      row.error?.remove()
+      row.error = null
+      row.input.removeAttribute('aria-invalid')
+      row.input.removeAttribute('aria-describedby')
+      return
+    }
+    if (!row.error) {
+      row.error = document.createElement('p')
+      row.error.id = row.field.id + '-error'
+      row.error.setAttribute('data-testid', 'error-' + row.field.id)
+      row.wrap.append(row.error)
+    }
+    row.error.textContent = row.field.message
+    row.input.setAttribute('aria-invalid', 'true')
+    row.input.setAttribute('aria-describedby', row.error.id)
+  }
+  form.addEventListener('submit', event => {
+    event.preventDefault()
+    let first: HTMLInputElement | null = null
+    for (const row of rows) {
+      const invalid = row.input.value.trim() === ''
+      setError(row, invalid)
+      if (invalid && !first) first = row.input
+    }
+    if (first) { status.remove(); first.focus() }
+    else { status.textContent = 'Form accepted.'; form.append(status) }
+  })
+  root.append(form)
+}`,
   'dom-accessible-form': `
 function mountAccessibleForm(root: HTMLElement, props: {fields: {id:string;label:string;type:string;message:string}[]}) {
   root.replaceChildren()
