@@ -163,6 +163,14 @@
   .trail .path-stage-heading:hover .trail-stage-index { border-color: var(--accent); }
 }
 .trail-node:has(> button:focus-visible) .trail-marker { transform: scale(1.14); border-color: var(--accent); }
+/* Skill map nodes use the same marker interaction, driven by the node's own action. */
+.skill-node:has(.text-button:focus-visible) .trail-marker { transform: scale(1.14); border-color: var(--accent); }
+@media (hover: hover) and (pointer: fine) {
+  .skill-node:has(.text-button:hover) .trail-marker { transform: scale(1.14); border-color: var(--accent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skill-node:has(.text-button:hover, .text-button:focus-visible) .trail-marker { transform: none; }
+}
 .trail-node > button:active { background: var(--accent-soft); }
 .trail-stage-index { transition: border-color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease); }
 /* The next node announces itself once when the trail arrives, then stays still. */

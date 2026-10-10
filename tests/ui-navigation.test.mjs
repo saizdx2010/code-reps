@@ -4,7 +4,7 @@ import { navigationArea, navigationSections, readRoute, routeHash, sectionView }
 import { runRep } from '../src/runner.ts'
 
 test('exercise bookmarks, library, and every product page round-trip', () => {
-  for (const view of ['sessions', 'home', 'catalog', 'paths', 'learn', 'progress', 'history', 'knowledge', 'projects', 'interview', 'notebook', 'assessment', 'plan']) {
+  for (const view of ['sessions', 'home', 'catalog', 'paths', 'learn', 'progress', 'skillmap', 'history', 'knowledge', 'projects', 'interview', 'notebook', 'assessment', 'plan']) {
     assert.deepEqual(readRoute(routeHash({ view }), ['one']), { view })
   }
   assert.deepEqual(readRoute(routeHash({ view: 'workspace', repId: 'one' }), ['one']), { view: 'workspace', repId: 'one' })
