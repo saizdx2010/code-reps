@@ -83,3 +83,8 @@
 .loading-assessment .loading-row .skeleton-line:not(:first-child) { display: none; }
 .loading-project-intro { padding: 4px 0; }
 .loading-projects .loading-row { padding: 14px 0; }
+
+/* Rep content loads after the draft is already on screen, so the notice stays quiet and keeps the work usable. */
+.rep-content-notice { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 14px; color: var(--muted); }
+.rep-content-notice p { margin: 0; flex: 1 1 220px; }
+div.rep-content-notice[role='alert'] { padding: 10px 12px; border: 1px solid var(--error-border); border-radius: var(--radius-control); background: var(--error-soft); color: var(--error); }

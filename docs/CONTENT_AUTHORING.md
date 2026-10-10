@@ -6,7 +6,7 @@ This is an internal authoring guide. Source rights are reserved for now; public 
 
 ## Add a rep
 
-1. Add a typed `Rep` in `src/rep.ts` or a focused content module.
+1. Add a typed `Rep` (type in `src/rep-types.ts`) to a focused content module. The base reps live in `src/core-reps.ts`. A new module is also listed in `src/rep-sources.ts` (catalog order) and `src/rep-content.ts` (its lazy loader), then run `yarn content:index`.
 2. Give it a unique ID, concise prompt, example, starter function, plan prompt, progressive hints, and checks for normal and edge cases.
 3. Keep a hint from giving away the full answer until the final reveal. Write a self-review guide in `src/reflection-guides.ts` (or the matching `src/review-*.ts` module) when the rep belongs to a journey.
 4. Give it a difficulty level in `repLevels` in `src/rep-levels.ts`: 1 (Beginner) for language basics, control flow, and introductory collection operations; 2 (Intermediate) for typical journeys, frontend and backend reps, techniques, and validation; 3 (Advanced) for recursion, trees, graphs, linked lists with node-identity requirements, dynamic programming with competing subproblems, complex ARIA widgets with coordinated keyboard/focus state, batch validation, harder async or reliability state, projects, and interviews. The level appears in the library, on the trail, and in the practice header. `yarn test` names any rep that still lacks one.
@@ -39,7 +39,9 @@ Run `yarn content:check` before publishing an app/content update. Keep exercise 
 
 The initial JavaScript chunk must stay small, so content is split by when it is needed:
 
-- **Startup (imported synchronously):** reps with their checks, hints, and starter code (`src/rep.ts` and the `*-reps.ts` modules), knowledge skills (`src/knowledge.ts`, `src/dsa-knowledge.ts`), paths, journeys (`src/learning.ts`), and fluency data. The Trail, planner, and badges read these.
+- **Startup (imported synchronously):** `src/catalog-index.ts`, a generated index with each rep's id, title, category, format, starter code, hint count, and source module, plus each lesson's id, title, summary, prerequisites, related lessons, rep links, first common mistake, and question ids with their answer contracts. Paths, journeys (`src/learning.ts`), fluency data, the Trail, planner, and badges read these. Run `yarn content:index` after changing a rep or lesson; `tests/catalog-index.test.mjs` fails when the file is stale and when a startup module imports heavy content.
+- **Rep content (loaded when a rep opens):** the brief, example, notes, vocabulary, plan prompt, hints, checks, and the short lesson before a rep, loaded per source module by `src/rep-content.ts`. `useRepContent` shows a loading state, and an error state with Retry (then Reload app if Retry cannot recover) that leaves the draft untouched. Lesson bodies (`src/knowledge.ts`) load with the lesson views, and the glossary and quick lessons load on demand.
+- **Whole catalog (Node only):** tests, scripts, and the practice worker import `src/rep.ts` (all reps, through `src/rep-sources.ts`) and `src/knowledge.ts` (all lessons). The app never imports them directly.
 - **Review (loaded when a rep or lesson opens):** self-review guides, rep depth (including `traceSteps`), and lesson depth. They live in `src/review-*.ts` (one module per content area, for example `src/review-dsa.ts` exports `dsaDepth` and `dsaGuides`) and are aggregated by `src/rep-depth.ts`, `src/lesson-depth.ts`, and `src/reflection-guides.ts`. `src/load-review-content.ts` imports those aggregators dynamically; `useReviewContent` shows a loading state, and an error state with Retry that leaves the draft untouched.
 
 Add depth, trace, guide, and lesson-depth entries to the matching `src/review-*.ts` module, not to the rep module, and never import `src/review-*.ts`, `rep-depth.ts`, `lesson-depth.ts`, or `reflection-guides.ts` from startup code; tests and `yarn content:check` may import them directly. `yarn build` fails if the initial chunk exceeds its budget in `scripts/check-bundle.mjs`.
@@ -106,6 +108,6 @@ The Trail has one root, Foundations (`typescript`), and three tracks: Problem so
 
 ## Advanced algorithm function reps
 
-`src/dsa-advanced-reps.ts` owns the guided prefix-sum, interval, linked-list, heap, subset, and dynamic-programming reps. Their depth and reflection guides live in `src/review-dsa-advanced.ts`. Register its exports alongside the existing DSA exports in `src/rep.ts`, `src/rep-depth.ts`, and `src/learning.ts`. Independent references live in `tests/fixtures/dsa-solutions.mjs`; `tests/dsa-advanced.test.mjs` checks common mistakes and the taught heap repair.
+`src/dsa-advanced-reps.ts` owns the guided prefix-sum, interval, linked-list, heap, subset, and dynamic-programming reps. Their depth and reflection guides live in `src/review-dsa-advanced.ts`. Register its exports alongside the existing DSA exports in `src/rep-sources.ts`, `src/rep-depth.ts`, and `src/learning.ts`. Independent references live in `tests/fixtures/dsa-solutions.mjs`; `tests/dsa-advanced.test.mjs` checks common mistakes and the taught heap repair.
 
 The linked-list contract requires fresh output nodes. Value comparisons and input-mutation checks cannot establish output identity; fresh allocation remains a learner self-review point. The authoring test checks reference-node identity separately. These guided reps alone do not establish independent or retained fluency.

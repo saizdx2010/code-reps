@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { emptyFluency, parseFluency, recurringReviews, skillEvidence, validateKnowledge, weeklyPlan, relatedHelp } from '../src/fluency.ts'
+import { emptyFluency, parseFluency, recurringReviews, skillEvidence, weeklyPlan, relatedHelp } from '../src/fluency.ts'
+import { validateKnowledge } from '../src/knowledge-validation.ts'
 import { reps } from '../src/rep.ts'
 import { parseBackup } from '../src/portability.ts'
 const day = (n) => new Date(Date.UTC(2026,0,n)).toISOString()

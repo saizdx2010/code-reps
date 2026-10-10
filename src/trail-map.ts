@@ -1,7 +1,7 @@
 import { pathApplications, repCurriculumRole, stageCoveredByFoundations } from './curriculum.ts'
-import { skillsForRep } from './knowledge.ts'
+import { skillSummariesForRep as skillsForRep } from './skill-index.ts'
 import { paths } from './path.ts'
-import { reps } from './rep.ts'
+import { repIndex as reps } from './catalog-index.ts'
 
 export type TrailNodeState = 'done' | 'next' | 'draft' | 'later' | 'open'
 export type TrailNode =

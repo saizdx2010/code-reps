@@ -2,7 +2,7 @@ import { browserProjects, projectReflection } from '../src/browser-projects.ts'
 import { validateContentDepth } from '../src/content-depth.ts'
 import { reps } from '../src/rep.ts'
 import { skills, contentVersion } from '../src/knowledge.ts'
-import { validateKnowledge } from '../src/fluency.ts'
+import { validateKnowledge } from '../src/knowledge-validation.ts'
 import { reflectionGuides } from '../src/reflection-guides.ts'
 const ids = new Set(reps.map(rep => rep.id))
 const errors = [...validateKnowledge(ids), ...validateContentDepth(ids, new Set(skills.map(skill => skill.id)))]

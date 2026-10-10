@@ -1,5 +1,5 @@
 import { paths } from './path.ts'
-import type { Rep } from './rep'
+import type { RepSummary } from './catalog-index'
 
 export const formatLabels: Record<string, string> = {
   algorithm: 'Exercise', debug: 'Debugging', read: 'Reading code', transform: 'Working with data',
@@ -22,7 +22,7 @@ const problemStages = paths.find(path => path.id === 'algorithms-data-structures
 const lookupReps = new Set(['most-frequent-number', 'first-unique-character', 'first-duplicate-label', 'count-statuses'])
 
 /** One primary topic per rep; authored categories and learner records stay unchanged. */
-export function catalogTopic(rep: Pick<Rep, 'id' | 'category'>): string {
+export function catalogTopic(rep: Pick<RepSummary, 'id' | 'category'>): string {
   if (rep.id === 'simplify-file-path') return 'Stacks and queues'
   if (rep.category.startsWith('Algorithm ') || rep.category === 'Problem-solving patterns') {
     return problemStages.find(stage => (stage.repIds as readonly string[]).includes(rep.id))?.title ?? 'Problem solving'

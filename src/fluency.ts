@@ -1,6 +1,6 @@
 import { migratePathId, paths } from './path.ts'
-import { skills, knowledgeGroups } from './knowledge.ts'
-import { journeys, getAllJourneys } from './learning.ts'
+import { skillIndex as skills } from './catalog-index.ts'
+import { getAllJourneys } from './learning.ts'
 import type { PortableRecord } from './portability.ts'
 export type Judgment = 'not-yet' | 'with-help' | 'independent'
 export type SelfReview = { understanding: Judgment; approach: Judgment; implementation: Judgment; explanation: Judgment; evidence: string; updatedAt: string }
@@ -26,9 +26,9 @@ const judgments = ['not-yet', 'with-help', 'independent']
 const pathIds = new Set<string>(paths.map(path => path.id))
 const skillIds = new Set(skills.map(s => s.id))
 // Keep old answer contracts readable without counting them as current lesson evidence.
-const retiredQuestions = new Map([
-  ['frontend:derive', { options: ['Source items and the current query', 'An unrelated saved copy', 'A mutation of the source array'], answer: 0, completion: false }],
-  ['event-loop:prediction-2', { options: ['It runs during the draining checkpoint', 'It always waits behind the next timer', 'It runs synchronously inside queueMicrotask'], answer: 0, completion: false }],
+const retiredQuestions = new Map<string, { optionCount: number; answer: number; completion?: true; answerText?: string }>([
+  ['frontend:derive', { optionCount: 3, answer: 0 }],
+  ['event-loop:prediction-2', { optionCount: 3, answer: 0 }],
 ])
 const questionIds = new Set(skills.flatMap(s => s.questions.map(q => `${s.id}:${q.id}`)))
 export function parseFluency(raw: unknown): FluencyState {
@@ -37,7 +37,7 @@ export function parseFluency(raw: unknown): FluencyState {
   if (!obj(raw) || raw.version !== 1 || !obj(raw.goal) || !text(raw.goal.pathId, 60) || !pathIds.has(raw.goal.pathId) || !Number.isInteger(raw.goal.minutes) || Number(raw.goal.minutes) < 5 || Number(raw.goal.minutes) > 120 || !Array.isArray(raw.goal.days) || raw.goal.days.length > 7 || raw.goal.days.some(d => !Number.isInteger(d) || d < 0 || d > 6) || new Set(raw.goal.days).size !== raw.goal.days.length || !obj(raw.answers) || !obj(raw.reviews) || !Array.isArray(raw.notes) || raw.notes.length > 1000 || !Array.isArray(raw.bookmarks) || raw.bookmarks.some(id => !skillIds.has(id)) || !Array.isArray(raw.rounds) || raw.rounds.length > 1000 || (raw.diagnosticStartedAt !== undefined && !date(raw.diagnosticStartedAt))) throw new Error('Learning data is invalid. Your saved copy has been kept.')
   for (const [id, answer] of Object.entries(raw.answers)) {
     const [sid, qid] = id.split(':'); const question = skills.find(s => s.id === sid)?.questions.find(q => q.id === qid) ?? retiredQuestions.get(id)
-    if ((!questionIds.has(id) && !retiredQuestions.has(id)) || !obj(answer) || (answer.response !== undefined && !text(answer.response, 300)) || !Number.isInteger(answer.choice) || Number(answer.choice) < 0 || Number(answer.choice) >= question!.options.length || answer.correct !== (question!.completion ? typeof answer.response === 'string' && answer.response.trim() === question!.options[question!.answer] : answer.choice === question!.answer) || !date(answer.answeredAt)) throw new Error('Invalid lesson answer.')
+    if ((!questionIds.has(id) && !retiredQuestions.has(id)) || !obj(answer) || (answer.response !== undefined && !text(answer.response, 300)) || !Number.isInteger(answer.choice) || Number(answer.choice) < 0 || Number(answer.choice) >= question!.optionCount || answer.correct !== (question!.completion ? typeof answer.response === 'string' && answer.response.trim() === question!.answerText : answer.choice === question!.answer) || !date(answer.answeredAt)) throw new Error('Invalid lesson answer.')
   }
   for (const [id, review] of Object.entries(raw.reviews)) if (!skillIds.has(id) || !obj(review) || !['understanding', 'approach', 'implementation', 'explanation'].every(k => judgments.includes(String(review[k]))) || !text(review.evidence) || !date(review.updatedAt)) throw new Error('Invalid self-review.')
   for (const note of [...raw.notes, ...(raw.noteDraft === undefined ? [] : [raw.noteDraft])]) if (!obj(note) || !text(note.id, 80) || !text(note.title, 120) || !text(note.body) || !text(note.skillId, 60) || (note.skillId && !skillIds.has(note.skillId)) || !text(note.repId, 100) || !['note', 'mistake', 'question'].includes(String(note.kind)) || !date(note.updatedAt)) throw new Error('Invalid notebook entry.')
@@ -119,25 +119,4 @@ export function relatedHelp(repId: string, failedNames: string[]) {
   const names = failedNames.join(' ').toLowerCase()
   const extra = /empty|blank|whitespace|trim|case/.test(names) ? skills.find(s => s.id === 'text') : /page|query|invalid|null|integer/.test(names) ? skills.find(s => s.id === 'validation') : /input|mutat|preserv/.test(names) ? skills.find(s => s.id === 'arrays') : undefined
   return [...new Map([...(extra ? [extra] : []), ...matching].map(s => [s.id, s])).values()].slice(0, 3)
-}
-export function validateKnowledge(repIds: Set<string>) {
-  const problems: string[] = []
-  if (new Set(skills.map(s=>s.id)).size !== skills.length) problems.push('Duplicate skill IDs')
-  for (const skill of skills) {
-    if (!skill.sections.length || !skill.objectives.length || !skill.example || !skill.walkthrough.length || !skill.questions.length) problems.push(`${skill.id}: incomplete lesson`)
-    for (const id of [...skill.prerequisites, ...skill.related]) if (!skillIds.has(id)) problems.push(`${skill.id}: missing skill ${id}`)
-    for (const id of skill.repIds) if (!repIds.has(id)) problems.push(`${skill.id}: missing rep ${id}`)
-    if (new Set(skill.questions.map(q=>q.id)).size !== skill.questions.length) problems.push(`${skill.id}: duplicate question`)
-    for (const q of skill.questions) if (!Number.isInteger(q.answer) || q.answer < 0 || q.answer >= q.options.length || !q.explanation) problems.push(`${skill.id}: invalid question ${q.id}`)
-  }
-  const groupedIds = knowledgeGroups.flatMap(group => group.skillIds)
-  if (new Set(groupedIds).size !== groupedIds.length || groupedIds.length !== skills.length || groupedIds.some(id => !skillIds.has(id))) problems.push('Knowledge groups must contain every skill exactly once')
-  const visit = (id: string, stack: Set<string>) => {
-    if (stack.has(id)) { problems.push(`${id}: prerequisite cycle`); return }
-    for (const dep of skills.find(s=>s.id===id)?.prerequisites ?? []) visit(dep, new Set([...stack, id]))
-  }
-  skills.forEach(s=>visit(s.id, new Set()))
-  for (const journey of journeys) if (!recallVariants[journey.id]?.every(id => repIds.has(id))) problems.push(`${journey.id}: missing recall variants`)
-  for (const project of capstones) for (const m of project.milestones) if (!repIds.has(m.repId)) problems.push(`${project.id}: missing milestone`)
-  return problems
 }

@@ -6,7 +6,7 @@ import { useSessionPreference } from './useSessionPreference'
 import { Button } from './Button'
 import { StepIndicator } from './StepIndicator'
 import { Textarea } from './Input'
-import { reps } from './rep'
+import { repIndex as reps } from './catalog-index'
 import type { PracticeSession } from './practice-sessions'
 import type { PortableRecord } from './portability'
 

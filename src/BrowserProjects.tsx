@@ -2,7 +2,7 @@ import { InfoNote } from './Layout'
 import { Button } from './Button'
 import { browserProjects, externalSetup, projectReflection, projectReview } from './browser-projects'
 import type { BrowserProject } from './browser-projects'
-import { reps } from './rep'
+import { repIndex as reps } from './catalog-index'
 
 export function BrowserProjects({ openRep, recordReflection }: { openRep: (id: string) => void; recordReflection: (title: string, body: string) => void }) {
   function reflect(project: BrowserProject) {

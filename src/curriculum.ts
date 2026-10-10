@@ -1,5 +1,5 @@
-import { skillsForRep } from './knowledge.ts'
-import { reps } from './rep.ts'
+import { skillSummariesForRep as skillsForRep } from './skill-index.ts'
+import { repIndex as reps } from './catalog-index.ts'
 import { paths } from './path.ts'
 import { journeys, stageLabels } from './learning.ts'
 import type { JourneyProgress } from './learning.ts'

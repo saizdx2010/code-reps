@@ -1,7 +1,7 @@
 import { paths } from './path.ts'
-import { skillById, skillsForRep } from './knowledge.ts'
+import { skillSummaryById as skillById, skillSummariesForRep as skillsForRep } from './skill-index.ts'
 import { repLevel, repLevelLabels, type RepLevel } from './rep-levels.ts'
-import { reps } from './rep.ts'
+import { repIndex as reps } from './catalog-index.ts'
 
 // Guidance is derived from authored levels, path order, and linked lessons. It is a planning aid:
 // nothing here gates access, and nothing infers proficiency from how quickly a learner works.

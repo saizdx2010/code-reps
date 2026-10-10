@@ -3,9 +3,10 @@ import { Input } from './Input'
 import { reducedMotion } from './ui-motion'
 import { getActiveProfile } from './local-store'
 import { setScreenNavigated } from './screen-focus'
+import { useGlossary } from './useGlossary'
 import { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { Rep } from './rep'
+import type { RepSummary } from './catalog-index'
 import type { TestResult } from './runner.types'
 
 type ScreenState = { windowY: number; scroll: [number, number][]; open: Record<string, boolean>; focusId?: string }
@@ -68,14 +69,16 @@ export function SearchDrawer({ title, children, onClose, className = '', closeRe
   return <dialog ref={dialog} className={`utility-dialog ${className}`} aria-label={title} onKeyDown={event => { if (event.key === 'Escape' || ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k')) { event.preventDefault(); event.stopPropagation(); requestClose() } }} onCancel={event => { event.preventDefault(); requestClose() }} onClick={event => { if (event.target === event.currentTarget) { const box = event.currentTarget.getBoundingClientRect(); if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) requestClose() } }}><div className="utility-heading"><h2>{title}</h2><button type="button" onClick={requestClose} aria-label={`Close ${title}`}><Icon name="close" />Close <kbd>Esc</kbd></button></div>{children}</dialog>
 }
 
-export function GlossaryDrawer({ terms, onClose }: { terms: { term: string; meaning: string }[]; onClose: () => void }) {
+export function GlossaryDrawer({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState('')
+  const glossary = useGlossary()
+  const terms = glossary.status === 'ready' ? glossary.terms : []
   const visible = terms.filter(item => `${item.term} ${item.meaning}`.toLowerCase().includes(query.toLowerCase()))
-  return <SearchDrawer title="Quick glossary" className="glossary-drawer" onClose={onClose}><label className="field-label" htmlFor="glossary-query">Find a term</label><Input id="glossary-query" type="search" autoFocus value={query} onChange={event => setQuery(event.target.value)} placeholder="Try index, map, or frequency" /><p className="utility-note">Definitions stay available while you practice.</p><dl className="glossary-list">{visible.map(item => <div key={item.term}><dt>{item.term}</dt><dd>{item.meaning}</dd></div>)}</dl>{!visible.length && <p>No matching terms. Try a shorter search.</p>}</SearchDrawer>
+  return <SearchDrawer title="Quick glossary" className="glossary-drawer" onClose={onClose}><label className="field-label" htmlFor="glossary-query">Find a term</label><Input id="glossary-query" type="search" autoFocus value={query} onChange={event => setQuery(event.target.value)} placeholder="Try index, map, or frequency" /><p className="utility-note">Definitions stay available while you practice.</p>{glossary.status === 'loading' && <p role="status">Loading the glossary…</p>}{glossary.status === 'error' && <div role="alert"><p>The glossary could not load. Your work is safe.</p><button type="button" className="text-button" onClick={glossary.retry}>Retry</button></div>}<dl className="glossary-list">{visible.map(item => <div key={item.term}><dt>{item.term}</dt><dd>{item.meaning}</dd></div>)}</dl>{glossary.status === 'ready' && !visible.length && <p>No matching terms. Try a shorter search.</p>}</SearchDrawer>
 }
 
 type Command = { label: string; shortcut?: string; run: () => void }
-export function CommandPalette({ reps, commands, onOpenRep, onClose }: { reps: Rep[]; commands: Command[]; onOpenRep: (id: string) => void; onClose: () => void }) {
+export function CommandPalette({ reps, commands, onOpenRep, onClose }: { reps: RepSummary[]; commands: Command[]; onOpenRep: (id: string) => void; onClose: () => void }) {
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
   const closeRequest = useRef<(() => void) | null>(null)

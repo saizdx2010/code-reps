@@ -1,7 +1,7 @@
 import { Button } from './Button'
 import { Input, Select } from './Input'
 import { parseProfileBackup } from './profile-backup'
-import { reps } from './rep'
+import { repIndex as reps } from './catalog-index'
 import { useRef, useState } from 'react'
 import App from './App'
 import { activateProfile, flushStorage, rawLocalStore } from './local-store'

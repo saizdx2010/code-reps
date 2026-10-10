@@ -18,7 +18,7 @@ import { capstones, diagnosticRepIds, recurringReviews, rubrics, skillEvidence, 
 import type { FluencyState, Judgment, LearningNote, SelfReview } from './fluency'
 import type { PortableRecord } from './portability'
 import { paths } from './path'
-import { reps } from './rep'
+import { repIndex as reps } from './catalog-index'
 import { useSessionPreference } from './useSessionPreference'
 const BrowserProjects = lazy(() => import('./BrowserProjects').then(module => ({ default: module.BrowserProjects })).catch(() => ({ default: () => <section role="alert"><p>Browser projects could not load. Reload to try again; your saved work will be kept.</p><Button onClick={() => window.location.reload()}>Reload projects</Button></section> })))
 export type { HubTab } from './learning-pages'

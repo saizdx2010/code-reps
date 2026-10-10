@@ -3,7 +3,7 @@ import { getActiveProfile, localStore, flushStorage, retryStorage, isServerReady
 import { scopedKey } from './profiles'
 import { assertSessionRevision, emptySessions, finishSession, mergeSessions, parseSessions, sessionsKey } from './practice-sessions'
 import type { PracticeSession, SessionState } from './practice-sessions'
-import { reps } from './rep'
+import { repIndex as reps } from './catalog-index'
 
 const repIds = new Set(reps.map(rep => rep.id))
 export function usePracticeSessions() {

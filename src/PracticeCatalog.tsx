@@ -4,8 +4,8 @@ import { statusTone } from './ui-status'
 import { Input, Select } from './Input'
 import { preloadEditor } from './editor-loader'
 import { useSessionPreference } from './useSessionPreference'
-import { reps } from './rep'
-import type { Rep } from './rep'
+import { repIndex as reps } from './catalog-index'
+import type { RepSummary } from './catalog-index'
 import { repLevel, repLevelLabel } from './rep-levels.ts'
 import { startHereReps } from './catalog-sample.ts'
 import { foundationsPathId } from './curriculum'
@@ -17,9 +17,9 @@ type Props = {
   onFilter: (field: Filter, value: string) => void
   clearFilters: () => void
   categories: string[]
-  visibleReps: Rep[]
+  visibleReps: RepSummary[]
   dueIds: Set<string>
-  repStatus: (rep: Rep) => string
+  repStatus: (rep: RepSummary) => string
   openRep: (id: string) => void
   goalPathId?: string
 }
@@ -34,7 +34,7 @@ export function PracticeCatalog({ filters, onFilter, clearFilters, categories, v
   try { const saved: unknown = JSON.parse(openGroups); if (Array.isArray(saved)) expanded = saved.filter((value): value is string => typeof value === 'string') } catch { /* Start collapsed if the session preference is unavailable. */ }
   const filtering = Boolean(filters.query.trim() || activeFilters)
   const startHere = startHereReps(visibleReps, { pathRepIds: pathRepIds(goalPathId), isDone: item => repStatus(item) === 'Completed', level: repLevel })
-  const renderRow = (item: Rep) => <ListRow key={item.id} title={item.title} meta={<>{formatLabels[item.format ?? 'algorithm']}{dueIds.has(item.id) && ' · Review due'}</>} status={<>{repLevelLabel(item.id) && <StatusChip>{repLevelLabel(item.id)}</StatusChip>}<StatusChip tone={statusTone(repStatus(item))}>{repStatus(item)}</StatusChip></>} onPreview={preloadEditor} onOpen={() => openRep(item.id)} />
+  const renderRow = (item: RepSummary) => <ListRow key={item.id} title={item.title} meta={<>{formatLabels[item.format ?? 'algorithm']}{dueIds.has(item.id) && ' · Review due'}</>} status={<>{repLevelLabel(item.id) && <StatusChip>{repLevelLabel(item.id)}</StatusChip>}<StatusChip tone={statusTone(repStatus(item))}>{repStatus(item)}</StatusChip></>} onPreview={preloadEditor} onOpen={() => openRep(item.id)} />
   return <main className="catalog-main">
     <PageHeader title="Find your next rep." description="Choose a skill to practice. Pick up saved work at any time." actions={<div className="catalog-search"><label htmlFor="catalog-query">Find a rep</label><Input id="catalog-query" type="search" value={filters.query} onChange={event => onFilter('query', event.target.value)} placeholder="Try arrays, strings, debugging…" /></div>} />
     <details className="catalog-filters" open={filterPanel === 'open'} onToggle={event => setFilterPanel(event.currentTarget.open ? 'open' : 'closed')}>

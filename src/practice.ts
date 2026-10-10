@@ -1,10 +1,9 @@
 import { repPracticeContext } from './curriculum.ts'
 import { migratePathId, paths } from './path.ts'
 import { recurringReviews } from './fluency.ts'
-import type { Rep } from './rep.ts'
+import type { RepSummary } from './catalog-index.ts'
 import { repLevel } from './rep-levels.ts'
-import { reps } from './rep.ts'
-import { foundations } from './foundations.ts'
+import { foundationRepIds, repIndex as reps } from './catalog-index.ts'
 import { getAllJourneys } from './learning.ts'
 import type { LearnerStart } from './learning.ts'
 import type { PortableAttempt, PortableRecord } from './portability.ts'
@@ -60,25 +59,25 @@ export function getPracticePlan(drafts: Record<string, PortableAttempt>, history
     .map(record => ({ repId: record.repId, mode: 'review', reason: `${difficultyReason(record)} At least three days have passed; try again from the starter.` }))
   const recurring: PracticeAction[] = recurringReviews(history, now).filter(review => review.due).map(review => ({ repId: review.repId, mode: status(review.repId) === 'In progress' ? 'resume' : 'review', reason: review.reason }))
   const due = [...new Map([...recalls, ...recurring, ...reviews].map(action => [action.repId, action])).values()]
-  const foundation = learnerStart === 'new' ? foundations.find(lesson => status(lesson.repId) !== 'Completed') : undefined
+  const foundation = learnerStart === 'new' ? foundationRepIds.find(repId => status(repId) !== 'Completed') : undefined
   const nextJourney = progress.find(state => state.nextRepId)
   const nextId = nextJourney?.nextRepId
   const journeyAction: PracticeAction | undefined = nextId ? {
     repId: nextId, mode: status(nextId) === 'Completed' ? 'retry' : 'start',
     reason: status(nextId) === 'Completed' ? 'This completion has not established independence. Try again without hints after guided practice.' : nextJourney.stage === 'practising' ? 'Your guided rep is complete. Try this related problem without hints.' : 'Build this skill with a guided rep before independent practice.',
   } : undefined
-  const available = reps.find(rep => status(rep.id) === 'Not started' && (learnerStart !== 'returning' || !foundations.some(lesson => lesson.repId === rep.id)) &&
+  const available = reps.find(rep => status(rep.id) === 'Not started' && (learnerStart !== 'returning' || !foundationRepIds.includes(rep.id)) &&
     !progress.some(state => state.journey.recall === rep.id && !state.recallDue && !state.retained))
   const recallAvailable = (id: string) => !progress.some(state => state.journey.recall === id && !state.recallDue && !state.retained)
   const goalPath = paths.find(path => path.id === migratePathId(goalPathId)) ?? paths[0]
-  const goalIds: readonly string[] = goalPath.stages.flatMap(stage => stage.repIds).filter(id => learnerStart !== 'returning' || goalPath.id !== 'typescript' || !foundations.some(lesson => lesson.repId === id))
+  const goalIds: readonly string[] = goalPath.stages.flatMap(stage => stage.repIds).filter(id => learnerStart !== 'returning' || goalPath.id !== 'typescript' || !foundationRepIds.includes(id))
   const goalDraft = unfinished.find(action => goalIds.includes(action.repId))
   const goalRepId = goalIds.find(id => status(id) !== 'Completed' && recallAvailable(id))
   const goalAction: PracticeAction | undefined = goalRepId ? { repId: goalRepId, mode: status(goalRepId) === 'In progress' ? 'resume' : 'start', reason: `${repPracticeContext(goalRepId).reason} Build toward your selected learning goal: ${goalPath.title}.` } : undefined
   const goalJourney = progress.find(state => state.nextRepId === state.journey.independent && goalIds.includes(state.nextRepId) && status(state.nextRepId) === 'Completed')
   const independenceAction: PracticeAction | undefined = goalJourney?.nextRepId ? { repId: goalJourney.nextRepId, mode: 'retry', reason: 'This completion has not established independence. Try again without hints after guided practice.' } : undefined
   const next: PracticeAction | null = recalls[0] ?? recurring[0] ?? goalDraft ?? reviews[0] ?? independenceAction ?? goalAction ??
-    unfinished[0] ?? (foundation ? { repId: foundation.repId, mode: 'start', reason: 'Build a TypeScript foundation before the problem-solving journeys.' } : undefined) ??
+    unfinished[0] ?? (foundation ? { repId: foundation, mode: 'start', reason: 'Build a TypeScript foundation before the problem-solving journeys.' } : undefined) ??
     journeyAction ?? (available ? { repId: available.id, mode: 'start', reason: 'Try a new application of your skills. Start with a plan, then write and check your solution.' } : null)
   const newGoalRepId = goalIds.find(id => status(id) === 'Not started' && recallAvailable(id))
   const recommended: PracticeAction | null = independenceAction ?? (newGoalRepId ? {
@@ -88,8 +87,8 @@ export function getPracticePlan(drafts: Record<string, PortableAttempt>, history
 }
 
 /** Guidance only: writing remains self-reviewed, with no length or prose scoring. */
-export function practiceWritingPrompts(rep: Pick<Rep, 'id' | 'format' | 'planPrompt'>) {
-  const scale = !rep.format && foundations.some(lesson => lesson.repId === rep.id)
+export function practiceWritingPrompts(rep: Pick<RepSummary, 'id' | 'format'> & { planPrompt: string }) {
+  const scale = !rep.format && foundationRepIds.includes(rep.id)
     ? 'sentence' : repLevel(rep.id) === 1 ? 'focused' : 'reasoned'
   const brief = scale === 'sentence'
   return {
