@@ -26,6 +26,13 @@ const allFruit = ['Apple', 'Banana', 'Pineapple', 'Apricot']
 const selected = (profile: string, security: string, billing: string) => [see('tab-profile', 'attr:aria-selected', profile), see('tab-security', 'attr:aria-selected', security), see('tab-billing', 'attr:aria-selected', billing)]
 const stops = (profile: number, security: number, billing: number) => [see('tab-profile', 'prop:tabIndex', profile), see('tab-security', 'prop:tabIndex', security), see('tab-billing', 'prop:tabIndex', billing)]
 const shown = (profile: boolean, security: boolean, billing: boolean) => [see('panel-profile', 'prop:hidden', !profile), see('panel-security', 'prop:hidden', !security), see('panel-billing', 'prop:hidden', !billing)]
+const accordionProps = { open: 'shipping', sections: [
+  { id: 'shipping', title: 'Shipping', content: 'Orders ship within two days.' },
+  { id: 'returns', title: 'Returns', content: 'Return items within thirty days.' },
+  { id: 'warranty', title: 'Warranty', content: 'Repairs are covered for a year.' },
+] }
+const expanded = (shipping: string, returns: string, warranty: string) => [see('header-shipping', 'attr:aria-expanded', shipping), see('header-returns', 'attr:aria-expanded', returns), see('header-warranty', 'attr:aria-expanded', warranty)]
+const visible = (shipping: boolean, returns: boolean, warranty: boolean) => [see('panel-shipping', 'prop:hidden', !shipping), see('panel-returns', 'prop:hidden', !returns), see('panel-warranty', 'prop:hidden', !warranty)]
 const limits = 'DOM checks run in a sandboxed frame. They establish the authored behavior and attribute contract, not screen-reader output, visual design, or real keyboard use in other browsers. Review those yourself.'
 
 export const domReps: Rep[] = [
@@ -136,6 +143,31 @@ export const domReps: Rep[] = [
       { name: 'Clearing the search restores the list and removes the empty state', ...dom(searchProps, [type('search', 'zzz'), type('search', '')], [see('item', 'texts', allFruit), see('status', 'text', '4 results'), see('empty', 'exists', false)]) },
       { name: 'Keeps the same live region and input while typing', ...dom(searchProps, [mark('status'), mark('search'), focus('search'), type('search', 'a'), type('search', 'ap'), type('search', 'zzz')], [see('status', 'prop:__marked', true), see('status', 'count', 1), see('status', 'attr:aria-live', 'polite'), see('search', 'prop:__marked', true), see('search', 'focused', true)]) },
       { name: 'Item labels containing markup remain text', ...dom({ items: ['<b>Ada</b>'] }, [], [see('item', 'texts', ['<b>Ada</b>']), see('item', 'prop:childElementCount', 0), see('status', 'text', '1 result')]) },
+    ],
+  },
+  {
+    id: 'dom-accordion', title: 'Build an accordion where one section stays open', category: 'Frontend accessibility', format: 'frontend',
+    context: 'A help page lists Shipping, Returns, and Warranty. People read one answer at a time, so at most one section shows, and keyboard and screen reader users must be able to tell which.',
+    prompt: 'Implement mountAccordion(root, props) with props.sections (id, title, content) and props.open, the id of the section that starts open or null. For each section render a header control and a panel. The header has type="button", the title as text, aria-expanded "true" or "false", and aria-controls naming its panel. The panel has role="region", aria-labelledby naming its header, the content as text, and is hidden unless its section is open. At most one section is open. Activating a closed header opens its section and closes the other. Activating the open header closes it, leaving none open. An open id that matches no section means none start open. Headers are not rebuilt, so they keep focus. Use data-testid header-<id> on each header and panel-<id> on each panel,, with matching element ids.',
+    example: { input: "open 'shipping', then click Returns", output: 'Returns is expanded and visible; Shipping is collapsed and hidden' },
+    note: 'Use data-testid header-<id> and panel-<id> (the same strings as the element ids). Render titles and content with textContent. Checks click the headers. ' + limits,
+    acceptanceCriteria: ['Tab reaches every header in order; Enter and Space activate the focused one in a real browser.', 'Focus stays visibly on the header you activated.', 'Try a screen reader to confirm that each header announces whether it is expanded.'],
+    domPreview: { title: 'Your accordion implementation', description: 'Open each section in turn, then close the open one.', props: accordionProps, review: ['Tab through the headers and activate each with Enter and Space.', 'Confirm the focus indicator stays on the header you activated.', 'With a screen reader, listen for the expanded or collapsed announcement. Checks cannot judge this.'] },
+    vocabulary: [{ term: 'Accordion', meaning: 'a stack of sections where each header shows or hides its own panel' }, { term: 'Region', meaning: 'a role for a named block of content' }],
+    planPrompt: 'Decide what the one piece of state is and what every header and panel is computed from. What does a click do to that state when the section is closed, and when it is already open?',
+    starter: 'type AccordionProps = { open: string | null; sections: { id: string; title: string; content: string }[] }\n\nfunction mountAccordion(root: HTMLElement, props: AccordionProps): void {\n  // Build a header and panel for each section. header-<id>, panel-<id>.\n  root.replaceChildren()\n}\n',
+    functionName: 'mountAccordion', preserveInput: true,
+    hints: ['Build every header and panel once, then write one function that sets all of them from the current state.', 'Keep a single value for which section is open, and compare each section to it instead of storing a flag per section.', 'A click should store the clicked section, or nothing when it was already the open one, and then reapply the state without rebuilding any element.'],
+    checks: [
+      { name: 'Renders headers wired to labelled regions', ...dom(accordionProps, [], [see('header-shipping', 'tag', 'button'), see('header-shipping', 'attr:type', 'button'), see('header-returns', 'text', 'Returns'), see('header-warranty', 'controls', 'panel-warranty'), see('panel-returns', 'attr:role', 'region'), see('panel-returns', 'attr:aria-labelledby', 'header-returns'), see('panel-warranty', 'text', 'Repairs are covered for a year.'), see('header-shipping', 'count', 1), see('panel-shipping', 'count', 1)]) },
+      { name: 'Starts with only the requested section open', ...dom(accordionProps, [], [...expanded('true', 'false', 'false'), ...visible(true, false, false)]) },
+      { name: 'Starts with every section closed when open is null', ...dom({ ...accordionProps, open: null }, [], [...expanded('false', 'false', 'false'), ...visible(false, false, false)]) },
+      { name: 'An unknown open id starts with every section closed', ...dom({ ...accordionProps, open: 'missing' }, [], [...expanded('false', 'false', 'false'), ...visible(false, false, false)]) },
+      { name: 'Opening another section closes the open one', ...dom(accordionProps, [click('header-returns')], [...expanded('false', 'true', 'false'), ...visible(false, true, false)]) },
+      { name: 'Clicking the open header closes it and leaves none open', ...dom(accordionProps, [click('header-shipping')], [...expanded('false', 'false', 'false'), ...visible(false, false, false)]) },
+      { name: 'A closed accordion opens the clicked section', ...dom({ ...accordionProps, open: null }, [click('header-warranty')], [...expanded('false', 'false', 'true'), ...visible(false, false, true)]) },
+      { name: 'Headers keep identity and focus across several clicks', ...dom(accordionProps, [mark('header-returns'), focus('header-returns'), click('header-returns'), click('header-warranty'), click('header-returns')], [see('header-returns', 'prop:__marked', true), see('header-returns', 'focused', true), see('header-returns', 'count', 1), ...expanded('false', 'true', 'false'), ...visible(false, true, false)]) },
+      { name: 'Titles and content containing markup remain text', ...dom({ open: 'a', sections: [{ id: 'a', title: '<b>A</b>', content: '<i>x</i>' }] }, [], [see('header-a', 'text', '<b>A</b>'), see('panel-a', 'text', '<i>x</i>'), see('header-a', 'prop:childElementCount', 0), see('panel-a', 'prop:childElementCount', 0)]) },
     ],
   },
 ]

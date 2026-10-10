@@ -127,7 +127,7 @@ test('DOM accessibility rep previews its authored props and passes frame checks'
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
 })
 
-for (const id of ['dom-accessible-form', 'dom-disclosure', 'dom-tabs', 'dom-live-search']) {
+for (const id of ['dom-accessible-form', 'dom-disclosure', 'dom-tabs', 'dom-live-search', 'dom-accordion']) {
   test(`${id} reference solution passes every check in real Chromium`, async ({ page }) => {
     const { domSolutions } = await import('../fixtures/dom-solutions.mjs')
     await page.goto(`/#/practice/${id}`)

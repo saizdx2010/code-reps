@@ -21,6 +21,11 @@ export const domGuides: Record<string, { plan: string[]; explanation: string[]; 
     explanation: ['Trace typing a query that matches one item, then one that matches none.', 'Explain why the live region must exist before the text changes and must not be recreated.', 'Say what the checks do not prove about how a screen reader announces updates.'],
     example: 'I build the label, input, status paragraph with aria-live polite, and list once. An input listener normalizes the query, filters a copy, rewrites the list items, sets the status text, and adds or removes one empty paragraph. The input and status elements are never replaced. I verify the actual announcement manually.',
   },
+  'dom-accordion': {
+    plan: ['Name the single value every header and panel is computed from.', 'Write what a click does when the section is closed and when it is open.', 'Decide what an open id that matches nothing should do.'],
+    explanation: ['Trace opening a second section while the first is open and name each attribute that changes.', 'Explain why storing a flag per section can leave two sections open.', 'Say what the checks do not show about real key presses and announcements.'],
+    example: 'I create every header and panel once and keep one current id. One function loops over the sections and sets aria-expanded and hidden from whether each id equals the current one. A click stores the clicked id, or null when that section was already open, then calls the function. The checks confirm the attributes in a sandbox; I still listen with a screen reader.',
+  },
 }
 
 export const domDepth: Record<string, RepDepth> = {
@@ -51,5 +56,12 @@ export const domDepth: Record<string, RepDepth> = {
     alternative: 'Debouncing the announcement avoids a spoken update per keystroke for large lists; role="status" implies a polite live region and is a common alternative to adding aria-live explicitly. The contract here asks for the explicit attribute.',
     counterexample: 'Creating the status paragraph on the first keystroke, or replacing it each time, may produce no announcement because nothing changed inside an existing live region. Rebuilding the input on each event drops focus.',
     transfer: 'Add a "clear" button that restores the list and returns focus to the input. Decide what the status should say afterward. This changed contract is self-reviewed, not checked.',
+  },
+  'dom-accordion': {
+    reasoning: 'One current id decides every header and panel. Deriving all sections from it in one pass means opening a section closes the others without any extra bookkeeping.',
+    trace: 'Shipping is open. Clicking Returns stores "returns", so the pass sets Shipping to aria-expanded "false" and hidden, and Returns to "true" and visible. Clicking Returns again stores null, so every section is collapsed and hidden.',
+    alternative: 'Allowing several sections open needs a set of open ids instead of one value. Native details elements with a shared name attribute give single-open behavior with less code but less control over the attributes.',
+    counterexample: 'Toggling only the clicked section leaves the previously open one expanded, so two answers show at once and the one-open rule fails. Setting hidden without aria-expanded tells a screen reader the visible section is collapsed.',
+    transfer: 'Let the accordion allow any number of open sections but add an expand-all button. Decide what the state becomes and when the button should say collapse all. This changed contract is self-reviewed, not checked.',
   },
 }

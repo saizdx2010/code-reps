@@ -82,6 +82,15 @@ const mutants = [
   ['dom-live-search', 'no label link', s => s.replace("label.htmlFor = 'item-search'", '')],
   ['dom-live-search', 'lowercased labels', s => s.replace('li.textContent = text', 'li.textContent = text.toLowerCase()')],
   ['dom-live-search', 'html insertion', s => s.replace('li.textContent = text', 'li.innerHTML = text')],
+  ['dom-accordion', 'div instead of button', s => s.replace("document.createElement('button')", "document.createElement('div')")],
+  ['dom-accordion', 'drop aria-expanded', s => s.replace("part.header.setAttribute('aria-expanded', String(isOpen))", '')],
+  ['dom-accordion', 'panels stay visible', s => s.replace('part.panel.hidden = !isOpen', '')],
+  ['dom-accordion', 'several sections open', s => s.replace('current = current === section.id ? null : section.id; apply()', 'section.open = !section.open; current = section.id; apply()').replace('const isOpen = part.section.id === current', 'const isOpen = part.section.id === current || part.section.open === true')],
+  ['dom-accordion', 'open header cannot close', s => s.replace('current === section.id ? null : section.id', 'section.id')],
+  ['dom-accordion', 'region role missing', s => s.replace("panel.setAttribute('role', 'region')", '')],
+  ['dom-accordion', 'labelledby mismatch', s => s.replace("panel.setAttribute('aria-labelledby', header.id)", "panel.setAttribute('aria-labelledby', panel.id)")],
+  ['dom-accordion', 'rebuilds headers', s => s.replace('current = current === section.id ? null : section.id; apply()', 'current = current === section.id ? null : section.id; const clone = header.cloneNode(true) as HTMLElement; header.replaceWith(clone); apply()')],
+  ['dom-accordion', 'html insertion', s => s.replace('panel.textContent = section.content', 'panel.innerHTML = section.content')],
 ]
 test('DOM checks reject common contract mistakes', () => {
   for (const [id, label, mutate] of mutants) {

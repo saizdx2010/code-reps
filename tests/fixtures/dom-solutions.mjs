@@ -161,4 +161,34 @@ function mountLiveSearch(root: HTMLElement, props: {items:string[]}) {
   root.append(label, input, status, list)
   render()
 }`,
+  'dom-accordion': `
+function mountAccordion(root: HTMLElement, props: {open: string | null; sections: {id:string;title:string;content:string}[]}) {
+  root.replaceChildren()
+  let current = props.sections.some(section => section.id === props.open) ? props.open : null
+  const parts = props.sections.map(section => {
+    const header = document.createElement('button')
+    header.type = 'button'
+    header.id = 'header-' + section.id
+    header.textContent = section.title
+    header.setAttribute('data-testid', 'header-' + section.id)
+    header.setAttribute('aria-controls', 'panel-' + section.id)
+    const panel = document.createElement('div')
+    panel.id = 'panel-' + section.id
+    panel.setAttribute('role', 'region')
+    panel.setAttribute('aria-labelledby', header.id)
+    panel.setAttribute('data-testid', 'panel-' + section.id)
+    panel.textContent = section.content
+    header.addEventListener('click', () => { current = current === section.id ? null : section.id; apply() })
+    root.append(header, panel)
+    return { section, header, panel }
+  })
+  function apply() {
+    for (const part of parts) {
+      const isOpen = part.section.id === current
+      part.header.setAttribute('aria-expanded', String(isOpen))
+      part.panel.hidden = !isOpen
+    }
+  }
+  apply()
+}`,
 }

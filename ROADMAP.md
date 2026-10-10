@@ -85,7 +85,7 @@ Start with one connected plain TypeScript browser feature using the existing DOM
 **Goal:** Build confidence through different applications of the same skill before adding more topics.
 
 - [ ] Record where you get stuck during ordinary practice: wording, missing prerequisite, approach, syntax, boundaries, or integration. Use those notes to select the next content batch.
-- [ ] Add a DOM interactions journey with guided, independent, and delayed-recall stages. Its `dom-*` reps (disclosure, tabs, accessible form, live search) exist, but no journey in `src/learning.ts` stages them.
+- [x] Add a DOM interactions journey with guided, independent, and delayed-recall stages. Its `dom-*` reps (disclosure, tabs, accessible form, live search) exist, but no journey in `src/learning.ts` stages them.
 - [ ] Add knowledge lessons for sorting, recursion, trees, and graphs. Their journeys and reps already exist (`src/learning.ts`, `src/path.ts`), but `src/dsa-knowledge.ts` defines only collection operations, queues, and array techniques, so these topics have no lesson questions or authored knowledge depth. Then review their journeys for difficulty transitions and unfamiliar transfer.
 - [ ] Add independent or recall tasks to queues, two pointers, windows, or binary search only when learner observations show a specific gap. Each of those four already has guided, independent, and delayed-recall journey stages.
 - [ ] Deepen TypeScript through narrowing unknown input, discriminated unions, exhaustive handling, generics, and reusable typed APIs. Separate compile-time guarantees from behavioral checks.

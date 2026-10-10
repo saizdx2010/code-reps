@@ -115,7 +115,7 @@ export const skills: Skill[] = [
     walkthrough: ['Normalize the query once.', 'Compare each name using the same case rule.', 'Keep matching original objects in their original order.', 'Render an empty message only after the request has resolved.'],
     mistakes: ['Showing empty content during loading.', 'Lowercasing the displayed label.', 'Using clickable divs instead of buttons.', 'Rendering names as HTML.'],
     questions: [q('precedence', 'Which state should this exercise display?', '{ loading: true, error: "Offline", count: 0 }', ['Empty', 'Error', 'Loading'], 2, 'Loading has priority under the authored contract.'), q('derive-source-v2', 'Where should the filtered list come from?', '', ['Source items and the current query', 'An unrelated saved copy', 'The list from the previous query'], 0, 'Deriving output avoids maintaining conflicting copies of the same information.')],
-    repIds: ['frontend-visible-items', 'frontend-view-state', 'frontend-directory', 'dom-accessible-form', 'dom-disclosure', 'dom-tabs', 'dom-live-search', 'project-team-directory', 'interview-frontend', 'derive-task-summary'], related: ['react', 'async', 'testing'],
+    repIds: ['frontend-visible-items', 'frontend-view-state', 'frontend-directory', 'dom-accessible-form', 'dom-disclosure', 'dom-tabs', 'dom-live-search', 'dom-accordion', 'project-team-directory', 'interview-frontend', 'derive-task-summary'], related: ['react', 'async', 'testing'],
   },
   {
     id: 'debugging', title: 'Debugging, reading, and safe refactoring', summary: 'Establish behavior before changing code and preserve evidence of the repair.', prerequisites: ['arrays'],

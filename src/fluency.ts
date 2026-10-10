@@ -65,6 +65,7 @@ export const recallVariants: Record<string, string[]> = {
   'control-flow': ['countdown-labels'],
   'interface-logic': ['filter-chip-summary'],
   'request-response': ['page-response-envelope'],
+  'dom-interactions': ['dom-accordion', 'dom-live-search', 'dom-disclosure'],
 }
 export function recurringReviews(history: PortableRecord[], now = Date.now()) {
   return getAllJourneys(history, now).flatMap(state => {
