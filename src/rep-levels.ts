@@ -49,6 +49,7 @@ export const repLevels: Record<string, RepLevel> = {
   'count-statuses': 1,
 
   // Intermediate: typical journeys, frontend and backend reps, techniques, validation, and async policies.
+  'function-returns-function': 2,
   'closure-counters': 2,
   'reference-groups': 2,
   'promise-outcomes': 2,
@@ -125,6 +126,7 @@ export const repLevels: Record<string, RepLevel> = {
   'countdown-labels': 1,
   // Bridge reps that open the Frontend and Backend tracks.
   'frontend-screen-message': 1,
+  'frontend-list-summary': 1,
   'backend-check-quantity': 1,
   'group-items-by-heading': 2,
   'filter-chip-summary': 2,

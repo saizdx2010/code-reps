@@ -33,6 +33,22 @@ export const repDepth: Record<string, RepDepth> = {
   ...appDepth,
   ...domDepth,
   ...browserStateDepth,
+  "function-returns-function": {
+    "traceSteps": {"code": ["function makeAdder(amount: number): (x: number) => number {", "  return x => x + amount", "}", "function addAll(amount: number, values: number[]): number[] {", "  const add = makeAdder(amount)", "  const result = values.map(value => add(value))", "  return result", "}"], "input": "amount = 5, values = [3, -5, 0]", "steps": [
+      {"line": 3, "vars": {"amount": 5}, "structure": {"kind": "array", "values": [3, -5, 0]}, "note": "addAll receives the amount 5 and three values. No adder exists yet."},
+      {"line": 4, "vars": {"amount": 5}, "structure": {"kind": "array", "values": [3, -5, 0]}, "note": "Call makeAdder(5). This runs the first function once and gives back a function."},
+      {"line": 1, "vars": {"amount": 5, "add": "x => x + 5"}, "structure": {"kind": "state", "entries": [["amount inside makeAdder", 5], ["returned function", "x => x + 5"]]}, "note": "makeAdder returns a small function. It keeps amount 5 with it, even after makeAdder is done."},
+      {"line": 5, "vars": {"amount": 5, "add": "x => x + 5", "value": 3}, "structure": {"kind": "array", "values": [3, -5, 0], "pointers": {"value": 0}}, "note": "map calls add with 3. The returned function computes 3 + 5 = 8. Result so far: [8]."},
+      {"line": 5, "vars": {"amount": 5, "add": "x => x + 5", "value": -5}, "structure": {"kind": "array", "values": [3, -5, 0], "pointers": {"value": 1}, "dimmed": [0]}, "note": "Next value is -5. The same add function computes -5 + 5 = 0. Result so far: [8, 0]."},
+      {"line": 5, "vars": {"amount": 5, "add": "x => x + 5", "value": 0}, "structure": {"kind": "array", "values": [3, -5, 0], "pointers": {"value": 2}, "dimmed": [0, 1]}, "note": "Last value is 0. The same add function computes 0 + 5 = 5. Result: [8, 0, 5]."},
+      {"line": 6, "vars": {"amount": 5, "result": "[8, 0, 5]"}, "structure": {"kind": "array", "values": [8, 0, 5]}, "note": "Return the new array. The input values were never changed, and makeAdder ran only once."}
+    ]},
+    "reasoning": "makeAdder builds a function that adds a fixed amount. Because addAll builds that function once and applies it to every value, each output depends only on its own input value and the amount.",
+    "trace": "For amount 5 and values [3, -5, 0], makeAdder(5) returns a function that adds 5. Applying it gives 8, 0, and 5. For an empty array, no value is visited and the result is an empty array.",
+    "alternative": "Writing values.map(value => value + amount) gives the same output with one function fewer, but it does not practice returning a function. Calling makeAdder(amount)(value) inside the callback works too, yet it builds a new function for every value.",
+    "counterexample": "Having makeAdder return amount + x directly instead of a function breaks the call add(value), because a number cannot be called. Using values.forEach and ignoring its results returns an empty array.",
+    "transfer": "Write makeMultiplier(factor) and use it to scale each value. Decide what stays fixed and what arrives later. This changed contract is self-reviewed, not checked by the original cases."
+  },
   "declare-variables": {
     "reasoning": "A name and its value are different: const protects the binding, not every value reachable through it.",
     "trace": "With name Ada, greeting remains Hello plus a space; message becomes Hello, Ada. With an empty name the space remains.",
