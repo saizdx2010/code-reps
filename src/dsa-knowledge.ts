@@ -114,4 +114,96 @@ export const dsaSkills: Skill[] = [{
       }],
     'repIds': ['algo-sorted-pair', 'sorted-offset-squares', 'reading-run-summary', 'algo-window-sum', 'count-unique-windows', 'shortest-run-reaching-target', 'algo-binary-search', 'first-insertion-point', 'smallest-daily-capacity'],
     'related': ['arrays', 'lookup', 'complexity']
+  }, {
+    'id': 'sorting-basics',
+    'title': 'Sort without changing the original',
+    'summary': 'Order values by building a sorted portion, merge two sorted lists, and choose comparison rules deliberately.',
+    'prerequisites': ['array-techniques', 'collection-operations'],
+    'objectives': ['Trace insertion sort and state what is already ordered after each step.', 'Merge two sorted lists by comparing their next unused values.', 'Write a comparator that orders numbers, ties, and records as the contract says.'],
+    'sections': [{
+        'title': 'Grow a sorted portion',
+        'body': 'Insertion sort keeps the left part of a copied array in order. Take the next value, shift larger sorted values one place right, and drop the value into the gap. After step i the first i + 1 values are ordered, though not yet final for the whole array. Shifting only while the neighbour is strictly larger keeps equal values in their original order. Worst-case time is O(n squared); an already-sorted input needs only about n comparisons. Copy first with [...values] when the caller owns the array.'
+      }, {
+        'title': 'Merge two sorted lists',
+        'body': 'Two sorted lists need no new sort. Keep one index in each list, compare the two next unused values, append the smaller, and advance that index. When one list is exhausted, append the rest of the other. Taking the left value on a tie keeps equal values stable. Every value is appended once: O(n + m) time and O(n + m) output space. Neither input is changed.'
+      }, {
+        'title': 'Say what the order means',
+        'body': 'JavaScript sort without a comparator compares values as text, so [10, 9, 1].sort() gives [1, 10, 9]. Pass a comparator such as (a, b) => a - b for numbers: negative puts a first, positive puts b first, zero keeps their relative order (sort is stable). Sort changes the array it is called on, so copy first. For records, compare score, then break ties by name; the contract must name the string rule, such as character codes or case-insensitive. A rank like kth smallest counts duplicate positions separately, so sort a copy and read index k - 1.'
+      }, {
+        'title': 'Check the claim, not only the output',
+        'body': 'Passing checks show results on the authored inputs. They do not show that you implemented insertion sort, kept the input unchanged under every call, or kept ties stable. Inspect your code against those claims after the checks pass.'
+      }],
+    'example': '// insertionSort([3, 1, 3, -2]) on a copy\n// [3 | 1, 3, -2]  start: first value is a sorted portion\n// [1, 3 | 3, -2]  1 shifts 3 right\n// [1, 3, 3 | -2]  3 is not larger than 3, so it stays\n// [-2, 1, 3, 3]  -2 shifts three values right',
+    'walkthrough': ['The bar separates the sorted portion from values not yet placed.', 'Each new value moves left only past strictly larger values, so the equal 3s keep their order.', 'After the last placement the sorted portion is the whole array.', 'The caller\'s array is still [3, 1, 3, -2] because only the copy was shifted.'],
+    'mistakes': ['Calling sort() on numbers without a comparator and getting text order.', 'Sorting the caller\'s array in place when the contract says not to change it.', 'Shifting while the neighbour is larger or equal, which reorders equal values.', 'Forgetting to append the leftover tail after one merge input runs out.'],
+    'questions': [{
+        'id': 'sort-default-order-v1',
+        'prompt': 'What does this expression return?',
+        'code': '[10, 9, 1].sort()',
+        'options': ['[1, 9, 10]', '[1, 10, 9]', '[10, 9, 1]'],
+        'answer': 1,
+        'explanation': 'Without a comparator the values are compared as text, and "10" comes before "9". Numbers need (a, b) => a - b.'
+      }, {
+        'id': 'merge-tail-v1',
+        'prompt': 'After comparing values, the left list is used up. What must the merge do next?',
+        'code': 'left = [1], right = [2, 3, 4]\nresult so far: [1]',
+        'options': ['Stop, because the result already has the smallest value', 'Append the rest of right in its existing order', 'Sort the result again'],
+        'answer': 1,
+        'explanation': 'The remaining right values are sorted and all at least as large as what was taken. Append them; no new sort is needed.'
+      }, {
+        'id': 'insertion-tie-v1',
+        'prompt': 'Which shift rule keeps equal values in their original order?',
+        'code': '// moving value into the sorted portion',
+        'options': ['Shift while the neighbour is strictly larger', 'Shift while the neighbour is larger or equal', 'Shift every value in the sorted portion'],
+        'answer': 0,
+        'explanation': 'Stopping at an equal neighbour leaves the earlier equal value in front. Shifting past equals would swap them.'
+      }],
+    'repIds': ['algo-insertion-sort', 'algo-merge-sorted', 'sort-score-records', 'kth-smallest-copy'],
+    'related': ['array-techniques', 'complexity', 'arrays']
+  }, {
+    'id': 'recursion-basics',
+    'title': 'Recursion: a base case and a smaller problem',
+    'summary': 'Solve nested data by handling the simplest case directly and letting a smaller copy of the task do the rest.',
+    'prerequisites': ['control-flow', 'arrays'],
+    'objectives': ['Name the base case and the smaller problem for a recursive function.', 'Trace calls and returns for a nested list.', 'Explain what happens when the base case is missing or the input does not shrink.'],
+    'sections': [{
+        'title': 'Two parts, always',
+        'body': 'A recursive function calls itself. It needs a base case, an input simple enough to answer directly, and a recursive case that passes a smaller or simpler input to the same function and combines the result. For summing a nested list, the base cases are a plain number (answer: itself) and an empty list (answer: 0). The recursive case sums every item of a list, treating each nested list as the same task. If the input never gets closer to a base case, calls never stop.'
+      }, {
+        'title': 'Trace calls and returns',
+        'body': 'Each call waits on the calls it made until they return, so unfinished work is stacked up. Trace by writing the call, the smaller calls it makes, and what each returns. For [1, [2, []]], the outer call adds 1 to the result of the call on [2, []], which adds 2 to the result for [], which is 0. Results combine on the way back: 0, then 2, then 3. Very deep nesting can exhaust the call stack and throw a RangeError, so recursion suits data whose depth is modest.'
+      }, {
+        'title': 'Nested arrays and objects',
+        'body': 'Use Array.isArray(item) to tell a nested list from a number. For objects, loop over Object.values and recurse into values that are objects; null needs its own check because typeof null is "object". Flattening collects numbers into one new array in left-to-right order: build a result, then append what each recursive call returns. Counting leaves counts a primitive as 1 and an empty object as 0. Do not change the input while walking it.'
+      }, {
+        'title': 'Cost and limits',
+        'body': 'When each value is visited once, time is O(n) for n values and the extra stack space is O(depth). A function that makes two recursive calls on nearly the same input can repeat work exponentially; that is a different problem from nested data. Checks show results on authored inputs, not that your function is recursive or terminates on every input.'
+      }],
+    'example': '// recursiveSum([1, [2, [], [-3]], 4])\n// 1                      -> 1\n// [2, [], [-3]]  -> 2 + 0 + (-3) = -1\n// 4                      -> 4\n// total: 1 + (-1) + 4 = 4',
+    'walkthrough': ['Plain numbers are base cases and return themselves.', 'The empty list is a base case and returns 0 without any calls.', 'The nested list [-3] is a smaller copy of the same task and returns -3.', 'Results combine as the calls return, giving 4, and the input arrays are unchanged.'],
+    'mistakes': ['Omitting the empty-list base case and indexing past the end.', 'Recursing on the same input, so calls never end.', 'Treating null as an object and reading its properties.', 'Pushing into a shared result in a way that mutates the caller\'s data.'],
+    'questions': [{
+        'id': 'recursion-base-case-v1',
+        'prompt': 'What is the missing base case for summing a list of numbers recursively?',
+        'code': 'function total(items: number[]): number {\n  return items[0] + total(items.slice(1))\n}',
+        'options': ['An empty list returns 0', 'A list of length 3 returns 3', 'A list with a negative first value returns 0'],
+        'answer': 0,
+        'explanation': 'Each call shortens the list. Without a stop at the empty list, items[0] becomes undefined and the calls continue until the stack overflows.'
+      }, {
+        'id': 'recursion-trace-v1',
+        'prompt': 'What does this call return?',
+        'code': 'recursiveSum([1, [2, []]])',
+        'options': ['1', '3', '5'],
+        'answer': 1,
+        'explanation': 'The empty list contributes 0, the inner list contributes 2 + 0, and the outer call adds 1 to give 3.'
+      }, {
+        'id': 'recursion-null-leaf-v1',
+        'prompt': 'Why check for null before treating a value as a nested object?',
+        'code': 'typeof null === "object"',
+        'options': ['null is an array', 'typeof reports null as "object", but it has no properties to walk', 'null is slower to read'],
+        'answer': 1,
+        'explanation': 'A typeof test alone would send null into Object.values and throw. In a leaf count, null is a leaf.'
+      }],
+    'repIds': ['algo-recursive-sum', 'flatten-nested-numbers', 'count-object-leaves'],
+    'related': ['sorting-basics', 'arrays', 'stacks']
   }]
