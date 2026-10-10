@@ -147,6 +147,7 @@ export const repLevels: Record<string, RepLevel> = {
   'dom-accessible-form': 2,
   'dom-live-search': 2,
   'dom-tabs': 3,
+  'dom-accordion': 2,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */
