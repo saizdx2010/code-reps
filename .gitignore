@@ -12,11 +12,26 @@ dist
 release
 dist-ssr
 *.local
+*.tsbuildinfo
+/coverage/
+
+# Local environment configuration
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Local learner data
+/.code-reps/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
+.claude/
 .DS_Store
 *.suo
 *.ntvs*
