@@ -27,6 +27,24 @@ test('connected multi-file feature checks execute in the real sandbox', async ({
   }
 })
 
+test('a multi-file starter resolves its sibling imports without false editor errors', async ({ page }) => {
+  await page.goto('/#/practice/connected-note-render')
+  const editor = page.getByRole('textbox', { name: /^TypeScript solution for/ })
+  await expect(editor).toBeVisible()
+  const importLine = page.locator('.view-line').filter({ hasText: "from './state'" })
+  await expect(importLine).toBeVisible()
+  // Positive control: the editor reports a real error when one is typed, so the empty result below is meaningful.
+  await editor.focus()
+  await editor.press('ControlOrMeta+End')
+  await editor.pressSequentially('\nconst probe: number = "text"')
+  await expect(page.locator('.squiggly-error').first()).toBeVisible({ timeout: 30_000 })
+  // Monaco groups typing into several undo steps; undo until the starter text is back, then the import lines must be clean.
+  for (let step = 0; step < 40; step++) await editor.press('ControlOrMeta+Z')
+  await expect(page.locator('.view-line').filter({ hasText: 'probe' })).toHaveCount(0)
+  await expect.poll(() => page.locator('.squiggly-error').count(), { timeout: 30_000 }).toBe(0)
+  await expect(importLine.locator('.squiggly-error')).toHaveCount(0)
+})
+
 test('scratch note supports keyboard save and recovery on a narrow screen', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')

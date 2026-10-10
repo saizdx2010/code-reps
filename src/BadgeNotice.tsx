@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { profileBadges, unacknowledgedBadges } from './badges'
+import type { Badge } from './badges'
 import type { PortableRecord } from './portability'
 import { useSessionPreference } from './useSessionPreference'
 
@@ -29,25 +30,41 @@ export function BadgeNotice({ history, now, onView, portalTarget }: Props) {
   const fresh = unacknowledgedBadges(badges, known)
   const freshKey = fresh.map(badge => badge.id).join(',')
   const noticeRef = useRef<HTMLDivElement | null>(null)
-  // The timer reads the latest acknowledgement without restarting every time the app re-renders.
+  // The badges this notice is announcing. They stay on screen for a while even though they are acknowledged at once.
+  const [shown, setShown] = useState<Badge[]>([])
+  // The effects read the latest acknowledgement without restarting every time the app re-renders.
   const latest = useRef({ known, fresh })
   useEffect(() => { latest.current = { known, fresh } })
 
   useEffect(() => {
     if (!freshKey) return
+    // Acknowledge when the notice is shown, so remounting on the next rep never shows the same badge again.
+    const { known: current, fresh: pending } = latest.current
+    setAcknowledged(JSON.stringify([...current, ...pending.map(badge => badge.id)]))
+    setShown(pending)
+  }, [freshKey, setAcknowledged])
+
+  // A notice raised in the completion panel belongs to that moment; leaving the panel for the next rep ends it.
+  const inPanel = useRef(Boolean(portalTarget))
+  useEffect(() => {
+    if (inPanel.current && !portalTarget) setShown([])
+    inPanel.current = Boolean(portalTarget)
+  }, [portalTarget])
+
+  useEffect(() => {
+    if (shown.length === 0) return
     const timer = window.setTimeout(() => {
       // Keep the notice while the learner is working inside it.
       if (noticeRef.current?.contains(document.activeElement)) return
-      const { known: current, fresh: pending } = latest.current
-      setAcknowledged(JSON.stringify([...current, ...pending.map(badge => badge.id)]))
+      setShown([])
     }, noticeMs)
     return () => window.clearTimeout(timer)
-  }, [freshKey, setAcknowledged])
+  }, [shown])
 
-  if (fresh.length === 0) return null
-  const notice = <div ref={noticeRef} className={`badge-notice${portalTarget ? ' in-panel' : ''}`} role="status">
-    <p><strong>{fresh.length === 1 ? 'Badge earned' : 'Badges earned'}:</strong> {fresh.map(badge => badge.name).join(', ')}</p>
-    <button type="button" className="text-button" onClick={() => { setAcknowledged(JSON.stringify([...known, ...fresh.map(badge => badge.id)])); onView() }}>View badges</button>
+  if (shown.length === 0) return null
+  const notice = <div ref={noticeRef} className={`badge-notice${portalTarget ? ' in-panel' : ' in-bar'}`} role="status">
+    <p><strong>{shown.length === 1 ? 'Badge earned' : 'Badges earned'}:</strong> {shown.map(badge => badge.name).join(', ')}</p>
+    <button type="button" className="text-button" onClick={() => { setShown([]); onView() }}>View badges</button>
   </div>
   return portalTarget ? createPortal(notice, portalTarget) : notice
 }

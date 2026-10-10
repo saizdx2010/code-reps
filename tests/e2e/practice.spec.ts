@@ -93,6 +93,35 @@ test('first-run recommendation leads and the starting point stays editable', asy
   await expect(page.locator('#continue-heading')).toHaveText('Sum positive numbers')
 })
 
+test('Complete stays a normal button before a difficulty choice and names the one thing still needed', async ({ page }) => {
+  await page.goto(route)
+  await page.getByRole('button', { name: 'Plan', exact: true }).click()
+  await page.getByLabel('Your plan', { exact: true }).fill('Count occurrences and choose the smaller number when counts tie.')
+  await replaceCode(page, solution)
+  await page.locator('.workspace-toolbar').getByRole('button', { name: /Run checks/ }).click()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
+  // Once checks pass, the only route to the explanation is the checks drawer, not a second footer link.
+  await expect(page.locator('.workspace-toolbar').getByRole('button', { name: 'Explain solution', exact: true })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Explain', exact: true }).click()
+  await page.getByLabel('Your explanation', { exact: true }).fill('I count each value, compare counts, and use the smaller value to break ties. Empty input returns null.')
+  await page.getByRole('button', { name: 'Review', exact: true }).click()
+  const complete = page.getByRole('button', { name: 'Complete rep', exact: true })
+  // Complete is not greyed out; the one missing item is named in the note and the checklist, with the same words.
+  await expect(complete).toBeEnabled()
+  await expect(page.locator('.finish-note')).toHaveText('Still needed: a difficulty choice.')
+  await expect(page.locator('.completion-checklist')).toContainText('Still needed: a difficulty choice')
+  await complete.click()
+  // Pressing Complete with the choice missing moves focus to the difficulty control, which describes what is needed.
+  const difficulty = page.locator('#difficulty-choice button').first()
+  await expect(difficulty).toBeFocused()
+  await expect(difficulty).toHaveAccessibleDescription('Still needed: a difficulty choice.')
+  await expect(page.getByText('Your attempt is saved in the Journal.', { exact: true })).toHaveCount(0)
+  await chooseSegment(page, 'What was hardest?', 'Nothing in particular')
+  await expect(page.locator('.finish-note')).toHaveCount(0)
+  await complete.click()
+  await expect(page.getByText('Your attempt is saved in the Journal.', { exact: true })).toBeVisible()
+})
+
 test('failed checks open one case at a time with keyboard access', async ({ page }) => {
   await page.goto(route)
   await page.locator('.workspace-toolbar').getByRole('button', { name: 'Run checks', exact: true }).click()
@@ -207,10 +236,10 @@ test('local profile progress is readable on narrow screens and links to paths', 
   await expect(page.getByRole('definition').filter({ hasText: /^0 days$/ })).toHaveCount(2)
   await expect(page.getByRole('heading', { name: 'Completion badges' })).toBeVisible()
   await page.getByText(/Upcoming badges/).click()
-  await expect(page.locator('.compact-path-list li').first()).toBeVisible()
+  await expect(page.locator('.badge-upcoming .list-rows li').first()).toBeVisible()
   await expect(page.locator('.profile-summary')).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  await page.locator('.compact-path-list li').filter({ hasText: 'Foundations path' }).getByRole('button').focus()
+  await page.locator('.badge-upcoming .list-rows li').filter({ hasText: 'Foundations path' }).getByRole('button').focus()
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/#\/paths/)
   await page.goBack()

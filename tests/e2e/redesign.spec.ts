@@ -41,10 +41,23 @@ test('focused writing steps preserve the real editor and hide unrelated forms', 
   await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue(/Count values/)
 })
 
+test('a fresh load starts at the skip link, and in-app navigation moves focus to the page heading', async ({ page }) => {
+  await page.goto('/#/home')
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  // The first Tab from a fresh load reaches the skip link before the header; the heading is not focused on load.
+  await page.keyboard.press('Tab')
+  await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused()
+  await expect(page.getByRole('heading', { level: 1 })).not.toBeFocused()
+  await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name: 'Progress', exact: true }).click()
+  await expect(page.getByRole('heading', { level: 1 })).toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(page.getByRole('heading', { level: 1 })).not.toBeFocused()
+})
+
 test('grouped navigation supports direct links, refresh, and Back and Forward', async ({ page }) => {
   await page.goto('/#/home')
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-  // Screen navigation focuses the heading; Shift+Tab from the brand reaches the skip link.
+  // Shift+Tab from the brand reaches the skip link; Enter on it moves focus to the heading.
   await page.getByRole('button', { name: 'Code Reps home', exact: true }).focus()
   await page.keyboard.press('Shift+Tab')
   await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused()

@@ -74,7 +74,7 @@ function applyEditorTheme(instance: typeof monaco) {
   instance.editor.defineTheme('code-reps', theme)
 }
 
-export default function CodeEditor({ onRunChecks, focusRequest = 0, ...props }: ComponentProps<typeof MonacoEditor> & { onRunChecks: () => void; focusRequest?: number }) {
+export default function CodeEditor({ onRunChecks, focusRequest = 0, siblingFiles, ...props }: ComponentProps<typeof MonacoEditor> & { onRunChecks: () => void; focusRequest?: number; /** Other files of a multi-file project, keyed by model path, so relative imports resolve. */ siblingFiles?: Record<string, string> }) {
   useLayoutEffect(() => {
     const observer = new MutationObserver(() => { applyEditorTheme(monaco); monaco.editor.setTheme('code-reps') })
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-palette', 'data-theme'] })
@@ -85,6 +85,20 @@ export default function CodeEditor({ onRunChecks, focusRequest = 0, ...props }: 
   const pathRef = useRef(props.path)
   const focusRequestRef = useRef(focusRequest)
   const viewSaveTimer = useRef<number | undefined>(undefined)
+  const siblingModels = useRef(new Map<string, monaco.editor.ITextModel>())
+  useLayoutEffect(() => {
+    const models = siblingModels.current
+    return () => { models.forEach(model => model.dispose()); models.clear() }
+  }, [])
+  // Sibling files are separate models so the TypeScript worker sees './state' and './view' as real modules. The active file stays with the editor.
+  useLayoutEffect(() => {
+    for (const [path, content] of Object.entries(siblingFiles ?? {})) {
+      const uri = monaco.Uri.parse(path)
+      const model = monaco.editor.getModel(uri)
+      if (!model) siblingModels.current.set(path, monaco.editor.createModel(content, 'typescript', uri))
+      else if (model.getValue() !== content) model.setValue(content)
+    }
+  })
   useLayoutEffect(() => {
     const save = () => {
       const editor = editorRef.current

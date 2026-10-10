@@ -1,6 +1,6 @@
 import './icons.css'
 
-type IconName = 'arrow' | 'play' | 'hint' | 'chevron' | 'left' | 'right' | 'check' | 'close' | 'plus' | 'minus' | 'calendar' | 'alert' | 'code' | 'circle' | 'down' | 'info' | 'book' | 'repeat' | 'flag'
+type IconName = 'arrow' | 'play' | 'hint' | 'chevron' | 'left' | 'right' | 'check' | 'close' | 'plus' | 'minus' | 'calendar' | 'alert' | 'code' | 'circle' | 'down' | 'info' | 'book' | 'repeat' | 'flag' | 'search'
 
 /** Decorative app-owned icons. Geometry lives in icons.css, including native disclosure markers. */
 export function Icon({ name }: { name: IconName }) {

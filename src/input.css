@@ -5,7 +5,7 @@
 }
 .ui-input::placeholder, .ui-textarea::placeholder { color: var(--muted); opacity: .8; }
 .ui-input:hover:not(:disabled), .ui-select:hover:not(:disabled), .ui-textarea:hover:not(:disabled) { border-color: var(--accent); }
-.ui-input:focus-visible, .ui-select:focus-visible, .ui-textarea:focus-visible { border-color: var(--accent); outline: 1px solid var(--accent); outline-offset: 1px; }
+.ui-input:focus-visible, .ui-select:focus-visible, .ui-textarea:focus-visible { border-color: var(--accent); outline: 2px solid var(--accent); outline-offset: 2px; }
 .ui-input[aria-invalid=true], .ui-select[aria-invalid=true], .ui-textarea[aria-invalid=true] { border-color: var(--error); }
 .ui-input:disabled, .ui-select:disabled, .ui-textarea:disabled { opacity: .55; cursor: not-allowed; }
 .ui-textarea { display: block; resize: vertical; min-height: 100px; }

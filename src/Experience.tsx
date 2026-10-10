@@ -2,6 +2,7 @@ import { Icon } from './Icon'
 import { Input } from './Input'
 import { reducedMotion } from './ui-motion'
 import { getActiveProfile } from './local-store'
+import { setScreenNavigated } from './screen-focus'
 import { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { Rep } from './rep'
@@ -9,11 +10,18 @@ import type { TestResult } from './runner.types'
 
 type ScreenState = { windowY: number; scroll: [number, number][]; open: Record<string, boolean>; focusId?: string }
 const screens = new Map<string, ScreenState>()
+// The screen the page last showed. Undefined until the first screen mounts, so a fresh load never moves focus.
+let shownScreen: string | undefined
 export function ScreenMemory({ screenKey, children }: { screenKey: string; children: ReactNode }) {
   const memoryKey = `${getActiveProfile()}:${screenKey}`
   const root = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
     const element = root.current!
+    // Strict Mode runs this effect twice for one screen; the second run sees the same key and does not count as navigation.
+    const navigated = shownScreen !== undefined && shownScreen !== memoryKey
+    shownScreen = memoryKey
+    // Only ever set on navigation: the Strict Mode second run must not clear what the first run recorded.
+    if (navigated) setScreenNavigated(true)
     const detailKey = (detail: HTMLDetailsElement) => `${detail.closest('[data-attempt-id]')?.getAttribute('data-attempt-id') ?? ''}:${detail.closest('section[id]')?.id ?? ''}:${detail.querySelector(':scope > summary')?.textContent ?? ''}`
     const scrollElements = () => Array.from(element.querySelectorAll<HTMLElement>('main, .catalog-list, .path-stages, .history-list, .task-column, .code-column'))
     let saved = screens.get(memoryKey)
@@ -23,7 +31,11 @@ export function ScreenMemory({ screenKey, children }: { screenKey: string; child
       scrollElements().forEach((item, index) => { const position = saved!.scroll[index]; if (position) { item.scrollTop = position[0]; item.scrollLeft = position[1] } })
       window.scrollTo(0, saved.windowY)
       if (saved.focusId) element.querySelector<HTMLElement>(`[id="${CSS.escape(saved.focusId)}"]`)?.focus({ preventScroll: true })
-    } else { window.scrollTo(0, 0); element.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true }) }
+    } else {
+      window.scrollTo(0, 0)
+      // In-app navigation moves focus to the new page heading; a page load leaves focus at the top, so the skip link stays the first stop.
+      if (navigated) element.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true })
+    }
     const capture = () => {
       const state: ScreenState = { windowY: window.scrollY, scroll: scrollElements().map(item => [item.scrollTop, item.scrollLeft]), open: Object.fromEntries(Array.from(element.querySelectorAll('details')).map(item => [detailKey(item), item.open])), focusId: element.contains(document.activeElement) ? document.activeElement?.id : undefined }
       screens.set(memoryKey, state)

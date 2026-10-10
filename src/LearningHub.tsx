@@ -8,6 +8,7 @@ import { ProjectListLoading } from './LoadingStates'
 import { learningPageTitles } from './learning-pages'
 import type { HubTab } from './learning-pages'
 import { revealElement } from './ui-motion'
+import { screenNavigated } from './screen-focus'
 import { Input, NumberInput, Select, Textarea } from './Input'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
@@ -74,8 +75,8 @@ function Notebook({state,update}: Pick<Props,'state'|'update'>) {
 }
 export function LearningHub(props: Props) {
   useEffect(() => {
-    // Restore the page heading after a focused loading placeholder is replaced.
-    if (document.activeElement === document.body) document.querySelector<HTMLElement>('.learning-hub h1')?.focus({ preventScroll: true })
+    // Restore the page heading after a focused loading placeholder is replaced, but only after in-app navigation; a page load keeps focus at the top.
+    if (screenNavigated() && document.activeElement === document.body) document.querySelector<HTMLElement>('.learning-hub h1')?.focus({ preventScroll: true })
   }, [])
   const {state,update,history,openRep,reviewRep,onSkill,skillId}=props
   const { tab, setTab } = props

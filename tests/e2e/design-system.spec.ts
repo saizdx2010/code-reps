@@ -36,11 +36,14 @@ test('reduced motion keeps buttons and dialogs usable without animated feedback'
   expect(await page.locator('.button-ripple').count()).toBe(0)
 })
 
-test('a cold learning route replaces the loading view with a focused usable lesson', async ({ page }) => {
+test('a cold learning route replaces the loading view with a usable lesson and leaves focus at the top', async ({ page }) => {
   await page.goto('/#/knowledge')
   const heading = page.getByRole('heading', { name: 'Learn a concept.', exact: true })
   await expect(heading).toBeVisible()
-  await expect(heading).toBeFocused()
+  // A page load does not move focus to the heading; the first Tab reaches the skip link.
+  await expect(heading).not.toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused()
   await page.getByRole('button', { name: 'Predict', exact: true }).click()
   await expect(page.locator('.lesson-navigation button[aria-current]')).toHaveText('Predict')
   await expect.poll(() => page.locator('.lesson-navigation').evaluate(element => {
@@ -175,8 +178,8 @@ test('lesson and path completion rows respond in place without moving their layo
   await page.goto('/#/progress')
   await page.getByText(/Upcoming badges/).click()
   await expect.poll(() => page.locator('main').evaluate(element => element.getAnimations().length)).toBe(0)
-  const card = page.locator('.compact-path-list .list-row > button').first()
-  const next = page.locator('.compact-path-list .list-row > button').nth(1)
+  const card = page.locator('.badge-upcoming .list-row > button').first()
+  const next = page.locator('.badge-upcoming .list-row > button').nth(1)
   // The upcoming list sits below the earned badges; bring both rows into view so focus does not scroll the page.
   await next.scrollIntoViewIfNeeded()
   await expect.poll(() => page.locator('main').evaluate(element => element.getAnimations().length)).toBe(0)
@@ -274,7 +277,8 @@ test('each pending learning page keeps its own heading and working surface', asy
       pendingTop = await loading.locator(pendingSurface).first().evaluate(element => element.getBoundingClientRect().top)
     } finally { release() }
     await expect(page.locator('.page-loading')).not.toBeVisible()
-    await expect(page.getByRole('heading', { name: title, exact: true })).toBeFocused()
+    // A cold load does not move focus to the heading; in-app navigation does.
+    await expect(page.getByRole('heading', { name: title, exact: true })).not.toBeFocused()
     await expect(page.locator('.learning-hub').locator(loadedSurface).first()).toBeVisible()
     await expect.poll(() => page.locator('.learning-hub').evaluate(element => element.getAnimations().length)).toBe(0)
     const loadedTop = await page.locator('.learning-hub').locator(loadedSurface).first().evaluate(element => element.getBoundingClientRect().top)
@@ -306,7 +310,7 @@ test('notebook loading reserves an existing writing draft and preserves it after
 test('path completion row navigates and session history selection stays visible', async ({ page }) => {
   await page.goto('/#/progress')
   await page.getByText(/Upcoming badges/).click()
-  await page.locator('.compact-path-list .list-row').filter({ hasText: 'Foundations path' }).locator('> button').click()
+  await page.locator('.badge-upcoming .list-row').filter({ hasText: 'Foundations path' }).locator('> button').click()
   await expect(page).toHaveURL(/#\/paths$/)
   await page.goto('/#/sessions')
   const group = page.getByRole('group', { name: 'Session history view' })

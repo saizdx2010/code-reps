@@ -50,7 +50,9 @@ test('walkthrough uses real checks, hints, writing and completion without granti
   await help(page).getByRole('button', { name: 'Walkthrough: explain next' }).click()
   await page.getByLabel('Your explanation', { exact: true }).fill('I combine the greeting and name, then return the message. I reviewed const and let myself.')
   await help(page).getByRole('button', { name: 'Walkthrough: review next' }).click()
-  await expect(page.getByRole('button', { name: 'Complete rep', exact: true })).toBeDisabled()
+  // Complete stays a normal button; before a difficulty choice it names what is still needed instead of going grey.
+  await expect(page.getByRole('button', { name: 'Complete rep', exact: true })).toBeEnabled()
+  await expect(page.locator('.finish-note')).toHaveText('Still needed: a difficulty choice.')
   await chooseSegment(page, 'What was hardest?', 'Writing TypeScript')
   await chooseSegment(page, 'How confident do you feel?', 'Getting there')
   await page.getByRole('button', { name: 'Complete rep', exact: true }).click()

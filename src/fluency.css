@@ -50,7 +50,7 @@
 .knowledge-article p { margin: 12px 0; }
 .knowledge-article ul, .knowledge-article ol { padding-left: 22px; }
 .knowledge-article li { margin: 8px 0; }
-.knowledge-article pre { margin: 18px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.knowledge-article pre { margin: 18px 0; white-space: pre; }
 .knowledge-article details summary { min-height: 40px; padding: 8px 0; color: var(--accent); cursor: pointer; font-size: 15px; }
 .lesson-navigation { display: flex; gap: 4px; position: sticky; isolation: isolate; top: 0; z-index: 5; padding: 5px; border-radius: var(--radius); background: var(--surface-2); margin-bottom: 24px; border: 1px solid var(--border); }
 .lesson-navigation button { flex: 1; min-height: 44px; padding: 10px 0; border: 0; position: relative; z-index: 1; border-radius: var(--radius-control); background: transparent; color: var(--text); font-size: 15px; }

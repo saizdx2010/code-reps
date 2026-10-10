@@ -62,6 +62,7 @@ The workspace title is a dense 22px (20px narrow). Body text is 15–16px; secon
 | Coding action | Lime with dark green text |
 | Hint / attention | Warm yellow with dark brown text |
 | Selected or recommended | Sage `--accent-soft`, or pale lime `--feature` for the single next action |
+| Earned badge | Success surface, border, and icon (`--success-soft`, `--success-border`, `--success`); never the next-action lime |
 | Success / error | Separate semantic text, border, and surface tokens, paired with explicit copy |
 | Controls / panels | 8px / 12px corners |
 | Standard control height | 40px for fields, selects, and buttons; dense workspace header controls are 36px |
@@ -107,7 +108,7 @@ Session reflection stays mounted behind an explicit Reflect and end session cont
 Use `Icon.tsx` for decorative control icons. `icons.css` is the single geometry source for both components and native disclosure markers: a 24px view box, 1.8px rounded outline strokes, and an 18px display size. Icons inherit the control color and are hidden from assistive technology; keep visible labels and accessible names. Do not substitute Unicode glyphs or separate inline SVG drawings. Preserve the original logo as its own brand asset.
 
 - **Arrow:** forward actions and row navigation.
-- **Chevron:** every expand/collapse control. Collapsible groups and cards (topic groups, trail stages, journeys, project overviews, path picker) use a trailing chevron that points down and rotates 180° when open. Inline text disclosures (Quick vocabulary, Change starting point) use the leading native marker. Buttons with `aria-expanded` rotate their chevron the same way; the checks drawer opens upward, so its chevron points up while closed.
+- **Chevron:** every expand/collapse control. Collapsible groups and cards (topic groups, trail stages, journeys, project overviews, path picker, upcoming badges, the Plan step brief) use a trailing chevron that points down and rotates 180° when open. Inline text disclosures (Quick vocabulary, Change starting point) use the leading native marker. Buttons with `aria-expanded` rotate their chevron the same way; the checks drawer opens upward, so its chevron points up while closed.
 - **Plus/minus:** only for adding and subtracting values, such as number steppers. Never for disclosure.
 - **Check / close:** success and selection / dismissal and failed checks.
 - **Info, book, repeat, flag:** `InfoNote`, lesson nodes, recall nodes, and project nodes.
@@ -130,7 +131,7 @@ Motion acknowledges interaction and shows where something came from; it never de
 | List row | Stays in place; the arrow slides into its reserved space; press settles to 99.5% |
 | Track and starting cards | Lift 2px on hover; settle on press |
 | Progress bars | Fill grows from the left when the page arrives |
-| Milestone notice | Rises 8px once when a badge is newly earned in this session; floats above the page so it never shifts content or takes focus; clears itself after 8 seconds |
+| Milestone notice | Rises 8px once when a badge is newly earned in this session; sits in the section bar inside the page frame (or in the completion panel) so the page heading does not move; never takes focus; is acknowledged as soon as it is shown, so moving on never repeats it; clears itself after 8 seconds |
 | Progress statistics, track cards | Rise in a short cascade |
 | Status chip | Settles in (scale and fade) when it appears or its status changes; an unchanged status stays still |
 | Checkbox and radio | Mark pops in |
@@ -149,7 +150,7 @@ Practice steps select immediately; new pane content fades from 80% opacity for 1
 
 `StepIndicator` measures the existing active button. `ui-motion.ts` and `useAppMotion.ts` add presentation without owning learner state; groups that cascade their own rows are excluded from the generic disclosure reveal. Animations must never remount editors, replace drafts, block an action, or change cancellation and stale-result handling. Animate children rather than page containers, so loading and page surfaces settle with no running animations.
 
-Honor `prefers-reduced-motion` for CSS and JavaScript motion: hover and press movement, icon rotation, cascades, progress fills, ripples, the dark-mode crossfade, and indicator glides all switch to immediate state changes. Keyboard focus uses a thin 1px green outline (fields add a 1px offset), stays visible on both white sheets and the dark coding desk, and receives the same cue as hover where one exists.
+Honor `prefers-reduced-motion` for CSS and JavaScript motion: hover and press movement, icon rotation, cascades, progress fills, ripples, the dark-mode crossfade, and indicator glides all switch to immediate state changes. Keyboard focus uses a 2px solid green outline with a 2px offset, on controls and fields alike. It stays visible on both white sheets and the dark coding desk, and receives the same cue as hover where one exists. A component that is inset on purpose (the workspace divider grip) may set its own offset.
 
 ## Loading language
 

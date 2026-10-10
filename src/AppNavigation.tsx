@@ -8,6 +8,7 @@ import type { View } from './ui-navigation'
 import { Tooltip } from './Tooltip'
 import { flushSync } from 'react-dom'
 import { reducedMotion } from './ui-motion'
+import type { ReactNode } from 'react'
 
 /** The dark-mode toggle crossfades where the browser supports view transitions; otherwise it applies immediately. Colour-scheme radios apply immediately so their checked state never lags the click. */
 function crossfade(update: () => void) {
@@ -23,9 +24,11 @@ type Props = {
   onNavigate: (view: View) => void
   onManageProfiles?: () => void
   onCommands: () => void
+  /** A milestone notice shown inside the section bar, so it stays in the page frame and does not move the heading. */
+  notice?: ReactNode
 }
 
-export function AppNavigation({ view, profileName, saveState, onNavigate, onManageProfiles, onCommands }: Props) {
+export function AppNavigation({ view, profileName, saveState, onNavigate, onManageProfiles, onCommands, notice }: Props) {
   const [theme, setTheme] = useSessionPreference<'light' | 'dark'>('theme', document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light', 'device')
   useLayoutEffect(() => { document.documentElement.dataset.theme = theme }, [theme])
   const [palette, setPalette] = useSessionPreference<'sage' | 'ocean' | 'plum'>('palette', (document.documentElement.dataset.palette as 'sage' | 'ocean' | 'plum') || 'sage', 'device')
@@ -55,7 +58,7 @@ export function AppNavigation({ view, profileName, saveState, onNavigate, onMana
         {workspace && <details className="site-menu" onKeyDown={event => {
           if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); event.currentTarget.open = false; event.currentTarget.querySelector('summary')?.focus() }
         }}><summary>Navigate</summary>{mainNavigation}</details>}
-        <button className="commands-trigger" type="button" onClick={onCommands} aria-label="Open commands and keyboard shortcuts">Search <kbd>⌘ / Ctrl K</kbd></button>
+        <button className="commands-trigger" type="button" onClick={onCommands} aria-label="Open commands and keyboard shortcuts"><Icon name="search" /><span className="commands-label">Search</span> <kbd>⌘ / Ctrl K</kbd></button>
         {onManageProfiles && <Tooltip text={`Local profile: ${profileName}`}><button className="profile-trigger" type="button" aria-label="Manage profiles" onClick={onManageProfiles}><span>{profileName}</span><Icon name="chevron" /></button></Tooltip>}
       </div>
     </header>
@@ -64,6 +67,7 @@ export function AppNavigation({ view, profileName, saveState, onNavigate, onMana
       <nav className="section-nav" aria-label={`${area === 'library' ? 'Library' : area === 'progress' ? 'Progress' : 'Trail'} pages`}>
         {navigationSections[area].map(item => <button key={item.view} type="button" aria-current={sectionView(view) === item.view ? 'page' : undefined} onClick={() => onNavigate(item.view)}>{item.label}</button>)}
       </nav>
+      {notice}
       <span className={`save-status${saveState === 'Saving…' ? ' is-loading' : ''}`} role="status">{saveState}</span>
     </div>}
   </>
