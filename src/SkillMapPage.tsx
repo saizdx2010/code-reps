@@ -10,6 +10,7 @@ import type { SkillNode, SkillState } from './skill-map'
 import type { JourneyProgress } from './learning'
 import type { ChipTone } from './ui-status'
 import { formatDate } from './ui-copy'
+import { SkillsSwitch } from './ProgressPage'
 
 type Props = {
   goalPathId: string
@@ -35,11 +36,11 @@ export function SkillMapPage({ goalPathId, progress, openRep, reviewRep }: Props
   const path = paths.find(item => item.id === pathId) ?? paths[0]
   const map = useMemo(() => buildSkillMap(path.id, progress), [path.id, progress])
   return <main className="skill-map-main">
-    <PageHeader title="Skill map." description="Every skill in a track, shown by the practice evidence recorded so far." actions={<label className="path-select">Track
+    <PageHeader eyebrow="Skills" title="Skill map." description="Every skill in a track, shown by the practice evidence recorded so far." actions={<><SkillsSwitch view="skillmap" /><label className="path-select">Track
       <Select value={path.id} onChange={event => setPathId(event.target.value)}>
         {paths.map(item => <option key={item.id} value={item.id}>{item.title}{item.id === goalPathId ? ' (your goal)' : ''}</option>)}
       </Select>
-    </label>} />
+    </label></>} />
     <InfoNote label="What this map shows"><p>Each state describes recorded practice evidence, not mastery. Practiced means a guided rep is completed, even with hints. Independent means a related rep was solved without hints. Retained means a fresh recall rep was solved without hints after a break. Checks show tested behavior, and you review your own writing.</p></InfoNote>
     <section className="skill-legend" aria-labelledby="skill-legend-title">
       <h2 id="skill-legend-title">Legend</h2>

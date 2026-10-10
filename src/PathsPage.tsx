@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Icon } from './Icon'
 import { foundationsPathId, trackGroups } from './curriculum'
 import { Select } from './Input'
@@ -18,6 +19,7 @@ type Props = {
   pathPicker: 'open' | 'closed'
   setPathPicker: (value: 'open' | 'closed') => void
   learnerStart: LearnerStart | null
+  startingPoint?: ReactNode
   completedPathIds: Set<string>
   trail: ReturnType<typeof buildTrail>
   evidence: (repId: string) => string
@@ -28,7 +30,7 @@ type Props = {
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /** All tracks: Foundations first, then the tracks that build on it, and the selected track's trail. */
-export function PathsPage({ goalPathId, setGoalPath, goalError, pathId, setPathId, pathPicker, setPathPicker, learnerStart, completedPathIds, trail, evidence, openRep, openLesson }: Props) {
+export function PathsPage({ goalPathId, setGoalPath, goalError, pathId, setPathId, pathPicker, setPathPicker, learnerStart, startingPoint, completedPathIds, trail, evidence, openRep, openLesson }: Props) {
   const selectedPath = paths.find((path) => path.id === pathId) ?? paths[0]
   const refresher = learnerStart === 'returning' && selectedPath.id === foundationsPathId
   const pathIntroduction = refresher
@@ -52,6 +54,10 @@ export function PathsPage({ goalPathId, setGoalPath, goalError, pathId, setPathI
         {paths.map(path => <option key={path.id} value={path.id}>{path.title}</option>)}
       </Select>
     </label>} />
+    {startingPoint && <details className="starting-point-settings">
+      <summary>Starting as: <strong>{learnerStart === 'new' ? 'New to coding' : learnerStart === 'returning' ? 'Returning to coding' : 'Not chosen yet'}</strong> · {learnerStart ? 'Change' : 'Choose'}</summary>
+      {startingPoint}
+    </details>}
     <details className="path-picker" open={pathPicker === 'open'} onToggle={event => setPathPicker(event.currentTarget.open ? 'open' : 'closed')}>
       <summary>Explore tracks <span>{paths.length} available</span></summary>
       <div className="track-map" role="group" aria-label="Learning tracks">

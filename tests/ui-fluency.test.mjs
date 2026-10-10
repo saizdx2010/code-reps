@@ -109,7 +109,7 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
     await click('Manage profiles');await input(document.querySelector('.profile-dialog select'),'default');await click('Close')
     await click('Progress');await click('Journal');await click('Notebook')
     assert.ok(document.body.textContent.includes('Return is not printing'));assert.equal(document.querySelector('input[maxlength="120"]').value,'An unfinished thought');await click('Cancel')
-    await click('Trail');await click('This week')
+    await click('Progress');await click('Plan a practice week')
     const goal=document.querySelector('.hub-form-row select');await input(goal,'backend')
     assert.equal(JSON.parse(localStorage.getItem('code-reps:profile:default:fluency:v1')).goal.pathId,'backend')
     const budget=document.querySelector('.hub-form-row input[type="number"]')
@@ -121,9 +121,9 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
     assert.ok(goal.classList.contains('ui-select-native'))
     assert.ok(document.querySelector('.hub-form-row [role=combobox]').classList.contains('ui-select'))
 
-    await click('Progress');await click('Self-assessment');await click('Start assessment')
+    await click('Progress');await click('Take the self-assessment');await click('Start assessment')
     assert.ok(JSON.parse(localStorage.getItem('code-reps:profile:default:fluency:v1')).diagnosticStartedAt)
-    await click('Library');await click('Interview');await click('Start round')
+    await click('Library');await click('Projects');await click('Timed interview practice');await click('Start round')
     assert.ok(document.body.textContent.includes('Time remaining'))
     await click('Round controls and debrief');await click('End round and review')
     await input(document.querySelector('.learning-hub textarea'),'I need clearer assumptions next time.')
@@ -164,15 +164,12 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
       await click('Library')
     }
     await click('Trail')
-    assert.equal(document.querySelectorAll('#home-drafts>li').length,3)
-    const expand=[...document.querySelectorAll('button')].find(button=>/^Show all .* drafts$/.test(button.textContent))
-    assert.ok(expand)
-    await act(async()=>expand.click())
-    assert.equal(document.querySelectorAll('#home-drafts>li').length,5)
-    await click('Library');await click('Trail')
-    assert.equal(document.querySelectorAll('#home-drafts>li').length,5)
-    await click('Show fewer drafts')
-    assert.equal(document.querySelectorAll('#home-drafts>li').length,3)
+    // Home stays compact: one saved draft beside the primary card, with a pointer to the rest; no draft is discarded.
+    assert.equal(document.querySelectorAll('#home-drafts').length,0)
+    assert.ok(document.body.textContent.includes('more saved')||document.body.textContent.includes('Saved draft'))
+    assert.ok(document.body.textContent.includes('Find saved drafts in the Library'))
+    assert.ok(!document.body.textContent.includes('Record a session'))
+    assert.ok(!document.body.textContent.includes('Unfinished sessions'))
 
     await click('Manage profiles')
     let finishImport

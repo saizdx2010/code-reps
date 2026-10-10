@@ -57,13 +57,13 @@ Ask neutrally, without pointing to the intended control:
 
 1. “What would you practice next, and why?” Observe whether the learner identifies the recommendation and its reason. In the due-recall scenario, check whether they understand why it can come from another path without changing their goal.
 2. “Choose the path you want to focus on. What changed?” Observe explicit goal choice versus browsing. With no due recall, inspect whether the learner can find the draft within that goal and other available work.
-3. “Start a short practice session. You can request help if you want it.” Observe explicit start, intentional help reveal, and the learner's explanation of its effect on independent evidence.
-4. “Stop before finishing the rep and write what you learned or where you got stuck.” Observe whether they can end with reflection and understand that the rep remains incomplete. Separately ask them to save and leave without reflection.
-5. “Close and return to the app, then continue your work.” Observe Home, explicit resume, preserved code and reflection, and the new session alongside the earlier unfinished record.
-6. “Explain what this path and your practice history show about your progress.” Observe whether session endings, completed attempts, independence, and retention are distinguished without facilitator teaching.
-7. “What would you do next?” Record the learner's intended action, including whether another session feels optional.
+3. “Open a short rep. You can request help if you want it.” Observe intentional rep start, intentional help reveal, and the learner's explanation of its effect on independent evidence.
+4. “Stop before finishing the rep.” Observe whether they understand the rep remains incomplete and the draft is saved.
+5. “Close and return to the app, then continue your work.” Observe Home, explicit resume, and preserved code and writing.
+6. “Explain what this path and your practice history show about your progress.” Observe whether completed attempts, independence, and retention are distinguished without facilitator teaching.
+7. “What would you do next?” Record the learner's intended action, including whether another rep feels optional.
 
-After at least three days, use an eligible authored recall without exposing the prior solution. Record hints and independent explanation separately from passing behavioral checks. An ended session must not be treated as new retention evidence. Apply the broader later-session protocol for transfer; do not infer effectiveness from one successful walkthrough.
+After at least three days, use an eligible authored recall without exposing the prior solution. Record hints and independent explanation separately from passing behavioral checks.  Apply the broader later-session protocol for transfer; do not infer effectiveness from one successful walkthrough.
 
 ### Record per scenario
 

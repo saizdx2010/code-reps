@@ -3,14 +3,19 @@ export type Route = { view: View; repId?: string }
 const views: View[] = ['sessions', 'home', 'catalog', 'workspace', 'history', 'learn', 'paths', 'progress', 'skillmap', 'knowledge', 'notebook', 'plan', 'assessment', 'mistakes', 'projects', 'interview']
 
 export const navigationSections = {
-  trail: [{ view: 'home', label: 'Your trail' }, { view: 'paths', label: 'All tracks' }, { view: 'plan', label: 'This week' }],
-  library: [{ view: 'catalog', label: 'Exercises' }, { view: 'knowledge', label: 'Lessons' }, { view: 'projects', label: 'Projects' }, { view: 'interview', label: 'Interview' }],
-  progress: [{ view: 'progress', label: 'Skills' }, { view: 'skillmap', label: 'Skill map' }, { view: 'history', label: 'Journal' }, { view: 'mistakes', label: 'Mistakes' }, { view: 'assessment', label: 'Self-assessment' }],
+  trail: [{ view: 'home', label: 'Your trail' }, { view: 'paths', label: 'All tracks' }],
+  library: [{ view: 'catalog', label: 'Exercises' }, { view: 'knowledge', label: 'Lessons' }, { view: 'projects', label: 'Projects' }],
+  progress: [{ view: 'progress', label: 'Skills' }, { view: 'history', label: 'Journal' }],
 } satisfies Record<string, { view: View; label: string }[]>
 
-// Pages reached through another section's own switch: the Journal and quick lessons.
-const sectionAliases: Partial<Record<View, View>> = { sessions: 'history', notebook: 'history', learn: 'knowledge' }
+// Pages reached from another page rather than a tab: the Journal switch, quick lessons, the skill map (a view of Skills),
+// the weekly plan and self-assessment (quiet links on Skills), and timed interview practice (an opt-in inside Projects).
+// Their routes still resolve, so old bookmarks keep working.
+const sectionAliases: Partial<Record<View, View>> = { sessions: 'history', notebook: 'history', mistakes: 'history', learn: 'knowledge', skillmap: 'progress', plan: 'progress', assessment: 'progress', interview: 'projects' }
 export const sectionView = (view: View): View => sectionAliases[view] ?? view
+
+/** Moves to a page from a component that does not own navigation state; the hash change updates the route. */
+export function goToView(view: View) { location.hash = routeHash({ view }) }
 
 export function navigationArea(view: View): keyof typeof navigationSections {
   view = sectionView(view)

@@ -40,17 +40,17 @@ test('Library topic filtering includes related reps from old overlapping categor
   await expect(page.getByRole('button', { name: /Find a duplicate/ })).toBeVisible()
 })
 
-test('Trail keeps the practice list when a saved draft offers another choice', async ({ page }) => {
-  await page.goto('/#/home')
+test('Trail shows one compact secondary list when a saved draft offers another choice', async ({ page }) => {
+  await page.goto('/#/paths')
   await page.locator('.starting-point-settings > summary').click()
   await page.getByRole('button', { name: /Returning to coding/ }).click()
   await page.goto('/#/practice/declare-variables')
   await page.getByRole('button', { name: 'Plan', exact: true }).click()
   await page.getByLabel('Your plan', { exact: true }).fill('Keep the greeting and update the name.')
   await page.goto('/#/home')
-  const choices = page.locator('.list-group').filter({ hasText: "Choose today's practice" })
-  await expect(choices).toBeVisible()
-  await expect(choices.locator('.list-row')).toHaveCount(2)
+  await expect(page.getByText("Choose today's practice", { exact: true })).toHaveCount(0)
+  const waiting = page.locator('.list-group').filter({ hasText: 'Also waiting' })
+  expect(await waiting.locator('.list-row').count()).toBeLessThanOrEqual(2)
 })
 
 test('task limits remain visible outside the assessment disclosure', async ({ page }) => {

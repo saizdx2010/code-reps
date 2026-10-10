@@ -22,7 +22,6 @@ test('walkthrough skip, replay, reload and Back preserve the real draft', async 
   await expect(help(page)).toHaveCount(0)
   await page.goBack()
   await expect(page).toHaveURL(/#\/home$/)
-  await page.getByText('How a rep works', { exact: true }).click()
   await page.getByRole('button', { name: 'Replay walkthrough' }).click()
   await expect(help(page)).toContainText('1 of 5')
   await help(page).getByRole('button', { name: 'Walkthrough: plan next' }).click()
@@ -50,9 +49,9 @@ test('walkthrough uses real checks, hints, writing and completion without granti
   await help(page).getByRole('button', { name: 'Walkthrough: explain next' }).click()
   await page.getByLabel('Your explanation', { exact: true }).fill('I combine the greeting and name, then return the message. I reviewed const and let myself.')
   await help(page).getByRole('button', { name: 'Walkthrough: review next' }).click()
-  // Complete stays a normal button; before a difficulty choice it names what is still needed instead of going grey.
+  // Difficulty is optional, so nothing is missing once checks pass.
   await expect(page.getByRole('button', { name: 'Complete rep', exact: true })).toBeEnabled()
-  await expect(page.locator('.finish-note')).toHaveText('Still needed: a difficulty choice.')
+  await expect(page.locator('.finish-note')).toHaveCount(0)
   await chooseSegment(page, 'What was hardest?', 'Writing TypeScript')
   await chooseSegment(page, 'How confident do you feel?', 'Getting there')
   await page.getByRole('button', { name: 'Complete rep', exact: true }).click()
@@ -65,9 +64,7 @@ test('walkthrough uses real checks, hints, writing and completion without granti
   await expect(page.locator('.workspace-save-status')).toHaveText('Saved in browser')
   const work = await page.evaluate(() => Object.entries(localStorage).filter(([key]) => key.includes('declare-variables')))
   await page.goto('/#/home')
-  await expect(page.getByRole('button', { name: 'Replay walkthrough' })).not.toBeVisible()
-  await page.getByText('How a rep works', { exact: true }).click()
-  await expect(page.locator('.info-note[open]')).toContainText('Opening a rep records no session')
+  await expect(page.getByRole('button', { name: 'Replay walkthrough' })).toBeVisible()
   await page.getByRole('button', { name: 'Replay walkthrough' }).click()
   for (const [number, action] of [[1, 'plan'], [2, 'solve'], [3, 'explain'], [4, 'review']] as const) {
     await expect(help(page)).toContainText(`${number} of 5`)
