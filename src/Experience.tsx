@@ -42,8 +42,14 @@ export function ScreenMemory({ screenKey, children }: { screenKey: string; child
       screens.set(memoryKey, state)
       try { sessionStorage.setItem(`code-reps:screen:${memoryKey}`, JSON.stringify(state)) } catch { /* Continue without session persistence. */ }
     }
+    // A lazy page replaces its loading heading after arrival; if that drops focus to the body, hand it to the new heading.
+    const settle = navigated && !saved ? new MutationObserver(() => {
+      if (document.activeElement === document.body) element.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true })
+    }) : undefined
+    settle?.observe(element, { childList: true, subtree: true })
+    const settleTimer = settle ? window.setTimeout(() => settle.disconnect(), 5000) : undefined
     window.addEventListener('pagehide', capture)
-    return () => { capture(); window.removeEventListener('pagehide', capture) }
+    return () => { settle?.disconnect(); window.clearTimeout(settleTimer); capture(); window.removeEventListener('pagehide', capture) }
   }, [memoryKey])
   return <div ref={root} className="screen-content screen-motion">{children}</div>
 }
