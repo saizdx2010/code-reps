@@ -1,11 +1,11 @@
-export type View = 'sessions' | 'home' | 'catalog' | 'workspace' | 'history' | 'learn' | 'paths' | 'progress' | 'knowledge' | 'notebook' | 'plan' | 'assessment' | 'projects' | 'interview'
+export type View = 'sessions' | 'home' | 'catalog' | 'workspace' | 'history' | 'learn' | 'paths' | 'progress' | 'knowledge' | 'notebook' | 'plan' | 'assessment' | 'mistakes' | 'projects' | 'interview'
 export type Route = { view: View; repId?: string }
-const views: View[] = ['sessions', 'home', 'catalog', 'workspace', 'history', 'learn', 'paths', 'progress', 'knowledge', 'notebook', 'plan', 'assessment', 'projects', 'interview']
+const views: View[] = ['sessions', 'home', 'catalog', 'workspace', 'history', 'learn', 'paths', 'progress', 'knowledge', 'notebook', 'plan', 'assessment', 'mistakes', 'projects', 'interview']
 
 export const navigationSections = {
   trail: [{ view: 'home', label: 'Your trail' }, { view: 'paths', label: 'All tracks' }, { view: 'plan', label: 'This week' }],
   library: [{ view: 'catalog', label: 'Exercises' }, { view: 'knowledge', label: 'Lessons' }, { view: 'projects', label: 'Projects' }, { view: 'interview', label: 'Interview' }],
-  progress: [{ view: 'progress', label: 'Skills' }, { view: 'history', label: 'Journal' }, { view: 'assessment', label: 'Self-assessment' }],
+  progress: [{ view: 'progress', label: 'Skills' }, { view: 'history', label: 'Journal' }, { view: 'mistakes', label: 'Mistakes' }, { view: 'assessment', label: 'Self-assessment' }],
 } satisfies Record<string, { view: View; label: string }[]>
 
 // Pages reached through another section's own switch: the Journal and quick lessons.

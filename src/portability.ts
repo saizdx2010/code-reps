@@ -2,6 +2,7 @@ import { parseSessions } from './practice-sessions.ts'
 import type { SessionState } from './practice-sessions.ts'
 import { parseFluency } from './fluency.ts'
 import type { FluencyState } from './fluency.ts'
+import { normalizeMistakes } from './mistakes.ts'
 export type PortableAttempt = {
   plan: string
   code: string
@@ -9,6 +10,8 @@ export type PortableAttempt = {
   hintCount: number
   difficulty?: string
   confidence?: string
+  /** Self-reported mistake tag IDs (see mistakes.ts). Optional; older attempts omit it. */
+  mistakes?: string[]
   completedAt?: string
 }
 
@@ -36,8 +39,17 @@ function attempt(value: unknown): value is PortableAttempt {
     Number.isInteger(value.hintCount) && Number(value.hintCount) >= 0 && Number(value.hintCount) <= 100 &&
     (value.difficulty === undefined || ['none', 'wording', 'approach', 'typescript', 'edge-cases'].includes(String(value.difficulty))) &&
     (value.confidence === undefined || ['need-practice', 'getting-there', 'confident'].includes(String(value.confidence))) &&
+    (value.mistakes === undefined || (Array.isArray(value.mistakes) && value.mistakes.length <= 50 && value.mistakes.every(tag => typeof tag === 'string' && tag.length <= 80))) &&
     (value.completedAt === undefined ||
       (typeof value.completedAt === 'string' && Number.isFinite(Date.parse(value.completedAt))))
+}
+
+/** Drops unknown tag IDs from an attempt without touching anything else about it. */
+function withKnownMistakes<T extends PortableAttempt>(value: T): T {
+  if (value.mistakes === undefined) return value
+  const { mistakes: _dropped, ...rest } = value
+  const tags = normalizeMistakes(value.mistakes)
+  return (tags ? { ...rest, mistakes: tags } : rest) as T
 }
 
 export function parseBackup(text: string, knownRepIds: Set<string>): Backup {
@@ -60,12 +72,12 @@ export function parseBackup(text: string, knownRepIds: Set<string>): Backup {
         !knownRepIds.has(entry.repId) || typeof entry.completedAt !== 'string' || !Number.isFinite(Date.parse(entry.completedAt))) {
       throw new Error('This backup contains an invalid completed attempt.')
     }
-    history.push(item as PortableRecord)
+    history.push(withKnownMistakes(item as PortableRecord))
   }
   const drafts: Record<string, PortableAttempt> = {}
   for (const [id, value] of Object.entries(raw.drafts)) {
     if (!knownRepIds.has(id) || !attempt(value)) throw new Error('This backup contains an invalid draft.')
-    drafts[id] = value
+    drafts[id] = withKnownMistakes(value)
   }
   return { format: 'code-reps-backup', version: 1,
     exportedAt: typeof raw.exportedAt === 'string' ? raw.exportedAt : '',

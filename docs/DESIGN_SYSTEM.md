@@ -22,7 +22,7 @@ Main navigation has three areas. Each area's section tabs list only its own page
 | --- | --- | --- |
 | Trail | Your trail (`#/home`), All tracks (`#/paths`), This week (`#/plan`) | Where you are and what to do next |
 | Library | Exercises (`#/practice`), Lessons (`#/knowledge`), Projects, Interview | Everything, browsable by topic |
-| Progress | Skills (`#/progress`), Journal, Self-assessment | Evidence and records |
+| Progress | Skills (`#/progress`), Journal, Mistakes (`#/mistakes`), Self-assessment | Evidence and records |
 
 Journal is one section with an Attempts / Practice sessions / Notebook switch (`JournalTabs`); each view keeps its own route (`#/history`, `#/sessions`, `#/notebook`). Quick lessons (`#/learn`) belongs to Lessons. `ui-navigation.ts` owns sections and the `sectionView` aliases; do not add a fourth main area or a second navigation row inside a page. Old bookmarks must keep resolving.
 

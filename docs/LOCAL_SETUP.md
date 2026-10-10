@@ -22,7 +22,7 @@ Stop the server, update the project files, then run `yarn install`, `yarn build`
 
 ## Restore
 
-Use **Progress → Import backup** with a Code Reps JSON backup. It adds completed attempts and fills empty drafts without replacing existing drafts. Daily SQLite snapshots are also kept in `~/.code-reps/backups`. The seven latest dated snapshots are retained. A snapshot is created on restart when a database already exists, then once every 24 hours while the server runs. The first snapshot for each UTC date is kept.
+Use **Progress → Import backup** with a Code Reps JSON backup. It adds completed attempts and fills empty drafts without replacing existing drafts. Attempts may carry optional self-reported mistake tags; unknown tag IDs in an imported file are dropped and the rest of the attempt is kept. Daily SQLite snapshots are also kept in `~/.code-reps/backups`. The seven latest dated snapshots are retained. A snapshot is created on restart when a database already exists, then once every 24 hours while the server runs. The first snapshot for each UTC date is kept.
 
 To restore a SQLite snapshot:
 
