@@ -2,9 +2,9 @@ import { Button } from './Button'
 import { StepIndicator } from './StepIndicator'
 import type { View } from './ui-navigation'
 
-const journalPages = [{ view: 'history', label: 'Attempts' }, { view: 'notebook', label: 'Notebook' }] as const
+const journalPages = [{ view: 'history', label: 'Attempts' }, { view: 'notebook', label: 'Notebook' }, { view: 'mistakes', label: 'Mistakes' }] as const
 
-/** One Journal in Progress: completed attempts and notes keep their own routes. */
+/** One Journal in Progress: completed attempts, notes, and tagged mistakes keep their own routes. */
 export function JournalTabs({ view, onNavigate }: { view: View; onNavigate: (view: View) => void }) {
   return <div className="segmented-control journal-tabs" role="group" aria-label="Journal">
     <StepIndicator active={view} selector="button[aria-pressed=true]" />

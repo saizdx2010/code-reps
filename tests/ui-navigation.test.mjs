@@ -23,6 +23,14 @@ test('every tool has one navigation home while legacy lessons and exercises stay
     assert.equal(sectionView(view), 'history')
   }
   assert.equal(sectionView('learn'), 'knowledge')
+  assert.deepEqual(navigationSections.trail.map(page => page.label), ['Your trail', 'All tracks'])
+  assert.deepEqual(navigationSections.library.map(page => page.label), ['Exercises', 'Lessons', 'Projects'])
+  assert.deepEqual(navigationSections.progress.map(page => page.label), ['Skills', 'Journal'])
+  // Old routes resolve and highlight the page that now holds them.
+  const homes = { mistakes: 'history', skillmap: 'progress', plan: 'progress', assessment: 'progress', interview: 'projects' }
+  for (const [view, home] of Object.entries(homes)) assert.equal(sectionView(view), home)
+  assert.equal(navigationArea('interview'), 'library')
+  assert.equal(navigationArea('mistakes'), 'progress')
   const pages = Object.values(navigationSections).flat()
   assert.equal(new Set(pages.map(page => page.view)).size, pages.length)
 })

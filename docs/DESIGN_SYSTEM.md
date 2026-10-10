@@ -20,11 +20,11 @@ Main navigation has three areas. Each area's section tabs list only its own page
 
 | Area | Sections | Purpose |
 | --- | --- | --- |
-| Trail | Your trail (`#/home`), All tracks (`#/paths`), This week (`#/plan`) | Where you are and what to do next |
-| Library | Exercises (`#/practice`), Lessons (`#/knowledge`), Projects, Interview | Everything, browsable by topic |
-| Progress | Skills (`#/progress`), Journal, Mistakes (`#/mistakes`), Self-assessment | Evidence and records |
+| Trail | Your trail (`#/home`), All tracks (`#/paths`) | Where you are and what to do next |
+| Library | Exercises (`#/practice`), Lessons (`#/knowledge`), Projects (timed interview practice is an opt-in link inside Projects) | Everything, browsable by topic |
+| Progress | Skills (`#/progress`, with a Journeys / Skill map switch), Journal | Evidence and records |
 
-Journal is one section with an Attempts / Notebook switch (`JournalTabs`); each view keeps its own route (`#/history`, `#/notebook`; the retired `#/sessions` redirects to `#/history`). Quick lessons (`#/learn`) belongs to Lessons. `ui-navigation.ts` owns sections and the `sectionView` aliases; do not add a fourth main area or a second navigation row inside a page. Old bookmarks must keep resolving.
+Journal is one section with an Attempts / Notebook / Mistakes switch (`JournalTabs`); each view keeps its own route (`#/history`, `#/notebook`, `#/mistakes`; the retired `#/sessions` redirects to `#/history`). The skill map (`#/skillmap`), weekly plan (`#/plan`), self-assessment (`#/assessment`), and timed interview (`#/interview`) are not tabs; their routes still work and `sectionView` highlights the page that links to them. Quick lessons (`#/learn`) belongs to Lessons. `ui-navigation.ts` owns sections and the `sectionView` aliases; do not add a fourth main area or a second navigation row inside a page. Old bookmarks must keep resolving.
 
 Foundations (`typescript`) is the shared root track. Other tracks are grouped in `curriculum.ts` (`trackGroups`) and declare it implicitly; a stage made only of Foundations reps is shown as covered by Foundations rather than repeated. Path IDs, rep lists, badges, and recommendations are unchanged by this presentation.
 
@@ -108,7 +108,7 @@ Practice step tabs are direct buttons without tooltips. Active primary navigatio
 Use `Icon.tsx` for decorative control icons. `icons.css` is the single geometry source for both components and native disclosure markers: a 24px view box, 1.8px rounded outline strokes, and an 18px display size. Icons inherit the control color and are hidden from assistive technology; keep visible labels and accessible names. Do not substitute Unicode glyphs or separate inline SVG drawings. Preserve the original logo as its own brand asset.
 
 - **Arrow:** forward actions and row navigation.
-- **Chevron:** every expand/collapse control. Collapsible groups and cards (topic groups, trail stages, journeys, project overviews, path picker, upcoming badges, the Plan step brief) use a trailing chevron that points down and rotates 180° when open. Inline text disclosures (Quick vocabulary, Change starting point) use the leading native marker. Buttons with `aria-expanded` rotate their chevron the same way; the checks drawer opens upward, so its chevron points up while closed.
+- **Chevron:** every expand/collapse control. Collapsible groups and cards (topic groups, trail stages, journeys, project overviews, path picker, the Plan step brief) use a trailing chevron that points down and rotates 180° when open. Inline text disclosures (Quick vocabulary, Change starting point) use the leading native marker. Buttons with `aria-expanded` rotate their chevron the same way; the checks drawer opens upward, so its chevron points up while closed.
 - **Plus/minus:** only for adding and subtracting values, such as number steppers. Never for disclosure.
 - **Check / close:** success and selection / dismissal and failed checks.
 - **Info, book, repeat, flag:** `InfoNote`, lesson nodes, recall nodes, and project nodes.
