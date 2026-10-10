@@ -32,6 +32,7 @@ Use **Node.js 24 or later** and **Yarn Classic 1.22.22**, as declared in `packag
 | `yarn playwright install chromium` | Install the browser required by the end-to-end suite |
 | `yarn test:e2e` | Run real-browser practice flows in Chromium |
 | `yarn content:check` | Validate authored content and depth coverage |
+| `yarn content:index` | Regenerate `src/catalog-index.ts` after changing reps or lessons (a test fails when it is stale) |
 | `yarn package` | Build a portable web bundle with a Node runtime |
 | `node scripts/verify-portable.mjs` | Smoke-test the generated portable bundle |
 
