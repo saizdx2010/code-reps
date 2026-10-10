@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { migratePathId, paths, retiredPathIds } from '../src/path.ts'
+import { firstPath, migratePathId, paths, retiredPathIds } from '../src/path.ts'
 import { foundationsPathId, pathApplications, trackGroups } from '../src/curriculum.ts'
 import { emptyFluency, parseFluency } from '../src/fluency.ts'
 import { reps } from '../src/rep.ts'
@@ -42,4 +42,18 @@ test('retired path ids map to current paths, and saved goals migrate safely', ()
   unknown.goal.pathId = 'made-up'
   assert.throws(() => parseFluency(JSON.parse(JSON.stringify(unknown))))
   assert.deepEqual(Object.keys(retiredPathIds).sort(), ['ai-era', 'interviews', 'practical-concepts', 'real-world', 'typescript-browser'])
+})
+
+test('structured briefs keep the full contract and early plan prompts stay short', async () => {
+  const words = text => text.split(/\s+/).filter(Boolean).length
+  const flat = rep => [rep.brief?.summary, ...(rep.brief?.rules ?? []), ...(rep.brief?.edgeCases ?? [])].join(' ')
+  for (const rep of reps.filter(item => item.brief)) {
+    const numbers = rep.prompt.match(/\d[\d.:]*/g) ?? []
+    for (const value of numbers) assert.ok(flat(rep).includes(value), `${rep.id} brief lost ${value}`)
+    assert.ok(rep.brief.rules.length >= 3, `${rep.id} needs a short rules list`)
+  }
+  for (const id of firstPath.stages.flatMap(stage => stage.repIds)) {
+    const rep = reps.find(item => item.id === id)
+    assert.ok(words(rep.planPrompt) <= words(rep.prompt) + words(rep.note), `${id} plan prompt is longer than its brief`)
+  }
 })

@@ -68,6 +68,13 @@ export const repDepth: Record<string, RepDepth> = {
     "counterexample": "Hardcoding 15 passes the example but fails price 2.5 and quantity 2.",
     "transfer": "Use the returned total in a second calculation and explain why console.log cannot supply that value."
   },
+  "pass-or-retry": {
+    "reasoning": "One comparison splits every score into two groups. Using >= puts the edge value 50 in the passing group, and the final return covers everything else.",
+    "trace": "For 50, 50 >= 50 is true, so the result is Pass. For 49, 49 >= 50 is false, so the if block is skipped and the final return gives Retry.",
+    "alternative": "An if with else makes both branches visible, while an early return needs no else. A conditional expression is shorter but harder to read while you are learning the boundary.",
+    "counterexample": "Writing score > 50 sends exactly 50 to Retry. The edge check at 50 exposes it, and the example 72 would not.",
+    "transfer": "Change the rule so a score must be above 50 to pass, then name which check changes and what 50 returns."
+  },
   "use-conditions": {
     "reasoning": "Checking the invalid range first keeps out-of-range scores away from the grade bands. Each grade test assumes every higher band has already failed, so the order defines the boundaries.",
     "trace": "For 90, the 90 test passes first and returns A. For 89.9 that test fails, the 80 test fails, the 70 test fails, the 60 test passes, and the result is B only if 89.9 is at least 80. For 101 the range guard returns Invalid before any grade test runs.",

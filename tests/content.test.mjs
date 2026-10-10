@@ -1,6 +1,7 @@
 import { connectedSolutionsById } from './fixtures/connected-feature-solutions.mjs'
 import { browserStateSolutions } from './fixtures/browser-state-solutions.mjs'
 import { dsaSolutions } from './fixtures/dsa-solutions.mjs'
+import { foundationsSolutions } from './fixtures/foundations-solutions.mjs'
 import { asyncSolutions } from './fixtures/async-solutions.mjs'
 import { practicalSolutions } from './fixtures/practical-solutions.mjs'
 import { validateContentDepth } from '../src/content-depth.ts'
@@ -26,6 +27,7 @@ const solutions = {
   ...validationSolutions,
   ...appSolutions,
   ...dsaSolutions,
+  ...foundationsSolutions,
   ...asyncSolutions,
   ...practicalSolutions,
   ...fluencySolutions,

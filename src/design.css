@@ -250,6 +250,9 @@ footer { display: flex; justify-content: space-between; gap: 20px; max-width: 10
 .task-panel > p { font-size: 16px; color: var(--text); margin: 0; }
 .task-panel .task-note { color: var(--muted); font-size: 15px; margin: 16px 0; }
 .rep-context { padding: 14px 16px; border-left: 2px solid var(--accent); background: var(--bg); margin-bottom: 18px !important; }
+.brief-subhead { margin: 14px 0 4px; font-size: var(--type-card); }
+.brief-rules { margin: 0 0 12px; padding-left: 22px; line-height: 1.7; }
+.brief-rules li + li { margin-top: 4px; }
 .acceptance-criteria { padding-left: 22px; color: var(--muted); font-size: 15px; line-height: 1.8; }
 .example { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin: 22px 0; padding: 18px; background: var(--bg); border-radius: var(--radius-control); }
 .example-label { width: 100%; margin: 0; }

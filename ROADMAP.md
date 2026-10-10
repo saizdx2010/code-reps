@@ -45,6 +45,7 @@ Implemented features do not establish learner comprehension, full accessibility,
 - [x] Keep the current step, completion requirements, saved state, and next action clear without adding another toolbar or navigation layer.
 - [x] After completion, offer one clear next step and make stopping for the day understandable too.
 - [x] Walk through desktop, narrow, short, and zoomed layouts with keyboard navigation. Check editor exit, focus, checks, writing fields, and preserved drafts.
+- [ ] Split `dom-accessible-form` into checkpoints of about 60 to 80 words each, following the connected-note pattern. Its brief is now structured as rules and edge cases, but it is still one task with manual review.
 
 **Done when:** A small rep can be completed without disproportionate form filling, and a harder rep makes prerequisites and missing completion requirements clear. Navigation, pane changes, reloads, and failed editor loads preserve work.
 

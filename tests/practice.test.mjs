@@ -145,7 +145,7 @@ test('nextRepInPath follows path order and skips completed reps', () => {
   const none = () => false
   assert.equal(nextRepInPath('typescript', 'basic-types', none), 'create-objects')
   assert.equal(nextRepInPath('typescript', 'basic-types', id => id === 'create-objects'), 'make-arrays')
-  assert.equal(nextRepInPath('typescript', 'write-functions', none), 'use-conditions')
+  assert.equal(nextRepInPath('typescript', 'write-functions', none), 'pass-or-retry')
   assert.equal(nextRepInPath('typescript', 'event-loop-order', none), undefined)
   assert.equal(nextRepInPath('typescript', 'not-in-this-path', none), undefined)
 })

@@ -31,7 +31,7 @@ export const skills: Skill[] = [
     walkthrough: ['For 85, the 90 check fails and the 80 check passes, so the label is B.', 'The return stops the function before the lower checks run.', 'In the while loop, n starts at 3 and goes down by one on each pass.', 'When n is 0 the condition is false, so count stays at 3.'],
     mistakes: ['Checking a lower boundary first, so a high score matches the wrong band.', 'Writing a loop whose condition never changes, so it never ends.', 'Assigning to a received object and then returning it, which changes the caller\'s data.'],
     questions: [q('branch', 'Which label does 80 receive?', 'if (score >= 90) return "A"\nif (score >= 80) return "B"\nreturn "C"', ['A', 'B', 'C'], 1, '80 is not at least 90, so the second branch returns B. The lower bound of each band is included.'), { ...q('loop-test', 'Complete the loop condition so it repeats while value is above 1.', 'while (___) { value = Math.floor(value / 2) }', ['value >= 1', 'value > 1', 'value < 1'], 1, 'Using >= 1 would run one extra halving when value is 1, turning it into 0 and counting an extra step.'), completion: true }],
-    repIds: ['use-conditions', 'loop-with-for', 'loop-while', 'string-basics', 'object-update'], related: ['values', 'arrays'],
+    repIds: ['pass-or-retry', 'use-conditions', 'loop-with-for', 'loop-while', 'string-basics', 'object-update'], related: ['values', 'arrays'],
   },
   {
     id: 'arrays', title: 'Arrays and one-pass reasoning', summary: 'Follow an ordered collection, keep a useful invariant, and handle boundaries.', prerequisites: ['values'],

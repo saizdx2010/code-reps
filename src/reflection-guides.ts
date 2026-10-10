@@ -70,6 +70,11 @@ export const reflectionGuides: Record<string, { plan: string[]; explanation: str
     explanation: ["Explain the difference between returning and printing.", "Describe zero quantity."],
     example: "I return price multiplied by quantity. Zero quantity gives zero. This uses a fixed number of arithmetic operations and O(1) extra space.",
   },
+  'pass-or-retry': {
+    plan: ["Decide which comparison includes 50.", "Decide what the code returns when the comparison is false."],
+    explanation: ["Explain why 50 passes but 49 does not.", "Describe what the final return handles."],
+    example: "I return Pass when the score is at least 50, so 50 itself passes. Every other score reaches the final return, which gives Retry. The checks verify both branches and the edge; I review my comparison myself.",
+  },
   'use-conditions': {
     plan: ["Handle scores outside 0 through 100 first.", "Check the highest grade band first, then each lower band."],
     explanation: ["Explain why 90 is A while 89.9 is B.", "Describe which branch handles scores below 60."],

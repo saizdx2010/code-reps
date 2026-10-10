@@ -32,6 +32,12 @@ export const foundations = [
     tip: 'The type after the closing parenthesis describes the return value.',
   },
   {
+    repId: 'pass-or-retry', title: 'Choose between two results',
+    explanation: 'An if statement runs its block only when a condition is true. When the condition is false, the code after it runs instead. A comparison such as score >= 50 is true at 50 itself, so the edge value belongs to the branch you wrote.',
+    example: 'function label(age: number): string {\n  if (age >= 18) return "Adult"\n  return "Minor"\n}',
+    tip: 'Use >= when the edge value is included and > when it is not.',
+  },
+  {
     repId: 'use-conditions', title: 'Make a decision with if',
     explanation: 'An if statement runs its block only when a condition is true. else if and else handle the other cases. The first true condition wins, so put the highest boundary first when you compare ranges.',
     example: 'function label(score: number): string {\n  if (score >= 90) return "A"\n  if (score >= 80) return "B"\n  return "C or lower"\n}',
@@ -146,6 +152,28 @@ export const foundationReps: Rep[] = [
     ],
   },
   {
+    id: 'pass-or-retry', title: 'Pass or retry a quiz score', category: 'TypeScript basics',
+    prompt: 'Return "Pass" when a quiz score is 50 or more, and "Retry" when it is below 50. A score of exactly 50 passes. Scores are whole numbers from 0 to 100.',
+    example: { input: 'passLabel(72)', output: "'Pass'" },
+    note: 'Checks cover both branches and the edge at 50. Review your comparison yourself.',
+    vocabulary: [{ term: 'Condition', meaning: 'a true or false test that decides which code runs' }, { term: 'Boundary', meaning: 'a value where the result changes' }],
+    planPrompt: 'Which comparison is true for 50? What does the code return when it is false?',
+    starter: 'function passLabel(score: number): string {\n  // Return "Pass" at 50 or more, otherwise "Retry".\n  return ""\n}\n',
+    functionName: 'passLabel',
+    hints: [
+      'Write one if statement that tests the score against 50.',
+      'Use >= so that exactly 50 is included in the passing branch.',
+      'Return "Pass" inside the if. After it, return "Retry".',
+    ],
+    checks: [
+      { name: 'Passes the example', input: [72], expected: 'Pass' },
+      { name: 'Passes at exactly 50', input: [50], expected: 'Pass' },
+      { name: 'Retries at 49', input: [49], expected: 'Retry' },
+      { name: 'Retries at 0', input: [0], expected: 'Retry' },
+      { name: 'Passes at 100', input: [100], expected: 'Pass' },
+    ],
+  },
+  {
     id: 'use-conditions', title: 'Choose a grade from a score', category: 'TypeScript basics',
     prompt: 'Return a grade label for a score. A score from 90 to 100 is "A". A score from 80 up to 90 is "B", with 80 included and 90 excluded. A score from 70 up to 80 is "C", and a score from 60 up to 70 is "D". A score below 60 is "F". Return "Invalid" for any score below 0 or above 100. Decimal scores use the same boundaries.',
     example: { input: 'gradeLabel(85)', output: "'B'" },
@@ -179,7 +207,7 @@ export const foundationReps: Rep[] = [
     example: { input: 'sumUpTo(4)', output: '10' },
     note: 'The example is 1 + 2 + 3 + 4. Checks cover zero, one, and the largest allowed input. Review where your loop starts and stops yourself.',
     vocabulary: [{ term: 'Loop', meaning: 'code that repeats while a condition holds' }, { term: 'Running total', meaning: 'a variable that collects values as a loop visits them' }],
-    planPrompt: 'What should the total be before the loop starts? Which number does the loop begin with, and which number is the last one added?',
+    planPrompt: 'What is the total before the loop? Which number starts the loop and which is added last?',
     starter: 'function sumUpTo(n: number): number {\n  // Add 1 through n with a for loop.\n  return 0\n}\n',
     functionName: 'sumUpTo',
     hints: [
@@ -225,7 +253,7 @@ export const foundationReps: Rep[] = [
     example: { input: "initials('ada lovelace')", output: "'AL'" },
     note: 'Checks cover extra spaces, a middle name, and empty input. Review how you split the words yourself.',
     vocabulary: [{ term: 'Trim', meaning: 'remove spaces from the start and end of text' }, { term: 'Slice', meaning: 'copy part of a string by its positions' }, { term: 'Split', meaning: 'turn text into an array of parts using a separator' }, { term: 'Join', meaning: 'combine array items into text with a chosen separator' }],
-    planPrompt: 'Which spaces should you remove first? How will you split words when spaces appear more than once in a row?',
+    planPrompt: 'Which spaces go first? How will you split words separated by several spaces?',
     starter: 'function initials(fullName: string): string {\n  // Trim, split into words, then take each first letter.\n  return ""\n}\n',
     functionName: 'initials',
     hints: [
@@ -268,10 +296,19 @@ export const foundationReps: Rep[] = [
   {
     id: 'shipping-cost-tiers', title: 'Price a shipment by weight tiers', category: 'TypeScript basics',
     prompt: 'Return the shipping cost in cents for an order. The order is a list of lines, and each line has weightGrams and quantity, both whole numbers. The total weight is the sum of weightGrams times quantity over every line. Charge 300 cents when the total is 500 grams or less, 600 cents when it is above 500 up to and including 2000 grams, and 1200 cents when it is above 2000 grams. An empty order costs 0 cents. Add one handling charge of 200 cents when any line has a quantity above 10, however many lines are bulky.',
+    brief: {
+      summary: 'Return the shipping cost in cents for an order. The order is a list of lines, and each line has weightGrams and quantity, both whole numbers.',
+      rules: [
+        'The total weight is the sum of weightGrams times quantity over every line.',
+        'Charge 300 cents when the total is 500 grams or less, 600 cents when it is above 500 up to and including 2000 grams, and 1200 cents when it is above 2000 grams.',
+        'Add one handling charge of 200 cents when any line has a quantity above 10.',
+      ],
+      edgeCases: ['An empty order costs 0 cents.', 'The handling charge is added once, however many lines are bulky.'],
+    },
     example: { input: 'shippingCost([{weightGrams: 300, quantity: 2}, {weightGrams: 150, quantity: 1}])', output: '600' },
     note: 'The total weight is 750 grams in the example, which falls in the middle tier. Checks cover the tier edges, the fee threshold, a fee added once, and a heavy order with a fee. Do not change the lines. Review your loop and tier order yourself.',
     vocabulary: [{ term: 'Accumulator', meaning: 'a variable that collects a value as a loop visits each item' }, { term: 'Boundary', meaning: 'a value where the result changes' }],
-    planPrompt: 'Which lines add to the total weight, and which tier does that total fall into? Before you run the checks, predict whether the handling charge applies to the example and why.',
+    planPrompt: 'How will you total the weight and pick a tier? When does the handling charge apply?',
     starter: 'type Line = { weightGrams: number; quantity: number }\n\nfunction shippingCost(lines: Line[]): number {\n  // Loop over the lines, then choose the tier and add any handling charge.\n  return 0\n}\n',
     functionName: 'shippingCost',
     preserveInput: true,
@@ -295,10 +332,19 @@ export const foundationReps: Rep[] = [
   {
     id: 'countdown-labels', title: 'Format a countdown timer', category: 'TypeScript basics',
     prompt: 'Return the labels a countdown timer shows. Start at startSeconds and subtract stepSeconds each time, stopping before the value would drop below 0. Format each value as minutes, a colon, and two-digit seconds, such as 2:05 or 0:30. Minutes are not padded. Keep counting whole minutes past 59; there are no hours (3600 seconds is 60:00). Return the labels in the order shown, starting with the largest value. Inputs are whole numbers: startSeconds from 0 to 3600 and stepSeconds from 1 to 600. When startSeconds is 0, return ["0:00"].',
+    brief: {
+      summary: 'Return the labels a countdown timer shows, counting down from startSeconds in steps of stepSeconds.',
+      rules: [
+        'Start at startSeconds and subtract stepSeconds each time, stopping before the value would drop below 0.',
+        'Format each value as minutes, a colon, and two-digit seconds, such as 2:05 or 0:30. Minutes are not padded.',
+        'Return the labels in the order shown, starting with the largest value.',
+      ],
+      edgeCases: ['Keep counting whole minutes past 59; there are no hours (3600 seconds is 60:00).', 'Inputs are whole numbers: startSeconds from 0 to 3600 and stepSeconds from 1 to 600.', 'When startSeconds is 0, return ["0:00"].'],
+    },
     example: { input: 'countdownLabels(130, 60)', output: "['2:10', '1:10', '0:10']" },
     note: 'The example stops at 0:10 because the next value would be negative. Checks cover steps that land exactly on zero, steps that do not, and the largest input. Review your stopping condition yourself.',
     vocabulary: [{ term: 'Countdown', meaning: 'a sequence of values that gets smaller until it reaches a limit' }, { term: 'Padding', meaning: 'adding leading characters so text has a fixed width' }],
-    planPrompt: 'What is the first value, and what is the last value the countdown may show? Predict the labels for 130 seconds with a 60-second step before you run the checks.',
+    planPrompt: 'What is the first value, and when do you stop? Predict the labels for 130 with a 60-second step.',
     starter: 'function countdownLabels(startSeconds: number, stepSeconds: number): string[] {\n  // Count down by stepSeconds and format each value as m:ss.\n  return []\n}\n',
     functionName: 'countdownLabels',
     hints: [

@@ -40,6 +40,18 @@ export const domReps: Rep[] = [
     id: 'dom-accessible-form', title: 'Build an accessible form with linked errors', category: 'Frontend accessibility', format: 'frontend',
     context: 'A sign-up form shows an error under each empty field. Sighted users see the red text; people using a screen reader only hear it if the error is programmatically linked to the field and focus moves to the problem.',
     prompt: 'Implement `mountAccessibleForm(root, props)`. Build one form from props.fields; each field has id, label, type, and message. Give every input a visible label element whose for attribute matches the input id, and a Submit button. Set `form.noValidate` = true when creating the form so browser validation cannot block submission. In the submit handler, call preventDefault to stop navigation. On submit, treat a trimmed-empty value as invalid. For each invalid field show its message in a paragraph with id "<id>-error", set `aria-invalid`="true" on the input, and point the input\'s `aria-describedby` at that paragraph. Move focus to the first invalid input in field order. Valid fields get no error paragraph, no `aria-invalid`, and no `aria-describedby`. When every field is valid, show "Form accepted." in a status paragraph. Never discard what the person typed. Use data-testid values: form, field-<id> on each input, error-<id> on each error paragraph, submit on the button, and status on the success paragraph.',
+    brief: {
+      summary: 'Implement `mountAccessibleForm(root, props)`. Build one form from props.fields; each field has id, label, type, and message.',
+      rules: [
+        'Create the form with `form.noValidate` = true so browser validation cannot block submission, and call preventDefault in the submit handler to stop navigation.',
+        'Give every input a visible label element whose for attribute matches the input id, and add a Submit button.',
+        'On submit, treat a trimmed-empty value as invalid.',
+        'For each invalid field show its message in a paragraph with id "<id>-error", set `aria-invalid`="true" on the input, and point the input\'s `aria-describedby` at that paragraph.',
+        'Move focus to the first invalid input in field order.',
+        'When every field is valid, show "Form accepted." in a status paragraph.',
+      ],
+      edgeCases: ['Valid fields get no error paragraph, no `aria-invalid`, and no `aria-describedby`.', 'Never discard what the person typed.', 'Use data-testid values: form, field-<id> on each input, error-<id> on each error paragraph, submit on the button, and status on the success paragraph.'],
+    },
     example: { input: "submit with name '  ' and email 'ada@example.com'", output: 'Error under Full name, aria-invalid on it, focus on Full name; no error on Email address' },
     note: 'Use data-testid values: form, field-<id> on each input, error-<id> on each error paragraph, submit on the button, and status on the success paragraph. Render messages as text, not HTML. The checks dispatch a submit event on the form; they do not press the real Submit button or Enter inside a field, so try those yourself. ' + limits,
     acceptanceCriteria: ['Pressing Tab reaches every field and the button in reading order with a visible focus indicator.', 'Clicking a label focuses its input.', 'Resubmitting after fixing a field removes that field\'s error and its ARIA attributes.', 'Test with a real screen reader before claiming it announces the error well.'],

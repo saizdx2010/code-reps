@@ -11,7 +11,7 @@ export const firstPath = {
   },
   stages: [
     { title: 'Learn the language', description: 'Declare values, use types, create objects and arrays, and write functions.', repIds: ['declare-variables', 'basic-types', 'create-objects', 'make-arrays', 'write-functions'] },
-    { title: 'Make decisions and repeat', description: 'Choose between cases, repeat work with loops, shape text, and update objects without changing the original.', repIds: ['use-conditions', 'loop-with-for', 'loop-while', 'string-basics', 'object-update'] },
+    { title: 'Make decisions and repeat', description: 'Choose between cases, repeat work with loops, shape text, and update objects without changing the original.', repIds: ['pass-or-retry', 'use-conditions', 'loop-with-for', 'loop-while', 'string-basics', 'object-update'] },
     { title: 'Work through arrays', description: 'Scan arrays to total, count, and find values, from guided practice to later recall.', repIds: ['sum-positive-numbers', 'count-even-numbers', 'count-above-threshold', 'first-long-word'] },
     { title: 'Count and remember', description: 'Use maps and sets when you need to look something up again.', repIds: ['has-duplicate', 'most-frequent-number', 'first-unique-character'] },
     { title: 'Handle text and gaps', description: 'Think through extra spaces and missing values.', repIds: ['count-words', 'missing-number'] },

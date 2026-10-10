@@ -21,6 +21,7 @@ export const repLevels: Record<string, RepLevel> = {
   'create-objects': 1,
   'make-arrays': 1,
   'write-functions': 1,
+  'pass-or-retry': 1,
   'use-conditions': 1,
   'loop-with-for': 1,
   'loop-while': 1,
