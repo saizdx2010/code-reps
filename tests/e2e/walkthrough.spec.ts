@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { chooseOption, expectChecksFinished, replaceCode, saved } from './helpers'
+import { chooseOption, chooseSegment, expectChecksFinished, replaceCode, saved } from './helpers'
 
 const greeting = 'function makeGreeting(name: string): string { const greeting = "Hello, "; let message = greeting + name; return message }'
 const help = (page: import('@playwright/test').Page) => page.getByRole('complementary', { name: 'First rep walkthrough' })
@@ -51,8 +51,8 @@ test('walkthrough uses real checks, hints, writing and completion without granti
   await page.getByLabel('Your explanation', { exact: true }).fill('I combine the greeting and name, then return the message. I reviewed const and let myself.')
   await help(page).getByRole('button', { name: 'Walkthrough: review next' }).click()
   await expect(page.getByRole('button', { name: 'Complete rep', exact: true })).toBeDisabled()
-  await chooseOption(page.getByLabel('What was hardest?', { exact: true }), 'typescript')
-  await chooseOption(page.getByLabel('How confident do you feel?', { exact: true }), 'getting-there')
+  await chooseSegment(page, 'What was hardest?', 'Writing TypeScript')
+  await chooseSegment(page, 'How confident do you feel?', 'Getting there')
   await page.getByRole('button', { name: 'Complete rep', exact: true }).click()
   await expect(help(page)).toContainText('Your attempt is saved')
   const finish = help(page).getByRole('button', { name: 'Finish walkthrough' })

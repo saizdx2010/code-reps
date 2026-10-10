@@ -52,3 +52,10 @@ export async function chooseOption(control: Locator, value: string | { label: st
   await option.click()
   await expect(control).toHaveAttribute('aria-expanded', 'false')
 }
+
+/** Tap one option of a segmented control and confirm it is the pressed one. */
+export async function chooseSegment(page: Page, group: string, label: string) {
+  const button = page.getByRole('group', { name: group, exact: true }).getByRole('button', { name: label, exact: true })
+  await button.click()
+  await expect(button).toHaveAttribute('aria-pressed', 'true')
+}

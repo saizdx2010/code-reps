@@ -1,9 +1,10 @@
+import { createPortal } from 'react-dom'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { profileBadges, unacknowledgedBadges } from './badges'
 import type { PortableRecord } from './portability'
 import { useSessionPreference } from './useSessionPreference'
 
-type Props = { history: PortableRecord[]; now: number; onView: () => void }
+type Props = { history: PortableRecord[]; now: number; onView: () => void; portalTarget?: HTMLElement | null }
 
 const noticeMs = 8000
 
@@ -19,7 +20,7 @@ function acknowledgedIds(value: string): string[] | null {
  * profile, so a reload does not repeat them and backups never contain them. The notice never takes focus.
  * Without a session record, the badges earned when this view opens are the baseline, so reopening never celebrates them.
  */
-export function BadgeNotice({ history, now, onView }: Props) {
+export function BadgeNotice({ history, now, onView, portalTarget }: Props) {
   const badges = useMemo(() => profileBadges(history, new Date(now)), [history, now])
   const [acknowledged, setAcknowledged] = useSessionPreference<string>('badges-acknowledged', '')
   // Captured once per mount: badges earned after this view opens are new, even though they are earned by the next render.
@@ -44,8 +45,9 @@ export function BadgeNotice({ history, now, onView }: Props) {
   }, [freshKey, setAcknowledged])
 
   if (fresh.length === 0) return null
-  return <div ref={noticeRef} className="badge-notice" role="status">
+  const notice = <div ref={noticeRef} className={`badge-notice${portalTarget ? ' in-panel' : ''}`} role="status">
     <p><strong>{fresh.length === 1 ? 'Badge earned' : 'Badges earned'}:</strong> {fresh.map(badge => badge.name).join(', ')}</p>
     <button type="button" className="text-button" onClick={() => { setAcknowledged(JSON.stringify([...known, ...fresh.map(badge => badge.id)])); onView() }}>View badges</button>
   </div>
+  return portalTarget ? createPortal(notice, portalTarget) : notice
 }

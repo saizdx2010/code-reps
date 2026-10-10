@@ -3,7 +3,7 @@ import type { Page } from '@playwright/test'
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { chooseOption, editor, expectChecksFinished, replaceCode, route, solution } from './helpers'
+import { chooseOption, chooseSegment, editor, expectChecksFinished, replaceCode, route, solution } from './helpers'
 
 // The first rep of the Foundations path earns the first-rep badge and the first stage's progress.
 const firstRep = 'most-frequent-number'
@@ -20,8 +20,8 @@ async function completeFirstRep(page: Page) {
   await page.getByRole('button', { name: 'Explain', exact: true }).click()
   await page.getByLabel('Your explanation', { exact: true }).fill('I counted each number in a map, then compared counts and kept the smallest value on ties.')
   await page.getByRole('button', { name: 'Review', exact: true }).click()
-  await chooseOption(page.getByLabel('What was hardest?', { exact: true }), 'none')
-  await chooseOption(page.getByLabel('How confident do you feel?', { exact: true }), 'confident')
+  await chooseSegment(page, 'What was hardest?', 'Nothing in particular')
+  await chooseSegment(page, 'How confident do you feel?', 'Confident')
   await page.getByRole('button', { name: 'Complete rep', exact: false }).click()
   await expect(page.getByText('Attempt recorded in History.', { exact: true })).toBeVisible()
 }
@@ -60,6 +60,8 @@ test('a milestone shows one quiet notice that does not take focus or repeat afte
   const notice = page.locator('.badge-notice')
   await expect(notice).toBeVisible()
   await expect(notice).toHaveText(noticeText)
+  await expect(page.locator('.completion-panel .badge-notice')).toBeVisible()
+  expect(await notice.evaluate(element => getComputedStyle(element).position)).not.toBe('fixed')
   expect(await notice.evaluate(element => element.contains(document.activeElement))).toBe(false)
   await page.reload()
   await expect(editor(page)).toBeVisible()

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
-import { expectChecksFinished, chooseOption, editor, replaceCode } from './helpers'
+import { expectChecksFinished, chooseOption, chooseSegment, editor, replaceCode } from './helpers'
 import { validationSolutions } from '../fixtures/validation-solutions.mjs'
 
 async function finish(page: Page, id: string, code: string) {
@@ -12,8 +12,9 @@ async function finish(page: Page, id: string, code: string) {
   await page.getByRole('button', { name: 'Explain', exact: true }).click()
   await page.getByLabel('Your explanation', { exact: true }).fill('I traced the boundary and conflicting invalid cases. I return a new object and keep the documented error order.')
   await page.getByRole('button', { name: 'Review', exact: true }).click()
-  await chooseOption(page.getByLabel('What was hardest?', { exact: true }), 'none')
-  await chooseOption(page.getByLabel('How confident do you feel?', { exact: true }), 'confident')
+  await chooseSegment(page, 'What was hardest?', 'Nothing in particular')
+  // Confidence is optional: completing without it must work.
+  await expect(page.getByText('Still needed', { exact: false })).toHaveCount(0)
   await page.getByRole('button', { name: 'Complete rep', exact: false }).click()
   await expect(page.getByText('Attempt recorded in History.', { exact: true })).toBeVisible()
   await expect(page.locator('.workspace-save-status')).toHaveText('Saved in browser')

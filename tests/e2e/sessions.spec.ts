@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { expectChecksFinished, chooseOption, replaceCode } from './helpers'
+import { expectChecksFinished, chooseSegment, replaceCode } from './helpers'
 
 const repId = 'sum-positive-numbers'
 const sessionKey = 'code-reps:profile:default:sessions:v1'
@@ -166,8 +166,8 @@ test('completed attempts stay separate from sessions and open immutable work', a
   await page.getByRole('button', { name: 'Explain', exact: true }).click()
   await page.getByLabel('Your explanation', { exact: true }).fill('I filter positive numbers and add them; empty input returns zero.')
   await page.getByRole('button', { name: 'Review', exact: true }).click()
-  await chooseOption(page.getByLabel('What was hardest?', { exact: true }), 'none')
-  await chooseOption(page.getByLabel('How confident do you feel?', { exact: true }), 'confident')
+  await chooseSegment(page, 'What was hardest?', 'Nothing in particular')
+  await chooseSegment(page, 'How confident do you feel?', 'Confident')
   await page.getByRole('button', { name: 'Complete rep', exact: true }).click()
   await expect(page.getByText('Attempt recorded in History.', { exact: true })).toBeVisible()
   await expect(page.locator('.workspace-save-status')).toHaveText('Saved in browser')

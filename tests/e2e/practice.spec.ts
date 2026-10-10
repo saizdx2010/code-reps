@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { expectChecksFinished, chooseOption, editor, replaceCode, route, saved, solution } from './helpers'
+import { expectChecksFinished, chooseOption, chooseSegment, editor, replaceCode, route, saved, solution } from './helpers'
 
 test('real Monaco editing, keyboard checks, and obsolete feedback', async ({ page }) => {
   await page.goto(route)
@@ -136,10 +136,13 @@ test('practice steps preserve work, explain missing requirements, and record com
   await expect(page.locator('#explain-section')).toBeFocused()
   await page.getByLabel('Your explanation', { exact: true }).fill('I count each value, compare counts, and use the smaller value to break ties. Empty input returns null.')
   await steps.getByRole('button', { name: 'Review', exact: true }).click()
-  await chooseOption(page.getByLabel('What was hardest?', { exact: true }), 'edge-cases')
-  await chooseOption(page.getByLabel('How confident do you feel?', { exact: true }), 'getting-there')
+  await chooseSegment(page, 'What was hardest?', 'Handling edge cases')
+  await chooseSegment(page, 'How confident do you feel?', 'Getting there')
   await page.getByRole('button', { name: 'Complete rep', exact: false }).click()
   await expect(page.getByText('Attempt recorded in History.', { exact: true })).toBeVisible()
+  await expect(page.getByRole('status').filter({ hasText: 'Rep completed' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Complete rep' })).toHaveCount(0)
+  await expect(page.locator('#checks-section').getByRole('button', { name: 'Explain your solution' })).toHaveCount(0)
   await expect(page.locator('.workspace-save-status')).toHaveText('Saved in browser')
   await expect(page.getByRole('button', { name: /^Next rep: / })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Done for today', exact: true })).toBeVisible()
