@@ -2,6 +2,7 @@
 .trail { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
 .trail-stage { position: relative; }
 .trail .path-stage { border-bottom: 1px solid var(--border); }
+.trail .status-chip { justify-self: start; }
 .trail .path-stage-heading { display: flex; align-items: center; gap: 16px; padding: 16px 4px; list-style: none; cursor: pointer; }
 .trail .path-stage-heading::-webkit-details-marker { display: none; }
 .trail .path-stage-heading > div { flex: 1; min-width: 0; }
@@ -53,6 +54,7 @@
 .trail-aside .continue-panel { flex-direction: column; align-items: stretch; gap: 18px; padding: 22px; }
 .trail-aside .continue-panel p { margin: 8px 0 12px; font-size: 15px; }
 .trail-aside .continue-panel .primary-button { align-self: flex-start; }
+.trail-aside .continue-panel .continue-guide { align-self: flex-start; min-height: 32px; padding: 4px 0; color: var(--feature-text); }
 .trail-aside > .text-button { margin-top: -8px; }
 .trail-queue { margin: 0; }
 .trail-queue h2 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 4px; font-size: 15px; }

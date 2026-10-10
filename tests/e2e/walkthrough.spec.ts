@@ -7,7 +7,7 @@ const help = (page: import('@playwright/test').Page) => page.getByRole('compleme
 test('walkthrough skip, replay, reload and Back preserve the real draft', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/#/home')
-  await page.getByRole('button', { name: 'Try first rep walkthrough', exact: true }).click()
+  await page.getByRole('button', { name: 'Show me how a rep works', exact: true }).click()
   await expect(page).toHaveURL(/#\/practice\/declare-variables$/)
   await help(page).getByRole('button', { name: 'Walkthrough: plan next' }).click()
   await page.getByLabel('Your plan', { exact: true }).fill('My saved walkthrough plan')
@@ -35,7 +35,7 @@ test('walkthrough skip, replay, reload and Back preserve the real draft', async 
 
 test('walkthrough uses real checks, hints, writing and completion without granting mastery', async ({ page }) => {
   await page.goto('/#/home')
-  await page.getByRole('button', { name: 'Try first rep walkthrough' }).click()
+  await page.getByRole('button', { name: 'Show me how a rep works' }).click()
   await help(page).getByRole('button', { name: 'Walkthrough: plan next' }).click()
   await page.getByLabel('Your plan', { exact: true }).fill('Combine the fixed greeting with the supplied name.')
   await help(page).getByRole('button', { name: 'Walkthrough: solve next' }).click()
@@ -80,7 +80,7 @@ test('walkthrough uses real checks, hints, writing and completion without granti
 
 test('walkthrough preference is session-only and separate for each profile', async ({ page }) => {
   await page.goto('/#/home')
-  await page.getByRole('button', { name: 'Try first rep walkthrough' }).click()
+  await page.getByRole('button', { name: 'Show me how a rep works' }).click()
   const skip = help(page).getByRole('button', { name: 'Skip walkthrough' })
   await skip.focus()
   await skip.press('Enter')
@@ -96,8 +96,8 @@ test('walkthrough preference is session-only and separate for each profile', asy
   await expect(dialog.getByRole('status')).toHaveText('Profile created.')
   await dialog.getByRole('button', { name: 'Close', exact: true }).click()
   await page.goto('/#/home')
-  await expect(page.getByRole('button', { name: 'Try first rep walkthrough' })).toBeVisible()
-  await page.getByRole('button', { name: 'Try first rep walkthrough' }).click()
+  await expect(page.getByRole('button', { name: 'Show me how a rep works' })).toBeVisible()
+  await page.getByRole('button', { name: 'Show me how a rep works' }).click()
   await expect(help(page)).toContainText('1 of 5')
   await page.getByRole('button', { name: 'Manage profiles' }).click()
   await chooseOption(dialog.getByRole('combobox', { name: 'Switch profile', exact: true }), { label: 'My learning' })
@@ -111,7 +111,7 @@ test('walkthrough preference is session-only and separate for each profile', asy
 test('an unavailable walkthrough leaves practice usable', async ({ page }) => {
   await page.route('**/src/FirstRepWalkthrough.tsx*', route => route.abort())
   await page.goto('/#/home')
-  await page.getByRole('button', { name: 'Try first rep walkthrough' }).click()
+  await page.getByRole('button', { name: 'Show me how a rep works' }).click()
   await expect(help(page)).toContainText('Reload to try again')
   await help(page).getByRole('button', { name: 'Skip walkthrough' }).click()
   await page.getByRole('button', { name: 'Plan', exact: true }).click()
@@ -123,7 +123,7 @@ for (const viewport of [{ width: 1280, height: 600 }, { width: 390, height: 600 
   test(`walkthrough leaves a usable desk at ${viewport.width}×${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport)
     await page.goto('/#/home')
-    await page.getByRole('button', { name: 'Try first rep walkthrough' }).click()
+    await page.getByRole('button', { name: 'Show me how a rep works' }).click()
     await help(page).getByRole('button', { name: 'Walkthrough: plan next' }).click()
     await page.getByLabel('Your plan', { exact: true }).fill('Keep my short-screen draft')
     await help(page).getByRole('button', { name: 'Walkthrough: solve next' }).click()

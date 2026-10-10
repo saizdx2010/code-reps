@@ -4,6 +4,7 @@ for (const width of [1280, 390]) {
   test(`daily entry names the goal and skill and opens the next rep by keyboard at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/#/home')
+    await page.locator('.starting-point-settings > summary').click()
     await page.getByRole('button', { name: /New to coding/ }).click()
     await expect(page.getByText('Your trail · Active learning goal')).toBeVisible()
     await expect(page.getByText('Browsing another track does not change your learning goal.')).toBeVisible()

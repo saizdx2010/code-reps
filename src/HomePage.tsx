@@ -14,6 +14,7 @@ import type { getPracticePlan, PracticeAction } from './practice'
 
 type Props = {
   walkthroughSeen: boolean
+  hasCompletedRep: boolean
   launchWalkthrough: () => void
   sessionBusy: boolean
   startPractice: (action: PracticeAction) => void
@@ -43,7 +44,7 @@ type Props = {
 const title = (id: string) => reps.find(item => item.id === id)?.title
 
 /** Home is the learner's trail: the goal path drawn as connected stages, with the next useful action beside it. */
-export function HomePage({ walkthroughSeen, launchWalkthrough, sessionBusy, startPractice, unfinishedSessions, resumeSession, onPracticeHistory, goalPathId, onPath, learnerStart, startingPoint, practicePlan, draftQueue, setDraftQueue, reviewQueue, setReviewQueue, repStatus, openPracticeAction, actionLabel, onProgress, onPlan, trail, evidence, openRep, openLesson }: Props) {
+export function HomePage({ walkthroughSeen, hasCompletedRep, launchWalkthrough, sessionBusy, startPractice, unfinishedSessions, resumeSession, onPracticeHistory, goalPathId, onPath, learnerStart, startingPoint, practicePlan, draftQueue, setDraftQueue, reviewQueue, setReviewQueue, repStatus, openPracticeAction, actionLabel, onProgress, onPlan, trail, evidence, openRep, openLesson }: Props) {
   const goal = paths.find(path => path.id === goalPathId) ?? paths[0]
   const recommendation = practicePlan.next
   const recommendedRep = recommendation && reps.find(rep => rep.id === recommendation.repId)
@@ -54,8 +55,8 @@ export function HomePage({ walkthroughSeen, launchWalkthrough, sessionBusy, star
     practicePlan.due[0] && { label: 'Due review', action: practicePlan.due[0] },
   ].filter(item => item !== null && item !== undefined)
   const sessions = [...new Map(unfinishedSessions.map(record => [record.repId, record])).values()].slice(0, 3)
+  const startLabel = learnerStart === 'new' ? 'New to coding' : learnerStart === 'returning' ? 'Returning to coding' : 'Not chosen yet'
   return <main className="home-main trail-home" id="top">
-    {!learnerStart && <div className="first-run-start">{startingPoint}</div>}
     <div className="trail-layout">
       <aside className="trail-aside" aria-label="Up next">
         {recommendation && recommendedRep ? <section className="continue-panel" aria-labelledby="continue-heading">
@@ -67,6 +68,7 @@ export function HomePage({ walkthroughSeen, launchWalkthrough, sessionBusy, star
             <span className="continue-status">{recommendedRep.category}<span>{repStatus(recommendedRep)}</span></span>
           </div>
           <Button variant="primary" onMouseEnter={preloadEditor} onFocus={preloadEditor} onClick={() => openPracticeAction(recommendation)}>{actionLabel(recommendation.mode)}<Icon name="arrow" /></Button>
+          {!walkthroughSeen && <Button variant="text" className="continue-guide" onClick={launchWalkthrough}>Show me how a rep works</Button>}
         </section> : <section className="continue-panel" aria-labelledby="continue-heading">
           <div>
             <span className="home-label">Caught up for now</span>
@@ -75,8 +77,11 @@ export function HomePage({ walkthroughSeen, launchWalkthrough, sessionBusy, star
           </div>
           <button className="primary-button" type="button" onClick={onProgress}>See progress</button>
         </section>}
-        {recommendation && <button type="button" className="text-button" disabled={sessionBusy} onClick={() => startPractice(recommendation)}>Record a session</button>}
-        {!walkthroughSeen && <section className="trail-queue" aria-label="First rep walkthrough"><h2>Try the practice loop</h2><p>An optional guide through Declare a value. Saved work stays in place.</p><Button onMouseEnter={preloadEditor} onFocus={preloadEditor} onClick={launchWalkthrough}>Try first rep walkthrough</Button></section>}
+        <details className="starting-point-settings">
+          <summary>Starting as: <strong>{startLabel}</strong> · {learnerStart ? 'Change' : 'Choose'}</summary>
+          {startingPoint}
+        </details>
+        {recommendation && hasCompletedRep && <button type="button" className="text-button" disabled={sessionBusy} onClick={() => startPractice(recommendation)}>Record a session</button>}
         {choices.length > 0 && <ListGroup title="Choose today's practice" open>
           {choices.map(({ label, action }) => <ListRow key={label} title={title(action.repId)} meta={label} status={<StatusChip tone={action.mode === 'resume' ? 'progress' : action.mode === 'review' ? 'attention' : 'neutral'}>{action.mode === 'resume' ? 'Saved' : label === 'Due review' ? 'Due' : 'Next'}</StatusChip>} onOpen={() => openPracticeAction(action)} onPreview={preloadEditor} />)}
         </ListGroup>}
@@ -98,11 +103,10 @@ export function HomePage({ walkthroughSeen, launchWalkthrough, sessionBusy, star
           {practicePlan.due.length > 3 && <button type="button" className="text-button" aria-expanded={reviewQueue === 'all'} aria-controls="home-reviews" onClick={() => setReviewQueue(reviewQueue === 'all' ? 'short' : 'all')}>{reviewQueue === 'all' ? 'Show fewer reviews' : `Show all ${practicePlan.due.length} reviews`}</button>}
         </section>}
         <nav className="trail-links" aria-label="Plan and progress">
-          <button type="button" className="text-button" onClick={onPlan}><Icon name="calendar" />Plan this week</button>
+          {hasCompletedRep && <button type="button" className="text-button" onClick={onPlan}><Icon name="calendar" />Plan this week</button>}
           <button type="button" className="text-button" onClick={onProgress}>View skill evidence</button>
         </nav>
         <InfoNote label="How a rep works"><p>Understand the brief, plan, solve with checks, explain, then review. Work stays on this device. Opening a rep records no session. Complete rep saves an attempt; Reflect and end session ends a session.</p>{walkthroughSeen && <Button variant="text" onClick={launchWalkthrough}>Replay walkthrough</Button>}</InfoNote>
-        {learnerStart && <details className="starting-point-settings"><summary>Change starting point</summary>{startingPoint}</details>}
       </aside>
       <section className="trail-column home-goal" aria-label="Learning goal">
         <PageHeader eyebrow="Your trail · Active learning goal" title={goal.title} description={`${trail.done} of ${trail.total} reps completed. Lessons appear just before the reps that use them.`} actions={<button type="button" className="text-button" onClick={() => onPath(goal.id)}>View or choose goal path</button>} />

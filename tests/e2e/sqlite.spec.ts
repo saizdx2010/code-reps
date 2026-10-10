@@ -28,7 +28,7 @@ const test = base.extend<{ service: Service }>({
 
 test('records local Home and editor readiness alongside bundle budgets', async ({ page, service }, testInfo) => {
   await page.goto(service.url + '/#/home')
-  await expect(page.getByRole('heading', { name: 'Where are you starting?' })).toBeVisible()
+  await expect(page.locator('.continue-panel')).toBeVisible()
   const homeReadyMs = await page.evaluate(() => performance.now())
   await page.goto(service.url + route)
   await expect(editor(page)).toBeVisible()
