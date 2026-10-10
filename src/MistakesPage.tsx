@@ -4,13 +4,15 @@ import { repIndex as reps } from './catalog-index'
 import { summarizeMistakes, trendWindowDays } from './mistakes'
 import type { MistakeTrend } from './mistakes'
 import type { PortableRecord } from './portability'
+import { JournalTabs } from './Journal'
+import { goToView } from './ui-navigation'
 
 const trendText: Record<MistakeTrend, string> = { new: 'New recently', more: 'More often recently', fewer: 'Less often recently', same: 'About the same', none: 'None recently' }
 
 export function MistakesPage({ history, now, onOpenRep }: { history: PortableRecord[]; now: number; onOpenRep: (id: string) => void }) {
   const groups = summarizeMistakes(history, now)
   return <main className="progress-main mistakes-main">
-    <PageHeader title="Mistakes" eyebrow="Your local learning profile" description="Tags you chose while reviewing finished reps, grouped over time." />
+    <PageHeader title="Mistakes" eyebrow="Journal" description="Tags you chose while reviewing finished reps, grouped over time." actions={<JournalTabs view="mistakes" onNavigate={goToView} />} />
     <InfoNote label="What this shows"><p>These tags are self-reported and optional. They show what you noticed, not how well you code, and they are not a skill measure.</p><p>Recent means the last {trendWindowDays} days; earlier means the {trendWindowDays} days before that. Small counts can move a lot.</p></InfoNote>
     {groups.length === 0 ? <EmptyState title="No mistakes tagged yet">When you review a finished rep, you can tag mistakes you noticed. They will collect here.</EmptyState> : <section aria-label="Mistake tags">
       {groups.map(group => <ListGroup key={group.id} title={group.label} count={group.total}>
