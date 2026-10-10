@@ -7,6 +7,14 @@ export type RepLevelLabel = 'Beginner' | 'Intermediate' | 'Advanced'
 export const repLevelLabels: Record<RepLevel, RepLevelLabel> = { 1: 'Beginner', 2: 'Intermediate', 3: 'Advanced' }
 
 export const repLevels: Record<string, RepLevel> = {
+  'connected-note-state': 2,
+  'connected-note-render': 2,
+  'connected-note-input': 2,
+  'connected-note-save': 2,
+  'connected-note-recover': 2,
+  'connected-note-test': 2,
+  'connected-note-independent': 2,
+
   // Beginner: language basics, control flow, and introductory collection operations.
   'declare-variables': 1,
   'basic-types': 1,

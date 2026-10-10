@@ -71,8 +71,8 @@ Implemented features do not establish learner comprehension, full accessibility,
 
 Start with one connected plain TypeScript browser feature using the existing DOM and multi-file owners. Keep it inside the Frontend track rather than adding a new main area.
 
-- [ ] Sequence a feature through modeling state → rendering → handling input → saving → recovering from invalid data → testing.
-- [ ] Provide integration checkpoints and a final independent brief that combines familiar skills without supplying the implementation approach.
+- [x] Sequence a feature through modeling state → rendering → handling input → saving → recovering from invalid data → testing.
+- [x] Provide integration checkpoints and a final independent brief that combines familiar skills without supplying the implementation approach.
 - [ ] Add a learner-written testing journey: choose boundary cases, expose a plausible faulty implementation, repair it, and apply the skill in a fresh delayed task.
 - [ ] Add actual asynchronous practice using deterministic local fixtures: awaiting work, parallel operations, partial failure, cancellation, and cleanup. Distinguish policy traces from runtime behavior.
 - [ ] Add a maintenance journey: read unfamiliar code, reproduce a bug, write a regression test, fix it, and adapt to a changed requirement.

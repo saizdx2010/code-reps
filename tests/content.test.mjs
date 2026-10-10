@@ -1,3 +1,4 @@
+import { connectedSolutionsById } from './fixtures/connected-feature-solutions.mjs'
 import { browserStateSolutions } from './fixtures/browser-state-solutions.mjs'
 import { dsaSolutions } from './fixtures/dsa-solutions.mjs'
 import { asyncSolutions } from './fixtures/async-solutions.mjs'
@@ -60,7 +61,7 @@ const solutions = {
 }
 
 test('every rep has reference-solution coverage and a complete learning brief', () => {
-  const covered = new Set([...Object.keys(solutions), ...Object.keys(richSolutions), ...Object.keys(capstoneSolutions), ...Object.keys(domSolutions), ...aiEraReps.map(rep => rep.id)])
+  const covered = new Set([...Object.keys(solutions), ...Object.keys(richSolutions), ...Object.keys(capstoneSolutions), ...Object.keys(domSolutions), ...Object.keys(connectedSolutionsById), ...aiEraReps.map(rep => rep.id)])
   assert.equal(new Set(reps.map(rep => rep.id)).size, reps.length, 'Rep IDs must be unique')
   assert.deepEqual([...covered].sort(), reps.map(rep => rep.id).sort())
   for (const rep of reps) {

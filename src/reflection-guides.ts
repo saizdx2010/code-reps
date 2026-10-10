@@ -1,3 +1,4 @@
+import { connectedFeatureGuides } from './review-connected-feature.ts'
 import { browserStateGuides } from './review-browser-state.ts'
 import { dsaGuides } from './review-dsa.ts'
 import { practicalGuides } from './review-practical.ts'
@@ -8,6 +9,7 @@ import { dsaAdvancedGuides } from './review-dsa-advanced.ts'
 import { domGuides } from './review-dom.ts'
 
 export const reflectionGuides: Record<string, { plan: string[]; explanation: string[]; example: string }> = {
+  ...connectedFeatureGuides,
   ...practicalGuides,
   ...dsaGuides,
   ...fluencyGuides,
