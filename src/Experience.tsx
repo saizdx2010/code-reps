@@ -43,7 +43,7 @@ export function ScreenMemory({ screenKey, children }: { screenKey: string; child
       try { sessionStorage.setItem(`code-reps:screen:${memoryKey}`, JSON.stringify(state)) } catch { /* Continue without session persistence. */ }
     }
     // A lazy page replaces its loading heading after arrival; if that drops focus to the body, hand it to the new heading.
-    const settle = navigated && !saved ? new MutationObserver(() => {
+    const settle = navigated && !saved && typeof MutationObserver !== 'undefined' ? new MutationObserver(() => {
       if (document.activeElement === document.body) element.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true })
     }) : undefined
     settle?.observe(element, { childList: true, subtree: true })
