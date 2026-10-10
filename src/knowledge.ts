@@ -226,13 +226,10 @@ export const contentVersion = 7
 // Discovery categories only; these do not change skill identity or learner evidence.
 export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[] = [
   { id: 'language', title: 'Language & problem solving', skillIds: ['values', 'control-flow', 'state-modeling', 'arrays', 'text', 'lookup', 'stacks', 'complexity'] },
-  { id: 'dsa', title: 'Algorithms & data structures', skillIds: ['collection-operations', 'queues', 'array-techniques', 'sorting-basics', 'recursion-basics'] },
+  { id: 'dsa', title: 'Algorithms & data structures', skillIds: ['collection-operations', 'queues', 'array-techniques', 'sorting-basics', 'recursion-basics', 'trees', 'graphs'] },
   { id: 'frontend', title: 'Frontend', skillIds: ['frontend', 'react'] },
   { id: 'backend', title: 'Backend & data', skillIds: ['validation', 'http', 'databases'] },
   { id: 'async', title: 'Async & runtime', skillIds: ['async', 'closures', 'reference-identity', 'event-loop', 'debouncing', 'throttling', 'request-ownership'] },
   { id: 'resources', title: 'Patterns & resources', skillIds: ['singleton', 'events', 'dependency-injection', 'resource-ownership', 'websockets', 'live-transports'] },
   { id: 'reliability', title: 'Reliability & testing', skillIds: ['debugging', 'testing', 'caching', 'retries', 'idempotency', 'optimistic-updates'] },
 ]
-
-// Discovery registration for the appended tree and graph lessons.
-knowledgeGroups.find(group => group.id === 'dsa')!.skillIds.push('trees', 'graphs')

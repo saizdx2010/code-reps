@@ -86,7 +86,8 @@ Start with one connected plain TypeScript browser feature using the existing DOM
 
 - [ ] Record where you get stuck during ordinary practice: wording, missing prerequisite, approach, syntax, boundaries, or integration. Use those notes to select the next content batch.
 - [x] Add a DOM interactions journey with guided, independent, and delayed-recall stages. Its `dom-*` reps (disclosure, tabs, accessible form, live search) exist, but no journey in `src/learning.ts` stages them.
-- [ ] Add knowledge lessons for sorting, recursion, trees, and graphs. Their journeys and reps already exist (`src/learning.ts`, `src/path.ts`), but `src/dsa-knowledge.ts` defines only collection operations, queues, and array techniques, so these topics have no lesson questions or authored knowledge depth. Then review their journeys for difficulty transitions and unfamiliar transfer.
+- [x] Add knowledge lessons for sorting, recursion, trees, and graphs (`sorting-basics`, `recursion-basics`, `trees`, `graphs` in `src/dsa-knowledge.ts`, with discussions in `src/review-dsa-lessons.ts`).
+- [ ] Review the sorting, recursion, tree, and graph journeys for difficulty transitions and unfamiliar transfer.
 - [ ] Add independent or recall tasks to queues, two pointers, windows, or binary search only when learner observations show a specific gap. Each of those four already has guided, independent, and delayed-recall journey stages.
 - [ ] Deepen TypeScript through narrowing unknown input, discriminated unions, exhaustive handling, generics, and reusable typed APIs. Separate compile-time guarantees from behavioral checks.
 - [ ] Strengthen debugging and frontend practice with fresh contexts instead of cosmetic variants of the same problem.
@@ -134,8 +135,3 @@ Keep three main areas: Trail, Library, and Progress. Extend existing owners and 
 
 Accounts, cloud sync, leaderboards, certificates, video courses, and AI tutoring remain outside scope. Completion badges recognize personal work; they are not credentials or an overall coding score.
 
-## Tree and graph lesson progress
-
-Trees and graphs now have knowledge lessons in `src/dsa-knowledge.ts`, with ASCII worked examples, four new stable recognition questions, links to their existing journey reps, and separately revealed self-review discussions in `src/lesson-depth.ts`. Both join the existing Algorithms & data structures knowledge group. Section 5's sorting and recursion lessons and journey-transition review remain separate work.
-
-Verification found a release blocker: the new lessons exceed the unchanged initial JavaScript bundle budget. TypeScript and Vite compilation succeed, but the complete `yarn build` gate fails its bundle-size check. Content/reference validation and the Node suite pass; browser presentation and learner validation remain unverified. Resolve startup-content headroom before treating this lesson update as release-ready.
