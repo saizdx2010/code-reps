@@ -233,3 +233,6 @@ export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[
   { id: 'resources', title: 'Patterns & resources', skillIds: ['singleton', 'events', 'dependency-injection', 'resource-ownership', 'websockets', 'live-transports'] },
   { id: 'reliability', title: 'Reliability & testing', skillIds: ['debugging', 'testing', 'caching', 'retries', 'idempotency', 'optimistic-updates'] },
 ]
+
+// Discovery registration for the appended tree and graph lessons.
+knowledgeGroups.find(group => group.id === 'dsa')!.skillIds.push('trees', 'graphs')

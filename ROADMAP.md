@@ -133,3 +133,9 @@ Public release is a separate milestone, not the current priority.
 Keep three main areas: Trail, Library, and Progress. Extend existing owners and controls before adding abstractions or dependencies.
 
 Accounts, cloud sync, leaderboards, certificates, video courses, and AI tutoring remain outside scope. Completion badges recognize personal work; they are not credentials or an overall coding score.
+
+## Tree and graph lesson progress
+
+Trees and graphs now have knowledge lessons in `src/dsa-knowledge.ts`, with ASCII worked examples, four new stable recognition questions, links to their existing journey reps, and separately revealed self-review discussions in `src/lesson-depth.ts`. Both join the existing Algorithms & data structures knowledge group. Section 5's sorting and recursion lessons and journey-transition review remain separate work.
+
+Verification found a release blocker: the new lessons exceed the unchanged initial JavaScript bundle budget. TypeScript and Vite compilation succeed, but the complete `yarn build` gate fails its bundle-size check. Content/reference validation and the Node suite pass; browser presentation and learner validation remain unverified. Resolve startup-content headroom before treating this lesson update as release-ready.
