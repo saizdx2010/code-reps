@@ -21,5 +21,19 @@ export const dsaLessonDepth: Record<string, LessonDepth> = {
     'reasoning': 'At each step the largest remaining partner still makes the left value too small. Discarding that left value cannot remove a solution. Stopping when indices meet prevents reusing the same position.',
     'challenge': 'Find an unsorted input where this movement rule misses a valid pair. Explain which assumption fails.',
     'answer': '[4, 1, 3], target 4: 4+3 is too large so right moves to 1; 4+1 is too large so right moves to 0, and the algorithm misses positions 1 and 2 (1+3). The rightmost item was not the largest remaining value, so discarding it was unjustified.'
+  },
+  'sorting-basics': {
+    'title': 'Equal values reveal whether a sort is stable',
+    'code': 'const records = [{ id: "a", score: 2 }, { id: "b", score: 2 }, { id: "c", score: 1 }]\nconst sorted = [...records].sort((x, y) => x.score - y.score)',
+    'reasoning': 'The comparator returns zero for a and b, so a stable sort keeps a before b. Copying first leaves records in its original order. An insertion step that shifts past equal neighbours would swap a and b even though the comparator calls them equal.',
+    'challenge': 'Predict the ids in sorted. Then change the comparator to (x, y) => x.score - y.score || y.id.localeCompare(x.id) and predict again.',
+    'answer': 'The first result is c, a, b. With the tie-break, equal scores are ordered by id descending, giving c, b, a. The original records array is unchanged in both cases.'
+  },
+  'recursion-basics': {
+    'title': 'A missing base case never stops',
+    'code': 'function depth(value: unknown): number {\n  return 1 + Math.max(...(value as unknown[]).map(depth))\n}',
+    'reasoning': 'Every call maps over its children, but a plain number has no children to map and an empty list produces Math.max() of nothing, which is -Infinity. Nothing answers directly, so the function cannot return a sensible depth. A base case must handle non-arrays and empty lists before the recursive step.',
+    'challenge': 'Repair depth so numbers have depth 0 and [] has depth 1. Then predict depth([1, [2, []]]).',
+    'answer': 'Return 0 when !Array.isArray(value), and 1 + Math.max(0, ...value.map(depth)) otherwise. The result for [1, [2, []]] is 3: the outer list, the inner list, and the empty list each add one level.'
   }
 }
