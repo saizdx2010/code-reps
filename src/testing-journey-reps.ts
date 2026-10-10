@@ -180,4 +180,85 @@ export const testingJourneyReps: Rep[] = [
       { name: 'Exposes variant-e', input: ['variant-e'], expected: true },
     ],
   },
+  {
+    id: 'expose-stock-bugs',
+    title: 'Expose faulty stock allocation',
+    category: 'Testing with cases',
+    format: 'backend',
+    prompt:
+      'Write exposes(variant) from these requirements. allocate(stock, wanted) returns the number of requested units that can be supplied: the smaller of stock and wanted. stock is a one-element number array whose value is an integer from 0 to 1000; wanted is an integer in the same range. The function never changes stock. Build your own cases with expected answers from the requirements. Run each case on fresh copies and return true if any result or input differs from the contract, otherwise false. exposes("correct") must be false and every other supplied variant true.',
+    brief: { summary: 'Write exposes(variant) from these requirements.', rules: [
+      'allocate(stock, wanted) returns the number of requested units that can be supplied: the smaller of stock and wanted.',
+      'stock is a one-element number array whose value is an integer from 0 to 1000; wanted is an integer in the same range.',
+      'The function never changes stock.',
+      'Build your own cases with expected answers from the requirements.',
+      'Run each case on fresh copies and return true if any result or input differs from the contract, otherwise false.',
+      'exposes("correct") must be false and every other supplied variant true.',
+    ] },
+    example: { input: 'allocate([5], 2)', output: '2' },
+    note: 'No starter cases are supplied. Write expected answers from the requirements, not by reading variants. These checks establish only that your cases distinguish the supplied variants. They do not establish that your table is complete.',
+    vocabulary: [
+      { term: 'Faulty variant', meaning: 'an implementation containing a deliberate mistake' },
+      { term: 'Case table', meaning: 'inputs paired with independently predicted results' },
+    ],
+    planPrompt:
+      'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    starter:
+      "type Allocate = (stock: number[], wanted: number) => number\nconst implementations: Record<string, Allocate> = {\n  correct: (stock, wanted) => Math.min(stock[0], wanted),\n  'variant-a': (stock, wanted) => Math.max(stock[0], wanted),\n  'variant-b': (stock, wanted) => wanted === 0 ? stock[0] : Math.min(stock[0], wanted),\n  'variant-c': (stock, wanted) => Math.min(stock[0], wanted) - 1,\n  'variant-d': (stock, wanted) => { const count = Math.min(stock[0], wanted); stock[0] -= count; return count },\n}\n\nfunction exposes(variant: string): boolean {\n  return false\n}\n",
+    functionName: 'exposes',
+    preserveInput: true,
+    hints: [
+      'Map each requirement to a case before inspecting variants.',
+      'Try equality and conflicting conditions, rather than only typical successful inputs.',
+      'Compare the result and the copied input after each call.',
+    ],
+    checks: [
+      { name: 'Your cases accept the correct version', input: ['correct'], expected: false },
+      { name: 'Exposes variant-a', input: ['variant-a'], expected: true },
+      { name: 'Exposes variant-b', input: ['variant-b'], expected: true },
+      { name: 'Exposes variant-c', input: ['variant-c'], expected: true },
+      { name: 'Exposes variant-d', input: ['variant-d'], expected: true },
+    ],
+  },
+  {
+    id: 'expose-access-bugs',
+    title: 'Expose faulty access decisions',
+    category: 'Testing with cases',
+    format: 'backend',
+    prompt:
+      'Write exposes(variant) from these requirements. canEnter(flags, age) returns true only if membership is active and age is at least 18, unless suspended is true, which always denies entry. flags is [active, suspended], two booleans. age is an integer from 0 to 120. The function never changes flags. Build your own cases with expected answers from the requirements. Run each case on fresh copies and return true if any result or input differs from the contract, otherwise false. exposes("correct") must be false and every other supplied variant true.',
+    brief: { summary: 'Write exposes(variant) from these requirements.', rules: [
+      'canEnter(flags, age) returns true only if membership is active and age is at least 18, unless suspended is true, which always denies entry.',
+      'flags is [active, suspended], two booleans.',
+      'age is an integer from 0 to 120.',
+      'The function never changes flags.',
+      'Build your own cases with expected answers from the requirements.',
+      'Run each case on fresh copies and return true if any result or input differs from the contract, otherwise false.',
+      'exposes("correct") must be false and every other supplied variant true.',
+    ] },
+    example: { input: 'canEnter([true, false], 18)', output: 'true' },
+    note: 'No starter cases are supplied. Write expected answers from the requirements, not by reading variants. These checks establish only that your cases distinguish the supplied variants. They do not establish that your table is complete.',
+    vocabulary: [
+      { term: 'Faulty variant', meaning: 'an implementation containing a deliberate mistake' },
+      { term: 'Case table', meaning: 'inputs paired with independently predicted results' },
+    ],
+    planPrompt:
+      'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    starter:
+      "type Access = (flags: boolean[], age: number) => boolean\nconst implementations: Record<string, Access> = {\n  correct: (flags, age) => flags[0] && !flags[1] && age >= 18,\n  'variant-a': (flags, age) => flags[0] && !flags[1] && age > 18,\n  'variant-b': (flags, age) => (flags[0] || age >= 18) && !flags[1],\n  'variant-c': (flags, age) => flags[0] && age >= 18,\n  'variant-d': (flags, age) => { const active = flags.shift(); const suspended = flags.shift(); return Boolean(active && !suspended && age >= 18) },\n}\n\nfunction exposes(variant: string): boolean {\n  return false\n}\n",
+    functionName: 'exposes',
+    preserveInput: true,
+    hints: [
+      'Map each requirement to a case before inspecting variants.',
+      'Try equality and conflicting conditions, rather than only typical successful inputs.',
+      'Compare the result and the copied input after each call.',
+    ],
+    checks: [
+      { name: 'Your cases accept the correct version', input: ['correct'], expected: false },
+      { name: 'Exposes variant-a', input: ['variant-a'], expected: true },
+      { name: 'Exposes variant-b', input: ['variant-b'], expected: true },
+      { name: 'Exposes variant-c', input: ['variant-c'], expected: true },
+      { name: 'Exposes variant-d', input: ['variant-d'], expected: true },
+    ],
+  },
 ]

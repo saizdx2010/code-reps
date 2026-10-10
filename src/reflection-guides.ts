@@ -232,4 +232,28 @@ export const reflectionGuides: Record<string, { plan: string[]; explanation: str
     explanation: ['Trace 130 seconds with a 60-second step through each pass.', 'Explain why a step that lands exactly on zero includes 0:00.', 'Explain why a zero start gives one label.'],
     example: 'I start value at startSeconds and loop while value is at least zero, subtracting stepSeconds each pass. Each label is Math.floor(value / 60), a colon, and the remainder padded to two digits. For 130 with a 60-second step the values are 130, 70, and 10, so the labels are 2:10, 1:10, and 0:10. The work is one pass per label, O(n) time for n labels, with O(1) extra space beyond the output.',
   },
+  'batch-slot-labels': {
+    plan: [
+      'Predict the labels for zero items and an exact multiple of capacity.',
+      'Predict the ordinary and boundary examples before coding.',
+    ],
+    explanation: [
+      'Explain why the final batch is nonempty and cannot exceed capacity.',
+      'Explain a boundary and a plausible mistake; passing checks does not prove independent understanding.',
+    ],
+    example:
+      'Each iteration removes one nonempty batch from the remaining items. The count never exceeds capacity or remaining, so the labels partition the total. For total 7 and capacity 3, remaining moves 7 to 4 to 1 to 0, giving counts 3, 3, 1. For total 6 it stops after two full batches.',
+  },
+  'inspection-run-summary': {
+    plan: [
+      'Distinguish total alerts from the longest uninterrupted alert streak.',
+      'Predict the ordinary and boundary examples before coding.',
+    ],
+    explanation: [
+      'Trace a streak that reaches the final reading and one broken by equality.',
+      'Explain a boundary and a plausible mistake; passing checks does not prove independent understanding.',
+    ],
+    example:
+      'The running streak ends whenever a reading fails the strict threshold. Updating the maximum on every alert includes a streak at the end. For [7,0,8,9,10] at limit 5, streak lengths are 1,0,1,2,3; alerts is 4 and longestRun is 3.',
+  },
 }

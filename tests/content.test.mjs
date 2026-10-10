@@ -1,3 +1,4 @@
+import { recallThinSolutions } from './fixtures/recall-thin-solutions.mjs'
 import { connectedSolutionsById } from './fixtures/connected-feature-solutions.mjs'
 import { browserStateSolutions } from './fixtures/browser-state-solutions.mjs'
 import { dsaSolutions } from './fixtures/dsa-solutions.mjs'
@@ -24,6 +25,7 @@ import { testingJourneySolutions } from './fixtures/testing-journey-solutions.mj
 
 // These independent implementations check authored expected results, not learner prose.
 const solutions = {
+  ...recallThinSolutions,
   ...browserStateSolutions,
   ...validationSolutions,
   ...appSolutions,

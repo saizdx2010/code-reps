@@ -40,6 +40,8 @@ Dates and reasons remain visible. A review completion is evidence for the checke
 
 The windows, two-pointers, sorting, binary-search, recursion, trees, and graphs review rotations also include fresh applications: sensor spans, reservation occurrence matching, dispatch ordering, affordable editions, nested parcel loads, terminal folder paths, and broadcast coverage. These variants are appended after existing entries so saved review indices keep their meaning. Checks establish the stated output and input-preservation behavior; they do not establish the chosen algorithm or independent understanding.
 
+Control-flow reviews now apply repetition and conditions to packing batches and inspection streaks. Interface-logic reviews derive bulk-action availability and nearby chapter links. Request-response reviews shape conditional resource and retry responses. Find-the-bug reviews ask learners to author stock-allocation and access-policy cases; distinguishing supplied variants does not prove a complete case table. Existing recall variants keep their positions, with the new applications appended.
+
 The validation journey uses the existing user-request validator for guided work, a stock-adjustment contract for independence, and a delivery-window contract after three days for recall. After retention, scheduled reviews begin with batch import validation. Defaults, error precedence, and normalized duplicate detection require different applications; passing output checks does not assess the learner's reasoning or establish a live service.
 
 ## Content quality

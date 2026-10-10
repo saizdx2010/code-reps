@@ -5,7 +5,7 @@ import { appReps } from '../src/app-reps.ts'
 import { appSolutions } from './fixtures/app-solutions.mjs'
 
 test('app reps all have an independent reference solution', () => {
-  assert.deepEqual(appReps.map(rep => rep.id).sort(), Object.keys(appSolutions).sort())
+  assert.deepEqual(appReps.map(rep => rep.id).sort(), [...Object.keys(appSolutions), ...['selection-action-state', 'navigation-window', 'conditional-resource-response', 'retry-response-policy']].sort())
 })
 
 test('app rep checks reject common contract mistakes', () => {

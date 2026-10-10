@@ -62,11 +62,11 @@ export const recallVariants: Record<string, string[]> = {
   text: ['first-label-ending', 'count-label-prefix', 'count-long-words'],
   lookup: ['first-duplicate-label', 'count-statuses', 'first-repeated-number'],
   stacks: ['remaining-actions', 'simplify-file-path', 'remove-adjacent-pairs'],
-  'control-flow': ['countdown-labels'],
-  'interface-logic': ['filter-chip-summary'],
-  'request-response': ['page-response-envelope'],
+  'control-flow': ['countdown-labels', 'batch-slot-labels', 'inspection-run-summary'],
+  'interface-logic': ['filter-chip-summary', 'selection-action-state', 'navigation-window'],
+  'request-response': ['page-response-envelope', 'conditional-resource-response', 'retry-response-policy'],
   'dom-interactions': ['dom-accordion', 'dom-live-search', 'dom-disclosure'],
-  'find-the-bug': ['expose-overlap-bugs'],
+  'find-the-bug': ['expose-overlap-bugs', 'expose-stock-bugs', 'expose-access-bugs'],
 }
 export function recurringReviews(history: PortableRecord[], now = Date.now()) {
   return getAllJourneys(history, now).flatMap(state => {
