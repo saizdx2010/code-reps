@@ -130,6 +130,7 @@ Motion acknowledges interaction and shows where something came from; it never de
 | List row | Stays in place; the arrow slides into its reserved space; press settles to 99.5% |
 | Track and starting cards | Lift 2px on hover; settle on press |
 | Progress bars | Fill grows from the left when the page arrives |
+| Milestone notice | Rises 8px once when a badge is newly earned in this session; floats above the page so it never shifts content or takes focus; clears itself after 8 seconds |
 | Progress statistics, track cards | Rise in a short cascade |
 | Status chip | Settles in (scale and fade) when it appears or its status changes; an unchanged status stays still |
 | Checkbox and radio | Mark pops in |

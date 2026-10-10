@@ -43,6 +43,7 @@ import { mergeHistory, parseBackup } from './portability'
 import type { Backup } from './portability'
 import { flushStorage, isServerReady, localStore, retryStorage, storageIssue } from './local-store'
 import { ProgressPage } from './ProgressPage'
+import { BadgeNotice } from './BadgeNotice'
 import './design.css'
 import './motion.css'
 import './trail.css'
@@ -474,6 +475,8 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
       if (sessions.activeId) await sessions.recordCompletion(record.id, repId, attempt.hintCount, entries)
       else localStore.setEntries(entries())
       setHistory(nextHistory)
+      // The clock ticks once a minute; refresh it so a completion moments old is not dated in the future.
+      setNow(Date.now())
       setAttempt(current => current === attempt ? completed : current)
       setSaveState('Saving…')
     } catch { setSaveState('Could not save on this device') } finally { completing.current = false }
@@ -537,6 +540,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
 
   return <div className="app-shell">
     <AppNavigation view={view} profileName={profileName} saveState={saveState} onNavigate={setView} onManageProfiles={onManageProfiles} onCommands={() => setCommandsOpen(true)} />
+    <BadgeNotice history={history} now={now} onView={() => setView('progress')} />
     {saveState !== 'Saving…' && !saveState.startsWith('Saved') && <div className="storage-recovery" role="status"><p>{saveState}</p><button type="button" onClick={() => { void retrySaving() }}>Retry saving</button><button className="reset-button" type="button" onClick={exportData}>Download backup</button></div>}
     {(sessions.error || (sessions.message && (view !== 'workspace' || !['Saved in browser', 'Saved on this laptop'].includes(sessions.message)))) && <div className="session-save" role="status"><p>{sessions.error || sessions.message}</p>{(sessions.error || sessions.message.includes('waiting') || sessions.message.startsWith('Session records reloaded')) && <><button className="reset-button" type="button" onClick={() => { void sessions.retry() }}>Retry session save</button><button className="reset-button" type="button" onClick={sessions.reload}>Reload session records</button><button className="reset-button" type="button" onClick={exportData}>Download recovery backup</button></>}</div>}
     {recordedAttempt && <div ref={recordedAttemptRef} tabIndex={-1} className="recorded-attempt" role="region" aria-label="Recorded attempt"><h2>Recorded attempt: {reps.find(rep => rep.id === recordedAttempt.repId)?.title}</h2><p>{new Date(recordedAttempt.completedAt).toLocaleString()}. Viewing this snapshot does not replace your current draft.</p><pre>{recordedAttempt.code}</pre><p>Plan: {recordedAttempt.plan}</p><p>Explanation: {recordedAttempt.explanation}</p><button className="reset-button" type="button" onClick={() => { setRecordedAttempt(null); recordedAttemptOpener.current?.focus() }}>Close recorded attempt</button></div>}

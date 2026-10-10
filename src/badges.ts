@@ -1,6 +1,9 @@
 import { firstPath, paths } from './path.ts'
 import type { PortableRecord } from './portability.ts'
 
+/** The path shape badges read. Passing a changed catalog shows how badges follow a path edit. */
+export type BadgeCatalog = readonly { id: string; title: string; stages: readonly { title: string; repIds: readonly string[] }[] }[]
+
 export type BadgeKind = 'first' | 'stage' | 'path'
 export type Badge = {
   id: string
@@ -40,7 +43,12 @@ function build(first: Map<string, number>, base: Pick<Badge, 'id' | 'kind' | 'na
   return { ...base, earned, completed, total: repIds.length, repId: next, earnedAt: earned ? new Date(Math.max(...repIds.map(id => first.get(id)!))).toISOString() : undefined }
 }
 
-export function profileBadges(history: PortableRecord[], now = new Date()): Badge[] {
+/**
+ * Badges are derived from the current path definitions on every render; nothing is awarded or stored.
+ * A required rep added to an earned stage moves its badge back to upcoming with the completed count kept,
+ * and a rep removed from a path stops being required. Completed attempts keep counting either way.
+ */
+export function profileBadges(history: PortableRecord[], now = new Date(), catalog: BadgeCatalog = paths): Badge[] {
   const first = firstCompletions(history, now)
   const badges: Badge[] = []
   const starter = firstPath.stages[0].repIds[0]
@@ -48,7 +56,7 @@ export function profileBadges(history: PortableRecord[], now = new Date()): Badg
   const earliest = first.size ? Math.min(...first.values()) : undefined
   const earliestId = [...first].find(([, time]) => time === earliest)?.[0]
   badges.push({ id: 'first-rep', kind: 'first', name: 'First rep', rule: 'Complete any one rep.', earned: first.size > 0, completed: Math.min(first.size, 1), total: 1, earnedAt: earliest === undefined ? undefined : new Date(earliest).toISOString(), repId: earliestId ?? starter })
-  for (const path of paths) {
+  for (const path of catalog) {
     path.stages.forEach((stage, index) => {
       const ids = [...new Set<string>(stage.repIds)]
       // Stages made only of Foundations reps are earned in Foundations, not repeated.
@@ -59,4 +67,10 @@ export function profileBadges(history: PortableRecord[], now = new Date()): Badg
     badges.push(build(first, { id: `${path.id}:path`, kind: 'path', name: `${path.title} path`, rule: `Complete every rep in the ${path.title} path.`, pathId: path.id }, ids))
   }
   return badges
+}
+
+/** Earned badges the learner has not been shown yet, given the badge IDs already acknowledged in this session. */
+export function unacknowledgedBadges(badges: Badge[], acknowledged: readonly string[]): Badge[] {
+  const known = new Set(acknowledged)
+  return badges.filter(badge => badge.earned && !known.has(badge.id))
 }

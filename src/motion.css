@@ -195,6 +195,9 @@
 .badge-card .badge-art { animation: mark-pop 320ms var(--motion-spring) both; }
 .badge-check { stroke-dasharray: 24; animation: badge-draw 420ms var(--motion-ease) 200ms both; }
 @keyframes badge-draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+/* The milestone notice rises into place once; it does not repeat or pulse. */
+.badge-notice { animation: notice-rise 240ms var(--motion-ease) both; }
+@keyframes notice-rise { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
 @keyframes fill-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 /* Choices pop their mark in; the info note tilts its icon on hover and takes the accent when open. */
@@ -246,5 +249,5 @@
   .ui-number-buttons button:active { scale: none !important; }
   .text-button { transition: none; text-underline-offset: 4px; }
   ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
-  .badge-card .badge-art, .badge-check, .compact-path-list progress { animation: none !important; }
+  .badge-card .badge-art, .badge-check, .compact-path-list progress, .badge-notice { animation: none !important; }
 }

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { profileBadges } from '../src/badges.ts'
+import { profileBadges, unacknowledgedBadges } from '../src/badges.ts'
 import { firstPath, paths } from '../src/path.ts'
 
 const now = new Date(2026, 9, 5, 12)
@@ -68,4 +68,35 @@ test('stages made only of Foundations reps are not repeated in other paths', () 
   for (const path of paths.slice(1)) path.stages.forEach((item, index) => {
     assert.equal(ids.includes(`${path.id}:stage:${index}`), !item.repIds.every(id => foundations.has(id)))
   })
+})
+
+const withStage0 = repIds => paths.map(path => path.id === firstPath.id ? { ...path, stages: path.stages.map((item, index) => index === 0 ? { ...item, repIds } : item) } : path)
+
+test('a required rep added to an earned stage moves its badge back to upcoming and keeps completed reps', () => {
+  const history = stageIds.map((id, index) => record(id, at(1 + index)))
+  assert.equal(byId(profileBadges(history, now), 'typescript:stage:0').earned, true)
+  const badge = byId(profileBadges(history, now, withStage0([...stageIds, 'added-rep'])), 'typescript:stage:0')
+  assert.equal(badge.earned, false)
+  assert.equal(badge.earnedAt, undefined)
+  assert.equal(badge.completed, stageIds.length)
+  assert.equal(badge.total, stageIds.length + 1)
+  assert.equal(badge.repId, 'added-rep')
+})
+
+test('a rep removed from a stage stops being required, so the badge is earned from the remaining reps', () => {
+  const history = stageIds.slice(1).map((id, index) => record(id, at(1 + index)))
+  const badge = byId(profileBadges(history, now, withStage0(stageIds.slice(1))), 'typescript:stage:0')
+  assert.equal(badge.earned, true)
+  assert.equal(badge.total, stageIds.length - 1)
+  assert.equal(badge.earnedAt, at(stageIds.length - 1).toISOString())
+})
+
+test('unacknowledged badges are only the earned ones not yet acknowledged', () => {
+  const badges = profileBadges(stageIds.map((id, index) => record(id, at(1 + index))), now)
+  const fresh = unacknowledgedBadges(badges, ['first-rep']).map(badge => badge.id)
+  assert.ok(fresh.includes('typescript:stage:0'))
+  assert.ok(!fresh.includes('first-rep'))
+  assert.ok(fresh.every(id => byId(badges, id).earned))
+  assert.deepEqual(unacknowledgedBadges(badges, badges.filter(badge => badge.earned).map(badge => badge.id)), [])
+  assert.deepEqual(unacknowledgedBadges(profileBadges([], now), []), [])
 })

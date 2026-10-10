@@ -15,7 +15,7 @@ This roadmap uses ordered phases rather than promised dates or release numbers. 
 - [x] Problem-solving content covering collections, sorting, recursion, trees, graphs, linked structures, heaps, backtracking, and dynamic programming.
 - [x] Recommendations, resumable drafts, due reviews, weekly planning, a Journal, and explicit practice-session records.
 - [x] Local profiles, browser persistence, a loopback SQLite service, backups, imports, and portable web bundles.
-- [x] Profile summaries with streaks, path completion rows, and completion badges on Progress. Badges are derived from completed attempts; section 3 lists the remaining verification.
+- [x] Profile summaries with streaks, path completion rows, and completion badges on Progress. Badges are derived from completed attempts and the current paths, with a quiet notice when one is earned.
 - [x] Automated content checks, Node tests, Chromium flows, and build budgets.
 
 Implemented features do not establish learner comprehension, full accessibility, disconnected operation, or support across every platform. See the [UI guide](./docs/UI_GUIDE.md), [fluency guide](./docs/FLUENCY_PLATFORM.md), and [browser testing guide](./docs/BROWSER_TESTING.md) for current behavior and limits.
@@ -44,7 +44,7 @@ Implemented features do not establish learner comprehension, full accessibility,
 - [x] Scale plan and explanation prompts to the task: one useful sentence for a small syntax exercise, deeper reasoning for a larger problem. Preserve self-review and avoid automated prose scoring.
 - [x] Keep the current step, completion requirements, saved state, and next action clear without adding another toolbar or navigation layer.
 - [x] After completion, offer one clear next step and make stopping for the day understandable too.
-- [ ] Walk through desktop, narrow, short, and zoomed layouts with keyboard navigation. Check editor exit, focus, checks, writing fields, and preserved drafts.
+- [x] Walk through desktop, narrow, short, and zoomed layouts with keyboard navigation. Check editor exit, focus, checks, writing fields, and preserved drafts.
 
 **Done when:** A small rep can be completed without disproportionate form filling, and a harder rep makes prerequisites and missing completion requirements clear. Navigation, pane changes, reloads, and failed editor loads preserve work.
 
@@ -56,12 +56,12 @@ Implemented features do not establish learner comprehension, full accessibility,
 - [x] Add smaller milestones, starting with a first completed rep and a completed path stage, so recognition does not require finishing an entire track.
 - [x] Give each badge a name, clear earning rule, earned or unearned state, progress where useful, and a link to supporting work. Show an earned date when it can be derived reliably.
 - [x] Show earned badges prominently and keep upcoming badges compact. Use text alongside artwork so status is understandable without color.
-- [ ] Offer a restrained acknowledgement when a milestone is reached. Avoid repeated celebrations on reload and preserve keyboard focus.
+- [x] Offer a restrained acknowledgement when a milestone is reached. Avoid repeated celebrations on reload and preserve keyboard focus.
 - [x] Derive completion from the active profile's existing completed attempts where possible. Repeated attempts must not inflate distinct-rep milestones; unfinished drafts and ended sessions must not count as rep completion.
 - [x] Keep completion badges separate from independent and retained skill evidence. Hinted completions may earn completion badges; they must not imply mastery.
-- [ ] Decide how badges behave when a path gains or replaces required reps before introducing durable awards. Preserve rep IDs and define any storage or migration change explicitly.
+- [x] Decide how badges behave when a path gains or replaces required reps before introducing durable awards. Preserve rep IDs and define any storage or migration change explicitly. Badges stay derived from the current path: an added required rep returns an earned badge to upcoming with its completed count kept, and a removed rep stops counting toward the badge (see the [README](./README.md)).
 - [x] Cover badge derivation with unit tests: repeat attempts, hinted completions, invalid and future dates, earliest first completion, and separate profile histories (`tests/badges.test.mjs`).
-- [ ] Verify badges in the browser: switching profiles, importing backed-up history, reloading, and narrow layouts. A 390px Chromium check of Progress badges exists in `tests/e2e/practice.spec.ts`; the badge unit tests do not exercise imports or reloads.
+- [x] Verify badges in the browser: switching profiles, importing backed-up history, reloading, and narrow layouts. `tests/e2e/badges.spec.ts` covers each of these in Chromium at desktop width and at 390px; the unit tests in `tests/badges.test.mjs` cover derivation and path edits.
 
 **Done when:** You can see what you have finished, understand exactly how each badge was earned, and open the relevant work. Badge behavior stays consistent across profiles and backups without changing fluency rules.
 
