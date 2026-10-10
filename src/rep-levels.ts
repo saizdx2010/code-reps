@@ -7,6 +7,15 @@ export type RepLevelLabel = 'Beginner' | 'Intermediate' | 'Advanced'
 export const repLevelLabels: Record<RepLevel, RepLevelLabel> = { 1: 'Beginner', 2: 'Intermediate', 3: 'Advanced' }
 
 export const repLevels: Record<string, RepLevel> = {
+  'sum-in-range': 1,
+  'adjacent-rise-count': 1,
+  'last-matching-word': 1,
+  'word-length-span': 1,
+  'shared-number-count': 2,
+  'singleton-number-list': 2,
+  'undo-word-actions': 2,
+  'erase-text-markers': 2,
+
   'expose-page-bugs': 2,
   'repair-range-label': 2,
   'expose-overlap-bugs': 2,

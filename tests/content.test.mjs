@@ -1,3 +1,4 @@
+import { journeyPracticeSolutions } from './fixtures/journey-practice-solutions.mjs'
 import { connectedSolutionsById } from './fixtures/connected-feature-solutions.mjs'
 import { browserStateSolutions } from './fixtures/browser-state-solutions.mjs'
 import { dsaSolutions } from './fixtures/dsa-solutions.mjs'
@@ -24,6 +25,7 @@ import { testingJourneySolutions } from './fixtures/testing-journey-solutions.mj
 
 // These independent implementations check authored expected results, not learner prose.
 const solutions = {
+  ...journeyPracticeSolutions,
   ...browserStateSolutions,
   ...validationSolutions,
   ...appSolutions,
@@ -167,4 +169,18 @@ test('DSA application checks reject changed order, deduplication, leaf rules, an
   for (const [id, code] of Object.entries(incorrect)) {
     assert.ok(runRep(code, id).some(result => !result.passed), `${id}: incorrect contract passed`)
   }
+})
+
+test('extra journey practice rejects boundary, ordering, and command mistakes', () => {
+  const incorrect = {
+    'sum-in-range': 'function sumInRange(numbers, low, high) { return numbers.filter(n => n > low && n < high).reduce((a,b) => a+b,0) }',
+    'adjacent-rise-count': 'function countRises(numbers) { return numbers.slice(1).filter((n,i) => n >= numbers[i]).length }',
+    'last-matching-word': 'function lastMatchingWord(words, suffix) { return words.find(w => w.toLowerCase().endsWith(suffix.toLowerCase())) ?? null }',
+    'word-length-span': 'function wordLengthSpan(words) { const lengths=words.map(w=>w.trim().length); return words.length ? Math.max(...lengths)-Math.min(...lengths) : 0 }',
+    'shared-number-count': 'function sharedNumberCount(left,right) { return left.filter(n=>right.includes(n)).length }',
+    'singleton-number-list': 'function singletonNumbers(numbers) { return [...new Set(numbers)] }',
+    'undo-word-actions': 'function applyWordActions(actions) { const out=[]; for(const a of actions) { if(a === "UNDO") out.shift(); else out.push(a) } return out }',
+    'erase-text-markers': 'function eraseMarkers(text) { return text.replaceAll("#", "") }',
+  }
+  for (const [id, code] of Object.entries(incorrect)) assert.ok(runRep(code, id).some(result => !result.passed), `${id}: incorrect contract passed`)
 })

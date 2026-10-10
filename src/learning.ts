@@ -6,13 +6,13 @@ export type LearningRecord = {
   hintCount: number
 }
 
-export type Journey = { id: string; title: string; guided: string; independent: string; recall: string; delayDays: number }
+export type Journey = { id: string; title: string; guided: string; independent: string; recall: string; practice?: string[]; delayDays: number }
 
 export const journeys: Journey[] = [
-  { id: 'arrays', title: 'Work through arrays', guided: 'sum-positive-numbers', independent: 'count-even-numbers', recall: 'count-above-threshold', delayDays: 3 },
-  { id: 'text', title: 'Work through words', guided: 'count-words', independent: 'first-long-word', recall: 'count-long-words', delayDays: 3 },
-  { id: 'lookup', title: 'Count and remember', guided: 'has-duplicate', independent: 'most-frequent-number', recall: 'first-repeated-number', delayDays: 3 },
-  { id: 'stacks', title: 'Match what came before', guided: 'valid-parentheses', independent: 'balanced-brackets', recall: 'simplify-file-path', delayDays: 3 },
+  { id: 'arrays', title: 'Work through arrays', guided: 'sum-positive-numbers', independent: 'count-even-numbers', recall: 'count-above-threshold', practice: ['sum-in-range', 'adjacent-rise-count'], delayDays: 3 },
+  { id: 'text', title: 'Work through words', guided: 'count-words', independent: 'first-long-word', recall: 'count-long-words', practice: ['last-matching-word', 'word-length-span'], delayDays: 3 },
+  { id: 'lookup', title: 'Count and remember', guided: 'has-duplicate', independent: 'most-frequent-number', recall: 'first-repeated-number', practice: ['shared-number-count', 'singleton-number-list'], delayDays: 3 },
+  { id: 'stacks', title: 'Match what came before', guided: 'valid-parentheses', independent: 'balanced-brackets', recall: 'simplify-file-path', practice: ['undo-word-actions', 'erase-text-markers'], delayDays: 3 },
   { id: 'request-ownership', title: 'Keep asynchronous results current', guided: 'latest-request', independent: 'search-request-state', recall: 'preview-slot-results', delayDays: 3 },
   { id: 'resource-ownership', title: 'Own and clean up shared resources', guided: 'shared-resource', independent: 'subscription-cleanup', recall: 'room-leases', delayDays: 3 },
   { id: 'validation', title: 'Validate data at a boundary', guided: 'backend-validate-user', independent: 'validate-stock-adjustment', recall: 'parse-delivery-window', delayDays: 3 },
@@ -50,7 +50,8 @@ export function getJourney(journey: Journey, records: LearningRecord[], now = Da
   const stage: JourneyStage = retained ? 'retained' : independent ? 'independent' : guided ? 'practising' : 'learning'
   const nextRepId = !guided ? journey.guided : !independent ? journey.independent :
     !retained && now >= recallAt! ? journey.recall : null
-  return { stage, guided, independent, retained, recallAt: recallAt ?? null, nextRepId,
+  const practiced = chronological.filter(record => journey.practice?.includes(record.repId) && record.hintCount === 0)
+  return { stage, guided, independent, practiced, retained, recallAt: recallAt ?? null, nextRepId,
     recallDue: Boolean(independent && !retained && now >= recallAt!) }
 }
 

@@ -22,6 +22,15 @@ export function validateKnowledge(repIds: Set<string>) {
   }
   skills.forEach(s=>visit(s.id, new Set()))
   for (const journey of journeys) if (!recallVariants[journey.id]?.every(id => repIds.has(id))) problems.push(`${journey.id}: missing recall variants`)
+  for (const journey of journeys) {
+    const practice = journey.practice ?? []
+    const reserved = new Set([journey.guided, journey.independent, journey.recall, ...(recallVariants[journey.id] ?? [])])
+    if (new Set(practice).size !== practice.length) problems.push(`${journey.id}: duplicate practice reps`)
+    for (const id of practice) {
+      if (!repIds.has(id)) problems.push(`${journey.id}: missing practice rep ${id}`)
+      if (reserved.has(id)) problems.push(`${journey.id}: practice overlaps evidence rep ${id}`)
+    }
+  }
   for (const project of capstones) for (const m of project.milestones) if (!repIds.has(m.repId)) problems.push(`${project.id}: missing milestone`)
   return problems
 }
