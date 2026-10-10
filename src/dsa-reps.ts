@@ -6,6 +6,14 @@ export const dsaReps: Rep[] = [
     title: 'Report ticket service times',
     category: 'Stacks & queues',
     prompt: 'A single desk serves tickets in input order, first arrival first served. Tickets are already ordered by nondecreasing arrival minute; equal arrivals keep input order. Each ticket starts when it has arrived and the previous ticket has finished. Return one {id, start, finish} record per ticket in input order, where finish is start plus minutes. The desk is available at minute 0. Keep IDs exactly as supplied, without trimming or case changes. Do not change the array or its records.',
+    brief: { summary: 'A single desk serves tickets in input order, first arrival first served.', rules: [
+      'Tickets are already ordered by nondecreasing arrival minute; equal arrivals keep input order.',
+      'Each ticket starts when it has arrived and the previous ticket has finished. The desk is available at minute 0.',
+      'Return one {id, start, finish} record per ticket in input order, where finish is start plus minutes.',
+    ], edgeCases: [
+      'Keep IDs exactly as supplied, without trimming or case changes.',
+      'Do not change the array or its records.',
+    ] },
     example: {'input': 'ticketTimes([{id:"A",arrival:2,minutes:3},{id:"B",arrival:3,minutes:1}])', 'output': '[{id:"A",start:2,finish:5},{id:"B",start:5,finish:6}]'},
     note: 'At most 100 tickets. IDs are 1 to 20 ASCII characters; duplicates are allowed and remain separate tickets. arrival is an integer from 0 to 1000; minutes is an integer from 1 to 100. Inputs satisfy these rules; no validation is required. Empty input returns []. This is a deterministic schedule, not a live timer.',
     vocabulary: [{'term': 'Arrival', 'meaning': 'the minute a ticket becomes available for service'}, {'term': 'Service interval', 'meaning': 'the time from starting a ticket to finishing it'}],
@@ -805,6 +813,15 @@ export const dsaReps: Rep[] = [
     'title': 'Follow connections to a destination',
     'category': 'Algorithm techniques',
     'prompt': 'Return whether target can be reached from start by following directed connections in graph. Return false if start or target is outside the graph; a valid node reaches itself without any connection. graph is an adjacency list: graph[i] lists the nodes you can visit directly from node i. Practice breadth-first search (BFS), visiting pending nodes in the order they were discovered. Do not change graph or any of its nested arrays.',
+    'brief': { 'summary': 'Return whether target can be reached from start by following directed connections in graph.', 'rules': [
+      'graph is an adjacency list: graph[i] lists the nodes you can visit directly from node i.',
+      'Practice breadth-first search (BFS), visiting pending nodes in the order they were discovered.',
+      'Return true when target is reachable, otherwise false.',
+    ], 'edgeCases': [
+      'Return false if start or target is outside the graph.',
+      'A valid node reaches itself without any connection.',
+      'Do not change graph or any of its nested arrays.',
+    ] },
     'example': {
       'input': 'graphReachable([[1], [2], []], 0, 2)',
       'output': 'true'

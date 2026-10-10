@@ -60,6 +60,14 @@ function saveStatus(result: SaveResult): {text: string; retry: boolean} {
     id: 'catalog-request-summary', title: 'Summarize catalog request outcomes', category: 'TypeScript modeling',
     context: 'An inspection panel summarizes multiple catalog requests. Return later to apply state modeling to an ordered collection.',
     prompt: 'Implement requestSummary(requests). Each request is {status: "pending", id: string}, {status: "ready", id: string, titles: string[]}, or {status: "failed", id: string, error: string}. Return {pending: string[], empty: string[], errors: {id: string, message: string}[]}. pending contains pending IDs, empty contains ready IDs whose titles array is empty, and errors contains each failed ID and its error as message. Keep input order within each output array and include repeated IDs. Ready requests with titles contribute nothing.',
+    brief: { summary: 'Implement requestSummary(requests).', rules: [
+      'Each request is {status: "pending", id: string}, {status: "ready", id: string, titles: string[]}, or {status: "failed", id: string, error: string}.',
+      'Return {pending: string[], empty: string[], errors: {id: string, message: string}[]}.',
+      'pending contains pending IDs, empty contains ready IDs whose titles array is empty, and errors contains each failed ID and its error as message.',
+    ], edgeCases: [
+      'Keep input order within each output array and include repeated IDs.',
+      'Ready requests with titles contribute nothing.',
+    ] },
     example: { input: 'requestSummary([{status: "ready", id: "b", titles: []}, {status: "pending", id: "a"}])', output: '{pending: ["a"], empty: ["b"], errors: []}' },
     note: 'At most 100 requests and 100 titles per ready request. Strings contain at most 100 basic Latin characters or whitespace, including empty strings. Inputs match the union type. Do not trim, deduplicate, mutate input, or interpret a blank title as an empty array. This checks a summary of supplied states, not promise execution or semantic typing.',
     vocabulary: [{ term: 'Variant', meaning: 'one permitted shape in a union' }, { term: 'Ordered collection', meaning: 'values whose relative positions matter to the contract' }],

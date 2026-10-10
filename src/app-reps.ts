@@ -9,6 +9,15 @@ export const appReps: Rep[] = [
     id: 'frontend-sort-table', title: 'Sort table rows', category: 'Frontend core', format: 'transform',
     context: 'A table lets people click a column header to sort. The table component needs the rows in display order, and the original list must stay untouched so other views can still use it.',
     prompt: 'Implement sortRows(rows, column, direction). Return a new array of the same row objects ordered by column, which is "name" or "qty". Names compare without case sensitivity using lowercase text and < and > (not locale rules); qty compares as numbers. direction "desc" reverses the order; any other direction value sorts ascending. Rows whose sort values are equal keep their original relative order in both directions. If column is not "name" or "qty", return a copy in the original order. Do not change the input array or its row objects.',
+    brief: { summary: 'Implement sortRows(rows, column, direction).', rules: [
+      'Return a new array of the same row objects ordered by column, which is "name" or "qty".',
+      'Names compare without case sensitivity using lowercase text and < and > (not locale rules); qty compares as numbers.',
+      'direction "desc" reverses the order; any other direction value sorts ascending.',
+    ], edgeCases: [
+      'Rows whose sort values are equal keep their original relative order in both directions.',
+      'If column is not "name" or "qty", return a copy in the original order.',
+      'Do not change the input array or its row objects.',
+    ] },
     example: { input: 'sortRows([{name:"Pear",qty:4},{name:"Fig",qty:4}], "qty", "desc")', output: '[{name:"Pear",qty:4},{name:"Fig",qty:4}]' },
     note: 'Ties stay in original order even when the direction is descending, so do not simply reverse an ascending result. Compare lowercase names with < and >, not locale rules. Authored tables have at most 200 rows with basic Latin names.',
     vocabulary: [{ term: 'Stable sort', meaning: 'a sort that keeps equal items in their original order' }, { term: 'Mutation', meaning: 'changing an existing array or object instead of making a new one' }],
@@ -89,6 +98,13 @@ export const appReps: Rep[] = [
     id: 'backend-query-filters', title: 'Parse query filters', category: 'Backend core', format: 'backend',
     context: 'A list endpoint receives its URL query as a parsed object. Values arrive as text, may be missing, and may be repeated, so the handler must turn them into trusted filters before searching.',
     prompt: 'Implement parseFilters(query). Return {ok: false, error: "INVALID_QUERY"} unless query is a non-null object that is not an array. For each field, a missing, undefined, or blank (after trim) value uses its default. Any other value for a field, including null, a number, or an array from a repeated parameter, returns that field\'s error code: INVALID_STATUS for status, INVALID_LIMIT for limit, or INVALID_TAG for tag. Do not change the query.',
+    brief: { summary: 'Implement parseFilters(query).', rules: [
+      'Return {ok: false, error: "INVALID_QUERY"} unless query is a non-null object that is not an array.',
+      'For each field, a missing, undefined, or blank (after trim) value uses its default.',
+      "Any other value for a field, including null, a number, or an array from a repeated parameter, returns that field's error code: INVALID_STATUS for status, INVALID_LIMIT for limit, or INVALID_TAG for tag.",
+    ], edgeCases: [
+      'Do not change the query.',
+    ] },
     acceptanceCriteria: [
       'Missing, undefined, or trimmed-blank fields use defaults. Null and other non-string values return INVALID_STATUS, INVALID_LIMIT, or INVALID_TAG for their respective field.',
       'Error precedence is query shape, then status, then limit, then tag. Ignore extra keys and do not change the query.',
@@ -140,6 +156,14 @@ export const appReps: Rep[] = [
     id: 'backend-rate-limit', title: 'Decide a rate limit', category: 'Backend core', format: 'backend',
     context: 'An API allows each caller a fixed number of requests per time window. The server keeps the times of the caller\'s earlier accepted requests; this function decides about one new request. The current time is passed in, so the function never reads a clock.',
     prompt: 'Implement rateLimit(times, now, limit, windowMs). Time is split into fixed windows that start at 0, windowMs, 2 * windowMs, and so on; the window containing now starts at Math.floor(now / windowMs) * windowMs and lasts windowMs milliseconds. Count the earlier times that are inside the same window as now and are not later than now. If that count is less than limit, return {allowed: true, remaining: limit - count - 1, retryAfterMs: 0}. Otherwise return {allowed: false, remaining: 0, retryAfterMs: the time left until the next window starts}. Do not change the times array.',
+    brief: { summary: 'Implement rateLimit(times, now, limit, windowMs).', rules: [
+      'Time is split into fixed windows that start at 0, windowMs, 2 * windowMs, and so on; the window containing now starts at Math.floor(now / windowMs) * windowMs and lasts windowMs milliseconds.',
+      'Count the earlier times that are inside the same window as now and are not later than now.',
+      'If that count is less than limit, return {allowed: true, remaining: limit - count - 1, retryAfterMs: 0}.',
+      'Otherwise return {allowed: false, remaining: 0, retryAfterMs: the time left until the next window starts}.',
+    ], edgeCases: [
+      'Do not change the times array.',
+    ] },
     example: { input: 'rateLimit([1000, 1500], 1800, 4, 1000)', output: '{allowed:true, remaining:1, retryAfterMs:0}' },
     note: 'A time exactly at a window start belongs to that new window, so a request at 2000 with windowMs 1000 starts fresh. Times from earlier windows do not count. Times later than now are ignored. Times may be in any order. limit and windowMs are positive integers; now and times are nonnegative integers. Authored lists have at most 200 times.',
     vocabulary: [{ term: 'Fixed window', meaning: 'counting requests in time slots with fixed start times' }, { term: 'Injected time', meaning: 'passing the current time in as an argument so the code is easy to test' }],
@@ -165,6 +189,13 @@ export const appReps: Rep[] = [
     id: 'backend-error-response', title: 'Map errors to responses', category: 'Backend core', format: 'backend',
     context: 'Application code throws errors with a short code. The API must turn each one into an HTTP status and a message that is safe to show clients, without leaking messages, stack traces, or database details.',
     prompt: 'Implement errorResponse(error). If error is a non-null object whose code property belongs directly to that object (not its prototype) and is one of the known strings below, return {status, body: {error: code, message}}. NOT_FOUND gives 404 "We could not find that item."; INVALID_INPUT gives 400 "The request was not valid."; UNAUTHENTICATED gives 401 "Please sign in first."; FORBIDDEN gives 403 "You do not have access to this."; CONFLICT gives 409 "That change conflicts with the current data." For anything else return {status: 500, body: {error: "INTERNAL", message: "Something went wrong. Please try again later."}}. Do not change the error.',
+    brief: { summary: 'Implement errorResponse(error).', rules: [
+      'If error is a non-null object whose code property belongs directly to that object (not its prototype) and is one of the known strings below, return {status, body: {error: code, message}}.',
+      'NOT_FOUND gives 404 "We could not find that item."; INVALID_INPUT gives 400 "The request was not valid."; UNAUTHENTICATED gives 401 "Please sign in first."; FORBIDDEN gives 403 "You do not have access to this."; CONFLICT gives 409 "That change conflicts with the current data."',
+      'For anything else return {status: 500, body: {error: "INTERNAL", message: "Something went wrong. Please try again later."}}.',
+    ], edgeCases: [
+      'Do not change the error.',
+    ] },
     example: { input: 'errorResponse({code:"NOT_FOUND", message:"row 7 missing in orders"})', output: '{status:404, body:{error:"NOT_FOUND", message:"We could not find that item."}}' },
     note: 'Codes match exactly, including case. The body has only error and message: never copy the thrown error\'s own message, stack, or other fields. Unknown codes, a code that is not a string, a missing code, null, strings, and plain Error objects all produce the 500 response. A code like "toString" or "constructor" is not known.',
     vocabulary: [{ term: 'Status code', meaning: 'the number in an HTTP response that says how the request went' }, { term: 'Information leak', meaning: 'exposing internal details such as stack traces to people who should not see them' }],

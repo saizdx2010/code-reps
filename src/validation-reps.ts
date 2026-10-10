@@ -43,6 +43,15 @@ export const validationReps: Rep[] = [
     id: 'parse-delivery-window', title: 'Validate a delivery window', category: 'Backend core', format: 'backend',
     context: 'A scheduling form has different rules for pickup and delivery. Return one predictable error when several fields are invalid.',
     prompt: 'Implement deliveryWindow(input). Return {ok: false, error: "INVALID_REQUEST"} for null, arrays, or non-objects. For an object, mode must be exactly "pickup" or "delivery"; otherwise return INVALID_MODE. For delivery only, address must be a string whose trimmed length is 1–80; otherwise return INVALID_ADDRESS. Ignore address entirely for pickup and return address: null. Finally, minutes defaults to 20 only when missing or undefined; otherwise it must be an integer from 0 through 120, or return INVALID_MINUTES. For valid input return {ok: true, mode, address, minutes}, using the trimmed delivery address. Errors always use {ok: false, error}.',
+    brief: { summary: 'Implement deliveryWindow(input). Errors always use {ok: false, error}.', rules: [
+      'Return {ok: false, error: "INVALID_REQUEST"} for null, arrays, or non-objects.',
+      'For an object, mode must be exactly "pickup" or "delivery"; otherwise return INVALID_MODE.',
+      'For delivery only, address must be a string whose trimmed length is 1–80; otherwise return INVALID_ADDRESS.',
+      'Finally, minutes defaults to 20 only when missing or undefined; otherwise it must be an integer from 0 through 120, or return INVALID_MINUTES.',
+      'For valid input return {ok: true, mode, address, minutes}, using the trimmed delivery address.',
+    ], edgeCases: [
+      'Ignore address entirely for pickup and return address: null.',
+    ] },
     example: { input: 'deliveryWindow({mode: "pickup", address: 42, minutes: 0})', output: '{ok: true, mode: "pickup", address: null, minutes: 0}' },
     note: 'Error precedence is request shape → mode → required address → minutes. Do not trim or change mode, coerce numbers, or change input. Ignore extra properties. Address length uses JavaScript string length after trim. The contract allows a trimmed address of 1 to 80 characters; authored test data never exceeds 200 characters in total. Requests have at most 20 properties. These are parsed objects, not a live scheduling or HTTP test.',
     vocabulary: [{ term: 'Precedence', meaning: 'the order that decides which rule wins when several apply' }, { term: 'Default', meaning: 'a specified value used when input is absent, rather than invalid' }],

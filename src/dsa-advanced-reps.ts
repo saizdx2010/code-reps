@@ -360,6 +360,15 @@ export const dsaAdvancedReps: Rep[] = [
     title: 'Process a min-heap operation trace',
     category: 'Problem-solving patterns',
     prompt: 'Start empty. Process operations in order: {type: "push", value} inserts a number; {type: "pop"} removes and reports the smallest number, or null if empty. Return only pop results, in operation order. Practice an array-backed binary min-heap: every parent is no greater than either child. The heap structure is self-reviewed; the checks compare pop results and check that inputs do not change. Do not change any input.',
+    brief: { summary: 'Process heap operations in order, starting empty, and return only the pop results.', rules: [
+      '{type: "push", value} inserts a number.',
+      '{type: "pop"} removes and reports the smallest number, or null if empty.',
+      'Return only pop results, in operation order.',
+      'Practice an array-backed binary min-heap: every parent is no greater than either child.',
+    ], edgeCases: [
+      'The heap structure is self-reviewed; the checks compare pop results and check that inputs do not change.',
+      'Do not change any input.',
+    ] },
     example: {
       input: 'heapPops([{type: "push", value: 6}, {type: "push", value: 2}, {type: "pop"}])',
       output: '[2]'

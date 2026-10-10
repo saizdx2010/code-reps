@@ -6,6 +6,15 @@ export const asyncReps: Rep[] = [
     id: 'search-request-state', title: 'Keep search results consistent', category: 'Practical concepts',
     context: 'A search screen receives results and errors in a different order from the requests. Implement its written display policy.',
     prompt: 'Implement searchState(events) and return the final display state. Start: {status: "idle", items: [], error: null}. start(id): make id current; return loading with empty items and no error. resolve(id) for the current id: return ready with its items (an empty list is still ready); the request ends. reject(id) for the current id: return error with empty items and its message (an empty message is still an error); the request ends. cancel(id) for the current id: return idle with empty items and no error; the request ends. Any other id, or any event after its request ended: no effect.',
+    brief: { summary: 'Implement searchState(events) and return the final display state.', rules: [
+      'Start: {status: "idle", items: [], error: null}.',
+      'start(id): make id current; return loading with empty items and no error.',
+      'resolve(id) for the current id: return ready with its items (an empty list is still ready); the request ends.',
+      'reject(id) for the current id: return error with empty items and its message (an empty message is still an error); the request ends.',
+      'cancel(id) for the current id: return idle with empty items and no error; the request ends.',
+    ], edgeCases: [
+      'Any other id, or any event after its request ended: no effect.',
+    ] },
     example: { input: 'searchState([{kind: "start", id: "A"}, {kind: "start", id: "B"}, {kind: "resolve", id: "B", items: ["Bo"]}, {kind: "reject", id: "A", message: "Offline"}])', output: '{status: "ready", items: ["Bo"], error: null}' },
     note: 'At most 200 events. Every start has a unique nonempty ID; IDs are compared exactly. Items and messages are strings, preserved without normalization; an empty message is allowed. Events may arrive without a matching start or after completion or cancellation. Do not change input arrays or objects. This trace does not run a real search request.',
     vocabulary: [{ term: 'Display policy', meaning: 'the required state a person sees after an event' }, { term: 'Settled request', meaning: 'work that has ended with a result, error, or cancellation' }],
@@ -37,6 +46,15 @@ function searchState(events: SearchEvent[]): SearchState {
     id: 'preview-slot-results', title: 'Recall ownership across preview slots', category: 'Practical concepts',
     context: 'A document screen has several independently loaded previews. Replacing or removing one preview must not disturb another.',
     prompt: 'Implement previewSlots(events). select creates or replaces one slot with {slot, status: "loading", url: null} and its load token. loaded changes that slot to ready with the exact URL only if the token belongs to its pending selection; that load then ends. remove deletes the slot, including any pending load. Unmatched or already-ended loaded events have no effect. Return remaining slots in the order they were first selected. Replacing a present slot keeps its position; selecting a removed slot puts it at the end.',
+    brief: { summary: 'Implement previewSlots(events) and return the remaining slots.', rules: [
+      'select creates or replaces one slot with {slot, status: "loading", url: null} and its load token.',
+      'loaded changes that slot to ready with the exact URL only if the token belongs to its pending selection; that load then ends.',
+      'remove deletes the slot, including any pending load.',
+      'Return remaining slots in the order they were first selected.',
+    ], edgeCases: [
+      'Unmatched or already-ended loaded events have no effect.',
+      'Replacing a present slot keeps its position; selecting a removed slot puts it at the end.',
+    ] },
     example: { input: 'previewSlots([{kind: "select", slot: "cover", token: "A"}, {kind: "select", slot: "detail", token: "B"}, {kind: "loaded", slot: "cover", token: "A", url: "cover.png"}])', output: '[{slot: "cover", status: "ready", url: "cover.png"}, {slot: "detail", status: "loading", url: null}]' },
     note: 'At most 200 events. Slot names and tokens are nonempty strings compared exactly; each select token is globally unique. URLs are opaque strings, including empty text: do not parse or normalize them. loaded may arrive after removal or replacement or without a select. Removing an absent slot does nothing. Do not change supplied arrays or objects. No real images are loaded.',
     vocabulary: [{ term: 'Slot', meaning: 'a named place that displays one preview' }, { term: 'Load token', meaning: 'an identity for one particular selection and its result' }],
@@ -65,6 +83,15 @@ function previewSlots(events: PreviewEvent[]): PreviewSlot[] {
     id: 'refresh-report-state', title: 'Refresh a report without losing its data', category: 'Practical concepts',
     context: 'A dashboard keeps its last report visible during refresh and after refresh failure. Apply that display policy to a recorded event sequence.',
     prompt: 'Implement reportState(initial, events). Start with {value: initial, pending: false, error: null}. refresh makes its ID current, sets pending to true, and clears error while keeping value. A current resolve replaces value and ends the refresh with pending false and no error. A current reject ends the refresh with its error message while keeping value. A current cancel ends the refresh with no error while keeping value. Ignore events for another ID or an already-ended refresh. Return the final state.',
+    brief: { summary: 'Implement reportState(initial, events) and return the final state.', rules: [
+      'Start with {value: initial, pending: false, error: null}.',
+      'refresh makes its ID current, sets pending to true, and clears error while keeping value.',
+      'A current resolve replaces value and ends the refresh with pending false and no error.',
+      'A current reject ends the refresh with its error message while keeping value.',
+      'A current cancel ends the refresh with no error while keeping value.',
+    ], edgeCases: [
+      'Ignore events for another ID or an already-ended refresh.',
+    ] },
     example: { input: 'reportState("yesterday", [{kind: "refresh", id: "A"}, {kind: "reject", id: "A", message: "Offline"}])', output: '{value: "yesterday", pending: false, error: "Offline"}' },
     note: 'initial is a string or null; null means no report yet. At most 200 events. Every refresh ID is unique and nonempty, compared exactly. Values and error messages are exact strings, including empty text. Events can be unmatched or late. Do not mutate inputs. This is a display-policy trace, not a live cache or network test.',
     vocabulary: [{ term: 'Refresh', meaning: 'requesting a newer value while an earlier value may still be displayed' }, { term: 'Stale data', meaning: 'a previous result that may no longer reflect the source' }],

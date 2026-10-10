@@ -57,3 +57,9 @@ test('structured briefs keep the full contract and early plan prompts stay short
     assert.ok(words(rep.planPrompt) <= words(rep.prompt) + words(rep.note), `${id} plan prompt is longer than its brief`)
   }
 })
+
+test('every rep whose prompt and note exceed 120 words has a structured brief', () => {
+  const words = text => text.split(/\s+/).filter(Boolean).length
+  const missing = reps.filter(rep => words(rep.prompt) + words(rep.note) > 120 && !rep.brief).map(rep => rep.id)
+  assert.deepEqual(missing, [])
+})

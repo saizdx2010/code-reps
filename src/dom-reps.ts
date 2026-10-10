@@ -76,6 +76,15 @@ export const domReps: Rep[] = [
     id: 'dom-disclosure', title: 'Build a keyboard-operable disclosure', category: 'Frontend accessibility', format: 'frontend',
     context: 'A "Shipping details" section opens and closes on demand. Clickable divs look right but are skipped by Tab and ignore Enter and Space; a real button gets both for free, and attributes tell assistive technology which panel it controls and whether it is open.',
     prompt: 'Implement `mountDisclosure(root, props)` with props.label, props.content, and props.open. Render a real button whose text is the label and a panel containing the content as text. The button must have type="button", `aria-expanded` set to the string "true" or "false", and `aria-controls` equal to the panel\'s id. When collapsed the panel is hidden (the hidden property); when expanded it is not. Start in the state given by props.open. Each click toggles the state and updates both `aria-expanded` and the panel. The button keeps its label and stays focused after toggling. Use data-testid="toggle" on the button and data-testid="panel" on the panel; give the panel an id and point `aria-controls` at it.',
+    brief: { summary: 'Implement `mountDisclosure(root, props)` with props.label, props.content, and props.open.', rules: [
+      'Render a real button whose text is the label and a panel containing the content as text.',
+      "The button must have type=\"button\", `aria-expanded` set to the string \"true\" or \"false\", and `aria-controls` equal to the panel's id.",
+      'When collapsed the panel is hidden (the hidden property); when expanded it is not. Start in the state given by props.open.',
+      'Each click toggles the state and updates both `aria-expanded` and the panel.',
+    ], edgeCases: [
+      'The button keeps its label and stays focused after toggling.',
+      'Use data-testid="toggle" on the button and data-testid="panel" on the panel; give the panel an id and point `aria-controls` at it.',
+    ] },
     example: { input: "label 'Shipping details', open false, one click", output: 'aria-expanded "true" and the panel visible' },
     note: 'Use data-testid="toggle" on the button and data-testid="panel" on the panel; give the panel an id and point `aria-controls` at it. Render content with `textContent`. A native button turns Enter and Space into a click, so the checks click the button; they cannot press real keys on it. ' + limits,
     acceptanceCriteria: ['Tab reaches the button; Enter and Space toggle it in a real browser.', 'Focus remains visibly on the button after toggling.', 'Collapsed content is not read or reachable.', 'Try a screen reader to confirm it announces expanded or collapsed.'],
