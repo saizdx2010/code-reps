@@ -30,6 +30,7 @@ const sources: Record<RepSourceName, Loader> = {
   'browser-state-reps': source(() => import('./browser-state-reps.ts'), module => ({ reps: module.browserStateReps })),
   'dom-reps': source(() => import('./dom-reps.ts'), module => ({ reps: module.domReps })),
   'connected-feature-reps': source(() => import('./connected-feature-reps.ts'), module => ({ reps: module.connectedFeatureReps })),
+  'testing-journey-reps': source(() => import('./testing-journey-reps.ts'), module => ({ reps: module.testingJourneyReps })),
 }
 
 const pending = new Map<RepSourceName, Promise<Source>>()

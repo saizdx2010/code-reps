@@ -59,3 +59,9 @@ brief combines the same feature requirements with an empty entry file and no mod
 plan. Type modeling, module design, keyboard usability, visual quality, and
 assistive-technology behavior remain self-reviewed separately from DOM checks.
 Async and maintenance journeys remain planned in the roadmap.
+
+## Find-the-bug journey
+
+`src/testing-journey-reps.ts` holds a guided, independent, and delayed find-the-bug journey in the Backend track: `expose-page-bugs`, `repair-range-label`, and `expose-overlap-bugs`. It uses the existing function worker. In the two expose reps the starter supplies a correct implementation and named faulty variants, and the learner writes a case table and `exposes(variant)`, which returns `true` when their cases fail on that variant. Variants are chosen by name because the worker passes only JSON-like inputs.
+
+The checks establish that the learner's cases separate the supplied variants from the correct one. They do not establish that a table is complete, that unsupplied faults would be caught, or that expected values were derived independently; the reps say so and ask the learner to name a version their table would still accept. The repair rep is checked behaviorally, and its reasoning stays self-reviewed. See [Find the bug](./FIND_THE_BUG.md) for how to author more journeys of this kind.

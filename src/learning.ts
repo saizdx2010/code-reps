@@ -28,6 +28,7 @@ export const journeys: Journey[] = [
   { id: 'recursion', title: 'Work through nested structures', guided: 'algo-recursive-sum', independent: 'flatten-nested-numbers', recall: 'count-object-leaves', delayDays: 3 },
   { id: 'trees', title: 'Explore tree routes and levels', guided: 'algo-tree-depth', independent: 'tree-depth-sum', recall: 'tree-value-path', delayDays: 3 },
   { id: 'graphs', title: 'Explore graph connections', guided: 'algo-graph-reachable', independent: 'graph-shortest-hops', recall: 'graph-connected-groups', delayDays: 3 },
+  { id: 'find-the-bug', title: 'Find and fix faulty code', guided: 'expose-page-bugs', independent: 'repair-range-label', recall: 'expose-overlap-bugs', delayDays: 3 },
   { id: 'dom-interactions', title: 'Build accessible interactions', guided: 'dom-disclosure', independent: 'dom-live-search', recall: 'dom-accordion', delayDays: 3 },
 ]
 

@@ -7,6 +7,9 @@ export type RepLevelLabel = 'Beginner' | 'Intermediate' | 'Advanced'
 export const repLevelLabels: Record<RepLevel, RepLevelLabel> = { 1: 'Beginner', 2: 'Intermediate', 3: 'Advanced' }
 
 export const repLevels: Record<string, RepLevel> = {
+  'expose-page-bugs': 2,
+  'repair-range-label': 2,
+  'expose-overlap-bugs': 2,
   'connected-note-state': 2,
   'connected-note-render': 2,
   'connected-note-input': 2,

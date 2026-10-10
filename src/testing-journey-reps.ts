@@ -1,0 +1,183 @@
+import type { Rep } from './rep-types.ts'
+
+// Find-the-bug journey: expose supplied faulty variants with your own cases, repair a faulty function, then expose
+// the mutants of a different function from requirements alone. The worker passes JSON-like inputs, so a variant is
+// chosen by name and the learner's `exposes(variant)` runs their own cases against it. Checks establish that those
+// cases distinguish the supplied variants. They do not establish that a case table is complete.
+const lines = (...parts: string[]) => parts.join('\n') + '\n'
+
+const exposePageStarter = lines(
+  'type Case = { items: number[]; page: number; size: number; expected: number[] }',
+  'type PageItems = (items: number[], page: number, size: number) => number[]',
+  '',
+  '// Supplied. "correct" follows the contract; the others are plausible faulty versions.',
+  'const implementations: Record<string, PageItems> = {',
+  '  correct: (items, page, size) => {',
+  '    if (page < 1 || size < 1) return []',
+  '    return items.slice((page - 1) * size, page * size)',
+  '  },',
+  "  'starts-one-late': (items, page, size) => {",
+  '    if (page < 1 || size < 1) return []',
+  '    return items.slice(page * size, page * size + size)',
+  '  },',
+  "  'drops-short-last-page': (items, page, size) => {",
+  '    if (page < 1 || size < 1) return []',
+  '    const result = items.slice((page - 1) * size, page * size)',
+  '    return result.length < size ? [] : result',
+  '  },',
+  "  'removes-from-input': (items, page, size) => {",
+  '    if (page < 1 || size < 1) return []',
+  '    return items.splice((page - 1) * size, size)',
+  '  },',
+  "  'zero-size-returns-everything': (items, page, size) => {",
+  '    if (page < 1) return []',
+  '    if (size < 1) return items',
+  '    return items.slice((page - 1) * size, page * size)',
+  '  },',
+  '}',
+  '',
+  '// 1. Work out each expected array by hand from the contract, not by running an implementation.',
+  'const cases: Case[] = [',
+  '  // { items: [10, 20, 30], page: 1, size: 2, expected: [10, 20] },',
+  ']',
+  '',
+  '// 2. Run every case against implementations[variant]. Return true as soon as one case fails.',
+  'function exposes(variant: string): boolean {',
+  '  return false',
+  '}'
+)
+
+const repairRangeStarter = lines(
+  '// Shows which items are on screen, for example "Showing 11-20 of 25".',
+  'function rangeLabel(total: number, page: number, size: number): string {',
+  '  const start = (page - 1) * size',
+  '  const end = page * size',
+  '  return `Showing ${start}-${end} of ${total}`',
+  '}'
+)
+
+const exposeOverlapStarter = lines(
+  'type Interval = [number, number]',
+  'type Overlaps = (a: Interval, b: Interval) => boolean',
+  '',
+  'const implementations: Record<string, Overlaps> = {',
+  '  correct: (a, b) => a[0] < a[1] && b[0] < b[1] && a[0] < b[1] && b[0] < a[1],',
+  "  'variant-a': (a, b) => a[0] < a[1] && b[0] < b[1] && a[0] <= b[1] && b[0] <= a[1],",
+  "  'variant-b': (a, b) => a[0] < a[1] && b[0] < b[1] && a[0] <= b[0] && b[0] < a[1],",
+  "  'variant-c': (a, b) => a[0] < b[1] && b[0] < a[1],",
+  "  'variant-d': (a, b) => (a[0] < b[0] && b[0] < a[1]) || (b[0] < a[0] && a[0] < b[1]),",
+  "  'variant-e': (a, b) => {",
+  '    const start = a.shift() as number',
+  '    const end = a.shift() as number',
+  '    return start < end && b[0] < b[1] && start < b[1] && b[0] < end',
+  '  },',
+  '}',
+  '',
+  'function exposes(variant: string): boolean {',
+  '  return false',
+  '}'
+)
+
+export const testingJourneyReps: Rep[] = [
+  {
+    id: 'expose-page-bugs', title: 'Write cases that expose faulty pagination', category: 'Testing with cases', format: 'backend',
+    context: 'A paging helper has been rewritten four times, and each rewrite looks plausible. Your cases decide which rewrites are safe to ship. Treat the supplied correct version as the answer key for the contract, and write your expected values by hand from the contract.',
+    prompt: 'Fill the cases table and write exposes(variant). pageItems(items, page, size) returns the items on a 1-based page. A page below 1, a size below 1, or a page past the end returns an empty array. The last page may be shorter than size. The function returns a new array and never changes items. In exposes, give each run its own copy of the items, compare the result with the expected array, and compare the copy with the original after the call. Return true as soon as one case fails and false when every case passes. exposes("correct") must be false, and every named faulty variant must be true.',
+    brief: { summary: 'Write cases for pageItems and an exposes(variant) function that runs them against one named implementation.', rules: [
+      'pageItems(items, page, size) returns the items on a 1-based page.',
+      'A page below 1, a size below 1, or a page past the end returns an empty array.',
+      'The last page may be shorter than size.',
+      'The function returns a new array and never changes items.',
+      'exposes(variant) runs each case on a fresh copy of its items and returns true as soon as the result or the copy is wrong.',
+      'exposes("correct") must be false, and every named faulty variant must be true.',
+    ], edgeCases: [
+      'Compare the copy with the original after each call, because a variant can return the right page and still change its input.',
+    ] },
+    example: { input: "cases: [{ items: [10, 20, 30], page: 2, size: 2, expected: [30] }]; exposes('drops-short-last-page')", output: 'true' },
+    note: 'Pick items, page, and size by hand from the rules above. Variants are chosen by name because checks pass plain values to your function. These checks establish only that your cases tell the supplied versions apart. They do not establish that your table is complete, and a variant you were not given could still pass it.',
+    acceptanceCriteria: ['Explain which sentence of the contract each case protects.', 'Name a faulty version your table would still accept.'],
+    vocabulary: [{ term: 'Faulty variant', meaning: 'a version of a function with one plausible mistake built in' }, { term: 'Case table', meaning: 'a list of inputs paired with the answers you expect' }, { term: 'Boundary case', meaning: 'an input at or just past a rule, such as the last page' }],
+    planPrompt: 'For each sentence of the contract, write one input that would break a careless version. Which case would you add for the last page, and how will you notice a changed input?',
+    starter: exposePageStarter,
+    functionName: 'exposes',
+    hints: [
+      'Go through the contract one sentence at a time and write a case for each: first page, middle page, short last page, page past the end, page below 1, size below 1.',
+      'Run the case on a copy: const copy = [...c.items], call the implementation with copy, then compare both the return value and copy with the original.',
+      'Compare arrays with JSON.stringify(a) === JSON.stringify(b), and return true when any comparison differs.',
+    ],
+    checks: [
+      { name: 'Your cases accept the correct version', input: ['correct'], expected: false },
+      { name: 'Exposes the version that starts one item late', input: ['starts-one-late'], expected: true },
+      { name: 'Exposes the version that drops a short last page', input: ['drops-short-last-page'], expected: true },
+      { name: 'Exposes the version that removes items from its input', input: ['removes-from-input'], expected: true },
+      { name: 'Exposes the version that mishandles a size of zero', input: ['zero-size-returns-everything'], expected: true },
+    ],
+  },
+  {
+    id: 'repair-range-label', title: 'Repair a results range label', category: 'Testing with cases', format: 'debug',
+    context: 'Bug report: on a list of 25 items with 10 per page, page 1 says "Showing 0-10 of 25" and page 3 says "Showing 20-30 of 25". An empty list says "Showing 0-10 of 0". Reproduce each report by hand before you edit.',
+    prompt: 'Repair rangeLabel(total, page, size). Pages start at 1. For a total of 0, return "No results", even when page or size is odd. Otherwise, a page below 1, a size below 1, or a page that starts after the last item returns "Page out of range". A valid page returns "Showing START-END of TOTAL", where START is the 1-based position of its first item and END is the position of its last item, which cannot pass TOTAL. Use a plain hyphen.',
+    brief: { summary: 'Repair rangeLabel(total, page, size) so the label matches what is on screen.', rules: [
+      'Pages start at 1. The total is a nonnegative integer.',
+      'A total of 0 returns "No results", before any other rule.',
+      'A page below 1, a size below 1, or a page that starts after the last item returns "Page out of range".',
+      'A valid page returns "Showing START-END of TOTAL" with a plain hyphen.',
+      'START is the 1-based position of the first item on the page; END is the position of the last item and cannot pass TOTAL.',
+    ] },
+    example: { input: 'rangeLabel(25, 3, 10)', output: '"Showing 21-25 of 25"' },
+    note: 'All inputs are integers. The checks cover the reported cases and the boundaries around them. They do not prove that you found every fault by reasoning, so say which line caused which report.',
+    vocabulary: [{ term: 'Reproduce', meaning: 'make a reported bug happen again with a specific input' }, { term: 'Off-by-one', meaning: 'a result that is one position too early or too late' }, { term: 'Precedence', meaning: 'which rule wins when two rules could both apply' }],
+    planPrompt: 'Trace each report through the code and name the line behind it. Which inputs besides the reports would you try, and which rule should win when the total is 0?',
+    starter: repairRangeStarter,
+    functionName: 'rangeLabel',
+    hints: [
+      'Trace page 1 of 25 with size 10 by hand: write the values of start and end next to the report.',
+      'Positions on a page are counted from 1, but the index arithmetic counts from 0, and the last page can be short.',
+      'Handle the empty total first, then the invalid page and size, then compute start and a capped end.',
+    ],
+    checks: [
+      { name: 'First page', input: [25, 1, 10], expected: 'Showing 1-10 of 25' },
+      { name: 'Middle page', input: [25, 2, 10], expected: 'Showing 11-20 of 25' },
+      { name: 'Short last page is capped at the total', input: [25, 3, 10], expected: 'Showing 21-25 of 25' },
+      { name: 'Exact multiple fills the last page', input: [20, 2, 10], expected: 'Showing 11-20 of 20' },
+      { name: 'Single item', input: [1, 1, 10], expected: 'Showing 1-1 of 1' },
+      { name: 'Empty list', input: [0, 1, 10], expected: 'No results' },
+      { name: 'Empty list wins over an odd page', input: [0, 5, 0], expected: 'No results' },
+      { name: 'Page past the end', input: [25, 4, 10], expected: 'Page out of range' },
+      { name: 'Page below one', input: [25, 0, 10], expected: 'Page out of range' },
+      { name: 'Size below one', input: [25, 1, 0], expected: 'Page out of range' },
+    ],
+  },
+  {
+    id: 'expose-overlap-bugs', title: 'Write cases that expose faulty overlap checks', category: 'Testing with cases', format: 'backend',
+    context: 'A booking tool decides whether two time slots collide. Five rewrites of the check are on file, labeled only variant-a to variant-e. Decide which ones are safe from the written requirements.',
+    prompt: 'Write exposes(variant) for overlaps(a, b). An interval [start, end) includes start and excludes end, with whole-number ends and start not above end. Two intervals overlap when they share at least one point. Intervals that only touch at an end do not overlap. An interval with start equal to end is empty and overlaps nothing. The order of the arguments does not matter. The function never changes its arguments. Build your own cases from these requirements, run each on fresh copies, and return true when any case fails. exposes("correct") must be false and every other variant true.',
+    brief: { summary: 'Write exposes(variant) for overlaps(a, b) from these requirements alone.', rules: [
+      'An interval [start, end) includes start and excludes end, with whole-number ends and start not above end.',
+      'Two intervals overlap when they share at least one point; touching at an end does not overlap.',
+      'An interval with start equal to end is empty and overlaps nothing.',
+      'The order of the arguments does not matter, and the function never changes its arguments.',
+      'exposes(variant) uses your own cases on fresh copies and returns true when any case fails.',
+      'exposes("correct") must be false and every other variant true.',
+    ] },
+    example: { input: 'overlaps([1, 5], [3, 8])', output: 'true' },
+    note: 'No starter cases are supplied. Write expected answers from the requirements, not by reading the variants. These checks establish only that your cases separate these five variants from the correct one. They do not establish that your table is complete.',
+    vocabulary: [{ term: 'Half-open interval', meaning: 'a range that includes its start and excludes its end' }, { term: 'Mutant', meaning: 'a copy of a function with one deliberate mistake' }],
+    planPrompt: 'Turn each requirement into a pair of intervals that would break a careless version. Which pairs sit exactly on a boundary?',
+    starter: exposeOverlapStarter,
+    functionName: 'exposes',
+    hints: [
+      'List the requirements and make sure each one is tested by at least one case.',
+      'Prefer cases at a boundary over cases that are far from it.',
+      'Check what remains of the inputs after each call, as well as the answer.',
+    ],
+    checks: [
+      { name: 'Your cases accept the correct version', input: ['correct'], expected: false },
+      { name: 'Exposes variant-a', input: ['variant-a'], expected: true },
+      { name: 'Exposes variant-b', input: ['variant-b'], expected: true },
+      { name: 'Exposes variant-c', input: ['variant-c'], expected: true },
+      { name: 'Exposes variant-d', input: ['variant-d'], expected: true },
+      { name: 'Exposes variant-e', input: ['variant-e'], expected: true },
+    ],
+  },
+]
