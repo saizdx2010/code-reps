@@ -7,6 +7,15 @@ export type RepLevelLabel = 'Beginner' | 'Intermediate' | 'Advanced'
 export const repLevelLabels: Record<RepLevel, RepLevelLabel> = { 1: 'Beginner', 2: 'Intermediate', 3: 'Advanced' }
 
 export const repLevels: Record<string, RepLevel> = {
+  'batch-slot-labels': 1,
+  'inspection-run-summary': 1,
+  'selection-action-state': 2,
+  'navigation-window': 2,
+  'conditional-resource-response': 2,
+  'retry-response-policy': 2,
+  'expose-stock-bugs': 2,
+  'expose-access-bugs': 2,
+
   'expose-page-bugs': 2,
   'repair-range-label': 2,
   'expose-overlap-bugs': 2,

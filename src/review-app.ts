@@ -61,6 +61,54 @@ export const appGuides = {
     explanation: ['Trace "3", 2.5, and 11 and say which rule rejects each.', 'Explain why the value is returned unchanged instead of converted.', 'Say what this does not cover, such as a full request body.'],
     example: 'I reject anything whose typeof is not number, then anything that is not a whole number, then return the value only when it is at least 1 and at most 10. Strings are rejected rather than converted. The checks cover both ends and the wrong-type cases; they do not validate a whole request.',
   },
+  'selection-action-state': {
+    plan: [
+      'List busy, empty selection, and selected locks in their stated priority.',
+      'Predict the ordinary and boundary examples before coding.',
+    ],
+    explanation: [
+      'Explain why unselected locked rows do not disable the action.',
+      'Explain a boundary and a plausible mistake; passing checks does not prove independent understanding.',
+    ],
+    example:
+      'Selection count is derived independently of availability. The message applies busy, empty, locked, then ready precedence, so exactly one state wins. One selected locked row while busy yields count 1, enabled false, Working. With busy false the same selection yields Selection locked.',
+  },
+  'navigation-window': {
+    plan: [
+      'Predict the chapter list for an empty book and a position beyond the end.',
+      'Predict the ordinary and boundary examples before coding.',
+    ],
+    explanation: [
+      'Explain how both omitted-chapter flags follow from the first and last visible chapters.',
+      'Explain a boundary and a plausible mistake; passing checks does not prove independent understanding.',
+    ],
+    example:
+      'Clamping the center before computing bounds guarantees a nonempty window for nonempty books. Flags compare those bounds to the book boundaries. total 5, current 8, radius 1 clamps center to 5, bounds to 4 and 5, giving before true and after false.',
+  },
+  'conditional-resource-response': {
+    plan: [
+      'Predict missing resources, matching revisions, and HEAD responses.',
+      'Predict the ordinary and boundary examples before coding.',
+    ],
+    explanation: [
+      'Explain why a missing resource cannot return 304 even when revisions match.',
+      'Explain a boundary and a plausible mistake; passing checks does not prove independent understanding.',
+    ],
+    example:
+      'Existence is decided before revision comparison. A match avoids a body for either method; HEAD removes only the successful unmatched body. A missing resource with requested r1 and revision r1 returns 404, not 304. An existing HEAD request without a match returns 200 and null body.',
+  },
+  'retry-response-policy': {
+    plan: [
+      'Predict permanent failure at the attempt limit and a zero-delay retry.',
+      'Predict the ordinary and boundary examples before coding.',
+    ],
+    explanation: [
+      'Explain the equality boundary and why retryAfter is text or null.',
+      'Explain a boundary and a plausible mistake; passing checks does not prove independent understanding.',
+    ],
+    example:
+      'Ordered decisions keep permanent rejection ahead of exhaustion. Only retryable responses carry a delay, encoded as text even when zero. attempt 3, maximum 3, permanent true yields Rejected. With permanent false it yields Exhausted; attempt 2 yields Retry later.',
+  },
 }
 
 export const appDepth: Record<string, RepDepth> = {
@@ -147,5 +195,51 @@ export const appDepth: Record<string, RepDepth> = {
     alternative: 'A single combined condition is shorter, but separate early returns make it clear which rule rejected a value. Coercing with Number("3") would accept text, which this contract forbids.',
     counterexample: 'Checking only value >= 1 && value <= 10 accepts 2.5. Using < 10 rejects the valid value 10. Using typeof alone accepts NaN, though checks here never pass it.',
     transfer: 'Allow a quantity of 0 only when a second argument says the cart is being cleared. Decide the new rule order and write the conflicting cases first. This is self-reviewed, not checked by the original cases.',
+  },
+  'selection-action-state': {
+    reasoning:
+      'Selection count is derived independently of availability. The message applies busy, empty, locked, then ready precedence, so exactly one state wins.',
+    trace:
+      'One selected locked row while busy yields count 1, enabled false, Working. With busy false the same selection yields Selection locked.',
+    alternative:
+      'A single pass counts and records whether a selected row is locked, using constant space. Filtering costs O(n) extra space but keeps the selection explicit.',
+    counterexample:
+      'Checking locks before busy returns Selection locked for the conflicting case, violating precedence.',
+    transfer:
+      'Allow an action that skips locked rows. Decide whether count means all selected or only eligible rows. This transfer is self-reviewed.',
+  },
+  'navigation-window': {
+    reasoning:
+      'Clamping the center before computing bounds guarantees a nonempty window for nonempty books. Flags compare those bounds to the book boundaries.',
+    trace: 'total 5, current 8, radius 1 clamps center to 5, bounds to 4 and 5, giving before true and after false.',
+    alternative:
+      'Filtering all chapter numbers by distance is simple but visits total entries even for radius 0. Generating the bounded range takes time proportional to output.',
+    counterexample: 'Computing bounds before clamping current gives an empty window for total 5, current 8, radius 1.',
+    transfer:
+      'Always display chapter 1 and the final chapter with gaps marked. Decide how gaps are represented. This transfer is self-reviewed.',
+  },
+  'conditional-resource-response': {
+    reasoning:
+      'Existence is decided before revision comparison. A match avoids a body for either method; HEAD removes only the successful unmatched body.',
+    trace:
+      'A missing resource with requested r1 and revision r1 returns 404, not 304. An existing HEAD request without a match returns 200 and null body.',
+    alternative:
+      'A response table for all boolean combinations makes policies visible but duplicates revision fields. Ordered conditions express precedence with constant work.',
+    counterexample:
+      'Trimming requestedRevision makes " r1 " incorrectly match r1; checking revisions first makes a missing resource return 304.',
+    transfer:
+      'Support a list of acceptable revisions. Decide whether any match is enough and how malformed tokens behave. This transfer is self-reviewed.',
+  },
+  'retry-response-policy': {
+    reasoning:
+      'Ordered decisions keep permanent rejection ahead of exhaustion. Only retryable responses carry a delay, encoded as text even when zero.',
+    trace:
+      'attempt 3, maximum 3, permanent true yields Rejected. With permanent false it yields Exhausted; attempt 2 yields Retry later.',
+    alternative:
+      'A nested conditional produces the same constant-time result but makes response fields harder to inspect together. Explicit response objects keep each policy visible.',
+    counterexample:
+      'Using attempt > maximum permits an extra retry at attempt 3 of 3. Treating delay as truthy loses the valid zero header.',
+    transfer:
+      'Add a total elapsed-time budget. Decide its priority when both time and attempts are exhausted. This transfer is self-reviewed.',
   },
 }

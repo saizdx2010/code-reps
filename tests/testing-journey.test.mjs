@@ -8,9 +8,9 @@ import { exposeOverlapSolution, exposePageSolution } from './fixtures/testing-jo
 const failed = (code, id) => runRep(code, id).filter(result => !result.passed).map(result => result.name)
 const rep = id => reps.find(item => item.id === id)
 
-test('the find-the-bug journey ships three distinct reps', () => {
-  assert.deepEqual(testingJourneyReps.map(item => item.id), ['expose-page-bugs', 'repair-range-label', 'expose-overlap-bugs'])
-  assert.deepEqual(testingJourneyReps.map(item => item.format), ['backend', 'debug', 'backend'])
+test('the find-the-bug journey ships the original reps and two additional recall tasks', () => {
+  assert.deepEqual(testingJourneyReps.map(item => item.id), ['expose-page-bugs', 'repair-range-label', 'expose-overlap-bugs', 'expose-stock-bugs', 'expose-access-bugs'])
+  assert.deepEqual(testingJourneyReps.map(item => item.format), ['backend', 'debug', 'backend', 'backend', 'backend'])
 })
 
 test('expose reps state that the checks do not prove a case table is complete', () => {

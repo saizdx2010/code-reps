@@ -22,6 +22,28 @@ export const testingJourneyDepth: Record<string, RepDepth> = {
     counterexample: 'Cases made only of clearly overlapping and clearly separate intervals accept every one of the five versions except the one that changes its inputs.',
     transfer: 'Change the requirements to closed intervals that include both ends. Decide which of your cases flip, and which faulty version you would now write. This transfer is self-reviewed.',
   },
+  'expose-stock-bugs': {
+    reasoning:
+      'Allocation is bounded by both available stock and requested demand. Zero demand and insufficient stock separate result faults, while comparing the copied stock after the call detects a correct result that consumes stock.',
+    trace:
+      'For stock [5] and wanted 2, expected is 2. The mutating variant also returns 2 but leaves [3], so the input comparison exposes it.',
+    alternative:
+      'Enumerating every valid small input can supplement hand-picked cases, but hand-picked expected answers make the requirement behind each failure easier to explain. Each run must receive fresh inputs.',
+    counterexample: 'Comparing only results accepts the mutating version for every input.',
+    transfer:
+      'Reserve two stock units for emergencies before allocating. Decide whether zero stock can become negative and author boundary cases. This transfer is self-reviewed.',
+  },
+  'expose-access-bugs': {
+    reasoning:
+      'Entry requires active membership, age at least 18, and no suspension together. Cases isolate each condition and the age equality boundary; a separate flags comparison catches destructive reads.',
+    trace:
+      'Active unsuspended membership at age 18 permits entry. The strict-greater variant denies it. Active suspended membership at age 20 must still be denied.',
+    alternative:
+      'Enumerating every valid small input can supplement hand-picked cases, but hand-picked expected answers make the requirement behind each failure easier to explain. Each run must receive fresh inputs.',
+    counterexample: 'Testing only active unsuspended adults over 18 misses both the equality and suspension faults.',
+    transfer:
+      'Allow a guest pass for inactive adults while suspension still denies entry. Decide which existing answers change and add cases for the exception. This transfer is self-reviewed.',
+  },
 }
 
 export const testingJourneyGuides: Record<string, { plan: string[]; explanation: string[]; example: string }> = {
@@ -39,5 +61,29 @@ export const testingJourneyGuides: Record<string, { plan: string[]; explanation:
     plan: ['Turn each requirement into a pair of intervals that sits on its boundary.', 'Include a case for the argument order and one for unchanged inputs.', 'Write expected answers from the requirements, not from the variants.'],
     explanation: ['Say which case exposes each lettered variant and why.', 'Explain how you chose boundaries instead of clearly separate or clearly overlapping pairs.', 'Name a faulty version your table would still accept; the checks cannot show completeness.'],
     example: 'My cases are a plain overlap, touching ends in both orders, containment, an empty interval inside a longer one, equal intervals, equal starts, and a comparison of each input after the call. exposes copies each interval first and returns true on the first difference.',
+  },
+  'expose-stock-bugs': {
+    plan: [
+      'Write expected allocations for zero demand, insufficient stock, and equality.',
+      'Predict the ordinary and boundary examples before coding.',
+    ],
+    explanation: [
+      'Name the case exposing each variant and explain the separate mutation comparison.',
+      'Explain a boundary and a plausible mistake; passing checks does not prove independent understanding.',
+    ],
+    example:
+      'Expected answers come from the policy rather than the supplied code. Independent cases at equality, conflicting states, and input preservation distinguish these variants. For stock [5] and wanted 2, expected is 2. The mutating variant also returns 2 but leaves [3], so the input comparison exposes it.',
+  },
+  'expose-access-bugs': {
+    plan: [
+      'Write expected access decisions for age 18, inactive membership, and suspension.',
+      'Predict the ordinary and boundary examples before coding.',
+    ],
+    explanation: [
+      'Name the case exposing each variant and explain why an adult can still be denied.',
+      'Explain a boundary and a plausible mistake; passing checks does not prove independent understanding.',
+    ],
+    example:
+      'Expected answers come from the policy rather than the supplied code. Independent cases at equality, conflicting states, and input preservation distinguish these variants. Active unsuspended membership at age 18 permits entry. The strict-greater variant denies it. Active suspended membership at age 20 must still be denied.',
   },
 }

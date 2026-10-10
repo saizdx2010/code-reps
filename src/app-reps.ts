@@ -387,4 +387,240 @@ export const appReps: Rep[] = [
       { name: 'Rejects null', input: [null], expected: null },
     ],
   },
+  {
+    id: 'selection-action-state',
+    title: 'Derive a bulk action state',
+    category: 'Frontend core',
+    format: 'transform',
+    prompt:
+      'Write selectionState(rows, busy). Each row has selected and locked booleans. Return { count, enabled, message }. count is the number of selected rows. When busy is true, return enabled false and message "Working", regardless of selection. Otherwise no selection gives false and "Select rows"; any selected locked row gives false and "Selection locked"; remaining selections give true and "Ready". Unselected locked rows do not block the action. rows has at most 1000 entries. Preserve rows.',
+    brief: { summary: 'Write selectionState(rows, busy).', rules: [
+      'Each row has selected and locked booleans.',
+      'Return { count, enabled, message }.',
+      'count is the number of selected rows.',
+      'When busy is true, return enabled false and message "Working", regardless of selection.',
+      'Otherwise no selection gives false and "Select rows"; any selected locked row gives false and "Selection locked"; remaining selections give true and "Ready".',
+      'Unselected locked rows do not block the action.',
+      'rows has at most 1000 entries.',
+      'Preserve rows.',
+    ] },
+    example: {
+      input: 'selectionState([{"selected": true, "locked": false}], false)',
+      output: '{"count": 1, "enabled": true, "message": "Ready"}',
+    },
+    note: 'Inputs stay unchanged. Checks establish the stated data behavior, not live interface or network behavior.',
+    vocabulary: [
+      { term: 'Derived state', meaning: 'a value calculated from current inputs' },
+      { term: 'Precedence', meaning: 'which rule wins when rules conflict' },
+    ],
+    planPrompt:
+      'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    starter:
+      "function selectionState(rows: { selected: boolean; locked: boolean }[], busy: boolean): { count: number; enabled: boolean; message: string } {\n  throw new Error('Not implemented')\n}\n",
+    functionName: 'selectionState',
+    preserveInput: true,
+    hints: [
+      'Separate the count from the availability decision.',
+      'List the message rules in priority order.',
+      'Count selected rows, inspect only selected locks, then apply busy before the other states.',
+    ],
+    checks: [
+      {
+        name: 'Ready',
+        input: [[{ selected: true, locked: false }], false],
+        expected: { count: 1, enabled: true, message: 'Ready' },
+      },
+      { name: 'Empty', input: [[], false], expected: { count: 0, enabled: false, message: 'Select rows' } },
+      { name: 'Busy empty', input: [[], true], expected: { count: 0, enabled: false, message: 'Working' } },
+      {
+        name: 'Busy locked',
+        input: [[{ selected: true, locked: true }], true],
+        expected: { count: 1, enabled: false, message: 'Working' },
+      },
+      {
+        name: 'Selected locked',
+        input: [[{ selected: true, locked: true }], false],
+        expected: { count: 1, enabled: false, message: 'Selection locked' },
+      },
+      {
+        name: 'Unselected locked',
+        input: [
+          [
+            { selected: false, locked: true },
+            { selected: true, locked: false },
+          ],
+          false,
+        ],
+        expected: { count: 1, enabled: true, message: 'Ready' },
+      },
+    ],
+  },
+  {
+    id: 'navigation-window',
+    title: 'Show nearby chapter links',
+    category: 'Frontend core',
+    format: 'transform',
+    prompt:
+      'Write chapterLinks(total, current, radius). Return { chapters, before, after }. total is an integer from 0 to 1000. current is an integer from -1000 to 2000 and radius from 0 to 1000. With total 0 return chapters [] and both flags false. Otherwise treat current below 1 as 1 and above total as total. chapters contains every chapter number at most radius away from that position, within 1 through total, in ascending order. before and after say whether any chapters are omitted before or after the returned list.',
+    brief: { summary: 'Write chapterLinks(total, current, radius).', rules: [
+      'Return { chapters, before, after }.',
+      'total is an integer from 0 to 1000.',
+      'current is an integer from -1000 to 2000 and radius from 0 to 1000.',
+      'With total 0 return chapters [] and both flags false.',
+      'Otherwise treat current below 1 as 1 and above total as total.',
+      'chapters contains every chapter number at most radius away from that position, within 1 through total, in ascending order.',
+      'before and after say whether any chapters are omitted before or after the returned list.',
+    ] },
+    example: {
+      input: 'chapterLinks(9, 5, 1)',
+      output: '{"chapters": [4, 5, 6], "before": true, "after": true}',
+    },
+    note: 'Inputs stay unchanged. Checks establish the stated data behavior, not live interface or network behavior.',
+    vocabulary: [
+      { term: 'Window', meaning: 'the nearby part of a larger ordered list' },
+      { term: 'Clamp', meaning: 'keep a number within inclusive bounds' },
+    ],
+    planPrompt:
+      'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    starter:
+      "function chapterLinks(total: number, current: number, radius: number): { chapters: number[]; before: boolean; after: boolean } {\n  throw new Error('Not implemented')\n}\n",
+    functionName: 'chapterLinks',
+    preserveInput: true,
+    hints: [
+      'Resolve the empty book separately.',
+      'Normalize the current position before measuring distance.',
+      'Clamp the center and endpoints, list the inclusive range, and compare endpoints with 1 and total.',
+    ],
+    checks: [
+      { name: 'Middle', input: [9, 5, 1], expected: { chapters: [4, 5, 6], before: true, after: true } },
+      { name: 'Empty', input: [0, 99, 2], expected: { chapters: [], before: false, after: false } },
+      { name: 'Clamp low', input: [5, -1, 1], expected: { chapters: [1, 2], before: false, after: true } },
+      { name: 'Clamp high', input: [5, 8, 1], expected: { chapters: [4, 5], before: true, after: false } },
+      { name: 'Zero radius', input: [5, 3, 0], expected: { chapters: [3], before: true, after: true } },
+      { name: 'All chapters', input: [3, 2, 9], expected: { chapters: [1, 2, 3], before: false, after: false } },
+    ],
+  },
+  {
+    id: 'conditional-resource-response',
+    title: 'Shape a conditional resource response',
+    category: 'Backend core',
+    format: 'backend',
+    prompt:
+      'Write resourceResponse(exists, revision, requestedRevision, method). method is "GET" or "HEAD". revision is a nonempty ASCII string of at most 80 characters; requestedRevision is null or an ASCII string of at most 80 characters. Return { status, revision, body }. Missing resources always return { status: 404, revision: null, body: null }. For an existing resource, an exact requestedRevision match returns status 304 with the current revision and body null. Otherwise return status 200 with the current revision; body is "Resource data" for GET and null for HEAD. Compare revisions exactly without trimming or changing case.',
+    brief: { summary: 'Write resourceResponse(exists, revision, requestedRevision, method).', rules: [
+      'method is "GET" or "HEAD".',
+      'revision is a nonempty ASCII string of at most 80 characters; requestedRevision is null or an ASCII string of at most 80 characters.',
+      'Return { status, revision, body }.',
+      'Missing resources always return { status: 404, revision: null, body: null }.',
+      'For an existing resource, an exact requestedRevision match returns status 304 with the current revision and body null.',
+      'Otherwise return status 200 with the current revision; body is "Resource data" for GET and null for HEAD.',
+      'Compare revisions exactly without trimming or changing case.',
+    ] },
+    example: {
+      input: 'resourceResponse(true, "r1", null, "GET")',
+      output: '{"status": 200, "revision": "r1", "body": "Resource data"}',
+    },
+    note: 'Inputs stay unchanged. Checks establish the stated data behavior, not live interface or network behavior.',
+    vocabulary: [
+      { term: 'Conditional response', meaning: 'a response that depends on a client condition' },
+      { term: 'Revision', meaning: 'an identifier for one version of a resource' },
+    ],
+    planPrompt:
+      'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    starter:
+      'function resourceResponse(exists: boolean, revision: string, requestedRevision: string | null, method: "GET" | "HEAD"): { status: number; revision: string | null; body: string | null } {\n  throw new Error(\'Not implemented\')\n}\n',
+    functionName: 'resourceResponse',
+    preserveInput: true,
+    hints: [
+      'List conflicts between existence, revision, and method.',
+      'Missing resources take priority over a matching revision.',
+      'Handle missing, then exact match, then choose the body according to method.',
+    ],
+    checks: [
+      {
+        name: 'GET',
+        input: [true, 'r1', null, 'GET'],
+        expected: { status: 200, revision: 'r1', body: 'Resource data' },
+      },
+      {
+        name: 'Missing match',
+        input: [false, 'r1', 'r1', 'GET'],
+        expected: { status: 404, revision: null, body: null },
+      },
+      { name: 'Exact match', input: [true, 'r1', 'r1', 'GET'], expected: { status: 304, revision: 'r1', body: null } },
+      { name: 'HEAD', input: [true, 'r1', null, 'HEAD'], expected: { status: 200, revision: 'r1', body: null } },
+      {
+        name: 'Case differs',
+        input: [true, 'r1', 'R1', 'GET'],
+        expected: { status: 200, revision: 'r1', body: 'Resource data' },
+      },
+      {
+        name: 'Spaces differ',
+        input: [true, 'r1', ' r1 ', 'GET'],
+        expected: { status: 200, revision: 'r1', body: 'Resource data' },
+      },
+      { name: 'HEAD match', input: [true, 'r1', 'r1', 'HEAD'], expected: { status: 304, revision: 'r1', body: null } },
+    ],
+  },
+  {
+    id: 'retry-response-policy',
+    title: 'Shape a retry response',
+    category: 'Backend core',
+    format: 'backend',
+    prompt:
+      'Write retryResponse(attempt, maximum, delaySeconds, permanent). Return { status, retryAfter, body }. attempt and maximum are integers from 1 to 100; delaySeconds is an integer from 0 to 3600. A permanent failure takes priority and returns status 400, retryAfter null, body "Rejected". Otherwise attempt at or above maximum returns 503, null, "Exhausted". Other attempts return 429, delaySeconds as a base-10 string, and "Retry later". Zero delay is valid and must be the string "0". This is a response policy, not a timer or network request.',
+    brief: { summary: 'Write retryResponse(attempt, maximum, delaySeconds, permanent).', rules: [
+      'Return { status, retryAfter, body }.',
+      'attempt and maximum are integers from 1 to 100; delaySeconds is an integer from 0 to 3600.',
+      'A permanent failure takes priority and returns status 400, retryAfter null, body "Rejected".',
+      'Otherwise attempt at or above maximum returns 503, null, "Exhausted".',
+      'Other attempts return 429, delaySeconds as a base-10 string, and "Retry later".',
+      'Zero delay is valid and must be the string "0".',
+      'This is a response policy, not a timer or network request.',
+    ] },
+    example: {
+      input: 'retryResponse(1, 3, 12, false)',
+      output: '{"status": 429, "retryAfter": "12", "body": "Retry later"}',
+    },
+    note: 'Inputs stay unchanged. Checks establish the stated data behavior, not live interface or network behavior.',
+    vocabulary: [
+      { term: 'Retry', meaning: 'another attempt after a failure' },
+      { term: 'Response policy', meaning: 'rules for the fields a server would return' },
+    ],
+    planPrompt:
+      'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    starter:
+      "function retryResponse(attempt: number, maximum: number, delaySeconds: number, permanent: boolean): { status: number; retryAfter: string | null; body: string } {\n  throw new Error('Not implemented')\n}\n",
+    functionName: 'retryResponse',
+    preserveInput: true,
+    hints: [
+      'Write the response for conflicting failure states.',
+      'Equality with maximum means exhausted, and zero is a valid delay.',
+      'Handle permanent first, then attempt >= maximum, otherwise encode the delay with String.',
+    ],
+    checks: [
+      { name: 'Retry', input: [1, 3, 12, false], expected: { status: 429, retryAfter: '12', body: 'Retry later' } },
+      { name: 'Zero delay', input: [1, 2, 0, false], expected: { status: 429, retryAfter: '0', body: 'Retry later' } },
+      {
+        name: 'Exact maximum',
+        input: [3, 3, 12, false],
+        expected: { status: 503, retryAfter: null, body: 'Exhausted' },
+      },
+      {
+        name: 'Above maximum',
+        input: [4, 3, 12, false],
+        expected: { status: 503, retryAfter: null, body: 'Exhausted' },
+      },
+      {
+        name: 'Permanent exhausted',
+        input: [3, 3, 12, true],
+        expected: { status: 400, retryAfter: null, body: 'Rejected' },
+      },
+      {
+        name: 'Maximum delay',
+        input: [1, 100, 3600, false],
+        expected: { status: 429, retryAfter: '3600', body: 'Retry later' },
+      },
+    ],
+  },
 ]

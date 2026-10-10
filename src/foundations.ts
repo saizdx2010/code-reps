@@ -364,4 +364,90 @@ export const foundationReps: Rep[] = [
       { name: 'Handles the largest allowed input', input: [3600, 600], expected: ['60:00', '50:00', '40:00', '30:00', '20:00', '10:00', '0:00'] },
     ],
   },
+  {
+    id: 'batch-slot-labels',
+    title: 'Label packing batches',
+    category: 'TypeScript basics',
+    prompt:
+      'Write batchLabels(total, capacity). Return one label for each nonempty packing batch, in order, using exactly "Batch N: K items". N starts at 1 and K is the number of items in that batch. All but possibly the last batch contain capacity items. A total of 0 returns []. total is an integer from 0 to 1000; capacity is an integer from 1 to 1000. Do not add an empty final batch.',
+    brief: { summary: 'Write batchLabels(total, capacity).', rules: [
+      'Return one label for each nonempty packing batch, in order, using exactly "Batch N: K items".',
+      'N starts at 1 and K is the number of items in that batch.',
+      'All but possibly the last batch contain capacity items.',
+      'A total of 0 returns [].',
+      'total is an integer from 0 to 1000; capacity is an integer from 1 to 1000.',
+      'Do not add an empty final batch.',
+    ] },
+    example: {
+      input: 'batchLabels(7, 3)',
+      output: '["Batch 1: 3 items", "Batch 2: 3 items", "Batch 3: 1 items"]',
+    },
+    note: 'Inputs stay unchanged. Use integer inputs within the stated limits.',
+    vocabulary: [
+      { term: 'Capacity', meaning: 'the maximum number of items in one batch' },
+      { term: 'Remainder', meaning: 'items left after full batches' },
+    ],
+    planPrompt:
+      'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    starter:
+      "function batchLabels(total: number, capacity: number): string[] {\n  throw new Error('Not implemented')\n}\n",
+    functionName: 'batchLabels',
+    preserveInput: true,
+    hints: [
+      'Account for items not yet packed.',
+      'The final count can be smaller than capacity.',
+      'Repeat while items remain, subtract the chosen count, and increase the batch number.',
+    ],
+    checks: [
+      {
+        name: 'Partial last batch',
+        input: [7, 3],
+        expected: ['Batch 1: 3 items', 'Batch 2: 3 items', 'Batch 3: 1 items'],
+      },
+      { name: 'Empty', input: [0, 3], expected: [] },
+      { name: 'Exact division', input: [6, 3], expected: ['Batch 1: 3 items', 'Batch 2: 3 items'] },
+      { name: 'One item', input: [1, 9], expected: ['Batch 1: 1 items'] },
+      { name: 'Unit capacity', input: [2, 1], expected: ['Batch 1: 1 items', 'Batch 2: 1 items'] },
+      { name: 'Maximum total', input: [1000, 1000], expected: ['Batch 1: 1000 items'] },
+    ],
+  },
+  {
+    id: 'inspection-run-summary',
+    title: 'Summarize inspection readings',
+    category: 'TypeScript basics',
+    prompt:
+      'Write inspectionSummary(readings, limit). Return { alerts, longestRun }: alerts counts readings strictly above limit; longestRun is the largest number of consecutive readings strictly above limit. A reading equal to limit is not an alert. Empty readings return both counts as 0. readings has at most 1000 integers between -1000 and 1000; limit is an integer in that range. Preserve readings.',
+    brief: { summary: 'Write inspectionSummary(readings, limit).', rules: [
+      'Return { alerts, longestRun }: alerts counts readings strictly above limit; longestRun is the largest number of consecutive readings strictly above limit.',
+      'A reading equal to limit is not an alert.',
+      'Empty readings return both counts as 0.',
+      'readings has at most 1000 integers between -1000 and 1000; limit is an integer in that range.',
+      'Preserve readings.',
+    ] },
+    example: { input: 'inspectionSummary([4, 7, 8, 5, 9], 5)', output: '{"alerts": 3, "longestRun": 2}' },
+    note: 'Inputs stay unchanged. Use integer inputs within the stated limits.',
+    vocabulary: [
+      { term: 'Consecutive', meaning: 'next to each other with no gap' },
+      { term: 'Threshold', meaning: 'a value that separates two categories' },
+    ],
+    planPrompt:
+      'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    starter:
+      "function inspectionSummary(readings: number[], limit: number): { alerts: number; longestRun: number } {\n  throw new Error('Not implemented')\n}\n",
+    functionName: 'inspectionSummary',
+    preserveInput: true,
+    hints: [
+      'Distinguish total alerts from consecutive alerts.',
+      'A non-alert ends the current streak.',
+      'Keep a current streak and a largest streak, updating the largest during each alert.',
+    ],
+    checks: [
+      { name: 'Interrupted run', input: [[4, 7, 8, 5, 9], 5], expected: { alerts: 3, longestRun: 2 } },
+      { name: 'Empty', input: [[], 0], expected: { alerts: 0, longestRun: 0 } },
+      { name: 'Equality', input: [[5, 5], 5], expected: { alerts: 0, longestRun: 0 } },
+      { name: 'Final longest run', input: [[7, 0, 8, 9, 10], 5], expected: { alerts: 4, longestRun: 3 } },
+      { name: 'Negative threshold', input: [[-2, -1, 0], -2], expected: { alerts: 2, longestRun: 2 } },
+      { name: 'All below', input: [[1, 2], 3], expected: { alerts: 0, longestRun: 0 } },
+    ],
+  },
 ]

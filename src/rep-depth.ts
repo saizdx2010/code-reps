@@ -590,5 +590,26 @@ export const repDepth: Record<string, RepDepth> = {
     "alternative": "Counting the number of labels first and then computing each value is also correct, but it adds a division that the countdown does not need. A while loop with the same condition reads the same way.",
     "counterexample": "Using value > 0 drops the 0:00 label for starts that land exactly on zero. Padding minutes as well as seconds turns 2:10 into 02:10, which the format does not ask for.",
     "transfer": "Count up from zero to a limit in steps and format each value as h:mm:ss. Decide the stop condition and how hours appear before coding. This changed contract is self-reviewed, not checked by the original cases."
-  }
+  },
+  'batch-slot-labels': {
+    reasoning:
+      'Each iteration removes one nonempty batch from the remaining items. The count never exceeds capacity or remaining, so the labels partition the total.',
+    trace:
+      'For total 7 and capacity 3, remaining moves 7 to 4 to 1 to 0, giving counts 3, 3, 1. For total 6 it stops after two full batches.',
+    alternative:
+      'A for loop over offsets also takes O(number of batches) time and output space. Tracking remaining makes the short final batch explicit.',
+    counterexample: 'A loop allowing remaining equal to zero adds Batch 3: 0 items for total 6, capacity 3.',
+    transfer:
+      'Allow different capacities on different days. Decide what happens if the schedule ends before all items are packed. This transfer is self-reviewed.',
+  },
+  'inspection-run-summary': {
+    reasoning:
+      'The running streak ends whenever a reading fails the strict threshold. Updating the maximum on every alert includes a streak at the end.',
+    trace: 'For [7,0,8,9,10] at limit 5, streak lengths are 1,0,1,2,3; alerts is 4 and longestRun is 3.',
+    alternative:
+      'Collecting streak lengths then taking their maximum is readable but needs extra storage. One pass uses O(n) time and constant working space.',
+    counterexample: 'Updating the maximum only when a streak ends misses [8,9,10] at limit 5 entirely.',
+    transfer:
+      'Require at least two consecutive alerts before sounding an alarm. Decide when the alarm resets. This transfer is self-reviewed.',
+  },
 }
