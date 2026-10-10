@@ -113,3 +113,21 @@ export const lessonDepth: Record<string, LessonDepth> = {
     "answer": "No. Offset positions can shift even under deterministic ordering. A consistent snapshot or a suitable cursor policy can help, depending on the desired semantics and data changes. The function-runner reps do not execute a database, so this reasoning is self-reviewed rather than integration-tested."
   }
 }
+
+// Appended together to keep parallel lesson additions independent.
+Object.assign(lessonDepth, {
+  trees: {
+    title: 'A shorter sibling must not replace the deepest route',
+    code: '//     6\n//    / \\\n//   2   9\n//   |\n//   4\n// Draft: start best=0; for each child set best=depth(child);\n// then return 1 + best.',
+    reasoning: 'With children visited left to right, the subtree at 2 returns node-count depth 2, but the later leaf 9 returns 1. Assignment forgets the deeper earlier result and returns 2 instead of 3. Keep best equal to the maximum depth among children processed so far. It starts at 0, so a leaf correctly returns 1. Descending to children terminates on these finite, acyclic trees.',
+    challenge: 'Repair the update without changing the children. Predict maximum node-count depth for null and for a root alone. Then explain how a queue-based alternative would count levels and what happens to recursive stack space on a chain of n nodes. Discuss before revealing the answer.',
+    answer: 'Use best = Math.max(best, depth(child)); return 1 + best for a real node, and return 0 for null. The diagram returns 3; null returns 0; a lone root returns 1. A BFS alternative increments a count after each complete nonempty level, not after each individual node. Both traverse n nodes in O(n) time. Recursion uses O(h) call frames, which becomes O(n) on a chain and may exceed the runtime stack; an explicit stack avoids recursive calls. Queue storage depends on the widest level when old entries are reclaimed. This discussion is self-reviewed, not evidence of independent coding.'
+  },
+  graphs: {
+    title: 'One traversal cannot count disconnected groups',
+    code: 'const graph = [[1], [0], [], [4], [3]]\n// 0 -- 1     2     3 -- 4\n// One traversal starting at 0 visits only {0, 1}.',
+    reasoning: 'Reciprocal edges make this an undirected graph. A traversal cannot cross between disconnected groups, so finding {0,1} says nothing about nodes 2, 3, or 4. Scan all node indices with a shared visited set. Each unseen seed starts exactly one new group; its traversal marks the entire group, so subsequent members do not count again. The isolated node 2 still exists and contributes a group.',
+    challenge: 'Predict the group count and describe the visited set after seeds 0, 2, and 3. Explain why resetting visited for each seed overcounts. Then remove the reverse edge 1 -> 0: why must you decide on a new definition before applying this group rule? Discuss before revealing the answer.',
+    answer: 'There are 3 groups. Visited grows to {0,1}, then {0,1,2}, then {0,1,2,3,4}. Keeping it across seeds skips 1 and 4; resetting it would count every node as a fresh seed, giving 5. Removing 1 -> 0 violates the reciprocal-edge contract. Directed graphs distinguish weak connectivity (ignore direction) from strong connectivity (every member reaches every other); neither should be silently substituted. Here the weak group {0,1} would split into two strongly connected groups. This transfer changes the contract and remains self-reviewed; the existing rep checks cover undirected groups.'
+  }
+} satisfies Record<string, LessonDepth>)
