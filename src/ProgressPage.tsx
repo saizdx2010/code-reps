@@ -1,3 +1,4 @@
+import { repIndex as repCatalog } from './catalog-index'
 import { formatDate, plural } from './ui-copy.ts'
 import { InfoNote, PageHeader, StatusChip } from './Layout'
 import { profileBadges } from './badges'
@@ -66,12 +67,16 @@ export function ProgressPage({ profileName, history, now, onManageProfiles, onOp
     </section>
     {dueReviews.length > 0 && <details className="progress-reviews"><summary>Choose a review · {dueReviews.length} ready</summary><ul>{dueReviews.map(review => <li key={review.repId}><div><strong>{review.title}</strong><p>{review.reason}</p></div><button type="button" className="text-button" onClick={review.open}>{review.label}</button></li>)}</ul></details>}
     <h2 className="progress-skills-title">Your skill journeys</h2>
-    {progress.map(({ journey, stage, guided, independent, retained, recallAt, recallDue }) => <details className="progress-journey" aria-labelledby={`progress-${journey.id}`} key={journey.id}>
+    {progress.map(({ journey, stage, guided, independent, practiced, retained, recallAt, recallDue }) => <details className="progress-journey" aria-labelledby={`progress-${journey.id}`} key={journey.id}>
       <summary className="progress-heading"><div><h2 id={`progress-${journey.id}`}>{journey.title}</h2><p>{retained ? `Recall recorded ${formatDate(retained.completedAt)}` : recallDue ? 'Fresh recall is ready now' : recallAt ? `Recall ready ${formatDate(recallAt)}` : independent ? 'Independent practice recorded' : guided ? 'Next: solve a related problem without hints' : 'Next: start with guided practice'}</p></div><span className="journey-markers" aria-label={stageLabels[stage]}>{[['Guided', Boolean(guided)], ['Independent', Boolean(independent)], ['Recall', Boolean(retained)]].map(([label, complete]) => <span key={String(label)} role="img" aria-label={`${label}: ${complete ? 'recorded' : 'not recorded'}`} data-complete={complete}>{label}</span>)}</span></summary>
       <ol className="evidence-list">
         <li><strong>1. Guided practice</strong><span>{guided ? `Completed ${formatDate(guided.completedAt)}${guided.hintCount ? ` with ${guided.hintCount} ${plural(guided.hintCount, 'hint')}` : ' without hints'}` : 'Start with a guided rep.'}</span><button type="button" className="text-button" onClick={() => onOpenRep(journey.guided)}>Open rep</button></li>
         <li><strong>2. Independent problem</strong><span>{independent ? `Solved without hints ${formatDate(independent.completedAt)}` : 'Solve a related problem without hints after guided practice.'}</span><button type="button" className="text-button" disabled={!guided} onClick={() => onReviewRep(journey.independent)}>{!guided ? 'After guided rep' : independent ? 'Open rep' : 'Try rep'}</button></li>
-        <li><strong>3. Later recall</strong><span>{retained ? `Fresh problem solved without hints ${formatDate(retained.completedAt)}` : recallAt ? recallDue ? 'Ready now. Solve a fresh problem without hints.' : `Ready ${formatDate(recallAt)}. Try a fresh problem then to see what stayed with you.` : 'Available after an independent solve.'}</span><button type="button" className="text-button" disabled={!recallDue} onClick={() => onReviewRep(journey.recall)}>{recallDue ? 'Try recall' : retained ? 'Evidence recorded' : 'Available later'}</button></li>
+        {journey.practice?.map((id, index) => {
+          const completed = practiced.find(record => record.repId === id)
+          return <li key={id}><strong>{index === 0 ? '3. Extra practice (optional)' : 'Extra practice (optional)'}: {repCatalog.find(rep => rep.id === id)?.title ?? id}</strong><span>{completed ? `Solved without hints ${formatDate(completed.completedAt)}` : 'Try without hints. This is optional and does not postpone recall.'}</span><button type="button" className="text-button" onClick={() => onReviewRep(id)}>{completed ? 'Open rep' : 'Try rep'}</button></li>
+        })}
+        <li><strong>{journey.practice?.length ? '4' : '3'}. Later recall</strong><span>{retained ? `Fresh problem solved without hints ${formatDate(retained.completedAt)}` : recallAt ? recallDue ? 'Ready now. Solve a fresh problem without hints.' : `Ready ${formatDate(recallAt)}. Try a fresh problem then to see what stayed with you.` : 'Available after an independent solve.'}</span><button type="button" className="text-button" disabled={!recallDue} onClick={() => onReviewRep(journey.recall)}>{recallDue ? 'Try recall' : retained ? 'Evidence recorded' : 'Available later'}</button></li>
       </ol>
     </details>)}
     <p className="progress-quiet-links">Also: <Button variant="text" onClick={() => goToView('plan')}>Plan a practice week</Button> <Button variant="text" onClick={() => goToView('assessment')}>Take the self-assessment</Button></p>

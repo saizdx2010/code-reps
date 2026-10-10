@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { recallVariants } from '../src/fluency.ts'
+import { validateKnowledge } from '../src/knowledge-validation.ts'
 import { getArrayJourney, getJourney, journeys } from '../src/learning.ts'
 import { reps } from '../src/rep.ts'
 import { paths } from '../src/path.ts'
@@ -75,5 +77,56 @@ test('DSA applications require unhinted independence and delayed unhinted recall
     assert.equal(getJourney(journey, [guided, independent, record(journey.recall, 23)], at(25)).stage, 'independent')
     assert.equal(getJourney(journey, [guided, independent, record(journey.recall, 24, 1)], at(25)).stage, 'independent')
     assert.equal(getJourney(journey, [guided, independent, record(journey.recall, 24)], at(25)).stage, 'retained')
+  }
+})
+
+
+test('optional practice is playable, unique, and separate from evidence and recall variants', () => {
+  const ids = new Set(reps.map(rep => rep.id))
+  for (const journey of journeys) {
+    const practice = journey.practice ?? []
+    assert.equal(new Set(practice).size, practice.length)
+    const reserved = [journey.guided, journey.independent, journey.recall, ...(recallVariants[journey.id] ?? [])]
+    for (const id of practice) {
+      assert.ok(ids.has(id), id)
+      assert.ok(!reserved.includes(id), id)
+    }
+  }
+  const allRecallVariants = new Set(Object.values(recallVariants).flat())
+  for (const id of ['arrays', 'text', 'lookup', 'stacks']) {
+    const practice = journeys.find(journey => journey.id === id).practice
+    assert.equal(practice.length, 2)
+    for (const repId of practice) assert.ok(!allRecallVariants.has(repId), repId)
+  }
+})
+
+test('practice exposes chronological hint-free records without gating stage or recall', () => {
+  for (const journey of journeys.filter(journey => journey.practice?.length)) {
+    const base = [record(journey.guided, 20), record(journey.independent, 21)]
+    const extra = [record(journey.practice[0], 23), record(journey.practice[1], 22, 1), record(journey.practice[1], 22), { ...record(journey.practice[0], 23), completedAt: 'invalid' }]
+    const before = getJourney(journey, base, at(25))
+    const after = getJourney(journey, [...base, ...extra], at(25))
+    assert.deepEqual(after.practiced, [extra[2], extra[0]])
+    const { practiced: _ignoredBefore, ...beforeEvidence } = before
+    const { practiced: _ignoredAfter, ...afterEvidence } = after
+    assert.deepEqual(afterEvidence, beforeEvidence)
+    assert.equal(getJourney(journey, extra, at(25)).stage, 'learning')
+    assert.equal(getJourney(journey, [...base, record(journey.recall, 24)], at(25)).stage, 'retained')
+  }
+  assert.deepEqual(getJourney({ ...journeys[0], practice: undefined }, [], at(25)).practiced, [])
+})
+
+test('knowledge validation rejects missing, duplicate, and overlapping practice targets', () => {
+  const journey = journeys[0]
+  const original = journey.practice
+  const ids = new Set(reps.map(rep => rep.id))
+  try {
+    journey.practice = ['missing-practice', journey.guided, journey.independent, journey.recall, recallVariants[journey.id][0], 'missing-practice']
+    const problems = validateKnowledge(ids)
+    assert.ok(problems.includes('arrays: duplicate practice reps'))
+    assert.ok(problems.includes('arrays: missing practice rep missing-practice'))
+    for (const id of [journey.guided, journey.independent, journey.recall, recallVariants[journey.id][0]]) assert.ok(problems.includes(`arrays: practice overlaps evidence rep ${id}`))
+  } finally {
+    journey.practice = original
   }
 })

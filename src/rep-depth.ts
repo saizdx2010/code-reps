@@ -1,3 +1,4 @@
+import { journeyPracticeDepth } from './review-journey-practice.ts'
 import { connectedFeatureDepth } from './review-connected-feature.ts'
 import { testingJourneyDepth } from './review-testing-journey.ts'
 import { browserStateDepth } from './review-browser-state.ts'
@@ -26,6 +27,7 @@ export type RepDepth = { reasoning: string; trace: string; traceSteps?: RepTrace
 
 // Authored post-attempt reviews. Keep these out of independent task prompts.
 export const repDepth: Record<string, RepDepth> = {
+  ...journeyPracticeDepth,
   ...connectedFeatureDepth,
   ...testingJourneyDepth,
   ...practicalRepDepth,
