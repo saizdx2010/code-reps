@@ -64,3 +64,6 @@ export const getAllJourneys = (records: LearningRecord[], now = Date.now()): Jou
 export const stageLabels: Record<JourneyStage, string> = {
   learning: 'Learning', practising: 'Practicing', independent: 'Independent', retained: 'Retained',
 }
+
+// Related parts share a parser; they are practice, not independent or recall evidence.
+export const puzzlePractice = ['puzzle-parse-part-one', 'puzzle-adapt-part-two'] as const

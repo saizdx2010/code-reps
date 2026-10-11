@@ -52,3 +52,7 @@ export const dsaSolutions = {
   'graph-connected-groups': 'function connectedGroups(graph:number[][]){const parent=graph.map((_,i)=>i);function find(x:number):number{return parent[x]===x?x:find(parent[x])}for(let i=0;i<graph.length;i++)for(const j of graph[i])parent[find(i)]=find(j);return new Set(parent.map((_,i)=>find(i))).size}',
   'simplify-file-path': 'function simplifyPath(path:string){const names:string[]=[];for(const part of path.split("/")){if(part===".."){if(names.length)names.splice(names.length-1,1)}else if(part!==""&&part!==".")names.push(part)}return "/"+names.join("/")}',
 }
+
+dsaSolutions['puzzle-parse-part-one'] = 'function strongestTotal(input) { const trays = input.split("\\n").flatMap(line => { const tokens = line.match(/-?\\d+/g); return tokens ? [tokens.map(Number)] : [] }); return trays.reduce((total, tray) => { const peak = tray.reduce((a,b) => a > b ? a : b); return total + peak }, 0) }'
+
+dsaSolutions['puzzle-adapt-part-two'] = 'function nearPeakCount(input) { const trays = input.split("\\n").flatMap(line => { const tokens = line.match(/-?\\d+/g); return tokens ? [tokens.map(Number)] : [] }); return trays.reduce((total, tray) => { const peak = tray.reduce((a,b) => a > b ? a : b); return total + tray.reduce((count, value) => count + Number(value >= peak - 2), 0) }, 0) }'

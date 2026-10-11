@@ -176,6 +176,8 @@ export const repLevels: Record<string, RepLevel> = {
   'count-object-leaves': 3,
   'tree-depth-sum': 3,
   'tree-value-path': 3,
+  'puzzle-parse-part-one': 2,
+  'puzzle-adapt-part-two': 2,
   'grid-open-neighbours': 2,
   'grid-count-rooms': 3,
   'grid-fewest-steps': 3,

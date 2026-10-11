@@ -2207,6 +2207,178 @@ export const dsaDepth: Record<string, RepDepth> = {
   },
 }
 
+Object.assign(dsaDepth, {
+  'puzzle-parse-part-one': {
+    reasoning: 'Parse each nonblank line independently so a tray never borrows another tray\'s strongest value. Numeric conversion makes negative values and multi-digit values comparable. After processing k trays, the running sum equals their maxima, including negative maxima.',
+    trace: 'For "1 4 3\\n\\n-5 -2 -4\\n", parsing yields [[1,4,3],[-5,-2,-4]]. Peaks are 4 and -2. Their sum is 2.',
+    alternative: 'Process one line at a time and discard its numeric readings after computing its contribution. This uses O(w) temporary numeric storage rather than O(n) for all readings. Keeping all trays makes a changed rule easier to explore; both approaches take O(input length) time here.',
+    counterexample: 'Starting the maximum at zero makes "-8 -3 -5" contribute 0 instead of -3.',
+    transfer: 'Self-reviewed variation: each section gets a different tolerance stated in a header. Decide how to preserve section identity alongside tray readings. Original checks do not validate this changed format.',
+    traceSteps: {
+      code: [
+        'function strongestTotal(input: string): number {',
+        '  const lines = input.split(\'\\n\').map(line => line.trim()).filter(Boolean)',
+        '  const trays = lines.map(line => line.split(/[ \\t]+/).map(Number))',
+        '  let result = 0',
+        '  for (const tray of trays) {',
+        '    const peak = Math.max(...tray)',
+        '    result += peak',
+        '  }',
+        '  return result',
+        '}'
+      ],
+      input: 'input = "1 4 3\\n\\n-5 -2 -4\\n"',
+      steps: [
+        {
+          line: 0,
+          vars: { input: '1 4 3\n\n-5 -2 -4\n' },
+          structure: { kind: 'array', values: ['1 4 3', '', '-5 -2 -4', ''] },
+          note: 'The raw lines include a blank separator and a final empty line.'
+        },
+        {
+          line: 1,
+          vars: {
+            lines: 2
+          },
+          structure: {
+            kind: 'array',
+            values: ['1 4 3', '-5 -2 -4']
+          },
+          note: 'Ignore the blank separator and final empty line; two tray lines remain.'
+        },
+        {
+          line: 2,
+          vars: {
+            trays: 2
+          },
+          structure: {
+            kind: 'array',
+            values: ['[1,4,3]', '[-5,-2,-4]']
+          },
+          note: 'Convert each line separately into numeric readings; tray boundaries remain intact.'
+        },
+        {
+          line: 6,
+          vars: {
+            peak: 4,
+            result: 4
+          },
+          structure: {
+            kind: 'array',
+            values: [1, 4, 3]
+          },
+          note: 'The first tray contributes its maximum, 4.'
+        },
+        {
+          line: 6,
+          vars: {
+            peak: -2,
+            result: 2
+          },
+          structure: {
+            kind: 'array',
+            values: [-5, -2, -4]
+          },
+          note: 'The second tray contributes -2, reducing the sum to 2.'
+        },
+        {
+          line: 8,
+          vars: {
+            result: 2
+          },
+          note: 'Return the combined answer after both trays.'
+        }
+      ]
+    }
+  }
+})
+
+Object.assign(dsaDepth, {
+  'puzzle-adapt-part-two': {
+    reasoning: 'Parse each nonblank line independently so a tray never borrows another tray\'s strongest value. Numeric conversion makes negative values and multi-digit values comparable. After processing k trays, the running count includes exactly their readings meeting each local inclusive cutoff. Retaining all occurrences preserves duplicates.',
+    trace: 'For "1 4 3\\n\\n-5 -2 -4\\n", parsing yields [[1,4,3],[-5,-2,-4]]. Peaks are 4 and -2. Cutoffs are 2 and -4. Two readings qualify on each tray, so return 4.',
+    alternative: 'Process one line at a time and discard its numeric readings after computing its contribution. This uses O(w) temporary numeric storage rather than O(n) for all readings. Keeping all trays makes a changed rule easier to explore; both approaches take O(input length) time here.',
+    counterexample: 'Using a global strongest reading makes "1 4 3\\n-5 -2 -4" lose the second tray. Using > instead of >= drops -4 at the exact cutoff; a set drops repeated 7s in "7 7 5 4".',
+    transfer: 'Self-reviewed variation: each section gets a different tolerance stated in a header. Decide how to preserve section identity alongside tray readings. Original checks do not validate this changed format.',
+    traceSteps: {
+      code: [
+        'function nearPeakCount(input: string): number {',
+        '  const lines = input.split(\'\\n\').map(line => line.trim()).filter(Boolean)',
+        '  const trays = lines.map(line => line.split(/[ \\t]+/).map(Number))',
+        '  let result = 0',
+        '  for (const tray of trays) {',
+        '    const peak = Math.max(...tray)',
+        '    result += tray.filter(value => value >= peak - 2).length',
+        '  }',
+        '  return result',
+        '}'
+      ],
+      input: 'input = "1 4 3\\n\\n-5 -2 -4\\n"',
+      steps: [
+        {
+          line: 0,
+          vars: { input: '1 4 3\n\n-5 -2 -4\n' },
+          structure: { kind: 'array', values: ['1 4 3', '', '-5 -2 -4', ''] },
+          note: 'The raw lines include a blank separator and a final empty line.'
+        },
+        {
+          line: 1,
+          vars: {
+            lines: 2
+          },
+          structure: {
+            kind: 'array',
+            values: ['1 4 3', '-5 -2 -4']
+          },
+          note: 'Ignore the blank separator and final empty line; two tray lines remain.'
+        },
+        {
+          line: 2,
+          vars: {
+            trays: 2
+          },
+          structure: {
+            kind: 'array',
+            values: ['[1,4,3]', '[-5,-2,-4]']
+          },
+          note: 'Convert each line separately into numeric readings; tray boundaries remain intact.'
+        },
+        {
+          line: 6,
+          vars: {
+            peak: 4,
+            result: 2
+          },
+          structure: {
+            kind: 'array',
+            values: [1, 4, 3]
+          },
+          note: 'The first tray contributes two readings: 4 and 3 are at least 2.'
+        },
+        {
+          line: 6,
+          vars: {
+            peak: -2,
+            result: 4
+          },
+          structure: {
+            kind: 'array',
+            values: [-5, -2, -4]
+          },
+          note: 'The second tray contributes two readings: -2 and -4 are at least -4; -5 is excluded.'
+        },
+        {
+          line: 8,
+          vars: {
+            result: 4
+          },
+          note: 'Return the combined answer after both trays.'
+        }
+      ]
+    }
+  }
+})
+
 export const dsaGuides = {
   'grid-fewest-steps': {
     'plan': [
@@ -2569,3 +2741,25 @@ export const dsaGuides = {
     'example': 'The saved names represent the normalized prefix. A name extends it; a parent removes its latest name; a current-directory or empty segment leaves it unchanged. O(c) time and storage for c characters. /a/b/../../c saves a,b, removes b, removes a, then saves c, returning /c.'
   },
 }
+
+Object.assign(dsaGuides, {
+  'puzzle-parse-part-one': {
+    plan: ['State the current output rule and the shared input contract.', 'Name a negative, empty, or repeated-reading boundary before coding.'],
+    explanation: [
+      'Explain how parsing preserves tray boundaries and how the changed rule affects aggregation.',
+      'State time and storage costs; passing checks does not prove parser reuse or independent understanding.'
+    ],
+    example: 'Parse each nonblank line independently so a tray never borrows another tray\'s strongest value. Numeric conversion makes negative values and multi-digit values comparable. After processing k trays, the running sum equals their maxima, including negative maxima. For "1 4 3\\n\\n-5 -2 -4\\n", parsing yields [[1,4,3],[-5,-2,-4]]. Peaks are 4 and -2. Their sum is 2.'
+  }
+})
+
+Object.assign(dsaGuides, {
+  'puzzle-adapt-part-two': {
+    plan: ['State the current output rule and the shared input contract.', 'Name a negative, empty, or repeated-reading boundary before coding.'],
+    explanation: [
+      'Explain how parsing preserves tray boundaries and how the changed rule affects aggregation.',
+      'State time and storage costs; passing checks does not prove parser reuse or independent understanding.'
+    ],
+    example: 'Parse each nonblank line independently so a tray never borrows another tray\'s strongest value. Numeric conversion makes negative values and multi-digit values comparable. After processing k trays, the running count includes exactly their readings meeting each local inclusive cutoff. Retaining all occurrences preserves duplicates. For "1 4 3\\n\\n-5 -2 -4\\n", parsing yields [[1,4,3],[-5,-2,-4]]. Peaks are 4 and -2. Cutoffs are 2 and -4. Two readings qualify on each tray, so return 4.'
+  }
+})
