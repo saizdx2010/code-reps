@@ -2,14 +2,15 @@
 .trail { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
 .trail-stage { position: relative; }
 .trail .path-stage { border-bottom: 1px solid var(--border); }
+.trail .trail-stage:last-child > .path-stage { border-bottom: 0; }
 .trail .status-chip { justify-self: start; }
-.trail .path-stage-heading { display: flex; align-items: center; gap: 16px; padding: 16px 4px; list-style: none; cursor: pointer; }
+.trail .path-stage-heading { display: flex; align-items: center; gap: 16px; margin: 0 -8px; padding: 16px 12px; list-style: none; cursor: pointer; }
 .trail .path-stage-heading::-webkit-details-marker { display: none; }
 .trail .path-stage-heading > div { flex: 1; min-width: 0; }
 .trail .path-stage-heading h3 { margin: 0; font-size: var(--type-card); }
 .trail .path-stage-heading p { margin: 3px 0 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
 .trail .path-stage-heading::after { content: ''; width: 18px; height: 18px; flex: none; background: var(--muted); mask: var(--icon-chevron) center / contain no-repeat; transition: rotate var(--motion-fast) var(--motion-ease); }
-.trail .path-stage[open] > .path-stage-heading::after { rotate: 180deg; mask-image: var(--icon-chevron); }
+.trail .path-stage[open] > .path-stage-heading::after { rotate: 180deg; }
 .trail-stage-index { display: grid; place-items: center; width: 32px; height: 32px; flex: none; border: 1px solid var(--border); border-radius: 50%; background: var(--surface); color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .trail-stage.is-current .trail-stage-index { border-color: var(--feature-border); background: var(--feature); color: var(--feature-text); font-weight: 650; }
 .trail-stage.is-done .trail-stage-index { border-color: var(--action); background: var(--action); color: var(--action-text); }
@@ -56,12 +57,6 @@
 .trail-aside .continue-panel .primary-button { align-self: flex-start; }
 .trail-aside .continue-panel .continue-guide { align-self: flex-start; min-height: 32px; padding: 4px 0; color: var(--feature-text); }
 .trail-aside > .text-button { margin-top: -8px; }
-.trail-queue { margin: 0; }
-.trail-queue h2 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 4px; font-size: 15px; }
-.trail-queue h2 span { color: var(--muted); font-size: 13px; font-weight: 500; }
-.trail-queue ul { margin: 0; padding: 0; list-style: none; }
-.trail-queue li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; padding: 6px 0; border-top: 1px solid var(--border); font-size: 14px; }
-.trail-queue li .text-button { min-height: 32px; }
 .trail-links { display: flex; flex-wrap: wrap; gap: 4px 20px; padding-top: 4px; border-top: 1px solid var(--border); }
 .trail-aside .info-note, .trail-aside .starting-point-settings { margin: 0; }
 @media (min-width: 1101px) {
@@ -94,8 +89,6 @@
 @media (max-width: 900px) {
   .path-overview-action { justify-items: start; }
 }
-
-.goal-browsing-note { margin: 0 0 24px; color: var(--muted); font-size: 14px; }
 
 /* Skill map: each skill is a trail node; state shows in chip text, marker shape, and border style, never color alone. */
 .skill-map-main .info-note { margin-bottom: 16px; }
