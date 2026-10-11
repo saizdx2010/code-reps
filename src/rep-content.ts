@@ -14,6 +14,7 @@ function source<Module>(load: () => Promise<Module>, pick: (module: Module) => S
   return { load, pick: pick as (module: unknown) => Source }
 }
 const sources: Record<RepSourceName, Loader> = {
+  'sqlite-reps': source(() => import('./sqlite-reps.ts'), module => ({ reps: module.sqliteReps })),
   'practical-concepts': source(() => import('./practical-concepts.ts'), module => ({ reps: module.practicalReps })),
   'foundations': source(() => import('./foundations.ts'), module => ({ reps: module.foundationReps, lessons: module.foundations })),
   'dsa-reps': source(() => import('./dsa-reps.ts'), module => ({ reps: module.dsaReps })),

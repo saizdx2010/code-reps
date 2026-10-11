@@ -10,7 +10,7 @@ yarn test:e2e
 
 On Linux CI, use `yarn playwright install --with-deps chromium` to install browser system dependencies too. Browser installation requires a download; running the installed suite uses local assets.
 
-Playwright first builds current assets, including bundle-size checks, then starts its own loopback Vite server at `http://127.0.0.1:4175`. The port must be free: the suite deliberately refuses to reuse an existing server. Each test gets a fresh browser context. Practice tests use browser-local learner data. SQLite tests start the actual local service on a random loopback port with a unique temporary data directory per test, and cleanly stop it and remove that directory afterward. They never reuse a learner server or touch `~/.code-reps`.
+Playwright first builds current assets, including bundle-size checks, then starts its own loopback Vite server at `http://127.0.0.1:4175`. The port must be free: the suite deliberately refuses to reuse an existing server. Each test gets a fresh browser context. Practice tests use browser-local learner data. SQLite persistence tests start the actual local service on a random loopback port with a unique temporary data directory per test, and cleanly stop it and remove that directory afterward. They never reuse a learner server or touch `~/.code-reps`.
 
 Use `E2E_PORT=4203 yarn test:e2e` to select another dedicated port. Ordinary assertions default to 10 seconds in local runs and CI; `E2E_EXPECT_TIMEOUT` can override that timeout in milliseconds (a positive integer). Exact check-result assertions use the shared `expectChecksFinished` helper with a named 30-second completion timeout for worker startup and Monaco compilation under load. Assertions still require the expected result text, and the suite has no retries. The overall test timeout remains 45 seconds.
 
@@ -34,6 +34,7 @@ Use `E2E_PORT=4203 yarn test:e2e` to select another dedicated port. Ordinary ass
 - Exercise frontend preview states, filtering, Retry, viewport selection, modal Escape/focus restoration, stale preview feedback, and real sandboxed-frame checks/cleanup.
 - Choose a track as your goal explicitly at 1280px and 320px, preserve it on reload, and keep early recall accessible without claiming retention.
 - Confirm no session controls appear in the workspace, Home, or Journal, that `#/sessions` redirects to the Journal, and that legacy session records in a learner backup still import into SQLite using temporary service data.
+- Run the SQLite stock-transfer rep in browser-only Vite: real WASM worker queries, rejection of missing rollback, repeated fresh databases, authored review, completion, and reload. Its databases live only in worker memory, with no progress database or service access.
 - With actual SQLite, fail writes, export the cached work, replay pending saves after reload, retry, restart the service, and restore through a clean browser context. Delay an older acknowledgement while a newer edit is pending.
 - Reject malformed browser imports without replacing work, then restore a valid backup into a separate profile and verify SQLite persistence.
 - Block every external HTTP request during a cold local-server flow and exercise Monaco, worker checks, previews, and frontend checks. This tests the local assets for those flows while loopback remains available.

@@ -115,3 +115,9 @@ The Trail has one root, Foundations (`typescript`), and four tracks: Problem sol
 `src/dsa-advanced-reps.ts` owns the guided prefix-sum, interval, linked-list, heap, subset, and dynamic-programming reps. Their depth and reflection guides live in `src/review-dsa-advanced.ts`. Register its exports alongside the existing DSA exports in `src/rep-sources.ts`, `src/rep-depth.ts`, and `src/learning.ts`. Independent references live in `tests/fixtures/dsa-solutions.mjs`; `tests/dsa-advanced.test.mjs` checks common mistakes and the taught heap repair.
 
 The linked-list contract requires fresh output nodes. Value comparisons and input-mutation checks cannot establish output identity; fresh allocation remains a learner self-review point. The authoring test checks reference-node identity separately. These guided reps alone do not establish independent or retained fluency.
+
+## SQLite stock-transfer task
+
+`src/sqlite-reps.ts` owns the single SQLite rep. It retains the backend function format and existing Explain/Review flow. `src/sqlite-task.ts` supplies a narrow synchronous `run`/`query` interface, seeds a new in-memory database for each check, independently queries resulting rows, rejects an unfinished transaction, and closes the database even on errors. The worker lazy-loads `src/sqlite-loader.ts` only for this stable rep ID. Node references inject the same SQLite engine using a database factory; ordinary function reps keep their synchronous runner.
+
+Do not expose progress storage, database files, or server endpoints to this adapter. The task checks real SQL behavior, including a late constraint failure after two successful updates, but does not establish disk durability, concurrency safety, SQL style, or learning effectiveness. SQL parameter binding and schema preservation also require authored self-review. See [ADR 0002](./adr/0002-in-memory-sqlite-practice.md).

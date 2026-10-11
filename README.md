@@ -40,6 +40,7 @@ Plan and Explain offer optional English sentence starters above the writing fiel
 
 - **TypeScript foundations:** 83 playable reps and 34 searchable knowledge lessons, with starting points for beginners and returning developers.
 - **Guided tracks:** Foundations (TypeScript basics, reading and repairing code, how JavaScript runs) plus three tracks: Problem solving, Frontend, and Backend. Interview rounds sit at the end of the tracks and are untimed.
+- **SQLite practice:** one stock-transfer rep runs real SQL and commit/rollback checks in a fresh in-memory database per check. It works in browser development without the local service and never opens the learner progress database.
 - **Real-world tasks:** checkout debugging, batch-pipeline predictions, an interactive browser directory, a ticket request handler, and behavior-preserving stock-report refactoring.
 - **Skill journeys:** arrays, words, lookups, stacks, request ownership, resource ownership, validation, TypeScript state modeling, control flow, interface logic, request-response, queues, two pointers, sorting, sliding windows, binary search, recursion, trees, and graphs. Each pairs guided work with an independent problem and fresh recall after three days.
 - **Algorithms & Data Structures:** collection operations before problem solving, stack and queue ordering, two pointers, fixed windows, and binary search. See the [path guide](./docs/ALGORITHMS_DATA_STRUCTURES.md) for scope and expansion.

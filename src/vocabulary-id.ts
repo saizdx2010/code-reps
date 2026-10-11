@@ -1,5 +1,9 @@
 /** Optional Indonesian glosses for rep vocabulary, keyed by the exact English term. English stays primary. */
 export const indonesianGlossary: Record<string, string> = {
+  Transaction: 'kelompok perubahan basis data yang berhasil atau dibatalkan bersama',
+  Rollback: 'membatalkan perubahan sejak transaksi dimulai',
+  Constraint: 'aturan basis data yang menolak nilai tidak valid',
+  'Parameter binding': 'memasukkan nilai terpisah dari teks SQL melalui placeholder',
   Closure: 'fungsi yang mengingat variabel dari tempat ia dibuat',
   Reference: 'rujukan ke satu objek yang sama',
   Microtask: 'tugas yang jalan setelah skrip saat ini, sebelum timer',

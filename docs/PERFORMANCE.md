@@ -4,12 +4,12 @@
 
 | Group | Raw byte budget | Gzip byte budget |
 | --- | ---: | ---: |
-| Initial route JavaScript and static dependencies | 800,000 | 235,000 |
+| Initial route JavaScript and static dependencies | 530,000 | 153,000 |
 | Additional editor JavaScript, including its dynamic language modules | 4,200,000 | 1,050,000 |
 | Additional frontend preview/check JavaScript | 3,900,000 | 1,050,000 |
 | Editor, TypeScript, and practice worker JavaScript | 11,400,000 | 3,100,000 |
 
-The script deduplicates shared chunks within each group, excludes initial-route dependencies from the additional groups, and requires all three local workers. It also rejects unused CSS, HTML, and JSON language workers. Editor and frontend groups describe separate features; their totals are not a sum of every possible network request.
+The script deduplicates shared chunks within each group, excludes initial-route dependencies from the additional groups, and requires all three local workers. Worker totals also include their shared and dynamically imported JavaScript chunks. It also rejects unused CSS, HTML, and JSON language workers. Editor and frontend groups describe separate features; their totals are not a sum of every possible network request.
 
 Monaco remains lazy, with existing hover/focus preloading and a plain text recovery editor. `src/monaco.ts` retains editor contributions from the locked Monaco release but registers only TypeScript and JavaScript language support. The previous general import also bundled CSS, HTML, and JSON workers plus many unused language modules. Removing those workers alone avoids approximately 2.26 MB of raw build output. This does not imply a corresponding startup-speed improvement: unused workers were not necessarily loaded on the first route.
 
@@ -18,3 +18,5 @@ The learning-tools presentation in `LearningHub.tsx` also loads on demand. Home,
 The SQLite browser suite attaches Home and editor readiness durations alongside the bundle report. It uses the built app and a fresh browser context on the local machine, without CPU/network throttling. Measurements include Playwright observation overhead and are not representative of every learner's hardware. Shared CI timing has no hard speed threshold; byte budgets provide the reproducible regression gate.
 
 When a dependency or content change exceeds a budget, inspect the manifest and measured flow before changing the limit. Keep TypeScript assistance, editor keyboard operation, recovery, and local worker behavior covered by the browser suite. Large editor/compiler chunks still trigger Vite's warning; it remains visible. The budgets establish current size limits, not a claim that loading performance is fully optimized.
+
+The stock-transfer rep alone lazy-loads sql.js in the practice worker. The production build bundles its WASM locally (659,806 raw bytes, 322,711 gzip bytes in sql.js 1.13.0); this binary is additional to the JavaScript budgets above. It is fetched only when that rep runs, never from a CDN. The worker JavaScript budget includes the lazy SQLite loader. See [ADR 0002](./adr/0002-in-memory-sqlite-practice.md). Asset bundling does not establish disconnected-browser operation.

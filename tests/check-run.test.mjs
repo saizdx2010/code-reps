@@ -110,3 +110,17 @@ test('structured failed-check feedback is preserved', () => {
   assert.deepEqual(run.results, [results])
   assert.deepEqual(run.errors, [])
 })
+
+test('the SQLite rep gets a separate load allowance, then the usual five seconds after the engine is ready', () => {
+  const delays = [], errors = []
+  let callback
+  const worker = { onmessage: null, onerror: null, postMessage() {}, terminate() {} }
+  startCheckRun('code', 'sqlite-stock-transfer', {
+    createWorker: () => worker, onResults() {}, onError: value => errors.push(value),
+    schedule: (run, ms) => { delays.push(ms); callback = run; return 1 }, clearTimer() {},
+  })
+  worker.onmessage({ data: { ready: true } })
+  assert.deepEqual(delays, [30000, 5000])
+  callback()
+  assert.match(errors[0], /took too long/)
+})

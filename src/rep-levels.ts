@@ -7,6 +7,7 @@ export type RepLevelLabel = 'Beginner' | 'Intermediate' | 'Advanced'
 export const repLevelLabels: Record<RepLevel, RepLevelLabel> = { 1: 'Beginner', 2: 'Intermediate', 3: 'Advanced' }
 
 export const repLevels: Record<string, RepLevel> = {
+  'sqlite-stock-transfer': 2,
   'quiet-sensor-span': 2,
   'shared-seat-occurrences': 2,
   'dispatch-priority-order': 2,

@@ -2,12 +2,13 @@
 // This is the small catalog the app renders from at startup. Heavy rep and lesson content loads on demand.
 import type { Rep } from './rep-types.ts'
 
-export type RepSourceName = 'practical-concepts' | 'foundations' | 'dsa-reps' | 'dsa-advanced-reps' | 'ai-era-reps' | 'core-reps' | 'journey-reps' | 'transfer-reps' | 'rich-reps' | 'fluency-reps' | 'capstone-reps' | 'validation-reps' | 'app-reps' | 'browser-state-reps' | 'dom-reps' | 'connected-feature-reps' | 'testing-journey-reps'
+export type RepSourceName = 'sqlite-reps' | 'practical-concepts' | 'foundations' | 'dsa-reps' | 'dsa-advanced-reps' | 'ai-era-reps' | 'core-reps' | 'journey-reps' | 'transfer-reps' | 'rich-reps' | 'fluency-reps' | 'capstone-reps' | 'validation-reps' | 'app-reps' | 'browser-state-reps' | 'dom-reps' | 'connected-feature-reps' | 'testing-journey-reps'
 export type RepSummary = { id: string; title: string; category: string; format?: Rep['format']; starter: string; hintTotal: number; briefWords: number; checkTotal: number; source: RepSourceName }
 export type QuestionSummary = { id: string; optionCount: number; answer: number; completion?: true; answerText?: string }
 export type SkillSummary = { id: string; title: string; summary: string; prerequisites: string[]; related: string[]; repIds: string[]; firstMistake: string; questions: QuestionSummary[] }
 
 export const repIndex: RepSummary[] = [
+  {"id":"sqlite-stock-transfer","title":"Transfer stock with SQLite","category":"Backend","format":"backend","starter":"type SqlValue = number | string | null\ntype Database = {\n  run(sql: string, parameters?: SqlValue[]): void\n  query(sql: string, parameters?: SqlValue[]): SqlValue[][]\n}\n\nfunction transferStock(db: Database, amount: number): boolean {\n  // Write your SQL and transaction handling here.\n  return false\n}\n","hintTotal":3,"briefWords":208,"checkTotal":7,"source":"sqlite-reps"},
   {"id":"closure-counters","title":"Build independent counters","category":"Practical concepts","starter":"function makeCounter(start: number): () => number {\n  return () => start\n}\nfunction counterTrace(starts: number[], calls: number[]): number[] {\n  // Create and call the counters.\n  return []\n}","hintTotal":3,"briefWords":37,"checkTotal":4,"source":"practical-concepts"},
   {"id":"reference-groups","title":"Count distinct referenced objects","category":"Practical concepts","starter":"function referenceGroups(pool: number[], indices: number[]): number {\n  return 0\n}","hintTotal":3,"briefWords":34,"checkTotal":4,"source":"practical-concepts"},
   {"id":"event-loop-order","title":"Predict one event-loop turn","category":"Practical concepts","starter":"function turnOrder(entries: {kind: 'sync' | 'micro' | 'timer'; label: string}[]): string[] {\n  return []\n}","hintTotal":3,"briefWords":39,"checkTotal":4,"source":"practical-concepts"},
