@@ -1,3 +1,4 @@
+import { reactSolution } from './fixtures/react-solution.mjs'
 import { recallThinSolutions } from './fixtures/recall-thin-solutions.mjs'
 import { journeyPracticeSolutions } from './fixtures/journey-practice-solutions.mjs'
 import { connectedSolutionsById } from './fixtures/connected-feature-solutions.mjs'
@@ -69,7 +70,7 @@ const solutions = {
 }
 
 test('every rep has reference-solution coverage and a complete learning brief', () => {
-  const covered = new Set([...Object.keys(solutions), ...Object.keys(richSolutions), ...Object.keys(capstoneSolutions), ...Object.keys(domSolutions), ...Object.keys(connectedSolutionsById), ...aiEraReps.map(rep => rep.id)])
+  const covered = new Set([...Object.keys(solutions), ...Object.keys(richSolutions), ...Object.keys(capstoneSolutions), ...Object.keys(domSolutions), ...Object.keys(connectedSolutionsById), ...aiEraReps.map(rep => rep.id), ...Object.keys({ 'react-channel-counter': reactSolution })])
   assert.equal(new Set(reps.map(rep => rep.id)).size, reps.length, 'Rep IDs must be unique')
   assert.deepEqual([...covered].sort(), reps.map(rep => rep.id).sort())
   for (const rep of reps) {

@@ -190,6 +190,7 @@ export const repLevels: Record<string, RepLevel> = {
   'algo-subsets': 3,
   'algo-coin-change': 3,
   // Accessible DOM interactions.
+  'react-channel-counter': 2,
   'dom-disclosure': 2,
   'dom-form-fields': 2,
   'dom-form-errors': 2,

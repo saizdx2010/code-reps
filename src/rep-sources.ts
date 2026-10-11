@@ -1,3 +1,4 @@
+import { reactReps } from './react-reps.ts'
 // Node-only: tests, scripts, and the practice worker see every rep synchronously through this list.
 // The app never imports it; it loads one source at a time through src/rep-content.ts.
 // The order here is the catalog order. Add a new rep module to this list, to src/rep-content.ts, and run `yarn content:index`.
@@ -36,6 +37,7 @@ export const repSources: { name: string; reps: Rep[]; lessons?: readonly RepSour
   { name: 'validation-reps', reps: validationReps },
   { name: 'app-reps', reps: appReps },
   { name: 'browser-state-reps', reps: browserStateReps },
+  { name: 'react-reps', reps: reactReps },
   { name: 'dom-reps', reps: domReps },
   { name: 'connected-feature-reps', reps: connectedFeatureReps },
   { name: 'testing-journey-reps', reps: testingJourneyReps },
