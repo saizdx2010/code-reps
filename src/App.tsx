@@ -1,11 +1,11 @@
 import { repNotes } from './rep-notes.ts'
 import { catalogTopic } from './catalog-labels.ts'
 import { InlineCode } from './InlineCode'
-import { formatDate } from './ui-copy.ts'
 import { usePracticeSessions } from './usePracticeSessions'
 import { emptySessions } from './practice-sessions'
-import { Input, Select, Textarea } from './Input'
-import { DateInput } from './DateInput'
+import { Input, Textarea } from './Input'
+import { difficultyLabels, confidenceLabels } from './attempt-labels.ts'
+import type { Difficulty, Confidence } from './attempt-labels.ts'
 import { AppNavigation } from './AppNavigation'
 import type { HubTab } from './LearningHub'
 import { InterviewStatus } from './InterviewStatus'
@@ -30,7 +30,7 @@ import { paths } from './path'
 import { PathsPage } from './PathsPage'
 import { buildTrail } from './trail-map'
 import { JournalTabs } from './Journal'
-import { InfoNote, PageHeader } from './Layout'
+import { InfoNote } from './Layout'
 import { foundationsPathId, repCurriculumEvidence } from './curriculum'
 import { HomePage } from './HomePage'
 import { TraceViewer } from './TraceViewer'
@@ -62,18 +62,15 @@ const PracticeCatalog = lazy(() => import('./PracticeCatalog').then(module => ({
 const QuickLessons = lazy(() => import('./QuickLessons').catch(() => ({ default: () => <main className="learn-main"><h1>The lessons could not load</h1><p>Reload to try again. Your saved work is kept.</p><button className="primary-button" type="button" onClick={() => window.location.reload()}>Reload app</button></main> })))
 const RepGuidance = lazy(() => import('./RepGuidance'))
 const FirstRepWalkthrough = lazy(() => import('./FirstRepWalkthrough').then(module => ({ default: module.FirstRepWalkthrough })).catch(() => ({ default: ({ onDismiss }: { onDismiss: () => void }) => <aside aria-label="First rep walkthrough"><p>Guide unavailable. Reload to try again, or continue practice.</p><button type="button" className="text-button" onClick={onDismiss}>Skip walkthrough</button></aside> })))
+const HistoryPage = lazy(() => import('./HistoryPage').then(module => ({ default: module.HistoryPage })).catch(() => ({ default: () => <main className="history-main"><h1>Attempt history could not load</h1><p>Reload to try again. Your saved work is kept.</p><button className="primary-button" type="button" onClick={() => window.location.reload()}>Reload app</button></main> })))
 const LearningHub = lazy(() => import('./LearningHub').then(module => ({ default: module.LearningHub })).catch(() => ({ default: () => <main className="learning-hub"><h1>Learning tools could not load</h1><p>Reload to try again. Your saved work is kept.</p><button className="primary-button" type="button" onClick={() => window.location.reload()}>Reload app</button></main> })))
 const FrontendPreview = lazy(() => import('./FrontendPreview').catch(() => ({ default: () => <section className="panel frontend-preview" role="alert"><p>The preview could not load. Reload to try again; your draft will be kept.</p><button className="primary-button" type="button" onClick={() => window.location.reload()}>Reload app</button></section> })))
 const storageKey = (repId: string) => `code-reps:attempt:${repId}:v1`
 const historyKey = 'code-reps:history:v1'
 const learnerStartKey = 'code-reps:learner-start:v1'
 
-type Difficulty = 'none' | 'wording' | 'approach' | 'typescript' | 'edge-cases'
-type Confidence = 'need-practice' | 'getting-there' | 'confident'
 type Attempt = { plan: string; code: string; explanation: string; hintCount: number; difficulty?: Difficulty; confidence?: Confidence; mistakes?: string[]; completedAt?: string }
 type AttemptRecord = Attempt & { id: string; repId: string; completedAt: string }
-const difficultyLabels: Record<Difficulty, string> = { none: 'Nothing in particular', wording: 'Understanding the wording', approach: 'Finding an approach', typescript: 'Writing TypeScript', 'edge-cases': 'Handling edge cases' }
-const confidenceLabels: Record<Confidence, string> = { 'need-practice': 'Need more practice', 'getting-there': 'Getting there', confident: 'Confident' }
 function readHistory(): AttemptRecord[] {
   try {
     const saved: unknown = JSON.parse(localStore.getItem(historyKey) || '[]')
@@ -99,12 +96,20 @@ function readAttempt(rep: RepSummary): Attempt {
   } catch { return { plan: '', code: rep.starter, explanation: '', hintCount: 0 } }
 }
 
-// UI-only renders reuse the same learner summary; work changes invalidate it.
+// UI-only renders reuse the same learner summary. Consumers read only draft status, so typing that keeps the status changes nothing here.
 function usePracticeOverview(repId: string, attempt: Attempt, history: AttemptRecord[], learnerStart: LearnerStart | null, now: number, goalPathId: string) {
-  const drafts = useMemo(() => Object.fromEntries(reps.map(item => [item.id, item.id === repId ? attempt : readAttempt(item)])), [repId, attempt])
+  // Other reps' saved drafts change only on rep switch or completion (history); re-reading every one on each keystroke dominated typing cost.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- history signals a completion write to another rep's draft.
+  const savedDrafts = useMemo(() => Object.fromEntries(reps.filter(item => item.id !== repId).map(item => [item.id, readAttempt(item)])), [repId, history])
+  const currentStatus = attemptStatus(repId, attempt)
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- the current attempt is refreshed whenever its status changes.
+  const drafts = useMemo(() => ({ ...savedDrafts, [repId]: attempt }), [savedDrafts, repId, currentStatus])
   const practicePlan = useMemo(() => getPracticePlan(drafts, history, learnerStart, repId, now, goalPathId), [drafts, history, learnerStart, repId, now, goalPathId])
   return { drafts, practicePlan }
 }
+
+const repById = new Map(reps.map(item => [item.id, item]))
+const categories = [...new Set(reps.map(catalogTopic))].sort()
 
 function App({ profileName = 'My learning', onManageProfiles }: { profileName?: string; onManageProfiles?: () => void }) {
   const fluency = useFluency()
@@ -117,10 +122,6 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   const [catalogSkill, setCatalogSkill] = useSessionPreference<string>('catalogSkill', '')
   const [catalogFormat, setCatalogFormat] = useSessionPreference<string>('catalogFormat', '')
   const [catalogStatus, setCatalogStatus] = useSessionPreference<string>('catalogStatus', '')
-  const [historyQuery, setHistoryQuery] = useSessionPreference<string>('historyQuery', '')
-  const [historySkill, setHistorySkill] = useSessionPreference<string>('historySkill', '')
-  const [historyDifficulty, setHistoryDifficulty] = useSessionPreference<string>('historyDifficulty', '')
-  const [historyDate, setHistoryDate] = useSessionPreference<string>('historyDate', '')
   const [glossaryOpen, setGlossaryOpen] = useState(false)
   const [commandsOpen, setCommandsOpen] = useState(false)
   const [focusMode, setFocusMode] = useState(false)
@@ -225,6 +226,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   }, [])
   useEffect(() => {
     const saveDraft = (event?: Event) => {
+      const { repId, attempt } = latestWork.current
       try { localStore.setItem(storageKey(repId), JSON.stringify(attempt)) }
       catch { event?.preventDefault(); setSaveState('Could not save on this device; download a backup') }
     }
@@ -233,7 +235,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     window.addEventListener('pagehide', saveDraft)
     document.addEventListener('visibilitychange', saveWhenHidden)
     return () => { window.removeEventListener('code-reps-save-current', saveDraft); window.removeEventListener('pagehide', saveDraft); document.removeEventListener('visibilitychange', saveWhenHidden) }
-  }, [attempt, repId])
+  }, [])
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 60_000)
     return () => window.clearInterval(timer)
@@ -464,25 +466,28 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   const reflectionGuide = review.status === 'ready' ? review.content.reflectionGuides[rep.id] : undefined
   const depth = review.status === 'ready' ? review.content.repDepth[rep.id] : undefined
   const recommendation = practicePlan.next
-  const recommendedRep = recommendation && reps.find(item => item.id === recommendation.repId)
+  const recommendedRep = recommendation && repById.get(recommendation.repId)
   const actionLabel = (mode: string) => mode === 'resume' ? 'Continue rep' : mode === 'review' ? 'Start review' : mode === 'retry' ? 'Retry without hints' : 'Start rep'
   const openPracticeAction = (action: { repId: string; mode: string }) => action.mode === 'review' || action.mode === 'retry' ? openReview(action.repId) : openRep(action.repId)
-  const completedPathIds = new Set(history.map(record => record.repId))
+  const completedPathIds = useMemo(() => new Set(history.map(record => record.repId)), [history])
   const recallReady = (id: string) => !journeyStates.some(state => state.journey.recall === id && !state.recallDue && !state.retained)
   // Due reviews and hint-free retries outrank path order; recall reps wait until they are due.
   const pathNextRep = recommendation?.mode === 'review' || recommendation?.mode === 'retry' ? undefined : reps.find(item => item.id === nextRepInPath(fluency.state.goal.pathId, repId, id => completedPathIds.has(id) || !recallReady(id)))
-  const trailInput = (id: string) => ({ completed: (repId: string) => completedPathIds.has(repId), inProgress: (repId: string) => repStatus(reps.find(item => item.id === repId)!) === 'In progress', recallReady, lessonChecked: (skillId: string) => Object.keys(fluency.state.answers).some(key => key.startsWith(`${skillId}:`)), skipStages: learnerStart === 'returning' && id === foundationsPathId ? 1 : 0 })
-  const goalTrail = buildTrail(fluency.state.goal.pathId, trailInput(fluency.state.goal.pathId))
-  const browsedTrail = buildTrail(pathId, trailInput(pathId))
+  const goalPathId = fluency.state.goal.pathId
+  const answers = fluency.state.answers
+  const [goalTrail, browsedTrail] = useMemo(() => {
+    const ready = (id: string) => !journeyStates.some(state => state.journey.recall === id && !state.recallDue && !state.retained)
+    const checkedSkills = new Set(Object.keys(answers).filter(key => key.includes(':')).map(key => key.slice(0, key.indexOf(':'))))
+    const input = (id: string) => ({ completed: (repId: string) => completedPathIds.has(repId), inProgress: (repId: string) => attemptStatus(repId, drafts[repId]) === 'In progress', recallReady: ready, lessonChecked: (skillId: string) => checkedSkills.has(skillId), skipStages: learnerStart === 'returning' && id === foundationsPathId ? 1 : 0 })
+    return [buildTrail(goalPathId, input(goalPathId)), buildTrail(pathId, input(pathId))]
+  }, [goalPathId, pathId, completedPathIds, journeyStates, drafts, answers, learnerStart])
   const completionNext = pathNextRep ? { repId: pathNextRep.id, mode: 'start' } : recommendation
   const completionLabel = pathNextRep ? `Next rep: ${pathNextRep.title}` : recommendedRep && recommendation ? `${actionLabel(recommendation.mode)}: ${recommendedRep.title}` : 'Return to your trail'
   const trailEvidence = (id: string) => repCurriculumEvidence(id, journeyStates)
   const journalTabs = <JournalTabs view={view} onNavigate={setView} />
   const notes = repNotes(full?.note ?? '')
-  const categories = [...new Set(reps.map(catalogTopic))].sort()
-  const dueIds = new Set(practicePlan.due.map(item => item.repId))
-  const visibleReps = reps.filter(item => `${item.title} ${catalogTopic(item)} ${item.category} ${item.format ?? 'algorithm'}`.toLowerCase().includes(catalogQuery.trim().toLowerCase()) && (!catalogSkill || catalogTopic(item) === catalogSkill) && (!catalogFormat || (item.format ?? 'algorithm') === catalogFormat) && (!catalogStatus || (catalogStatus === 'review' ? dueIds.has(item.id) : repStatus(item) === catalogStatus)))
-  const visibleHistory = history.filter(record => { const item = reps.find(rep => rep.id === record.repId); return (!historyQuery || `${item?.title ?? ''} ${item?.category ?? ''}`.toLowerCase().includes(historyQuery.toLowerCase())) && (!historySkill || Boolean(item && catalogTopic(item) === historySkill)) && (!historyDifficulty || record.difficulty === historyDifficulty) && (!historyDate || new Date(record.completedAt).toLocaleDateString('en-CA') === new Date(`${historyDate}T12:00:00`).toLocaleDateString('en-CA')) })
+  const dueIds = useMemo(() => new Set(practicePlan.due.map(item => item.repId)), [practicePlan])
+  const visibleReps = useMemo(() => reps.filter(item => `${item.title} ${catalogTopic(item)} ${item.category} ${item.format ?? 'algorithm'}`.toLowerCase().includes(catalogQuery.trim().toLowerCase()) && (!catalogSkill || catalogTopic(item) === catalogSkill) && (!catalogFormat || (item.format ?? 'algorithm') === catalogFormat) && (!catalogStatus || (catalogStatus === 'review' ? dueIds.has(item.id) : attemptStatus(item.id, drafts[item.id]) === catalogStatus))), [catalogQuery, catalogSkill, catalogFormat, catalogStatus, dueIds, drafts])
   const commands = [
     ...(['home', 'paths', 'catalog', 'learn', 'knowledge', 'notebook', 'plan', 'projects', 'interview', 'assessment', 'mistakes', 'progress', 'skillmap', 'history'] as View[]).map(page => ({ label: `Go to ${page === 'skillmap' ? 'skill map' : page === 'catalog' ? 'practice library' : page === 'learn' ? 'quick lessons' : page === 'home' ? 'Home: your trail' : page === 'paths' ? 'all tracks' : page === 'plan' ? 'this week' : page}`, run: () => setView(page) })),
     { label: 'Open glossary', run: () => setGlossaryOpen(true) },
@@ -552,7 +557,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     {view === 'workspace' && <BadgeNotice portalTarget={attempt.completedAt ? badgeSlot : null} history={history} now={now} onView={() => setView('progress')} />}
     {saveState !== 'Saving…' && !saveState.startsWith('Saved') && <div className="storage-recovery" role="status"><p>{saveState}</p><button type="button" onClick={() => { void retrySaving() }}>Retry saving</button><button className="reset-button" type="button" onClick={exportData}>Download backup</button></div>}
     <ScreenMemory key={`${view}:${view === 'workspace' ? repId : ''}`} screenKey={`${view}:${view === 'workspace' ? repId : ''}`}>
-    {(['knowledge', 'notebook', 'plan', 'assessment', 'projects', 'interview'] as View[]).includes(view) ? <Suspense fallback={<PageLoading journalTabs={journalTabs} page={view as HubTab} notebookHasDraft={Boolean(fluency.state.noteDraft)} notebookHasEntries={fluency.state.notes.length > 0} />}><LearningHub journalTabs={journalTabs} onQuickLessons={() => setView('learn')} tab={view as HubTab} setTab={setHubTab} state={fluency.state} update={fluency.update} error={fluency.error} history={history} openRep={openRep} reviewRep={openReview} skillId={knowledgeSkill} onSkill={setKnowledgeSkill} candidates={[...practicePlan.due, ...practicePlan.unfinished, ...(practicePlan.next ? [practicePlan.next] : []), ...((paths.find(p => p.id === fluency.state.goal.pathId) ?? paths[0]).stages.flatMap(stage => stage.repIds).filter(id => !history.some(a => a.repId === id)).map(repId => ({ repId, reason: 'Build toward your selected track.' })))]} /></Suspense> : view === 'home' ? <HomePage walkthroughSeen={walkthrough !== 'new'} launchWalkthrough={() => { setWalkthrough('active'); openRep('declare-variables') }} goalPathId={fluency.state.goal.pathId} onPath={id => { setPathId(id); setView('paths') }} practicePlan={practicePlan} repStatus={repStatus} openPracticeAction={openPracticeAction} actionLabel={actionLabel} onProgress={() => setView('progress')} onLibrary={() => setView('catalog')} trail={goalTrail} evidence={trailEvidence} openRep={openRep} openLesson={openKnowledge} /> : view === 'catalog' ? <Suspense fallback={<main aria-busy="true"><p role="status">Loading the library…</p></main>}><PracticeCatalog goalPathId={fluency.state.goal.pathId} filters={{ query: catalogQuery, skill: catalogSkill, format: catalogFormat, status: catalogStatus }} onFilter={(field, value) => ({ query: setCatalogQuery, skill: setCatalogSkill, format: setCatalogFormat, status: setCatalogStatus })[field](value)} clearFilters={() => { setCatalogQuery(''); setCatalogSkill(''); setCatalogFormat(''); setCatalogStatus('') }} categories={categories} visibleReps={visibleReps} dueIds={dueIds} repStatus={repStatus} openRep={openRep} /></Suspense> : view === 'paths' ? <PathsPage goalPathId={fluency.state.goal.pathId} setGoalPath={id => fluency.update({ ...fluency.state, goal: { ...fluency.state.goal, pathId: id } })} goalError={fluency.error} pathId={pathId} setPathId={setPathId} pathPicker={pathPicker} setPathPicker={setPathPicker} learnerStart={learnerStart} startingPoint={startingPoint} completedPathIds={completedPathIds} trail={browsedTrail} evidence={trailEvidence} openRep={openRep} openLesson={openKnowledge} /> : view === 'skillmap' ? <SkillMapPage goalPathId={fluency.state.goal.pathId} progress={journeyStates} openRep={openRep} reviewRep={openReview} /> : view === 'mistakes' ? <MistakesPage history={history} now={now} onOpenRep={openRep} /> : view === 'progress' ? <ProgressPage profileName={profileName} history={history} now={now} onManageProfiles={onManageProfiles} onOpenPath={id => { setPathId(id); setView('paths') }} progress={journeyStates} recommendation={recommendation && recommendedRep ? { title: recommendedRep.title, reason: recommendation.reason, label: actionLabel(recommendation.mode), open: () => openPracticeAction(recommendation) } : undefined} dueReviews={practicePlan.due.map(action => ({ title: reps.find(item => item.id === action.repId)!.title, reason: action.reason, open: () => openPracticeAction(action), label: actionLabel(action.mode), repId: action.repId }))} onOpenRep={openRep} onReviewRep={openReview} onExport={exportData} onImport={(file) => { void importData(file) }} transferMessage={transferMessage} serverReady={isServerReady()} /> : view === 'learn' ? <Suspense fallback={<main className="learn-main" aria-busy="true"><p role="status">Loading the lessons…</p></main>}><QuickLessons openRep={openRep} onBrowse={() => setView('knowledge')} /></Suspense> : view === 'history' ? <main className="history-main"><PageHeader eyebrow="Journal" title="Attempt history" description="Completed reps stay here so you can compare your thinking over time." actions={journalTabs} /><div className="filter-bar" aria-label="History filters"><label>Find an attempt<Input type="search" value={historyQuery} onChange={event => setHistoryQuery(event.target.value)} placeholder="Rep or skill…" /></label><label>Skill<Select aria-label="Skill" value={historySkill} onChange={event => setHistorySkill(event.target.value)}><option value="">All skills</option>{categories.map(category => <option key={category}>{category}</option>)}</Select></label><label>Difficulty<Select aria-label="Difficulty" value={historyDifficulty} onChange={event => setHistoryDifficulty(event.target.value)}><option value="">Any difficulty</option>{Object.entries(difficultyLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select></label><label>Date<DateInput value={historyDate} onValueChange={setHistoryDate} /></label><button className="text-button" type="button" onClick={() => { setHistoryQuery(''); setHistorySkill(''); setHistoryDifficulty(''); setHistoryDate('') }}>Clear filters</button></div><p className="utility-note" aria-live="polite">{visibleHistory.length} matching attempts</p>{history.length === 0 ? <div className="history-empty">No completed attempts yet. Finish a rep to save your first one here.</div> : <ol className="history-list">{visibleHistory.map((record) => { const item = reps.find((entry) => entry.id === record.repId); const previous = history.filter(entry => entry.repId === record.repId && Date.parse(entry.completedAt) < Date.parse(record.completedAt)).sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt))[0]; return <li key={record.id} data-attempt-id={record.id}><div><strong>{item?.title ?? 'Unknown rep'}</strong><span>{formatDate(record.completedAt, true)} · {record.hintCount} {record.hintCount === 1 ? 'hint' : 'hints'} used</span></div><details><summary>Review attempt</summary>{record.difficulty && <p className="reflection-detail">Difficulty: {difficultyLabels[record.difficulty]}</p>}{record.confidence && <p className="reflection-detail">Confidence: {confidenceLabels[record.confidence]}</p>}{previous && <section className="attempt-compare"><strong>Since your previous attempt</strong><p>Hints: {previous.hintCount} {record.hintCount}. Compare the code and any written reasoning below; the app does not grade their quality.</p><div className="attempt-comparison"><div><h4>Previous · {formatDate(previous.completedAt)}</h4>{previous.plan.trim() && <><h5>Plan</h5><p>{previous.plan}</p></>}<h5>Code</h5><pre><code>{previous.code}</code></pre>{previous.explanation.trim() && <><h5>Explanation</h5><p>{previous.explanation}</p></>}</div><div><h4>This attempt · {formatDate(record.completedAt)}</h4>{record.plan.trim() && <><h5>Plan</h5><p>{record.plan}</p></>}<h5>Code</h5><pre><code>{record.code}</code></pre>{record.explanation.trim() && <><h5>Explanation</h5><p>{record.explanation}</p></>}</div></div></section>}{record.plan.trim() && <><h3>Plan</h3><p>{record.plan}</p></>}<h3>Code</h3><pre><code>{record.code}</code></pre>{record.explanation.trim() && <><h3>Explanation</h3><p>{record.explanation}</p></>}</details>{item && <button className="text-button" type="button" onClick={() => openRep(item.id)}>Open rep</button>}</li> })}</ol>}{history.length > 0 && !visibleHistory.length && <p className="history-empty">No attempts match these filters. Try another date or clear filters.</p>}</main> : <main ref={workspaceRef} className={`practice-main ${focusMode ? 'focus-mode' : ''}`} data-step={activeStep} id="main-content" onKeyDown={event => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); runChecks() } }}>
+    {(['knowledge', 'notebook', 'plan', 'assessment', 'projects', 'interview'] as View[]).includes(view) ? <Suspense fallback={<PageLoading journalTabs={journalTabs} page={view as HubTab} notebookHasDraft={Boolean(fluency.state.noteDraft)} notebookHasEntries={fluency.state.notes.length > 0} />}><LearningHub journalTabs={journalTabs} onQuickLessons={() => setView('learn')} tab={view as HubTab} setTab={setHubTab} state={fluency.state} update={fluency.update} error={fluency.error} history={history} openRep={openRep} reviewRep={openReview} skillId={knowledgeSkill} onSkill={setKnowledgeSkill} candidates={[...practicePlan.due, ...practicePlan.unfinished, ...(practicePlan.next ? [practicePlan.next] : []), ...((paths.find(p => p.id === fluency.state.goal.pathId) ?? paths[0]).stages.flatMap(stage => stage.repIds).filter(id => !history.some(a => a.repId === id)).map(repId => ({ repId, reason: 'Build toward your selected track.' })))]} /></Suspense> : view === 'home' ? <HomePage walkthroughSeen={walkthrough !== 'new'} launchWalkthrough={() => { setWalkthrough('active'); openRep('declare-variables') }} goalPathId={fluency.state.goal.pathId} onPath={id => { setPathId(id); setView('paths') }} practicePlan={practicePlan} repStatus={repStatus} openPracticeAction={openPracticeAction} actionLabel={actionLabel} onProgress={() => setView('progress')} onLibrary={() => setView('catalog')} trail={goalTrail} evidence={trailEvidence} openRep={openRep} openLesson={openKnowledge} /> : view === 'catalog' ? <Suspense fallback={<main aria-busy="true"><p role="status">Loading the library…</p></main>}><PracticeCatalog goalPathId={fluency.state.goal.pathId} filters={{ query: catalogQuery, skill: catalogSkill, format: catalogFormat, status: catalogStatus }} onFilter={(field, value) => ({ query: setCatalogQuery, skill: setCatalogSkill, format: setCatalogFormat, status: setCatalogStatus })[field](value)} clearFilters={() => { setCatalogQuery(''); setCatalogSkill(''); setCatalogFormat(''); setCatalogStatus('') }} categories={categories} visibleReps={visibleReps} dueIds={dueIds} repStatus={repStatus} openRep={openRep} /></Suspense> : view === 'paths' ? <PathsPage goalPathId={fluency.state.goal.pathId} setGoalPath={id => fluency.update({ ...fluency.state, goal: { ...fluency.state.goal, pathId: id } })} goalError={fluency.error} pathId={pathId} setPathId={setPathId} pathPicker={pathPicker} setPathPicker={setPathPicker} learnerStart={learnerStart} startingPoint={startingPoint} completedPathIds={completedPathIds} trail={browsedTrail} evidence={trailEvidence} openRep={openRep} openLesson={openKnowledge} /> : view === 'skillmap' ? <SkillMapPage goalPathId={fluency.state.goal.pathId} progress={journeyStates} openRep={openRep} reviewRep={openReview} /> : view === 'mistakes' ? <MistakesPage history={history} now={now} onOpenRep={openRep} /> : view === 'progress' ? <ProgressPage profileName={profileName} history={history} now={now} onManageProfiles={onManageProfiles} onOpenPath={id => { setPathId(id); setView('paths') }} progress={journeyStates} recommendation={recommendation && recommendedRep ? { title: recommendedRep.title, reason: recommendation.reason, label: actionLabel(recommendation.mode), open: () => openPracticeAction(recommendation) } : undefined} dueReviews={practicePlan.due.map(action => ({ title: reps.find(item => item.id === action.repId)!.title, reason: action.reason, open: () => openPracticeAction(action), label: actionLabel(action.mode), repId: action.repId }))} onOpenRep={openRep} onReviewRep={openReview} onExport={exportData} onImport={(file) => { void importData(file) }} transferMessage={transferMessage} serverReady={isServerReady()} /> : view === 'learn' ? <Suspense fallback={<main className="learn-main" aria-busy="true"><p role="status">Loading the lessons…</p></main>}><QuickLessons openRep={openRep} onBrowse={() => setView('knowledge')} /></Suspense> : view === 'history' ? <Suspense fallback={<main className="history-main" aria-busy="true"><p role="status">Loading your attempt history…</p></main>}><HistoryPage history={history} categories={categories} journalTabs={journalTabs} openRep={openRep} /></Suspense> : <main ref={workspaceRef} className={`practice-main ${focusMode ? 'focus-mode' : ''}`} data-step={activeStep} id="main-content" onKeyDown={event => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); runChecks() } }}>
       <header className="workspace-header">
         <div className="workspace-title"><button type="button" className="breadcrumb-link" onClick={() => setView('catalog')}><Icon name="left" />Library</button><h1 tabIndex={-1}>{rep.title}</h1>{repLevelLabel(rep.id) && <StatusChip>{repLevelLabel(rep.id)}</StatusChip>}<StatusChip tone={statusTone(currentStatus)}>{currentStatus}</StatusChip><span className="workspace-category">{rep.category}</span></div>
         <div className="workspace-actions"><p className="workspace-save-status" role="status">{saveState}</p><button className="reset-button" type="button" onClick={() => setGlossaryOpen(true)}>Glossary</button><details className="workspace-options" onClick={event => { if ((event.target as HTMLElement).closest('button')) event.currentTarget.open = false }} onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); event.currentTarget.open = false; event.currentTarget.querySelector('summary')?.focus() } }}><summary>Tools</summary><div><button className="reset-button" type="button" onClick={() => { setFocusMode(!focusMode); revealSection('solution-section') }}>{focusMode ? 'Exit focus' : 'Focus mode'}</button><button className="reset-button" type="button" onClick={() => resetDialogRef.current?.showModal()}>Reset rep</button>{skillsForRep(repId).length > 0 && <div className="workspace-knowledge"><span>Related concepts</span>{skillsForRep(repId).slice(0,3).map(skill => <button type="button" key={skill.id} onClick={() => openKnowledge(skill.id)}>{skill.title}</button>)}</div>}</div></details></div>

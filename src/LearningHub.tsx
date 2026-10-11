@@ -11,7 +11,7 @@ import type { HubTab } from './learning-pages'
 import { revealElement } from './ui-motion'
 import { screenNavigated } from './screen-focus'
 import { Input, NumberInput, Select, Textarea } from './Input'
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { skills, skillById, knowledgeGroups } from './knowledge'
 import { lessonDepth } from './lesson-depth'
@@ -74,6 +74,12 @@ function Notebook({state,update}: Pick<Props,'state'|'update'>) {
     {editing&&<form className="hub-panel" onSubmit={e=>{e.preventDefault();if(!editing.title.trim())return;if(update({...state,noteDraft:undefined,notes:[{...editing,title:editing.title.trim(),updatedAt:new Date().toISOString()},...state.notes.filter(n=>n.id!==editing.id)]})){setEditingState(null);setMessage('Entry saved.')}else setMessage('Entry could not be saved. Keep this form open and retry.')}}><h3>{state.notes.some(n=>n.id===editing.id)?'Edit entry':'New entry'}</h3><label>Title<Input required maxLength={120} value={editing.title} onChange={e=>setEditing({...editing,title:e.target.value})}/></label><div className="hub-form-row"><label>Kind<Select value={editing.kind} onChange={e=>setEditing({...editing,kind:e.target.value as LearningNote['kind']})}><option value="note">Note</option><option value="mistake">Mistake</option><option value="question">Question</option></Select></label><label>Skill<Select value={editing.skillId} onChange={e=>setEditing({...editing,skillId:e.target.value})}><option value="">General</option>{skills.map(s=><option key={s.id} value={s.id}>{s.title}</option>)}</Select></label><label>Exercise<Select value={editing.repId} onChange={e=>setEditing({...editing,repId:e.target.value})}><option value="">No exercise</option>{reps.map(r=><option key={r.id} value={r.id}>{r.title}</option>)}</Select></label></div><label>What you learned<Textarea maxLength={20_000} rows={7} value={editing.body} onChange={e=>setEditing({...editing,body:e.target.value})}/></label><div className="hub-actions"><Button variant="primary" type="submit">Save entry</Button><Button type="button" onClick={()=>setEditing(null)}>Cancel</Button></div></form>}
     {message&&<p className="hub-message feedback-note" data-state={message === 'Entry saved.' ? 'success' : 'error'} role="status"><Icon name={message === 'Entry saved.' ? 'check' : 'alert'} />{message}</p>}<div className="hub-cards">{visible.map(note=><article className="hub-panel" key={note.id}><span className="home-label">{note.kind}</span><h3>{note.title}</h3><p className="note-body">{note.body}</p><p className="utility-note">{skillById(note.skillId)?.title} {note.repId&&` · ${reps.find(r=>r.id===note.repId)?.title}`} · {formatDate(note.updatedAt)}</p><div className="hub-actions"><Button type="button" onClick={()=>setEditing(note)}>Edit</Button>{confirm===note.id?<><Button variant="danger" type="button" onClick={()=>{update({...state,notes:state.notes.filter(n=>n.id!==note.id)});setConfirm('')}}>Confirm delete</Button><Button type="button" onClick={()=>setConfirm('')}>Keep entry</Button></>:<Button type="button" onClick={()=>setConfirm(note.id)}>Delete…</Button>}</div></article>)}</div>{!visible.length&&<div className="hub-empty"><span className="home-label">{query?'No matches':'Your notebook'}</span><h3>{query?'Try another search.':'Make your next attempt useful.'}</h3><p>{query?'No matching entries.':'Your notebook is empty. Save an idea or mistake after your next attempt.'}</p>{!query&&<Button variant="primary" onClick={newNote}>Write your first entry</Button>}</div>}</>
 }
+const searchText = new Map<string, string>()
+function skillSearchText(skill: typeof skills[number]) {
+  let text = searchText.get(skill.id)
+  if (text === undefined) { text = `${skill.title} ${skill.summary} ${skill.sections.map(x=>x.body).join(' ')} ${skill.objectives.join(' ')}`.toLowerCase(); searchText.set(skill.id, text) }
+  return text
+}
 export function LearningHub(props: Props) {
   useEffect(() => {
     // Restore the page heading after a focused loading placeholder is replaced, but only after in-app navigation; a page load keeps focus at the top.
@@ -98,11 +104,13 @@ export function LearningHub(props: Props) {
   const [now,setNow]=useState(Date.now)
   const [minutes,setMinutes]=useState(30)
   const [roundRep, setRoundRep] = useSessionPreference<string>('interview-focus', 'interview-frontend')
-  useEffect(()=>{const id=setInterval(()=>setNow(Date.now()),1000);return()=>clearInterval(id)},[])
-  const matching=skills.filter(s=>(!bookmarked||state.bookmarks.includes(s.id))&&`${s.title} ${s.summary} ${s.sections.map(x=>x.body).join(' ')} ${s.objectives.join(' ')}`.toLowerCase().includes(query.toLowerCase()))
-  const groups=knowledgeGroups.filter(group=>!topic||group.id===topic).map(group=>({...group,lessons:matching.filter(skill=>group.skillIds.includes(skill.id))})).filter(group=>group.lessons.length)
-  const reviews=recurringReviews(history,now)
   const currentRound=state.rounds.find(r=>!r.endedAt)
+  // Only a visible interview countdown needs second-level time; everything else is day-scale.
+  const fastTick=tab==='interview'&&Boolean(currentRound)
+  useEffect(()=>{const id=setInterval(()=>setNow(Date.now()),fastTick?1000:60_000);return()=>clearInterval(id)},[fastTick])
+  const matching=useMemo(()=>{const needle=query.toLowerCase();return skills.filter(s=>(!bookmarked||state.bookmarks.includes(s.id))&&skillSearchText(s).includes(needle))},[query,bookmarked,state.bookmarks])
+  const groups=useMemo(()=>knowledgeGroups.filter(group=>!topic||group.id===topic).map(group=>({...group,lessons:matching.filter(skill=>group.skillIds.includes(skill.id))})).filter(group=>group.lessons.length),[matching,topic])
+  const reviews=useMemo(()=>recurringReviews(history,now),[history,now])
   const diagnostic=diagnosticRepIds.map(id=>{const attempts=history.filter(r=>r.repId===id&&state.diagnosticStartedAt&&Date.parse(r.completedAt)>=Date.parse(state.diagnosticStartedAt));return {rep:reps.find(r=>r.id===id)!,attempt:attempts[0]}})
   const missing=diagnostic.find(d=>!d.attempt||d.attempt.hintCount)
   const [indexOpen, setIndexOpen] = useSessionPreference<'open' | 'closed'>('lesson-index', matchMedia('(min-width: 901px)').matches ? 'open' : 'closed')
