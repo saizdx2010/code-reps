@@ -32,6 +32,8 @@ The workspace follows five steps:
 
 Practice writing scales with the task: one useful sentence for a small Foundations rep, a focused approach and boundary for other beginner reps, and deeper reasoning for larger problems. Plan and explanation are optional on sentence-scale and focused reps and required on reasoned reps; passing checks is always required, and difficulty and confidence are optional. The step rail marks each step Needed, Optional, or Done; the header keeps save status visible. Completion offers one next action, with a quiet option to stop for today. A completed attempt is the record of practice; there is no separate session to end. Existing drafts keep their format.
 
+Plan and Explain offer optional English sentence starters above the writing field. Selecting one appends it to your draft and returns focus to the field; your writing saves normally. **Show Indonesian help**, beside Quick vocabulary in the brief, is off by default. It adds short Indonesian glosses where available and an English tips disclosure in Explain. English stays primary. This profile-scoped preference survives refresh in the current browser session and never enters learner backups.
+
 > Passing checks establishes behavior. Plans and explanations use a self-review rubric; independent fluency and retention need evidence from unhinted work and later recall.
 
 ## What you can practice

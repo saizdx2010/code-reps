@@ -2,7 +2,7 @@ import { paths } from '../src/path.ts'
 import { journeys } from '../src/learning.ts'
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { getPracticePlan, attemptStatus, nextRepInPath, practiceWritingPrompts } from '../src/practice.ts'
+import { getPracticePlan, attemptStatus, nextRepInPath, practiceWritingPrompts, practiceSentenceStarters, appendSentenceStarter, englishTipsForIndonesianSpeakers } from '../src/practice.ts'
 import { reps } from '../src/rep.ts'
 
 const now = Date.parse('2026-09-30T12:00:00Z')
@@ -164,4 +164,25 @@ test('writing guidance scales from existing metadata without changing authored p
   assert.match(practiceWritingPrompts(reps.find(rep => rep.id === 'declare-variables')).explanation, /one useful sentence/)
   assert.equal(practiceWritingPrompts({ id: 'future-rep', planPrompt: 'Make a plan' }).scale, 'reasoned')
   assert.equal(practiceWritingPrompts({ id: 'declare-variables', format: 'frontend', planPrompt: 'Make a plan' }).scale, 'focused')
+})
+
+test('writing starters stay task-neutral and are available at every writing scale', () => {
+  assert.deepEqual(practiceSentenceStarters.plan, ['My approach is ', 'First I will ', 'then ', 'One edge case is ', 'I chose this because '])
+  assert.deepEqual(practiceSentenceStarters.explanation, ['This works because ', 'For example, if the input is ', 'the result is ', 'I chose X instead of Y because ', 'The time cost is '])
+  for (const id of ['declare-variables', 'sum-positive-numbers', 'most-frequent-number']) {
+    assert.equal(practiceWritingPrompts({ id, planPrompt: '' }).starters, practiceSentenceStarters)
+  }
+})
+
+test('starter insertion preserves existing writing and sensibly separates words', () => {
+  for (const [input, expected] of [['', ''], ['Existing text', 'Existing text '], ['Existing text ', 'Existing text '], ['Existing text\n', 'Existing text\n'], ['Existing text\n\n', 'Existing text\n\n']]) {
+    assert.equal(appendSentenceStarter(input, 'My approach is '), expected + 'My approach is ')
+  }
+})
+
+test('English tips cover tense, plurals, articles and adjective verbs', () => {
+  assert.equal(englishTipsForIndonesianSpeakers.length, 4)
+  for (const [index, example] of ['it returned', 'two items', 'the function returns an array', 'the list is empty'].entries()) {
+    assert.ok(englishTipsForIndonesianSpeakers[index].includes(example))
+  }
 })
