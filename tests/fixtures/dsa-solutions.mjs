@@ -63,3 +63,14 @@ Object.assign(dsaSolutions, {
 dsaSolutions['puzzle-parse-part-one'] = 'function strongestTotal(input) { const trays = input.split("\\n").flatMap(line => { const tokens = line.match(/-?\\d+/g); return tokens ? [tokens.map(Number)] : [] }); return trays.reduce((total, tray) => { const peak = tray.reduce((a,b) => a > b ? a : b); return total + peak }, 0) }'
 
 dsaSolutions['puzzle-adapt-part-two'] = 'function nearPeakCount(input) { const trays = input.split("\\n").flatMap(line => { const tokens = line.match(/-?\\d+/g); return tokens ? [tokens.map(Number)] : [] }); return trays.reduce((total, tray) => { const peak = tray.reduce((a,b) => a > b ? a : b); return total + tray.reduce((count, value) => count + Number(value >= peak - 2), 0) }, 0) }'
+
+Object.assign(dsaSolutions, {
+  'closest-value-gap': 'function closestGap(numbers: number[]): number | null { let best: number | null = null; for (let a = 0; a < numbers.length; a++) for (let b = a + 1; b < numbers.length; b++) { const gap = Math.abs(numbers[a] - numbers[b]); if (best === null || gap < best) best = gap } return best }',
+  'tree-value-depth': 'type TreeNode = { value: number; children: TreeNode[] }\n\nfunction depthOfValue(root: TreeNode | null, target: number): number { if (!root) return -1; let pending = [root], depth = 0; while (pending.length) { if (pending.some(node => node.value === target)) return depth; pending = pending.flatMap(node => node.children); depth++ } return -1 }',
+  'graph-reachable-count': 'function reachableCount(graph: number[][], start: number): number { if (start < 0 || start >= graph.length) return 0; const seen = new Set([start]); const stack = [start]; while (stack.length) { const node = stack.pop()!; for (const next of graph[node]) if (!seen.has(next)) { seen.add(next); stack.push(next) } } return seen.size }',
+})
+
+Object.assign(dsaSolutions, {
+  'tree-leaf-count': 'type TreeNode = { value: number; children: TreeNode[] }\n\nfunction countTreeLeaves(root: TreeNode | null): number { if (!root) return 0; if (!root.children.length) return 1; return root.children.reduce((total, child) => total + countTreeLeaves(child), 0) }',
+  'graph-incoming-counts': 'function incomingCounts(graph: number[][]): number[] { const counts = graph.map(() => 0); graph.forEach(list => list.forEach(next => { counts[next]++ })); return counts }',
+})

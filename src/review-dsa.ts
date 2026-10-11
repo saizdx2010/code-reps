@@ -3206,3 +3206,75 @@ Object.assign(dsaGuides, {
     example: 'Parse each nonblank line independently so a tray never borrows another tray\'s strongest value. Numeric conversion makes negative values and multi-digit values comparable. After processing k trays, the running count includes exactly their readings meeting each local inclusive cutoff. Retaining all occurrences preserves duplicates. For "1 4 3\\n\\n-5 -2 -4\\n", parsing yields [[1,4,3],[-5,-2,-4]]. Peaks are 4 and -2. Cutoffs are 2 and -4. Two readings qualify on each tray, so return 4.'
   }
 })
+
+Object.assign(dsaDepth, {
+  'closest-value-gap': {
+    reasoning: 'In sorted order, any pair with another value between them can be replaced by a closer adjacent pair, so the minimum difference is always between neighbours. Comparing each neighbour pair of a sorted copy is enough.',
+    trace: '[10,3,7,20] sorts to [3,7,10,20]; neighbour gaps are 4, 3, 10, so the answer is 3 (7 and 10), though 10 and 3 sit next to each other in the input.',
+    alternative: 'Comparing every pair is O(n squared) with no extra storage and is easy to verify; sorting a copy costs O(n log n) time and O(n) storage and then needs only n - 1 comparisons.',
+    counterexample: 'Comparing only neighbours in the input gives 8 for [1,10,2] instead of 1. Skipping the length check returns Infinity or NaN for a single value.',
+    transfer: 'Self-reviewed: return the two values themselves, or the closest value to a given target. Decide what changes in the comparison; original checks do not cover that contract.'
+  },
+  'tree-value-depth': {
+    reasoning: 'A node is at depth 0 if it holds the target; otherwise the target is in some child subtree and sits one level deeper than it does there. A branch reports "not found" so the parent can try its next sibling.',
+    trace: 'Root 1 has children 2 (with child 3) and 4 (with child 5). Searching for 5: the branch under 2 reports not found, the branch under 4 finds 5 one level below 4, so the answer is 2.',
+    alternative: 'A level-by-level scan stops at the first level containing the target and needs space for the widest level; a recursive search uses stack space proportional to the height and must carry not-found separately.',
+    counterexample: 'Using 0 or falsy results as "not found" hides a root target at depth 0, and returning the first child result without checking it ignores a match in a later sibling.',
+    transfer: 'Self-reviewed: return the route of values instead of the depth, or allow repeated values and return the shallowest match. Name what must be remembered on the way back; original checks do not cover either contract.'
+  },
+  'graph-reachable-count': {
+    reasoning: 'Each node is recorded when first discovered and explored once, so cycles and repeated routes cannot inflate the count. The recorded set is exactly the nodes reachable from start.',
+    trace: 'For [[1,2],[3],[3],[]] from 0, nodes 1 and 2 are discovered; both lead to 3, but 3 is already recorded the second time. Four nodes are reached.',
+    alternative: 'A queue or a stack gives the same count; only shortest-hop questions require breadth-first order. Counting edges followed instead of nodes recorded over-counts shared targets.',
+    counterexample: 'Counting every node in the graph returns 4 for [[1],[2],[],[0]] from 0; node 3 points in but is not reachable. Counting neighbour entries returns 3 for [[0,0,1],[]], but only 2 nodes are reached.',
+    transfer: 'Self-reviewed: list the nodes that cannot be reached, or count groups in an undirected graph. Decide how a visited set must be shared; original checks do not cover either contract.'
+  },
+})
+
+Object.assign(dsaGuides, {
+  'closest-value-gap': {
+    plan: ['Which two positions could give the answer, and what is returned when fewer than two values exist?', 'Name a boundary before coding.'],
+    explanation: ['Explain why your comparisons cannot miss the closest pair and why the input is unchanged.', 'State time and storage costs; passing checks does not prove the implementation approach.'],
+    example: 'In sorted order the closest pair is always adjacent, because a value between two others is closer to both. [10,3,7,20] sorts to [3,7,10,20] with gaps 4, 3, 10, so the answer is 3.'
+  },
+  'tree-value-depth': {
+    plan: ['What does the root report, and what does a branch without the target report?', 'Name a boundary before coding.'],
+    explanation: ['Explain how a not-found branch differs from depth 0, and why the tree is unchanged.', 'State time and storage costs; passing checks does not prove the implementation approach.'],
+    example: 'A match at the current node is depth 0; otherwise a match below is one more than the child reported. Searching for 5 beneath the second child of 1 finds nothing under 2, then depth 2 under 4.'
+  },
+  'graph-reachable-count': {
+    plan: ['Which node is always counted for a valid start, and how will repeated routes count?', 'Name a boundary before coding.'],
+    explanation: ['Explain how the visited record stops cycles and double counting, and why the graph is unchanged.', 'State time and storage costs; passing checks does not prove the implementation approach.'],
+    example: 'Record start, then record each unseen neighbour once. [[1,2],[3],[3],[]] from 0 reaches 0, 1, 2, and 3 once each: four nodes.'
+  },
+})
+
+Object.assign(dsaDepth, {
+  'tree-leaf-count': {
+    reasoning: 'A node without children is one leaf; any other node has the leaves of its children and none of its own. Adding the child counts therefore counts each leaf exactly once.',
+    trace: 'Root 5 with children 0 (a leaf) and 1 (with leaves 2 and 3): the 0 branch gives 1, the 1 branch gives 2, and the root adds them to 3 without counting itself.',
+    alternative: 'An explicit stack visits every node once and counts those with empty children; recursion is shorter but uses call-stack space proportional to the height.',
+    counterexample: 'Counting every node returns 5 instead of 3 for the example tree. Treating a node with value 0 as absent drops a real leaf.',
+    transfer: 'Self-reviewed: count nodes that have exactly one child, or the leaves at a given depth. Decide what the base case and the combined result become; original checks do not cover that contract.'
+  },
+  'graph-incoming-counts': {
+    reasoning: 'Each neighbor entry is one connection ending at that node, so adding one to counts[entry] for every entry in every list yields the incoming total. Starting every count at 0 covers nodes nothing points to.',
+    trace: 'For [[0,0,1],[1]]: node 0 has two entries to 0 (the duplicate counts twice), node 1 has one entry to 1 and one from 0, so the result is [2, 2].',
+    alternative: 'Scanning all lists for each node gives the same result in O(V times E) time; one pass over all entries takes O(V + E) time with an array of V counts.',
+    counterexample: 'Using graph[i].length reports how many connections leave node i, giving [2, 1, 0] for the example instead of [0, 1, 2].',
+    transfer: 'Self-reviewed: list the nodes with no incoming connection, or treat duplicate edges as one. Decide what changes in the bookkeeping; original checks do not cover that contract.'
+  },
+})
+
+Object.assign(dsaGuides, {
+  'tree-leaf-count': {
+    plan: ['Which nodes count directly, and what does a node with children contribute?', 'Name a boundary before coding.'],
+    explanation: ['Explain why each leaf is counted once and why the tree is unchanged.', 'State time and storage costs; passing checks does not prove the implementation approach.'],
+    example: 'A node with no children is one leaf; otherwise add the leaf counts of its children. A root with children 0 (leaf) and 1 (two leaves) has 3 leaves, not 5 nodes.'
+  },
+  'graph-incoming-counts': {
+    plan: ['Which entry tells you about an incoming connection, and what does each count start at?', 'Name a boundary before coding.'],
+    explanation: ['Explain why direction matters and why the graph is unchanged.', 'State time and storage costs; passing checks does not prove the implementation approach.'],
+    example: 'Every entry in every list is an arrow ending at that entry. [[1,2],[2],[]] ends one arrow at node 1 and two at node 2: [0, 1, 2].'
+  },
+})

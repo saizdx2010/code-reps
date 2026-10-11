@@ -88,7 +88,7 @@ Start with one connected plain TypeScript browser feature using the existing DOM
 - [ ] Record where you get stuck during ordinary practice: wording, missing prerequisite, approach, syntax, boundaries, or integration. Use those notes to select the next content batch.
 - [x] Add a DOM interactions journey with guided, independent, and delayed-recall stages. Its `dom-*` reps (disclosure, tabs, accessible form, live search) exist, but no journey in `src/learning.ts` stages them.
 - [x] Add knowledge lessons for sorting, recursion, trees, and graphs (`sorting-basics`, `recursion-basics`, `trees`, `graphs` in `src/dsa-knowledge.ts`, with discussions in `src/review-dsa-lessons.ts`).
-- [ ] Review the sorting, recursion, tree, and graph journeys for difficulty transitions and unfamiliar transfer.
+- [x] Review the sorting, recursion, tree, and graph journeys for difficulty transitions and unfamiliar transfer. Findings and fixes (a fresh sorting recall, tree and graph bridge practice reps, trimmed lesson clues) are in `docs/DSA_JOURNEY_REVIEW.md`; this is editorial review, not learner evidence.
 - [ ] Add independent or recall tasks to queues, two pointers, windows, or binary search only when learner observations show a specific gap. Each of those four already has guided, independent, and delayed-recall journey stages.
 - [ ] Deepen TypeScript through narrowing unknown input, discriminated unions, exhaustive handling, generics, and reusable typed APIs. Separate compile-time guarantees from behavioral checks.
 - [ ] Strengthen debugging and frontend practice with fresh contexts instead of cosmetic variants of the same problem.
