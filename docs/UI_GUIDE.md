@@ -62,6 +62,8 @@ Walkthrough visibility is a profile-scoped session UI preference through `useSes
 - One compact header row carries the Practice back link, exercise title, status chip, save status, Glossary, and Tools. Tools contains focus mode, Reset rep, and related concepts. Escape closes Tools and returns focus to its summary.
 - The editor begins loading when an exercise row is hovered or focused. Editor recovery remains available if loading fails.
 
+Plan and Explain offer optional English sentence starters above the writing field. Selecting one appends it to your draft and returns focus to the field; your writing saves normally. **Show Indonesian help**, beside Quick vocabulary in the brief, is off by default. It adds short Indonesian glosses where available and an English tips disclosure in Explain. English stays primary. This profile-scoped preference survives refresh in the current browser session and never enters learner backups.
+
 ## Checks and completion
 
 - The first failed check expands to show the failing input, expected and actual values where available, and actionable feedback. Selecting another failed check opens that case and closes the previous one. Passed checks remain visible as rows with right-aligned outcomes in the checks drawer.

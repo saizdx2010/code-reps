@@ -86,6 +86,24 @@ export function getPracticePlan(drafts: Record<string, PortableAttempt>, history
   return { next, recommended, unfinished, due, progress }
 }
 
+/** Optional writing scaffolds, without task-specific solution clues. */
+export const practiceSentenceStarters = {
+  plan: ['My approach is ', 'First I will ', 'then ', 'One edge case is ', 'I chose this because '],
+  explanation: ['This works because ', 'For example, if the input is ', 'the result is ', 'I chose X instead of Y because ', 'The time cost is '],
+} as const
+
+/** Append without changing the learner's existing writing or trailing line breaks. */
+export function appendSentenceStarter(text: string, starter: string) {
+  return `${text}${text && !/\s$/.test(text) ? ' ' : ''}${starter}`
+}
+
+export const englishTipsForIndonesianSpeakers = [
+  'Indonesian has no verb tenses. English: “it returned” (past), “it returns” (general).',
+  'Plural: “two items”, with -s.',
+  'Use a/an/the: “the function returns an array”.',
+  'Use is/are: “the list is empty”, not “the list empty”.',
+] as const
+
 /** Guidance only: writing remains self-reviewed, with no length or prose scoring. */
 export function practiceWritingPrompts(rep: Pick<RepSummary, 'id' | 'format'> & { planPrompt: string }) {
   const scale = !rep.format && foundationRepIds.includes(rep.id)
@@ -93,6 +111,7 @@ export function practiceWritingPrompts(rep: Pick<RepSummary, 'id' | 'format'> & 
   const brief = scale === 'sentence'
   return {
     scale,
+    starters: practiceSentenceStarters,
     plan: rep.planPrompt,
     planHelp: brief ? 'One useful sentence is enough.' : scale === 'focused' ? 'Name your approach and one boundary.' : 'Explain your approach, boundaries, and tradeoffs.',
     explanation: brief ? 'In one useful sentence, explain what your code does and why.' : scale === 'focused' ? 'Explain your code and trace one boundary.' : 'Explain why it works, trace a boundary, and discuss tradeoffs and time or space costs.',
