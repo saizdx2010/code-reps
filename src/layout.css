@@ -25,7 +25,9 @@
 .empty-state p { margin: 0; }
 
 .list-group { border-bottom: 1px solid var(--border); }
-.list-group > summary { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 4px; list-style: none; cursor: pointer; font-weight: 600; }
+.list-group:last-child { border-bottom: 0; }
+.list-group > summary { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 12px; list-style: none; cursor: pointer; border-radius: var(--radius-control); font-weight: 600; }
+.list-group > summary:hover, .list-group > summary:focus-visible { background: var(--surface); }
 .list-group > summary::-webkit-details-marker { display: none; }
 .list-group > summary .ui-icon { margin-left: auto; color: var(--muted); transition: rotate var(--motion-fast) var(--motion-ease); }
 .list-group[open] > summary .ui-icon { rotate: 180deg; }

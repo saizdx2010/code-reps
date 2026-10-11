@@ -7,7 +7,7 @@
 .brand-mark { width: 30px; height: 30px; color: var(--accent); }
 .top-nav, .topbar-right, .section-nav { display: flex; align-items: center; gap: 6px; }
 .top-nav button { min-height: 42px; padding: 8px 18px; border: 0; border-radius: var(--radius-control); color: var(--muted); background: transparent; font-size: 15px; font-weight: 550; }
-.top-nav button:hover { background: var(--bg); color: var(--text); }
+.top-nav button:hover, .top-nav button:focus-visible { background: var(--bg); color: var(--text); }
 .top-nav button[aria-current=page] { background: var(--accent-soft); color: var(--accent); }
 .topbar-right { gap: 14px; }
 .theme-trigger { display: grid; place-items: center; flex: none; width: 36px; height: 40px; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); color: var(--text); transition: background-color var(--motion-fast), border-color var(--motion-fast); }
@@ -114,7 +114,8 @@ main { max-width: var(--page-width); margin: 0 auto; padding: 32px var(--page-gu
 .catalog-list-heading > span { font-size: 13px; color: var(--muted); }
 .catalog-list { outline-offset: 6px; }
 .rep-list-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 20px; width: 100%; min-height: 82px; padding: 18px 12px; border: 0; border-bottom: 1px solid var(--border); color: var(--text); background: transparent; text-align: left; }
-.rep-list-row:hover { background: var(--surface); box-shadow: inset 3px 0 var(--accent); }
+.rep-list-row:hover, .rep-list-row:focus-visible { border-radius: var(--radius-control); background: var(--surface); box-shadow: inset 3px 0 var(--accent); }
+.list-rows > :last-child .rep-list-row, .list-rows > .rep-list-row:last-child { border-bottom: 0; }
 .rep-list-name { display: grid; gap: 5px; min-width: 0; }
 .rep-list-name strong { font-size: 17px; font-weight: 550; }
 .rep-list-name small { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--muted); font-size: 13px; }
@@ -239,7 +240,7 @@ footer { display: flex; justify-content: space-between; gap: 20px; max-width: 10
 .practice-steps { position: relative; isolation: isolate; display: flex; align-items: stretch; gap: 4px; flex: none; padding: 5px; margin-bottom: 18px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); counter-reset: step; }
 .practice-steps button { position: relative; z-index: 1; flex: 1; justify-content: center; border-radius: var(--radius-control); display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 44px; padding: 9px 4px; border: 0; background: transparent; color: var(--text); font-size: 15px; counter-increment: step; }
 .practice-steps button[aria-current=step] { color: var(--action-text); font-weight: 600; }
-.practice-steps button:hover:not([aria-current]) { background: var(--accent-soft); }
+.practice-steps button:hover:not([aria-current]), .practice-steps button:focus-visible:not([aria-current]) { background: var(--accent-soft); }
 .workspace-layout { display: grid; align-items: stretch; gap: 0; flex: none; height: clamp(440px, 58dvh, 680px); min-height: 0; }
 .task-pane { display: grid; grid-template-columns: 84px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); min-width: 0; min-height: 0; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
 .task-column, .code-column { min-width: 0; min-height: 0; scrollbar-width: thin; overscroll-behavior: contain; }
@@ -686,7 +687,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 .progress-main .progress-summary dd { font-size: 26px; }
 .progress-main .progress-summary dt { font-size: 12px; }
 .compact-path-list { list-style: none; margin: 0; padding: 0; }
-.compact-path-list .list-row { border-bottom: 1px solid var(--border); }
+.compact-path-list .list-row:not(:last-child) { border-bottom: 1px solid var(--border); }
 .compact-path-list progress { display: block; width: min(240px, 100%); height: 3px; margin-top: 5px; accent-color: var(--accent); border: 0; }
 .compact-path-list progress::-webkit-progress-bar { background: var(--border); }
 .compact-path-list progress::-webkit-progress-value { background: var(--accent); }
@@ -817,3 +818,6 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 .practice-steps button small { font-size: 10px; line-height: 1.2; color: inherit; }
 .completion-panel .stop-for-today { margin-bottom: 0; }
 .progress-quiet-links, .projects-more { color: var(--muted); margin: 16px 0; }
+
+/* No trailing divider after the last item of a bordered list. */
+.practice-queue li:last-child, .result-list li:last-child, .home-sessions li:last-child, .history-list > li:last-child, .utility-dialog .glossary-list > div:last-child, .trace-state-rows > div:last-child { border-bottom: 0; }
