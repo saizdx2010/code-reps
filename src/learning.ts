@@ -17,6 +17,7 @@ export const journeys: Journey[] = [
   { id: 'async', title: 'Await, coordinate, and cancel local work', guided: 'await-local-records', independent: 'settle-local-panels', recall: 'cancel-local-export', delayDays: 3 },
   { id: 'resource-ownership', title: 'Own and clean up shared resources', guided: 'shared-resource', independent: 'subscription-cleanup', recall: 'room-leases', delayDays: 3 },
   { id: 'validation', title: 'Validate data at a boundary', guided: 'backend-validate-user', independent: 'validate-stock-adjustment', recall: 'parse-delivery-window', delayDays: 3 },
+  { id: 'typescript-boundaries', title: 'Narrow and reuse types', guided: 'guard-contact-input', independent: 'typed-record-lookup', recall: 'sensor-import-report', practice: ['exhaustive-delivery-label', 'generic-prefix-copy'], delayDays: 3 },
   { id: 'state-modeling', title: 'Model valid browser states', guided: 'task-state-label', independent: 'saved-record-status', recall: 'catalog-request-summary', delayDays: 3 },
   { id: 'control-flow', title: 'Repeat work and choose by condition', guided: 'loop-with-for', independent: 'shipping-cost-tiers', recall: 'countdown-labels', delayDays: 3 },
   { id: 'interface-logic', title: 'Derive what the interface shows', guided: 'frontend-sort-table', independent: 'group-items-by-heading', recall: 'filter-chip-summary', delayDays: 3 },

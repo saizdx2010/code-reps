@@ -11,6 +11,12 @@ export const repLevels: Record<string, RepLevel> = {
   'settle-local-panels': 3,
   'cancel-local-export': 3,
   'sqlite-stock-transfer': 2,
+  'guard-contact-input': 2,
+  'exhaustive-delivery-label': 2,
+  'generic-prefix-copy': 2,
+  'typed-record-lookup': 2,
+  'sensor-import-report': 2,
+
   'quiet-sensor-span': 2,
   'shared-seat-occurrences': 2,
   'dispatch-priority-order': 2,

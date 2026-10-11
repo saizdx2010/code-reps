@@ -1,6 +1,7 @@
 import { reactSolution } from './fixtures/react-solution.mjs'
 import { sqliteSolution } from './fixtures/sqlite-solution.mjs'
 import initSqlJs from 'sql.js'
+import { typescriptDepthSolutions } from './fixtures/typescript-depth-solutions.mjs'
 import { recallThinSolutions } from './fixtures/recall-thin-solutions.mjs'
 import { journeyPracticeSolutions } from './fixtures/journey-practice-solutions.mjs'
 import { connectedSolutionsById } from './fixtures/connected-feature-solutions.mjs'
@@ -31,6 +32,7 @@ import { testingJourneySolutions } from './fixtures/testing-journey-solutions.mj
 const SQL = await initSqlJs()
 const solutions = {
   'sqlite-stock-transfer': sqliteSolution,
+  ...typescriptDepthSolutions,
   ...recallThinSolutions,
   ...journeyPracticeSolutions,
   ...browserStateSolutions,

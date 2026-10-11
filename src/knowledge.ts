@@ -1,3 +1,4 @@
+import { typescriptBoundarySkill } from './typescript-depth-knowledge.ts'
 import { browserStateSkill } from './browser-state-reps.ts'
 import { dsaSkills } from './dsa-knowledge.ts'
 import { practicalSkills } from './practical-concepts.ts'
@@ -216,6 +217,7 @@ export const skills: Skill[] = [
     repIds: ['backend-ticket-handler', 'project-ticket-api', 'validate-page-query'], related: ['http', 'testing'],
   },
   ...practicalSkills,
+  typescriptBoundarySkill,
   browserStateSkill,
   ...dsaSkills,
 ]
@@ -225,7 +227,7 @@ export const contentVersion = 7
 
 // Discovery categories only; these do not change skill identity or learner evidence.
 export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[] = [
-  { id: 'language', title: 'Language & problem solving', skillIds: ['values', 'control-flow', 'state-modeling', 'arrays', 'text', 'lookup', 'stacks', 'complexity'] },
+  { id: 'language', title: 'Language & problem solving', skillIds: ['values', 'control-flow', 'state-modeling', 'typescript-boundaries', 'arrays', 'text', 'lookup', 'stacks', 'complexity'] },
   { id: 'dsa', title: 'Algorithms & data structures', skillIds: ['recognize-the-pattern', 'collection-operations', 'queues', 'array-techniques', 'sorting-basics', 'recursion-basics', 'trees', 'graphs'] },
   { id: 'frontend', title: 'Frontend', skillIds: ['frontend', 'react'] },
   { id: 'backend', title: 'Backend & data', skillIds: ['validation', 'http', 'databases'] },
