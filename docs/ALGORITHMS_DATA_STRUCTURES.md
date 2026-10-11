@@ -55,3 +55,7 @@ completions remain saved; the current retention rule requires the new path task.
 These registrations do not place new reps into track stages; path wiring is
 maintained separately. Automated checks verify contracts and evidence timing,
 not learner transfer or learning effectiveness.
+
+## Pattern Recognition
+
+The companion **Pattern Recognition** track starts with **Recognize the pattern**: “See the shape, then solve the problem.” Its story-based questions ask learners to choose and justify a tool from the contract, including misleading similarities. Then an opening rep and interleaved existing problems invite a written choice before coding, without technique labels in stage titles. Existing rep titles, hints, and completion evidence remain shared with Problem solving; this introductory slice is not a blind assessment or a new measure of independence or retention.
