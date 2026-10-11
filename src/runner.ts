@@ -1,10 +1,11 @@
 import { createAsyncFixture } from './async-fixture.ts'
+import { checkStockTransfer, SQLITE_REP_ID, type SqliteFactory } from './sqlite-task.ts'
 import { compileSolution } from './compile-solution.ts'
 import { reps } from './rep.ts'
 import { sameValue } from './compare.ts'
 import type { TestResult } from './runner.types'
 
-export function runRep(code: string, repId: string): TestResult[] {
+export function runRep(code: string, repId: string, createDatabase?: SqliteFactory): TestResult[] {
   const rep = reps.find((item) => item.id === repId)
   if (!rep) throw new Error('This rep could not be found.')
   if (rep.runtime) throw new Error('This rep requires the asynchronous fixture runner.')
@@ -17,7 +18,9 @@ export function runRep(code: string, repId: string): TestResult[] {
     const inputPreview = `${rep.functionName}(${input.map((value) => JSON.stringify(value)).join(', ')})`.slice(0, 200)
     try {
       const argumentsCopy = structuredClone(input)
-      const actual = (solve as (...values: unknown[]) => unknown)(...argumentsCopy)
+      const actual = rep.id === 'sqlite-stock-transfer'
+        ? checkStockTransfer(solve as (...values: unknown[]) => unknown, argumentsCopy, createDatabase ?? (() => { throw new Error('SQLite must be loaded before running this rep.') }))
+        : (solve as (...values: unknown[]) => unknown)(...argumentsCopy)
       const changedInput = rep.preserveInput && !sameValue(argumentsCopy, input)
       const passed = sameValue(actual, expected) && !changedInput
       const format = (value: unknown) => { try { return JSON.stringify(value) ?? String(value) } catch { return String(value) } }
@@ -29,9 +32,10 @@ export function runRep(code: string, repId: string): TestResult[] {
 }
 
 /** Async fixtures never cross postMessage: only authored serializable specifications do. */
-export async function runAsyncRep(code: string, repId: string): Promise<TestResult[]> {
+export async function runAsyncRep(code: string, repId: string, createDatabase?: SqliteFactory): Promise<TestResult[]> {
   const rep = reps.find(item => item.id === repId)
   if (!rep) throw new Error('This rep could not be found.')
+  if (rep.id === SQLITE_REP_ID) return runRep(code, repId, createDatabase)
   if (rep.format === 'frontend') throw new Error('This exercise uses browser interaction checks. Run it in the workspace.')
   if (typeof code !== 'string' || code.length > 100_000) throw new Error('The solution is too large to run.')
   const output = compileSolution(code, rep.functionName)

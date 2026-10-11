@@ -1,4 +1,6 @@
 import { reactSolution } from './fixtures/react-solution.mjs'
+import { sqliteSolution } from './fixtures/sqlite-solution.mjs'
+import initSqlJs from 'sql.js'
 import { recallThinSolutions } from './fixtures/recall-thin-solutions.mjs'
 import { journeyPracticeSolutions } from './fixtures/journey-practice-solutions.mjs'
 import { connectedSolutionsById } from './fixtures/connected-feature-solutions.mjs'
@@ -26,7 +28,9 @@ import { domSolutions } from './fixtures/dom-solutions.mjs'
 import { testingJourneySolutions } from './fixtures/testing-journey-solutions.mjs'
 
 // These independent implementations check authored expected results, not learner prose.
+const SQL = await initSqlJs()
 const solutions = {
+  'sqlite-stock-transfer': sqliteSolution,
   ...recallThinSolutions,
   ...journeyPracticeSolutions,
   ...browserStateSolutions,
@@ -86,7 +90,7 @@ test('every rep has reference-solution coverage and a complete learning brief', 
 
 for (const [id, code] of Object.entries(solutions)) {
   test(`authored checks accept the reference solution: ${id}`, async () => {
-    const failures = (await runAsyncRep(code, id)).filter(result => !result.passed)
+    const failures = (await runAsyncRep(code, id, () => new SQL.Database())).filter(result => !result.passed)
     assert.deepEqual(failures, [])
   })
 }

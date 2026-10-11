@@ -15,6 +15,7 @@ function source<Module>(load: () => Promise<Module>, pick: (module: Module) => S
 }
 const sources: Record<RepSourceName, Loader> = {
   'async-runtime-reps': source(() => import('./async-runtime-reps.ts'), module => ({ reps: module.asyncRuntimeReps })),
+  'sqlite-reps': source(() => import('./sqlite-reps.ts'), module => ({ reps: module.sqliteReps })),
   'practical-concepts': source(() => import('./practical-concepts.ts'), module => ({ reps: module.practicalReps })),
   'foundations': source(() => import('./foundations.ts'), module => ({ reps: module.foundationReps, lessons: module.foundations })),
   'dsa-reps': source(() => import('./dsa-reps.ts'), module => ({ reps: module.dsaReps })),

@@ -26,11 +26,17 @@ const frontend = filesFor('src/FrontendPreview.tsx', true).union(filesFor('src/f
 const assets = await readdir(join(dist, 'assets'))
 const workers = assets.filter(name => /^(ts|editor|runner)\.worker-.*\.js$/.test(name)).map(name => `assets/${name}`)
 if (workers.length !== 3) throw new Error('Expected the editor, TypeScript, and practice workers')
+// Worker builds have their own chunks outside the app manifest. Include lazy and shared JS.
+const workerFiles = new Set(workers)
+for (const file of workerFiles) {
+  const code = await readFile(join(dist, file), 'utf8')
+  for (const match of code.matchAll(/["'`](\.\/[^"'`]+\.js)["'`]/g)) workerFiles.add(join('assets', match[1]))
+}
 const groups = [
   { name: 'Initial JavaScript', files: [...initial], limit: 153_000, rawLimit: 530_000 },
   { name: 'Additional editor JavaScript', files: [...editor], limit: 1_050_000, rawLimit: 4_200_000 },
   { name: 'Additional frontend JavaScript', files: [...frontend], limit: 1_050_000, rawLimit: 3_900_000 },
-  { name: 'Local worker JavaScript', files: workers, limit: 3_100_000, rawLimit: 11_400_000 },
+  { name: 'Local worker JavaScript', files: [...workerFiles], limit: 3_100_000, rawLimit: 11_400_000 },
 ]
 const report = []
 for (const group of groups) {

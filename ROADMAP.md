@@ -101,7 +101,7 @@ See [content authoring](./docs/CONTENT_AUTHORING.md) for requirements and the [c
 ## Later, when there is a concrete need
 
 - [x] Introduce one complete React task with actual rendering and effect cleanup before expanding React content.
-- [ ] Introduce one local SQLite task with real queries and transaction behavior before expanding database content. Use temporary learner-independent data.
+- [x] Introduce one local SQLite task with real queries and transaction behavior before expanding database content. Use temporary learner-independent data.
 - [ ] Add alternative external projects after the existing browser progression is useful in practice.
 - [ ] Consider distributable content packs only after defining executable-content isolation, versioning, and evidence migration.
 
