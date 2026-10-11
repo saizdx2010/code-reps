@@ -52,3 +52,10 @@ export const dsaSolutions = {
   'graph-connected-groups': 'function connectedGroups(graph:number[][]){const parent=graph.map((_,i)=>i);function find(x:number):number{return parent[x]===x?x:find(parent[x])}for(let i=0;i<graph.length;i++)for(const j of graph[i])parent[find(i)]=find(j);return new Set(parent.map((_,i)=>find(i))).size}',
   'simplify-file-path': 'function simplifyPath(path:string){const names:string[]=[];for(const part of path.split("/")){if(part===".."){if(names.length)names.splice(names.length-1,1)}else if(part!==""&&part!==".")names.push(part)}return "/"+names.join("/")}',
 }
+
+Object.assign(dsaSolutions, {
+  'next-warmer-day': 'function nextWarmerDay(temperatures: number[]): number[] { return temperatures.map((t,i)=>{ for(let j=i+1;j<temperatures.length;j++) if(temperatures[j]>t) return j-i; return 0 }) }',
+  'top-k-frequent-tags': 'function topKFrequentTags(tags: string[], k: number): string[] { const counts = new Map<string,number>(); for(const tag of tags) counts.set(tag,(counts.get(tag) ?? 0)+1); return [...counts.keys()].sort((a,b)=>counts.get(b)!-counts.get(a)! || (a<b?-1:a>b?1:0)).slice(0,k) }',
+  'course-order': 'function courseOrder(courseCount: number, prerequisites: [number,number][]): number[] { const done = new Set<number>(), result:number[]=[]; while(done.size<courseCount) { let found=-1; for(let c=0;c<courseCount;c++) if(!done.has(c)&&prerequisites.every(([course,p])=>course!==c||done.has(p))) { found=c; break } if(found<0)return []; done.add(found);result.push(found) } return result }',
+  'longest-shared-sequence': 'function longestSharedSequence(left: string, right: string): number { const memo=new Map<string,number>(); function solve(i:number,j:number):number { if(i===left.length||j===right.length)return 0; const key=i+","+j; if(memo.has(key))return memo.get(key)!; const n=left[i]===right[j]?1+solve(i+1,j+1):Math.max(solve(i+1,j),solve(i,j+1));memo.set(key,n);return n } return solve(0,0) }',
+})

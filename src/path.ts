@@ -51,6 +51,7 @@ export const paths = [
       { title: 'Grids', description: 'Inspect cell boundaries, count connected floor regions, and find a shortest route through walls.', recap: 'You can now explore rectangular grids while respecting boundaries and movement rules.', repIds: ['grid-open-neighbours', 'grid-count-rooms', 'grid-fewest-steps'] },
       { title: 'Ranges and linked structures', description: 'Answer range questions with prefix sums, merge intervals, reverse a linked list, and keep a heap in order.', recap: 'You can now answer range queries and work with intervals, linked lists, and heaps.', repIds: ['algo-prefix-sums', 'algo-merge-intervals', 'algo-linked-list-reverse', 'algo-min-heap'] },
       { title: 'Backtracking and dynamic programming', description: 'List every choice with backtracking, then reuse answers to smaller problems.', recap: 'You can now explore choices and reuse answers to smaller problems.', repIds: ['algo-subsets', 'algo-climb-stairs', 'algo-coin-change'] },
+      { title: 'Harder patterns', description: 'Resolve future readings, rank frequent labels, schedule dependencies, and compare ordered sequences.', recap: 'You can now justify approaches for competing order and dependency rules.', repIds: ['next-warmer-day', 'top-k-frequent-tags', 'course-order', 'longest-shared-sequence'] },
       { title: 'Interview round', description: 'Practice clarifying, planning, coding, and explaining in a backend-style interview task.', recap: 'You can now clarify, plan, solve, and explain a backend interview task.', repIds: ['interview-backend'] },
     ] satisfies readonly PathStage[],
   },
@@ -69,6 +70,7 @@ export const paths = [
       { title: 'Name the pattern first', description: 'Read "Recognize the pattern" in Lessons, then justify a candidate using the input contract before coding.', recap: 'You can now justify a candidate from the input contract before coding.', repIds: ['algo-sorted-pair'] },
       { title: 'Decide which tool fits', description: 'Switch between different kinds of problems. Write the decisive signal and a near-miss before you code.', recap: 'You can now compare candidate tools across different kinds of problems.', repIds: ['has-duplicate', 'valid-parentheses', 'algo-window-sum', 'most-frequent-number', 'simplify-file-path', 'count-unique-windows'] },
       { title: 'Find your way across a floor plan', description: 'Inspect nearby cells, separate rooms, then guide a robot along its shortest route. Choose from the movement contract before coding.', recap: 'You can now reason about map boundaries, connected areas, and minimum moves.', repIds: ['grid-open-neighbours', 'grid-count-rooms', 'grid-fewest-steps'] },
+      { title: 'Choose under pressure', description: 'Mix unfamiliar contracts with earlier tasks. Name the decisive signal and reject a near-miss before coding.', recap: 'You can now defend a choice across contrasting contracts.', repIds: ['next-warmer-day', 'top-k-frequent-tags', 'algo-prefix-sums', 'course-order', 'longest-shared-sequence', 'algo-subsets'] },
     ] satisfies readonly PathStage[],
   },
   {

@@ -3145,3 +3145,266 @@ export const dsaReps: Rep[] = [
   ]
 }
 ]
+
+// Further applications: briefs deliberately leave the technique choice to the learner.
+dsaReps.push(
+  {
+    'id': 'next-warmer-day',
+    'title': 'Wait for warmer weather',
+    'category': 'Algorithm applications',
+    'prompt': 'For each day, return how many days pass until the first later day with a strictly higher temperature. Return 0 if no such day exists. Equal temperatures are not warmer. Keep the original day order and do not mutate temperatures.',
+    'example': {
+      'input': 'nextWarmerDay([30, 30, 29, 31])',
+      'output': '[3, 2, 1, 0]',
+    },
+    'note': 'temperatures contains 0 to 200 integer readings from -100 to 100. No conversion, rounding, or sorting is requested. Invalid values are outside the contract.',
+    'vocabulary': [{
+        'term': 'Strictly higher',
+        'meaning': 'greater than, excluding equality',
+      }, {
+        'term': 'Wait',
+        'meaning': 'the difference between the later day index and the current day index',
+      }],
+    'planPrompt': 'Which later day qualifies first? Explain how equal readings and a final day affect your answer.',
+    'starter': 'function nextWarmerDay(temperatures: number[]): number[] {\n  // Write your solution here.\n  return []\n}\n',
+    'functionName': 'nextWarmerDay',
+    'preserveInput': true,
+    'hints': ['Trace several equal readings followed by one higher reading.', 'Keep the positions of days whose answers are still unresolved. A new reading may resolve several.', 'Keep unresolved indices in a decreasing-temperature stack. Pop only when the current temperature is strictly greater, recording the index difference.'],
+    'checks': [{
+        'name': 'Several waits',
+        'input': [[73, 74, 75, 71, 69, 72, 76, 73]],
+        'expected': [1, 1, 4, 2, 1, 1, 0, 0],
+      }, {
+        'name': 'Equal is not warmer',
+        'input': [[30, 30, 29, 31]],
+        'expected': [3, 2, 1, 0],
+      }, {
+        'name': 'Empty',
+        'input': [[]],
+        'expected': [],
+      }, {
+        'name': 'Single',
+        'input': [[-100]],
+        'expected': [0],
+      }, {
+        'name': 'All equal',
+        'input': [[5, 5, 5]],
+        'expected': [0, 0, 0],
+      }, {
+        'name': 'Descending',
+        'input': [[100, 0, -100]],
+        'expected': [0, 0, 0],
+      }, {
+        'name': 'Increasing',
+        'input': [[-100, 0, 100]],
+        'expected': [1, 1, 0],
+      }, {
+        'name': 'Maximum size',
+        'input': [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100]],
+        'expected': [199, 198, 197, 196, 195, 194, 193, 192, 191, 190, 189, 188, 187, 186, 185, 184, 183, 182, 181, 180, 179, 178, 177, 176, 175, 174, 173, 172, 171, 170, 169, 168, 167, 166, 165, 164, 163, 162, 161, 160, 159, 158, 157, 156, 155, 154, 153, 152, 151, 150, 149, 148, 147, 146, 145, 144, 143, 142, 141, 140, 139, 138, 137, 136, 135, 134, 133, 132, 131, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 120, 119, 118, 117, 116, 115, 114, 113, 112, 111, 110, 109, 108, 107, 106, 105, 104, 103, 102, 101, 100, 99, 98, 97, 96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 77, 76, 75, 74, 73, 72, 71, 70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
+      }],
+  },
+  {
+    'id': 'top-k-frequent-tags',
+    'brief': {
+      'summary': 'Select exactly k distinct tags by their occurrence counts.',
+      'rules': ['Rank higher counts first, then lexicographic ascending for equal counts.', 'Compare lowercase ASCII strings character by character; a shorter matching prefix comes first. Count exact strings without trimming or changing case.', 'Do not mutate tags. k is between 0 and the number of distinct tags, inclusive.'],
+      'edgeCases': ['Return [] when k is 0. Empty tags permits only k = 0.'],
+    },
+    'title': 'Find the leading tags',
+    'category': 'Algorithm applications',
+    'prompt': 'Return the k distinct tags with the greatest occurrence counts. Order the result by higher count first, then lexicographic ascending for equal counts. Compare lowercase ASCII strings character by character; a shorter prefix comes first. Count exact strings without trimming or changing case. Return [] when k is 0. Do not mutate tags.',
+    'example': {
+      'input': 'topKFrequentTags([\'web\', \'api\', \'web\', \'api\', \'app\'], 2)',
+      'output': '[\'api\', \'web\']',
+    },
+    'note': 'tags contains 0 to 200 strings, each 1 to 20 lowercase ASCII letters a-z. k is an integer from 0 through the number of distinct tags, inclusive; therefore an empty input permits only k = 0. Invalid strings and out-of-range k are outside the contract.',
+    'vocabulary': [{
+        'term': 'Frequency',
+        'meaning': 'how many times an exact tag occurs',
+      }, {
+        'term': 'Lexicographic',
+        'meaning': 'dictionary order by ASCII letters, with a shorter matching prefix first',
+      }],
+    'planPrompt': 'How will you rank equal counts and choose exactly k distinct results without changing the input?',
+    'starter': 'function topKFrequentTags(tags: string[], k: number): string[] {\n  // Write your solution here.\n  return []\n}\n',
+    'functionName': 'topKFrequentTags',
+    'preserveInput': true,
+    'hints': ['Separate occurrences from distinct labels before ranking.', 'Compare both frequency and the stated tie rule; arrival order is irrelevant.', 'Count with a map, group tags in buckets by count, sort each bucket lexicographically, and consume buckets from high to low until k tags are selected. A bounded heap is another option.'],
+    'checks': [{
+        'name': 'Frequency first',
+        'input': [['z', 'a', 'z', 'b', 'a', 'z'], 2],
+        'expected': ['z', 'a'],
+      }, {
+        'name': 'Tie across cutoff',
+        'input': [['web', 'api', 'web', 'api', 'app'], 1],
+        'expected': ['api'],
+      }, {
+        'name': 'Empty',
+        'input': [[], 0],
+        'expected': [],
+      }, {
+        'name': 'Zero k',
+        'input': [['a', 'b'], 0],
+        'expected': [],
+      }, {
+        'name': 'Single',
+        'input': [['z'], 1],
+        'expected': ['z'],
+      }, {
+        'name': 'All equal',
+        'input': [['a', 'a', 'a'], 1],
+        'expected': ['a'],
+      }, {
+        'name': 'Prefix and all distinct',
+        'input': [['aa', 'b', 'a', 'ab'], 4],
+        'expected': ['a', 'aa', 'ab', 'b'],
+      }, {
+        'name': 'Maximum size and tag length',
+        'input': [['zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'zzzzzzzzzzzzzzzzzzzz', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaa'], 2],
+        'expected': ['aaaaaaaaaaaaaaaaaaaa', 'zzzzzzzzzzzzzzzzzzzz'],
+      }],
+  },
+  {
+    'id': 'course-order',
+    'brief': {
+      'summary': 'Schedule every course while obeying its requirements and the smallest-eligible choice.',
+      'rules': ['Return every ID from 0 through courseCount - 1 exactly once. A pair [course, prerequisite] requires the prerequisite first.', 'At each step choose the smallest-numbered course whose prerequisites are completed. Pair order has no significance.', 'Duplicate pairs represent one requirement. A self-pair is a cycle. Do not mutate prerequisites or its pairs.'],
+      'edgeCases': ['Return [] if any cycle prevents completing every course, even if other courses can finish.', 'With 0 courses and no pairs, return [].'],
+    },
+    'title': 'Schedule the courses',
+    'category': 'Algorithm applications',
+    'prompt': 'Return an order containing every course from 0 through courseCount - 1 exactly once. Each prerequisite pair [course, prerequisite] means the prerequisite must appear first. At each step choose the smallest-numbered course whose prerequisites have all been completed. Return [] if any cycle prevents completing every course, even if some courses can be completed. Duplicate pairs represent one requirement; a self-pair is a cycle. Do not mutate prerequisites or its pairs.',
+    'example': {
+      'input': 'courseOrder(4, [[2, 0], [2, 1]])',
+      'output': '[0, 1, 2, 3]',
+    },
+    'note': 'courseCount is an integer from 0 to 50. prerequisites contains 0 to 200 pairs of valid course IDs. With zero courses, the pairs must be empty. Pair order has no significance; no other normalization is required. Invalid IDs or malformed pairs are outside the contract.',
+    'vocabulary': [{
+        'term': 'Prerequisite',
+        'meaning': 'a course that must be completed before another',
+      }, {
+        'term': 'Cycle',
+        'meaning': 'a chain of requirements that leads back to a course in the same chain',
+      }],
+    'planPrompt': 'When is a course eligible, how do you choose among eligible courses, and how will you detect an impossible schedule?',
+    'starter': 'function courseOrder(courseCount: number, prerequisites: [number, number][]): number[] {\n  // Write your solution here.\n  return []\n}\n',
+    'functionName': 'courseOrder',
+    'preserveInput': true,
+    'hints': ['Eligibility changes after each completed course, so choosing once at the beginning is insufficient.', 'Track each course’s remaining requirements, treating repeated pairs as one.', 'Build outgoing edges and indegrees. Repeatedly remove the smallest zero-indegree course and decrement its dependents. If fewer than courseCount courses finish, return [].'],
+    'checks': [{
+        'name': 'Newly eligible before older choice',
+        'input': [4, [[2, 0], [2, 1]]],
+        'expected': [0, 1, 2, 3],
+      }, {
+        'name': 'Reverse IDs dependency',
+        'input': [3, [[0, 2]]],
+        'expected': [1, 2, 0],
+      }, {
+        'name': 'Duplicate requirement',
+        'input': [3, [[1, 0], [1, 0], [2, 1]]],
+        'expected': [0, 1, 2],
+      }, {
+        'name': 'Empty',
+        'input': [0, []],
+        'expected': [],
+      }, {
+        'name': 'Single',
+        'input': [1, []],
+        'expected': [0],
+      }, {
+        'name': 'Single self-cycle',
+        'input': [1, [[0, 0]]],
+        'expected': [],
+      }, {
+        'name': 'Cycle plus free course',
+        'input': [3, [[0, 1], [1, 0]]],
+        'expected': [],
+      }, {
+        'name': 'No requirements',
+        'input': [4, []],
+        'expected': [0, 1, 2, 3],
+      }, {
+        'name': 'Maximum courses and pairs',
+        'input': [50, [[1, 0], [2, 1], [3, 2], [4, 3], [5, 4], [6, 5], [7, 6], [8, 7], [9, 8], [10, 9], [11, 10], [12, 11], [13, 12], [14, 13], [15, 14], [16, 15], [17, 16], [18, 17], [19, 18], [20, 19], [21, 20], [22, 21], [23, 22], [24, 23], [25, 24], [26, 25], [27, 26], [28, 27], [29, 28], [30, 29], [31, 30], [32, 31], [33, 32], [34, 33], [35, 34], [36, 35], [37, 36], [38, 37], [39, 38], [40, 39], [41, 40], [42, 41], [43, 42], [44, 43], [45, 44], [46, 45], [47, 46], [48, 47], [49, 48], [1, 0], [2, 1], [3, 2], [4, 3], [5, 4], [6, 5], [7, 6], [8, 7], [9, 8], [10, 9], [11, 10], [12, 11], [13, 12], [14, 13], [15, 14], [16, 15], [17, 16], [18, 17], [19, 18], [20, 19], [21, 20], [22, 21], [23, 22], [24, 23], [25, 24], [26, 25], [27, 26], [28, 27], [29, 28], [30, 29], [31, 30], [32, 31], [33, 32], [34, 33], [35, 34], [36, 35], [37, 36], [38, 37], [39, 38], [40, 39], [41, 40], [42, 41], [43, 42], [44, 43], [45, 44], [46, 45], [47, 46], [48, 47], [49, 48], [1, 0], [2, 1], [3, 2], [4, 3], [5, 4], [6, 5], [7, 6], [8, 7], [9, 8], [10, 9], [11, 10], [12, 11], [13, 12], [14, 13], [15, 14], [16, 15], [17, 16], [18, 17], [19, 18], [20, 19], [21, 20], [22, 21], [23, 22], [24, 23], [25, 24], [26, 25], [27, 26], [28, 27], [29, 28], [30, 29], [31, 30], [32, 31], [33, 32], [34, 33], [35, 34], [36, 35], [37, 36], [38, 37], [39, 38], [40, 39], [41, 40], [42, 41], [43, 42], [44, 43], [45, 44], [46, 45], [47, 46], [48, 47], [49, 48], [1, 0], [2, 1], [3, 2], [4, 3], [5, 4], [6, 5], [7, 6], [8, 7], [9, 8], [10, 9], [11, 10], [12, 11], [13, 12], [14, 13], [15, 14], [16, 15], [17, 16], [18, 17], [19, 18], [20, 19], [21, 20], [22, 21], [23, 22], [24, 23], [25, 24], [26, 25], [27, 26], [28, 27], [29, 28], [30, 29], [31, 30], [32, 31], [33, 32], [34, 33], [35, 34], [36, 35], [37, 36], [38, 37], [39, 38], [40, 39], [41, 40], [42, 41], [43, 42], [44, 43], [45, 44], [46, 45], [47, 46], [48, 47], [49, 48], [1, 0], [1, 0], [1, 0], [1, 0]]],
+        'expected': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49],
+      }],
+  },
+  {
+    'id': 'longest-shared-sequence',
+    'brief': {
+      'summary': 'Find the longest character sequence shared in order by both strings.',
+      'rules': ['Return only the length, not the sequence. Chosen characters may have gaps; adjacency is unnecessary.', 'Each position can be used at most once. Repeated letters count only when separate positions match.', 'Compare exact lowercase ASCII characters without trimming or changing case. Do not change the inputs.'],
+      'edgeCases': ['An empty string gives length 0.'],
+    },
+    'title': 'Compare ordered messages',
+    'category': 'Algorithm applications',
+    'prompt': 'Return the length of the longest character sequence appearing in both strings in the same relative order. Chosen characters may have gaps; they need not be adjacent. Each position can be used at most once. Return only the length, not the sequence. Compare exact characters without trimming or changing case. An empty string gives length 0. Do not change the inputs.',
+    'example': {
+      'input': 'longestSharedSequence(\'abcde\', \'ace\')',
+      'output': '3',
+    },
+    'note': 'left and right each contain 0 to 100 lowercase ASCII letters a-z. Other character sets are outside the contract. Order matters, and repeated characters count only when separate positions can be matched.',
+    'vocabulary': [{
+        'term': 'Subsequence',
+        'meaning': 'characters chosen in order while allowing skipped positions',
+      }, {
+        'term': 'Length',
+        'meaning': 'the number of chosen character positions',
+      }],
+    'planPrompt': 'What makes a shared sequence valid? Give an example where counting shared letters ignores their order.',
+    'starter': 'function longestSharedSequence(left: string, right: string): number {\n  // Write your solution here.\n  return 0\n}\n',
+    'functionName': 'longestSharedSequence',
+    'preserveInput': true,
+    'hints': ['Contrast a shared adjacent fragment with a shared sequence that has gaps.', 'Consider answers for shorter prefixes of both inputs, including empty prefixes.', 'Use a table of prefix lengths. Equal last characters extend the diagonal by one; otherwise take the larger answer after dropping the last character from either prefix.'],
+    'checks': [{
+        'name': 'Gaps allowed',
+        'input': ['abcde', 'ace'],
+        'expected': 3,
+      }, {
+        'name': 'Order matters',
+        'input': ['ab', 'ba'],
+        'expected': 1,
+      }, {
+        'name': 'Repeated positions',
+        'input': ['aaba', 'abaa'],
+        'expected': 3,
+      }, {
+        'name': 'Both empty',
+        'input': ['', ''],
+        'expected': 0,
+      }, {
+        'name': 'Left empty',
+        'input': ['', 'abc'],
+        'expected': 0,
+      }, {
+        'name': 'Right empty',
+        'input': ['abc', ''],
+        'expected': 0,
+      }, {
+        'name': 'Single match',
+        'input': ['a', 'a'],
+        'expected': 1,
+      }, {
+        'name': 'Single mismatch',
+        'input': ['a', 'b'],
+        'expected': 0,
+      }, {
+        'name': 'All equal',
+        'input': ['aaaa', 'aa'],
+        'expected': 2,
+      }, {
+        'name': 'No overlap',
+        'input': ['abc', 'xyz'],
+        'expected': 0,
+      }, {
+        'name': 'Maximum equal',
+        'input': ['aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'],
+        'expected': 100,
+      }, {
+        'name': 'Maximum competing order',
+        'input': ['aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'],
+        'expected': 50,
+      }],
+  }
+)

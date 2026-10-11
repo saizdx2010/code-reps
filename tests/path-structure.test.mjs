@@ -83,7 +83,7 @@ test('recognition practice reuses valid tasks with mixed journeys and unlabeled 
     assert.doesNotMatch(stage.title, /\b(window\w*|stack\w*|maps?|sets?|pointer\w*|binary|BFS|DFS)\b/i)
     for (const id of stage.repIds) assert.ok(reps.some(rep => rep.id === id), id)
   }
-  const grids = path.stages.at(-1)
+  const grids = path.stages.find(stage => stage.title === 'Find your way across a floor plan')
   assert.equal(grids.title, 'Find your way across a floor plan')
   assert.deepEqual(grids.repIds, ['grid-open-neighbours', 'grid-count-rooms', 'grid-fewest-steps'])
   assert.ok(grids.description && grids.recap)
