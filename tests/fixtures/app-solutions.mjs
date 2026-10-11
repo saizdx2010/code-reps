@@ -135,6 +135,11 @@ function screenMessage(status: string, name: string) {
   if (status === 'error') return 'Could not load ' + name
   return name
 }`,
+  'frontend-list-summary': `
+function itemsSummary(names: string[]) {
+  if (names.length === 0) return 'No items yet'
+  return names.length === 1 ? '1 item' : names.length + ' items'
+}`,
   'backend-check-quantity': `
 function checkQuantity(value: unknown) {
   if (typeof value !== 'number') return null

@@ -56,6 +56,11 @@ export const appGuides = {
     explanation: ['Trace one status through your conditions and say which line returns.', 'Explain why the name is never changed.', 'Say what these checks do not cover, such as how the words look on a screen.'],
     example: 'I test the status with one condition per state and return its message as soon as it matches. Loading and error build text around the name; ready returns the name unchanged, so an empty name stays empty. The checks cover each state and an empty name; they do not show how the text looks on screen.',
   },
+  'frontend-list-summary': {
+    plan: ['Decide the words for zero, one, and several items.', 'Read the count once and test it.', 'Return from each condition so only one line is produced.'],
+    explanation: ['Trace a list of one name and say which line returns.', 'Explain why one item is its own case.', 'Say what these checks do not cover, such as how the line looks above a real list.'],
+    example: 'I read the number of names and return "No items yet" for zero and "1 item" for one. Any other count becomes the count, a space, and "items". An empty name still counts. The checks cover zero, one, and several; they do not show how the line looks on screen.',
+  },
   'backend-check-quantity': {
     plan: ['List the rules a value must meet: a number, whole, and in range.', 'Decide which test to run first so later tests are safe.', 'Name the values at each end of the range.'],
     explanation: ['Trace "3", 2.5, and 11 and say which rule rejects each.', 'Explain why the value is returned unchanged instead of converted.', 'Say what this does not cover, such as a full request body.'],
@@ -188,6 +193,21 @@ export const appDepth: Record<string, RepDepth> = {
     alternative: 'A lookup object of message builders keeps the three states together, but for three short messages plain if statements are easier to read and trace.',
     counterexample: 'Returning "Loading " + name without the dots, or checking ready first and returning name for every status, passes the ready check but fails the loading and error checks.',
     transfer: 'Add an "empty" status that shows "No profile yet". Decide where it goes among the conditions and what name it uses. This change is self-reviewed; the original checks do not cover it.',
+  },
+  'frontend-list-summary': {
+    traceSteps: {code: ["function itemsSummary(names: string[]): string {", "  const count = names.length", "  if (count === 0) return 'No items yet'", "  if (count === 1) return '1 item'", "  const text = count + ' items'", "  return text", "}"], input: "names = ['Ada', 'Bo']", steps: [
+      {line: 0, vars: {}, structure: {kind: 'array', values: ['Ada', 'Bo']}, note: 'The function receives a list of two names. Only how many there are matters.'},
+      {line: 1, vars: {count: 2}, structure: {kind: 'array', values: ['Ada', 'Bo']}, note: 'Read the length once: count is 2.'},
+      {line: 2, vars: {count: 2}, structure: {kind: 'state', entries: [['count', 2], ['empty rule', 'no match'], ['one rule', 'not tested yet']]}, note: 'Is count 0? No, 2 is not 0, so the empty message is skipped.'},
+      {line: 3, vars: {count: 2}, structure: {kind: 'state', entries: [['count', 2], ['empty rule', 'no match'], ['one rule', 'no match']]}, note: 'Is count 1? No, so the singular message is skipped. Only the plural case is left.'},
+      {line: 4, vars: {count: 2, text: '2 items'}, structure: {kind: 'state', entries: [['count', 2], ['text', '2 items']]}, note: 'Join the count, a space, and the plural word: 2 items.'},
+      {line: 5, vars: {count: 2, text: '2 items', result: '2 items'}, structure: {kind: 'state', entries: [['count', 2], ['shown on screen', '2 items']]}, note: 'Return the text. A list of one name would have stopped at the one rule and shown 1 item.'},
+    ]},
+    reasoning: 'The count decides the words, and zero, one, and several are mutually exclusive. Testing zero and one first leaves every other count for the plural line, so exactly one message is produced.',
+    trace: 'For ["Ada"] the count is 1, the zero test fails, the one test matches, and "1 item" returns. For ["Ada", "Bo"] both tests fail and the last line builds "2 items".',
+    alternative: 'A single line such as count + " item" + (count === 1 ? "" : "s") covers one and several together, but zero still needs its own words. Separate conditions are easier to trace for three outcomes.',
+    counterexample: 'Returning count + " items" for every non-empty list prints "1 items" and fails the one-item check. Testing count === 1 before zero is harmless, but forgetting zero returns "0 items" instead of the empty message.',
+    transfer: 'Add a limit: from 100 items on, show "99+ items". Decide where that test goes among the conditions and what 99 and 100 return. This change is self-reviewed; the original checks do not cover it.',
   },
   'backend-check-quantity': {
     reasoning: 'Each rule is tested before the next depends on it: the type first, then wholeness, then the range. The value is returned only when all three hold, so no invalid value reaches later code.',

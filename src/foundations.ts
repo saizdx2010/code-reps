@@ -450,4 +450,22 @@ export const foundationReps: Rep[] = [
       { name: 'All below', input: [[1, 2], 3], expected: { alerts: 0, longestRun: 0 } },
     ],
   },
+  {
+    id: 'function-returns-function', title: 'Make a function that returns a function', category: 'TypeScript basics',
+    prompt: 'Implement makeAdder(amount), which returns a new function. That function takes a number and returns it plus amount. Then implement addAll(amount, values): build one adder with makeAdder and return a new array holding the adder\'s result for each value.',
+    example: { input: 'addAll(5, [1, 2])', output: '[6, 7]' },
+    note: 'Amount and values are finite integers; values may be empty. Return a new array and do not change values. The checks inspect outputs only, so review yourself that addAll calls makeAdder once and uses the function it returns.',
+    vocabulary: [{ term: 'Returned function', meaning: 'a function created inside another function and handed back to the caller' }, { term: 'Callback', meaning: 'a function passed to another function so it can be called for each item' }],
+    planPrompt: 'What does makeAdder(5) give back? What happens when you call that result with 3?',
+    starter: 'function makeAdder(amount: number): (x: number) => number {\n  return x => x\n}\nfunction addAll(amount: number, values: number[]): number[] {\n  // Build one adder, then apply it to each value.\n  return []\n}\n',
+    functionName: 'addAll', preserveInput: true,
+    hints: ['makeAdder returns a function, so its body should end with an arrow function that uses x.', 'Inside the arrow function you can read amount, which belongs to the makeAdder call.', 'In addAll, store makeAdder(amount) in a const, then map values with it.'],
+    checks: [
+      { name: 'Adds to each value', input: [5, [1, 2]], expected: [6, 7] },
+      { name: 'Returns an empty array for no values', input: [5, []], expected: [] },
+      { name: 'Adds a negative amount', input: [-3, [3, 10]], expected: [0, 7] },
+      { name: 'Adds zero without change', input: [0, [4, -4]], expected: [4, -4] },
+      { name: 'Handles negative values', input: [5, [-5, 0, 7]], expected: [0, 5, 12] },
+    ],
+  },
 ]

@@ -21,7 +21,7 @@ export const firstPath = {
     { title: 'Calculate shipping on your own', description: 'Use loops and conditions without hints on a fresh pricing problem.', recap: 'You can now combine loops and conditions to calculate tiered shipping costs.', repIds: ['shipping-cost-tiers'] },
     { title: 'Recall in a new setting', description: 'Come back after a break and solve related word, lookup, stack, and countdown problems.', recap: 'You can now apply counting, lookups, and stacks in different settings.', repIds: ['count-long-words', 'first-repeated-number', 'remove-adjacent-pairs', 'countdown-labels'] },
     { title: 'Read and repair code', description: 'Fix a bug, read a teammate\'s function, transform data for a screen, and check a suggested answer.', recap: 'You can now read unfamiliar code, find bugs, and check a proposed answer.', repIds: ['repair-visible-count', 'read-unique-names', 'transform-active-labels', 'verify-generated-code'] },
-    { title: 'How JavaScript runs', description: 'See how closures, shared objects, promises, and the event loop behave.', recap: 'You can now trace closures, shared objects, promises, and event-loop ordering.', repIds: ['closure-counters', 'reference-groups', 'promise-outcomes', 'event-loop-order'] },
+    { title: 'How JavaScript runs', description: 'Return a function from a function, then see how closures, shared objects, promises, and the event loop behave.', recap: 'You can now return a function from a function and trace closures, shared objects, promises, and event-loop ordering.', repIds: ['function-returns-function', 'closure-counters', 'reference-groups', 'promise-outcomes', 'event-loop-order'] },
   ] satisfies readonly PathStage[],
 } as const
 
@@ -88,6 +88,7 @@ export const paths = [
     },
     stages: [
       { title: 'Show one state', description: 'Turn a single screen state into the words a person sees, before you model several states.', recap: 'You can now turn one screen state into the words a person sees.', repIds: ['frontend-screen-message'] },
+      { title: 'Show empty or not', description: 'Choose the words for an empty list and for a list with items, including the one-item case, before you model several states.', recap: 'You can now choose the words for an empty list and a list with items.', repIds: ['frontend-list-summary'] },
       { title: 'Model valid states', description: 'Use unions so a screen can only be in states that make sense.', recap: 'You can now model screen states with unions that rule out invalid combinations.', repIds: ['task-state-label', 'saved-record-status', 'catalog-request-summary'] },
       { title: 'Decide what the screen shows', description: 'Filter items and choose between loading, error, empty, and ready.', recap: 'You can now choose what to show for loading, error, empty, and ready states.', repIds: ['frontend-visible-items', 'frontend-view-state'] },
       { title: 'Build interface logic', description: 'Sort a table, show form errors, choose page buttons, group items, and summarize filters.', recap: 'You can now derive table order, form errors, page buttons, groups, and filter labels.', repIds: ['frontend-sort-table', 'frontend-form-errors', 'frontend-pagination-controls', 'group-items-by-heading', 'filter-chip-summary'] },

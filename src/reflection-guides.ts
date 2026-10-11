@@ -84,6 +84,11 @@ export const reflectionGuides: Record<string, { plan: string[]; explanation: str
     explanation: ["Explain why 90 is A while 89.9 is B.", "Describe which branch handles scores below 60."],
     example: "I return Invalid for scores outside 0 through 100 before any grade check. Then I test 90, 80, 70, and 60 in that order, so each band is one branch. Scores below 60 reach the final return. The checks verify labels at the boundaries; I review my branch order myself.",
   },
+  'function-returns-function': {
+    plan: ["Decide what makeAdder(5) gives back.", "Decide where addAll builds the adder, and how often."],
+    explanation: ["Explain why the returned function can still use amount after makeAdder has finished.", "Explain why addAll builds the adder once instead of once per value."],
+    example: "makeAdder returns a small function that adds amount to its input. addAll calls makeAdder once, keeps the result in a const, and maps over the values with it, so the input array is unchanged. An empty array maps to an empty array. The checks verify outputs; I review the one call to makeAdder myself.",
+  },
   'loop-with-for': {
     plan: ["Start the total at zero.", "Decide where the loop starts and whether it includes n."],
     explanation: ["Explain why the loop includes n itself.", "Explain what happens when n is zero."],
