@@ -108,7 +108,7 @@ The effort estimate on a rep derives from the brief word count plus eight per ch
 
 ## Paths
 
-The Trail has one root, Foundations (`typescript`), and three tracks: Problem solving (`algorithms-data-structures`), Frontend (`frontend`), and Backend (`backend`). Add a rep to the stage it belongs to in `src/path.ts`; avoid listing it in two tracks except interview rounds and project capstones (`pathApplications` in `src/curriculum.ts`). A track stage made only of Foundations reps renders as a link back to Foundations. Retired path ids (`typescript-browser`, `practical-concepts`, `real-world`, `ai-era`, `interviews`) are mapped to current ids by `migratePathId`, which saved learning goals pass through when loaded; `tests/path-structure.test.mjs` checks that no previously placed rep is dropped.
+The Trail has one root, Foundations (`typescript`), and four tracks: Problem solving (`algorithms-data-structures`), Pattern Recognition (`pattern-recognition`), Frontend (`frontend`), and Backend (`backend`). Add a rep to the stage it belongs to in `src/path.ts`; avoid listing it in two tracks except the deliberate mixed practice in Pattern Recognition, interview rounds, and project capstones (`pathApplications` in `src/curriculum.ts`). A track stage made only of Foundations reps renders as a link back to Foundations. Retired path ids (`typescript-browser`, `practical-concepts`, `real-world`, `ai-era`, `interviews`) are mapped to current ids by `migratePathId`, which saved learning goals pass through when loaded; `tests/path-structure.test.mjs` checks that no previously placed rep is dropped.
 
 ## Advanced algorithm function reps
 

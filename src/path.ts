@@ -54,6 +54,22 @@ export const paths = [
     ] satisfies readonly PathStage[],
   },
   {
+    id: 'pattern-recognition',
+    title: 'Pattern Recognition',
+    description: 'Read an unlabeled problem, identify its decisive signals, and explain your choice before coding.',
+    introduction: {
+      title: 'See the shape, then solve the problem',
+      body: 'Knowing a technique is different from recognizing when to use it. Read "Recognize the pattern" in Lessons before "Name the pattern first". Review the prerequisite Problem solving lessons when a tool is unfamiliar. These reps reuse existing tasks and completion evidence; they do not create a new independent or retained assessment.',
+      example: '// Before coding, write:\n// What must the result answer?\n// Which input facts make my approach safe?\n// What small example would break another approach?',
+      explanation: 'Choose from the contract rather than a stage label. A useful plan names a candidate, the fact that supports it, and a boundary that could disprove it.',
+      next: 'Read the lesson, then name your candidate before solving the first rep. In the mixed practice, decide which tool fits before you code. Existing rep titles and hints remain available, so this is introductory recognition practice rather than a blind assessment.',
+    },
+    stages: [
+      { title: 'Name the pattern first', description: 'Read "Recognize the pattern" in Lessons, then justify a candidate using the input contract before coding.', recap: 'You can now justify a candidate from the input contract before coding.', repIds: ['algo-sorted-pair'] },
+      { title: 'Decide which tool fits', description: 'Switch between different kinds of problems. Write the decisive signal and a near-miss before you code.', recap: 'You can now compare candidate tools across different kinds of problems.', repIds: ['has-duplicate', 'valid-parentheses', 'algo-window-sum', 'most-frequent-number', 'simplify-file-path', 'count-unique-windows'] },
+    ] satisfies readonly PathStage[],
+  },
+  {
     id: 'frontend',
     title: 'Frontend',
     description: 'Decide what a screen shows, keep async results current, and manage live connections.',

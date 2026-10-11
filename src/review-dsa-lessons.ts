@@ -1,6 +1,13 @@
 import type { LessonDepth } from './lesson-depth.ts'
 
 export const dsaLessonDepth: Record<string, LessonDepth> = {
+  'recognize-the-pattern': {
+    title: 'A familiar shape can hide a broken assumption',
+    code: '// Daily costs [4, -3, 1], budget 3\n// A draft discards the first 4 immediately.\n// But the first two costs total 1.',
+    reasoning: 'With negative values, a run that is too expensive now may become affordable after extension. For budget 3, discarding the first 4 before seeing -3 loses the valid length-two run [4, -3]. Positive-cost shrinking relies on an assumption that this contract does not provide.',
+    challenge: 'For costs [4, -3, 1] and budget 3, predict the longest affordable run. Explain why a positive-cost shrinking rule can miss it. Then distinguish finding that longest run from answering many supplied range-total questions. Discuss before revealing.',
+    answer: 'The longest run has length 3: all three costs total 2, within budget 3. The shrinking draft drops the first 4 too early and can only find the length-two run [-3, 1]. It discards a start that later becomes affordable, so its invariant is false. Prefix sums answer supplied ranges by subtraction even with negative values; prefix sums alone do not locate a longest affordable run without additional searching or structure. State a new invariant before choosing an algorithm. This discussion is self-reviewed, not checked implementation evidence.',
+  },
   'collection-operations': {
     'title': 'Presence is different from truthiness',
     'code': 'const counts = new Map([["Ada", 0]])\nconst result = counts.get("Ada") || null',
