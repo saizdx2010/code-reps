@@ -48,6 +48,7 @@
 }
 .continue-panel, .hub-cards > .hub-panel { transition: border-color var(--motion-fast) var(--motion-ease), box-shadow 260ms var(--motion-ease); }
 .text-button { text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px; }
+summary { border-radius: var(--radius-control); }
 @media (hover: hover) and (pointer: fine) {
   .starting-options button:hover:not(:disabled), .path-choices button:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 5px 16px #293e3310; }
   .path-choices button:hover:not(:disabled) { background: var(--surface); }

@@ -2,7 +2,7 @@
 .loading-status { color: var(--muted); font-size: 14px; margin: 0 0 24px; }
 .loading-status::before, .is-loading::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 8px; border-radius: 50%; background: var(--accent); vertical-align: middle; animation: loading-breathe 1.6s ease-in-out infinite alternate; }
 .page-loading, .project-list-loading, .preview-loading { position: relative; }
-.page-loading-status { position: absolute; top: 12px; right: 28px; margin: 0; font-size: 12px; line-height: 1.1; }
+.page-loading-status { position: absolute; top: 12px; right: var(--page-gutter); margin: 0; font-size: 12px; line-height: 1.1; }
 .project-list-loading > .page-loading-status { top: -18px; right: 0; }
 .profile-loading-status { margin: 1em 0; }
 .loading-sheet { padding: 28px; min-width: 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); margin-bottom: 24px; }
@@ -14,10 +14,11 @@
 .loading-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 20px; margin: 14px 0 24px; }
 .loading-fields-stacked { grid-template-columns: minmax(0, 1fr); }
 .skeleton-field { height: var(--control-height); }
-.skeleton-action { width: 120px; height: 40px; margin-top: 24px; }
+.skeleton-action { width: 120px; height: var(--control-height); margin-top: 24px; }
 .loading-fields > .skeleton-action { margin: 0; }
 .loading-rows { margin-top: 24px; }
 .loading-row { padding: 28px 0 14px; border-bottom: 1px solid var(--border); }
+.loading-rows > .loading-row:last-child { padding-bottom: 0; border-bottom: 0; }
 .loading-lesson-layout { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 40px; }
 .loading-lesson-layout aside .loading-fields { grid-template-columns: 1fr; margin-top: 0; }
 .loading-lesson-layout .loading-sheet { margin-bottom: 0; }
@@ -28,11 +29,10 @@
 .loading-notebook-heading > div { flex: 1; padding-top: 14px; }
 .loading-notebook-heading > .skeleton-action { margin-top: 0; }
 .loading-notebook-empty .skeleton-title { width: 38%; }
-.loading-project-intro { padding: 14px 0 8px; }
 .loading-project-intro .skeleton-line:nth-child(2) { margin-bottom: 30px; }
 .loading-tabs, .loading-week { display: flex; gap: 8px; margin: 28px 0; }
-.loading-tabs > span { flex: 1; height: 40px; }
-.loading-week > span { flex: 1; height: 40px; max-width: 80px; }
+.loading-tabs > span { flex: 1; height: var(--control-height); }
+.loading-week > span { flex: 1; height: var(--control-height); max-width: 80px; }
 .skeleton-code { height: 180px; margin: 24px 0 0; }
 .skeleton-writing { height: 130px; }
 .loading-interview-sheet { max-width: none; }
@@ -48,7 +48,7 @@
 .loading-code-row:nth-child(6) .skeleton-line { width: 18%; }
 .preview-loading > .page-loading-status { top: 6px; right: 20px; }
 .loading-preview-description { padding: 8px 0; }
-.loading-preview-controls .skeleton-field { width: 140px; height: 40px; }
+.loading-preview-controls .skeleton-field { width: 140px; height: var(--control-height); }
 .loading-preview-controls .skeleton-action { margin: 0; }
 .loading-preview-empty { min-height: 68px; }
 .loading-preview-empty .skeleton-line { margin: 4px 0; }
@@ -62,6 +62,7 @@
 .startup-columns .loading-sheet { background: var(--bg); margin-bottom: 0; }
 .startup-note { color: var(--muted); font-size: 14px; }
 @keyframes loading-breathe { from { opacity: .4; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .loading-status::before, .is-loading::before { animation: none; } }
 @media (max-width: 900px) {
   .loading-lesson-layout { grid-template-columns: minmax(0, 1fr); gap: 20px; }
   .loading-lesson-layout > aside { display: flex; align-items: center; min-height: 45px; border-bottom: 1px solid var(--border); }
@@ -73,7 +74,7 @@
   .loading-fields, .startup-columns { grid-template-columns: 1fr; }
   .startup-workbook { padding: 40px 18px; }
   .startup-brand { padding: 0 18px; }
-  .page-loading-status { top: 6px; right: 18px; }
+  .page-loading-status { top: 6px; }
   .loading-lesson-heading > .skeleton-action { width: 68px; }
 }
 @media (prefers-reduced-motion: reduce) { .startup-loading *, .page-loading *, .project-list-loading *, .loading-code-lines * { animation: none !important; } }
