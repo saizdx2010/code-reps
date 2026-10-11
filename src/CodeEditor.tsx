@@ -86,18 +86,31 @@ export default function CodeEditor({ onRunChecks, focusRequest = 0, siblingFiles
   const focusRequestRef = useRef(focusRequest)
   const viewSaveTimer = useRef<number | undefined>(undefined)
   const siblingModels = useRef(new Map<string, monaco.editor.ITextModel>())
+  const syncedContent = useRef(new Map<string, string>())
   useLayoutEffect(() => {
     const models = siblingModels.current
-    return () => { models.forEach(model => model.dispose()); models.clear() }
+    const synced = syncedContent.current
+    return () => { models.forEach(model => model.dispose()); models.clear(); synced.clear() }
   }, [])
   // Sibling files are separate models so the TypeScript worker sees './state' and './view' as real modules. The active file stays with the editor.
   useLayoutEffect(() => {
-    for (const [path, content] of Object.entries(siblingFiles ?? {})) {
+    // Runs every render, so skip unchanged files without reading the model text.
+    const siblings = siblingFiles ?? {}
+    for (const [path, content] of Object.entries(siblings)) {
+      if (syncedContent.current.get(path) === content) continue
       const uri = monaco.Uri.parse(path)
       const model = monaco.editor.getModel(uri)
       if (!model) siblingModels.current.set(path, monaco.editor.createModel(content, 'typescript', uri))
       else if (model.getValue() !== content) model.setValue(content)
+      syncedContent.current.set(path, content)
     }
+    // Release models for files that left the project; a model the editor now shows as the active file stays until unmount.
+    for (const [path, model] of siblingModels.current) {
+      if (path in siblings || path === props.path) continue
+      model.dispose()
+      siblingModels.current.delete(path)
+    }
+    for (const path of syncedContent.current.keys()) if (!(path in siblings)) syncedContent.current.delete(path)
   })
   useLayoutEffect(() => {
     const save = () => {

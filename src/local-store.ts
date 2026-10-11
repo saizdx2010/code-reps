@@ -50,8 +50,12 @@ export function createLocalStore(environment: Environment) {
     for (const [key, value] of Object.entries(entries)) if (remaining[key] === value) delete remaining[key]
     saveJournal(remaining)
   }
+  // Saves made while an earlier request is in flight merge into one follow-up request, so a slow server sees one PATCH rather than a backlog.
+  let queued: Entries | null = null
   const enqueue = (entries: Entries) => {
-    pending = pending.then(() => send(entries)).catch((error: unknown) => {
+    if (queued) { Object.assign(queued, entries); return }
+    queued = { ...entries }
+    pending = pending.then(() => { const batch = queued!; queued = null; return send(batch) }).catch((error: unknown) => {
       pendingError = error instanceof Error ? error : new Error('Could not save to the local server.')
       issue = pendingError.message
       environment.onError()
