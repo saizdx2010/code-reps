@@ -15,9 +15,20 @@ Specialized concepts used in application code, spread across Foundations (How Ja
 
 The resource-ownership journey progresses from shared connection leases to independent subscription cleanup, then room membership recall after three days. Recurring review rotates through those applications. The request-ownership journey starts with obsolete-result rejection, continues with independent search display states, and recalls the skill across independent preview slots after three days. Recurring review begins with preserving report data through refresh, failure, and cancellation, then rotates through preview and search applications. Other topics record lesson answers, attempts, and self-assessment but do not claim delayed retention without a dedicated journey. See [Content gaps](./CONTENT_GAPS.md) for the next small batches.
 
+## Local runtime journey
+
+The async journey stages `await-local-records` (guided sequential await and release),
+`settle-local-panels` (independent parallel collection with partial failure), and
+`cancel-local-export` (distinct delayed recall with pre-abort, in-flight AbortSignal
+cancellation, failure, and cleanup). Recall requires three days after hint-free
+independence. Prompts explicitly say “Runtime behavior”; request-ownership prompts
+remain labeled as policy traces. Local fetch fixtures settle in microtasks with no
+network or wall-clock waits. Checks compare values and observed lifecycle calls;
+Promise.all with caught outcomes and Promise.allSettled are both accepted.
+
 ## Verification boundaries
 
-Practical-concept reps run in the existing synchronous TypeScript worker. Networking and scheduling reps operate on deterministic traces, with their simplifications and equality policies stated in their prompts. They do not open sockets, wait on actual timers, or validate server persistence. The promises rep processes already-settled records rather than awaiting requests. Closure, singleton, and injected-clock reps request helper functions, but output checks cannot prove that learners used those helpers or a particular architecture; the self-review must inspect the implementation.
+Most practical-concept reps calculate authored policy traces. The worker also awaits real Promise-returning functions. Networking and scheduling reps operate on deterministic traces, with their simplifications and equality policies stated in their prompts. They do not open sockets, wait on actual timers, or validate server persistence. The promises rep processes already-settled records rather than awaiting requests. Closure, singleton, and injected-clock reps request helper functions, but output checks cannot prove that learners used those helpers or a particular architecture; the self-review must inspect the implementation.
 
 Passing checks establishes the checked behavior, not production integration fluency. Real implementations need checks for actual subscriptions, timing, browser scheduling, disconnect/reconnect behavior, account boundaries, malformed payloads, authentication, concurrent server transactions, and reconciliation with authoritative results as applicable.
 

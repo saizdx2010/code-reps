@@ -115,3 +115,30 @@ The Trail has one root, Foundations (`typescript`), and four tracks: Problem sol
 `src/dsa-advanced-reps.ts` owns the guided prefix-sum, interval, linked-list, heap, subset, and dynamic-programming reps. Their depth and reflection guides live in `src/review-dsa-advanced.ts`. Register its exports alongside the existing DSA exports in `src/rep-sources.ts`, `src/rep-depth.ts`, and `src/learning.ts`. Independent references live in `tests/fixtures/dsa-solutions.mjs`; `tests/dsa-advanced.test.mjs` checks common mistakes and the taught heap repair.
 
 The linked-list contract requires fresh output nodes. Value comparisons and input-mutation checks cannot establish output identity; fresh allocation remains a learner self-review point. The authoring test checks reference-node identity separately. These guided reps alone do not establish independent or retained fluency.
+
+## Local asynchronous function checks
+
+Set `runtime: 'async-fixture'` for reps that await injected local work. Each check
+adds a serializable `fixture` specification (`src/async-fixture.ts`): jobs with exact
+IDs, values or error messages, optional `before`/`during` abort, and expected
+lifecycle events. The worker creates a fresh fixture per check and appends it to
+the cloned input arguments. Functions and AbortSignals are never serialized.
+The fixture exposes `fetch(id, signal?)`, a read-only `signal`, and `release()`.
+Fetch settlement occurs in a later microtask, with no network or wall-clock wait;
+during-abort happens immediately before the first fetch settles. Every subsequent
+fetch in that mode also sees the aborted signal. Job lookup compares IDs exactly.
+
+The asynchronous runner awaits learner results, checks original input preservation,
+and compares actual lifecycle events with the authored sequence. Starts, resolves,
+rejections, aborts, premature releases, and duplicate releases are observable.
+This establishes local runtime behavior rather than a calculated event-policy
+trace. It does not prove a particular syntax, real network behavior, production
+resource cleanup, or browser timer ordering. Keep independent and recall briefs
+free of implementation clues; disclose fixture semantics and expected ownership.
+
+The synchronous `runRep` API remains for existing Node callers; async fixture reps
+require `runAsyncRep`. The browser worker uses the asynchronous entry point for all
+function reps, including Promise-returning solutions to ordinary reps. The existing
+five-second limit covers the entire run. Stop, edit, or timeout terminates the worker
+and suppresses stale replies; termination cannot guarantee learner `finally` runs.
+Cooperative AbortSignal cancellation inside a fixture is a separate checked behavior.

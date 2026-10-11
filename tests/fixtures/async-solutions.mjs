@@ -46,3 +46,32 @@ export const asyncSolutions = {
     return {value: result.value, pending: result.pending, error: result.error}
   }`,
 }
+
+Object.assign(asyncSolutions, {
+  'await-local-records': `async function loadRecords(ids, fixture) {
+    try {
+      const values = []
+      for (const id of ids) values.push(await fixture.fetch(id))
+      return values
+    } catch { return null }
+    finally { fixture.release() }
+  }`,
+  'settle-local-panels': `async function loadPanels(ids, fixture) {
+    try {
+      const outcomes = await Promise.allSettled(ids.map(id => fixture.fetch(id)))
+      return outcomes.map(outcome => outcome.status === 'fulfilled'
+        ? {status: 'ready', value: outcome.value}
+        : {status: 'error', message: outcome.reason.message})
+    } finally { fixture.release() }
+  }`,
+  'cancel-local-export': `async function exportRecords(ids, fixture) {
+    try {
+      if (fixture.signal.aborted) return {status: 'cancelled'}
+      const values = []
+      for (const id of ids) values.push(await fixture.fetch(id, fixture.signal))
+      return {status: 'done', text: values.join('|')}
+    } catch (error) {
+      return error.name === 'AbortError' ? {status: 'cancelled'} : {status: 'error', message: error.message}
+    } finally { fixture.release() }
+  }`,
+})

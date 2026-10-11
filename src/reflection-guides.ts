@@ -1,4 +1,5 @@
 import { reactGuides } from './review-react.ts'
+import { asyncRuntimeGuides } from './review-async-runtime.ts'
 import { journeyPracticeGuides } from './review-journey-practice.ts'
 import { connectedFeatureGuides } from './review-connected-feature.ts'
 import { testingJourneyGuides } from './review-testing-journey.ts'
@@ -12,6 +13,7 @@ import { dsaAdvancedGuides } from './review-dsa-advanced.ts'
 import { domGuides } from './review-dom.ts'
 
 export const reflectionGuides: Record<string, { plan: string[]; explanation: string[]; example: string }> = {
+  ...asyncRuntimeGuides,
   ...journeyPracticeGuides,
   ...connectedFeatureGuides,
   ...testingJourneyGuides,

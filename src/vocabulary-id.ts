@@ -2,6 +2,9 @@
 export const indonesianGlossary: Record<string, string> = {
   'Effect cleanup': 'fungsi untuk melepas resource saat effect diganti atau komponen dilepas',
   Subscription: 'pendaftaran untuk menerima event sampai dibatalkan',
+  'Local async fixture': 'dependensi lokal yang menyelesaikan pekerjaan asinkron dengan hasil yang ditentukan',
+  AbortSignal: 'sinyal yang memberi tahu pekerjaan bahwa pembatalan telah diminta',
+  'Resource release': 'mengakhiri kepemilikan sumber daya setelah pekerjaan selesai',
   Closure: 'fungsi yang mengingat variabel dari tempat ia dibuat',
   Reference: 'rujukan ke satu objek yang sama',
   Microtask: 'tugas yang jalan setelah skrip saat ini, sebelum timer',
