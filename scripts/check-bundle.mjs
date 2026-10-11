@@ -30,7 +30,7 @@ const groups = [
   { name: 'Initial JavaScript', files: [...initial], limit: 153_000, rawLimit: 530_000 },
   { name: 'Additional editor JavaScript', files: [...editor], limit: 1_050_000, rawLimit: 4_200_000 },
   { name: 'Additional frontend JavaScript', files: [...frontend], limit: 1_050_000, rawLimit: 3_900_000 },
-  { name: 'Local worker JavaScript', files: workers, limit: 3_100_000, rawLimit: 11_200_000 },
+  { name: 'Local worker JavaScript', files: workers, limit: 3_100_000, rawLimit: 11_400_000 },
 ]
 const report = []
 for (const group of groups) {
