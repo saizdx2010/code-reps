@@ -6,7 +6,7 @@ import { runRep } from '../src/runner.ts'
 const variants = {
   windows: ['shortest-run-reaching-target', 'count-unique-windows', 'algo-window-sum', 'quiet-sensor-span'],
   'two-pointers': ['reading-run-summary', 'sorted-offset-squares', 'algo-sorted-pair', 'shared-seat-occurrences'],
-  sorting: ['kth-smallest-copy', 'sort-score-records', 'algo-merge-sorted', 'dispatch-priority-order'],
+  sorting: ['closest-value-gap', 'sort-score-records', 'algo-merge-sorted', 'dispatch-priority-order', 'kth-smallest-copy'],
   'binary-search': ['smallest-daily-capacity', 'first-insertion-point', 'algo-binary-search', 'first-affordable-edition'],
   recursion: ['count-object-leaves', 'flatten-nested-numbers', 'algo-recursive-sum', 'nested-parcel-load'],
   trees: ['tree-value-path', 'tree-depth-sum', 'algo-tree-depth', 'terminal-folder-paths'],

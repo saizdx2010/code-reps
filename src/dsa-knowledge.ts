@@ -128,7 +128,7 @@ export const dsaSkills: Skill[] = [{
         'body': 'Two sorted lists need no new sort. Keep one index in each list, compare the two next unused values, append the smaller, and advance that index. When one list is exhausted, append the rest of the other. Taking the left value on a tie keeps equal values stable. Every value is appended once: O(n + m) time and O(n + m) output space. Neither input is changed.'
       }, {
         'title': 'Say what the order means',
-        'body': 'JavaScript sort without a comparator compares values as text, so [10, 9, 1].sort() gives [1, 10, 9]. Pass a comparator such as (a, b) => a - b for numbers: negative puts a first, positive puts b first, zero keeps their relative order (sort is stable). Sort changes the array it is called on, so copy first. For records, compare score, then break ties by name; the contract must name the string rule, such as character codes or case-insensitive. A rank like kth smallest counts duplicate positions separately, so sort a copy and read index k - 1.'
+        'body': 'JavaScript sort without a comparator compares values as text, so [10, 9, 1].sort() gives [1, 10, 9]. Pass a comparator such as (a, b) => a - b for numbers: negative puts a first, positive puts b first, zero keeps their relative order (sort is stable). Sort changes the array it is called on, so copy first. For records, compare score, then break ties by name; the contract must name the string rule, such as character codes or case-insensitive. A rank counts duplicate positions separately.'
       }, {
         'title': 'Check the claim, not only the output',
         'body': 'Passing checks show results on the authored inputs. They do not show that you implemented insertion sort, kept the input unchanged under every call, or kept ties stable. Inspect your code against those claims after the checks pass.'
@@ -158,7 +158,7 @@ export const dsaSkills: Skill[] = [{
         'answer': 0,
         'explanation': 'Stopping at an equal neighbour leaves the earlier equal value in front. Shifting past equals would swap them.'
       }],
-    'repIds': ['algo-insertion-sort', 'algo-merge-sorted', 'sort-score-records', 'kth-smallest-copy'],
+    'repIds': ['algo-insertion-sort', 'algo-merge-sorted', 'sort-score-records', 'kth-smallest-copy', 'closest-value-gap'],
     'related': ['array-techniques', 'complexity', 'arrays']
   }, {
     'id': 'recursion-basics',
@@ -174,7 +174,7 @@ export const dsaSkills: Skill[] = [{
         'body': 'Each call waits on the calls it made until they return, so unfinished work is stacked up. Trace by writing the call, the smaller calls it makes, and what each returns. For [1, [2, []]], the outer call adds 1 to the result of the call on [2, []], which adds 2 to the result for [], which is 0. Results combine on the way back: 0, then 2, then 3. Very deep nesting can exhaust the call stack and throw a RangeError, so recursion suits data whose depth is modest.'
       }, {
         'title': 'Nested arrays and objects',
-        'body': 'Use Array.isArray(item) to tell a nested list from a number. For objects, loop over Object.values and recurse into values that are objects; null needs its own check because typeof null is "object". Flattening collects numbers into one new array in left-to-right order: build a result, then append what each recursive call returns. Counting leaves counts a primitive as 1 and an empty object as 0. Do not change the input while walking it.'
+        'body': 'Use Array.isArray(item) to tell a nested list from a number. For objects, loop over Object.values and recurse into values that are objects; null needs its own check because typeof null is "object". Flattening collects numbers into one new array in left-to-right order: build a result, then append what each recursive call returns. Do not change the input while walking it.'
       }, {
         'title': 'Cost and limits',
         'body': 'When each value is visited once, time is O(n) for n values and the extra stack space is O(depth). A function that makes two recursive calls on nearly the same input can repeat work exponentially; that is a different problem from nested data. Checks show results on authored inputs, not that your function is recursive or terminates on every input.'
@@ -225,6 +225,9 @@ dsaSkills.push({
     title: 'Solve the same smaller question',
     body: 'Recursion means a function calls itself on a smaller part. For maximum depth, an absent tree returns 0; a real node returns 1 plus the largest child depth, using 0 when there are no children. Each call moves to a descendant, so a finite tree eventually reaches leaves. For a level sum, carry the level or decrease the requested remaining depth; add only values at the requested level. Keep caller-owned nodes and child arrays unchanged.'
   }, {
+    title: 'Search for a value',
+    body: 'A search may find its target in one branch and not another. Each branch reports either what it found (a depth, or a route) or a distinct "not found" value, so a parent can move on to its next child. Pick a "not found" value that cannot be a real answer: a depth of 0 is valid, so -1 or null is safer than 0. Stop as soon as one branch finds the target; with unique values at most one branch can.'
+  }, {
     title: 'Choose the visiting order',
     body: 'Depth-first search finishes a child subtree before moving to its sibling. Recursion keeps unfinished work on the call stack; an explicit stack is an alternative that avoids deep recursive calls. Breadth-first search uses a queue to visit one level before the next. For an n-node tree of height h, depth-first traversal takes O(n) time and O(h) working stack space; breadth-first traversal needs working queue space proportional to the widest level when consumed entries are reclaimed. A skewed tree can make h equal n. Path output needs additional storage. For the route rep, unique values mean at most one route matches. Return its values including both endpoints; no match or a null root returns null.'
   }],
@@ -246,7 +249,7 @@ dsaSkills.push({
     answer: 2,
     explanation: 'Only 0 and -2 are at level 1. The 9 is at level 2; the root is at level 0.'
   }],
-  repIds: ['algo-tree-depth', 'tree-depth-sum', 'tree-value-path'],
+  repIds: ['algo-tree-depth', 'tree-depth-sum', 'tree-value-depth', 'tree-leaf-count', 'tree-value-path'],
   related: ['graphs', 'stacks', 'queues', 'complexity']
 }, {
   id: 'graphs',
@@ -285,7 +288,7 @@ dsaSkills.push({
     answer: 0,
     explanation: 'The direct edge reaches 3 in one hop. BFS discovers it while processing 0; a visited set handles the cycle.'
   }],
-  repIds: ['algo-graph-reachable', 'graph-shortest-hops', 'graph-connected-groups'],
+  repIds: ['algo-graph-reachable', 'graph-reachable-count', 'graph-incoming-counts', 'graph-shortest-hops', 'graph-connected-groups'],
   related: ['trees', 'lookup', 'queues', 'complexity']
 })
 
