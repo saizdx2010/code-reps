@@ -216,7 +216,37 @@ export const dsaDepth: Record<string, RepDepth> = {
     'trace': '[".#","#."] contains two isolated dots. Starting at [0,0] cannot reach [1,1] by side moves; the scan later counts the second room. Result 2.',
     'alternative': 'Union-find joins side-adjacent floor cells, then counts distinct roots. It needs more bookkeeping; recursive DFS is concise but can exhaust the call stack on larger maps.',
     'counterexample': 'Counting dots returns 4 for ["..",".."], but all four form one room. Forgetting visited state repeats forever around that square.',
-    'transfer': 'Self-reviewed: return room areas in descending order. Decide how to accumulate area and order results; original checks establish only room counts.'
+    'transfer': 'Self-reviewed: return room areas in descending order. Decide how to accumulate area and order results; original checks establish only room counts.',
+    'traceSteps': {
+      'code': [
+        'function countRooms(grid: string[]): number {',
+        '  const seen = new Set<string>(); let rooms = 0',
+        '  for (let r = 0; r < grid.length; r++) for (let c = 0; c < grid[r].length; c++) {',
+        '    if (grid[r][c] !== \'.\' || seen.has(`${r},${c}`)) continue',
+        '    rooms++; const stack: [number, number][] = [[r, c]]',
+        '    while (stack.length) {',
+        '      const [y, x] = stack.pop()!; const key = `${y},${x}`',
+        '      if (seen.has(key)) continue',
+        '      seen.add(key)',
+        '      for (const [ny, nx] of [[y - 1, x], [y + 1, x], [y, x - 1], [y, x + 1]]) if (grid[ny]?.[nx] === \'.\' && !seen.has(`${ny},${nx}`)) stack.push([ny, nx])',
+        '    }',
+        '  }',
+        '  return rooms',
+        '}'
+      ],
+      'input': 'grid = ["..#.", ".##.", "#..."]',
+      'steps': [
+        { 'line': 1, 'vars': { 'rooms': 0 }, 'structure': { 'kind': 'table', 'name': 'room', 'cells': [[null, null, '#', null], [null, '#', '#', null], ['#', null, null, null]] }, 'note': 'No floor is seen and no rooms are counted yet. Walls show # from the start; blank cells are unseen floor.' },
+        { 'line': 3, 'vars': { 'rooms': 0, 'r': 0, 'c': 0 }, 'structure': { 'kind': 'table', 'name': 'room', 'cells': [[null, null, '#', null], [null, '#', '#', null], ['#', null, null, null]], 'current': [0, 0] }, 'note': 'The first cell is unseen floor, so a new room starts here.' },
+        { 'line': 8, 'vars': { 'rooms': 1, 'y': 0, 'x': 0 }, 'structure': { 'kind': 'table', 'name': 'room', 'cells': [[1, null, '#', null], [null, '#', '#', null], ['#', null, null, null]], 'current': [0, 0] }, 'note': 'Mark (0,0) as room 1. Its floor neighbours are pushed onto the stack next.' },
+        { 'line': 8, 'vars': { 'rooms': 1, 'y': 0, 'x': 1 }, 'structure': { 'kind': 'table', 'name': 'room', 'cells': [[1, 1, '#', null], [null, '#', '#', null], ['#', null, null, null]], 'current': [0, 1] }, 'note': 'Pop (0,1), the last cell pushed, and mark it room 1.' },
+        { 'line': 8, 'vars': { 'rooms': 1, 'y': 1, 'x': 0 }, 'structure': { 'kind': 'table', 'name': 'room', 'cells': [[1, 1, '#', null], [1, '#', '#', null], ['#', null, null, null]], 'current': [1, 0] }, 'note': 'Pop (1,0) and mark it room 1. Its other neighbours are walls, seen cells, or outside the grid, so the stack empties.' },
+        { 'line': 3, 'vars': { 'rooms': 1, 'r': 0, 'c': 3 }, 'structure': { 'kind': 'table', 'name': 'room', 'cells': [[1, 1, '#', null], [1, '#', '#', null], ['#', null, null, null]], 'current': [0, 3] }, 'note': 'The scan reaches (0,3), which is unseen floor, so a second room starts.' },
+        { 'line': 8, 'vars': { 'rooms': 2, 'y': 0, 'x': 3 }, 'structure': { 'kind': 'table', 'name': 'room', 'cells': [[1, 1, '#', 2], [1, '#', '#', null], ['#', null, null, null]], 'current': [0, 3] }, 'note': 'Mark (0,3) as room 2. The floor below it, (1,3), is pushed next.' },
+        { 'line': 8, 'vars': { 'rooms': 2, 'y': 2, 'x': 1 }, 'structure': { 'kind': 'table', 'name': 'room', 'cells': [[1, 1, '#', 2], [1, '#', '#', 2], ['#', 2, 2, 2]], 'current': [2, 1] }, 'note': 'The walk marked (1,3), (2,3), and (2,2) on the way here. Marking (2,1) empties the stack, so room 2 is complete.' },
+        { 'line': 12, 'vars': { 'rooms': 2, 'result': 2 }, 'structure': { 'kind': 'table', 'name': 'room', 'cells': [[1, 1, '#', 2], [1, '#', '#', 2], ['#', 2, 2, 2]] }, 'note': 'The scan finds no unseen floor left, so the answer is 2.' }
+      ]
+    }
   },
   'grid-open-neighbours': {
     'reasoning': 'Check the origin before considering its four offsets. Each candidate is read only inside both dimensions, and appending in offset order gives the required order. O(1) time and storage.',
@@ -428,7 +458,32 @@ export const dsaDepth: Record<string, RepDepth> = {
   'trace': 'For [5,5,6,5], threshold 5 and allowance 0, lengths grow to 2, then the 6 forces the left boundary past it; the final length is 1. Return 2.',
   'alternative': 'Enumerate all starts and extend each span with a noise count: O(n²) time, O(1) storage. This is a useful independent oracle for the stated small limit.',
   'counterexample': 'Using >= marks equality noisy: [5,5], threshold 5, allowance 0 should return 2. Counting all quiet readings ignores gaps.',
-  'transfer': 'Self-reviewed: give noisy readings different costs and bound total cost. Decide whether negative costs invalidate shrinking; original checks do not cover this variation.'
+  'transfer': 'Self-reviewed: give noisy readings different costs and bound total cost. Decide whether negative costs invalidate shrinking; original checks do not cover this variation.',
+  'traceSteps': {
+    'code': [
+      'function quietSpan(readings: number[], threshold: number, allowance: number): number {',
+      '  let best = 0',
+      '  for (let start = 0; start < readings.length; start++) {',
+      '    let noise = 0',
+      '    for (let end = start; end < readings.length; end++) {',
+      '      noise += Number(readings[end] > threshold)',
+      '      if (noise <= allowance) best = Math.max(best, end - start + 1)',
+      '    }',
+      '  }',
+      '  return best',
+      '}'
+    ],
+    'input': 'readings = [2, 9, 3, 8, 4], threshold = 5, allowance = 1',
+    'steps': [
+      { 'line': 1, 'vars': { 'best': 0 }, 'structure': { 'kind': 'array', 'values': [2, 9, 3, 8, 4] }, 'note': 'No quiet span has been found yet.' },
+      { 'line': 6, 'vars': { 'noise': 0, 'best': 1 }, 'structure': { 'kind': 'array', 'values': [2, 9, 3, 8, 4], 'pointers': { 'start': 0, 'end': 0 } }, 'note': '2 is not above 5, so [2] is a quiet span of length 1.' },
+      { 'line': 6, 'vars': { 'noise': 1, 'best': 2 }, 'structure': { 'kind': 'array', 'values': [2, 9, 3, 8, 4], 'pointers': { 'start': 0, 'end': 1 } }, 'note': '9 is above 5. One noisy value is allowed, so [2, 9] is a span of length 2.' },
+      { 'line': 6, 'vars': { 'noise': 1, 'best': 3 }, 'structure': { 'kind': 'array', 'values': [2, 9, 3, 8, 4], 'pointers': { 'start': 0, 'end': 2 } }, 'note': '3 is quiet, so [2, 9, 3] with one noisy value has length 3, the best so far.' },
+      { 'line': 6, 'vars': { 'noise': 2, 'best': 3 }, 'structure': { 'kind': 'array', 'values': [2, 9, 3, 8, 4], 'pointers': { 'start': 0, 'end': 3 } }, 'note': '8 is a second noisy value, which exceeds the allowance of 1. The best stays 3.' },
+      { 'line': 6, 'vars': { 'noise': 1, 'best': 3 }, 'structure': { 'kind': 'array', 'values': [2, 9, 3, 8, 4], 'pointers': { 'start': 2, 'end': 4 } }, 'note': 'Starting at index 2, the run [3, 8, 4] has one noisy value. Its length 3 ties the best.' },
+      { 'line': 9, 'vars': { 'best': 3, 'result': 3 }, 'structure': { 'kind': 'array', 'values': [2, 9, 3, 8, 4] }, 'note': 'Return the longest quiet span found.' }
+    ]
+  }
 },
 'shared-seat-occurrences': {
   'reasoning': 'Two positions delimit unmatched suffixes. Discarding the smaller value is safe because the other suffix starts larger; equality consumes one occurrence from each. O(n+m) time with output storage only.',
@@ -442,35 +497,158 @@ export const dsaDepth: Record<string, RepDepth> = {
   'trace': 'A(1,0), B(2,9), C(2,3): urgency puts B and C before A; deadline puts C before B. Return C,B,A.',
   'alternative': 'Repeatedly selecting the best unused index takes O(n²) time and O(n) storage, but provides an independent reference without relying on sort stability.',
   'counterexample': 'Sorting deadline first puts A before C in the example, violating urgency precedence. An ID tie-breaker changes the order of fully tied requests.',
-  'transfer': 'Self-reviewed: allow missing deadlines and define their precedence. Explain the new comparator; original checks do not validate it.'
+  'transfer': 'Self-reviewed: allow missing deadlines and define their precedence. Explain the new comparator; original checks do not validate it.',
+  'traceSteps': {
+    'code': [
+      'type Request = { id: string; urgency: number; deadline: number }',
+      'function dispatchOrder(requests: Request[]): string[] {',
+      '  const pending = requests.slice(), out: string[] = []',
+      '  while (pending.length) {',
+      '    let best = 0',
+      '    for (let i = 1; i < pending.length; i++) {',
+      '      const a = pending[i], b = pending[best]',
+      '      if (a.urgency > b.urgency || (a.urgency === b.urgency && a.deadline < b.deadline)) best = i',
+      '    }',
+      '    out.push(pending.splice(best, 1)[0].id)',
+      '  }',
+      '  return out',
+      '}'
+    ],
+    'input': 'requests = [{ id: "A", urgency: 1, deadline: 0 }, { id: "B", urgency: 2, deadline: 9 }, { id: "C", urgency: 2, deadline: 3 }]',
+    'steps': [
+      { 'line': 2, 'vars': { 'dispatched': 'none' }, 'structure': { 'kind': 'array', 'values': ['A', 'B', 'C'] }, 'note': 'All three requests are pending. Each round dispatches the best remaining request.' },
+      { 'line': 7, 'vars': { 'dispatched': 'none' }, 'structure': { 'kind': 'array', 'values': ['A', 'B', 'C'], 'pointers': { 'best': 1, 'scan': 1 } }, 'note': 'B has higher urgency than A, so B is the best so far.' },
+      { 'line': 7, 'vars': { 'dispatched': 'none' }, 'structure': { 'kind': 'array', 'values': ['A', 'B', 'C'], 'pointers': { 'best': 2, 'scan': 2 } }, 'note': 'C ties B on urgency but has the earlier deadline, so C becomes the best.' },
+      { 'line': 9, 'vars': { 'dispatched': 'C' }, 'structure': { 'kind': 'array', 'values': ['A', 'B'] }, 'note': 'C is removed from the pending list and dispatched first.' },
+      { 'line': 7, 'vars': { 'dispatched': 'C' }, 'structure': { 'kind': 'array', 'values': ['A', 'B'], 'pointers': { 'best': 1, 'scan': 1 } }, 'note': 'B has higher urgency than A, so B is the best remaining request.' },
+      { 'line': 9, 'vars': { 'dispatched': 'C, B' }, 'structure': { 'kind': 'array', 'values': ['A'] }, 'note': 'B is dispatched second.' },
+      { 'line': 9, 'vars': { 'dispatched': 'C, B, A' }, 'note': 'A is the last request, so it is dispatched third.' },
+      { 'line': 11, 'vars': { 'dispatched': 'C, B, A', 'result': '["C","B","A"]' }, 'note': 'Return the IDs in dispatch order.' }
+    ]
+  }
 },
 'first-affordable-edition': {
   'reasoning': 'Affordability changes only from false to true as costs decrease. A lower-bound search preserves the first true position in its candidate interval; if it ends at length, none qualifies. O(log n) time and O(1) storage.',
   'trace': 'For [9,7,7,3], budget 7: index 2 qualifies but index 1 also qualifies. The boundary is 1, not an arbitrary matching 7.',
   'alternative': 'A left-to-right scan is O(n), O(1) storage and directly expresses the contract. Behavioral checks cannot establish binary search.',
   'counterexample': 'Searching for exact budget fails on [9,3], budget 5: index 1 qualifies without equality. Returning the last qualifying index misses the first.',
-  'transfer': 'Self-reviewed: costs are no longer ordered. Explain why the monotone boundary disappears; current checks assume ordered costs.'
+  'transfer': 'Self-reviewed: costs are no longer ordered. Explain why the monotone boundary disappears; current checks assume ordered costs.',
+  'traceSteps': {
+    'code': [
+      'function firstAffordable(costs: number[], budget: number): number {',
+      '  let index = 0',
+      '  while (index < costs.length) {',
+      '    if (costs[index] <= budget) return index',
+      '    index++',
+      '  }',
+      '  return -1',
+      '}'
+    ],
+    'input': 'costs = [90, 70, 70, 40, 25], budget = 50',
+    'steps': [
+      { 'line': 1, 'vars': { 'index': 0, 'budget': 50 }, 'structure': { 'kind': 'array', 'values': [90, 70, 70, 40, 25], 'pointers': { 'index': 0 } }, 'note': 'Start at the oldest edition, index 0.' },
+      { 'line': 3, 'vars': { 'index': 0, 'budget': 50 }, 'structure': { 'kind': 'array', 'values': [90, 70, 70, 40, 25], 'pointers': { 'index': 0 } }, 'note': '90 is above 50, so this edition is not affordable.' },
+      { 'line': 4, 'vars': { 'index': 1, 'budget': 50 }, 'structure': { 'kind': 'array', 'values': [90, 70, 70, 40, 25], 'pointers': { 'index': 1 } }, 'note': 'Move to index 1. Its cost, 70, is checked on the next pass through the loop.' },
+      { 'line': 4, 'vars': { 'index': 2, 'budget': 50 }, 'structure': { 'kind': 'array', 'values': [90, 70, 70, 40, 25], 'pointers': { 'index': 2 } }, 'note': 'Move to index 2, which also costs 70.' },
+      { 'line': 4, 'vars': { 'index': 3, 'budget': 50 }, 'structure': { 'kind': 'array', 'values': [90, 70, 70, 40, 25], 'pointers': { 'index': 3 } }, 'note': 'Move to index 3, which costs 40. That is within the budget of 50.' },
+      { 'line': 3, 'vars': { 'index': 3, 'budget': 50, 'result': 3 }, 'structure': { 'kind': 'array', 'values': [90, 70, 70, 40, 25], 'pointers': { 'index': 3 } }, 'note': 'The check passes at index 3, so the scan returns 3.' }
+    ]
+  }
 },
 'nested-parcel-load': {
   'reasoning': 'A call receives the correct depth for its parcel. Numbers contribute weight times depth; arrays sum calls at depth+1. Structural induction gives the total without changing input. O(nodes) time and O(depth) call storage.',
   'trace': 'For [[1],2], the root array has depth 1. Inner array has depth 2, so 1 contributes 3; sibling 2 has depth 2 and contributes 4. Total 7.',
   'alternative': 'An explicit stack of parcel/depth pairs avoids recursion, with O(nodes) work and potentially O(nodes) pending storage.',
   'counterexample': 'A global incrementing depth leaks across siblings: [[1],2] must total 7. Flattening and summing loses all depth factors.',
-  'transfer': 'Self-reviewed: arrays carry their own multipliers. Define how ancestor multipliers combine before adapting traversal; original checks do not assess it.'
+  'transfer': 'Self-reviewed: arrays carry their own multipliers. Define how ancestor multipliers combine before adapting traversal; original checks do not assess it.',
+  'traceSteps': {
+    'code': [
+      'type Parcel = number | Parcel[]',
+      'function parcelLoad(parcel: Parcel): number {',
+      '  const pending: [Parcel, number][] = [[parcel, 1]]; let total = 0',
+      '  while (pending.length) {',
+      '    const [item, depth] = pending.pop()!',
+      '    if (typeof item === \'number\') total += item * depth',
+      '    else for (const child of item) pending.push([child, depth + 1])',
+      '  }',
+      '  return total',
+      '}'
+    ],
+    'input': 'parcel = [2, [3, [4]], 5]',
+    'steps': [
+      { 'line': 2, 'vars': { 'total': 0 }, 'structure': { 'kind': 'tree', 'root': { 'id': 'root', 'value': 'list', 'children': [{ 'id': 'n2', 'value': 2, 'note': 'depth 2' }, { 'id': 'L1', 'value': 'list', 'children': [{ 'id': 'n3', 'value': 3, 'note': 'depth 3' }, { 'id': 'L2', 'value': 'list', 'children': [{ 'id': 'n4', 'value': 4, 'note': 'depth 4' }] }] }, { 'id': 'n5', 'value': 5, 'note': 'depth 2' }] }, 'visited': [] }, 'note': 'Start with the outer list. Its items sit one level inside it, so they will have depth 2.' },
+      { 'line': 6, 'vars': { 'total': 0 }, 'structure': { 'kind': 'tree', 'root': { 'id': 'root', 'value': 'list', 'children': [{ 'id': 'n2', 'value': 2, 'note': 'depth 2' }, { 'id': 'L1', 'value': 'list', 'children': [{ 'id': 'n3', 'value': 3, 'note': 'depth 3' }, { 'id': 'L2', 'value': 'list', 'children': [{ 'id': 'n4', 'value': 4, 'note': 'depth 4' }] }] }, { 'id': 'n5', 'value': 5, 'note': 'depth 2' }] }, 'current': 'root', 'visited': [] }, 'note': 'Entering the outer list pushes its items at depth 2. The last item, 5, is on top of the stack, so it is handled first.' },
+      { 'line': 5, 'vars': { 'total': 10, 'depth': 2 }, 'structure': { 'kind': 'tree', 'root': { 'id': 'root', 'value': 'list', 'children': [{ 'id': 'n2', 'value': 2, 'note': 'depth 2' }, { 'id': 'L1', 'value': 'list', 'children': [{ 'id': 'n3', 'value': 3, 'note': 'depth 3' }, { 'id': 'L2', 'value': 'list', 'children': [{ 'id': 'n4', 'value': 4, 'note': 'depth 4' }] }] }, { 'id': 'n5', 'value': 5, 'note': 'depth 2' }] }, 'current': 'n5', 'visited': ['root'] }, 'note': 'Weight 5 at depth 2 adds 10.' },
+      { 'line': 6, 'vars': { 'total': 10, 'depth': 2 }, 'structure': { 'kind': 'tree', 'root': { 'id': 'root', 'value': 'list', 'children': [{ 'id': 'n2', 'value': 2, 'note': 'depth 2' }, { 'id': 'L1', 'value': 'list', 'children': [{ 'id': 'n3', 'value': 3, 'note': 'depth 3' }, { 'id': 'L2', 'value': 'list', 'children': [{ 'id': 'n4', 'value': 4, 'note': 'depth 4' }] }] }, { 'id': 'n5', 'value': 5, 'note': 'depth 2' }] }, 'current': 'L1', 'visited': ['root', 'n5'] }, 'note': 'The inner list is at depth 2, so its items are pushed at depth 3.' },
+      { 'line': 6, 'vars': { 'total': 10, 'depth': 3 }, 'structure': { 'kind': 'tree', 'root': { 'id': 'root', 'value': 'list', 'children': [{ 'id': 'n2', 'value': 2, 'note': 'depth 2' }, { 'id': 'L1', 'value': 'list', 'children': [{ 'id': 'n3', 'value': 3, 'note': 'depth 3' }, { 'id': 'L2', 'value': 'list', 'children': [{ 'id': 'n4', 'value': 4, 'note': 'depth 4' }] }] }, { 'id': 'n5', 'value': 5, 'note': 'depth 2' }] }, 'current': 'L2', 'visited': ['root', 'n5', 'L1'] }, 'note': 'The list [4] is at depth 3, so its item 4 is pushed at depth 4.' },
+      { 'line': 5, 'vars': { 'total': 26, 'depth': 4 }, 'structure': { 'kind': 'tree', 'root': { 'id': 'root', 'value': 'list', 'children': [{ 'id': 'n2', 'value': 2, 'note': 'depth 2' }, { 'id': 'L1', 'value': 'list', 'children': [{ 'id': 'n3', 'value': 3, 'note': 'depth 3' }, { 'id': 'L2', 'value': 'list', 'children': [{ 'id': 'n4', 'value': 4, 'note': 'depth 4' }] }] }, { 'id': 'n5', 'value': 5, 'note': 'depth 2' }] }, 'current': 'n4', 'visited': ['root', 'n5', 'L1', 'L2'] }, 'note': 'Weight 4 at depth 4 adds 16. The total is 26.' },
+      { 'line': 5, 'vars': { 'total': 35, 'depth': 3 }, 'structure': { 'kind': 'tree', 'root': { 'id': 'root', 'value': 'list', 'children': [{ 'id': 'n2', 'value': 2, 'note': 'depth 2' }, { 'id': 'L1', 'value': 'list', 'children': [{ 'id': 'n3', 'value': 3, 'note': 'depth 3' }, { 'id': 'L2', 'value': 'list', 'children': [{ 'id': 'n4', 'value': 4, 'note': 'depth 4' }] }] }, { 'id': 'n5', 'value': 5, 'note': 'depth 2' }] }, 'current': 'n3', 'visited': ['root', 'n5', 'L1', 'L2', 'n4'] }, 'note': 'Weight 3 at depth 3 adds 9. The total is 35.' },
+      { 'line': 5, 'vars': { 'total': 39, 'depth': 2 }, 'structure': { 'kind': 'tree', 'root': { 'id': 'root', 'value': 'list', 'children': [{ 'id': 'n2', 'value': 2, 'note': 'depth 2' }, { 'id': 'L1', 'value': 'list', 'children': [{ 'id': 'n3', 'value': 3, 'note': 'depth 3' }, { 'id': 'L2', 'value': 'list', 'children': [{ 'id': 'n4', 'value': 4, 'note': 'depth 4' }] }] }, { 'id': 'n5', 'value': 5, 'note': 'depth 2' }] }, 'current': 'n2', 'visited': ['root', 'n5', 'L1', 'L2', 'n4', 'n3'] }, 'note': 'Weight 2 at depth 2 adds 4. The total is 39.' },
+      { 'line': 8, 'vars': { 'total': 39, 'result': 39 }, 'structure': { 'kind': 'tree', 'root': { 'id': 'root', 'value': 'list', 'children': [{ 'id': 'n2', 'value': 2, 'note': 'depth 2' }, { 'id': 'L1', 'value': 'list', 'children': [{ 'id': 'n3', 'value': 3, 'note': 'depth 3' }, { 'id': 'L2', 'value': 'list', 'children': [{ 'id': 'n4', 'value': 4, 'note': 'depth 4' }] }] }, { 'id': 'n5', 'value': 5, 'note': 'depth 2' }] }, 'visited': ['root', 'n5', 'L1', 'L2', 'n4', 'n3', 'n2'] }, 'note': 'The stack is empty, so the total 39 is returned.' }
+    ]
+  }
 },
 'terminal-folder-paths': {
   'reasoning': 'Depth-first traversal in supplied child order emits terminal paths in the required order. Each branch extends its own prefix, preventing sibling contamination. Time and output storage scale with total returned path length; traversal stack depth is bounded by tree depth.',
   'trace': 'Root r has terminal b and branch a→z. Emit [r,b], then [r,a,z]. No [r,a] is emitted because a has a child.',
   'alternative': 'An explicit stack can carry paths; push children in reverse order to pop them in authored order. It avoids call recursion but retains pending branch state.',
   'counterexample': 'Sorting children changes required order: children b,a must stay b,a. Deduplicating equal names loses distinct terminal paths.',
-  'transfer': 'Self-reviewed: only emit terminal paths whose total name length fits a limit. Decide whether pruning is safe; original checks do not cover filtering.'
+  'transfer': 'Self-reviewed: only emit terminal paths whose total name length fits a limit. Decide whether pruning is safe; original checks do not cover filtering.',
+  'traceSteps': {
+    'code': [
+      'type Folder = { name: string; children: Folder[] }',
+      'function folderPaths(root: Folder | null): string[][] {',
+      '  if (!root) return []',
+      '  const pending: [Folder, string[]][] = [[root, []]], out: string[][] = []',
+      '  while (pending.length) {',
+      '    const [node, prefix] = pending.pop()!; const path = [...prefix, node.name]',
+      '    if (!node.children.length) out.push(path)',
+      '    for (let i = node.children.length - 1; i >= 0; i--) pending.push([node.children[i], path])',
+      '  }',
+      '  return out',
+      '}'
+    ],
+    'input': 'root = { name: "r", children: [{ name: "a", children: [{ name: "x", children: [] }, { name: "y", children: [] }] }, { name: "b", children: [] }, { name: "c", children: [{ name: "z", children: [] }] }] }',
+    'steps': [
+      { 'line': 5, 'vars': { 'path': 'r', 'paths': 0 }, 'structure': { 'kind': 'tree', 'root': { 'id': 'r', 'value': 'r', 'children': [{ 'id': 'a', 'value': 'a', 'children': [{ 'id': 'x', 'value': 'x' }, { 'id': 'y', 'value': 'y' }] }, { 'id': 'b', 'value': 'b' }, { 'id': 'c', 'value': 'c', 'children': [{ 'id': 'z', 'value': 'z' }] }] }, 'current': 'r', 'visited': [] }, 'note': 'Pop the root and start its path with r. Its children are pushed in reverse, so the first child is handled first.' },
+      { 'line': 5, 'vars': { 'path': 'r > a', 'paths': 0 }, 'structure': { 'kind': 'tree', 'root': { 'id': 'r', 'value': 'r', 'children': [{ 'id': 'a', 'value': 'a', 'children': [{ 'id': 'x', 'value': 'x' }, { 'id': 'y', 'value': 'y' }] }, { 'id': 'b', 'value': 'b' }, { 'id': 'c', 'value': 'c', 'children': [{ 'id': 'z', 'value': 'z' }] }] }, 'current': 'a', 'visited': ['r'] }, 'note': 'Pop a, the first child, and extend the path to r > a. Its children come next.' },
+      { 'line': 6, 'vars': { 'path': 'r > a > x', 'paths': 1 }, 'structure': { 'kind': 'tree', 'root': { 'id': 'r', 'value': 'r', 'children': [{ 'id': 'a', 'value': 'a', 'children': [{ 'id': 'x', 'value': 'x' }, { 'id': 'y', 'value': 'y' }] }, { 'id': 'b', 'value': 'b' }, { 'id': 'c', 'value': 'c', 'children': [{ 'id': 'z', 'value': 'z' }] }] }, 'current': 'x', 'visited': ['r', 'a'] }, 'note': 'x has no children, so [r, a, x] is the first finished path.' },
+      { 'line': 6, 'vars': { 'path': 'r > a > y', 'paths': 2 }, 'structure': { 'kind': 'tree', 'root': { 'id': 'r', 'value': 'r', 'children': [{ 'id': 'a', 'value': 'a', 'children': [{ 'id': 'x', 'value': 'x' }, { 'id': 'y', 'value': 'y' }] }, { 'id': 'b', 'value': 'b' }, { 'id': 'c', 'value': 'c', 'children': [{ 'id': 'z', 'value': 'z' }] }] }, 'current': 'y', 'visited': ['r', 'a', 'x'] }, 'note': 'y is the next leaf, so [r, a, y] is finished.' },
+      { 'line': 6, 'vars': { 'path': 'r > b', 'paths': 3 }, 'structure': { 'kind': 'tree', 'root': { 'id': 'r', 'value': 'r', 'children': [{ 'id': 'a', 'value': 'a', 'children': [{ 'id': 'x', 'value': 'x' }, { 'id': 'y', 'value': 'y' }] }, { 'id': 'b', 'value': 'b' }, { 'id': 'c', 'value': 'c', 'children': [{ 'id': 'z', 'value': 'z' }] }] }, 'current': 'b', 'visited': ['r', 'a', 'x', 'y'] }, 'note': 'b is a leaf, so [r, b] is finished. The branch through c is still on the stack.' },
+      { 'line': 5, 'vars': { 'path': 'r > c', 'paths': 3 }, 'structure': { 'kind': 'tree', 'root': { 'id': 'r', 'value': 'r', 'children': [{ 'id': 'a', 'value': 'a', 'children': [{ 'id': 'x', 'value': 'x' }, { 'id': 'y', 'value': 'y' }] }, { 'id': 'b', 'value': 'b' }, { 'id': 'c', 'value': 'c', 'children': [{ 'id': 'z', 'value': 'z' }] }] }, 'current': 'c', 'visited': ['r', 'a', 'x', 'y', 'b'] }, 'note': 'Pop c. It has a child, so no path ends here and z is pushed next.' },
+      { 'line': 6, 'vars': { 'path': 'r > c > z', 'paths': 4 }, 'structure': { 'kind': 'tree', 'root': { 'id': 'r', 'value': 'r', 'children': [{ 'id': 'a', 'value': 'a', 'children': [{ 'id': 'x', 'value': 'x' }, { 'id': 'y', 'value': 'y' }] }, { 'id': 'b', 'value': 'b' }, { 'id': 'c', 'value': 'c', 'children': [{ 'id': 'z', 'value': 'z' }] }] }, 'current': 'z', 'visited': ['r', 'a', 'x', 'y', 'b', 'c'] }, 'note': 'z is a leaf, so [r, c, z] is the last finished path.' },
+      { 'line': 9, 'vars': { 'paths': 4, 'result': '[["r","a","x"],["r","a","y"],["r","b"],["r","c","z"]]' }, 'structure': { 'kind': 'tree', 'root': { 'id': 'r', 'value': 'r', 'children': [{ 'id': 'a', 'value': 'a', 'children': [{ 'id': 'x', 'value': 'x' }, { 'id': 'y', 'value': 'y' }] }, { 'id': 'b', 'value': 'b' }, { 'id': 'c', 'value': 'c', 'children': [{ 'id': 'z', 'value': 'z' }] }] }, 'visited': ['r', 'a', 'x', 'y', 'b', 'c', 'z'] }, 'note': 'The stack is empty, so the paths return in the order the children were listed.' }
+    ]
+  }
 },
 'broadcast-unreached-stations': {
   'reasoning': 'The reached set begins with every seed and is closed under outgoing links. Exploring each newly reached station once terminates despite cycles and reaches exactly the stations with a seed-to-station path. Enumerating all indices gives sorted missing stations. O(V+E) time and O(V) state.',
   'trace': 'For links [[],[0]], seed 0 reaches only 0. Station 1 can send to 0 but cannot receive from it, so return [1].',
   'alternative': 'Repeatedly scan all links from reached sources until no set growth occurs. This fixed-point reference is simpler to audit but may take O(VE) work.',
   'counterexample': 'Treating links as undirected wrongly reaches 1 from seed 0 in [[],[0]]. Starting only from the first seed misses independent broadcast groups.',
-  'transfer': 'Self-reviewed: each forwarding hop consumes one minute and delivery has a deadline. Decide what extra distance state is required; original checks do not validate timing.'
+  'transfer': 'Self-reviewed: each forwarding hop consumes one minute and delivery has a deadline. Decide what extra distance state is required; original checks do not validate timing.',
+  'traceSteps': {
+    'code': [
+      'function unreachedStations(links: number[][], seeds: number[]): number[] {',
+      '  const reached = new Set(seeds); let changed = true',
+      '  while (changed) {',
+      '    changed = false',
+      '    for (let i = 0; i < links.length; i++)',
+      '      if (reached.has(i)) for (const next of links[i]) if (!reached.has(next)) { reached.add(next); changed = true }',
+      '  }',
+      '  return links.map((_, i) => i).filter(i => !reached.has(i))',
+      '}'
+    ],
+    'input': 'links = [[1], [2], [], [4], []], seeds = [0]',
+    'steps': [
+      { 'line': 1, 'vars': { 'changed': true }, 'structure': { 'kind': 'array', 'values': [0, 1, 2, 3, 4], 'dimmed': [1, 2, 3, 4] }, 'note': 'Only seed 0 is reached. Dimmed stations are not reached yet.' },
+      { 'line': 5, 'vars': { 'changed': true }, 'structure': { 'kind': 'array', 'values': [0, 1, 2, 3, 4], 'dimmed': [2, 3, 4], 'pointers': { 'scan': 0 } }, 'note': 'Station 0 is reached and sends to 1, so 1 becomes reached.' },
+      { 'line': 5, 'vars': { 'changed': true }, 'structure': { 'kind': 'array', 'values': [0, 1, 2, 3, 4], 'dimmed': [3, 4], 'pointers': { 'scan': 1 } }, 'note': 'Station 1 is reached in the same sweep, so station 2 becomes reached.' },
+      { 'line': 3, 'vars': { 'changed': false }, 'structure': { 'kind': 'array', 'values': [0, 1, 2, 3, 4], 'dimmed': [3, 4] }, 'note': 'The next sweep starts with changed false. Stations 3 and 4 are still unreached.' },
+      { 'line': 5, 'vars': { 'changed': false }, 'structure': { 'kind': 'array', 'values': [0, 1, 2, 3, 4], 'dimmed': [3, 4], 'pointers': { 'scan': 1 } }, 'note': 'Station 2 is already reached, so this sweep changes nothing.' },
+      { 'line': 7, 'vars': { 'changed': false, 'result': '[3,4]' }, 'structure': { 'kind': 'array', 'values': [0, 1, 2, 3, 4], 'dimmed': [3, 4] }, 'note': 'No station changed, so the loop ends and unreached stations 3 and 4 are returned.' }
+    ]
+  }
 },
 
 'parcel-loading-turns': {'reasoning': 'Each waiting cart retains its original identity. Removing one parcel and returning unfinished carts to the back preserves the service order. Stop only when the target reaches zero; other carts can remain.', 'trace': '[2,1,3], target 0: turn 1 leaves cart 0 with 1; turn 2 finishes cart 1; turn 3 leaves cart 2 with 2; turn 4 finishes cart 0. Return 4 even though cart 2 is unfinished.', 'alternative': 'For target count k, earlier or target carts contribute min(count,k) turns and later carts min(count,k-1). Summing is O(n), but requires proving the asymmetric final round. Direct simulation uses O(sum of counts) turns and O(n) storage with a head index; shifting arrays adds movement cost.', 'counterexample': 'Counting complete rounds overcounts later carts: [1,100], target 0 finishes on turn 1, before cart 1 gets a turn. Looking up a count instead of identity confuses equal carts: [2,2,2], target 2 finishes on turn 6.', 'transfer': 'Self-reviewed: let carts remove up to two parcels each turn. Decide whether a turn or a parcel is counted and derive new boundaries; original checks do not validate the changed policy.'},
@@ -827,28 +1005,127 @@ export const dsaDepth: Record<string, RepDepth> = {
     'trace': '["a","a","b","c","a"], k=3: [a,a,b] repeats; slide: [a,b,c] is clean (count 1); slide: [b,c,a] is clean (count 2).',
     'alternative': 'Building a fresh Set for each window takes O(nk) time and is easy to verify; a frequency map updated per step takes O(n) time with up to k stored labels. Both pass these checks.',
     'counterexample': 'Counting distinct labels in the whole array treats [a,b,a,c], k=3 as having three distinct labels. Windows [a,b,a] and [b,a,c] differ, so the answer is 1, not 2.',
-    'transfer': 'Self-review: return the largest number of distinct labels in any window of k. What changes in the bookkeeping, and what no longer matters?'
+    'transfer': 'Self-review: return the largest number of distinct labels in any window of k. What changes in the bookkeeping, and what no longer matters?',
+    'traceSteps': {
+      'code': [
+        'function countUniqueWindows(labels: string[], k: number): number {',
+        '  let count = 0',
+        '  for (let start = 0; start + k <= labels.length; start++) {',
+        '    const windowLabels = labels.slice(start, start + k)',
+        '    if (new Set(windowLabels).size === k) count++',
+        '  }',
+        '  return count',
+        '}'
+      ],
+      'input': 'labels = ["a", "b", "a", "c"], k = 3',
+      'steps': [
+        { 'line': 1, 'vars': { 'count': 0, 'k': 3 }, 'structure': { 'kind': 'array', 'values': ['a', 'b', 'a', 'c'] }, 'note': 'No windows have been checked yet.' },
+        { 'line': 2, 'vars': { 'count': 0, 'start': 0 }, 'structure': { 'kind': 'array', 'values': ['a', 'b', 'a', 'c'], 'pointers': { 'start': 0, 'end': 2 } }, 'note': 'The first window covers indices 0 to 2: a, b, a.' },
+        { 'line': 4, 'vars': { 'count': 0, 'start': 0, 'distinct': 2 }, 'structure': { 'kind': 'array', 'values': ['a', 'b', 'a', 'c'], 'pointers': { 'start': 0, 'end': 2 } }, 'note': 'The set has two values, not three, because a repeats. The window is not counted.' },
+        { 'line': 2, 'vars': { 'count': 0, 'start': 1 }, 'structure': { 'kind': 'array', 'values': ['a', 'b', 'a', 'c'], 'pointers': { 'start': 1, 'end': 3 } }, 'note': 'The next window covers indices 1 to 3: b, a, c.' },
+        { 'line': 4, 'vars': { 'count': 1, 'start': 1, 'distinct': 3 }, 'structure': { 'kind': 'array', 'values': ['a', 'b', 'a', 'c'], 'pointers': { 'start': 1, 'end': 3 } }, 'note': 'All three labels differ, so the count becomes 1.' },
+        { 'line': 2, 'vars': { 'count': 1, 'start': 2 }, 'structure': { 'kind': 'array', 'values': ['a', 'b', 'a', 'c'] }, 'note': 'A window from index 2 would need index 4, past the end, so the loop stops.' },
+        { 'line': 6, 'vars': { 'count': 1, 'result': 1 }, 'structure': { 'kind': 'array', 'values': ['a', 'b', 'a', 'c'] }, 'note': 'Return the single unique window.' }
+      ]
+    }
   },
   'shortest-run-reaching-target': {
     'reasoning': 'With positive numbers, extending a run only raises its total and dropping the oldest item only lowers it. Growing until the total reaches target, then shrinking while it still does, therefore tests every useful start exactly once.',
     'trace': '[2,3,1,2,4,3], target 7: grow to [2,3,1,2] total 8, record 4; shrink to [3,1,2] total 6; grow to [3,1,2,4] total 10, shrink to [2,4] total 6 after recording 3; grow with 3 to [4,3] = 7, record 2.',
     'alternative': 'Trying every start and extending until the target takes O(n squared) time; prefix sums with a search per start take O(n log n). The grow-and-shrink run takes O(n) time and O(1) storage.',
     'counterexample': 'Using > instead of >= misses an exact total: [5] with target 5 returns 0 instead of 1. Shrinking only once per step misses [1,1,9] with target 9.',
-    'transfer': 'Self-review: allow zero or negative numbers. Why can giving up the oldest item then lose a better run, and what would you need instead?'
+    'transfer': 'Self-review: allow zero or negative numbers. Why can giving up the oldest item then lose a better run, and what would you need instead?',
+    'traceSteps': {
+      'code': [
+        'function shortestRun(numbers: number[], target: number): number {',
+        '  let best = 0',
+        '  for (let start = 0; start < numbers.length; start++) {',
+        '    let total = 0',
+        '    for (let end = start; end < numbers.length; end++) {',
+        '      total += numbers[end]',
+        '      if (total >= target) { if (best === 0 || end - start + 1 < best) best = end - start + 1; break }',
+        '    }',
+        '  }',
+        '  return best',
+        '}'
+      ],
+      'input': 'numbers = [2, 3, 1, 2, 4, 3], target = 7',
+      'steps': [
+        { 'line': 1, 'vars': { 'best': 0, 'target': 7 }, 'structure': { 'kind': 'array', 'values': [2, 3, 1, 2, 4, 3] }, 'note': 'No run has been checked yet. Each start index extends a run to the right.' },
+        { 'line': 6, 'vars': { 'total': 8, 'best': 4 }, 'structure': { 'kind': 'array', 'values': [2, 3, 1, 2, 4, 3], 'pointers': { 'start': 0, 'end': 3 } }, 'note': 'The run 2, 3, 1, 2 first reaches 7 at index 3 with total 8, so the best length is 4.' },
+        { 'line': 6, 'vars': { 'total': 10, 'best': 4 }, 'structure': { 'kind': 'array', 'values': [2, 3, 1, 2, 4, 3], 'pointers': { 'start': 1, 'end': 4 } }, 'note': 'Starting at index 1 first reaches the target at index 4. Length 4 does not beat 4.' },
+        { 'line': 6, 'vars': { 'total': 7, 'best': 3 }, 'structure': { 'kind': 'array', 'values': [2, 3, 1, 2, 4, 3], 'pointers': { 'start': 2, 'end': 4 } }, 'note': 'From index 2, the run 1, 2, 4 totals exactly 7. Length 3 is shorter, so best becomes 3.' },
+        { 'line': 6, 'vars': { 'total': 9, 'best': 3 }, 'structure': { 'kind': 'array', 'values': [2, 3, 1, 2, 4, 3], 'pointers': { 'start': 3, 'end': 5 } }, 'note': 'From index 3, 2, 4, 3 totals 9. Length 3 does not beat 3.' },
+        { 'line': 6, 'vars': { 'total': 7, 'best': 2 }, 'structure': { 'kind': 'array', 'values': [2, 3, 1, 2, 4, 3], 'pointers': { 'start': 4, 'end': 5 } }, 'note': 'From index 4, 4 and 3 total exactly 7. Length 2 is the best so far.' },
+        { 'line': 9, 'vars': { 'best': 2, 'result': 2 }, 'structure': { 'kind': 'array', 'values': [2, 3, 1, 2, 4, 3] }, 'note': 'No later start can beat length 2, so return 2.' }
+      ]
+    }
   },
   'first-insertion-point': {
     'reasoning': 'Because the array is ordered, "is this value at least target?" is false for a prefix and true for the rest. Keeping the middle when it answers true, and discarding it when false, converges on the first true position, which is the first of any duplicates. Cost is O(log n) comparisons and O(1) extra space.',
     'trace': '[1, 3, 3, 7], target 3: the interval is 0 to 4. Middle 2 has 3, which is at least 3, so the answer is at index 2 or earlier and the end moves to 2. Middle 1 has 3, so the end moves to 1. Middle 0 has 1, which is below 3, so the start moves to 1. The interval is empty at index 1.',
     'alternative': 'A linear scan for the first value at least target is O(n) and simpler. Binary search needs the sorted precondition but takes O(log n) comparisons.',
     'counterexample': 'Returning as soon as a middle value equals target gives index 2 for [3, 3, 3] instead of 0, and indexOf gives -1 for an absent target where an insertion index is required.',
-    'transfer': 'Self-review: return how many values are less than or equal to target. Explain which boundary you search for and how it relates to this one; the original checks do not validate the changed question.'
+    'transfer': 'Self-review: return how many values are less than or equal to target. Explain which boundary you search for and how it relates to this one; the original checks do not validate the changed question.',
+    'traceSteps': {
+      'code': [
+        'function insertionPoint(numbers: number[], target: number): number {',
+        '  let low = 0, high = numbers.length',
+        '  while (low < high) {',
+        '    const mid = (low + high) >> 1',
+        '    if (numbers[mid] >= target) high = mid',
+        '    else low = mid + 1',
+        '  }',
+        '  return low',
+        '}'
+      ],
+      'input': 'numbers = [1, 3, 3, 7, 9, 12], target = 5',
+      'steps': [
+        { 'line': 1, 'vars': { 'low': 0, 'high': 6, 'target': 5 }, 'structure': { 'kind': 'array', 'values': [1, 3, 3, 7, 9, 12] }, 'note': 'Start with the whole array. high is one past the last index, so the search range is [low, high).' },
+        { 'line': 3, 'vars': { 'low': 0, 'high': 6, 'mid': 3, 'target': 5 }, 'structure': { 'kind': 'array', 'values': [1, 3, 3, 7, 9, 12], 'pointers': { 'low': 0, 'mid': 3 } }, 'note': 'Check the middle index, 3, which holds 7.' },
+        { 'line': 4, 'vars': { 'low': 0, 'high': 3, 'mid': 3, 'target': 5 }, 'structure': { 'kind': 'array', 'values': [1, 3, 3, 7, 9, 12], 'pointers': { 'low': 0, 'mid': 3 }, 'dimmed': [4, 5] }, 'note': '7 is at least 5, so index 3 might be the answer and high moves to 3. Indices 4 and 5 are ruled out.' },
+        { 'line': 3, 'vars': { 'low': 0, 'high': 3, 'mid': 1, 'target': 5 }, 'structure': { 'kind': 'array', 'values': [1, 3, 3, 7, 9, 12], 'pointers': { 'low': 0, 'mid': 1 }, 'dimmed': [4, 5] }, 'note': 'The new middle is index 1, which holds 3.' },
+        { 'line': 5, 'vars': { 'low': 2, 'high': 3, 'mid': 1, 'target': 5 }, 'structure': { 'kind': 'array', 'values': [1, 3, 3, 7, 9, 12], 'pointers': { 'low': 2 }, 'dimmed': [0, 1, 4, 5] }, 'note': '3 is below 5, so low moves past index 1 to 2. Indices 0 and 1 are ruled out.' },
+        { 'line': 3, 'vars': { 'low': 2, 'high': 3, 'mid': 2, 'target': 5 }, 'structure': { 'kind': 'array', 'values': [1, 3, 3, 7, 9, 12], 'pointers': { 'low': 2, 'mid': 2 }, 'dimmed': [0, 1, 4, 5] }, 'note': 'Only index 2 is left in the range. Its value, 3, is below 5.' },
+        { 'line': 5, 'vars': { 'low': 3, 'high': 3, 'mid': 2, 'target': 5 }, 'structure': { 'kind': 'array', 'values': [1, 3, 3, 7, 9, 12], 'pointers': { 'low': 3 }, 'dimmed': [0, 1, 2, 4, 5] }, 'note': '3 is below 5, so low moves to 3. The range is empty, so the loop ends.' },
+        { 'line': 7, 'vars': { 'low': 3, 'high': 3, 'result': 3, 'target': 5 }, 'structure': { 'kind': 'array', 'values': [1, 3, 3, 7, 9, 12], 'pointers': { 'answer': 3 }, 'dimmed': [0, 1, 2, 4, 5] }, 'note': 'Index 3 holds 7, the first value that is at least 5.' }
+      ]
+    }
   },
   'smallest-daily-capacity': {
     'reasoning': 'The answer is not an index, but feasibility is monotonic: if a capacity ships everything in time, any larger capacity does too. The answer therefore lies between the heaviest package and the total weight, and testing the middle capacity with a greedy day count discards half of that range each time.',
     'trace': '[1, 2, 3, 4, 5], 2 days: capacities run from 5 to 15. Capacity 10 needs 2 days (1+2+3+4, then 5), so try lower. Capacity 7 needs 3 days (1+2+3, 4, 5), so go higher. Capacity 8 needs 3 days, capacity 9 needs 2 days (1+2+3, 4+5), so 9 is the smallest.',
     'alternative': 'Trying each capacity from the heaviest package upward is simple but can test up to the total weight. Binary searching the answer space needs only about log of that range, each test costing O(n).',
     'counterexample': 'Using the heaviest package alone fails for [7, 2, 5, 10, 8] over 2 days, which needs 18, and using total divided by days fails the same input because packages cannot be split or reordered.',
-    'transfer': 'Self-review: allow each truck to carry at most m packages as well as a weight limit. Which part of the feasibility test changes, and does the monotonic property still hold?'
+    'transfer': 'Self-review: allow each truck to carry at most m packages as well as a weight limit. Which part of the feasibility test changes, and does the monotonic property still hold?',
+    'traceSteps': {
+      'code': [
+        'function smallestCapacity(weights: number[], days: number): number {',
+        '  if (weights.length === 0) return 0',
+        '  let low = Math.max(...weights), high = weights.reduce((a, b) => a + b, 0)',
+        '  const fits = (cap: number) => { let used = 1, load = 0; for (const w of weights) { if (load + w > cap) { used++; load = 0 } load += w } return used <= days }',
+        '  while (low < high) {',
+        '    const mid = (low + high) >> 1',
+        '    if (fits(mid)) high = mid',
+        '    else low = mid + 1',
+        '  }',
+        '  return low',
+        '}'
+      ],
+      'input': 'weights = [1, 2, 3, 4, 5], days = 2',
+      'steps': [
+        { 'line': 2, 'vars': { 'low': 5, 'high': 15, 'days': 2 }, 'structure': { 'kind': 'array', 'values': [1, 2, 3, 4, 5] }, 'note': 'The capacity must be at least 5, the heaviest package, and at most 15, one truck for everything. Search between them.' },
+        { 'line': 5, 'vars': { 'low': 5, 'high': 15, 'mid': 10 }, 'structure': { 'kind': 'array', 'values': [1, 2, 3, 4, 5] }, 'note': 'Test capacity 10.' },
+        { 'line': 6, 'vars': { 'low': 5, 'high': 10, 'mid': 10 }, 'structure': { 'kind': 'array', 'values': [1, 2, 3, 4, 5] }, 'note': 'Greedy loads [1, 2, 3, 4] = 10 and then [5]. Two days fit, so high becomes 10.' },
+        { 'line': 5, 'vars': { 'low': 5, 'high': 10, 'mid': 7 }, 'structure': { 'kind': 'array', 'values': [1, 2, 3, 4, 5] }, 'note': 'Test capacity 7.' },
+        { 'line': 7, 'vars': { 'low': 8, 'high': 10, 'mid': 7 }, 'structure': { 'kind': 'array', 'values': [1, 2, 3, 4, 5] }, 'note': 'Greedy needs [1, 2, 3], [4], and [5]: three days. Capacity 7 fails, so low becomes 8.' },
+        { 'line': 5, 'vars': { 'low': 8, 'high': 10, 'mid': 9 }, 'structure': { 'kind': 'array', 'values': [1, 2, 3, 4, 5] }, 'note': 'Test capacity 9.' },
+        { 'line': 6, 'vars': { 'low': 8, 'high': 9, 'mid': 9 }, 'structure': { 'kind': 'array', 'values': [1, 2, 3, 4, 5] }, 'note': 'Greedy loads [1, 2, 3] = 6, then [4, 5] = 9. Two days fit, so high becomes 9.' },
+        { 'line': 5, 'vars': { 'low': 8, 'high': 9, 'mid': 8 }, 'structure': { 'kind': 'array', 'values': [1, 2, 3, 4, 5] }, 'note': 'Test capacity 8.' },
+        { 'line': 7, 'vars': { 'low': 9, 'high': 9, 'mid': 8 }, 'structure': { 'kind': 'array', 'values': [1, 2, 3, 4, 5] }, 'note': 'Capacity 8 needs three days: [1, 2, 3], [4], [5]. Low becomes 9, and the range closes.' },
+        { 'line': 9, 'vars': { 'low': 9, 'high': 9, 'result': 9 }, 'structure': { 'kind': 'array', 'values': [1, 2, 3, 4, 5] }, 'note': 'Capacity 9 is the smallest value that fits in two days.' }
+      ]
+    }
   },
   'flatten-nested-numbers': {
     'reasoning': 'Visiting children in their stored order and appending only numbers preserves the full left-to-right sequence. Empty arrays append nothing. Work is O(e) for all entries, with output and nesting storage.',
@@ -2203,7 +2480,30 @@ export const dsaDepth: Record<string, RepDepth> = {
     'trace': '/a/b/../../c saves a,b, removes b, removes a, then saves c, returning /c.',
     'alternative': 'Repeated string replacement is harder to bound and can confuse literal dot names; a segment stack states the parent rule directly.',
     'counterexample': 'Treating every dot-prefixed name as special loses .hidden and ... from /.../.hidden/.',
-    'transfer': 'Self-review: support relative paths. Decide whether unmatched parent segments must remain.'
+    'transfer': 'Self-review: support relative paths. Decide whether unmatched parent segments must remain.',
+    'traceSteps': {
+      'code': [
+        'function simplifyPath(path: string): string {',
+        '  const names: string[] = []',
+        '  for (const part of path.split(\'/\')) {',
+        '    if (part === \'..\') { if (names.length) names.pop() }',
+        '    else if (part !== \'\' && part !== \'.\') names.push(part)',
+        '  }',
+        '  return \'/\' + names.join(\'/\')',
+        '}'
+      ],
+      'input': 'path = "/home/./notes/../work/"',
+      'steps': [
+        { 'line': 1, 'vars': { 'kept': 0 }, 'structure': { 'kind': 'stack', 'values': [] }, 'note': 'Start with no kept names. Each slash-separated part is handled in order.' },
+        { 'line': 4, 'vars': { 'part': '', 'kept': 0 }, 'structure': { 'kind': 'stack', 'values': [] }, 'note': 'The empty first part comes from the leading slash, so nothing is kept.' },
+        { 'line': 4, 'vars': { 'part': 'home', 'kept': 1 }, 'structure': { 'kind': 'stack', 'values': ['home'] }, 'note': 'home is an ordinary name, so it is pushed.' },
+        { 'line': 4, 'vars': { 'part': '.', 'kept': 1 }, 'structure': { 'kind': 'stack', 'values': ['home'] }, 'note': 'A single dot is skipped, so the stack does not change.' },
+        { 'line': 4, 'vars': { 'part': 'notes', 'kept': 2 }, 'structure': { 'kind': 'stack', 'values': ['home', 'notes'] }, 'note': 'notes is pushed on top of home.' },
+        { 'line': 3, 'vars': { 'part': '..', 'kept': 1 }, 'structure': { 'kind': 'stack', 'values': ['home'] }, 'note': 'A double dot removes the most recent name, notes.' },
+        { 'line': 4, 'vars': { 'part': 'work', 'kept': 2 }, 'structure': { 'kind': 'stack', 'values': ['home', 'work'] }, 'note': 'work is pushed. The empty part after the final slash would be skipped too.' },
+        { 'line': 6, 'vars': { 'result': '/home/work', 'kept': 2 }, 'structure': { 'kind': 'stack', 'values': ['home', 'work'] }, 'note': 'Join the kept names with slashes and add the leading slash: /home/work.' }
+      ]
+    }
   },
 }
 
