@@ -49,3 +49,8 @@ export function EditorLoading() {
 export function PreviewLoading() {
   return <section className="panel frontend-preview preview-loading" aria-busy="true"><div className="panel-heading"><h2>Interactive preview</h2></div><p className="loading-status page-loading-status" role="status">Opening preview controls…</p><div aria-hidden="true"><div className="loading-preview-description"><span className="skeleton-line" /><span className="skeleton-line skeleton-short" /></div><div className="preview-controls loading-preview-controls"><span className="skeleton-field" /><span className="skeleton-field" /><span className="skeleton-action" /><span className="skeleton-action" /></div><div className="preview-empty loading-preview-empty"><span className="skeleton-line" /></div><div className="loading-preview-review"><span className="skeleton-label" /></div></div></section>
 }
+
+/** Placeholder shown while a route chunk loads. It keeps the page heading in place so focus and skip links stay valid. */
+export function RouteLoading({ title, status }: { title: string; status: string }) {
+  return <main aria-busy="true"><PageHeader title={title} /><p className="loading-status page-loading-status" role="status">{status}</p></main>
+}
