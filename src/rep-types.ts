@@ -17,6 +17,7 @@ export type Rep = {
   functionName: string
   preserveInput?: boolean
   /** Frontend reps that check authored DOM and ARIA contracts. Without it the rep uses the directory scenarios. */
+  reactPreview?: boolean
   domPreview?: { title: string; description: string; props: Record<string, unknown>; review: string[] }
   hints: string[]
   checks: Check[]

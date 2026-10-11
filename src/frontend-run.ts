@@ -42,11 +42,16 @@ export function startFrontendRun(code: string, rep: Rep, onResults: (results: Te
       else onError('Browser checks returned incomplete feedback. Your code is still here; try again.')
     }
   }
-  try {
-    frame.srcdoc = buildFrontendFrame(code, rep, token, 'checks')
-    frameWindow.addEventListener('message', receive)
-    timer = frameWindow.setTimeout(() => { if (disposed) return; dispose(); onError('The browser checks did not finish. Your code is still here; review it and try again.') }, 5000)
-    frameDocument.body.append(frame)
-  } catch (error) { dispose(); onError(error instanceof Error ? error.message : 'The browser checks could not start.') }
+  const launch = (runtime = '') => {
+    if (disposed) return
+    try {
+      frame.srcdoc = buildFrontendFrame(code, rep, token, 'checks', undefined, runtime)
+      frameWindow.addEventListener('message', receive)
+      timer = frameWindow.setTimeout(() => { if (disposed) return; dispose(); onError('The browser checks did not finish. Your code is still here; review it and try again.') }, 5000)
+      frameDocument.body.append(frame)
+    } catch (error) { dispose(); onError(error instanceof Error ? error.message : 'The browser checks could not start.') }
+  }
+  if (rep.reactPreview) import('virtual:react-frame').then(module => launch(module.default), error => { if (!disposed) { dispose(); onError(error instanceof Error ? error.message : 'React could not load.') } })
+  else launch()
   return dispose
 }

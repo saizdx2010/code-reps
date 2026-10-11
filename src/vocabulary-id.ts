@@ -1,5 +1,7 @@
 /** Optional Indonesian glosses for rep vocabulary, keyed by the exact English term. English stays primary. */
 export const indonesianGlossary: Record<string, string> = {
+  'Effect cleanup': 'fungsi untuk melepas resource saat effect diganti atau komponen dilepas',
+  Subscription: 'pendaftaran untuk menerima event sampai dibatalkan',
   Closure: 'fungsi yang mengingat variabel dari tempat ia dibuat',
   Reference: 'rujukan ke satu objek yang sama',
   Microtask: 'tugas yang jalan setelah skrip saat ini, sebelum timer',
