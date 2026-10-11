@@ -68,7 +68,7 @@ export const paths = [
     stages: [
       { title: 'Name the pattern first', description: 'Read "Recognize the pattern" in Lessons, then justify a candidate using the input contract before coding.', recap: 'You can now justify a candidate from the input contract before coding.', repIds: ['algo-sorted-pair'] },
       { title: 'Decide which tool fits', description: 'Switch between different kinds of problems. Write the decisive signal and a near-miss before you code.', recap: 'You can now compare candidate tools across different kinds of problems.', repIds: ['has-duplicate', 'valid-parentheses', 'algo-window-sum', 'most-frequent-number', 'simplify-file-path', 'count-unique-windows'] },
-      { title: 'Find your way through a map', description: 'Inspect nearby cells, separate rooms, then guide a robot along its shortest route. Choose from the movement contract before coding.', recap: 'You can now reason about map boundaries, connected areas, and minimum moves.', repIds: ['grid-open-neighbours', 'grid-count-rooms', 'grid-fewest-steps'] },
+      { title: 'Find your way across a floor plan', description: 'Inspect nearby cells, separate rooms, then guide a robot along its shortest route. Choose from the movement contract before coding.', recap: 'You can now reason about map boundaries, connected areas, and minimum moves.', repIds: ['grid-open-neighbours', 'grid-count-rooms', 'grid-fewest-steps'] },
     ] satisfies readonly PathStage[],
   },
   {
