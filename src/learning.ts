@@ -14,6 +14,7 @@ export const journeys: Journey[] = [
   { id: 'lookup', title: 'Count and remember', guided: 'has-duplicate', independent: 'most-frequent-number', recall: 'first-repeated-number', practice: ['shared-number-count', 'singleton-number-list'], delayDays: 3 },
   { id: 'stacks', title: 'Match what came before', guided: 'valid-parentheses', independent: 'balanced-brackets', recall: 'simplify-file-path', practice: ['undo-word-actions', 'erase-text-markers'], delayDays: 3 },
   { id: 'request-ownership', title: 'Keep asynchronous results current', guided: 'latest-request', independent: 'search-request-state', recall: 'preview-slot-results', delayDays: 3 },
+  { id: 'async', title: 'Await, coordinate, and cancel local work', guided: 'await-local-records', independent: 'settle-local-panels', recall: 'cancel-local-export', delayDays: 3 },
   { id: 'resource-ownership', title: 'Own and clean up shared resources', guided: 'shared-resource', independent: 'subscription-cleanup', recall: 'room-leases', delayDays: 3 },
   { id: 'validation', title: 'Validate data at a boundary', guided: 'backend-validate-user', independent: 'validate-stock-adjustment', recall: 'parse-delivery-window', delayDays: 3 },
   { id: 'state-modeling', title: 'Model valid browser states', guided: 'task-state-label', independent: 'saved-record-status', recall: 'catalog-request-summary', delayDays: 3 },

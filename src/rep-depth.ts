@@ -1,3 +1,4 @@
+import { asyncRuntimeDepth } from './review-async-runtime.ts'
 import { journeyPracticeDepth } from './review-journey-practice.ts'
 import { connectedFeatureDepth } from './review-connected-feature.ts'
 import { testingJourneyDepth } from './review-testing-journey.ts'
@@ -27,6 +28,7 @@ export type RepDepth = { reasoning: string; trace: string; traceSteps?: RepTrace
 
 // Authored post-attempt reviews. Keep these out of independent task prompts.
 export const repDepth: Record<string, RepDepth> = {
+  ...asyncRuntimeDepth,
   ...journeyPracticeDepth,
   ...connectedFeatureDepth,
   ...testingJourneyDepth,

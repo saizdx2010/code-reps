@@ -157,7 +157,7 @@ export const skills: Skill[] = [
     walkthrough: ['Calling loadName returns a Promise.', 'fetch settles when a response is available.', 'HTTP failure requires an explicit response.ok check.', 'Parsing also returns a Promise and can fail.', 'The catch handles either failure in this example.'],
     mistakes: ['Using a Promise as though it were its result.', 'Assuming fetch rejects on every HTTP error.', 'Letting an old response overwrite newer state.'],
     questions: [q('async-result', 'What does calling an async function return?', 'async function value() { return 4 }\nvalue()', ['4 directly', 'A Promise', 'undefined'], 1, 'Even an immediate returned value is wrapped in a Promise.'), q('fetch', 'How should a 404 response be detected?', '', ['Only through catch', 'By checking response.ok or status', 'It always means invalid JSON'], 1, 'fetch normally resolves for HTTP error responses; check the status explicitly.')],
-    repIds: ['promise-outcomes', 'frontend-view-state', 'frontend-directory'], related: ['http', 'frontend', 'react', 'event-loop', 'request-ownership'],
+    repIds: ['await-local-records', 'settle-local-panels', 'cancel-local-export', 'promise-outcomes', 'frontend-view-state', 'frontend-directory'], related: ['http', 'frontend', 'react', 'event-loop', 'request-ownership'],
   },
   {
     id: 'http', title: 'HTTP requests and response contracts', summary: 'Understand methods, status codes, payloads, and validation at a service boundary.', prerequisites: ['validation'],

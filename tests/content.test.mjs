@@ -16,7 +16,7 @@ import test from 'node:test'
 import { fluencySolutions } from '../src/fluency-reps.ts'
 import { reps } from '../src/rep.ts'
 import { aiEraReps } from '../src/ai-era-reps.ts'
-import { runRep } from '../src/runner.ts'
+import { runRep, runAsyncRep } from '../src/runner.ts'
 import { reflectionGuides } from '../src/reflection-guides.ts'
 import { richSolutions } from './fixtures/rich-solutions.mjs'
 import { validationSolutions } from './fixtures/validation-solutions.mjs'
@@ -84,8 +84,8 @@ test('every rep has reference-solution coverage and a complete learning brief', 
 })
 
 for (const [id, code] of Object.entries(solutions)) {
-  test(`authored checks accept the reference solution: ${id}`, () => {
-    const failures = runRep(code, id).filter(result => !result.passed)
+  test(`authored checks accept the reference solution: ${id}`, async () => {
+    const failures = (await runAsyncRep(code, id)).filter(result => !result.passed)
     assert.deepEqual(failures, [])
   })
 }

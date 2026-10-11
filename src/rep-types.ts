@@ -1,4 +1,6 @@
-export type Check = { name: string; input: unknown[]; expected: unknown }
+import type { AsyncFixtureSpec } from './async-fixture.ts'
+
+export type Check = { name: string; input: unknown[]; expected: unknown; fixture?: AsyncFixtureSpec }
 export type Rep = {
   id: string
   title: string
@@ -16,6 +18,7 @@ export type Rep = {
   starter: string
   functionName: string
   preserveInput?: boolean
+  runtime?: 'async-fixture'
   /** Frontend reps that check authored DOM and ARIA contracts. Without it the rep uses the directory scenarios. */
   domPreview?: { title: string; description: string; props: Record<string, unknown>; review: string[] }
   hints: string[]
