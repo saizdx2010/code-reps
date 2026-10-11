@@ -2569,3 +2569,446 @@ export const dsaGuides = {
     'example': 'The saved names represent the normalized prefix. A name extends it; a parent removes its latest name; a current-directory or empty segment leaves it unchanged. O(c) time and storage for c characters. /a/b/../../c saves a,b, removes b, removes a, then saves c, returning /c.'
   },
 }
+
+// Post-attempt comparisons for the harder mixed applications.
+Object.assign(dsaDepth, {
+  'next-warmer-day': {
+    'reasoning': 'Unresolved indices have non-increasing temperatures from bottom to top. A strictly warmer new reading resolves every popped day: no earlier intervening reading was warmer, or that day would already have been popped. Each index is pushed and popped once, so time is O(n) and storage O(n). Checks establish results and preserved input, not use of a stack.',
+    'trace': 'For [30,30,29,31], days 0 and 1 stay unresolved on equality. Day 2 joins them. Day 3 resolves day 2 with wait 1, day 1 with wait 2, and day 0 with wait 3. Day 3 has no later warmer day: [3,2,1,0].',
+    'alternative': 'Scanning every suffix is simple and correct, but costs O(n²) on equal or decreasing readings. A reverse monotonic scan can also find the next warmer index in O(n) with a different invariant.',
+    'counterexample': 'Popping on greater-than-or-equal reports wait 1 for the first 30 in [30,30,29,31]; the correct wait is 3. Sorting readings destroys the original day distances.',
+    'transfer': 'Self-reviewed: return the next day at least five degrees warmer. Decide whether the same unresolved ordering still supports safe pops; the original checks do not assess this changed threshold.',
+    'traceSteps': {
+      'input': 'temperatures = [30,30,29,31]',
+      'code': ['function nextWarmerDay(temperatures: number[]): number[] {', '  const waits = Array<number>(temperatures.length).fill(0), pending: number[] = []', '  for (let day = 0; day < temperatures.length; day++) {', '    while (pending.length && temperatures[day] > temperatures[pending[pending.length - 1]]) {', '      const earlier = pending.pop()!; waits[earlier] = day - earlier', '    }', '    pending.push(day)', '  }', '  return waits', '}'],
+      'steps': [{
+          'line': 1,
+          'vars': {
+            'waits': '[0,0,0,0]',
+          },
+          'note': 'Initialize waits to zero and an empty unresolved stack.',
+          'structure': {
+            'kind': 'stack',
+            'values': [],
+          },
+        }, {
+          'line': 6,
+          'vars': {
+            'day': 0,
+          },
+          'note': 'Push day 0 with temperature 30.',
+          'structure': {
+            'kind': 'stack',
+            'values': [0],
+          },
+        }, {
+          'line': 6,
+          'vars': {
+            'day': 1,
+          },
+          'note': 'Equal 30 does not resolve day 0; push day 1.',
+          'structure': {
+            'kind': 'stack',
+            'values': [0, 1],
+          },
+        }, {
+          'line': 6,
+          'vars': {
+            'day': 2,
+          },
+          'note': '29 is lower; push day 2.',
+          'structure': {
+            'kind': 'stack',
+            'values': [0, 1, 2],
+          },
+        }, {
+          'line': 4,
+          'vars': {
+            'day': 3,
+            'earlier': 2,
+            'waits': '[0,0,1,0]',
+          },
+          'note': '31 resolves day 2 with a one-day wait.',
+          'structure': {
+            'kind': 'stack',
+            'values': [0, 1],
+          },
+        }, {
+          'line': 4,
+          'vars': {
+            'day': 3,
+            'earlier': 1,
+            'waits': '[0,2,1,0]',
+          },
+          'note': '31 resolves day 1 with a two-day wait.',
+          'structure': {
+            'kind': 'stack',
+            'values': [0],
+          },
+        }, {
+          'line': 4,
+          'vars': {
+            'day': 3,
+            'earlier': 0,
+            'waits': '[3,2,1,0]',
+          },
+          'note': '31 resolves day 0 with a three-day wait.',
+          'structure': {
+            'kind': 'stack',
+            'values': [],
+          },
+        }, {
+          'line': 6,
+          'vars': {
+            'day': 3,
+          },
+          'note': 'Push day 3; no later readings remain.',
+          'structure': {
+            'kind': 'stack',
+            'values': [3],
+          },
+        }, {
+          'line': 8,
+          'vars': {
+            'result': '[3,2,1,0]',
+          },
+          'note': 'Return waits; unresolved day 3 keeps zero.',
+          'structure': {
+            'kind': 'stack',
+            'values': [3],
+          },
+        }],
+    },
+  },
+  'top-k-frequent-tags': {
+    'reasoning': 'The count map has one entry per exact tag. Every tag enters the bucket indexed by its count. Descending bucket traversal implements frequency precedence, and ASCII lexicographic sorting within a bucket implements ties before truncation. Work is O(n + u log u) in the worst case for n occurrences and u distinct tags (string comparisons cost up to 20 characters), storage O(n + u). Checks do not require buckets.',
+    'trace': 'For [web,api,web,api,app], counts are web:2, api:2, app:1. Bucket 2 sorts to [api,web]; bucket 1 is [app]. With k=2, stop after api and web. First arrival does not win a tie.',
+    'alternative': 'Sorting all distinct tags by descending count and ascending text is compact and suitable for a one-off request. A bounded heap reduces ranking work to O(u log k), but its eviction comparator must reverse both count and tie priority; sort the final k values for output.',
+    'counterexample': 'Returning insertion order from the count map gives [web,api] for the traced input, violating the tie. Sorting only the already selected k tags can keep the wrong tied tag at the cutoff.',
+    'transfer': 'Self-reviewed: tags may contain uppercase and accented letters, and comparison is locale-sensitive. Specify normalization and ordering before adapting the comparator; the original checks cover lowercase ASCII only.',
+    'traceSteps': {
+      'input': 'tags = [\'web\',\'api\',\'web\',\'api\',\'app\'], k = 2',
+      'code': ['function topKFrequentTags(tags: string[], k: number): string[] {', '  const counts = new Map<string, number>()', '  for (const tag of tags) counts.set(tag, (counts.get(tag) ?? 0) + 1)', '  const buckets: string[][] = Array.from({length: tags.length + 1}, () => [])', '  for (const [tag, count] of counts) buckets[count].push(tag)', '  const ordered: string[] = []', '  for (let count = tags.length; count > 0; count--) ordered.push(...buckets[count].sort())', '  return ordered.slice(0, k)', '}'],
+      'steps': [{
+          'line': 1,
+          'vars': {
+            'k': 2,
+          },
+          'note': 'Start with an empty count map.',
+          'structure': {
+            'kind': 'map',
+            'entries': [],
+          },
+        }, {
+          'line': 2,
+          'vars': {
+            'tag': 'web',
+          },
+          'note': 'Count the first web.',
+          'structure': {
+            'kind': 'map',
+            'entries': [['web', 1]],
+          },
+        }, {
+          'line': 2,
+          'vars': {
+            'tag': 'api',
+          },
+          'note': 'Count the first api.',
+          'structure': {
+            'kind': 'map',
+            'entries': [['web', 1], ['api', 1]],
+          },
+        }, {
+          'line': 2,
+          'vars': {
+            'tag': 'web',
+          },
+          'note': 'Increment web to two.',
+          'structure': {
+            'kind': 'map',
+            'entries': [['web', 2], ['api', 1]],
+          },
+        }, {
+          'line': 2,
+          'vars': {
+            'tag': 'api',
+          },
+          'note': 'Increment api to two.',
+          'structure': {
+            'kind': 'map',
+            'entries': [['web', 2], ['api', 2]],
+          },
+        }, {
+          'line': 2,
+          'vars': {
+            'tag': 'app',
+          },
+          'note': 'Count app once.',
+          'structure': {
+            'kind': 'map',
+            'entries': [['web', 2], ['api', 2], ['app', 1]],
+          },
+        }, {
+          'line': 4,
+          'vars': {
+            'k': 2,
+          },
+          'note': 'Group by count; keep all tied tags before choosing k.',
+          'structure': {
+            'kind': 'map',
+            'entries': [['2', 'web, api'], ['1', 'app']],
+          },
+        }, {
+          'line': 6,
+          'vars': {
+            'ordered': '["api","web","app"]',
+          },
+          'note': 'Visit count 2 before 1; sort tied tags as api then web.',
+          'structure': {
+            'kind': 'map',
+            'entries': [['2', 'api, web'], ['1', 'app']],
+          },
+        }, {
+          'line': 7,
+          'vars': {
+            'result': '["api","web"]',
+          },
+          'note': 'Take the first two ranked distinct tags.',
+          'structure': {
+            'kind': 'map',
+            'entries': [['web', 2], ['api', 2], ['app', 1]],
+          },
+        }],
+    },
+  },
+  'course-order': {
+    'reasoning': 'Deduplicated edges contribute exactly once to indegree. A zero-indegree unfinished course has every prerequisite completed. Selecting the smallest eligible ID each time satisfies the deterministic rule, including newly eligible smaller IDs. Removing its outgoing edges preserves the invariant. If no eligible course remains before all finish, the remaining directed graph has a cycle. Scanning IDs each step costs O(V² + E), with O(V + E) storage.',
+    'trace': 'For 4 courses and [[2,0],[2,1]], initial counts are [0,0,2,0]. Choose 0, then 1. Course 2 becomes eligible and must precede already-eligible 3. Return [0,1,2,3]. A cycle plus an isolated course still requires [] rather than a partial order.',
+    'alternative': 'A min-heap of eligible courses improves selection to O(log V) per course, for O(E + V log V) total. DFS finishing order can find a valid order with cycle tracking, but does not directly guarantee smallest eligible selection at every step.',
+    'counterexample': 'A FIFO ready list initialized to [0,1,3] returns [0,1,3,2] on the traced input, which is valid dependency-wise but violates the specified choice. Returning a partial order hides a disconnected cycle.',
+    'transfer': 'Self-reviewed: courses now have durations and unlimited parallel workers. Decide how to compute earliest finish times and distinguish that result from a sequential order; original checks do not establish scheduling time.',
+    'traceSteps': {
+      'input': 'courseCount = 4, prerequisites = [[2,0],[2,1]]',
+      'code': ['function courseOrder(courseCount: number, prerequisites: [number, number][]): number[] {', '  const edges = Array.from({length: courseCount}, () => new Set<number>()), degree = Array<number>(courseCount).fill(0)', '  for (const [course, pre] of prerequisites) if (!edges[pre].has(course)) { edges[pre].add(course); degree[course]++ }', '  const done = new Set<number>(), order: number[] = []', '  while (order.length < courseCount) {', '    let next = -1; for (let c = 0; c < courseCount; c++) if (!done.has(c) && degree[c] === 0) { next = c; break }', '    if (next === -1) return []', '    done.add(next); order.push(next)', '    for (const course of edges[next]) degree[course]--', '  }', '  return order', '}'],
+      'steps': [{
+          'line': 1,
+          'vars': {
+            'order': '[]',
+          },
+          'note': 'Initialize remaining prerequisite counts.',
+          'structure': {
+            'kind': 'map',
+            'entries': [['0', 0], ['1', 0], ['2', 0], ['3', 0]],
+          },
+        }, {
+          'line': 2,
+          'vars': {
+            'course': 2,
+            'pre': 0,
+          },
+          'note': 'Add requirement 0 before 2.',
+          'structure': {
+            'kind': 'map',
+            'entries': [['0', 0], ['1', 0], ['2', 1], ['3', 0]],
+          },
+        }, {
+          'line': 2,
+          'vars': {
+            'course': 2,
+            'pre': 1,
+          },
+          'note': 'Add requirement 1 before 2.',
+          'structure': {
+            'kind': 'map',
+            'entries': [['0', 0], ['1', 0], ['2', 2], ['3', 0]],
+          },
+        }, {
+          'line': 8,
+          'vars': {
+            'next': 0,
+            'order': '[0]',
+          },
+          'note': 'Choose 0; course 2 still needs 1.',
+          'structure': {
+            'kind': 'map',
+            'entries': [['0', 'done'], ['1', 0], ['2', 1], ['3', 0]],
+          },
+        }, {
+          'line': 8,
+          'vars': {
+            'next': 1,
+            'order': '[0,1]',
+          },
+          'note': 'Choose 1; course 2 becomes eligible.',
+          'structure': {
+            'kind': 'map',
+            'entries': [['0', 'done'], ['1', 'done'], ['2', 0], ['3', 0]],
+          },
+        }, {
+          'line': 7,
+          'vars': {
+            'next': 2,
+            'order': '[0,1,2]',
+          },
+          'note': 'Choose newly eligible 2 before 3.',
+          'structure': {
+            'kind': 'map',
+            'entries': [['0', 'done'], ['1', 'done'], ['2', 'done'], ['3', 0]],
+          },
+        }, {
+          'line': 7,
+          'vars': {
+            'next': 3,
+            'order': '[0,1,2,3]',
+          },
+          'note': 'Choose 3; every course is complete.',
+          'structure': {
+            'kind': 'map',
+            'entries': [['0', 'done'], ['1', 'done'], ['2', 'done'], ['3', 'done']],
+          },
+        }, {
+          'line': 10,
+          'vars': {
+            'result': '[0,1,2,3]',
+          },
+          'note': 'Return the deterministic complete order.',
+          'structure': {
+            'kind': 'map',
+            'entries': [['0', 'done'], ['1', 'done'], ['2', 'done'], ['3', 'done']],
+          },
+        }],
+    },
+  },
+  'longest-shared-sequence': {
+    'reasoning': 'Let dp[i][j] be the longest shared subsequence length of the first i and j characters. Empty prefixes contribute 0. Equal final characters can extend an optimal shorter-prefix sequence by one. If they differ, a common sequence cannot use both final positions together, so the optimum is the larger of dropping either endpoint. Dependencies are already filled row by row. Time O(mn), storage O(mn); passing checks does not prove use of DP.',
+    'trace': 'For left=ab and right=ba, dp[1][1]=0 for a versus b; dp[1][2]=1 for matching a; dp[2][1]=1 for matching b; dp[2][2]=max(1,1)=1. Sharing two character counts does not mean both can be used in order.',
+    'alternative': 'Memoized recursion over suffix indices has the same O(mn) state count and adds call-stack overhead. Rolling rows reduce storage to O(min(m,n)), but require preserving the previous diagonal before overwriting. Enumerating all subsequences is exponential.',
+    'counterexample': 'Counting the minimum occurrences of each letter returns 2 for ab and ba; the answer is 1 because order matters. A longest-common-substring rule returns only 1 for abcde and ace, missing the gapped length 3.',
+    'transfer': 'Self-reviewed: return an actual shared sequence and choose the lexicographically smallest among maximum-length answers. Decide how to reconstruct and break ties; the original checks assess only length.',
+    'traceSteps': {
+      'code': ['function longestSharedSequence(left: string, right: string): number {', '  const dp: number[][] = Array.from({length: left.length + 1}, () => Array<number>(right.length + 1).fill(0))', '  for (let i = 1; i <= left.length; i++) {', '    for (let j = 1; j <= right.length; j++) {', '      dp[i][j] = left[i - 1] === right[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1])', '    }', '  }', '  return dp[left.length][right.length]', '}'],
+      'input': 'left = \'ab\', right = \'ba\'',
+      'steps': [{
+          'line': 1,
+          'vars': {
+            'i': 0,
+            'j': 0,
+          },
+          'note': 'Empty prefixes have zero shared length. Interior zero placeholders await computation.',
+          'structure': {
+            'kind': 'table',
+            'name': 'Shared prefix lengths',
+            'cells': [[0, 0, 0], [0, null, null], [0, null, null]],
+            'rowLabels': ['empty', 'a', 'ab'],
+            'colLabels': ['empty', 'b', 'ba'],
+          },
+        }, {
+          'line': 4,
+          'vars': {
+            'i': 1,
+            'j': 1,
+            'value': 0,
+          },
+          'note': 'a differs from b; both shorter-prefix lengths are zero.',
+          'structure': {
+            'kind': 'table',
+            'name': 'Shared prefix lengths',
+            'cells': [[0, 0, 0], [0, 0, null], [0, null, null]],
+            'rowLabels': ['empty', 'a', 'ab'],
+            'colLabels': ['empty', 'b', 'ba'],
+            'current': [1, 1],
+            'reads': [[0, 1], [1, 0]],
+          },
+        }, {
+          'line': 4,
+          'vars': {
+            'i': 1,
+            'j': 2,
+            'value': 1,
+          },
+          'note': 'a matches a; extend the diagonal zero to one.',
+          'structure': {
+            'kind': 'table',
+            'name': 'Shared prefix lengths',
+            'cells': [[0, 0, 0], [0, 0, 1], [0, null, null]],
+            'rowLabels': ['empty', 'a', 'ab'],
+            'colLabels': ['empty', 'b', 'ba'],
+            'current': [1, 2],
+            'reads': [[0, 1]],
+          },
+        }, {
+          'line': 4,
+          'vars': {
+            'i': 2,
+            'j': 1,
+            'value': 1,
+          },
+          'note': 'b matches b; extend the diagonal zero to one.',
+          'structure': {
+            'kind': 'table',
+            'name': 'Shared prefix lengths',
+            'cells': [[0, 0, 0], [0, 0, 1], [0, 1, null]],
+            'rowLabels': ['empty', 'a', 'ab'],
+            'colLabels': ['empty', 'b', 'ba'],
+            'current': [2, 1],
+            'reads': [[1, 0]],
+          },
+        }, {
+          'line': 4,
+          'vars': {
+            'i': 2,
+            'j': 2,
+            'value': 1,
+          },
+          'note': 'b differs from a; the larger shorter-prefix length is one.',
+          'structure': {
+            'kind': 'table',
+            'name': 'Shared prefix lengths',
+            'cells': [[0, 0, 0], [0, 0, 1], [0, 1, 1]],
+            'rowLabels': ['empty', 'a', 'ab'],
+            'colLabels': ['empty', 'b', 'ba'],
+            'current': [2, 2],
+            'reads': [[1, 2], [2, 1]],
+          },
+        }, {
+          'line': 7,
+          'vars': {
+            'result': 1,
+          },
+          'note': 'Return the full-prefix length one; counts alone would incorrectly give two.',
+          'structure': {
+            'kind': 'table',
+            'name': 'Shared prefix lengths',
+            'cells': [[0, 0, 0], [0, 0, 1], [0, 1, 1]],
+            'rowLabels': ['empty', 'a', 'ab'],
+            'colLabels': ['empty', 'b', 'ba'],
+            'current': [2, 2],
+          },
+        }],
+    },
+  },
+})
+
+Object.assign(dsaGuides, {
+  'next-warmer-day': {
+    'plan': ['Which later day qualifies first? Explain how equal readings and a final day affect your answer.', 'Name a boundary and a tempting approach that fails it.'],
+    'explanation': ['Explain the invariant or subproblem that makes your answer correct.', 'State time and storage costs, the tie or equality rule, and how you preserve input. Checks assess behavior, not the chosen approach.'],
+    'example': 'For [30,30,29,31], days 0 and 1 stay unresolved on equality. Day 2 joins them. Day 3 resolves day 2 with wait 1, day 1 with wait 2, and day 0 with wait 3. Day 3 has no later warmer day: [3,2,1,0]. Unresolved indices have non-increasing temperatures from bottom to top. A strictly warmer new reading resolves every popped day: no earlier intervening reading was warmer, or that day would already have been popped. Each index is pushed and popped once, so time is O(n) and storage O(n). Checks establish results and preserved input, not use of a stack.',
+  },
+  'top-k-frequent-tags': {
+    'plan': ['How will you rank equal counts and choose exactly k distinct results without changing the input?', 'Name a boundary and a tempting approach that fails it.'],
+    'explanation': ['Explain the invariant or subproblem that makes your answer correct.', 'State time and storage costs, the tie or equality rule, and how you preserve input. Checks assess behavior, not the chosen approach.'],
+    'example': 'For [web,api,web,api,app], counts are web:2, api:2, app:1. Bucket 2 sorts to [api,web]; bucket 1 is [app]. With k=2, stop after api and web. First arrival does not win a tie. The count map has one entry per exact tag. Every tag enters the bucket indexed by its count. Descending bucket traversal implements frequency precedence, and ASCII lexicographic sorting within a bucket implements ties before truncation. Work is O(n + u log u) in the worst case for n occurrences and u distinct tags (string comparisons cost up to 20 characters), storage O(n + u). Checks do not require buckets.',
+  },
+  'course-order': {
+    'plan': ['When is a course eligible, how do you choose among eligible courses, and how will you detect an impossible schedule?', 'Name a boundary and a tempting approach that fails it.'],
+    'explanation': ['Explain the invariant or subproblem that makes your answer correct.', 'State time and storage costs, the tie or equality rule, and how you preserve input. Checks assess behavior, not the chosen approach.'],
+    'example': 'For 4 courses and [[2,0],[2,1]], initial counts are [0,0,2,0]. Choose 0, then 1. Course 2 becomes eligible and must precede already-eligible 3. Return [0,1,2,3]. A cycle plus an isolated course still requires [] rather than a partial order. Deduplicated edges contribute exactly once to indegree. A zero-indegree unfinished course has every prerequisite completed. Selecting the smallest eligible ID each time satisfies the deterministic rule, including newly eligible smaller IDs. Removing its outgoing edges preserves the invariant. If no eligible course remains before all finish, the remaining directed graph has a cycle. Scanning IDs each step costs O(V² + E), with O(V + E) storage.',
+  },
+  'longest-shared-sequence': {
+    'plan': ['What makes a shared sequence valid? Give an example where counting shared letters ignores their order.', 'Name a boundary and a tempting approach that fails it.'],
+    'explanation': ['Explain the invariant or subproblem that makes your answer correct.', 'State time and storage costs, the tie or equality rule, and how you preserve input. Checks assess behavior, not the chosen approach.'],
+    'example': 'For left=ab and right=ba, dp[1][1]=0 for a versus b; dp[1][2]=1 for matching a; dp[2][1]=1 for matching b; dp[2][2]=max(1,1)=1. Sharing two character counts does not mean both can be used in order. Let dp[i][j] be the longest shared subsequence length of the first i and j characters. Empty prefixes contribute 0. Equal final characters can extend an optimal shorter-prefix sequence by one. If they differ, a common sequence cannot use both final positions together, so the optimum is the larger of dropping either endpoint. Dependencies are already filled row by row. Time O(mn), storage O(mn); passing checks does not prove use of DP.',
+  },
+})

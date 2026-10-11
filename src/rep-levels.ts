@@ -212,3 +212,10 @@ export function stageLevelRange(repIds: readonly string[]): string | undefined {
   const high = Math.max(...levels) as RepLevel
   return low === high ? repLevelLabels[low] : `${repLevelLabels[low]}–${repLevelLabels[high]}`
 }
+
+Object.assign(repLevels, {
+  'next-warmer-day': 3,
+  'top-k-frequent-tags': 3,
+  'course-order': 3,
+  'longest-shared-sequence': 3,
+})

@@ -331,3 +331,31 @@ dsaSkills.push({
   repIds: ['algo-sorted-pair', 'has-duplicate', 'valid-parentheses', 'algo-window-sum', 'most-frequent-number', 'simplify-file-path', 'count-unique-windows'],
   related: ['array-techniques', 'lookup', 'stacks', 'graphs', 'recursion-basics'],
 })
+
+// Add new question identities without changing previously saved answer contracts.
+dsaSkills.find(skill => skill.id === 'recognize-the-pattern')!.questions.push(
+  {
+    'id': 'recognition-warmer-readings-v1',
+    'prompt': 'For every sensor reading, find the first later strictly higher reading. Equal readings do not qualify. You need linear total work. Which approach fits?',
+    'code': '',
+    'options': ['Monotonic stack of unresolved indices', 'Sort readings by value', 'Scan every later reading for each position'],
+    'answer': 0,
+    'explanation': 'A monotonic stack retains unresolved positions; each is pushed and popped at most once, giving linear work. Strictly higher readings resolve popped positions. Sorting loses original position order and the first-later requirement. Repeated suffix scans can take quadratic work on equal readings.',
+  },
+  {
+    'id': 'recognition-course-dependencies-v1',
+    'prompt': 'Courses have prerequisites. Produce every course in a valid order, choosing the smallest eligible ID after each completion, or report a cycle. Which approach fits?',
+    'code': '',
+    'options': ['BFS from course 0 by distance', 'Topological order with smallest eligible selection', 'Sort IDs once and return them'],
+    'answer': 1,
+    'explanation': 'Topological ordering tracks unmet prerequisites and selects the smallest currently eligible course; an incomplete result detects a cycle. BFS distance from 0 neither checks all prerequisites nor covers disconnected courses. Sorting IDs once can put a dependent before its prerequisite and cannot detect cycles.',
+  },
+  {
+    'id': 'recognition-shared-message-v1',
+    'prompt': 'Two messages contain lowercase letters. Find only the longest length obtainable by selecting positions in order from each, allowing gaps. Which approach fits?',
+    'code': '',
+    'options': ['Sliding window for a shared substring', 'Count each letter and sum minimum counts', 'Dynamic programming over two prefix lengths'],
+    'answer': 2,
+    'explanation': 'Two-prefix dynamic programming reuses the best shared lengths: a match extends the diagonal; a mismatch compares dropping one endpoint. A substring window requires adjacency and misses gapped matches. Minimum letter counts ignore order: ab and ba share two letters but the longest ordered sequence has length one.',
+  }
+)

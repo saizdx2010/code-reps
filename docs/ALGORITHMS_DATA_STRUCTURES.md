@@ -61,3 +61,14 @@ not learner transfer or learning effectiveness.
 The companion **Pattern Recognition** track starts with **Recognize the pattern**: “See the shape, then solve the problem.” Its story-based questions ask learners to choose and justify a tool from the contract, including misleading similarities. Then an opening rep and interleaved existing problems invite a written choice before coding, without technique labels in stage titles. Existing rep titles, hints, and completion evidence remain shared with Problem solving; this introductory slice is not a blind assessment or a new measure of independence or retention.
 
 The **Find your way across a floor plan** stage adds the `grids` journey: ordered open neighbours, independent room counting, and a warehouse robot's fewest moves after three days. Rectangular ASCII maps use side moves only and remain unchanged. Bounds inspection and shortest-route reviews include step-by-step grid tables. A new recognition question compares shortest-route candidates; recognition remains separate from coding independence.
+
+**Harder patterns** adds `next-warmer-day` (strictly warmer future readings),
+`top-k-frequent-tags` (frequency ranking with ASCII ties), `course-order`
+(smallest eligible course first, duplicate requirements counted once), and
+`longest-shared-sequence` (ordered, possibly gapped character matches). Each has
+boundary checks, an independent reference, and a post-attempt visual trace.
+**Choose under pressure** interleaves these with earlier range-total and selection
+tasks in Pattern Recognition. Three new recognition questions compare future
+reading, dependency, and shared-sequence candidates with near-misses. These four
+applications have no new journey or recall evidence; recognition and completion
+remain separate from independent and retained fluency.
