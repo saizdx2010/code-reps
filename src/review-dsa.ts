@@ -1,6 +1,428 @@
 import type { RepDepth } from './rep-depth.ts'
 
 export const dsaDepth: Record<string, RepDepth> = {
+  'grid-fewest-steps': {
+    'reasoning': 'A FIFO frontier processes nondecreasing distances. First discovery of a cell is therefore minimal because every move costs one. Mark on discovery to avoid cycles; separate distance storage preserves the map. O(rows × columns) time and storage.',
+    'trace': '["S#E","..."]: distances fill [0,0]=0, [1,0]=1, [1,1]=2, [1,2]=3, [0,2]=4. The wall prevents the apparent two-move route. Return 4.',
+    'alternative': 'Repeated distance relaxation also finds the minimum, but may scan the map many times. DFS finds reachability; its first route is not necessarily shortest unless all alternatives are compared.',
+    'counterexample': 'Manhattan distance returns 2 for ["S#E","..."], but the answer is 4. Treating only dots as traversable rejects ["SE"], which requires 1 move.',
+    'transfer': 'Self-reviewed: some floor cells cost two units to enter. Decide why first FIFO discovery no longer proves minimum cost; original checks cover equal-cost moves only.',
+    'traceSteps': {
+      'code': [
+        'function fewestSteps(grid: string[]): number {',
+        '  const h = grid.length, w = grid[0]?.length ?? 0, d = Array.from({length:h}, () => Array<number>(w).fill(-1))',
+        '  const q: [number,number][] = []; let result = -1',
+        '  for (let r=0;r<h;r++) for (let c=0;c<w;c++) if (grid[r][c] === \'S\') { q.push([r,c]); d[r][c]=0 }',
+        '  for (let head=0;head<q.length;head++) {',
+        '    const [r,c] = q[head]',
+        '    if (grid[r][c] === \'E\') { result=d[r][c]; break }',
+        '    for (const [dr,dc] of [[-1,0],[0,1],[1,0],[0,-1]]) {',
+        '      const nr=r+dr,nc=c+dc',
+        '      if (nr>=0 && nr<h && nc>=0 && nc<w && grid[nr][nc]!==\'#\' && d[nr][nc]===-1) { d[nr][nc]=d[r][c]+1; q.push([nr,nc]) }',
+        '    }',
+        '  }',
+        '  return result',
+        '}'
+      ],
+      'input': 'grid = ["S#E","..."]',
+      'steps': [
+        {
+          'line': 3,
+          'vars': {
+            'distance': 0
+          },
+          'structure': {
+            'kind': 'table',
+            'name': 'distance',
+            'cells': [
+              [
+                0,
+                '#',
+                null
+              ],
+              [
+                null,
+                null,
+                null
+              ]
+            ],
+            'current': [
+              0,
+              0
+            ]
+          },
+          'note': 'Seed S with zero moves.'
+        },
+        {
+          'line': 9,
+          'vars': {
+            'distance': 1
+          },
+          'structure': {
+            'kind': 'table',
+            'name': 'distance',
+            'cells': [
+              [
+                0,
+                '#',
+                null
+              ],
+              [
+                1,
+                null,
+                null
+              ]
+            ],
+            'current': [
+              1,
+              0
+            ],
+            'reads': [
+              [
+                0,
+                0
+              ]
+            ]
+          },
+          'note': 'Discover [1,0] from the previous distance 0; record 1 moves.'
+        },
+        {
+          'line': 9,
+          'vars': {
+            'distance': 2
+          },
+          'structure': {
+            'kind': 'table',
+            'name': 'distance',
+            'cells': [
+              [
+                0,
+                '#',
+                null
+              ],
+              [
+                1,
+                2,
+                null
+              ]
+            ],
+            'current': [
+              1,
+              1
+            ],
+            'reads': [
+              [
+                1,
+                0
+              ]
+            ]
+          },
+          'note': 'Discover [1,1] from the previous distance 1; record 2 moves.'
+        },
+        {
+          'line': 9,
+          'vars': {
+            'distance': 3
+          },
+          'structure': {
+            'kind': 'table',
+            'name': 'distance',
+            'cells': [
+              [
+                0,
+                '#',
+                null
+              ],
+              [
+                1,
+                2,
+                3
+              ]
+            ],
+            'current': [
+              1,
+              2
+            ],
+            'reads': [
+              [
+                1,
+                1
+              ]
+            ]
+          },
+          'note': 'Discover [1,2] from the previous distance 2; record 3 moves.'
+        },
+        {
+          'line': 9,
+          'vars': {
+            'distance': 4
+          },
+          'structure': {
+            'kind': 'table',
+            'name': 'distance',
+            'cells': [
+              [
+                0,
+                '#',
+                4
+              ],
+              [
+                1,
+                2,
+                3
+              ]
+            ],
+            'current': [
+              0,
+              2
+            ],
+            'reads': [
+              [
+                1,
+                2
+              ]
+            ]
+          },
+          'note': 'Discover [0,2] from the previous distance 3; record 4 moves.'
+        },
+        {
+          'line': 12,
+          'vars': {
+            'result': 4
+          },
+          'structure': {
+            'kind': 'table',
+            'name': 'distance',
+            'cells': [
+              [
+                0,
+                '#',
+                4
+              ],
+              [
+                1,
+                2,
+                3
+              ]
+            ]
+          },
+          'note': 'E is reached at distance 4; all earlier frontier cells have smaller distances.'
+        }
+      ]
+    }
+  },
+  'grid-count-rooms': {
+    'reasoning': 'Scan every cell and start a traversal only at unseen floor. The traversal marks exactly that room, so each room contributes once. A queue or iterative stack works in O(rows × columns) time and storage.',
+    'trace': '[".#","#."] contains two isolated dots. Starting at [0,0] cannot reach [1,1] by side moves; the scan later counts the second room. Result 2.',
+    'alternative': 'Union-find joins side-adjacent floor cells, then counts distinct roots. It needs more bookkeeping; recursive DFS is concise but can exhaust the call stack on larger maps.',
+    'counterexample': 'Counting dots returns 4 for ["..",".."], but all four form one room. Forgetting visited state repeats forever around that square.',
+    'transfer': 'Self-reviewed: return room areas in descending order. Decide how to accumulate area and order results; original checks establish only room counts.'
+  },
+  'grid-open-neighbours': {
+    'reasoning': 'Check the origin before considering its four offsets. Each candidate is read only inside both dimensions, and appending in offset order gives the required order. O(1) time and storage.',
+    'trace': 'At [0,1] in ["...",".#.","..."]: up is outside, right [0,2] is open, down [1,1] is a wall, left [0,0] is open. Return [[0,2],[0,0]].',
+    'alternative': 'Four explicit branches are equally constant-time; an offset list centralizes the order and reduces copied boundary logic.',
+    'counterexample': 'Checking column against row count fails on ["..."] at [0,1]. Diagonal offsets incorrectly connect [".#","#."].',
+    'transfer': 'Self-reviewed: allow eight directions and define their output order. Original checks do not validate the new adjacency rule.',
+    'traceSteps': {
+      'code': [
+        'function openNeighbours(grid: string[], position: [number, number]): [number, number][] {',
+        '  const [r,c] = position, h = grid.length, w = grid[0]?.length ?? 0',
+        '  if (r < 0 || r >= h || c < 0 || c >= w) return []',
+        '  const result: [number, number][] = []',
+        '  for (const [dr,dc] of [[-1,0],[0,1],[1,0],[0,-1]]) {',
+        '    const nr = r + dr, nc = c + dc',
+        '    if (nr >= 0 && nr < h && nc >= 0 && nc < w && grid[nr][nc] === \'.\') result.push([nr,nc])',
+        '  }',
+        '  return result',
+        '}'
+      ],
+      'input': 'grid = ["...",".#.","..."], position = [0,1]',
+      'steps': [
+        {
+          'line': 3,
+          'vars': {
+            'origin': '[0,1]',
+            'result': '[]'
+          },
+          'structure': {
+            'kind': 'table',
+            'name': 'inspection',
+            'cells': [
+              [
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                '#',
+                null
+              ],
+              [
+                null,
+                null,
+                null
+              ]
+            ]
+          },
+          'note': 'Start with an empty result; # marks the wall. Unfilled cells have not been tested.'
+        },
+        {
+          'line': 6,
+          'vars': {
+            'result': '[]'
+          },
+          'structure': {
+            'kind': 'table',
+            'name': 'inspection',
+            'cells': [
+              [
+                null,
+                null,
+                null
+              ],
+              [
+                null,
+                '#',
+                null
+              ],
+              [
+                null,
+                null,
+                null
+              ]
+            ]
+          },
+          'note': 'Up [-1,1] is outside the grid; read no cell.'
+        },
+        {
+          'line': 6,
+          'vars': {
+            'result': '[[0,2]]'
+          },
+          'structure': {
+            'kind': 'table',
+            'name': 'inspection',
+            'cells': [
+              [
+                null,
+                null,
+                'open'
+              ],
+              [
+                null,
+                '#',
+                null
+              ],
+              [
+                null,
+                null,
+                null
+              ]
+            ],
+            'current': [
+              0,
+              2
+            ]
+          },
+          'note': 'Right [0,2] is inside and open; append it.'
+        },
+        {
+          'line': 6,
+          'vars': {
+            'result': '[[0,2]]'
+          },
+          'structure': {
+            'kind': 'table',
+            'name': 'inspection',
+            'cells': [
+              [
+                null,
+                null,
+                'open'
+              ],
+              [
+                null,
+                'wall',
+                null
+              ],
+              [
+                null,
+                null,
+                null
+              ]
+            ],
+            'current': [
+              1,
+              1
+            ]
+          },
+          'note': 'Down [1,1] is inside but blocked; append nothing.'
+        },
+        {
+          'line': 6,
+          'vars': {
+            'result': '[[0,2],[0,0]]'
+          },
+          'structure': {
+            'kind': 'table',
+            'name': 'inspection',
+            'cells': [
+              [
+                'open',
+                null,
+                'open'
+              ],
+              [
+                null,
+                'wall',
+                null
+              ],
+              [
+                null,
+                null,
+                null
+              ]
+            ],
+            'current': [
+              0,
+              0
+            ]
+          },
+          'note': 'Left [0,0] is inside and open; append after right.'
+        },
+        {
+          'line': 8,
+          'vars': {
+            'result': '[[0,2],[0,0]]'
+          },
+          'structure': {
+            'kind': 'table',
+            'name': 'inspection',
+            'cells': [
+              [
+                'open',
+                null,
+                'open'
+              ],
+              [
+                null,
+                'wall',
+                null
+              ],
+              [
+                null,
+                null,
+                null
+              ]
+            ]
+          },
+          'note': 'Return right then left; up was outside and down was blocked.'
+        }
+      ]
+    }
+  },
 'quiet-sensor-span': {
   'reasoning': 'A sliding span tracks exactly its noisy readings. Shrinking until the count is allowed restores validity; the longest valid span ending at each right position includes every possible optimum. O(n) time and O(1) extra storage.',
   'trace': 'For [5,5,6,5], threshold 5 and allowance 0, lengths grow to 2, then the 6 forces the left boundary past it; the final length is 1. Return 2.',
@@ -1786,6 +2208,39 @@ export const dsaDepth: Record<string, RepDepth> = {
 }
 
 export const dsaGuides = {
+  'grid-fewest-steps': {
+    'plan': [
+      'What must the result minimize? Name two routes of different lengths and a map with no possible route.',
+      'Name a boundary before coding.'
+    ],
+    'explanation': [
+      'Explain why your result matches the movement rules and preserves input.',
+      'State time and storage costs; checks do not prove the approach or complexity.'
+    ],
+    'example': 'A FIFO frontier processes nondecreasing distances. First discovery of a cell is therefore minimal because every move costs one. Mark on discovery to avoid cycles; separate distance storage preserves the map. O(rows × columns) time and storage. ["S#E","..."]: distances fill [0,0]=0, [1,0]=1, [1,1]=2, [1,2]=3, [0,2]=4. The wall prevents the apparent two-move route. Return 4.'
+  },
+  'grid-count-rooms': {
+    'plan': [
+      'What makes two floor cells belong to the same room? Name a small map that challenges your counting rule.',
+      'Name a boundary before coding.'
+    ],
+    'explanation': [
+      'Explain why your result matches the movement rules and preserves input.',
+      'State time and storage costs; checks do not prove the approach or complexity.'
+    ],
+    'example': 'Scan every cell and start a traversal only at unseen floor. The traversal marks exactly that room, so each room contributes once. A queue or iterative stack works in O(rows × columns) time and storage. [".#","#."] contains two isolated dots. Starting at [0,0] cannot reach [1,1] by side moves; the scan later counts the second room. Result 2.'
+  },
+  'grid-open-neighbours': {
+    'plan': [
+      'Which row and column inequalities make a candidate safe to read? How will you preserve the requested order?',
+      'Name a boundary before coding.'
+    ],
+    'explanation': [
+      'Explain why your result matches the movement rules and preserves input.',
+      'State time and storage costs; checks do not prove the approach or complexity.'
+    ],
+    'example': 'Check the origin before considering its four offsets. Each candidate is read only inside both dimensions, and appending in offset order gives the required order. O(1) time and storage. At [0,1] in ["...",".#.","..."]: up is outside, right [0,2] is open, down [1,1] is a wall, left [0,0] is open. Return [[0,2],[0,0]].'
+  },
 'quiet-sensor-span': {
   'plan': [
     'Which spans qualify? What boundary would expose treating equality incorrectly?',

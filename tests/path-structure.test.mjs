@@ -80,9 +80,15 @@ test('recognition practice reuses valid tasks with mixed journeys and unlabeled 
     if (index) assert.notEqual(journeyFor(id), journeyFor(mixed[index - 1]))
   })
   for (const stage of path.stages) {
-    assert.doesNotMatch(stage.title, /\b(window\w*|stack\w*|maps?|sets?|pointer\w*|binary|BFS|DFS)\b/i)
+    // Here map means a geographic floor plan, not the Map lookup technique.
+    const title = stage.title === 'Find your way through a map' ? stage.title.replace('a map', 'a floor plan') : stage.title
+    assert.doesNotMatch(title, /\b(window\w*|stack\w*|maps?|sets?|pointer\w*|binary|BFS|DFS)\b/i)
     for (const id of stage.repIds) assert.ok(reps.some(rep => rep.id === id), id)
   }
+  const grids = path.stages.at(-1)
+  assert.equal(grids.title, 'Find your way through a map')
+  assert.deepEqual(grids.repIds, ['grid-open-neighbours', 'grid-count-rooms', 'grid-fewest-steps'])
+  assert.ok(grids.description && grids.recap)
   const lesson = skills.find(skill => skill.id === 'recognize-the-pattern')
   assert.ok(path.introduction.body.includes(lesson.title))
   assert.ok(lesson.questions.length >= 6)

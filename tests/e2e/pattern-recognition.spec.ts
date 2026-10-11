@@ -29,7 +29,7 @@ for (const width of [1280, 390]) {
       await expect(field.getByRole('status')).toContainText('Correct prediction.')
     }
     await page.reload()
-    await expect(page.locator('.lesson-feedback[data-state="success"]')).toHaveCount(10)
+    await expect(page.locator('.lesson-feedback[data-state="success"]')).toHaveCount(lesson.questions.length)
     await page.getByRole('navigation', { name: 'Lesson sections' }).getByRole('button', { name: 'Practice', exact: true }).click()
     await page.locator('.rep-links button').first().click()
     await expect(page).toHaveURL(/practice\/algo-sorted-pair/)
