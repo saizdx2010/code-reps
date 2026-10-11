@@ -59,3 +59,7 @@ Object.assign(dsaSolutions, {
   'course-order': 'function courseOrder(courseCount: number, prerequisites: [number,number][]): number[] { const done = new Set<number>(), result:number[]=[]; while(done.size<courseCount) { let found=-1; for(let c=0;c<courseCount;c++) if(!done.has(c)&&prerequisites.every(([course,p])=>course!==c||done.has(p))) { found=c; break } if(found<0)return []; done.add(found);result.push(found) } return result }',
   'longest-shared-sequence': 'function longestSharedSequence(left: string, right: string): number { const memo=new Map<string,number>(); function solve(i:number,j:number):number { if(i===left.length||j===right.length)return 0; const key=i+","+j; if(memo.has(key))return memo.get(key)!; const n=left[i]===right[j]?1+solve(i+1,j+1):Math.max(solve(i+1,j),solve(i,j+1));memo.set(key,n);return n } return solve(0,0) }',
 })
+
+dsaSolutions['puzzle-parse-part-one'] = 'function strongestTotal(input) { const trays = input.split("\\n").flatMap(line => { const tokens = line.match(/-?\\d+/g); return tokens ? [tokens.map(Number)] : [] }); return trays.reduce((total, tray) => { const peak = tray.reduce((a,b) => a > b ? a : b); return total + peak }, 0) }'
+
+dsaSolutions['puzzle-adapt-part-two'] = 'function nearPeakCount(input) { const trays = input.split("\\n").flatMap(line => { const tokens = line.match(/-?\\d+/g); return tokens ? [tokens.map(Number)] : [] }); return trays.reduce((total, tray) => { const peak = tray.reduce((a,b) => a > b ? a : b); return total + tray.reduce((count, value) => count + Number(value >= peak - 2), 0) }, 0) }'

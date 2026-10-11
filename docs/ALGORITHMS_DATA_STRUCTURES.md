@@ -72,3 +72,5 @@ tasks in Pattern Recognition. Three new recognition questions compare future
 reading, dependency, and shared-sequence candidates with near-misses. These four
 applications have no new journey or recall evidence; recognition and completion
 remain separate from independent and retained fluency.
+
+The **Solve a two-part puzzle** stage uses an original greenhouse lamp log. Both function reps parse the same newline-separated tray readings; part 1 sums local maxima and part 2 counts occurrences within two units of each local maximum. Reviews show text becoming grouped numeric readings. The related part 2 encourages parser reuse and is adaptation practice, not a distinct delayed-recall task or retained-fluency claim. A recognition question contrasts preserving tray boundaries and duplicates with lossy shapes.

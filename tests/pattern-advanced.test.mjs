@@ -45,7 +45,7 @@ test('checks expose strict-warmth, cutoff ties, eligible ordering, cycles, and s
 
 test('new mixed stage alternates patterns and keeps every new rep in Problem solving', () => {
   const recognition = paths.find(path => path.id === 'pattern-recognition')
-  const stage = recognition.stages.at(-1)
+  const stage = recognition.stages.find(stage => stage.title === 'Choose under pressure')
   assert.equal(stage.title, 'Choose under pressure')
   assert.deepEqual(stage.repIds, ['next-warmer-day', 'top-k-frequent-tags', 'algo-prefix-sums', 'course-order', 'longest-shared-sequence', 'algo-subsets'])
   const patterns = { 'next-warmer-day': 'monotonic', 'top-k-frequent-tags': 'ranking', 'algo-prefix-sums': 'prefix', 'course-order': 'dependency', 'longest-shared-sequence': 'dp', 'algo-subsets': 'enumeration' }

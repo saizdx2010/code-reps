@@ -122,3 +122,6 @@ export function relatedHelp(repId: string, failedNames: string[]) {
   const extra = /empty|blank|whitespace|trim|case/.test(names) ? skills.find(s => s.id === 'text') : /page|query|invalid|null|integer/.test(names) ? skills.find(s => s.id === 'validation') : /input|mutat|preserv/.test(names) ? skills.find(s => s.id === 'arrays') : undefined
   return [...new Map([...(extra ? [extra] : []), ...matching].map(s => [s.id, s])).values()].slice(0, 3)
 }
+
+// The two-part puzzle intentionally has no recallVariants entry: adapting the same
+// log is not a distinct delayed application and must not establish retention.
