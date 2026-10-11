@@ -59,3 +59,33 @@ export async function chooseSegment(page: Page, group: string, label: string) {
   await button.click()
   await expect(button).toHaveAttribute('aria-pressed', 'true')
 }
+
+/** Fail when two horizontal dividers stack with nothing visible between them. */
+export async function expectNoStackedDividers(page: Page, label = page.url()) {
+  const stacked = await page.evaluate(() => {
+    const lines: { y: number, left: number, right: number, label: string }[] = []
+    for (const element of document.querySelectorAll<HTMLElement>('body *')) {
+      const box = element.getBoundingClientRect()
+      if (!box.width || !box.height) continue
+      const style = getComputedStyle(element)
+      if (!element.checkVisibility({ opacityProperty: true, visibilityProperty: true })) continue
+      const label = `${element.tagName.toLowerCase()}.${[...element.classList].join('.')}`
+      if (parseFloat(style.borderTopWidth) > 0 && style.borderTopStyle !== 'none' && style.borderTopColor !== 'rgba(0, 0, 0, 0)' && style.borderLeftStyle === 'none') lines.push({ y: box.top + scrollY, left: box.left, right: box.right, label })
+      if (parseFloat(style.borderBottomWidth) > 0 && style.borderBottomStyle !== 'none' && style.borderBottomColor !== 'rgba(0, 0, 0, 0)' && style.borderLeftStyle === 'none') lines.push({ y: box.bottom + scrollY, left: box.left, right: box.right, label })
+    }
+    const content = [...document.querySelectorAll<HTMLElement>('body *')].filter(element => element.checkVisibility() && ([...element.childNodes].some(node => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) || ['BUTTON', 'INPUT', 'IMG', 'SVG', 'PROGRESS'].includes(element.tagName.toUpperCase())))
+      .map(element => element.getBoundingClientRect()).filter(box => box.width && box.height).map(box => ({ top: box.top + scrollY, bottom: box.bottom + scrollY, left: box.left, right: box.right }))
+    lines.sort((a, b) => a.y - b.y)
+    const found: string[] = []
+    for (let i = 0; i < lines.length; i++) for (let j = i + 1; j < lines.length && lines[j].y - lines[i].y < 80; j++) {
+      const a = lines[i], b = lines[j]
+      if (b.y - a.y < 3 && a.label === b.label) continue
+      const left = Math.max(a.left, b.left), right = Math.min(a.right, b.right)
+      if (right - left < 40 || b.y - a.y < 1) continue
+      const between = content.some(box => box.top >= a.y - 1 && box.bottom <= b.y + 1 && box.right > left && box.left < right)
+      if (!between) found.push(`${a.label} @${Math.round(a.y)} / ${b.label} @${Math.round(b.y)}`)
+    }
+    return found
+  })
+  expect(stacked, label).toEqual([])
+}

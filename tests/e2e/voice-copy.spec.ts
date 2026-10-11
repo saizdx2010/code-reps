@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { chooseOption } from './helpers'
+import { chooseOption, expectNoStackedDividers } from './helpers'
 
 test('fresh Trail avoids a duplicate practice list and Progress explains its zeros', async ({ page }) => {
   await page.goto('/#/home')
@@ -59,4 +59,22 @@ test('task limits remain visible outside the assessment disclosure', async ({ pa
   await expect(page.locator('#brief-section .task-note')).toContainText('Numbers may be decimals as well as whole numbers.')
   await expect(page.locator('#brief-section .task-note')).toContainText('Return 0 for an empty array')
   await expect(page.locator('#brief-section summary').filter({ hasText: 'How this is checked' })).toHaveCount(1)
+})
+
+test('main pages never stack two dividers with nothing between them', async ({ page }) => {
+  await page.goto('/#/paths')
+  await page.locator('.starting-point-settings > summary').click()
+  await page.getByRole('button', { name: /Returning to coding/ }).click()
+  await page.goto('/#/practice/declare-variables')
+  await page.getByRole('button', { name: 'Plan', exact: true }).click()
+  await page.getByLabel('Your plan', { exact: true }).fill('Keep the greeting and update the name.')
+  for (const width of [1280, 375]) {
+    await page.setViewportSize({ width, height: 900 })
+    for (const hash of ['#/home', '#/paths', '#/practice', '#/progress', '#/learn']) {
+      await page.goto(`/${hash}`)
+      await expect(page.locator('h1')).toBeVisible()
+      if (hash === '#/home') await expect(page.locator('.list-group').filter({ hasText: 'Also waiting' })).toBeVisible()
+      await expectNoStackedDividers(page, `${hash} at ${width}px`)
+    }
+  }
 })

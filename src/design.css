@@ -109,7 +109,7 @@ main { max-width: var(--page-width); margin: 0 auto; padding: 32px var(--page-gu
 .filter-bar { display: flex; flex-wrap: wrap; align-items: end; gap: 14px; padding-top: 12px; }
 .filter-bar label { display: grid; gap: 7px; flex: 1 1 140px; max-width: 260px; min-width: 0; color: var(--muted); font-size: 13px; }
 .filter-bar .text-button { min-height: var(--control-height); }
-.catalog-list-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.catalog-list-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 12px; }
 .catalog-list-heading h2 { margin: 0; font-size: var(--type-section); }
 .catalog-list-heading > span { font-size: 13px; color: var(--muted); }
 .catalog-list { outline-offset: 6px; }
@@ -155,6 +155,7 @@ main { max-width: var(--page-width); margin: 0 auto; padding: 32px var(--page-gu
 .path-progress span { display: block; height: 100%; background: var(--accent); }
 .path-stages { margin-top: 24px; }
 .learn-section, .foundation-lesson { border-bottom: 1px solid var(--border); }
+.learn-section:last-child, .foundation-list > .foundation-lesson:last-child { border-bottom: 0; }
 .learn-section > summary { padding: 22px 0; cursor: pointer; }
 .learn-section > summary h2 { display: inline; font-size: var(--type-section); }
 .section-intro { color: var(--muted); }
@@ -680,6 +681,8 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 .catalog-filters { margin-bottom: 16px; }
 .catalog-filters .filter-bar { margin-bottom: 0; padding: 8px 0; }
 .catalog-list { border: 0; }
+/* Groups draw the line above themselves so the last grid row never stacks a divider on the footer; the first row doubles as the heading rule. */
+.catalog-list > .list-group { border-top: 1px solid var(--border); border-bottom: 0; }
 .catalog-list-heading { margin-bottom: 4px; }
 .catalog-start { margin-bottom: 24px; }
 .progress-main .progress-summary { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px; padding: 16px 0; margin: 0; }

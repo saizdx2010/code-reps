@@ -57,6 +57,7 @@
 .trail-aside .continue-panel .primary-button { align-self: flex-start; }
 .trail-aside .continue-panel .continue-guide { align-self: flex-start; min-height: 32px; padding: 4px 0; color: var(--feature-text); }
 .trail-aside > .text-button { margin-top: -8px; }
+.trail-aside .list-group { border-bottom: 0; }
 .trail-links { display: flex; flex-wrap: wrap; gap: 4px 20px; padding-top: 4px; border-top: 1px solid var(--border); }
 .trail-aside .info-note, .trail-aside .starting-point-settings { margin: 0; }
 @media (min-width: 1101px) {
