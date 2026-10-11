@@ -1,5 +1,10 @@
 /** Optional Indonesian glosses for rep vocabulary, keyed by the exact English term. English stays primary. */
 export const indonesianGlossary: Record<string, string> = {
+  'Boundary validation': 'memeriksa data yang belum dipercaya sebelum dipakai',
+  'Typed API': 'antarmuka yang menghubungkan input dengan tipe hasil yang tepat',
+  'Generic': 'parameter tipe yang menjaga hubungan tipe input dan output',
+  'Exhaustiveness': 'menangani semua kemungkinan varian',
+  'Type guard': 'pemeriksaan saat runtime yang mempersempit tipe nilai',
   Closure: 'fungsi yang mengingat variabel dari tempat ia dibuat',
   Reference: 'rujukan ke satu objek yang sama',
   Microtask: 'tugas yang jalan setelah skrip saat ini, sebelum timer',

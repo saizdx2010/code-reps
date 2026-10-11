@@ -3,6 +3,7 @@
 // The order here is the catalog order. Add a new rep module to this list, to src/rep-content.ts, and run `yarn content:index`.
 import { aiEraReps, coreLessons } from './ai-era-reps.ts'
 import { appReps } from './app-reps.ts'
+import { typescriptDepthReps } from './typescript-depth-reps.ts'
 import { browserStateReps } from './browser-state-reps.ts'
 import { capstoneReps } from './capstone-reps.ts'
 import { connectedFeatureReps } from './connected-feature-reps.ts'
@@ -35,6 +36,7 @@ export const repSources: { name: string; reps: Rep[]; lessons?: readonly RepSour
   { name: 'capstone-reps', reps: capstoneReps },
   { name: 'validation-reps', reps: validationReps },
   { name: 'app-reps', reps: appReps },
+  { name: 'ts-depth-reps', reps: typescriptDepthReps },
   { name: 'browser-state-reps', reps: browserStateReps },
   { name: 'dom-reps', reps: domReps },
   { name: 'connected-feature-reps', reps: connectedFeatureReps },

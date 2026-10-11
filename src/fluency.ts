@@ -46,6 +46,7 @@ export function parseFluency(raw: unknown): FluencyState {
   return raw as unknown as FluencyState
 }
 export const recallVariants: Record<string, string[]> = {
+  'typescript-boundaries': ['sensor-import-report'],
   grids: ['grid-fewest-steps', 'grid-count-rooms', 'grid-open-neighbours'],
   windows: ['shortest-run-reaching-target', 'count-unique-windows', 'algo-window-sum', 'quiet-sensor-span'],
   queues: ['parcel-loading-turns', 'ticket-service-times', 'remaining-actions'],

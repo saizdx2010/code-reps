@@ -90,7 +90,7 @@ Start with one connected plain TypeScript browser feature using the existing DOM
 - [x] Add knowledge lessons for sorting, recursion, trees, and graphs (`sorting-basics`, `recursion-basics`, `trees`, `graphs` in `src/dsa-knowledge.ts`, with discussions in `src/review-dsa-lessons.ts`).
 - [ ] Review the sorting, recursion, tree, and graph journeys for difficulty transitions and unfamiliar transfer.
 - [ ] Add independent or recall tasks to queues, two pointers, windows, or binary search only when learner observations show a specific gap. Each of those four already has guided, independent, and delayed-recall journey stages.
-- [ ] Deepen TypeScript through narrowing unknown input, discriminated unions, exhaustive handling, generics, and reusable typed APIs. Separate compile-time guarantees from behavioral checks.
+- [x] Deepen TypeScript through narrowing unknown input, discriminated unions, exhaustive handling, generics, and reusable typed APIs. Separate compile-time guarantees from behavioral checks.
 - [ ] Strengthen debugging and frontend practice with fresh contexts instead of cosmetic variants of the same problem.
 - [ ] Keep batches small and complete: a lesson where needed, guided practice, an independent application, delayed recall, reference solutions, boundaries, hints, and authored review.
 

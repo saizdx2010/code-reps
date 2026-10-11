@@ -1,3 +1,4 @@
+import { typescriptDepthSolutions } from './fixtures/typescript-depth-solutions.mjs'
 import { recallThinSolutions } from './fixtures/recall-thin-solutions.mjs'
 import { journeyPracticeSolutions } from './fixtures/journey-practice-solutions.mjs'
 import { connectedSolutionsById } from './fixtures/connected-feature-solutions.mjs'
@@ -26,6 +27,7 @@ import { testingJourneySolutions } from './fixtures/testing-journey-solutions.mj
 
 // These independent implementations check authored expected results, not learner prose.
 const solutions = {
+  ...typescriptDepthSolutions,
   ...recallThinSolutions,
   ...journeyPracticeSolutions,
   ...browserStateSolutions,

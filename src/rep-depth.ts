@@ -1,3 +1,4 @@
+import { typescriptDepth } from './review-typescript-depth.ts'
 import { journeyPracticeDepth } from './review-journey-practice.ts'
 import { connectedFeatureDepth } from './review-connected-feature.ts'
 import { testingJourneyDepth } from './review-testing-journey.ts'
@@ -37,6 +38,7 @@ export const repDepth: Record<string, RepDepth> = {
   ...appDepth,
   ...domDepth,
   ...browserStateDepth,
+  ...typescriptDepth,
   "function-returns-function": {
     "traceSteps": {"code": ["function makeAdder(amount: number): (x: number) => number {", "  return x => x + amount", "}", "function addAll(amount: number, values: number[]): number[] {", "  const add = makeAdder(amount)", "  const result = values.map(value => add(value))", "  return result", "}"], "input": "amount = 5, values = [3, -5, 0]", "steps": [
       {"line": 3, "vars": {"amount": 5}, "structure": {"kind": "array", "values": [3, -5, 0]}, "note": "addAll receives the amount 5 and three values. No adder exists yet."},
