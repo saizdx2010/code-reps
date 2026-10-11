@@ -15,6 +15,7 @@ const formProps = { fields: [
   { id: 'email', label: 'Email address', type: 'email', message: 'Enter your email address.' },
 ] }
 const markupForm = { fields: [{ id: 'name', label: 'Full name', type: 'text', message: '<b>Required</b>' }] }
+const markupLabel = { fields: [{ id: 'name', label: '<b>Name</b>', type: 'text', message: 'Enter a name.' }] }
 const disclosureProps = { label: 'Shipping details', content: 'Orders ship within two business days.', open: false }
 const tabsProps = { label: 'Account settings', tabs: [
   { id: 'profile', title: 'Profile', content: 'Edit your name.' },
@@ -36,6 +37,104 @@ const visible = (shipping: boolean, returns: boolean, warranty: boolean) => [see
 const limits = 'DOM checks run in a sandboxed frame. They establish the authored behavior and attribute contract, not screen-reader output, visual design, or real keyboard use in other browsers. Review those yourself.'
 
 export const domReps: Rep[] = [
+  {
+    id: 'dom-form-fields', title: 'Build the labelled form fields', category: 'Frontend accessibility', format: 'frontend',
+    context: 'The accessible sign-up form starts with its structure. A placeholder is not a label: a visible label element tied to its input gives every field a name that clicks, focuses, and is announced.',
+    prompt: 'Implement `mountFormFields(root, props)`. Build one form from props.fields; each field has id, label, type, and message (messages are used in the next checkpoint). Set `form.noValidate` = true so browser validation cannot block submission, and call preventDefault in a submit handler. In field order, give every input a visible label element whose for attribute matches the input id, then add a Submit button. Show no errors yet. Use data-testid values: form, field-<id> on each input, and submit on the button.',
+    brief: {
+      summary: 'Implement `mountFormFields(root, props)`. Build one form from props.fields; each field has id, label, type, and message (messages are used in the next checkpoint).',
+      rules: [
+        'Create the form with `form.noValidate` = true so browser validation cannot block submission, and call preventDefault in a submit handler.',
+        'In field order, give every input a visible label element whose for attribute matches the input id.',
+        'Add a Submit button after the last field.',
+      ],
+      edgeCases: ['Show no errors and no status yet.', 'Render labels as text, not HTML.', 'Use data-testid values: form, field-<id> on each input, and submit on the button.'],
+    },
+    example: { input: "fields name (text) and email (email)", output: 'Two labelled inputs in order, then a Submit button; no error text' },
+    note: 'The checks dispatch a submit event on the form; they cannot observe whether you called preventDefault, so review that yourself, and press the real Submit button and Enter in a field to try it. ' + limits,
+    acceptanceCriteria: ['Clicking a label focuses its input.', 'Pressing Tab reaches every field and the button in reading order with a visible focus indicator.', 'Submitting the form does not navigate away or reload the page.'],
+    domPreview: { title: 'Your form fields', description: 'Click each label, Tab through the form, and press Submit.', props: formProps, review: ['Click a label and confirm its input receives focus.', 'Tab through the form and confirm the focus indicator is always visible.', 'Press Submit and confirm the page does not reload.'] },
+    vocabulary: [{ term: 'Accessible name', meaning: 'the text assistive technology uses to identify a control, such as its label' }, { term: 'noValidate', meaning: 'a form property that turns off the browser\'s built-in validation so your own handler decides' }, { term: 'preventDefault', meaning: 'an event method that stops the browser\'s default action, here navigating on submit' }],
+    planPrompt: 'List the elements the form needs for one field and in what order they appear. Which two properties must be set so your own submit handler is in charge?',
+    starter: 'type FormProps = { fields: { id: string; label: string; type: string; message: string }[] }\n\nfunction mountFormFields(root: HTMLElement, props: FormProps): void {\n  // Build the form with document.createElement and attach it to root.\n  // Use data-testid values: form, field-<id>, submit.\n  root.replaceChildren()\n}\n',
+    functionName: 'mountFormFields', preserveInput: true,
+    hints: ['Create the form first and set its validation property before adding anything to it.', 'For each field, create a label and an input, link them with the same id value, then add both to the form.', 'Add the Submit button after the loop so it comes last in reading order.'],
+    checks: [
+      { name: 'Builds a form with browser validation off', ...dom(formProps, [], [see('form', 'tag', 'form'), see('form', 'prop:noValidate', true)]) },
+      { name: 'Each input has a linked visible label', ...dom(formProps, [], [see('field-name', 'label', 'Full name'), see('field-email', 'label', 'Email address')]) },
+      { name: 'Inputs use the requested types', ...dom(formProps, [], [see('field-name', 'prop:type', 'text'), see('field-email', 'prop:type', 'email')]) },
+      { name: 'Has a Submit button of type submit', ...dom(formProps, [], [see('submit', 'tag', 'button'), see('submit', 'prop:type', 'submit'), see('submit', 'text', 'Submit')]) },
+      { name: 'Shows no errors or status before submission', ...dom(formProps, [], [see('error-name', 'exists', false), see('error-email', 'exists', false), see('field-name', 'attr:aria-invalid', null), see('field-name', 'attr:aria-describedby', null), see('status', 'exists', false)]) },
+      { name: 'Renders one input per field and keeps typed text on submit', ...dom(formProps, [type('field-name', 'Ada'), submit('form')], [see('field-name', 'count', 1), see('field-email', 'count', 1), see('field-name', 'prop:value', 'Ada'), see('error-name', 'exists', false)]) },
+      { name: 'Label text stays text', ...dom(markupLabel, [], [see('field-name', 'label', '<b>Name</b>'), see('field-name', 'prop:type', 'text')]) },
+    ],
+  },
+  {
+    id: 'dom-form-errors', title: 'Link an error to each empty field', category: 'Frontend accessibility', format: 'frontend',
+    context: 'The labelled form now needs to report problems. A visible message only helps screen reader users if the field points at it, and a fixed field must not keep stale error state. Your earlier draft is not copied; the starter carries forward a working form to extend.',
+    prompt: 'Implement `mountFormErrors(root, props)`; the starter already builds the labelled form. On submit, treat a trimmed-empty value as invalid. For each invalid field show its message in a paragraph with id "<id>-error", set `aria-invalid`="true" on the input, and point `aria-describedby` at that paragraph. Valid fields get none of these, and fixing a field clears them. Do not move focus or report success yet.',
+    brief: {
+      summary: 'Implement `mountFormErrors(root, props)`; the starter already builds the labelled form.',
+      rules: [
+        'On submit, treat a trimmed-empty value as invalid.',
+        'For each invalid field show its message in a paragraph with id "<id>-error", set `aria-invalid`="true" on the input, and point `aria-describedby` at that paragraph.',
+        'Valid fields get no error paragraph, no `aria-invalid`, and no `aria-describedby`; fixing a field clears all three.',
+      ],
+      edgeCases: ['Resubmitting must not duplicate an error paragraph.', 'Never discard or rewrite what the person typed.', 'Use data-testid="error-<id>" on each error paragraph. Do not move focus or report success yet.'],
+    },
+    example: { input: "submit with name '  ' and email 'ada@example.com'", output: 'Error under Full name with aria-invalid and aria-describedby; Email address untouched' },
+    note: 'Render messages as text, not HTML. The checks dispatch a submit event on the form; they do not press the real Submit button or Enter inside a field, so try those yourself. ' + limits,
+    acceptanceCriteria: ['Resubmitting after fixing a field removes that field\'s error and its ARIA attributes.', 'Pressing Enter inside a field shows the same errors as clicking Submit.', 'Test with a real screen reader before claiming it announces the error well.'],
+    domPreview: { title: 'Your form errors', description: 'Submit the empty form, fix one field, and submit again.', props: formProps, review: ['Submit with both fields empty and read each error under its field.', 'Fix one field, submit again, and confirm only the other error remains.', 'Listen with a screen reader to what is announced for a field with an error. Checks cannot judge this.'] },
+    vocabulary: [{ term: 'aria-describedby', meaning: 'an attribute naming the element whose text describes this control' }, { term: 'aria-invalid', meaning: 'an attribute telling assistive technology a field\'s value is not acceptable' }],
+    planPrompt: 'List the attributes and elements that must change for one invalid field, and the ones that must be removed when it becomes valid. Where will one helper apply or clear them?',
+    starter: 'type FormProps = { fields: { id: string; label: string; type: string; message: string }[] }\n\nfunction mountFormErrors(root: HTMLElement, props: FormProps): void {\n  root.replaceChildren()\n  const form = document.createElement(\'form\')\n  form.noValidate = true\n  form.setAttribute(\'data-testid\', \'form\')\n  for (const field of props.fields) {\n    const wrap = document.createElement(\'div\')\n    const label = document.createElement(\'label\')\n    label.htmlFor = field.id\n    label.textContent = field.label\n    const input = document.createElement(\'input\')\n    input.id = field.id\n    input.type = field.type\n    input.setAttribute(\'data-testid\', \'field-\' + field.id)\n    wrap.append(label, input)\n    form.append(wrap)\n  }\n  const button = document.createElement(\'button\')\n  button.type = \'submit\'\n  button.textContent = \'Submit\'\n  button.setAttribute(\'data-testid\', \'submit\')\n  form.append(button)\n  form.addEventListener(\'submit\', event => {\n    event.preventDefault()\n    // Validate each field here and show or clear its error.\n  })\n  root.append(form)\n}\n',
+    functionName: 'mountFormErrors', preserveInput: true,
+    hints: ['Keep the form you built once and update it on submit; rebuilding it would throw away typed values.', 'Write one helper that applies or clears the error state for a single field, so the invalid and valid paths cannot drift apart.', 'Remember each field\'s error paragraph so a second submit updates it instead of adding another.'],
+    checks: [
+      { name: 'Starts with no errors', ...dom(formProps, [], [see('error-name', 'exists', false), see('error-email', 'exists', false), see('field-name', 'attr:aria-invalid', null)]) },
+      { name: 'Empty submit links every error', ...dom(formProps, [submit('form')], [see('error-name', 'text', 'Enter your full name.'), see('error-email', 'text', 'Enter your email address.'), see('field-name', 'attr:aria-invalid', 'true'), see('field-name', 'describedBy', ['Enter your full name.']), see('field-email', 'describedBy', ['Enter your email address.'])]) },
+      { name: 'Error paragraphs use the id pattern', ...dom(formProps, [submit('form')], [see('error-name', 'attr:id', 'name-error'), see('error-email', 'attr:id', 'email-error'), see('field-name', 'attr:aria-describedby', 'name-error')]) },
+      { name: 'Only the invalid field gets an error', ...dom(formProps, [type('field-name', 'Ada'), submit('form')], [see('error-name', 'exists', false), see('field-name', 'attr:aria-invalid', null), see('field-name', 'attr:aria-describedby', null), see('error-email', 'exists', true), see('field-name', 'prop:value', 'Ada')]) },
+      { name: 'Whitespace-only text is invalid and is not rewritten', ...dom(formProps, [type('field-name', '   '), type('field-email', 'ada@example.com'), submit('form')], [see('error-name', 'text', 'Enter your full name.'), see('field-name', 'prop:value', '   '), see('field-email', 'attr:aria-invalid', null)]) },
+      { name: 'Fixing a field clears its error and attributes', ...dom(formProps, [submit('form'), type('field-name', 'Ada'), type('field-email', 'ada@example.com'), submit('form')], [see('error-name', 'exists', false), see('error-email', 'exists', false), see('field-name', 'attr:aria-invalid', null), see('field-email', 'attr:aria-invalid', null), see('field-email', 'attr:aria-describedby', null)]) },
+      { name: 'Submitting twice does not duplicate errors', ...dom(formProps, [submit('form'), submit('form')], [see('error-name', 'count', 1), see('error-email', 'count', 1), see('field-name', 'describedBy', ['Enter your full name.'])]) },
+      { name: 'Error messages containing markup remain text', ...dom(markupForm, [submit('form')], [see('error-name', 'text', '<b>Required</b>'), see('error-name', 'prop:childElementCount', 0), see('field-name', 'describedBy', ['<b>Required</b>'])]) },
+    ],
+  },
+  {
+    id: 'dom-form-submit', title: 'Focus the first problem and confirm success', category: 'Frontend accessibility', format: 'frontend',
+    context: 'Linked errors are not enough on their own: keyboard and screen reader users also need focus to move to the first problem, and a clear confirmation once everything is valid. Your earlier draft is not copied; the starter carries forward a working form with linked errors to extend.',
+    prompt: 'Implement `mountFormSubmit(root, props)`; the starter already links errors. After validating every field, move focus to the first invalid input in field order. When every field is valid, show "Form accepted." in a status paragraph, and remove that status whenever a later submit finds a problem. Use data-testid="status" on the status paragraph.',
+    brief: {
+      summary: 'Implement `mountFormSubmit(root, props)`; the starter already links errors.',
+      rules: [
+        'After validating every field, move focus to the first invalid input in field order.',
+        'When every field is valid, show "Form accepted." in a status paragraph.',
+        'Remove the status whenever a later submit finds a problem.',
+      ],
+      edgeCases: ['Submitting twice must not duplicate the status.', 'Never discard what the person typed.', 'Use data-testid="status" on the status paragraph.'],
+    },
+    example: { input: "submit with name 'Ada' and email ''", output: 'Error under Email address and focus on Email address; no status' },
+    note: 'The checks dispatch a submit event on the form; they do not press the real Submit button, so try it and watch where focus lands. ' + limits,
+    acceptanceCriteria: ['After a failed submit, focus is visibly on the first invalid field.', 'Fixing the first field and submitting again moves focus to the next invalid one.', 'Use a real screen reader to confirm the confirmation is announced; checks cannot.'],
+    domPreview: { title: 'Your complete form', description: 'Submit empty, fix one field at a time, and finish with a valid form.', props: formProps, review: ['Submit with both fields empty and check that focus lands on the first field.', 'Fill every field and confirm the confirmation appears.', 'Listen to what a screen reader announces for the confirmation. Checks cannot judge this.'] },
+    vocabulary: [{ term: 'Focus', meaning: 'the element that receives keyboard input right now' }, { term: 'Status message', meaning: 'text that confirms a result to every user, including those using assistive technology' }],
+    planPrompt: 'In what order will you validate fields so you can remember the first invalid one? When exactly do you move focus, and when do you show or remove the confirmation?',
+    starter: 'type FormProps = { fields: { id: string; label: string; type: string; message: string }[] }\n\nfunction mountFormSubmit(root: HTMLElement, props: FormProps): void {\n  root.replaceChildren()\n  const form = document.createElement(\'form\')\n  form.noValidate = true\n  form.setAttribute(\'data-testid\', \'form\')\n  const rows = props.fields.map(field => {\n    const wrap = document.createElement(\'div\')\n    const label = document.createElement(\'label\')\n    label.htmlFor = field.id\n    label.textContent = field.label\n    const input = document.createElement(\'input\')\n    input.id = field.id\n    input.type = field.type\n    input.setAttribute(\'data-testid\', \'field-\' + field.id)\n    wrap.append(label, input)\n    form.append(wrap)\n    return { field, wrap, input, error: null as HTMLElement | null }\n  })\n  const button = document.createElement(\'button\')\n  button.type = \'submit\'\n  button.textContent = \'Submit\'\n  button.setAttribute(\'data-testid\', \'submit\')\n  form.append(button)\n  function setError(row: typeof rows[number], invalid: boolean) {\n    if (!invalid) {\n      row.error?.remove()\n      row.error = null\n      row.input.removeAttribute(\'aria-invalid\')\n      row.input.removeAttribute(\'aria-describedby\')\n      return\n    }\n    if (!row.error) {\n      row.error = document.createElement(\'p\')\n      row.error.id = row.field.id + \'-error\'\n      row.error.setAttribute(\'data-testid\', \'error-\' + row.field.id)\n      row.wrap.append(row.error)\n    }\n    row.error.textContent = row.field.message\n    row.input.setAttribute(\'aria-invalid\', \'true\')\n    row.input.setAttribute(\'aria-describedby\', row.error.id)\n  }\n  form.addEventListener(\'submit\', event => {\n    event.preventDefault()\n    for (const row of rows) setError(row, row.input.value.trim() === \'\')\n    // Move focus to the first invalid input, or show the confirmation.\n  })\n  root.append(form)\n}\n',
+    functionName: 'mountFormSubmit', preserveInput: true,
+    hints: ['Remember the first invalid input while you validate, but wait until every field has been updated before you move focus.', 'Create the status paragraph once, give it its test id, and add or remove it rather than rebuilding it.', 'The two outcomes are exclusive: a problem means focus and no status; no problem means a status and no focus move.'],
+    checks: [
+      { name: 'Starts with no status and no focus move', ...dom(formProps, [], [see('status', 'exists', false), see('field-name', 'focused', false)]) },
+      { name: 'Empty submit focuses the first field and shows no status', ...dom(formProps, [submit('form')], [see('field-name', 'focused', true), see('field-email', 'focused', false), see('status', 'exists', false), see('error-name', 'exists', true)]) },
+      { name: 'Focus lands on the first invalid field even when it is later', ...dom(formProps, [type('field-name', 'Ada'), submit('form')], [see('field-email', 'focused', true), see('field-name', 'focused', false), see('error-name', 'exists', false)]) },
+      { name: 'Focus moves to the field that is still invalid', ...dom(formProps, [submit('form'), type('field-name', 'Ada'), submit('form')], [see('field-email', 'focused', true), see('field-name', 'focused', false), see('error-email', 'exists', true)]) },
+      { name: 'All valid fields report success', ...dom(formProps, [type('field-name', 'Ada'), type('field-email', 'ada@example.com'), submit('form')], [see('status', 'text', 'Form accepted.'), see('error-name', 'exists', false), see('error-email', 'exists', false)]) },
+      { name: 'Fixing every field clears errors and reports success', ...dom(formProps, [submit('form'), type('field-name', 'Ada'), type('field-email', 'ada@example.com'), submit('form')], [see('error-name', 'exists', false), see('field-email', 'attr:aria-invalid', null), see('status', 'text', 'Form accepted.')]) },
+      { name: 'Submitting twice does not duplicate the status', ...dom(formProps, [type('field-name', 'Ada'), type('field-email', 'ada@example.com'), submit('form'), submit('form')], [see('status', 'count', 1), see('status', 'text', 'Form accepted.')]) },
+      { name: 'A later invalid submit removes the status and keeps typed text', ...dom(formProps, [type('field-name', 'Ada'), type('field-email', 'ada@example.com'), submit('form'), type('field-name', '  '), submit('form')], [see('status', 'exists', false), see('field-name', 'focused', true), see('field-name', 'prop:value', '  '), see('field-email', 'prop:value', 'ada@example.com')]) },
+    ],
+  },
   {
     id: 'dom-accessible-form', title: 'Build an accessible form with linked errors', category: 'Frontend accessibility', format: 'frontend',
     context: 'A sign-up form shows an error under each empty field. Sighted users see the red text; people using a screen reader only hear it if the error is programmatically linked to the field and focus moves to the problem.',

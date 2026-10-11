@@ -110,7 +110,7 @@ Verified by reading `src/learning.ts` (`journeys`), `src/knowledge.ts` and `src/
 | Trees | No skill/lesson ID | `algo-tree-depth` (`src/learning.ts:25`) | `tree-depth-sum` | `tree-value-path` | No |
 | Graphs | No skill/lesson ID | `algo-graph-reachable` (`src/learning.ts:26`) | `graph-shortest-hops` | `graph-connected-groups` | No |
 
-Notes on linked reps that are not journey stages: queues also has `ds-stack-operations` and `remaining-actions`; DOM interactions has `dom-disclosure`, `dom-accessible-form`, `dom-live-search`, `dom-tabs` (`src/knowledge.ts`, `frontend` lesson). The queue, two-pointer, window, and binary-search journey reps are linked in their skill `repIds` and the Problem solving path. Their checks verify outputs and unchanged input; they do not establish that a learner used the named technique or its time bound.
+Notes on linked reps that are not journey stages: queues also has `ds-stack-operations` and `remaining-actions`; DOM interactions has `dom-disclosure`, the form checkpoints `dom-form-fields`, `dom-form-errors`, `dom-form-submit`, `dom-accessible-form`, `dom-live-search`, `dom-tabs` (`src/knowledge.ts`, `frontend` lesson). The queue, two-pointer, window, and binary-search journey reps are linked in their skill `repIds` and the Problem solving path. Their checks verify outputs and unchanged input; they do not establish that a learner used the named technique or its time bound.
 
 Thin areas:
 
