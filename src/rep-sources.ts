@@ -13,6 +13,7 @@ import { dsaReps } from './dsa-reps.ts'
 import { fluencyReps } from './fluency-reps.ts'
 import { foundationReps, foundations } from './foundations.ts'
 import { journeyReps } from './journey-reps.ts'
+import { maintenanceJourneyReps } from './maintenance-journey-reps.ts'
 import { practicalReps } from './practical-concepts.ts'
 import { richReps } from './rich-reps.ts'
 import { testingJourneyReps } from './testing-journey-reps.ts'
@@ -39,4 +40,5 @@ export const repSources: { name: string; reps: Rep[]; lessons?: readonly RepSour
   { name: 'dom-reps', reps: domReps },
   { name: 'connected-feature-reps', reps: connectedFeatureReps },
   { name: 'testing-journey-reps', reps: testingJourneyReps },
+  { name: 'maintenance-journey-reps', reps: maintenanceJourneyReps },
 ]

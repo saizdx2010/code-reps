@@ -1,6 +1,7 @@
 import { journeyPracticeDepth } from './review-journey-practice.ts'
 import { connectedFeatureDepth } from './review-connected-feature.ts'
 import { testingJourneyDepth } from './review-testing-journey.ts'
+import { maintenanceJourneyDepth } from './review-maintenance-journey.ts'
 import { browserStateDepth } from './review-browser-state.ts'
 import { dsaDepth } from './review-dsa.ts'
 import { practicalRepDepth } from './review-practical.ts'
@@ -30,6 +31,7 @@ export const repDepth: Record<string, RepDepth> = {
   ...journeyPracticeDepth,
   ...connectedFeatureDepth,
   ...testingJourneyDepth,
+  ...maintenanceJourneyDepth,
   ...practicalRepDepth,
   ...dsaDepth,
   ...dsaAdvancedDepth,

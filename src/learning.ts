@@ -30,6 +30,7 @@ export const journeys: Journey[] = [
   { id: 'grids', title: 'Move through a grid', guided: 'grid-open-neighbours', independent: 'grid-count-rooms', recall: 'grid-fewest-steps', delayDays: 3 },
   { id: 'graphs', title: 'Explore graph connections', guided: 'algo-graph-reachable', independent: 'graph-shortest-hops', recall: 'graph-connected-groups', delayDays: 3 },
   { id: 'find-the-bug', title: 'Find and fix faulty code', guided: 'expose-page-bugs', independent: 'repair-range-label', recall: 'expose-overlap-bugs', delayDays: 3 },
+  { id: 'maintenance', title: 'Maintain unfamiliar code', guided: 'fix-quote-bug', independent: 'maintain-library-fines', recall: 'maintain-room-booking', delayDays: 3 },
   { id: 'dom-interactions', title: 'Build accessible interactions', guided: 'dom-disclosure', independent: 'dom-live-search', recall: 'dom-accordion', delayDays: 3 },
 ]
 
