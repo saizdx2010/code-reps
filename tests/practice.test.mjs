@@ -2,7 +2,8 @@ import { paths } from '../src/path.ts'
 import { journeys } from '../src/learning.ts'
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { getPracticePlan, attemptStatus, nextRepInPath, practiceWritingPrompts, practiceSentenceStarters, appendSentenceStarter, englishTipsForIndonesianSpeakers } from '../src/practice.ts'
+import { getPracticePlan, attemptStatus, nextRepInPath, practiceWritingPrompts, practiceSentenceStarters, appendSentenceStarter } from '../src/practice.ts'
+import { englishTipsForIndonesianSpeakers } from '../src/vocabulary-id.ts'
 import { reps } from '../src/rep.ts'
 
 const now = Date.parse('2026-09-30T12:00:00Z')

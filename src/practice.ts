@@ -97,13 +97,6 @@ export function appendSentenceStarter(text: string, starter: string) {
   return `${text}${text && !/\s$/.test(text) ? ' ' : ''}${starter}`
 }
 
-export const englishTipsForIndonesianSpeakers = [
-  'Indonesian has no verb tenses. English: “it returned” (past), “it returns” (general).',
-  'Plural: “two items”, with -s.',
-  'Use a/an/the: “the function returns an array”.',
-  'Use is/are: “the list is empty”, not “the list empty”.',
-] as const
-
 /** Guidance only: writing remains self-reviewed, with no length or prose scoring. */
 export function practiceWritingPrompts(rep: Pick<RepSummary, 'id' | 'format'> & { planPrompt: string }) {
   const scale = !rep.format && foundationRepIds.includes(rep.id)

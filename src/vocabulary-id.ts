@@ -255,6 +255,14 @@ export const indonesianGlossary: Record<string, string> = {
   Mutant: 'salinan fungsi dengan satu kesalahan yang disengaja',
 }
 
+/** Shown with the glossary when Indonesian help is on. */
+export const englishTipsForIndonesianSpeakers = [
+  'Indonesian has no verb tenses. English: “it returned” (past), “it returns” (general).',
+  'Plural: “two items”, with -s.',
+  'Use a/an/the: “the function returns an array”.',
+  'Use is/are: “the list is empty”, not “the list empty”.',
+] as const
+
 export function indonesianMeaning(term: string): string | undefined {
   return indonesianGlossary[term]
 }
