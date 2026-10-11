@@ -55,7 +55,7 @@ For a focused test, use `node --experimental-strip-types --test tests/<name>.tes
 | Persistence and backup contracts | `src/local-store.ts`, `src/portability.ts`, `src/profile-backup.ts`, `server/store.mjs`, `server/index.mjs` |
 | Distribution | `scripts/package.mjs`, `scripts/verify-portable.mjs`, `.github/workflows/portable-bundles.yml` |
 
-Use the relevant guide rather than guessing: `docs/CONTENT_AUTHORING.md`, `docs/RICH_EXERCISES.md`, `docs/FLUENCY_PLATFORM.md`, `docs/PRACTICAL_CONCEPTS.md`, `docs/UI_GUIDE.md`, `docs/LOCAL_SETUP.md`, `docs/LOCAL_RELIABILITY.md`, or `docs/PORTABLE_BUNDLE.md`.
+Use the relevant guide rather than guessing: `docs/CONTENT_AUTHORING.md`, `docs/RICH_EXERCISES.md`, `docs/FLUENCY_PLATFORM.md`, `docs/PRACTICAL_CONCEPTS.md`, `docs/UI_GUIDE.md`, `docs/LOCAL_SETUP.md`, `docs/LOCAL_RELIABILITY.md`, `docs/PORTABLE_BUNDLE.md`, or `docs/MAINTAINING.md` (routine maintenance, gates, and common failures).
 
 ## Code and UI conventions
 

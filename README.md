@@ -142,6 +142,7 @@ Automated checks do not establish learning effectiveness, full disconnected-brow
 | [Content authoring](./docs/CONTENT_AUTHORING.md) | Internal exercise and lesson standards |
 | [Content gap map](./docs/CONTENT_GAPS.md) | Priorities for future practice content |
 | [Browser testing](./docs/BROWSER_TESTING.md) | Real-browser coverage and verification limits |
+| [Maintaining](./docs/MAINTAINING.md) | Daily loop, adding reps and lessons, gates, common failures, and backups |
 
 ---
 

@@ -17,6 +17,7 @@
     "package": "yarn build && node scripts/package.mjs",
     "content:index": "node --experimental-strip-types scripts/generate-catalog-index.mjs",
     "content:check": "node --experimental-strip-types scripts/validate-content.mjs",
+    "rep:new": "node --experimental-strip-types scripts/new-rep.mjs",
     "test:e2e": "playwright test"
   },
   "dependencies": {
