@@ -8,6 +8,7 @@ import { connectedSolutionsById } from './fixtures/connected-feature-solutions.m
 import { browserStateSolutions } from './fixtures/browser-state-solutions.mjs'
 import { dsaSolutions } from './fixtures/dsa-solutions.mjs'
 import { foundationsSolutions } from './fixtures/foundations-solutions.mjs'
+import { coreSolutions } from './fixtures/core-solutions.mjs'
 import { asyncSolutions } from './fixtures/async-solutions.mjs'
 import { practicalSolutions } from './fixtures/practical-solutions.mjs'
 import { validateContentDepth } from '../src/content-depth.ts'
@@ -47,35 +48,7 @@ const solutions = {
   ...fluencySolutions,
   ...testingJourneySolutions,
   ...maintenanceSolutions,
-  'declare-variables': 'function makeGreeting(name: string) { const greeting = "Hello, "; let message = greeting + name; return message }',
-  'basic-types': 'function describePerson(name: string, age: number, active: boolean) { return `${name} is ${age}. Active: ${active}` }',
-  'create-objects': 'type Person = {name: string; age: number}; function introduce(name: string, age: number) { const person: Person = {name, age}; return `${person.name} is ${person.age} years old` }',
-  'make-arrays': 'function firstName(names: string[]) { return names.length ? names[0] : null }',
-  'write-functions': 'function totalPrice(price: number, quantity: number) { return price * quantity }',
-  'use-conditions': "function gradeLabel(score: number) { if (score < 0 || score > 100) return 'Invalid'; if (score >= 90) return 'A'; if (score >= 80) return 'B'; if (score >= 70) return 'C'; if (score >= 60) return 'D'; return 'F' }",
-  'loop-with-for': 'function sumUpTo(n: number) { let total = 0; for (let i = 1; i <= n; i++) total += i; return total }',
-  'loop-while': 'function stepsToOne(n: number) { let value = n; let steps = 0; while (value > 1) { value = Math.floor(value / 2); steps++ } return steps }',
-  'string-basics': 'function initials(fullName: string) { return fullName.trim().split(/\\s+/).map(word => word.slice(0, 1).toUpperCase()).join("") }',
-  'object-update': 'type Task = { title: string; done: boolean; priority: number }; function setDone(task: Task, done: boolean) { return { ...task, done } }',
-  'most-frequent-number': 'function mostFrequent(numbers: number[]) { if (!numbers.length) return null; const counts = new Map<number, number>(); for (const n of numbers) counts.set(n, (counts.get(n) ?? 0) + 1); return [...counts.keys()].sort((a,b) => counts.get(b)! - counts.get(a)! || a - b)[0] }',
-  'first-unique-character': 'function firstUnique(text: string) { for (let i = 0; i < text.length; i++) if (text.indexOf(text[i]) === text.lastIndexOf(text[i])) return i; return -1 }',
-  'balanced-brackets': 'function isBalanced(text: string) { const stack: string[] = []; const pairs: Record<string,string> = { ")": "(", "]": "[", "}": "{" }; for (const c of text) { if ("([{".includes(c)) stack.push(c); else if (stack.pop() !== pairs[c]) return false } return stack.length === 0 }',
-  'sum-positive-numbers': 'function sumPositive(numbers: number[]) { return numbers.reduce((sum,n) => sum + (n > 0 ? n : 0), 0) }',
-  'count-even-numbers': 'function countEvens(numbers: number[]) { return numbers.filter(n => n % 2 === 0).length }',
-  'count-above-threshold': 'function countAbove(numbers: number[], limit: number) { return numbers.filter(n => n > limit).length }',
-  'first-long-word': 'function firstLongWord(words: string[], minimum: number) { return words.find(w => w.length >= minimum) ?? null }',
-  'count-words': 'function countWords(text: string) { return text.match(/\\S+/g)?.length ?? 0 }',
-  'has-duplicate': 'function hasDuplicate(numbers: number[]) { return new Set(numbers).size !== numbers.length }',
-  'missing-number': 'function missingNumber(numbers: number[]) { const n = numbers.length; return n * (n + 1) / 2 - numbers.reduce((sum,x) => sum + x, 0) }',
-  'valid-parentheses': 'function validParentheses(text: string) { let open = 0; for (const c of text) { open += c === "(" ? 1 : -1; if (open < 0) return false } return open === 0 }',
-  'count-long-words': 'function countLongWords(words: string[], minimum: number) { return words.filter(w => w.length >= minimum).length }',
-  'first-repeated-number': 'function firstRepeated(numbers: number[]) { const seen = new Set<number>(); for (const n of numbers) { if (seen.has(n)) return n; seen.add(n) } return null }',
-  'remove-adjacent-pairs': 'function removePairs(text: string) { const stack: string[] = []; for (const c of text) { if (stack.at(-1) === c) stack.pop(); else stack.push(c) } return stack.join("") }',
-  'repair-visible-count': 'function countVisible(items: {active: boolean}[]) { return items.filter(item => item.active).length }',
-  'read-unique-names': 'function uniqueNames(input: string[]) { return [...new Set(input.filter(name => name !== ""))] }',
-  'transform-active-labels': 'function activeLabels(users: {name: string; active: boolean}[]) { return users.filter(user => user.active).map(user => user.name.trim()).filter(Boolean).map(name => name.toUpperCase()) }',
-  'shipping-cost-tiers': 'function shippingCost(lines: {weightGrams: number; quantity: number}[]) { if (lines.length === 0) return 0; let total = 0; let bulky = false; for (const line of lines) { total += line.weightGrams * line.quantity; if (line.quantity > 10) bulky = true } let cost = total <= 500 ? 300 : total <= 2000 ? 600 : 1200; if (bulky) cost += 200; return cost }',
-  'countdown-labels': 'function countdownLabels(startSeconds: number, stepSeconds: number) { const labels: string[] = []; for (let value = startSeconds; value >= 0; value -= stepSeconds) { const minutes = Math.floor(value / 60); const seconds = value % 60; labels.push(`${minutes}:${String(seconds).padStart(2, "0")}`) } return labels }',
+  ...coreSolutions,
 }
 
 test('every rep has reference-solution coverage and a complete learning brief', () => {
