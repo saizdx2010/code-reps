@@ -115,7 +115,7 @@ Use `Icon.tsx` for decorative control icons. `icons.css` is the single geometry 
 
 ## Motion
 
-Motion acknowledges interaction and shows where something came from; it never decorates idle screens. Each kind of element has one recognizable interaction, all built from the shared tokens (`--motion-fast` 180ms, `--motion-panel` 320ms, `--motion-ease`, `--motion-spring`). Movement stays inside the element's own box, so hovering never shifts neighbours, and nothing animates continuously: the only repeating motion is the next trail node's ring, which plays twice on arrival and stops.
+Motion acknowledges interaction and shows where something came from; it never decorates idle screens. Each kind of element has one recognizable interaction, all built from the shared tokens (`--motion-fast` 180ms, `--motion-ease`, `--motion-spring`). Movement stays inside the element's own box, so hovering never shifts neighbours, and nothing animates continuously: the only repeating motion is the next trail node's ring, which plays twice on arrival and stops.
 
 | Element | Interaction |
 | --- | --- |
