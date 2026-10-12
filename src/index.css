@@ -56,13 +56,10 @@
   --type-section: 20px;
   --type-card: 17px;
   --motion-fast: 180ms;
-  --motion-panel: 320ms;
   --motion-ease: cubic-bezier(.2, .8, .2, 1);
   --motion-spring: cubic-bezier(.22, 1.18, .36, 1);
   --shadow-menu: 0 8px 24px #23392d1a;
   /* Existing runner and preview controls use these semantic aliases. */
-  --lime: #bce57b;
-  --blue: #b2c9bd;
 }
 
 * { box-sizing: border-box; }
