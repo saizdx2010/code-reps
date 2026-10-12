@@ -19,7 +19,16 @@ export function Input({ className, type = 'text', ...props }: ComponentProps<'in
 function FileInput({ className, onChange, ...props }: ComponentProps<'input'>) {
   const field = useRef<HTMLInputElement>(null)
   const [name, setName] = useState('No file selected')
-  return <span className="ui-file-control"><input {...props} ref={field} type="file" hidden aria-hidden="true" tabIndex={-1} onChange={event => { setName(event.target.files?.[0]?.name ?? 'No file selected'); onChange?.(event) }} /><button type="button" className={classes('reset-button', className)} disabled={props.disabled} onClick={() => field.current?.click()}>Choose file</button><span className="ui-file-name">{name}</span></span>
+  return <span className="ui-file-control">
+    <input
+      {...props} ref={field} type="file" hidden aria-hidden="true" tabIndex={-1}
+      onChange={event => { setName(event.target.files?.[0]?.name ?? 'No file selected'); onChange?.(event) }}
+    />
+    <button type="button" className={classes('reset-button', className)} disabled={props.disabled} onClick={() => field.current?.click()}>
+      Choose file
+    </button>
+    <span className="ui-file-name">{name}</span>
+  </span>
 }
 
 function SearchInput({ className, ...props }: ComponentProps<'input'>) {
@@ -29,7 +38,12 @@ function SearchInput({ className, ...props }: ComponentProps<'input'>) {
     const source = field.current?.labels?.[0]
     if (source) { const copy = source.cloneNode(true) as HTMLElement; copy.querySelector('.ui-search-control')?.remove(); setLabel(copy.textContent?.trim() ?? '') }
   }, [])
-  return <span className="ui-search-control"><input {...props} ref={field} type="search" aria-label={props['aria-label'] ?? (label || undefined)} className={classes('ui-input', className)} />{String(props.value ?? '').length > 0 && <button type="button" className="ui-search-clear" aria-label={`Clear ${label || 'search'}`} disabled={props.disabled} onClick={() => {
+  return <span
+    className="ui-search-control"
+  ><input
+    {...props} ref={field} type="search" aria-label={props['aria-label'] ?? (label || undefined)} className={classes('ui-input', className)}
+  />
+    {String(props.value ?? '').length > 0 && <button type="button" className="ui-search-clear" aria-label={`Clear ${label || 'search'}`} disabled={props.disabled} onClick={() => {
     const node = field.current!
     Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!.call(node, '')
     node.dispatchEvent(new Event('input', { bubbles: true }))
@@ -66,7 +80,9 @@ export function NumberInput({ value, min, max, onValueChange, onBlur, ...props }
     setEdit({ source: next, text: String(next) })
     onValueChange(next)
   }
-  return <span className="ui-number-control"><Input {...props} ref={field} aria-label={props['aria-label'] ?? label} type="number" inputMode="numeric" step={1} min={min} max={max} value={draft}
+  return <span
+    className="ui-number-control"
+  ><Input {...props} ref={field} aria-label={props['aria-label'] ?? label} type="number" inputMode="numeric" step={1} min={min} max={max} value={draft}
     aria-invalid={draft.trim() !== '' && !valid || undefined}
     onChange={event => {
       const next = event.target.value
@@ -77,5 +93,13 @@ export function NumberInput({ value, min, max, onValueChange, onBlur, ...props }
     onBlur={event => {
       setEdit({ source: value, text: String(value) })
       onBlur?.(event)
-    }} /><span className="ui-number-buttons"><button type="button" disabled={props.disabled || value <= min} aria-label={`Decrease ${label}`} onClick={() => step(-1)}><Icon name="minus" /></button><button type="button" disabled={props.disabled || value >= max} aria-label={`Increase ${label}`} onClick={() => step(1)}><Icon name="plus" /></button></span></span>
+    }} />
+    <span className="ui-number-buttons">
+      <button type="button" disabled={props.disabled || value <= min} aria-label={`Decrease ${label}`} onClick={() => step(-1)}>
+        <Icon name="minus" />
+      </button>
+      <button type="button" disabled={props.disabled || value >= max} aria-label={`Increase ${label}`} onClick={() => step(1)}>
+        <Icon name="plus" />
+      </button>
+    </span></span>
 }

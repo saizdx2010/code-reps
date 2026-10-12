@@ -10,9 +10,31 @@ export default function RepGuidance({ repId, history, openRep, openLesson }: Pro
   const { checkpoint } = guidance
   return <InfoNote label="About this rep">
     <p><strong>Allow roughly:</strong> {guidance.effort}. Take the time you need; this is only a guide for your first attempt.</p>
-    {guidance.lessons.length > 0 && <p><strong>Helpful to know:</strong> {guidance.lessons.map((lesson, index) => <span key={lesson.id}>{index > 0 && ', '}<button type="button" className="text-button" onClick={() => openLesson(lesson.id)}>{lesson.title}</button></span>)}</p>}
-    {guidance.priorReps.length > 0 && <p><strong>Earlier in this stage:</strong> {guidance.priorReps.map((rep, index) => <span key={rep.id}>{index > 0 && ', '}<button type="button" className="text-button" onClick={() => openRep(rep.id)}>{rep.title}</button></span>)}</p>}
+    {guidance.lessons.length > 0 && <p>
+      <strong>
+        Helpful to know:
+      </strong> {guidance.lessons.map((lesson, index) => <span key={lesson.id}>
+        {index > 0 && ', '}
+        <button type="button" className="text-button" onClick={() => openLesson(lesson.id)}>{lesson.title}</button>
+      </span>)}
+    </p>}
+    {guidance.priorReps.length > 0 && <p>
+      <strong>
+        Earlier in this stage:
+      </strong> {guidance.priorReps.map((rep, index) => <span key={rep.id}>
+        {index > 0 && ', '}
+        <button type="button" className="text-button" onClick={() => openRep(rep.id)}>{rep.title}</button>
+      </span>)}
+    </p>}
     {checkpoint && <div role="note" aria-label="Readiness checkpoint"><p><strong>Readiness check:</strong> {checkpoint.message}</p>
-      <p>{checkpoint.bridgeRep && <button type="button" className="text-button" onClick={() => openRep(checkpoint.bridgeRep!.id)}>Optional bridge rep: {checkpoint.bridgeRep.title}</button>}{checkpoint.bridgeRep && checkpoint.lesson && ' · '}{checkpoint.lesson && <button type="button" className="text-button" onClick={() => openLesson(checkpoint.lesson!.id)}>Optional lesson: {checkpoint.lesson.title}</button>}</p></div>}
+      <p>
+        {checkpoint.bridgeRep && <button type="button" className="text-button" onClick={() => openRep(checkpoint.bridgeRep!.id)}>
+          Optional bridge rep: {checkpoint.bridgeRep.title}
+        </button>}
+        {checkpoint.bridgeRep && checkpoint.lesson && ' · '}
+        {checkpoint.lesson && <button type="button" className="text-button" onClick={() => openLesson(checkpoint.lesson!.id)}>
+          Optional lesson: {checkpoint.lesson.title}
+        </button>}
+      </p></div>}
   </InfoNote>
 }

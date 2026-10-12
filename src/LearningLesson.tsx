@@ -55,7 +55,9 @@ export function LearningLesson({ skillId, state, update, openRep, onSkill, histo
     <nav className="lesson-navigation" aria-label="Lesson sections">
       <StepIndicator active={section} />
       {['read', 'predict', 'practise', 'review'].map(id => (
-        <Button key={id} aria-current={section === id ? 'location' : undefined} onClick={() => revealLesson(id)}>{sectionLabels[id]}</Button>
+        <Button key={id} aria-current={section === id ? 'location' : undefined} onClick={() => revealLesson(id)}>
+          {sectionLabels[id]}
+        </Button>
       ))}
     </nav>
     <div id="lesson-read" hidden={section !== 'read'} tabIndex={-1}>
@@ -65,7 +67,10 @@ export function LearningLesson({ skillId, state, update, openRep, onSkill, histo
       <p>These are suggestions. You can practice any skill at any time.</p>
     </div>}
     <section><h3>What you will learn</h3><ul>{skill.objectives.map(o => <li key={o}><InlineCode text={o} /></li>)}</ul></section>
-    {skill.sections.map(section => <section key={section.title}><h3>{section.title}</h3><p><InlineCode text={section.body} /></p></section>)}
+    {skill.sections.map(section => <section key={section.title}>
+      <h3>{section.title}</h3>
+      <p><InlineCode text={section.body} /></p>
+    </section>)}
     <section>
       <h3>A worked example</h3>
       <pre><code>{skill.example}</code></pre>
@@ -89,7 +94,9 @@ export function LearningLesson({ skillId, state, update, openRep, onSkill, histo
     </section>
     <section id="lesson-practise" hidden={section !== 'practise'} tabIndex={-1}>
       <h3>Apply the skill</h3>
-      <div className="rep-links">{skill.repIds.map(id => <Button type="button" key={id} onClick={() => openRep(id)}>{repTitle(id)}</Button>)}</div>
+      <div className="rep-links">
+        {skill.repIds.map(id => <Button type="button" key={id} onClick={() => openRep(id)}>{repTitle(id)}</Button>)}
+      </div>
     </section>
     <div id="lesson-review" hidden={section !== 'review'} tabIndex={-1}>
       <details className="lesson-review-details" open={reviewOpen} onToggle={event => setReviewOpen(event.currentTarget.open)}>
@@ -100,7 +107,9 @@ export function LearningLesson({ skillId, state, update, openRep, onSkill, histo
     </div>
     <section hidden={section !== 'read'}>
       <h3>Related knowledge</h3>
-      <div className="rep-links">{skill.related.map(id => <Button type="button" key={id} onClick={() => onSkill(id)}>{skillById(id)?.title}</Button>)}</div>
+      <div className="rep-links">
+        {skill.related.map(id => <Button type="button" key={id} onClick={() => onSkill(id)}>{skillById(id)?.title}</Button>)}
+      </div>
     </section>
   </article>
 }
@@ -130,7 +139,9 @@ function LessonQuestions({ skill, state, update }: { skill: Skill; state: Fluenc
           <Input type="radio" name={id} checked={choice === i} onChange={() => setChoices({ ...choices, [id]: i })} />
           <InlineCode text={option} />
         </label>)}
-      <Button variant="primary" type="button" disabled={question.completion ? !response.trim() : choice === undefined} onClick={check}>Check prediction</Button>
+      <Button variant="primary" type="button" disabled={question.completion ? !response.trim() : choice === undefined} onClick={check}>
+        Check prediction
+      </Button>
       {answer && <p className="lesson-feedback feedback-note" data-state={answer.correct ? 'success' : 'error'} role="status">
         <Icon name={answer.correct ? 'check' : 'alert'} />
         <strong>{answer.correct ? 'Correct prediction.' : 'Revisit this idea.'}</strong> <InlineCode text={question.explanation} />
@@ -168,7 +179,12 @@ function LessonSelfReview({ skillId, state, update }: { skillId: string; state: 
   }
   return <section>
     <h3>Assess yourself</h3>
-    <InfoNote><p>Use the criteria and name the attempt or example supporting your judgment. These are your assessments, separate from checked behavior.</p></InfoNote>
+    <InfoNote>
+      <p>
+        Use the criteria and name the attempt or example supporting your judgment. These are your assessments, separate from checked
+        behavior.
+      </p>
+    </InfoNote>
     <div className="rubric-grid">{(Object.keys(rubrics) as (keyof typeof rubrics)[]).map(dimension => <fieldset key={dimension}>
       <legend>{dimension}</legend>
       <ul>{rubrics[dimension].map(point => <li key={point}>{point}</li>)}</ul>

@@ -59,7 +59,10 @@ function layoutTree(root: TraceTreeNode) {
 function TreeView({ structure }: { structure: Extract<TraceStructure, { kind: 'tree' }> }) {
   const { placed, width, height } = layoutTree(structure.root)
   return <svg viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
-    {placed.filter(entry => entry.parent).map(entry => <line key={`edge-${entry.node.id}`} className="trace-edge" x1={entry.parent!.x} y1={entry.parent!.y + TREE_RADIUS} x2={entry.x} y2={entry.y - TREE_RADIUS} />)}
+    {placed.filter(entry => entry.parent).map(entry => <line
+      key={`edge-${entry.node.id}`} className="trace-edge" x1={entry.parent!.x} y1={entry.parent!.y + TREE_RADIUS} x2={entry.x}
+      y2={entry.y - TREE_RADIUS}
+    />)}
     {placed.map(({ node, x, y }) => {
       const state = node.id === structure.current ? 'trace-node-current' : structure.visited?.includes(node.id) ? 'trace-dimmed' : undefined
       return <g key={node.id} className={state}>
@@ -77,11 +80,17 @@ function CallStack({ structure }: { structure: Extract<TraceStructure, { kind: '
     {[...structure.frames].reverse().map((frame, row) => {
       const isTop = row === 0
       const returning = isTop && structure.event === 'return'
-      return <li key={`${top - row}-${frame.call}`} className={`trace-frame${isTop ? ' trace-frame-top' : ''}${isTop && structure.event === 'call' ? ' trace-frame-new' : ''}`}>
+      return <li
+        key={`${top - row}-${frame.call}`}
+        className={`trace-frame${isTop ? ' trace-frame-top' : ''}${isTop && structure.event === 'call' ? ' trace-frame-new' : ''}`}
+      >
         <code>{frame.call}</code>
         {frame.locals && <span className="trace-frame-locals">{frame.locals}</span>}
         {(isTop && structure.event === 'call') && <span className="trace-frame-tag">pushed</span>}
-        {frame.returns !== undefined && <span className="trace-frame-tag">{returning ? 'returns' : 'returned'} <code>{String(frame.returns)}</code>{returning ? ', then popped' : ''}</span>}
+        {frame.returns !== undefined && <span className="trace-frame-tag">
+          {returning ? 'returns' : 'returned'} <code>{String(frame.returns)}</code>
+          {returning ? ', then popped' : ''}
+        </span>}
       </li>
     })}
   </ol>
@@ -90,10 +99,20 @@ function CallStack({ structure }: { structure: Extract<TraceStructure, { kind: '
 function StatePanel({ structure, previous }: { structure: Extract<TraceStructure, { kind: 'state' }>; previous?: TraceStep }) {
   const before = previous?.structure?.kind === 'state' ? new Map(previous.structure.entries) : undefined
   return <div className="trace-state" aria-hidden="true">
-    {structure.events && <ol className="trace-events">{structure.events.map((event, index) => <li key={index} className={index === structure.eventIndex ? 'trace-event-current' : index < (structure.eventIndex ?? -1) ? 'trace-event-done' : undefined}><code>{event}</code></li>)}</ol>}
+    {structure.events && <ol className="trace-events">
+      {structure.events.map((event, index) => <li
+        key={index}
+        className={index === structure.eventIndex ? 'trace-event-current' : index < (structure.eventIndex ?? -1) ? 'trace-event-done' : undefined}
+      >
+        <code>{event}</code>
+      </li>)}
+    </ol>}
     <dl className="trace-state-rows">{structure.entries.map(([label, value]) => {
       const changed = Boolean(before) && (!before!.has(label) || before!.get(label) !== value)
-      return <div key={label} className={changed ? 'trace-changed' : undefined}><dt>{label}</dt><dd><code>{String(value)}</code>{changed && <span className="trace-change-label"> changed</span>}</dd></div>
+      return <div key={label} className={changed ? 'trace-changed' : undefined}>
+        <dt>{label}</dt>
+        <dd><code>{String(value)}</code>{changed && <span className="trace-change-label"> changed</span>}</dd>
+      </div>
     })}</dl>
   </div>
 }
@@ -114,18 +133,32 @@ function TableView({ structure }: { structure: TableStructure }) {
     })}
   </div>)
   return <div className="trace-structure trace-table">
-    {grid ? <div className="trace-table-scroll" role="group" aria-label="Table cells, scroll sideways if clipped" tabIndex={0}><div aria-hidden="true">{rows}</div></div> : <div className="trace-table-wrap" aria-hidden="true">{rows}</div>}
+    {grid ? <div className="trace-table-scroll" role="group" aria-label="Table cells, scroll sideways if clipped" tabIndex={0}>
+      <div aria-hidden="true">{rows}</div>
+    </div> : <div className="trace-table-wrap" aria-hidden="true">{rows}</div>}
     <p className="trace-table-focus" aria-hidden="true">{tableFocus(structure)}</p>
-    <p className="trace-legend" aria-hidden="true">Solid: filled. Dashed “empty”: not filled yet. Thick outline “now”: cell being filled. Double outline “↑ reads”: cells it uses.</p>
+    <p className="trace-legend" aria-hidden="true">
+      Solid: filled. Dashed “empty”: not filled yet. Thick outline “now”: cell being filled. Double outline “↑ reads”: cells it uses.
+    </p>
     <p className="sr-only">{describe(structure)}</p>
   </div>
 }
 
 function Structure({ structure, previous }: { structure: TraceStructure; previous?: TraceStep }) {
   if (structure.kind === 'table') return <TableView structure={structure} />
-  if (structure.kind === 'tree') return <div className="trace-structure trace-tree"><TreeView structure={structure} /><p className="trace-legend" aria-hidden="true">Filled outline: current node. Dashed: visited.</p><p className="sr-only">{describe(structure)}</p></div>
-  if (structure.kind === 'calls') return <div className="trace-structure"><CallStack structure={structure} /><p className="sr-only">{describe(structure)}</p></div>
-  if (structure.kind === 'state') return <div className="trace-structure"><StatePanel structure={structure} previous={previous} /><p className="sr-only">{describe(structure)}</p></div>
+  if (structure.kind === 'tree') return <div className="trace-structure trace-tree">
+    <TreeView structure={structure} />
+    <p className="trace-legend" aria-hidden="true">Filled outline: current node. Dashed: visited.</p>
+    <p className="sr-only">{describe(structure)}</p>
+  </div>
+  if (structure.kind === 'calls') return <div className="trace-structure">
+    <CallStack structure={structure} />
+    <p className="sr-only">{describe(structure)}</p>
+  </div>
+  if (structure.kind === 'state') return <div className="trace-structure">
+    <StatePanel structure={structure} previous={previous} />
+    <p className="sr-only">{describe(structure)}</p>
+  </div>
   const cells = structure.kind === 'map' ? structure.entries.map(([key, value]) => `${key}: ${value}`) : structure.values.map(String)
   const vertical = structure.kind !== 'array'
   const pointers = structure.kind === 'array' ? Object.entries(structure.pointers ?? {}) : []
@@ -142,7 +175,12 @@ function Structure({ structure, previous }: { structure: TraceStructure; previou
         {!vertical && <text x={x + 40} y={14} className="trace-index">{index}</text>}
       </g>
     })}
-    {pointers.map(([name, index], row) => <g key={name} className="trace-pointer" transform={`translate(${index * 90 + 45}, ${70 + row * 28})`}><path d="M 0 0 L -6 10 L 6 10 Z" /><text y={25}>{name}</text></g>)}
+    {pointers.map(([name, index], row) => <g
+      key={name} className="trace-pointer" transform={`translate(${index * 90 + 45}, ${70 + row * 28})`}
+    >
+      <path d="M 0 0 L -6 10 L 6 10 Z" />
+      <text y={25}>{name}</text>
+    </g>)}
     {!cells.length && <text x={width / 2} y={30}>Empty {structure.kind}</text>}
   </svg><p className="sr-only">{describe(structure)}</p></div>
 }
@@ -164,13 +202,38 @@ export function TraceViewer({ trace }: { trace: RepTrace }) {
   }}>
     <h4>Step trace</h4><p className="utility-note">Authored reference snapshots</p><p><strong>Input:</strong> <code>{trace.input}</code></p>
     <div className="trace-panes"><div className="trace-code" role="list" aria-label="Trace code">
-      {trace.code.map((line, lineIndex) => <div role="listitem" key={lineIndex} className={lineIndex === step.line ? 'trace-current' : undefined} aria-current={lineIndex === step.line ? 'step' : undefined}><span className="trace-line-number" aria-hidden="true">{lineIndex + 1}</span><code>{line || ' '}</code>{lineIndex === step.line && <span className="sr-only"> Current line</span>}</div>)}
-    </div><div>{step.structure && <Structure structure={step.structure} previous={previous} />}<table className="trace-vars"><caption>Variables</caption><thead><tr><th scope="col">Name</th><th scope="col">Value</th></tr></thead><tbody>{Object.entries(step.vars).map(([name, value]) => {
+      {trace.code.map((line, lineIndex) => <div
+        role="listitem" key={lineIndex} className={lineIndex === step.line ? 'trace-current' : undefined}
+        aria-current={lineIndex === step.line ? 'step' : undefined}
+      >
+        <span className="trace-line-number" aria-hidden="true">{lineIndex + 1}</span>
+        <code>{line || ' '}</code>
+        {lineIndex === step.line && <span className="sr-only"> Current line</span>}
+      </div>)}
+    </div>
+      <div>{step.structure && <Structure structure={step.structure} previous={previous} />}
+        <table className="trace-vars"><caption>Variables</caption>
+          <thead><tr><th scope="col">Name</th><th scope="col">Value</th></tr></thead>
+          <tbody>{Object.entries(step.vars).map(([name, value]) => {
       const changed = Boolean(previous) && (!Object.hasOwn(previous.vars, name) || previous.vars[name] !== value)
-      return <tr key={name} className={changed ? 'trace-changed' : undefined}><th scope="row">{name}</th><td><code>{String(value)}</code>{changed && <span className="trace-change-label"> changed</span>}</td></tr>
+      return <tr key={name} className={changed ? 'trace-changed' : undefined}>
+        <th scope="row">{name}</th>
+        <td><code>{String(value)}</code>{changed && <span className="trace-change-label"> changed</span>}</td>
+      </tr>
     })}</tbody></table></div></div>
     <p className="trace-note" aria-live="polite" aria-atomic="true">Step {index + 1} of {trace.steps.length}: {step.note}</p>
-    <div className="trace-controls"><Button disabled={index === 0} onClick={() => move(-1)}>Prev</Button><div className="trace-dots" aria-label="Trace steps">{trace.steps.map((_, dot) => <Button key={dot} variant="text" aria-label={`Go to step ${dot + 1}`} aria-current={dot === index ? 'step' : undefined} onClick={() => setIndex(dot)}><span aria-hidden="true" /></Button>)}</div><Button disabled={index === trace.steps.length - 1} onClick={() => move(1)}>Next</Button></div>
+    <div className="trace-controls">
+      <Button disabled={index === 0} onClick={() => move(-1)}>Prev</Button>
+      <div className="trace-dots" aria-label="Trace steps">
+        {trace.steps.map((_, dot) => <Button
+          key={dot} variant="text" aria-label={`Go to step ${dot + 1}`} aria-current={dot === index ? 'step' : undefined}
+          onClick={() => setIndex(dot)}
+        >
+          <span aria-hidden="true" />
+        </Button>)}
+      </div>
+      <Button disabled={index === trace.steps.length - 1} onClick={() => move(1)}>Next</Button>
+    </div>
     <p className="utility-note">Use Left and Right arrow keys while focused here.</p>
   </section>
 }

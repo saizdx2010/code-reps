@@ -36,23 +36,32 @@ export function LearningPlan({ state, update, history, openRep, reviewRep, candi
     <section className="hub-panel">
       <h2>A manageable practice week</h2>
       <InfoNote><p>
-        Choose a goal and time budget. Suggestions mix due reviews, saved work, and your chosen track. Time is a budget, not an estimate of mastery.
+        Choose a goal and time budget. Suggestions mix due reviews, saved work, and your chosen track. Time is a budget, not an estimate of
+        mastery.
       </p></InfoNote>
       <div className="hub-form-row">
         <label>Goal<Select value={goal.pathId} onChange={e => setGoal({ pathId: e.target.value })}>
           {paths.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
         </Select></label>
-        <label>Minutes per session<NumberInput min={5} max={120} value={goal.minutes} onValueChange={value => setGoal({ minutes: value })} /></label>
+        <label>
+          Minutes per session
+          <NumberInput min={5} max={120} value={goal.minutes} onValueChange={value => setGoal({ minutes: value })} />
+        </label>
       </div>
       <fieldset className="day-picker">
         <legend>Practice days</legend>
-        {weekdays.map((day, i) => <label key={day}><Input type="checkbox" checked={goal.days.includes(i)} onChange={() => toggleDay(i)} />{day}</label>)}
+        {weekdays.map((day, i) => <label key={day}>
+          <Input type="checkbox" checked={goal.days.includes(i)} onChange={() => toggleDay(i)} />
+          {day}
+        </label>)}
       </fieldset>
       <ol className="milestone-list">{weeklyPlan(goal, candidates).map(session => {
         const action = session.action
         return <li key={session.date.toISOString()}>
           <div>
-            <strong>{session.date.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })} · {session.minutes} minutes</strong>
+            <strong>
+              {session.date.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })} · {session.minutes} minutes
+            </strong>
             <p>{action ? `${repTitle(action.repId)}: ${action.reason}` : 'Use this session for your notebook or a knowledge lesson.'}</p>
           </div>
           {action && <Button
@@ -66,7 +75,8 @@ export function LearningPlan({ state, update, history, openRep, reviewRep, candi
     <section className="hub-panel">
       <h2>Keep skills available</h2>
       <InfoNote><p>
-        After first delayed recall, additional reviews rotate through different applications. Successful independent scheduled recalls extend the interval;
+        After first delayed recall, additional reviews rotate through different applications. Successful independent scheduled recalls
+        extend the interval;
         difficult or hinted recalls shorten it. These intervals are starting rules to validate with learners.
       </p></InfoNote>
       {reviews.length

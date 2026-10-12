@@ -52,14 +52,22 @@ export function LearningHub(props: Props) {
     {tab === 'assessment' && <LearningAssessment
       state={state} update={update} history={history} reviewRep={reviewRep} onReviewSkill={id => { onSkill(id); setTab('knowledge') }}
     />}
-    {tab === 'plan' && <LearningPlan state={state} update={update} history={history} openRep={openRep} reviewRep={reviewRep} candidates={props.candidates} />}
+    {tab === 'plan' && <LearningPlan
+      state={state} update={update} history={history} openRep={openRep} reviewRep={reviewRep} candidates={props.candidates}
+    />}
     {tab === 'notebook' && <LearningNotebook state={state} update={update} />}
-    {tab === 'projects' && <LearningProjects state={state} update={update} history={history} openRep={openRep} openNotebook={() => setTab('notebook')} />}
+    {tab === 'projects' && <LearningProjects
+      state={state} update={update} history={history} openRep={openRep} openNotebook={() => setTab('notebook')}
+    />}
     {tab === 'interview' && <LearningInterview
       state={state} update={update} openRep={openRep} reviewRep={reviewRep} minutes={interviewMinutes} setMinutes={setInterviewMinutes}
     />}
-    {(tab === 'plan' || tab === 'assessment') && <p className="projects-more"><Button variant="text" onClick={() => goToView('progress')}>Back to Skills</Button></p>}
-    {tab === 'interview' && <p className="projects-more"><Button variant="text" onClick={() => setTab('projects')}>Back to Projects</Button></p>}
+    {(tab === 'plan' || tab === 'assessment') && <p className="projects-more">
+      <Button variant="text" onClick={() => goToView('progress')}>Back to Skills</Button>
+    </p>}
+    {tab === 'interview' && <p className="projects-more">
+      <Button variant="text" onClick={() => setTab('projects')}>Back to Projects</Button>
+    </p>}
     {tab === 'projects' && <p className="projects-more">
       Optional: <Button variant="text" onClick={() => setTab('interview')}>Timed interview practice<Icon name="arrow" /></Button>
     </p>}

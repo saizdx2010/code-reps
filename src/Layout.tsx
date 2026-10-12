@@ -39,15 +39,27 @@ export function EmptyState({ title, children, action }: { title: ReactNode; chil
 /** A collapsible group of rows. Native details semantics; open state may be controlled by a session preference. */
 export function ListGroup({ title, count, open, onToggle, children }: { title: ReactNode; count?: number; open?: boolean; onToggle?: (open: boolean) => void; children: ReactNode }) {
   return <details className="list-group" open={open} onToggle={event => onToggle?.(event.currentTarget.open)}>
-    <summary><span className="list-group-title">{title}</span>{count !== undefined && <span className="list-group-count">{count}</span>}<Icon name="chevron" /></summary>
+    <summary>
+      <span className="list-group-title">{title}</span>
+      {count !== undefined && <span className="list-group-count">{count}</span>}
+      <Icon name="chevron" />
+    </summary>
     <ul className="list-rows">{children}</ul>
   </details>
 }
 
 /** One row style for exercises, lessons, journal entries, and skills. */
 export function ListRow({ title, meta, status, current, onOpen, onPreview, action }: { title: ReactNode; meta?: ReactNode; status?: ReactNode; current?: boolean; onOpen?: () => void; onPreview?: () => void; action?: ReactNode }) {
-  const body = <><span className="list-row-text"><strong>{title}</strong>{meta && <small>{meta}</small>}</span>{status && <span className="list-row-status">{status}</span>}</>
+  const body = <>
+    <span className="list-row-text"><strong>{title}</strong>{meta && <small>{meta}</small>}</span>
+    {status && <span className="list-row-status">{status}</span>}
+  </>
   return <li className="list-row">
-    {onOpen ? <button type="button" aria-current={current ? 'step' : undefined} onClick={onOpen} onMouseEnter={onPreview} onFocus={onPreview}>{body}<Icon name="arrow" /></button> : <div>{body}{action}</div>}
+    {onOpen ? <button
+      type="button" aria-current={current ? 'step' : undefined} onClick={onOpen} onMouseEnter={onPreview} onFocus={onPreview}
+    >
+      {body}
+      <Icon name="arrow" />
+    </button> : <div>{body}{action}</div>}
   </li>
 }

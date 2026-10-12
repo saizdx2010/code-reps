@@ -20,7 +20,12 @@ export function FirstRepWalkthrough({ step, completed, onNext, onDismiss }: {
   const saved = completed && step === 'review'
   return <aside className="first-rep-walkthrough" aria-label="First rep walkthrough">
     <strong>{saved ? 'Your attempt is saved' : help.title}</strong>
-    <p tabIndex={step === 'solve' ? 0 : undefined}>{saved ? 'You can revisit your work, choose another rep, or stop for today.' : help.text}</p>
-    <div>{help.next && <Button variant="text" onClick={() => onNext(help.next!)}>{help.action}</Button>}<Button variant="text" onClick={onDismiss}>{step === 'review' ? 'Finish walkthrough' : 'Skip walkthrough'}</Button></div>
+    <p tabIndex={step === 'solve' ? 0 : undefined}>
+      {saved ? 'You can revisit your work, choose another rep, or stop for today.' : help.text}
+    </p>
+    <div>
+      {help.next && <Button variant="text" onClick={() => onNext(help.next!)}>{help.action}</Button>}
+      <Button variant="text" onClick={onDismiss}>{step === 'review' ? 'Finish walkthrough' : 'Skip walkthrough'}</Button>
+    </div>
   </aside>
 }

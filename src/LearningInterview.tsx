@@ -42,7 +42,11 @@ export function LearningInterview({ state, update, openRep, reviewRep, minutes, 
             <option value="interview-frontend">Frontend</option><option value="interview-backend">Backend</option>
           </Select>
           <div className="hub-actions">
-            <Button variant="primary" type="button" disabled={!Number.isInteger(minutes) || minutes < 5 || minutes > 120} onClick={startRound}>Start round</Button>
+            <Button
+              variant="primary" type="button" disabled={!Number.isInteger(minutes) || minutes < 5 || minutes > 120} onClick={startRound}
+            >
+              Start round
+            </Button>
           </div>
         </>
         : <>
@@ -52,21 +56,26 @@ export function LearningInterview({ state, update, openRep, reviewRep, minutes, 
           /></label>
           <div className="hub-actions">
             <Button variant="primary" type="button" onClick={() => openRep(currentRound.repId)}>Continue coding</Button>
-            <Button type="button" onClick={() => editRound(currentRound.id, { endedAt: new Date().toISOString() })}>End round and review</Button>
+            <Button type="button" onClick={() => editRound(currentRound.id, { endedAt: new Date().toISOString() })}>
+              End round and review
+            </Button>
           </div>
         </>}
     </section>
     {state.rounds.filter(r => r.endedAt).map(round => <section className="hub-panel" key={round.id}>
       <h3>{repTitle(round.repId)}</h3>
       <p>
-        {formatDate(round.startedAt, true)} · {Math.ceil((Date.parse(round.endedAt!) - Date.parse(round.startedAt)) / 60_000)} minutes elapsed
+        {formatDate(round.startedAt, true)} · {Math.ceil((Date.parse(round.endedAt!) - Date.parse(round.startedAt)) / 60_000)} minutes
+        elapsed
         {' '}· {round.minutes}-minute budget
       </p>
       <p>Clarifications: {round.clarification || 'None recorded.'}</p>
       <label>Debrief: approach, implementation, explanation, and next focus<Textarea
         rows={4} maxLength={20_000} value={round.debrief} onChange={e => editRound(round.id, { debrief: e.target.value })}
       /></label>
-      <p className="utility-note">Review checked attempts in History and record skill judgments in Self-assessment. Elapsed time is not a correctness score.</p>
+      <p className="utility-note">
+        Review checked attempts in History and record skill judgments in Self-assessment. Elapsed time is not a correctness score.
+      </p>
     </section>)}
   </>
 }

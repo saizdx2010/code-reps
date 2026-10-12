@@ -53,7 +53,9 @@ export function LearningAssessment({ state, update, history, reviewRep, onReview
     <div className="hub-evidence">{knowledgeGroups.map(group => (
       <ListGroup key={group.id} title={group.title} count={group.skillIds.length}>
         {skills.filter(skill => group.skillIds.includes(skill.id)).map(skill => (
-          <SkillEvidenceCard key={skill.id} skillId={skill.id} title={skill.title} state={state} history={history} onReview={onReviewSkill} />
+          <SkillEvidenceCard
+            key={skill.id} skillId={skill.id} title={skill.title} state={state} history={history} onReview={onReviewSkill}
+          />
         ))}
       </ListGroup>
     ))}</div>

@@ -61,7 +61,9 @@ export function HistoryPage({ history, categories, journalTabs, openRep }: Props
         <option value="">All skills</option>
         {categories.map(category => <option key={category}>{category}</option>)}
       </Select></label>
-      <label>Difficulty<Select aria-label="Difficulty" value={historyDifficulty} onChange={event => setHistoryDifficulty(event.target.value)}>
+      <label>Difficulty<Select
+        aria-label="Difficulty" value={historyDifficulty} onChange={event => setHistoryDifficulty(event.target.value)}
+      >
         <option value="">Any difficulty</option>
         {Object.entries(difficultyLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
       </Select></label>

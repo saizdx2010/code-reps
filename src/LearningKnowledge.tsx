@@ -59,17 +59,28 @@ export function LearningKnowledge({ state, update, history, openRep, skillId, on
     setBookmarkFilter('all')
   }
   return <div className="knowledge-layout">
-    <details className="knowledge-browser" open={indexOpen === 'open'} onToggle={event => setIndexOpen(event.currentTarget.open ? 'open' : 'closed')}>
-      <summary>Browse lessons<span aria-live="polite">{groups.reduce((count, group) => count + group.lessons.length, 0)} available</span></summary>
+    <details
+      className="knowledge-browser" open={indexOpen === 'open'}
+      onToggle={event => setIndexOpen(event.currentTarget.open ? 'open' : 'closed')}
+    >
+      <summary>
+        Browse lessons
+        <span aria-live="polite">{groups.reduce((count, group) => count + group.lessons.length, 0)} available</span>
+      </summary>
       <aside className="knowledge-index">
         <div className="knowledge-controls">
-          <label>Search knowledge<Input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Try arrays or promises" /></label>
+          <label>
+            Search knowledge
+            <Input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Try arrays or promises" />
+          </label>
           <label>Topic<Select value={topic} onChange={e => setTopic(e.target.value)}>
             <option value="">All topics</option>
             {knowledgeGroups.map(group => <option key={group.id} value={group.id}>{group.title}</option>)}
           </Select></label>
           <label className="check-label">
-            <Input type="checkbox" checked={bookmarked} onChange={e => setBookmarkFilter(e.target.checked ? 'bookmarked' : 'all')} />Bookmarks only
+            <Input
+              type="checkbox" checked={bookmarked} onChange={e => setBookmarkFilter(e.target.checked ? 'bookmarked' : 'all')}
+            />Bookmarks only
           </label>
           <Button variant="text" onClick={onQuickLessons}>Quick lessons</Button>
         </div>
@@ -80,7 +91,9 @@ export function LearningKnowledge({ state, update, history, openRep, skillId, on
           >
             <summary>{group.title}<span>{group.lessons.length}</span></summary>
             <div className="knowledge-topic-list">{group.lessons.map(skill => (
-              <Button type="button" key={skill.id} aria-current={skillId === skill.id ? 'page' : undefined} onClick={() => selectSkill(skill.id)}>
+              <Button
+                type="button" key={skill.id} aria-current={skillId === skill.id ? 'page' : undefined} onClick={() => selectSkill(skill.id)}
+              >
                 <strong>{skill.title}</strong><Icon name="arrow" />
               </Button>
             ))}</div>
@@ -91,7 +104,9 @@ export function LearningKnowledge({ state, update, history, openRep, skillId, on
       </aside>
     </details>
     <div ref={lessonRef} tabIndex={-1} className="knowledge-reading">
-      <LearningLesson key={skillId} skillId={skillId} state={state} update={update} openRep={openRep} onSkill={selectSkill} history={history} />
+      <LearningLesson
+        key={skillId} skillId={skillId} state={state} update={update} openRep={openRep} onSkill={selectSkill} history={history}
+      />
     </div>
   </div>
 }
