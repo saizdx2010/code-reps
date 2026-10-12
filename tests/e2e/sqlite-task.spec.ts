@@ -4,9 +4,9 @@ import { expectChecksFinished, replaceCode } from './helpers'
 
 const solution = readFileSync(new URL('../fixtures/sqlite-solution.mjs', import.meta.url), 'utf8').split('`')[1]
 
-test('browser-only SQLite queries, rollback, fresh runs, review, and saved completion', async ({ page }) => {
+test('browser-only SQLite queries, rollback, fresh runs, review, and saved completion', async ({ page, baseURL }) => {
   const external: string[] = []
-  page.on('request', request => { if (!request.url().startsWith('http://127.0.0.1:4206') && !request.url().startsWith('data:')) external.push(request.url()) })
+  page.on('request', request => { if (!request.url().startsWith(baseURL!) && !request.url().startsWith('data:')) external.push(request.url()) })
   await page.goto('/#/practice/sqlite-stock-transfer')
   await page.getByRole('button', { name: 'Plan', exact: true }).click()
   await page.getByLabel('Your plan', { exact: true }).fill('Begin, debit, credit, insert, commit; roll back either constraint failure.')
