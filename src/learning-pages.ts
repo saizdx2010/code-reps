@@ -1,3 +1,5 @@
+import type { Judgment } from './fluency.ts'
+
 export type HubTab = 'knowledge' | 'assessment' | 'plan' | 'notebook' | 'projects' | 'interview'
 
 /** Shared by compact loaded and pending PageHeader surfaces. */
@@ -10,3 +12,5 @@ export const learningPageTitles: Record<HubTab, { title: string; description: st
   interview: { title: 'Practice an interview.', description: 'A timed round with space to clarify, code, and reflect.' },
 }
 
+/** Self-assessment judgments as lessons and the assessment summary name them. */
+export const judgmentLabels: Record<Judgment, string> = { 'not-yet': 'Not yet', 'with-help': 'With help', independent: 'Independently' }

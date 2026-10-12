@@ -63,7 +63,7 @@ test('visible UI and authored content use US English and the shared term list', 
         const text = node.text
         // Existing evidence-state and lesson-section IDs are compatibility contracts.
         const internalId = text === 'practising' && ['learning.ts', 'practice.ts'].includes(name)
-          || name === 'LearningHub.tsx' && (text === 'practise' && (ts.isArrayLiteralExpression(node.parent) || ts.isBinaryExpression(node.parent))
+          || name === 'LearningLesson.tsx' && (text === 'practise' && (ts.isArrayLiteralExpression(node.parent) || ts.isBinaryExpression(node.parent))
             || text === 'lesson-practise' && ts.isJsxAttribute(node.parent) && node.parent.name.text === 'id')
         if (!internalId) assert.doesNotMatch(text, /\bpractis(?:e[ds]?|ing)\b|\bgoal (?:trail|path)\b/i, `${name}: ${text}`)
       }
