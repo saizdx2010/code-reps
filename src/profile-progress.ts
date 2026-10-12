@@ -1,8 +1,9 @@
 import type { PortableRecord } from './portability.ts'
+import { DAY_MS } from './dates.ts'
 
 // Calendar dates use the learner's current local timezone, rather than 24-hour gaps.
 function dayNumber(date: Date) {
-  return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86_400_000
+  return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / DAY_MS
 }
 
 export function profileProgress(history: PortableRecord[], now = new Date()) {

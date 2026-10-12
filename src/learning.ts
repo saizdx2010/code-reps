@@ -1,12 +1,15 @@
+import { byCompletedAt, DAY_MS } from './dates.ts'
+import { isDateString } from './guards.ts'
+
 export type LearnerStart = 'new' | 'returning'
 
-export type LearningRecord = {
+type LearningRecord = {
   repId: string
   completedAt: string
   hintCount: number
 }
 
-export type Journey = { id: string; title: string; guided: string; independent: string; recall: string; practice?: string[]; delayDays: number }
+type Journey = { id: string; title: string; guided: string; independent: string; recall: string; practice?: string[]; delayDays: number }
 
 export const journeys: Journey[] = [
   { id: 'arrays', title: 'Work through arrays', guided: 'sum-positive-numbers', independent: 'count-even-numbers', recall: 'count-above-threshold', practice: ['sum-in-range', 'adjacent-rise-count'], delayDays: 3 },
@@ -38,16 +41,16 @@ export const journeys: Journey[] = [
 
 export const arrayJourney = journeys[0]
 
-export type JourneyStage = 'learning' | 'practising' | 'independent' | 'retained'
+type JourneyStage = 'learning' | 'practising' | 'independent' | 'retained'
 
 export function getJourney(journey: Journey, records: LearningRecord[], now = Date.now()) {
-  const chronological = [...records].filter((record) => Number.isFinite(Date.parse(record.completedAt)))
-    .sort((a, b) => Date.parse(a.completedAt) - Date.parse(b.completedAt))
+  const chronological = [...records].filter((record) => isDateString(record.completedAt))
+    .sort(byCompletedAt)
   const guided = chronological.find((record) => record.repId === journey.guided)
   const independent = guided && chronological.find((record) =>
     record.repId === journey.independent && record.hintCount === 0 &&
     Date.parse(record.completedAt) >= Date.parse(guided.completedAt))
-  const recallAt = independent && Date.parse(independent.completedAt) + journey.delayDays * 86_400_000
+  const recallAt = independent && Date.parse(independent.completedAt) + journey.delayDays * DAY_MS
   const retained = recallAt && chronological.find((record) =>
     record.repId === journey.recall && record.hintCount === 0 &&
     Date.parse(record.completedAt) >= recallAt)

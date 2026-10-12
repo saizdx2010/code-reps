@@ -1,3 +1,5 @@
+import { byCompletedAt, DAY_MS } from './dates.ts'
+
 // Self-reported mistake tags. IDs are stored on attempts and in backups: never rename or reuse one.
 export const mistakeTags = [
   { id: 'off-by-one', label: 'Off-by-one' },
@@ -9,10 +11,9 @@ export const mistakeTags = [
   { id: 'other', label: 'Something else' },
 ] as const
 
-export type MistakeTagId = typeof mistakeTags[number]['id']
+type MistakeTagId = typeof mistakeTags[number]['id']
 const known = new Set<string>(mistakeTags.map(tag => tag.id))
-export const mistakeLabel = (id: string) => mistakeTags.find(tag => tag.id === id)?.label ?? id
-export const isMistakeTag = (value: unknown): value is MistakeTagId => typeof value === 'string' && known.has(value)
+const isMistakeTag = (value: unknown): value is MistakeTagId => typeof value === 'string' && known.has(value)
 
 /** Keeps known tag IDs once each, in catalog order. Anything else (unknown IDs, non-strings, non-arrays) is dropped. Returns undefined when no tag remains. */
 export function normalizeMistakes(value: unknown): MistakeTagId[] | undefined {
@@ -22,12 +23,11 @@ export function normalizeMistakes(value: unknown): MistakeTagId[] | undefined {
   return tags.length ? tags : undefined
 }
 
-export type MistakeSource = { id: string; repId: string; completedAt: string; mistakes?: unknown }
-export type MistakeOccurrence = { attemptId: string; repId: string; completedAt: string }
+type MistakeSource = { id: string; repId: string; completedAt: string; mistakes?: unknown }
+type MistakeOccurrence = { attemptId: string; repId: string; completedAt: string }
 export type MistakeTrend = 'new' | 'more' | 'fewer' | 'same' | 'none'
-export type MistakeGroup = { id: MistakeTagId; label: string; total: number; recent: number; earlier: number; trend: MistakeTrend; occurrences: MistakeOccurrence[] }
+type MistakeGroup = { id: MistakeTagId; label: string; total: number; recent: number; earlier: number; trend: MistakeTrend; occurrences: MistakeOccurrence[] }
 
-const day = 86_400_000
 export const trendWindowDays = 14
 
 /**
@@ -35,8 +35,8 @@ export const trendWindowDays = 14
  * Occurrences are newest first, limited to `limit` per tag. Unused tags are omitted; groups sort by total, then recency.
  */
 export function summarizeMistakes(history: MistakeSource[], now: number, limit = 5): MistakeGroup[] {
-  const recentStart = now - trendWindowDays * day
-  const earlierStart = recentStart - trendWindowDays * day
+  const recentStart = now - trendWindowDays * DAY_MS
+  const earlierStart = recentStart - trendWindowDays * DAY_MS
   const groups = new Map<MistakeTagId, MistakeOccurrence[]>()
   for (const record of history) {
     const time = Date.parse(record.completedAt)
@@ -45,7 +45,7 @@ export function summarizeMistakes(history: MistakeSource[], now: number, limit =
     for (const id of tags) groups.set(id, [...(groups.get(id) ?? []), { attemptId: record.id, repId: record.repId, completedAt: record.completedAt }])
   }
   return mistakeTags.flatMap(({ id, label }) => {
-    const all = [...(groups.get(id) ?? [])].sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt))
+    const all = [...(groups.get(id) ?? [])].sort((a, b) => byCompletedAt(b, a))
     if (!all.length) return []
     const at = (item: MistakeOccurrence) => Date.parse(item.completedAt)
     const recent = all.filter(item => at(item) > recentStart && at(item) <= now).length

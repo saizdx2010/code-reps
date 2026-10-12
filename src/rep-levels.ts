@@ -2,7 +2,7 @@
 // Every rep in the registry needs an entry; tests/rep-levels.test.mjs names any missing or unknown IDs.
 
 export type RepLevel = 1 | 2 | 3
-export type RepLevelLabel = 'Beginner' | 'Intermediate' | 'Advanced'
+type RepLevelLabel = 'Beginner' | 'Intermediate' | 'Advanced'
 
 export const repLevelLabels: Record<RepLevel, RepLevelLabel> = { 1: 'Beginner', 2: 'Intermediate', 3: 'Advanced' }
 

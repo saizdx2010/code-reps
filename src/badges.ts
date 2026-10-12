@@ -2,9 +2,9 @@ import { firstPath, paths } from './path.ts'
 import type { PortableRecord } from './portability.ts'
 
 /** The path shape badges read. Passing a changed catalog shows how badges follow a path edit. */
-export type BadgeCatalog = readonly { id: string; title: string; stages: readonly { title: string; repIds: readonly string[] }[] }[]
+type BadgeCatalog = readonly { id: string; title: string; stages: readonly { title: string; repIds: readonly string[] }[] }[]
 
-export type BadgeKind = 'first' | 'stage' | 'path'
+type BadgeKind = 'first' | 'stage' | 'path'
 export type Badge = {
   id: string
   kind: BadgeKind

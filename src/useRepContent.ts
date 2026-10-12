@@ -3,7 +3,7 @@ import { loadRepContent, peekRepContent, type RepContent } from './rep-content.t
 
 type Settled = { repId: string; attempt: number; content?: RepContent; failures?: number }
 
-export type RepContentState = { status: 'loading' } | { status: 'error'; failures: number } | { status: 'ready'; content: RepContent }
+type RepContentState = { status: 'loading' } | { status: 'error'; failures: number } | { status: 'ready'; content: RepContent }
 
 /** Loads the heavy material for one rep once `enabled`. A result for a rep the learner has already left is ignored. */
 export function useRepContent(repId: string, enabled = true): RepContentState & { retry: () => void } {

@@ -3,6 +3,7 @@ import type { SessionState } from './practice-sessions.ts'
 import { parseFluency } from './fluency.ts'
 import type { FluencyState } from './fluency.ts'
 import { normalizeMistakes } from './mistakes.ts'
+import { isDateString, isPlainObject } from './guards.ts'
 export type PortableAttempt = {
   plan: string
   code: string
@@ -28,11 +29,8 @@ export type Backup = {
   learning?: FluencyState
 }
 
-const object = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value)
-
 function attempt(value: unknown): value is PortableAttempt {
-  if (!object(value)) return false
+  if (!isPlainObject(value)) return false
   return typeof value.plan === 'string' && value.plan.length <= 100_000 &&
     typeof value.code === 'string' && value.code.length <= 100_000 &&
     typeof value.explanation === 'string' && value.explanation.length <= 100_000 &&
@@ -40,8 +38,7 @@ function attempt(value: unknown): value is PortableAttempt {
     (value.difficulty === undefined || ['none', 'wording', 'approach', 'typescript', 'edge-cases'].includes(String(value.difficulty))) &&
     (value.confidence === undefined || ['need-practice', 'getting-there', 'confident'].includes(String(value.confidence))) &&
     (value.mistakes === undefined || (Array.isArray(value.mistakes) && value.mistakes.length <= 50 && value.mistakes.every(tag => typeof tag === 'string' && tag.length <= 80))) &&
-    (value.completedAt === undefined ||
-      (typeof value.completedAt === 'string' && Number.isFinite(Date.parse(value.completedAt))))
+    (value.completedAt === undefined || isDateString(value.completedAt))
 }
 
 /** Drops unknown tag IDs from an attempt without touching anything else about it. */
@@ -56,8 +53,8 @@ export function parseBackup(text: string, knownRepIds: Set<string>): Backup {
   if (text.length > 2_000_000) throw new Error('This backup is too large to import.')
   let raw: unknown
   try { raw = JSON.parse(text) } catch { throw new Error('This file is not valid JSON.') }
-  if (!object(raw) || raw.format !== 'code-reps-backup' || raw.version !== 1 ||
-      !Array.isArray(raw.history) || !object(raw.drafts) ||
+  if (!isPlainObject(raw) || raw.format !== 'code-reps-backup' || raw.version !== 1 ||
+      !Array.isArray(raw.history) || !isPlainObject(raw.drafts) ||
       !(raw.learnerStart === null || raw.learnerStart === 'new' || raw.learnerStart === 'returning')) {
     throw new Error('This is not a supported Code Reps backup.')
   }
@@ -66,10 +63,10 @@ export function parseBackup(text: string, knownRepIds: Set<string>): Backup {
   }
   const history: PortableRecord[] = []
   for (const item of raw.history) {
-    if (!object(item) || !attempt(item)) throw new Error('This backup contains an invalid completed attempt.')
+    if (!isPlainObject(item) || !attempt(item)) throw new Error('This backup contains an invalid completed attempt.')
     const entry = item as Record<string, unknown>
     if (typeof entry.id !== 'string' || typeof entry.repId !== 'string' ||
-        !knownRepIds.has(entry.repId) || typeof entry.completedAt !== 'string' || !Number.isFinite(Date.parse(entry.completedAt))) {
+        !knownRepIds.has(entry.repId) || !isDateString(entry.completedAt)) {
       throw new Error('This backup contains an invalid completed attempt.')
     }
     history.push(withKnownMistakes(item as PortableRecord))

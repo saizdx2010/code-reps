@@ -1,5 +1,5 @@
 export const SQLITE_REP_ID = 'sqlite-stock-transfer'
-export type SqlValue = number | string | null
+type SqlValue = number | string | null
 export type SqliteDatabase = {
   run(sql: string, parameters?: SqlValue[]): unknown
   prepare(sql: string): { bind(parameters: SqlValue[]): void; step(): boolean; get(): SqlValue[]; free(): void }

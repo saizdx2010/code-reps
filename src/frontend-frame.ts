@@ -1,7 +1,7 @@
 import { compileSolution } from './compile-solution.ts'
 import type { Rep } from './rep'
 
-export type DirectoryScenario = { loading: boolean; error: string | null; people: { name: string }[] }
+type DirectoryScenario = { loading: boolean; error: string | null; people: { name: string }[] }
 export const previewScenarios: Record<string, DirectoryScenario> = {
   ready: { loading: false, error: null, people: [{ name: 'Ada' }, { name: 'Bo' }, { name: 'Adam' }] },
   loading: { loading: true, error: null, people: [] },

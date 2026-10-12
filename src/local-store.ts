@@ -1,4 +1,5 @@
 import { scopedKey, profileRegistryKey, parseProfiles } from './profiles.ts'
+import { isPlainObject } from './guards.ts'
 const journalKey = 'code-reps:pending-writes:v1'
 const serverModeKey = 'code-reps:server-mode:v1'
 type Entries = Record<string, string | null>
@@ -9,7 +10,7 @@ type Environment = {
 }
 const keyAllowed = (key: string) => /^code-reps:[a-z0-9:-]+$/.test(key) && key.length < 160 && key !== journalKey && key !== serverModeKey
 const validEntries = (value: unknown, nullable = false): value is Entries =>
-  Boolean(value && typeof value === 'object' && !Array.isArray(value) && Object.entries(value).every(([key, entry]) => keyAllowed(key) && ((nullable && entry === null) || (typeof entry === 'string' && entry.length <= 1_000_000))))
+  isPlainObject(value) && Object.entries(value).every(([key, entry]) => keyAllowed(key) && ((nullable && entry === null) || (typeof entry === 'string' && entry.length <= 1_000_000)))
 
 export function createLocalStore(environment: Environment) {
   let serverReady = false

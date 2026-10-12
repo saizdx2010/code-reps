@@ -1,4 +1,4 @@
-export type ProjectFiles = { entry: string; files: Record<string, string> }
+type ProjectFiles = { entry: string; files: Record<string, string> }
 export const encodeFiles = (project: ProjectFiles) => JSON.stringify({ format: 'code-reps-files', version: 1, ...project })
 export function decodeFiles(code: string): ProjectFiles | null {
   if (!code.trimStart().startsWith('{')) return null

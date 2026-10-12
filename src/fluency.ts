@@ -2,6 +2,9 @@ import { migratePathId, paths } from './path.ts'
 import { skillIndex as skills } from './catalog-index.ts'
 import { getAllJourneys } from './learning.ts'
 import type { PortableRecord } from './portability.ts'
+import { isDateString, isPlainObject } from './guards.ts'
+import { byCompletedAt, DAY_MS } from './dates.ts'
+import { formatDate } from './ui-copy.ts'
 export type Judgment = 'not-yet' | 'with-help' | 'independent'
 export type SelfReview = { understanding: Judgment; approach: Judgment; implementation: Judgment; explanation: Judgment; evidence: string; updatedAt: string }
 export type LearningNote = { id: string; title: string; body: string; skillId: string; repId: string; kind: 'note' | 'mistake' | 'question'; updatedAt: string }
@@ -19,9 +22,7 @@ export type FluencyState = {
 }
 export const fluencyKey = 'code-reps:fluency:v1'
 export const emptyFluency = (): FluencyState => ({ version: 1, goal: { pathId: 'typescript', minutes: 20, days: [1, 3, 5] }, answers: {}, reviews: {}, notes: [], bookmarks: [], rounds: [] })
-const obj = (x: unknown): x is Record<string, unknown> => Boolean(x && typeof x === 'object' && !Array.isArray(x))
 const text = (x: unknown, max = 20_000): x is string => typeof x === 'string' && x.length <= max
-const date = (x: unknown) => text(x, 100) && Number.isFinite(Date.parse(x))
 const judgments = ['not-yet', 'with-help', 'independent']
 const pathIds = new Set<string>(paths.map(path => path.id))
 const skillIds = new Set(skills.map(s => s.id))
@@ -33,15 +34,15 @@ const retiredQuestions = new Map<string, { optionCount: number; answer: number; 
 const questionIds = new Set(skills.flatMap(s => s.questions.map(q => `${s.id}:${q.id}`)))
 export function parseFluency(raw: unknown): FluencyState {
   if (JSON.stringify(raw)?.length > 900_000) throw new Error('Learning data is full. Export your profile and remove older notes or rounds before adding more.')
-  if (obj(raw) && obj(raw.goal) && typeof raw.goal.pathId === 'string' && migratePathId(raw.goal.pathId) !== raw.goal.pathId) raw = { ...raw, goal: { ...raw.goal, pathId: migratePathId(raw.goal.pathId) } }
-  if (!obj(raw) || raw.version !== 1 || !obj(raw.goal) || !text(raw.goal.pathId, 60) || !pathIds.has(raw.goal.pathId) || !Number.isInteger(raw.goal.minutes) || Number(raw.goal.minutes) < 5 || Number(raw.goal.minutes) > 120 || !Array.isArray(raw.goal.days) || raw.goal.days.length > 7 || raw.goal.days.some(d => !Number.isInteger(d) || d < 0 || d > 6) || new Set(raw.goal.days).size !== raw.goal.days.length || !obj(raw.answers) || !obj(raw.reviews) || !Array.isArray(raw.notes) || raw.notes.length > 1000 || !Array.isArray(raw.bookmarks) || raw.bookmarks.some(id => !skillIds.has(id)) || !Array.isArray(raw.rounds) || raw.rounds.length > 1000 || (raw.diagnosticStartedAt !== undefined && !date(raw.diagnosticStartedAt))) throw new Error('Learning data is invalid. Your saved copy has been kept.')
+  if (isPlainObject(raw) && isPlainObject(raw.goal) && typeof raw.goal.pathId === 'string' && migratePathId(raw.goal.pathId) !== raw.goal.pathId) raw = { ...raw, goal: { ...raw.goal, pathId: migratePathId(raw.goal.pathId) } }
+  if (!isPlainObject(raw) || raw.version !== 1 || !isPlainObject(raw.goal) || !text(raw.goal.pathId, 60) || !pathIds.has(raw.goal.pathId) || !Number.isInteger(raw.goal.minutes) || Number(raw.goal.minutes) < 5 || Number(raw.goal.minutes) > 120 || !Array.isArray(raw.goal.days) || raw.goal.days.length > 7 || raw.goal.days.some(d => !Number.isInteger(d) || d < 0 || d > 6) || new Set(raw.goal.days).size !== raw.goal.days.length || !isPlainObject(raw.answers) || !isPlainObject(raw.reviews) || !Array.isArray(raw.notes) || raw.notes.length > 1000 || !Array.isArray(raw.bookmarks) || raw.bookmarks.some(id => !skillIds.has(id)) || !Array.isArray(raw.rounds) || raw.rounds.length > 1000 || (raw.diagnosticStartedAt !== undefined && !isDateString(raw.diagnosticStartedAt, 100))) throw new Error('Learning data is invalid. Your saved copy has been kept.')
   for (const [id, answer] of Object.entries(raw.answers)) {
     const [sid, qid] = id.split(':'); const question = skills.find(s => s.id === sid)?.questions.find(q => q.id === qid) ?? retiredQuestions.get(id)
-    if ((!questionIds.has(id) && !retiredQuestions.has(id)) || !obj(answer) || (answer.response !== undefined && !text(answer.response, 300)) || !Number.isInteger(answer.choice) || Number(answer.choice) < 0 || Number(answer.choice) >= question!.optionCount || answer.correct !== (question!.completion ? typeof answer.response === 'string' && answer.response.trim() === question!.answerText : answer.choice === question!.answer) || !date(answer.answeredAt)) throw new Error('Invalid lesson answer.')
+    if ((!questionIds.has(id) && !retiredQuestions.has(id)) || !isPlainObject(answer) || (answer.response !== undefined && !text(answer.response, 300)) || !Number.isInteger(answer.choice) || Number(answer.choice) < 0 || Number(answer.choice) >= question!.optionCount || answer.correct !== (question!.completion ? typeof answer.response === 'string' && answer.response.trim() === question!.answerText : answer.choice === question!.answer) || !isDateString(answer.answeredAt, 100)) throw new Error('Invalid lesson answer.')
   }
-  for (const [id, review] of Object.entries(raw.reviews)) if (!skillIds.has(id) || !obj(review) || !['understanding', 'approach', 'implementation', 'explanation'].every(k => judgments.includes(String(review[k]))) || !text(review.evidence) || !date(review.updatedAt)) throw new Error('Invalid self-review.')
-  for (const note of [...raw.notes, ...(raw.noteDraft === undefined ? [] : [raw.noteDraft])]) if (!obj(note) || !text(note.id, 80) || !text(note.title, 120) || !text(note.body) || !text(note.skillId, 60) || (note.skillId && !skillIds.has(note.skillId)) || !text(note.repId, 100) || !['note', 'mistake', 'question'].includes(String(note.kind)) || !date(note.updatedAt)) throw new Error('Invalid notebook entry.')
-  for (const round of raw.rounds) if (!obj(round) || !text(round.id, 80) || !['interview-frontend', 'interview-backend'].includes(String(round.repId)) || !date(round.startedAt) || (round.endedAt !== undefined && (!date(round.endedAt) || Date.parse(String(round.endedAt)) < Date.parse(String(round.startedAt)))) || !Number.isInteger(round.minutes) || Number(round.minutes) < 5 || Number(round.minutes) > 120 || !text(round.clarification) || !text(round.debrief)) throw new Error('Invalid interview round.')
+  for (const [id, review] of Object.entries(raw.reviews)) if (!skillIds.has(id) || !isPlainObject(review) || !['understanding', 'approach', 'implementation', 'explanation'].every(k => judgments.includes(String(review[k]))) || !text(review.evidence) || !isDateString(review.updatedAt, 100)) throw new Error('Invalid self-review.')
+  for (const note of [...raw.notes, ...(raw.noteDraft === undefined ? [] : [raw.noteDraft])]) if (!isPlainObject(note) || !text(note.id, 80) || !text(note.title, 120) || !text(note.body) || !text(note.skillId, 60) || (note.skillId && !skillIds.has(note.skillId)) || !text(note.repId, 100) || !['note', 'mistake', 'question'].includes(String(note.kind)) || !isDateString(note.updatedAt, 100)) throw new Error('Invalid notebook entry.')
+  for (const round of raw.rounds) if (!isPlainObject(round) || !text(round.id, 80) || !['interview-frontend', 'interview-backend'].includes(String(round.repId)) || !isDateString(round.startedAt, 100) || (round.endedAt !== undefined && (!isDateString(round.endedAt, 100) || Date.parse(String(round.endedAt)) < Date.parse(String(round.startedAt)))) || !Number.isInteger(round.minutes) || Number(round.minutes) < 5 || Number(round.minutes) > 120 || !text(round.clarification) || !text(round.debrief)) throw new Error('Invalid interview round.')
   if (new Set(raw.notes.map(n => n.id)).size !== raw.notes.length || new Set(raw.rounds.map(r => r.id)).size !== raw.rounds.length) throw new Error('Duplicate learning records.')
   return raw as unknown as FluencyState
 }
@@ -81,18 +82,18 @@ export function recurringReviews(history: PortableRecord[], now = Date.now()) {
     let successes = 0
     let nextIndex = 0
     const evidence: PortableRecord[] = []
-    for (const record of [...history].filter(r => variants.includes(r.repId) && Number.isFinite(Date.parse(r.completedAt))).sort((a,b) => Date.parse(a.completedAt)-Date.parse(b.completedAt))) {
+    for (const record of [...history].filter(r => variants.includes(r.repId) && isDateString(r.completedAt)).sort(byCompletedAt)) {
       const at = Date.parse(record.completedAt)
-      if (at < anchor + interval * 86_400_000 || record.repId !== variants[nextIndex]) continue
+      if (at < anchor + interval * DAY_MS || record.repId !== variants[nextIndex]) continue
       evidence.push(record)
       anchor = at
       if (!record.hintCount && record.confidence !== 'need-practice' && (!record.difficulty || record.difficulty === 'none')) {
         successes++; interval = Math.min(60, interval * 2); nextIndex = (nextIndex + 1) % variants.length
       } else interval = 3
     }
-    const dueAt = anchor + interval * 86_400_000
+    const dueAt = anchor + interval * DAY_MS
     return [{ skillId: state.journey.id, title: state.journey.title, repId: variants[nextIndex], dueAt, due: now >= dueAt, interval, successes, evidence,
-      reason: `Your last scheduled recall was ${new Date(anchor).toLocaleDateString()}. ${interval} days allow a gap before testing the skill again. ${successes ? 'Independent recalls increased the interval.' : 'Try a different application without hints.'}` }]
+      reason: `Your last scheduled recall was ${formatDate(anchor)}. ${interval} days allow a gap before testing the skill again. ${successes ? 'Independent recalls increased the interval.' : 'Try a different application without hints.'}` }]
   })
 }
 export function skillEvidence(skillId: string, history: PortableRecord[], state: FluencyState) {
