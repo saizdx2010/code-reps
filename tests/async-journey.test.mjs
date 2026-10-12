@@ -5,10 +5,11 @@ import { asyncSolutions } from './fixtures/async-solutions.mjs'
 import { getJourney, journeys } from '../src/learning.ts'
 import { emptyFluency, recurringReviews, skillEvidence } from '../src/fluency.ts'
 import { skills } from '../src/knowledge.ts'
+import { completion, utcDay } from './helpers/records.mjs'
 
 const journey = journeys.find(item => item.id === 'request-ownership')
-const at = day => Date.parse(`2026-10-${String(day).padStart(2, '0')}T00:00:00Z`)
-const record = (repId, day, hintCount = 0) => ({repId, completedAt: new Date(at(day)).toISOString(), hintCount, confidence: 'confident', difficulty: 'none'})
+const at = day => Date.parse(utcDay(2026, 10, day))
+const record = (repId, day, hintCount = 0) => completion(repId, utcDay(2026, 10, day), hintCount, {confidence: 'confident', difficulty: 'none'})
 
 test('async journey rejects hinted independence and early or hinted recall', () => {
   const guided = record(journey.guided, 1)

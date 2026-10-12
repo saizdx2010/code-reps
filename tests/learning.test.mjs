@@ -6,9 +6,10 @@ import { getArrayJourney, getJourney, journeys } from '../src/learning.ts'
 import { reps } from '../src/rep.ts'
 import { paths } from '../src/path.ts'
 import { coreLessons } from '../src/ai-era-reps.ts'
+import { completion, utcDay } from './helpers/records.mjs'
 
-const record = (repId, day, hintCount = 0) => ({ repId, completedAt: `2026-09-${String(day).padStart(2, '0')}T00:00:00.000Z`, hintCount })
-const at = (day) => Date.parse(`2026-09-${String(day).padStart(2, '0')}T00:00:00.000Z`)
+const record = (repId, day, hintCount = 0) => completion(repId, utcDay(2026, 9, day), hintCount)
+const at = (day) => Date.parse(utcDay(2026, 9, day))
 
 test('guides a learner from first rep to delayed recall', () => {
   assert.equal(getArrayJourney([], at(25)).nextRepId, 'sum-positive-numbers')
