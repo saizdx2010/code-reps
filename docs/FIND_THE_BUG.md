@@ -37,7 +37,7 @@ The checks establish that the learner's cases distinguish the supplied variants.
 | `src/rep-sources.ts` | Import and add `{ name, reps }` (catalog order) |
 | `src/rep-content.ts` | Add the lazy loader for the same source name |
 | `src/review-<name>.ts` | Depth entries and self-review guides |
-| `src/rep-depth.ts`, `src/reflection-guides.ts` | Spread the new depth and guide records |
+| The review registries | Spread the new depth and guide records (`yarn rep:new` prints where) |
 | `src/rep-levels.ts` | A level for each rep |
 | `src/learning.ts` | A `journeys` entry (guided, independent, recall) |
 | `src/path.ts` | Add the reps to a stage of the track where they belong |

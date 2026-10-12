@@ -43,6 +43,12 @@ Use `E2E_PORT=4203 yarn test:e2e` to select another dedicated port. Ordinary ass
 
 The tests use authored fixture code through the visible editor, without mocking Monaco, worker checks, or persistence. Tests are independent and run without retries so failures remain visible.
 
+## Layout walkthrough
+
+`tests/e2e/layout-walkthrough.spec.ts` walks the practice desk with keyboard navigation at four viewport profiles: desktop 1280x800, narrow 390x844, short 1280x560, and a 640x400 viewport at deviceScaleFactor 2 approximating 200% zoom. Each pass tabs through the workspace (every focus target must be visible), types in the real Monaco editor, exits the editor with the keyboard, runs checks, writes a plan field, and reloads to confirm the code draft and written plan persist, with the focused element visible at each stage.
+
+This covers Chromium only. It does not establish assistive-technology support, other browser engines, cross-platform behavior, or visual fidelity; the zoomed profile approximates zoom but is not a real OS/browser zoom setting.
+
 ## Debugging
 
 ```sh
@@ -56,6 +62,6 @@ Failures retain screenshots and traces under `test-results/`. The HTML report is
 
 This suite does not verify every storage-failure or upgrade case, disconnected operation across the entire app, OS-level network disconnection, Firefox/WebKit, other operating systems, browser zoom, or assistive-technology support. The external-request test covers specific flows with a running loopback server; it does not make the app available after that server stops. Narrow layout assertions are functional checks, not screenshot or visual-design approval. Keep the existing Node suite and manual release walkthroughs; browser tests do not establish learning effectiveness.
 
-Configuration: `playwright.config.ts`. Tests: `tests/e2e/*.spec.ts`; shared editor helpers: `tests/e2e/helpers.ts`. Pull requests and pushes to main run the suite through `.github/workflows/checks.yml`, retaining failure reports for seven days. `yarn test` and `just check` do not run this suite; run `yarn test:e2e` explicitly for affected browser flows.
+Configuration: `playwright.config.ts`. Tests: `tests/e2e/*.spec.ts`; shared editor helpers: `tests/e2e/helpers.ts`. Pull requests and pushes to main run the suite through `.github/workflows/checks.yml`, retaining failure reports for seven days. `yarn test` and `just check` do not run this suite; run `yarn test:e2e` (or `just check-all`) explicitly for affected browser flows.
 
-See [performance measurements](./PERFORMANCE.md) and [the remaining accessibility/learner walkthrough](./ACCESSIBILITY_REVIEW.md) for their specific evidence boundaries.
+See [performance measurements](./PERFORMANCE.md), [the remaining accessibility/learner walkthrough](./ACCESSIBILITY_REVIEW.md), and [local reliability](./LOCAL_RELIABILITY.md) for their specific evidence boundaries.
