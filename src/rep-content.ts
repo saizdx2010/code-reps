@@ -1,42 +1,13 @@
 // Heavy rep material (brief, example, notes, vocabulary, hints, checks, the lesson before a rep) is loaded when a rep opens.
-// Each source file below becomes its own chunk. Keep startup modules on src/catalog-index.ts and never import a rep module directly.
+// Each source becomes its own chunk through its generated loader in src/rep-chunks.ts.
+// Keep startup modules on src/catalog-index.ts and never import a rep module directly.
 import { repIndex, type RepSourceName } from './catalog-index.ts'
+import { repSourceLoaders as sources } from './rep-chunks.ts'
+import type { RepLesson, RepSource as Source } from './rep-source-loader.ts'
 import type { Rep } from './rep-types.ts'
 
-export type RepLesson = { repId: string; title: string; explanation: string; example: string; tip: string }
+export type { RepLesson }
 export type RepContent = { rep: Rep; lesson?: RepLesson }
-type Source = { reps: Rep[]; lessons?: readonly RepLesson[] }
-
-// A browser remembers a failed import of one URL, so Retry cannot simply import it again.
-// `pick` is separate from `load` so a retry can import the same chunk under a fresh query string.
-type Loader = { load: () => Promise<unknown>; pick: (module: unknown) => Source }
-function source<Module>(load: () => Promise<Module>, pick: (module: Module) => Source): Loader {
-  return { load, pick: pick as (module: unknown) => Source }
-}
-const sources: Record<RepSourceName, Loader> = {
-  'async-runtime-reps': source(() => import('./async-runtime-reps.ts'), module => ({ reps: module.asyncRuntimeReps })),
-  'sqlite-reps': source(() => import('./sqlite-reps.ts'), module => ({ reps: module.sqliteReps })),
-  'ts-depth-reps': source(() => import('./typescript-depth-reps.ts'), module => ({ reps: module.typescriptDepthReps })),
-  'practical-concepts': source(() => import('./practical-concepts.ts'), module => ({ reps: module.practicalReps })),
-  'foundations': source(() => import('./foundations.ts'), module => ({ reps: module.foundationReps, lessons: module.foundations })),
-  'dsa-reps': source(() => import('./dsa-reps.ts'), module => ({ reps: module.dsaReps })),
-  'dsa-advanced-reps': source(() => import('./dsa-advanced-reps.ts'), module => ({ reps: module.dsaAdvancedReps })),
-  'ai-era-reps': source(() => import('./ai-era-reps.ts'), module => ({ reps: module.aiEraReps, lessons: module.coreLessons })),
-  'core-reps': source(() => import('./core-reps.ts'), module => ({ reps: module.coreReps })),
-  'journey-reps': source(() => import('./journey-reps.ts'), module => ({ reps: module.journeyReps })),
-  'transfer-reps': source(() => import('./transfer-reps.ts'), module => ({ reps: module.transferReps })),
-  'rich-reps': source(() => import('./rich-reps.ts'), module => ({ reps: module.richReps })),
-  'fluency-reps': source(() => import('./fluency-reps.ts'), module => ({ reps: module.fluencyReps })),
-  'capstone-reps': source(() => import('./capstone-reps.ts'), module => ({ reps: module.capstoneReps })),
-  'validation-reps': source(() => import('./validation-reps.ts'), module => ({ reps: module.validationReps })),
-  'app-reps': source(() => import('./app-reps.ts'), module => ({ reps: module.appReps })),
-  'browser-state-reps': source(() => import('./browser-state-reps.ts'), module => ({ reps: module.browserStateReps })),
-  'react-reps': source(() => import('./react-reps.ts'), module => ({ reps: module.reactReps })),
-  'dom-reps': source(() => import('./dom-reps.ts'), module => ({ reps: module.domReps })),
-  'connected-feature-reps': source(() => import('./connected-feature-reps.ts'), module => ({ reps: module.connectedFeatureReps })),
-  'testing-journey-reps': source(() => import('./testing-journey-reps.ts'), module => ({ reps: module.testingJourneyReps })),
-  'maintenance-journey-reps': source(() => import('./maintenance-journey-reps.ts'), module => ({ reps: module.maintenanceJourneyReps })),
-}
 
 const pending = new Map<RepSourceName, Promise<Source>>()
 const loaded = new Map<RepSourceName, Source>()

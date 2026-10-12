@@ -75,7 +75,7 @@ export function renderRepSkeleton({ id, moduleFile }) {
     [
       `- [ ] Add the rep to a stage in src/path.ts if it belongs on a path, and add its level to src/rep-levels.ts ('${id}': 1, 2, or 3).`,
       `- [ ] Gloss every vocabulary term in indonesianGlossary (src/vocabulary-id.ts) using the exact English key. tests/vocabulary-id.test.mjs names any missing gloss.`,
-      '- [ ] If the module is new, list it in src/rep-sources.ts and src/rep-content.ts.',
+      '- [ ] If the module is new, list it in src/rep-sources.ts (yarn content:index then generates its lazy loader).',
       '- [ ] yarn content:index   (regenerates src/catalog-index.ts; tests/catalog-index.test.mjs fails when it is stale)',
       '- [ ] yarn content:check   (fields, checks, self-review guide, depth, and references)',
       '- [ ] node --experimental-strip-types --test tests/content.test.mjs   (reference solution must pass every check)',
