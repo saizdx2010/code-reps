@@ -1,8 +1,10 @@
 import { Icon } from './Icon'
 import { useId, useLayoutEffect, useRef, useState } from 'react'
+import type { KeyboardEvent, MouseEvent } from 'react'
 import { createPortal } from 'react-dom'
 
-function dateKey(date: Date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` }
+const twoDigits = (value: number) => String(value).padStart(2, '0')
+function dateKey(date: Date) { return `${date.getFullYear()}-${twoDigits(date.getMonth() + 1)}-${twoDigits(date.getDate())}` }
 function parseDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined
   const [year, month, day] = value.split('-').map(Number)
@@ -14,8 +16,12 @@ function addMonth(date: Date, amount: number) {
   return new Date(end.getFullYear(), end.getMonth(), Math.min(date.getDate(), end.getDate()))
 }
 
+const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+type Props = { value: string; onValueChange: (value: string) => void; label?: string }
+
 /** A local calendar; selected dates retain the existing YYYY-MM-DD filter contract. */
-export function DateInput({ value, onValueChange, label = 'Date' }: { value: string; onValueChange: (value: string) => void; label?: string }) {
+export function DateInput({ value, onValueChange, label = 'Date' }: Props) {
   const id = useId()
   const trigger = useRef<HTMLButtonElement>(null)
   const dialog = useRef<HTMLDialogElement>(null)
@@ -34,6 +40,23 @@ export function DateInput({ value, onValueChange, label = 'Date' }: { value: str
   }
   function close() { dialog.current?.close(); trigger.current?.focus({ preventScroll: true }) }
   function choose(date: string) { onValueChange(date); close() }
+  function moveFocus(event: KeyboardEvent<HTMLButtonElement>, date: Date) {
+    let next: Date | undefined
+    const offsets: Record<string, number> = {
+      ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7, Home: -date.getDay(), End: 6 - date.getDay(),
+    }
+    if (event.key in offsets) next = new Date(date.getFullYear(), date.getMonth(), date.getDate() + offsets[event.key])
+    if (event.key === 'PageUp' || event.key === 'PageDown') {
+      next = addMonth(date, (event.key === 'PageUp' ? -1 : 1) * (event.shiftKey ? 12 : 1))
+    }
+    if (next) { event.preventDefault(); focusDate(next) }
+  }
+  // A click on the backdrop lands on the dialog itself, outside its box.
+  function onBackdropClick(event: MouseEvent<HTMLDialogElement>) {
+    if (event.target !== event.currentTarget) return
+    const box = event.currentTarget.getBoundingClientRect()
+    if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) close()
+  }
   function show() {
     const date = parseDate(value) ?? new Date()
     setFocused(date)
@@ -50,11 +73,10 @@ export function DateInput({ value, onValueChange, label = 'Date' }: { value: str
       </span>
       <Icon name="calendar" />
     </button>
-    {createPortal(<dialog ref={dialog} id={`${id}-calendar`} className="ui-calendar" aria-labelledby={`${id}-title`} onCancel={event => { event.preventDefault(); close() }} onClick={event => {
-      if (event.target !== event.currentTarget) return
-      const box = event.currentTarget.getBoundingClientRect()
-      if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) close()
-    }}>
+    {createPortal(<dialog
+      ref={dialog} id={`${id}-calendar`} className="ui-calendar" aria-labelledby={`${id}-title`}
+      onCancel={event => { event.preventDefault(); close() }} onClick={onBackdropClick}
+    >
       <div className="ui-calendar-heading">
         <button type="button" className="ui-calendar-icon" aria-label="Previous month" onClick={() => focusDate(addMonth(focused, -1))}>
           <Icon name="left" />
@@ -65,28 +87,23 @@ export function DateInput({ value, onValueChange, label = 'Date' }: { value: str
         </button>
       </div>
       <p className="ui-calendar-help" id={`${id}-help`}>Arrow keys move by day or week. Page Up and Page Down change month.</p>
-      <table role="grid" aria-label={monthName} aria-describedby={`${id}-help`} className="ui-calendar-grid"><thead>
-        <tr>
-          {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => <th
-            key={day} scope="col" aria-label={day}
-          >
-            {day.slice(0, 2)}
-          </th>)}
-        </tr>
-      </thead>
+      <table role="grid" aria-label={monthName} aria-describedby={`${id}-help`} className="ui-calendar-grid">
+        <thead>
+          <tr>{weekdays.map(day => <th key={day} scope="col" aria-label={day}>{day.slice(0, 2)}</th>)}</tr>
+        </thead>
         <tbody>{Array.from({ length: 6 }, (_, week) => <tr key={week}>{Array.from({ length: 7 }, (_, day) => {
-        const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + week * 7 + day)
-        const key = dateKey(date)
-        return <td
-          key={key} role="gridcell" aria-selected={value === key}
-        ><button type="button" data-date={key} aria-label={date.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} aria-current={today === key ? 'date' : undefined} tabIndex={dateKey(focused) === key ? 0 : -1} className={`ui-calendar-day${date.getMonth() !== month.getMonth() ? ' other-month' : ''}${value === key ? ' selected' : ''}`} onClick={() => choose(key)} onKeyDown={event => {
-          let next: Date | undefined
-          const offsets: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7, Home: -date.getDay(), End: 6 - date.getDay() }
-          if (event.key in offsets) next = new Date(date.getFullYear(), date.getMonth(), date.getDate() + offsets[event.key])
-          if (event.key === 'PageUp' || event.key === 'PageDown') next = addMonth(date, (event.key === 'PageUp' ? -1 : 1) * (event.shiftKey ? 12 : 1))
-          if (next) { event.preventDefault(); focusDate(next) }
-        }}>{date.getDate()}</button></td>
-      })}</tr>)}</tbody></table>
+          const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + week * 7 + day)
+          const key = dateKey(date)
+          const otherMonth = date.getMonth() !== month.getMonth()
+          const className = `ui-calendar-day${otherMonth ? ' other-month' : ''}${value === key ? ' selected' : ''}`
+          const dayLabel = date.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+          return <td key={key} role="gridcell" aria-selected={value === key}><button
+            type="button" data-date={key} aria-label={dayLabel}
+            aria-current={today === key ? 'date' : undefined} tabIndex={dateKey(focused) === key ? 0 : -1} className={className}
+            onClick={() => choose(key)} onKeyDown={event => moveFocus(event, date)}
+          >{date.getDate()}</button></td>
+        })}</tr>)}</tbody>
+      </table>
       <div className="ui-calendar-actions">
         <button type="button" className="text-button" onClick={() => choose('')}>Clear date</button>
         <button type="button" className="reset-button" onClick={() => choose(today)}>Today</button>

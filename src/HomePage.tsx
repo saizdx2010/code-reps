@@ -28,8 +28,12 @@ type Props = {
 }
 
 
+const modeLabel = (mode?: string) => mode === 'review' ? 'Ready to review' : mode === 'resume' ? 'Your saved draft' : 'Next practice'
+
 /** Home is the learner's trail: the goal drawn as connected stages, with the next useful action beside it. */
-export function HomePage({ walkthroughSeen, launchWalkthrough, goalPathId, onPath, practicePlan, repStatus, openPracticeAction, actionLabel, onProgress, onLibrary, trail, evidence, openRep, openLesson }: Props) {
+export function HomePage(props: Props) {
+  const { walkthroughSeen, launchWalkthrough, goalPathId, onPath, practicePlan, repStatus, openPracticeAction, actionLabel } = props
+  const { onProgress, onLibrary, trail, evidence, openRep, openLesson } = props
   const goal = paths.find(path => path.id === goalPathId) ?? paths[0]
   const recommendation = practicePlan.next
   const recommendedRep = recommendation && repSummaryById.get(recommendation.repId)
@@ -43,9 +47,7 @@ export function HomePage({ walkthroughSeen, launchWalkthrough, goalPathId, onPat
       <aside className="trail-aside" aria-label="Up next">
         {recommendation && recommendedRep ? <section className="continue-panel" aria-labelledby="continue-heading">
           <div>
-            <span className="home-label">
-              {recommendation.mode === 'review' ? 'Ready to review' : recommendation.mode === 'resume' ? 'Your saved draft' : 'Next practice'}
-            </span>
+            <span className="home-label">{modeLabel(recommendation.mode)}</span>
             <h2 id="continue-heading">{recommendedRep.title}</h2>
             <p>{recommendation.reason} {!recommendation.reason.includes(context!.reason) && context!.reason}</p>
             <p>{context!.afterward}</p>
@@ -67,16 +69,14 @@ export function HomePage({ walkthroughSeen, launchWalkthrough, goalPathId, onPat
           <button className="primary-button" type="button" onClick={onProgress}>See progress</button>
         </section>}
         {(draft || review) && <ListGroup title="Also waiting" open>
-          {draft && <ListRow title={repTitle(draft.repId)} meta={moreDrafts > 0 ? `Saved draft · ${moreDrafts} more saved` : 'Saved draft'} status={<StatusChip
-            tone="progress"
-          >
-            Saved
-          </StatusChip>} onOpen={() => openPracticeAction(draft)} onPreview={preloadEditor} />}
-          {review && <ListRow title={repTitle(review.repId)} meta={moreReviews > 0 ? `Due review · ${moreReviews} more due` : 'Due review'} status={<StatusChip
-            tone="attention"
-          >
-            Due
-          </StatusChip>} onOpen={() => openPracticeAction(review)} onPreview={preloadEditor} />}
+          {draft && <ListRow
+            title={repTitle(draft.repId)} meta={moreDrafts > 0 ? `Saved draft · ${moreDrafts} more saved` : 'Saved draft'}
+            status={<StatusChip tone="progress">Saved</StatusChip>} onOpen={() => openPracticeAction(draft)} onPreview={preloadEditor}
+          />}
+          {review && <ListRow
+            title={repTitle(review.repId)} meta={moreReviews > 0 ? `Due review · ${moreReviews} more due` : 'Due review'}
+            status={<StatusChip tone="attention">Due</StatusChip>} onOpen={() => openPracticeAction(review)} onPreview={preloadEditor}
+          />}
         </ListGroup>}
         {(moreDrafts > 0 || moreReviews > 0) && <p className="trail-more">
           {moreReviews > 0 && <button type="button" className="text-button" onClick={onProgress}>
@@ -91,14 +91,14 @@ export function HomePage({ walkthroughSeen, launchWalkthrough, goalPathId, onPat
         </nav>
       </aside>
       <section className="trail-column home-goal" aria-label="Learning goal">
-        <PageHeader eyebrow="Your trail · Active learning goal" title={goal.title} description={`${trail.done} of ${trail.total} reps completed. Lessons appear just before the reps that use them.`} actions={<button
-          type="button" className="text-button" onClick={() => onPath(goal.id)}
-        >
-          View or choose goal
-        </button>} />
+        <PageHeader
+          eyebrow="Your trail · Active learning goal" title={goal.title}
+          description={`${trail.done} of ${trail.total} reps completed. Lessons appear just before the reps that use them.`}
+          actions={<button type="button" className="text-button" onClick={() => onPath(goal.id)}>View or choose goal</button>}
+        />
         <div
-          className="path-progress" role="progressbar" aria-label="Trail progress" aria-valuenow={trail.done} aria-valuemin={0}
-          aria-valuemax={trail.total}
+          className="path-progress" role="progressbar" aria-label="Trail progress"
+          aria-valuenow={trail.done} aria-valuemin={0} aria-valuemax={trail.total}
         >
           <span style={{ width: `${trail.total ? trail.done / trail.total * 100 : 0}%` }} />
         </div>

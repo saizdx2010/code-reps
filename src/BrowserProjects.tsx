@@ -4,7 +4,9 @@ import { browserProjects, externalSetup, projectReflection, projectReview } from
 import type { BrowserProject } from './browser-projects'
 import { repIndex as reps } from './catalog-index'
 
-export function BrowserProjects({ openRep, recordReflection }: { openRep: (id: string) => void; recordReflection: (title: string, body: string) => void }) {
+type Props = { openRep: (id: string) => void; recordReflection: (title: string, body: string) => void }
+
+export function BrowserProjects({ openRep, recordReflection }: Props) {
   function reflect(project: BrowserProject) {
     recordReflection(`Level ${project.level}: ${project.title}`, projectReflection(project))
   }

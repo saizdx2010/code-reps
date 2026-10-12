@@ -36,6 +36,11 @@ function ProjectSkeleton() {
 
 type PageLoadingProps = { page: HubTab; notebookHasDraft?: boolean; notebookHasEntries?: boolean; journalTabs?: ReactNode }
 
+const loadingStatus: Record<HubTab, string> = {
+  knowledge: 'Opening lesson…', notebook: 'Opening notebook…', plan: 'Preparing practice week…',
+  assessment: 'Preparing self-assessment…', projects: 'Opening projects…', interview: 'Preparing interview practice…',
+}
+
 /** Pending routes keep the loaded heading and first working surface in the same place. */
 export function PageLoading({ page, notebookHasDraft = false, notebookHasEntries = false, journalTabs }: PageLoadingProps) {
   const copy = learningPageTitles[page]
@@ -44,54 +49,56 @@ export function PageLoading({ page, notebookHasDraft = false, notebookHasEntries
       eyebrow={page === 'notebook' ? 'Journal' : undefined} title={copy.title} description={copy.description}
       actions={page === 'notebook' ? journalTabs : undefined}
     />
-    <p className="loading-status page-loading-status" role="status">
-      {({ knowledge: 'Opening lesson…', notebook: 'Opening notebook…', plan: 'Preparing practice week…', assessment: 'Preparing self-assessment…', projects: 'Opening projects…', interview: 'Preparing interview practice…' })[page]}
-    </p>
+    <p className="loading-status page-loading-status" role="status">{loadingStatus[page]}</p>
     <div aria-hidden="true">
-      {page === 'knowledge' ? <div className="loading-lesson-layout">
-        <aside><span className="skeleton-label" /><Fields stacked /><Rows /></aside>
-        <div className="knowledge-article loading-sheet">
-          <div className="loading-lesson-heading"><div><Lines /></div><span className="skeleton-action" /></div>
-          <div className="loading-tabs">{Array.from({ length: 4 }, (_, index) => <span key={index} />)}</div>
-          <Rows />
-          <div className="skeleton-code" />
-        </div>
-      </div>
-        : page === 'notebook' ? <div className="loading-notebook-surface">
-          <div className="hub-heading loading-notebook-heading">
-            <div><span className="skeleton-line" /><span className="skeleton-line skeleton-short" /></div>
-            <span className="skeleton-action" />
-          </div>
-          <Fields count={1} />
-          {notebookHasDraft ? <div className="hub-panel loading-sheet">
-            <Lines />
-            <Fields count={1} />
-            <Fields count={3} />
-            <div className="skeleton-writing" />
-            <span className="skeleton-action" />
-          </div> : notebookHasEntries ? <div className="hub-cards">
-            {[0, 1].map(index => <div className="hub-panel loading-sheet" key={index}><Lines /></div>)}
-          </div> : <div className="hub-empty loading-notebook-empty"><Lines /><span className="skeleton-action" /></div>}
-        </div>
-          : page === 'plan' ? <div className="hub-panel loading-sheet">
-            <Lines />
-            <Fields />
-            <span className="skeleton-label" />
-            <div className="loading-week">{Array.from({ length: 7 }, (_, index) => <span key={index} />)}</div>
-            <Rows />
-          </div>
-            : page === 'assessment' ? <>
-              <div className="hub-panel loading-sheet"><Lines /><span className="skeleton-action" /></div>
-              <Rows count={3} />
-            </>
-              : page === 'projects' ? <ProjectSkeleton />
-                : <div className="hub-panel loading-sheet loading-interview-sheet">
-                  <Lines />
-                  <Fields stacked />
-                  <span className="skeleton-action" />
-                </div>}
+      <PageSkeleton page={page} notebookHasDraft={notebookHasDraft} notebookHasEntries={notebookHasEntries} />
     </div>
   </main>
+}
+
+function PageSkeleton({ page, notebookHasDraft, notebookHasEntries }: Required<Omit<PageLoadingProps, 'journalTabs'>>) {
+  if (page === 'knowledge') return <div className="loading-lesson-layout">
+    <aside><span className="skeleton-label" /><Fields stacked /><Rows /></aside>
+    <div className="knowledge-article loading-sheet">
+      <div className="loading-lesson-heading"><div><Lines /></div><span className="skeleton-action" /></div>
+      <div className="loading-tabs">{Array.from({ length: 4 }, (_, index) => <span key={index} />)}</div>
+      <Rows />
+      <div className="skeleton-code" />
+    </div>
+  </div>
+  if (page === 'notebook') return <div className="loading-notebook-surface">
+    <div className="hub-heading loading-notebook-heading">
+      <div><span className="skeleton-line" /><span className="skeleton-line skeleton-short" /></div>
+      <span className="skeleton-action" />
+    </div>
+    <Fields count={1} />
+    {notebookHasDraft ? <div className="hub-panel loading-sheet">
+      <Lines />
+      <Fields count={1} />
+      <Fields count={3} />
+      <div className="skeleton-writing" />
+      <span className="skeleton-action" />
+    </div> : notebookHasEntries ? <div className="hub-cards">
+      {[0, 1].map(index => <div className="hub-panel loading-sheet" key={index}><Lines /></div>)}
+    </div> : <div className="hub-empty loading-notebook-empty"><Lines /><span className="skeleton-action" /></div>}
+  </div>
+  if (page === 'plan') return <div className="hub-panel loading-sheet">
+    <Lines />
+    <Fields />
+    <span className="skeleton-label" />
+    <div className="loading-week">{Array.from({ length: 7 }, (_, index) => <span key={index} />)}</div>
+    <Rows />
+  </div>
+  if (page === 'assessment') return <>
+    <div className="hub-panel loading-sheet"><Lines /><span className="skeleton-action" /></div>
+    <Rows count={3} />
+  </>
+  if (page === 'projects') return <ProjectSkeleton />
+  return <div className="hub-panel loading-sheet loading-interview-sheet">
+    <Lines />
+    <Fields stacked />
+    <span className="skeleton-action" />
+  </div>
 }
 
 export function ProjectListLoading() {
