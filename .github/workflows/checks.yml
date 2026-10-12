@@ -22,12 +22,14 @@ jobs:
       - run: npm install --global yarn@1.22.22
       - run: yarn install --frozen-lockfile
       - run: yarn lint
-      # Server and browser integration tests need the current built assets.
       - run: yarn build
       - run: yarn test
       - run: yarn content:check
       - run: yarn playwright install --with-deps chromium
+      # The browser SQLite tests serve dist/ from the build step above, so skip Playwright's own build.
       - run: yarn test:e2e
+        env:
+          E2E_SKIP_BUILD: '1'
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
