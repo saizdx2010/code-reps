@@ -1,6 +1,6 @@
 # Code Reps design language
 
-Code Reps uses bright practice sheets and a green coding desk. The original logo supplies the charcoal green, sage, and lime colors. Source Sans 3 carries interface and reading text; Maple Mono carries code. Both are local assets. This system belongs to the app and uses app-owned React components, native HTML semantics, and CSS; it adds no UI library or hosted service.
+Code Reps uses bright practice sheets and a green coding desk. The original logo supplies the charcoal green, sage, and lime colors. Source Sans 3 carries interface and reading text; Maple Mono carries code. Both are local assets: Source Sans 3 is bundled in `public/fonts/` under its included SIL Open Font License, so fonts need no runtime external request. This system belongs to the app and uses app-owned React components, native HTML semantics, and CSS; it adds no UI library or hosted service.
 
 ## Character
 
@@ -26,7 +26,7 @@ Main navigation has three areas. Each area's section tabs list only its own page
 
 Journal is one section with an Attempts / Notebook / Mistakes switch (`JournalTabs`); each view keeps its own route (`#/history`, `#/notebook`, `#/mistakes`; the retired `#/sessions` redirects to `#/history`). The skill map (`#/skillmap`), weekly plan (`#/plan`), self-assessment (`#/assessment`), and timed interview (`#/interview`) are not tabs; their routes still work and `sectionView` highlights the page that links to them. Quick lessons (`#/learn`) belongs to Lessons. `ui-navigation.ts` owns sections and the `sectionView` aliases; do not add a fourth main area or a second navigation row inside a page. Old bookmarks must keep resolving.
 
-Foundations (`typescript`) is the shared root track. Other tracks are grouped in `curriculum.ts` (`trackGroups`) and declare it implicitly; a stage made only of Foundations reps is shown as covered by Foundations rather than repeated. Path IDs, rep lists, badges, and recommendations are unchanged by this presentation.
+Foundations (`typescript`) is the shared root track. The tracks that build on it (Problem solving, Pattern Recognition, Frontend, and Backend) are grouped in `curriculum.ts` (`trackGroups`) and declare it implicitly; a stage made only of Foundations reps is shown as covered by Foundations rather than repeated. Path IDs, rep lists, badges, and recommendations are unchanged by this presentation.
 
 ## Page frame and layout
 
@@ -47,7 +47,7 @@ Foundations (`typescript`) is the shared root track. Other tracks are grouped in
 | `--type-section` | 20px | Section headings within a page |
 | `--type-card` | 17px | Card, row-group, trail-stage, and journey titles |
 
-The workspace title is a dense 22px (20px narrow). Body text is 15–16px; secondary text 13–14px. Text disclosures (Filters, Explore tracks, Set up your local project, Change starting point) are 15px; disclosures that act as group headings use the card or section title; dense workspace disclosures are 14px, lesson-index group labels 13px, and `InfoNote` 13px.
+The workspace title is a dense 22px (20px narrow). Body text is 15–16px; secondary text 13–14px. Text disclosures (Filters, Explore tracks, Set up your local project, Starting as) are 15px; disclosures that act as group headings use the card or section title; dense workspace disclosures are 14px, lesson-index group labels 13px, and `InfoNote` 13px.
 
 ## Tokens and colour
 
@@ -71,7 +71,7 @@ Text keeps at least 4.5:1 contrast in every scheme and mode. Supporting text on 
 
 ## Components
 
-All components are app-owned. Extend these before writing page-specific markup.
+All components are app-owned. Extend these before writing page-specific markup. Menu indicators, dialogs, and command search use the same presentation; Monaco remains the code editor, with its menus and suggestions themed to the active palette. Native text fields and choices keep browser input semantics. [UI guide](./UI_GUIDE.md#keyboard) describes their keyboard behavior.
 
 | Component | Owner | Use |
 | --- | --- | --- |
@@ -108,7 +108,7 @@ Practice step tabs are direct buttons without tooltips. Active primary navigatio
 Use `Icon.tsx` for decorative control icons. `icons.css` is the single geometry source for both components and native disclosure markers: a 24px view box, 1.8px rounded outline strokes, and an 18px display size. Icons inherit the control color and are hidden from assistive technology; keep visible labels and accessible names. Do not substitute Unicode glyphs or separate inline SVG drawings. Preserve the original logo as its own brand asset.
 
 - **Arrow:** forward actions and row navigation.
-- **Chevron:** every expand/collapse control. Collapsible groups and cards (topic groups, trail stages, journeys, project overviews, path picker, the Plan step brief) use a trailing chevron that points down and rotates 180° when open. Inline text disclosures (Quick vocabulary, Change starting point) use the leading native marker. Buttons with `aria-expanded` rotate their chevron the same way; the checks drawer opens upward, so its chevron points up while closed.
+- **Chevron:** every expand/collapse control. Collapsible groups and cards (topic groups, trail stages, journeys, project overviews, path picker, the Plan step brief) use a trailing chevron that points down and rotates 180° when open. Inline text disclosures (Quick vocabulary, Starting as) use the leading native marker. Buttons with `aria-expanded` rotate their chevron the same way; the checks drawer opens upward, so its chevron points up while closed.
 - **Plus/minus:** only for adding and subtracting values, such as number steppers. Never for disclosure.
 - **Check / close:** success and selection / dismissal and failed checks.
 - **Info, book, repeat, flag:** `InfoNote`, lesson nodes, recall nodes, and project nodes.
@@ -182,4 +182,4 @@ The logo has Sage, Ocean, and Plum colour variants using the original geometry; 
 
 ## Verification
 
-The browser suite asserts that every page shares the frame (title aligned with section tabs), the 32px page title, and 40px standalone controls, alongside step-indicator alignment, retained writing across animated steps, reduced-motion controls and dialogs, pending-layout alignment, and the editor, navigation, profile, and persistence flows. Use fresh browser contexts and temporary server data; never seed the learner's real database. These checks do not establish visual fidelity, assistive-technology support, other browser engines, disconnected operation, or cross-platform behavior. See [UI guide](./UI_GUIDE.md) and [accessibility review](./ACCESSIBILITY_REVIEW.md).
+The browser suite asserts that every page shares the frame (title aligned with section tabs), the 32px page title, and 40px standalone controls, alongside step-indicator alignment, retained writing across animated steps, reduced-motion controls and dialogs, pending-layout alignment, and the editor, navigation, profile, and persistence flows. Use fresh browser contexts and temporary server data; never seed the learner's real database. These checks do not establish visual fidelity, assistive-technology support, other browser engines, disconnected operation, or cross-platform behavior. See the [UI guide](./UI_GUIDE.md) for routes, keyboard behavior, and saved state, and the [accessibility review](./ACCESSIBILITY_REVIEW.md) for manual checks.

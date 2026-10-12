@@ -4,14 +4,14 @@ This is a prepared protocol, not evidence of completed learner sessions. Do not 
 
 ## Session setup
 
-For the daily-practice iteration, recruit three to five returning TypeScript developers when the internal build is ready. Participant availability is pending. This protocol does not authorize sending invitations or collecting learner work. No accounts are needed. Each participant uses a local profile; export is optional, and keep their work on their machine unless they explicitly agree to share it. Explain that the product is being tested, not the person's intelligence.
+Recruit three to five returning TypeScript developers when the internal build is ready. Participant availability is pending. This protocol does not authorize sending invitations or collecting learner work. No accounts are needed. Each participant uses a local profile; export is optional, and keep their work on their machine unless they explicitly agree to share it. Explain that the product is being tested, not the person's intelligence.
 
 Record observations locally with a participant alias rather than identifying information. Let the participant choose whether the observer sees code or written reflections. Do not send telemetry or silently collect their notebook.
 
 ## First session
 
-1. Ask the participant to explain the purpose of the home recommendation in their own words.
-2. Have them open Knowledge, find arrays, and describe a worked example before checking the prediction.
+1. Ask the participant to explain the purpose of the Trail recommendation in their own words.
+2. Have them open Library → Lessons, find arrays, and describe a worked example before checking the prediction.
 3. Observe guided practice: record where wording, syntax, planning, or feedback causes confusion. Let them request hints themselves.
 4. Ask them to solve a related independent task and explain an empty/equality boundary.
 5. Ask them to review their understanding, approach, implementation, and explanation with the rubric. Check whether they understand which evidence is automatic and which judgment is their own.
@@ -49,21 +49,21 @@ An incorrect attempt is useful evidence. Inspect whether the cause is an unclear
 - Proposed content or product change:
 - What still cannot be concluded:
 
-## Daily practice observation packet (stages 3 and 4)
+## Daily practice walkthrough
 
-Run this focused walkthrough before the broader knowledge and transfer protocol above. Use a fresh local profile or participant-owned data with consent; never alter their existing work merely to stage a scenario. Use prepared disposable profiles for a due recall and for drafts inside and outside the chosen path. Record any facilitator setup separately from learner actions.
+Run this focused walkthrough before the broader knowledge and transfer protocol above. Use a fresh local profile or participant-owned data with consent; never alter their existing work merely to stage a scenario. Use prepared disposable profiles for a due recall and for drafts inside and outside the chosen track. Record any facilitator setup separately from learner actions.
 
 Ask neutrally, without pointing to the intended control:
 
-1. “What would you practice next, and why?” Observe whether the learner identifies the recommendation and its reason. In the due-recall scenario, check whether they understand why it can come from another path without changing their goal.
-2. “Choose the path you want to focus on. What changed?” Observe explicit goal choice versus browsing. With no due recall, inspect whether the learner can find the draft within that goal and other available work.
+1. “What would you practice next, and why?” Observe whether the learner identifies the recommendation and its reason. In the due-recall scenario, check whether they understand why it can come from another track without changing their goal.
+2. “Choose the track you want to focus on. What changed?” Observe explicit goal choice versus browsing. With no due recall, inspect whether the learner can find the draft within that track and other available work.
 3. “Open a short rep. You can request help if you want it.” Observe intentional rep start, intentional help reveal, and the learner's explanation of its effect on independent evidence.
 4. “Stop before finishing the rep.” Observe whether they understand the rep remains incomplete and the draft is saved.
-5. “Close and return to the app, then continue your work.” Observe Home, explicit resume, and preserved code and writing.
-6. “Explain what this path and your practice history show about your progress.” Observe whether completed attempts, independence, and retention are distinguished without facilitator teaching.
+5. “Close and return to the app, then continue your work.” Observe Trail, explicit resume, and preserved code and writing.
+6. “Explain what this track and your Journal show about your progress.” Observe whether completed attempts, independence, and retention are distinguished without facilitator teaching.
 7. “What would you do next?” Record the learner's intended action, including whether another rep feels optional.
 
-After at least three days, use an eligible authored recall without exposing the prior solution. Record hints and independent explanation separately from passing behavioral checks.  Apply the broader later-session protocol for transfer; do not infer effectiveness from one successful walkthrough.
+After at least three days, use an eligible authored recall without exposing the prior solution. Record hints and independent explanation separately from passing behavioral checks. Apply the broader later-session protocol for transfer; do not infer effectiveness from one successful walkthrough.
 
 ### Record per scenario
 
@@ -79,7 +79,7 @@ After at least three days, use an eligible authored recall without exposing the 
 - Follow-up recall date and actual result, or pending:
 - Supported finding and remaining uncertainty:
 
-### Stage 4 finding record
+### Finding record
 
 For each proposed fix, record the source (automated failure, manual walkthrough, or learner observation), reproducible steps or observation context, expected versus actual behavior, learner impact, proposed scoped change, and checks to rerun. Distinguish isolated preference from repeated confusion. A single data-loss or accessibility blocker can justify action without waiting for repeated reports.
 

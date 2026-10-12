@@ -31,7 +31,7 @@ To try the production-like local app with SQLite, run `yarn build` then `yarn se
 | `git diff --check` | Whitespace errors and conflict markers | Before every commit |
 | `yarn package` then `node scripts/verify-portable.mjs` | The portable bundle starts, saves, restarts, and shuts down cleanly | Changes to packaging or the local server |
 
-`just check` runs lint, tests, and build, but **not** `yarn content:check`. CI (`.github/workflows/checks.yml`) runs `yarn content:check` and `yarn test:e2e` as well, so run content validation yourself before you push.
+`just check` runs lint, build, tests, and `yarn content:check`; `just check-all` also runs `yarn test:e2e`. CI (`.github/workflows/checks.yml`) runs the same gates, including the browser suite.
 
 Passing tests do not prove that a prompt is clear, that a check matches the contract, or that the app is accessible. Read new prompts as someone new to the terminology, and try them in `yarn dev`.
 
@@ -50,8 +50,8 @@ The command checks that the ID is kebab-case (lowercase letters and digits joine
 The output has five blocks, in order:
 
 1. **Rep object**: paste into the rep array exported by the module. Replace every `TODO`. The required fields are listed in the `Rep` type in `src/rep-types.ts`.
-2. **Depth entry**: `reasoning`, `trace`, `alternative`, `counterexample`, and `transfer`. Add it to the matching `src/review-*.ts` depth export; `src/rep-depth.ts` aggregates it.
-3. **Self-review guide**: `plan`, `explanation`, and `example`. Add it to `src/reflection-guides.ts` or the matching review module. `yarn content:check` fails without it.
+2. **Depth entry**: `reasoning`, `trace`, `alternative`, `counterexample`, and `transfer`. Add it to the matching `src/review-*.ts` depth export; the review registry aggregates it.
+3. **Self-review guide**: `plan`, `explanation`, and `example`. Add it to the matching `src/review-*.ts` module. `yarn content:check` fails without it.
 4. **Reference solution**: a complete independent implementation in `tests/fixtures/`. Use the fixture file for your module, for example `tests/fixtures/foundations-solutions.mjs`. If you create a new fixture file, add it to the spread in `tests/content.test.mjs`.
 5. **Follow-up checklist**: the steps below, in the same order.
 
@@ -114,7 +114,7 @@ Every vocabulary term on a rep needs a gloss in `indonesianGlossary` in `src/voc
 | `yarn build` fails with "Bundle budget exceeded: Initial JavaScript" (or another group) | A startup module imported heavy content or a review module | Find the import chain from `src/main.tsx`. Move the content into a rep-content, lesson, or `src/review-*.ts` module loaded on demand. After `yarn build`, `dist/bundle-size.json` lists the size of each group |
 | `yarn build` fails with "Unused language workers were bundled" | An extra worker was pulled in by a dependency | Check the imports that added the worker before changing the budget |
 | `yarn test:e2e` fails to start the server, or Vite reports the port is in use | Port 4175 is busy. The Playwright server uses `--strictPort`, so it will not pick another port | Run `E2E_PORT=4207 yarn test:e2e` (any free port). Use a different `E2E_PORT` for each checkout you test side by side |
-| `yarn content:check` reports "missing self-review" | No entry in `src/reflection-guides.ts` (or the matching review module) | Add the `plan`, `explanation`, and `example` guide for that rep |
+| `yarn content:check` reports "missing self-review" | No self-review guide in the matching `src/review-*.ts` module | Add the `plan`, `explanation`, and `example` guide for that rep |
 | `yarn content:check` reports "missing ... " for a field | A required field is empty | Fill the field. Required fields: `title`, `category`, `prompt`, `note`, `planPrompt`, `starter`, `functionName` |
 | `yarn content:check` reports "missing or duplicate checks" | No checks, or two checks share a name | Give every check a unique name |
 | `yarn content:check` reports "Exercise IDs must be unique." | Two reps share an ID, often after copying a rep | Rename the new rep with a fresh, stable ID |
@@ -128,7 +128,7 @@ Every vocabulary term on a rep needs a gloss in `indonesianGlossary` in `src/voc
 Parallel content branches often edit the same generated and registry files.
 
 - **`src/catalog-index.ts` conflicts: regenerate, do not hand-merge.** Take either side of the conflicted file (for example `git checkout --ours -- src/catalog-index.ts`), then run `yarn content:index`, `git add src/catalog-index.ts`, and continue the merge. The generated output depends on the final catalog, so hand edits are wrong even when they look plausible.
-- **Registry conflicts (`src/rep-sources.ts`, `src/rep-content.ts`, `src/path.ts`, `src/rep-levels.ts`, `src/vocabulary-id.ts`, `src/rep-depth.ts`) are hand-merged.** Keep both sides' entries. Check for duplicate keys, and check the lists are in the order the file expects.
+- **Registry conflicts (`src/rep-sources.ts`, `src/rep-content.ts`, `src/path.ts`, `src/rep-levels.ts`, `src/vocabulary-id.ts`, and the review registries) are hand-merged.** Keep both sides' entries. Check for duplicate keys, and check the lists are in the order the file expects.
 - **After any merge that touches content:** run `yarn content:index`, `yarn content:check`, `yarn test`, `yarn lint`, and `yarn build`. A clean textual merge can still break a rep ID, a glossary key, or a level.
 - Give each parallel checkout its own `E2E_PORT` if you run the browser suite at the same time.
 
@@ -143,6 +143,10 @@ Learner data is local. Know where it lives before you release, reset, or move an
 | Learner JSON backup | **Progress → Download backup** in the app | The portable way to move work between machines. Import with **Progress → Import backup** |
 | Browser copy | The browser's own storage for the same address and port | Used before the server saves. Changing the port hides it, so keep the port stable |
 | Portable bundle | `release/code-reps-<platform>-<arch>` after `yarn package` | Git-ignored. Built output, not learner data |
+
+### Retired practice-session records
+
+Practice sessions were retired from the interface, but their data contract is still read. `code-reps:sessions:v1` (`src/practice-sessions.ts`) is a profile-scoped, versioned object with a revision token and session records; each record has a stable session ID, rep ID, start date, reflection, and hint count, with an optional end date, difficulty, and completed-attempt ID. It accepts at most 1,000 records, 2,000 characters per reflection, and 800,000 serialized UTF-8 bytes. Learner backups may carry an optional `sessions` field and full-profile files may carry `sessions:v1`; both are validated on import (`src/portability.ts`, `src/profile-backup.ts`), and invalid session data rejects the import before anything is replaced. Older files without sessions remain valid. The app no longer creates or shows these records, and they never counted toward completion, streaks, independence, retention, or recall scheduling. Keep this contract readable until a deliberate migration removes it. The original design is [archived](./archive/DAILY_SESSION_DESIGN.md).
 
 Rules for maintainers:
 

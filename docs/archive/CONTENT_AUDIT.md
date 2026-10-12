@@ -1,5 +1,7 @@
 # Learning quality audit — 2026-09-30
 
+> **Archived 2026-10-12.** Historical record, not current behavior. Its still-open items moved to section 5 of the [roadmap](../../ROADMAP.md).
+
 Reviewed all 29 authored reps across foundations, core exercises, journeys, transfer tasks, and AI-era/frontend/backend/interview content. Reviewed the five paths and four journeys for progression: language foundations precede applications; guided, independent, and recall tasks remain distinct. No rep IDs or learner history keys changed.
 
 ## Changes
@@ -38,7 +40,7 @@ Verification: content validation, lint, build/typecheck, all 107 tests, and whit
 
 ## Rep and lesson audit — 2026-10-09 (catalog of 83 reps, 34 lessons)
 
-Read-only pass against [Content authoring](./CONTENT_AUTHORING.md). No source files changed. Every rep and knowledge lesson, with its depth entry, was read line by line. Reflection guides were checked by the existing coverage test (every rep has one) but not reviewed sentence by sentence. Evidence is cited as `file:line`. Counts in the earlier sections above are historical and no longer match the catalog.
+Read-only pass against [Content authoring](../CONTENT_AUTHORING.md). No source files changed. Every rep and knowledge lesson, with its depth entry, was read line by line. Reflection guides were checked by the existing coverage test (every rep has one) but not reviewed sentence by sentence. Evidence is cited as `file:line`. Counts in the earlier sections above are historical and no longer match the catalog.
 
 The findings and scores below preserve the original audit snapshot. **Status (updated)** notes were checked against the current implementation on 2026-10-09; historical line references may have moved. Fixed means the named editorial change is present, not that learner comprehension or retention has been validated.
 
@@ -244,7 +246,7 @@ Skill block at `src/knowledge.ts` (line of `id`), lesson depth at `src/lesson-de
 
 ## Top 15 fixes
 
-Ranked by learner impact. ID impact follows [Content authoring](./CONTENT_AUTHORING.md): changing a checked question's answer or option order needs a new question ID. A prompt-only edit does not.
+Ranked by learner impact. ID impact follows [Content authoring](../CONTENT_AUTHORING.md): changing a checked question's answer or option order needs a new question ID. A prompt-only edit does not.
 
 1. **`read-batch-labels` — remove the answer from the example and make learners trace.** `src/rich-reps.ts:62` shows the answer to check 1 (`src/rich-reps.ts:70`). Replace the example with a case that is not checked, for example `collectLabels([' Cy ', 'cy', ' Cy'])` → `['Cy', 'cy']`. Change the planning prompt (line 65) to require a row per input: raw value, trimmed label, Set contents, and output. ID impact: none; this is a rep, not an interactive question.
    - **Status (updated):** Fixed — The Cy/cy example is separate from the checked cases, and the plan requires raw, trimmed, Set, and output columns (`src/rich-reps.ts`).

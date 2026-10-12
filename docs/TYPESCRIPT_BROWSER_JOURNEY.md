@@ -24,7 +24,7 @@ The TypeScript boundaries batch now adds a dedicated lesson and reps for unknown
 
 The existing catalog is a useful foundation but is not sufficient evidence for this finish line. The TypeScript path starts with five language reps and then emphasizes collection problem solving. Existing DOM and multi-file directory tasks provide a starting point for browser practice, while the ticket project exercises simulated handler behavior.
 
-The [content gap map](./CONTENT_GAPS.md) identifies incomplete independent and recall journeys for language foundations, frontend state, debugging, and learner-authored tests. It also distinguishes deterministic async policy traces from actual asynchronous composition and failure handling.
+The [content gap map](./CONTENT_GAPS.md) lists the topics that still lack independent and recall journeys. Dedicated journeys now cover state modeling, TypeScript boundaries, interface logic, DOM interactions, learner-written test cases, maintenance, and local asynchronous work; deterministic async policy traces remain distinct from actual asynchronous composition.
 
 `src/compile-solution.ts` uses `transpileModule`; its diagnostics are not full semantic type checking. Behavioral success must remain separate from evidence of TypeScript correctness. Type-focused assessment requires semantic compiler checks, with normal and deliberately invalid cases, before claiming that the app assesses type-system fluency.
 

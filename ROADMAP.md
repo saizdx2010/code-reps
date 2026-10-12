@@ -9,11 +9,11 @@ This roadmap uses ordered phases rather than promised dates or release numbers. 
 ## What already exists
 
 - [x] A practice workspace with plans, code, checks, explanations, hints, authored reviews, and saved attempts.
-- [x] Trail, Library, and Progress, with Foundations plus Problem solving, Frontend, and Backend tracks.
+- [x] Trail, Library, and Progress, with Foundations plus Problem solving, Pattern Recognition, Frontend, and Backend tracks.
 - [x] Lessons, interactive predictions, glossary help, and guided → independent → delayed-recall skill journeys.
 - [x] Debugging, code reading, refactoring, DOM interactions, multi-file projects, and optional timed interviews.
 - [x] Problem-solving content covering collections, sorting, recursion, trees, graphs, linked structures, heaps, backtracking, and dynamic programming.
-- [x] Recommendations, resumable drafts, due reviews, weekly planning, a Journal, and explicit practice-session records.
+- [x] Recommendations, resumable drafts, due reviews, weekly planning, and a Journal of attempts, notes, and mistake tags.
 - [x] Local profiles, browser persistence, a loopback SQLite service, backups, imports, and portable web bundles.
 - [x] Profile summaries with streaks, path completion rows, and completion badges on Progress. Badges are derived from completed attempts and the current paths, with a quiet notice when one is earned.
 - [x] Automated content checks, Node tests, Chromium flows, and build budgets.
@@ -27,7 +27,7 @@ Implemented features do not establish learner comprehension, full accessibility,
 - [x] Make Trail's primary action answer three questions: what should I practice, why this rep, and what comes afterward. The Home “Up next” panel shows the rep, its reason, and an afterward line.
 - [x] Offer a short, optional walkthrough around the real “Declare a value” rep. Introduce checks, hints, writing, and completion at the relevant steps; allow skipping and replay from Trail without replacing saved work.
 - [x] Make the selected learning goal obvious, with an easy way to change it and a clear explanation that browsing another track does not change the goal.
-- [x] Clarify opening a rep versus recording a practice session with “Record a session” and “Resume session” actions. Completing a rep and ending a session remain separate actions.
+- [x] ~~Clarify opening a rep versus recording a practice session with “Record a session” and “Resume session” actions.~~ Superseded: practice sessions were retired from the interface (769a139), so a completed attempt is the record of practice. Existing `sessions:v1` records still import.
 - [x] Offer a small daily choice: continue saved work, take the recommended next rep, or choose a due review. Keep other tools reachable through existing sections.
 - [x] Improve recommendation reasons with the specific skill involved, rather than only naming the selected track. Concrete prerequisite and readiness guidance remains in section 2.
 - [x] Keep advanced planning, assessment, and management controls secondary so they do not compete with the next useful action. Planning and evidence are text links below the primary action, and changing the starting point is under a disclosure.
@@ -55,12 +55,12 @@ Implemented features do not establish learner comprehension, full accessibility,
 
 - [x] Turn existing path completion rows into recognizable badges within the local profile on Progress. Reuse the logo palette, shared geometry, and reduced-motion behavior.
 - [x] Add smaller milestones, starting with a first completed rep and a completed path stage, so recognition does not require finishing an entire track.
-- [x] Give each badge a name, clear earning rule, earned or unearned state, progress where useful, and a link to supporting work. Show an earned date when it can be derived reliably.
-- [x] Show earned badges prominently and keep upcoming badges compact. Use text alongside artwork so status is understandable without color.
+- [x] Give each badge a name, clear earning rule, and a link to supporting work. Show an earned date when it can be derived reliably.
+- [x] Show earned badges on Progress. Progress later moved to listing only earned badges, quietly, with no upcoming list. Use text alongside artwork so status is understandable without color.
 - [x] Offer a restrained acknowledgement when a milestone is reached. Avoid repeated celebrations on reload and preserve keyboard focus.
-- [x] Derive completion from the active profile's existing completed attempts where possible. Repeated attempts must not inflate distinct-rep milestones; unfinished drafts and ended sessions must not count as rep completion.
+- [x] Derive completion from the active profile's existing completed attempts where possible. Repeated attempts must not inflate distinct-rep milestones; unfinished drafts must not count as rep completion.
 - [x] Keep completion badges separate from independent and retained skill evidence. Hinted completions may earn completion badges; they must not imply mastery.
-- [x] Decide how badges behave when a path gains or replaces required reps before introducing durable awards. Preserve rep IDs and define any storage or migration change explicitly. Badges stay derived from the current path: an added required rep returns an earned badge to upcoming with its completed count kept, and a removed rep stops counting toward the badge (see the [README](./README.md)).
+- [x] Decide how badges behave when a path gains or replaces required reps before introducing durable awards. Preserve rep IDs and define any storage or migration change explicitly. Badges stay derived from the current path: an added required rep stops showing an earned badge as earned while its completed reps are kept, and a removed rep stops counting toward the badge (see the [README](./README.md)).
 - [x] Cover badge derivation with unit tests: repeat attempts, hinted completions, invalid and future dates, earliest first completion, and separate profile histories (`tests/badges.test.mjs`).
 - [x] Verify badges in the browser: switching profiles, importing backed-up history, reloading, and narrow layouts. `tests/e2e/badges.spec.ts` covers each of these in Chromium at desktop width and at 390px; the unit tests in `tests/badges.test.mjs` cover derivation and path edits.
 
@@ -77,7 +77,7 @@ Start with one connected plain TypeScript browser feature using the existing DOM
 - [x] Add a learner-written testing journey: choose boundary cases, expose a plausible faulty implementation, repair it, and apply the skill in a fresh delayed task. One journey ships (pagination cases, a range-label repair, and an interval-overlap transfer rep); checks show the learner's cases separate the supplied variants, not that a case table is complete. More journeys are authored with `docs/FIND_THE_BUG.md`.
 - [x] Add actual asynchronous practice using deterministic local fixtures: awaiting work, parallel operations, partial failure, cancellation, and cleanup. Distinguish policy traces from runtime behavior.
 - [x] Add a maintenance journey: read unfamiliar code, reproduce a bug, write a regression test, fix it, and adapt to a changed requirement. Six reps ship (a shipping module read, reproduce, guard-and-fix, and adapt sequence, then library-fines and room-booking transfer reps); checks show a case separates the original from the fix, not that a regression suite is complete. See `docs/MAINTENANCE_JOURNEY.md`.
-- [ ] Use existing external browser project briefs as transfer options. External self-reviews remain learner-reported rather than checked fluency evidence.
+- [x] Use existing external browser project briefs as transfer options. Each of the three projects in Library → Projects (`src/browser-projects.ts`) offers a later transfer challenge recorded through the notebook template. External self-reviews remain learner-reported rather than checked fluency evidence.
 
 **Done when:** One complete feature can be built, tested, explained, and repaired through the existing practice loop. Behavioral checks, type checks, visual review, accessibility review, and self-reviewed reasoning remain distinct.
 
@@ -86,12 +86,15 @@ Start with one connected plain TypeScript browser feature using the existing DOM
 **Goal:** Build confidence through different applications of the same skill before adding more topics.
 
 - [ ] Record where you get stuck during ordinary practice: wording, missing prerequisite, approach, syntax, boundaries, or integration. Use those notes to select the next content batch.
-- [x] Add a DOM interactions journey with guided, independent, and delayed-recall stages. Its `dom-*` reps (disclosure, tabs, accessible form, live search) exist, but no journey in `src/learning.ts` stages them.
+- [x] Add a DOM interactions journey with guided, independent, and delayed-recall stages. The `dom-interactions` journey in `src/learning.ts` stages `dom-disclosure`, `dom-live-search`, and `dom-accordion`.
 - [x] Add knowledge lessons for sorting, recursion, trees, and graphs (`sorting-basics`, `recursion-basics`, `trees`, `graphs` in `src/dsa-knowledge.ts`, with discussions in `src/review-dsa-lessons.ts`).
-- [x] Review the sorting, recursion, tree, and graph journeys for difficulty transitions and unfamiliar transfer. Findings and fixes (a fresh sorting recall, tree and graph bridge practice reps, trimmed lesson clues) are in `docs/DSA_JOURNEY_REVIEW.md`; this is editorial review, not learner evidence.
+- [x] Review the sorting, recursion, tree, and graph journeys for difficulty transitions and unfamiliar transfer. Findings and fixes (a fresh sorting recall, tree and graph bridge practice reps, trimmed lesson clues) are in the archived [journey review](./docs/archive/DSA_JOURNEY_REVIEW.md); this is editorial review, not learner evidence.
 - [ ] Add independent or recall tasks to queues, two pointers, windows, or binary search only when learner observations show a specific gap. Each of those four already has guided, independent, and delayed-recall journey stages.
 - [x] Deepen TypeScript through narrowing unknown input, discriminated unions, exhaustive handling, generics, and reusable typed APIs. Separate compile-time guarantees from behavioral checks.
 - [ ] Strengthen debugging and frontend practice with fresh contexts instead of cosmetic variants of the same problem.
+- [ ] Add structured step-by-step traces (`traceSteps`) to the reviews of `read-batch-labels`, `preview-slot-results`, `validate-import-batch`, `debug-page-offset`, and `leading-throttle`. Their reviews still trace in prose only; each was named as a visual-trace candidate in the archived [content audit](./docs/archive/CONTENT_AUDIT.md).
+- [ ] Keep final hints as non-code guidance. Several Foundations reps (`declare-variables`, `basic-types`, `create-objects`) still end with the code to write; move that code into the post-attempt review.
+- [ ] Replace weak recall variants: `first-duplicate-label` and `sum-matching-prices` repeat their guided comparison and accumulation patterns. Give each a changed comparison or data shape, appended after existing variants so saved review positions keep their meaning.
 - [ ] Keep batches small and complete: a lesson where needed, guided practice, an independent application, delayed recall, reference solutions, boundaries, hints, and authored review.
 
 **Done when:** Each chosen batch addresses a difficulty observed in your own use and includes a fresh application that cannot be solved merely by recalling the previous answer. Later attempts support only the evidence the task actually establishes.
@@ -111,14 +114,7 @@ These options should not delay making daily personal practice clear and enjoyabl
 
 Keep browser development and the local SQLite mode usable. Protect profile separation, stable content IDs, pending writes, drafts, backups, cancellation, and rejection of stale results.
 
-- Source changes: run relevant focused tests, then `yarn lint`, `yarn test`, and `yarn build`.
-- Content, assessment, or content-model changes: also run `yarn content:check`.
-- Practice, editor, navigation, profile, or browser-persistence changes: also run `yarn test:e2e` using its dedicated server and fresh contexts.
-- UI changes: inspect the affected flow at representative sizes, with keyboard access and work preservation. Automated flows do not establish visual fidelity or assistive-technology support.
-- Packaging or local-service changes: run `yarn package` and `node scripts/verify-portable.mjs` as appropriate, using temporary data directories.
-- Documentation changes: review links, paths, and commands. Finish every change with `git diff --check` and review the final diff.
-
-Record failures and unavailable checks explicitly. See [local reliability](./docs/LOCAL_RELIABILITY.md), [accessibility review](./docs/ACCESSIBILITY_REVIEW.md), and [portable bundles](./docs/PORTABLE_BUNDLE.md).
+Run the gates that match each change, as listed in [Maintaining](./docs/MAINTAINING.md#what-each-gate-catches) and [AGENTS.md](./AGENTS.md#verification-and-delivery). Automated flows do not establish visual fidelity or assistive-technology support, so UI changes also need a walkthrough at representative sizes with the keyboard. Record failures and unavailable checks explicitly. See [local reliability](./docs/LOCAL_RELIABILITY.md), [accessibility review](./docs/ACCESSIBILITY_REVIEW.md), and [portable bundles](./docs/PORTABLE_BUNDLE.md).
 
 ## Before sharing more widely
 

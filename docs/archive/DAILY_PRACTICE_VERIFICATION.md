@@ -1,10 +1,12 @@
 # Daily practice verification and findings
 
+> **Archived 2026-10-12.** Historical record, not current behavior. Practice sessions were later retired from the interface (769a139, c5f5541).
+
 ## Scope and build
 
 Stages 3 and 4 were authorized after the shared-understanding interview. This report covers the current uncommitted daily-practice work on top of `43ecb8a`, verified on macOS arm64 with Node 24.21.0 and Yarn 1.22.22. It is an internal engineering report, not public-release or learner-effectiveness approval.
 
-The [accepted plan](./DAILY_PRACTICE_PLAN.md) and [learner observation packet](./LEARNER_VALIDATION.md) define the scope. No participants were contacted and no learner observations were fabricated.
+The [accepted plan](./DAILY_PRACTICE_PLAN.md) and [learner observation packet](../LEARNER_VALIDATION.md) define the scope. No participants were contacted and no learner observations were fabricated.
 
 ## Engineering evidence
 
@@ -15,7 +17,7 @@ The [accepted plan](./DAILY_PRACTICE_PLAN.md) and [learner observation packet](.
 - Portable macOS arm64 bundle: packaged and passed `node scripts/verify-portable.mjs` (24 local assets, first run, paths with spaces, bundled runtime, save, restart, snapshot, clean shutdown). The verifier used temporary data.
 - Chromium: initial full run had 44 passes and one test-fixture failure described below. The corrected focused recall-session test passed. The final full rerun passed all 45 tests without retries.
 
-Coverage includes explicit path choice, early recall boundaries, narrow/keyboard flows, unfinished session endings, reload/new-session resume, immutable attempt links, profile separation, malformed imports, cross-tab conflicts, quota recovery, pending SQLite replay, and unchanged recall/independence evidence. See [browser testing](./BROWSER_TESTING.md) for detailed coverage and limits.
+Coverage includes explicit path choice, early recall boundaries, narrow/keyboard flows, unfinished session endings, reload/new-session resume, immutable attempt links, profile separation, malformed imports, cross-tab conflicts, quota recovery, pending SQLite replay, and unchanged recall/independence evidence. See [browser testing](../BROWSER_TESTING.md) for detailed coverage and limits.
 
 ## Stage 4 findings and response
 
