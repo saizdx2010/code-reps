@@ -1,7 +1,7 @@
+import { see } from './rep-helpers.ts'
 import type { Rep } from './rep.ts'
 
 // Observation and step helpers for the sandboxed DOM checks. Targets are data-testid values.
-const see = (target: string, read: string, value: unknown) => ({ target, read, value })
 const type = (target: string, value: string) => ({ do: 'type', target, value })
 const click = (target: string) => ({ do: 'click', target })
 const focus = (target: string) => ({ do: 'focus', target })

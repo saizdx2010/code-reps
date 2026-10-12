@@ -1,5 +1,5 @@
+import { see } from './rep-helpers.ts'
 import type { Rep } from './rep-types.ts'
-const see = (target: string, read: string, value: unknown) => ({ target, read, value })
 const check = (name: string, steps: unknown[], expected: unknown[], channel = 'north') => ({ name, input: [{ props: { channel }, steps }], expected })
 export const reactReps: Rep[] = [{
   id: 'react-channel-counter', title: 'Subscribe with a React effect', category: 'Frontend', format: 'frontend', reactPreview: true,
