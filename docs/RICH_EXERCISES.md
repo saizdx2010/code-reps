@@ -58,7 +58,7 @@ feature checkpoint, not a guided/independent/delayed testing journey. The indepe
 brief combines the same feature requirements with an empty entry file and no module
 plan. Type modeling, module design, keyboard usability, visual quality, and
 assistive-technology behavior remain self-reviewed separately from DOM checks.
-Async and maintenance journeys remain planned in the roadmap.
+Async practice with deterministic local fixtures is described in [Content authoring](./CONTENT_AUTHORING.md#local-asynchronous-function-checks); the maintenance journey is described below.
 
 ## Find-the-bug journey
 
