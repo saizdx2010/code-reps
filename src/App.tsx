@@ -37,7 +37,7 @@ import { Button } from './Button'
 import { useReviewContent } from './useReviewContent'
 import { attemptStatus, getPracticePlan, nextRepInPath, practiceWritingPrompts, appendSentenceStarter } from './practice'
 import type { LearnerStart } from './learning'
-import { mergeHistory, parseBackup } from './portability'
+import { BackupTooLargeError, backupFileText, mergeHistory, parseBackup } from './portability'
 import type { Backup } from './portability'
 import { flushStorage, isServerReady, localStore, retryStorage, storageIssue } from './local-store'
 import { mistakeTags, normalizeMistakes } from './mistakes'
@@ -368,14 +368,17 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
       }
       if (attempt.code !== undefined) drafts[repId] = { ...attempt, code: attempt.code }
       const backup: Backup = { format: 'code-reps-backup', version: 1, exportedAt: new Date().toISOString(), learnerStart, history, drafts, learning: fluency.state, sessions: sessions.backup() }
-      const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }))
+      // Refuses, rather than writes, a file that import would reject.
+      const url = URL.createObjectURL(new Blob([backupFileText(backup)], { type: 'application/json' }))
       const link = document.createElement('a')
       link.href = url
       link.download = `code-reps-backup-${new Date().toISOString().slice(0, 10)}.json`
       link.click()
       window.setTimeout(() => URL.revokeObjectURL(url), 1000)
       setTransferMessage('Backup downloaded to this device.')
-    } catch { setTransferMessage('The backup could not be created on this device.') }
+    } catch (error) {
+      setTransferMessage(error instanceof BackupTooLargeError ? error.message : 'The backup could not be created on this device.')
+    }
   }
 
   async function importData(file: File) {
