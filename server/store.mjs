@@ -3,8 +3,7 @@ import { existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 import { DatabaseSync, backup } from 'node:sqlite'
-
-const keyAllowed = (key) => typeof key === 'string' && /^code-reps:[a-z0-9:-]+$/.test(key) && key.length < 160
+import { storageKeyAllowed as keyAllowed } from './storage-keys.mjs'
 
 export function createStore(dataDir = process.env.CODE_REPS_DATA_DIR || join(homedir(), '.code-reps')) {
   mkdirSync(dataDir, { recursive: true, mode: 0o700 })
