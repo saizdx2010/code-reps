@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { navigationArea, navigationSections, readRoute, routeHash, sectionView } from '../src/ui-navigation.ts'
 import { runRep } from '../src/runner.ts'
+import { hubTabs, isHubTab, learningPageTitles } from '../src/learning-pages.ts'
 
 test('exercise bookmarks, library, and every product page round-trip', () => {
   for (const view of ['sessions', 'home', 'catalog', 'paths', 'learn', 'progress', 'skillmap', 'history', 'knowledge', 'projects', 'interview', 'notebook', 'assessment', 'mistakes', 'plan']) {
@@ -40,6 +41,15 @@ test('unknown exercises and malformed bookmarks recover without throwing', () =>
   assert.deepEqual(readRoute('#/practice/%E0%A4%A', ['one']), { view: 'catalog' })
   assert.deepEqual(readRoute('#/missing', ['one']), { view: 'home' })
   assert.deepEqual(readRoute('', ['one']), { view: 'home' })
+})
+
+test('learning hub tabs are routable pages with a title each', () => {
+  assert.deepEqual([...hubTabs].sort(), Object.keys(learningPageTitles).sort())
+  for (const tab of hubTabs) {
+    assert.equal(isHubTab(tab), true)
+    assert.deepEqual(readRoute(routeHash({ view: tab }), ['one']), { view: tab })
+  }
+  for (const view of ['home', 'catalog', 'workspace', 'history', 'learn', 'progress']) assert.equal(isHubTab(view), false)
 })
 
 test('failed checks expose structured expected and actual feedback', () => {
