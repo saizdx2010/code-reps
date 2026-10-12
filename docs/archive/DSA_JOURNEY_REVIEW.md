@@ -1,5 +1,7 @@
 # Sorting, recursion, tree, and graph journey review
 
+> **Archived 2026-10-12.** Historical record, not current behavior. Its fixes shipped; this is editorial review, not learner evidence.
+
 Scope: the `sorting`, `recursion`, `trees`, and `graphs` journeys in `src/learning.ts`. For each, the lesson in `src/dsa-knowledge.ts`, the guided, independent, and recall reps, their hints, checks, and `src/review-dsa.ts` entries were read. Questions: how steep is each stage change, is recall a genuinely distinct application, do prompts or lessons leak the solution, and do the checks match the written contract.
 
 Method limits: this is an editorial review plus an automated scan of every authored check input against the stated size, range, uniqueness, and reciprocity limits (no violations found). It is not learner evidence; difficulty judgments are the reviewer's, not observed completion data.

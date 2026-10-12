@@ -59,5 +59,3 @@ This suite does not verify every storage-failure or upgrade case, disconnected o
 Configuration: `playwright.config.ts`. Tests: `tests/e2e/*.spec.ts`; shared editor helpers: `tests/e2e/helpers.ts`. Pull requests and pushes to main run the suite through `.github/workflows/checks.yml`, retaining failure reports for seven days. `yarn test` and `just check` do not run this suite; run `yarn test:e2e` explicitly for affected browser flows.
 
 See [performance measurements](./PERFORMANCE.md) and [the remaining accessibility/learner walkthrough](./ACCESSIBILITY_REVIEW.md) for their specific evidence boundaries.
-
-See [daily-practice verification](./DAILY_PRACTICE_VERIFICATION.md) for the stage 3 results, stage 4 findings, and pending learner gates.

@@ -1,5 +1,7 @@
 # Project audit — 7 October 2026
 
+> **Archived 2026-10-12.** Historical record, not current behavior. Its UI changes shipped; its two outstanding data findings (notebook draft replacement and the backup export/import size mismatch) were handled as separate fixes.
+
 ## Scope
 
 Reviewed the current worktree, product and design documentation, page rendering owners, practice and editor lifecycle, navigation, learning evidence, profiles, persistence, backup validation, local server, runners, tests, and distribution configuration. Existing uncommitted work was preserved.

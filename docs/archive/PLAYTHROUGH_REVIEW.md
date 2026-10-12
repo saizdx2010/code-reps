@@ -1,5 +1,7 @@
 # Prompt-only playthrough review
 
+> **Archived 2026-10-12.** Historical record, not current behavior. Follow-up fixes are recorded in its implementation status; check current source before reusing a finding.
+
 Date: 2026-10-09 · Branch: `content/playthrough-review` · Scope: 45 reps added or recently reworked (Foundations, algorithm, sorting/tree/graph, app-level frontend/backend, and DOM accessibility reps).
 
 The original review was read-only. The implementation status below records follow-up fixes on `content/playthrough-fixes`; original observations and verification limits remain historical.

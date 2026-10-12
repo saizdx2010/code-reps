@@ -1,10 +1,12 @@
 # Daily practice verification and findings
 
+> **Archived 2026-10-12.** Historical record, not current behavior. Practice sessions were later retired from the interface (769a139, c5f5541).
+
 ## Scope and build
 
 Stages 3 and 4 were authorized after the shared-understanding interview. This report covers the current uncommitted daily-practice work on top of `43ecb8a`, verified on macOS arm64 with Node 24.21.0 and Yarn 1.22.22. It is an internal engineering report, not public-release or learner-effectiveness approval.
 
-The [accepted plan](./DAILY_PRACTICE_PLAN.md) and [learner observation packet](./LEARNER_VALIDATION.md) define the scope. No participants were contacted and no learner observations were fabricated.
+The [accepted plan](./DAILY_PRACTICE_PLAN.md) and [learner observation packet](../LEARNER_VALIDATION.md) define the scope. No participants were contacted and no learner observations were fabricated.
 
 ## Engineering evidence
 

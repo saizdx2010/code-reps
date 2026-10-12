@@ -1,5 +1,7 @@
 # Daily practice sessions
 
+> **Archived 2026-10-12.** Historical record, not current behavior. Practice sessions were retired from the interface (769a139, c5f5541); `sessions:v1` records still import, as described in [Maintaining](../MAINTAINING.md#retired-practice-session-records).
+
 Status: shared understanding confirmed and stage 2 implemented. Learner observation remains pending.
 
 This is stage 2 of [the daily practice plan](./DAILY_PRACTICE_PLAN.md). It serves returning TypeScript developers within the existing free, local-first, authored-content boundaries.

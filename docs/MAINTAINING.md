@@ -144,6 +144,10 @@ Learner data is local. Know where it lives before you release, reset, or move an
 | Browser copy | The browser's own storage for the same address and port | Used before the server saves. Changing the port hides it, so keep the port stable |
 | Portable bundle | `release/code-reps-<platform>-<arch>` after `yarn package` | Git-ignored. Built output, not learner data |
 
+### Retired practice-session records
+
+Practice sessions were retired from the interface, but their data contract is still read. `code-reps:sessions:v1` (`src/practice-sessions.ts`) is a profile-scoped, versioned object with a revision token and session records; each record has a stable session ID, rep ID, start date, reflection, and hint count, with an optional end date, difficulty, and completed-attempt ID. It accepts at most 1,000 records, 2,000 characters per reflection, and 800,000 serialized UTF-8 bytes. Learner backups may carry an optional `sessions` field and full-profile files may carry `sessions:v1`; both are validated on import (`src/portability.ts`, `src/profile-backup.ts`), and invalid session data rejects the import before anything is replaced. Older files without sessions remain valid. The app no longer creates or shows these records, and they never counted toward completion, streaks, independence, retention, or recall scheduling. Keep this contract readable until a deliberate migration removes it. The original design is [archived](./archive/DAILY_SESSION_DESIGN.md).
+
 Rules for maintainers:
 
 - Before a risky local change to the data, stop the server and copy the whole `~/.code-reps` folder somewhere safe. Restore only into a temporary `CODE_REPS_DATA_DIR` first.

@@ -1,5 +1,7 @@
 # Daily practice and curriculum cohesion
 
+> **Archived 2026-10-12.** Historical record, not current behavior. Practice sessions were later retired from the interface (769a139, c5f5541).
+
 Status: shared understanding confirmed. Stages 1 and 2 implemented. Stage 3 engineering verification and observation preparation executed; stage 4 engineering findings addressed. Learner observation and the remaining manual/environment gates are pending. See [the verification report](./DAILY_PRACTICE_VERIFICATION.md).
 
 ## Agreed direction
