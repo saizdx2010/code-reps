@@ -1,16 +1,12 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { emptyFluency, parseFluency, recurringReviews, skillEvidence, weeklyPlan, relatedHelp } from '../src/fluency.ts'
-import { validateKnowledge } from '../src/knowledge-validation.ts'
 import { reps } from '../src/rep.ts'
 import { parseBackup } from '../src/portability.ts'
 import { completion, utcDay } from './helpers/records.mjs'
 const day = (n) => utcDay(2026,1,n)
 const record = (repId,n,hintCount=0,extra={}) => completion(repId,day(n),hintCount,{id:`${repId}-${n}`,plan:'plan',code:'code',explanation:'explanation',...extra})
 const retained = [record('sum-positive-numbers',1),record('count-even-numbers',2),record('count-above-threshold',5)]
-test('knowledge references, prerequisite graph, questions, projects and recall variants are valid',()=>{
-  assert.deepEqual(validateKnowledge(new Set(reps.map(r=>r.id))),[])
-})
 test('recurring recalls rotate only after the scheduled independent evidence and expand intervals',()=>{
   assert.equal(recurringReviews(retained,Date.parse(day(11)))[0].due,false)
   assert.equal(recurringReviews(retained,Date.parse(day(12)))[0].due,true)

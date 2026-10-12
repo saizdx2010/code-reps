@@ -117,10 +117,12 @@ test('practice exposes chronological hint-free records without gating stage or r
   assert.deepEqual(getJourney({ ...journeys[0], practice: undefined }, [], at(25)).practiced, [])
 })
 
-test('knowledge validation rejects missing, duplicate, and overlapping practice targets', () => {
+test('knowledge validation accepts the catalog and rejects missing, duplicate, and overlapping practice targets', () => {
   const journey = journeys[0]
   const original = journey.practice
   const ids = new Set(reps.map(rep => rep.id))
+  // References, the prerequisite graph, questions, projects, and recall variants are valid as authored.
+  assert.deepEqual(validateKnowledge(ids), [])
   try {
     journey.practice = ['missing-practice', journey.guided, journey.independent, journey.recall, recallVariants[journey.id][0], 'missing-practice']
     const problems = validateKnowledge(ids)
