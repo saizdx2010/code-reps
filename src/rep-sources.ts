@@ -13,7 +13,12 @@ import { connectedFeatureReps } from './connected-feature-reps.ts'
 import { coreReps } from './core-reps.ts'
 import { domReps } from './dom-reps.ts'
 import { dsaAdvancedReps } from './dsa-advanced-reps.ts'
-import { dsaReps } from './dsa-reps.ts'
+import { dsaGridReps } from './dsa-grid-reps.ts'
+import { dsaApplicationReps } from './dsa-application-reps.ts'
+import { dsaBasicsReps } from './dsa-basics-reps.ts'
+import { dsaPracticeReps } from './dsa-practice-reps.ts'
+import { dsaPuzzleReps } from './dsa-puzzle-reps.ts'
+import { dsaHarderReps } from './dsa-harder-reps.ts'
 import { fluencyReps } from './fluency-reps.ts'
 import { foundationReps, foundations } from './foundations.ts'
 import { journeyReps } from './journey-reps.ts'
@@ -31,7 +36,12 @@ export const repSources: { name: string; reps: Rep[]; lessons?: readonly RepSour
   { name: 'sqlite-reps', reps: sqliteReps },
   { name: 'practical-concepts', reps: practicalReps },
   { name: 'foundations', reps: foundationReps, lessons: foundations },
-  { name: 'dsa-reps', reps: dsaReps },
+  { name: 'dsa-grid-reps', reps: dsaGridReps },
+  { name: 'dsa-application-reps', reps: dsaApplicationReps },
+  { name: 'dsa-basics-reps', reps: dsaBasicsReps },
+  { name: 'dsa-practice-reps', reps: dsaPracticeReps },
+  { name: 'dsa-puzzle-reps', reps: dsaPuzzleReps },
+  { name: 'dsa-harder-reps', reps: dsaHarderReps },
   { name: 'dsa-advanced-reps', reps: dsaAdvancedReps },
   { name: 'ai-era-reps', reps: aiEraReps, lessons: coreLessons },
   { name: 'core-reps', reps: coreReps },
