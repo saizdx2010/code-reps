@@ -1,6 +1,7 @@
 import type { RepDepth } from './rep-depth.ts'
+import type { ReflectionGuide } from './reflection-guides.ts'
 
-export const validationGuides = {
+export const validationGuides: Record<string, ReflectionGuide> = {
   'validate-stock-adjustment': {
     plan: ['Separate shape, type, normalization, and allowed values.', 'Reject zero, fractions, and out-of-range changes.', 'Create a result without changing input.'],
     explanation: ['Trace a normalized SKU and both numerical limits.', 'Explain rejection versus coercion and clamping.', 'Account for string-processing costs.'],

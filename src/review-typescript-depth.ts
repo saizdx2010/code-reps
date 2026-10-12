@@ -1,5 +1,6 @@
 import type { RepDepth } from './rep-depth.ts'
 import type { LessonDepth } from './lesson-depth.ts'
+import type { ReflectionGuide } from './reflection-guides.ts'
 
 export const typescriptDepth: Record<string, RepDepth> = {
   'guard-contact-input': {
@@ -39,7 +40,7 @@ export const typescriptDepth: Record<string, RepDepth> = {
   }
 }
 
-export const typescriptGuides = {
+export const typescriptGuides: Record<string, ReflectionGuide> = {
   'guard-contact-input': {
     'plan': [
       'Which shape checks must happen before reading fields? Trace null, an array, and subscribed false.'

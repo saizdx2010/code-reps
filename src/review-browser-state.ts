@@ -1,7 +1,8 @@
 import type { RepDepth } from './rep-depth.ts'
 import type { LessonDepth } from './lesson-depth.ts'
+import type { ReflectionGuide } from './reflection-guides.ts'
 
-export const browserStateGuides = {
+export const browserStateGuides: Record<string, ReflectionGuide> = {
   'task-state-label': { plan: ['Identify the tag and fields for each variant.', 'Normalize only the draft title.'], explanation: ['Trace blank and saved labels.', 'Separate output evidence from type-check evidence.'], example: 'Checking kind narrows the state before I access its fields. Draft trimming is a contract rule, not a rule for saved labels. Worker output checks do not prove narrowing; I also run a strict compiler check outside the app.' },
   'saved-record-status': { plan: ['Restate all result shapes.', 'Preserve zero, false, and literal reason text.'], explanation: ['Explain why saved and failed fields differ.', 'Distinguish a supplied result from a real write acknowledgement.'], example: 'I use status to decide which payload exists, preserving recoverable rather than inferring it from reason text. Zero saved books is still success. This rep consumes a result and cannot prove the storage operation happened.' },
   'catalog-request-summary': { plan: ['Predict separate output sequences.', 'Distinguish empty titles from a blank title.'], explanation: ['Trace repeated IDs and mixed variants.', 'Explain why summary checks do not test real async ownership.'], example: 'Each request contributes according to status. A ready request contributes an empty ID only when titles has length zero. Appending preserves encounter order and duplicates. The supplied snapshots do not establish promise execution.' },

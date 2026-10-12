@@ -1,9 +1,8 @@
-import { asyncRepDepth, asyncGuides } from './review-async.ts'
 import type { RepDepth } from './rep-depth.ts'
 import type { LessonDepth } from './lesson-depth.ts'
+import type { ReflectionGuide } from './reflection-guides.ts'
 
 export const practicalRepDepth: Record<string, RepDepth> = {
-  ...asyncRepDepth,
   "closure-counters": {
     traceSteps: {"code": ["function makeCounter(start: number): () => number {", "  let count = start", "  return () => {", "    count++", "    return count", "  }", "}", "function counterTrace(starts: number[], calls: number[]): number[] {", "  const counters = starts.map(makeCounter)", "  const out: number[] = []", "  for (const i of calls) out.push(counters[i]())", "  return out", "}"], "input": "starts = [0, 10], calls = [0, 0, 1, 0]", "steps": [
       {"line": 8, "vars": {}, "structure": {"kind": "state", "entries": [["counter 0", "not made"], ["counter 1", "not made"]], "events": ["call 0", "call 0", "call 1", "call 0"]}, "note": "Make one counter for each start: one begins at 0 and one begins at 10. Each keeps its own count."},
@@ -291,8 +290,7 @@ export const practicalLessonDepth: Record<string, LessonDepth> = {
   }
 }
 
-export const practicalGuides = {
-  ...asyncGuides,
+export const practicalGuides: Record<string, ReflectionGuide> = {
   "closure-counters": {
     "plan": [
       "Restate the contract and its boundary rules.",

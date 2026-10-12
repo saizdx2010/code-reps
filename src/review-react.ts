@@ -1,4 +1,5 @@
 import type { RepDepth } from './rep-depth.ts'
+import type { ReflectionGuide } from './reflection-guides.ts'
 export const reactDepth: Record<string, RepDepth> = {
   'react-channel-counter': {
     reasoning: 'The total belongs to component state. The subscription belongs to the effect for channel and source. Returning its disposer makes replacement and unmount release that exact registration. Functional updates add to the latest total.',
@@ -8,7 +9,7 @@ export const reactDepth: Record<string, RepDepth> = {
     transfer: 'Add a pause control that releases the subscription without resetting the total. Decide which dependency changes the effect lifetime. This variation is self-reviewed; the original checks do not validate it.',
   },
 }
-export const reactGuides = {
+export const reactGuides: Record<string, ReflectionGuide> = {
   'react-channel-counter': {
     plan: ['Separate persistent state from the registration lifetime.', 'Name the changes that require a new subscription.', 'Plan how to observe cleanup at replacement and unmount.'],
     explanation: ['Trace an old-channel event after a switch.', 'Explain why the state updater uses its previous value.', 'Inspect effect use and dependencies yourself; passing checks only establishes behavior.'],

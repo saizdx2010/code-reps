@@ -1,4 +1,5 @@
 import type { RepDepth } from './rep-depth.ts'
+import type { ReflectionGuide } from './reflection-guides.ts'
 
 export const asyncRepDepth: Record<string, RepDepth> = {
   'search-request-state': {
@@ -25,7 +26,7 @@ export const asyncRepDepth: Record<string, RepDepth> = {
   },
 }
 
-export const asyncGuides = {
+export const asyncGuides: Record<string, ReflectionGuide> = {
   'search-request-state': { plan: ['Separate display state from pending request ownership.', 'List start, result, failure, cancellation, and duplicate behavior.'], explanation: ['Trace an obsolete failure after a newer success.', 'Explain ready empty results and why terminal events remove ownership.'], example: 'I keep a pending ID and a separate display state. Only the pending request can settle. I clear ownership after settlement, so late or duplicate events cannot change the display.' },
   'preview-slot-results': { plan: ['Track ownership separately for each slot.', 'Specify replacement and removal ordering.'], explanation: ['Trace removal and reselection while another slot loads.', 'Explain token matching, duplicate results, and output order.'], example: 'Each slot keeps its own pending token. Replacing its selection keeps its position; removing it discards ownership. A later selection is appended. A loaded event must match both its slot and pending token.' },
   'refresh-report-state': { plan: ['Keep accepted data separate from refresh state.', 'List what preserves data and what replaces it.'], explanation: ['Trace failure, retry, and a late old result.', 'Distinguish cancellation from failure and null from an empty string.'], example: 'Refresh keeps the accepted report visible and clears the prior error. Only its pending owner may settle. Success replaces the report; failure or cancellation retains it. All terminal events release ownership.' },

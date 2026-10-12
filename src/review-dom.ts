@@ -1,6 +1,7 @@
 import type { RepDepth } from './rep-depth.ts'
+import type { ReflectionGuide } from './reflection-guides.ts'
 
-export const domGuides: Record<string, { plan: string[]; explanation: string[]; example: string }> = {
+export const domGuides: Record<string, ReflectionGuide> = {
   'dom-form-fields': {
     plan: ['List the elements one field needs and the order they appear in.', 'Decide which two form settings put your own submit handler in charge.', 'Build the form once so later checkpoints can update it.'],
     explanation: ['Trace one field from props to its label and input, naming the value that links them.', 'Explain why a placeholder cannot replace a label.', 'Say what the checks do not prove: preventDefault being called, real clicks and Enter, and screen-reader names.'],
