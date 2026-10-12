@@ -53,6 +53,7 @@ import { StatusChip } from './Layout'
 import { statusTone } from './ui-status'
 import { repLevelLabel } from './rep-levels.ts'
 import { revealElement } from './ui-motion'
+import { savedMessage } from './save-status'
 
 const repIds = reps.map(rep => rep.id)
 const PathsPage = lazyRoute(() => import('./PathsPage').then(module => module.PathsPage), 'The tracks')
@@ -198,7 +199,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   const [results, setResults] = useState<TestResult[] | null>(null)
   const [runError, setRunError] = useState('')
   const [running, setRunning] = useState(false)
-  const [saveState, setSaveState] = useState(storageIssue() || (isServerReady() ? 'Saved on this laptop' : 'Saved in browser'))
+  const [saveState, setSaveState] = useState(storageIssue() || savedMessage())
   const cancelRunRef = useRef<(() => void) | null>(null)
   const saveGenerationRef = useRef(0)
   const [runNotice, setRunNotice] = useState('')
@@ -213,7 +214,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
       try {
         saveAttempt(repId, attempt)
         void flushStorage().then(() => {
-          if (generation === pendingSave.current) setSaveState(isServerReady() ? 'Saved on this laptop' : 'Saved in browser')
+          if (generation === pendingSave.current) setSaveState(savedMessage())
         }).catch(() => {
           if (generation === pendingSave.current) setSaveState('Could not save to the local server; download a backup')
         })
@@ -415,7 +416,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     try {
       saveAttempt(repId, attempt)
       await retryStorage()
-      setSaveState(isServerReady() ? 'Saved on this laptop' : 'Saved in browser')
+      setSaveState(savedMessage())
     } catch (error) { setSaveState(error instanceof Error ? error.message : 'Could not save; download a backup') }
   }
 
