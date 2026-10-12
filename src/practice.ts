@@ -10,6 +10,7 @@ import type { LearnerStart } from './learning.ts'
 import type { PortableAttempt, PortableRecord } from './portability.ts'
 import { byCompletedAt, DAY_MS } from './dates.ts'
 import { isDateString } from './guards.ts'
+import { formatDate } from './ui-copy.ts'
 
 export type PracticeAction = { repId: string; reason: string; mode: 'start' | 'resume' | 'review' | 'retry' }
 const delay = 3 * DAY_MS
@@ -54,7 +55,7 @@ export function getPracticePlan(drafts: Record<string, DraftAttempt>, history: P
     .map(rep => ({ repId: rep.id, mode: 'resume', reason: 'Continue your saved plan, code, and explanation.' }))
   const recalls: PracticeAction[] = progress.filter(state => state.recallDue).map(state => ({
     repId: state.journey.recall, mode: status(state.journey.recall) === 'In progress' ? 'resume' : 'review',
-    reason: `You solved the related problem without hints on ${new Date(state.independent!.completedAt).toLocaleDateString()}. ${status(state.journey.recall) === 'In progress' ? 'Continue your saved recall attempt.' : 'Try this different problem from a fresh start.'}`,
+    reason: `You solved the related problem without hints on ${formatDate(state.independent!.completedAt)}. ${status(state.journey.recall) === 'In progress' ? 'Continue your saved recall attempt.' : 'Try this different problem from a fresh start.'}`,
   }))
   const journeyIds = new Set(progress.flatMap(({ journey }) => [journey.guided, journey.independent, journey.recall]))
   const reviews: PracticeAction[] = [...latest.values()]

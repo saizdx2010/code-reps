@@ -4,6 +4,7 @@ import { getAllJourneys } from './learning.ts'
 import type { PortableRecord } from './portability.ts'
 import { isDateString, isPlainObject } from './guards.ts'
 import { byCompletedAt, DAY_MS } from './dates.ts'
+import { formatDate } from './ui-copy.ts'
 export type Judgment = 'not-yet' | 'with-help' | 'independent'
 export type SelfReview = { understanding: Judgment; approach: Judgment; implementation: Judgment; explanation: Judgment; evidence: string; updatedAt: string }
 export type LearningNote = { id: string; title: string; body: string; skillId: string; repId: string; kind: 'note' | 'mistake' | 'question'; updatedAt: string }
@@ -92,7 +93,7 @@ export function recurringReviews(history: PortableRecord[], now = Date.now()) {
     }
     const dueAt = anchor + interval * DAY_MS
     return [{ skillId: state.journey.id, title: state.journey.title, repId: variants[nextIndex], dueAt, due: now >= dueAt, interval, successes, evidence,
-      reason: `Your last scheduled recall was ${new Date(anchor).toLocaleDateString()}. ${interval} days allow a gap before testing the skill again. ${successes ? 'Independent recalls increased the interval.' : 'Try a different application without hints.'}` }]
+      reason: `Your last scheduled recall was ${formatDate(anchor)}. ${interval} days allow a gap before testing the skill again. ${successes ? 'Independent recalls increased the interval.' : 'Try a different application without hints.'}` }]
   })
 }
 export function skillEvidence(skillId: string, history: PortableRecord[], state: FluencyState) {

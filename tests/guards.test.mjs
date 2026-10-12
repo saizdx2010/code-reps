@@ -2,6 +2,11 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { isDateString, isPlainObject } from '../src/guards.ts'
 import { byCompletedAt, DAY_MS } from '../src/dates.ts'
+import { formatDate } from '../src/ui-copy.ts'
+import { repCurriculumEvidence } from '../src/curriculum.ts'
+import { recurringReviews } from '../src/fluency.ts'
+import { getAllJourneys } from '../src/learning.ts'
+import { getPracticePlan } from '../src/practice.ts'
 
 test('plain-object guard rejects null, arrays and primitives', () => {
   assert.equal(isPlainObject({}), true)
@@ -21,4 +26,19 @@ test('completed-at ordering is oldest first and keeps equal times in place', () 
   assert.deepEqual([...records].sort(byCompletedAt).map(r => r.id), ['a', 'b', 'c'])
   assert.deepEqual([...records].sort((a, b) => byCompletedAt(b, a)).map(r => r.id), ['b', 'c', 'a'])
   assert.equal(DAY_MS, 24 * 60 * 60 * 1000)
+})
+
+const record = (repId, completedAt) => ({ id: `${repId}-${completedAt}`, repId, completedAt, hintCount: 0, plan: 'plan', code: 'code', explanation: 'explanation' })
+
+test('recall and review reasons use the shared readable date format', () => {
+  const independent = [record('sum-positive-numbers', '2026-10-05T10:00:00Z'), record('count-even-numbers', '2026-10-05T12:00:00Z')]
+  const now = Date.parse('2026-10-20T12:00:00Z')
+  const progress = getAllJourneys(independent, now)
+  const recallAt = progress.find(state => state.journey.recall === 'count-above-threshold').recallAt
+  assert.equal(repCurriculumEvidence('count-above-threshold', progress), `Recall ready ${formatDate(recallAt)}.`)
+  const recall = getPracticePlan({}, independent, 'returning', '', now).due.find(action => action.repId === 'count-above-threshold')
+  assert.match(recall.reason, new RegExp(`without hints on ${formatDate('2026-10-05T12:00:00Z')}\\.`))
+  const retained = [...independent, record('count-above-threshold', '2026-10-09T10:00:00Z')]
+  const review = recurringReviews(retained, now)[0]
+  assert.match(review.reason, new RegExp(`^Your last scheduled recall was ${formatDate('2026-10-09T10:00:00Z')}\\.`))
 })
