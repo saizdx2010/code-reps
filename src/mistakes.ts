@@ -11,7 +11,6 @@ export const mistakeTags = [
 
 export type MistakeTagId = typeof mistakeTags[number]['id']
 const known = new Set<string>(mistakeTags.map(tag => tag.id))
-export const mistakeLabel = (id: string) => mistakeTags.find(tag => tag.id === id)?.label ?? id
 export const isMistakeTag = (value: unknown): value is MistakeTagId => typeof value === 'string' && known.has(value)
 
 /** Keeps known tag IDs once each, in catalog order. Anything else (unknown IDs, non-strings, non-arrays) is dropped. Returns undefined when no tag remains. */

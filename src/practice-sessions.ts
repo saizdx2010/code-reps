@@ -1,6 +1,6 @@
 export const sessionsKey = 'code-reps:sessions:v1'
 export const sessionLimit = 1000
-export const reflectionLimit = 2000
+const reflectionLimit = 2000
 export type PracticeSession = {
   id: string
   repId: string

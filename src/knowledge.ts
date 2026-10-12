@@ -222,7 +222,6 @@ export const skills: Skill[] = [
   ...dsaSkills,
 ]
 export const skillById = (id: string) => skills.find(skill => skill.id === id)
-export const skillsForRep = (id: string) => skills.filter(skill => skill.repIds.includes(id))
 export const contentVersion = 7
 
 // Discovery categories only; these do not change skill identity or learner evidence.
