@@ -1,7 +1,7 @@
 import { typescriptBoundarySkill } from './typescript-depth-knowledge.ts'
-import { browserStateSkill } from './browser-state-reps.ts'
+import { browserStateSkill } from './browser-state-knowledge.ts'
 import { dsaSkills } from './dsa-knowledge.ts'
-import { practicalSkills } from './practical-concepts.ts'
+import { practicalSkills } from './practical-knowledge.ts'
 export type Question = { completion?: boolean; id: string; prompt: string; code: string; options: string[]; answer: number; explanation: string }
 export type Skill = { id: string; title: string; summary: string; prerequisites: string[]; objectives: string[]; sections: { title: string; body: string }[]; example: string; walkthrough: string[]; mistakes: string[]; questions: Question[]; repIds: string[]; related: string[] }
 const q = (id: string, prompt: string, code: string, options: string[], answer: number, explanation: string): Question => ({ id, prompt, code, options, answer, explanation })
