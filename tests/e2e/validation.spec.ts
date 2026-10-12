@@ -21,6 +21,8 @@ async function finish(page: Page, id: string, code: string) {
 }
 
 test('validation journey requires a fresh delayed recall and remains discoverable', async ({ page }) => {
+  // Five full rep completions in one journey run close to the default limit on shared CI runners (about 43s of 45s).
+  test.slow()
   const start = Date.parse('2026-10-02T12:00:00Z')
   await page.clock.setFixedTime(start)
   await page.goto('/#/practice/backend-validate-user')
