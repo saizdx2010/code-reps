@@ -2,8 +2,8 @@ import { formatDate } from './ui-copy.ts'
 import { Button } from './Button'
 import { Icon } from './Icon'
 import { Input, Select, Textarea } from './Input'
-import { useState } from 'react'
-import type { FormEvent } from 'react'
+import { useRef, useState } from 'react'
+import type { FormEvent, RefObject } from 'react'
 import { skills, skillById } from './knowledge'
 import type { FluencyState, LearningNote } from './fluency'
 import { repIndex as reps } from './catalog-index'
@@ -13,27 +13,53 @@ type Props = { state: FluencyState; update: (next: FluencyState) => boolean }
 
 const blankNote = (): LearningNote => ({ id: crypto.randomUUID(), title: '', body: '', skillId: '', repId: '', kind: 'note', updatedAt: new Date().toISOString() })
 
+/** Whether replacing the open entry would lose writing the learner has not saved. */
+function hasUnsavedChanges(draft: LearningNote | null, notes: LearningNote[]) {
+  if (!draft) return false
+  const saved = notes.find(note => note.id === draft.id)
+  if (!saved) return Boolean(draft.title.trim() || draft.body.trim() || draft.skillId || draft.repId || draft.kind !== 'note')
+  return draft.title !== saved.title || draft.body !== saved.body || draft.kind !== saved.kind
+    || draft.skillId !== saved.skillId || draft.repId !== saved.repId
+}
+
 /** The Journal notebook: searchable entries and one open draft that survives reloads. */
 export function LearningNotebook({ state, update }: Props) {
   const [query, setQuery] = useState('')
   const [editing, setEditingState] = useState<LearningNote | null>(state.noteDraft ?? null)
   const [confirm, setConfirm] = useState('')
   const [message, setMessage] = useState('')
+  // An entry waiting to replace an open draft that has unsaved writing.
+  const [replacement, setReplacement] = useState<LearningNote | null>(null)
+  const form = useRef<HTMLFormElement>(null)
   function setEditing(next: LearningNote | null) {
     setEditingState(next)
     update({ ...state, noteDraft: next ?? undefined })
   }
   function openEntry(next: LearningNote) {
     setMessage('')
+    if (hasUnsavedChanges(editing, state.notes)) return setReplacement(next)
+    setReplacement(null)
     setEditing(next)
   }
-  const cancel = () => setEditing(null)
+  function cancel() {
+    setReplacement(null)
+    setEditing(null)
+  }
+  function discardDraft() {
+    if (replacement) setEditing(replacement)
+    setReplacement(null)
+  }
+  function keepDraft() {
+    setReplacement(null)
+    form.current?.querySelector('input')?.focus()
+  }
   function save(event: FormEvent) {
     event.preventDefault()
     if (!editing?.title.trim()) return
     const saved = { ...editing, title: editing.title.trim(), updatedAt: new Date().toISOString() }
     if (update({ ...state, noteDraft: undefined, notes: [saved, ...state.notes.filter(n => n.id !== editing.id)] })) {
       setEditingState(null)
+      setReplacement(null)
       setMessage('Entry saved.')
     } else setMessage('Entry could not be saved. Keep this form open and retry.')
   }
@@ -47,7 +73,14 @@ export function LearningNotebook({ state, update }: Props) {
       <Button variant="primary" type="button" onClick={newNote}>New entry</Button>
     </div>
     <label>Search notes<Input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search a concept or mistake" /></label>
-    {editing && <NoteForm editing={editing} isNew={!state.notes.some(n => n.id === editing.id)} onChange={setEditing} onSubmit={save} onCancel={cancel} />}
+    {replacement && editing && <div className="hub-panel" role="group" aria-labelledby="notebook-unsaved">
+      <p id="notebook-unsaved">Your open entry has unsaved changes. Discard them and open another entry?</p>
+      <div className="hub-actions">
+        <Button variant="danger" type="button" onClick={discardDraft}>Discard changes</Button>
+        <Button type="button" autoFocus onClick={keepDraft}>Keep editing</Button>
+      </div>
+    </div>}
+    {editing && <NoteForm form={form} editing={editing} isNew={!state.notes.some(n => n.id === editing.id)} onChange={setEditing} onSubmit={save} onCancel={cancel} />}
     {message && <p className="hub-message feedback-note" data-state={message === 'Entry saved.' ? 'success' : 'error'} role="status">
       <Icon name={message === 'Entry saved.' ? 'check' : 'alert'} />{message}
     </p>}
@@ -78,6 +111,7 @@ export function LearningNotebook({ state, update }: Props) {
 }
 
 type FormProps = {
+  form: RefObject<HTMLFormElement | null>
   editing: LearningNote
   isNew: boolean
   onChange: (next: LearningNote) => void
@@ -85,8 +119,8 @@ type FormProps = {
   onCancel: () => void
 }
 
-function NoteForm({ editing, isNew, onChange, onSubmit, onCancel }: FormProps) {
-  return <form className="hub-panel" onSubmit={onSubmit}>
+function NoteForm({ form, editing, isNew, onChange, onSubmit, onCancel }: FormProps) {
+  return <form ref={form} className="hub-panel" onSubmit={onSubmit}>
     <h3>{isNew ? 'New entry' : 'Edit entry'}</h3>
     <label>Title<Input required maxLength={120} value={editing.title} onChange={e => onChange({ ...editing, title: e.target.value })} /></label>
     <div className="hub-form-row">
