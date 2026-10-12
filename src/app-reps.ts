@@ -1,4 +1,4 @@
-import type { Rep } from './rep.ts'
+import type { Rep } from './rep-types.ts'
 
 const sortRows = [
   { name: 'Pear', qty: 4 }, { name: 'apple', qty: 9 }, { name: 'Fig', qty: 4 }, { name: 'Apple', qty: 2 },

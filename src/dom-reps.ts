@@ -1,5 +1,5 @@
 import { see } from './rep-helpers.ts'
-import type { Rep } from './rep.ts'
+import type { Rep } from './rep-types.ts'
 
 // Observation and step helpers for the sandboxed DOM checks. Targets are data-testid values.
 const type = (target: string, value: string) => ({ do: 'type', target, value })

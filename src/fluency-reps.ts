@@ -1,4 +1,4 @@
-import type { Rep } from './rep'
+import type { Rep } from './rep-types.ts'
 export const fluencyReps: Rep[] = [
   {
     id: 'sum-matching-prices', title: 'Total available prices', category: 'Arrays & maps',

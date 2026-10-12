@@ -1,4 +1,4 @@
-import type { Rep } from './rep.ts'
+import type { Rep } from './rep-types.ts'
 
 // Pure event traces: no live requests, timers, or browser integration are assessed.
 export const asyncReps: Rep[] = [
