@@ -2,6 +2,7 @@ import { expect, test as base } from '@playwright/test'
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import type { AddressInfo } from 'node:net'
 import { startServer } from '../../server/index.mjs'
 import { expectChecksFinished, editor, replaceCode, route, solution } from './helpers'
 
@@ -15,7 +16,7 @@ const test = base.extend<{ service: Service }>({
     const url = running.url
     try {
       await provide({ url, restart: async () => {
-        const port = running.server.address().port
+        const port = (running.server.address() as AddressInfo).port
         await running.close()
         running = await startServer({ port, dataDir })
       } })
