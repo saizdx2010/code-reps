@@ -38,17 +38,26 @@ Plan and Explain offer optional English sentence starters above the writing fiel
 
 ## What you can practice
 
-- **TypeScript foundations:** 83 playable reps and 34 searchable knowledge lessons, with starting points for beginners and returning developers.
-- **Guided tracks:** Foundations (TypeScript basics, reading and repairing code, how JavaScript runs) plus three tracks: Problem solving, Frontend, and Backend. Interview rounds sit at the end of the tracks and are untimed.
+- **TypeScript foundations:** playable reps and searchable knowledge lessons, with starting points for beginners and returning developers.
+- **Guided tracks:** Foundations (TypeScript basics, reading and repairing code, how JavaScript runs) plus four tracks that build on it: Problem solving, Pattern Recognition, Frontend, and Backend. Interview rounds sit at the end of Problem solving, Frontend, and Backend and are untimed.
 - **SQLite practice:** one stock-transfer rep runs real SQL and commit/rollback checks in a fresh in-memory database per check. It works in browser development without the local service and never opens the learner progress database.
+- **React practice:** one rep renders a real React component in the sandboxed frame and checks that its subscriptions are released, including after unmount.
 - **Real-world tasks:** checkout debugging, batch-pipeline predictions, an interactive browser directory, a ticket request handler, and behavior-preserving stock-report refactoring.
-- **Skill journeys:** arrays, words, lookups, stacks, request ownership, resource ownership, validation, TypeScript state modeling, control flow, interface logic, request-response, queues, two pointers, sorting, sliding windows, binary search, recursion, trees, and graphs. Each pairs guided work with an independent problem and fresh recall after three days.
-- **Algorithms & Data Structures:** collection operations before problem solving, stack and queue ordering, two pointers, fixed windows, and binary search. See the [path guide](./docs/ALGORITHMS_DATA_STRUCTURES.md) for scope and expansion.
-- **Practical concepts:** closures, reference equality, async ordering, subscriptions, dependency injection, cancellation, caching, retries, idempotency, and optimistic updates. See the [Practical Concepts guide](./docs/PRACTICAL_CONCEPTS.md) for the full scope.
+- **Skill journeys:** from arrays, words, and lookups through validation, request ownership, sorting, trees, graphs, grids, debugging, maintenance, and DOM interactions. Each pairs guided work with an independent problem and fresh recall after three days.
+- **Algorithms & Data Structures:** collection operations before problem solving, stacks and queues, two pointers, windows, binary search, sorting, recursion, trees, graphs, linked lists, heaps, backtracking, and introductory dynamic programming. Pattern Recognition then asks you to choose the tool from the contract. See the [path guide](./docs/ALGORITHMS_DATA_STRUCTURES.md) for scope and expansion.
+- **Practical concepts:** closures, reference equality, async ordering, subscriptions, dependency injection, cancellation, caching, retries, idempotency, and optimistic updates. Local async practice awaits deterministic injected fetchers (sequential records, parallel panel outcomes, and cancellable exports) without network or timer waits. See the [Practical Concepts guide](./docs/PRACTICAL_CONCEPTS.md) for the full scope and evidence limits.
 - **Browser application journey:** a TypeScript state-modeling lesson and guided/independent/delayed-recall reps, plus three freely accessible external project levels using plain TypeScript and the DOM. Detailed requirements cover forms, persistence recovery, real promises, learner-written tests, and a runnable production build. External self-reviews are learner-reported and do not grant retained-skill status.
 - **Personal practice:** two multi-file projects, weekly plans, notes, recurring reviews, self-assessment, and optional timed interview rounds.
 
-Trail is home: your chosen track drawn as stages, with lessons placed before the reps that use them, and your next rep beside it, with one compact list for a saved draft and a due review. All tracks shows Foundations and the three tracks that build on it. Saved goals that name a retired path (typescript-browser, practical-concepts, real-world, ai-era, interviews) move to the track that absorbed it. Progress → Journal keeps completed attempts and notes in one place. Practice sessions were retired from the interface; existing `sessions:v1` records stay in storage and backups and still import, but they are no longer created or shown, and the old `#/sessions` bookmark opens the Journal. Library holds exercises, lessons, projects, and interviews; Progress includes your local profile, completion badges (first rep, track stages, and whole tracks), completed-rep calendar streaks, and the evidence behind **Learning**, **Practicing**, **Independent**, and **Retained**. While reviewing a rep you can optionally tag mistakes you made from a fixed list (off-by-one, mutated input, missed empty case, wrong boundary condition, misread contract, type or null handling, other); Progress → Mistakes counts each tag, lists recent attempts with links to the rep, and compares the last 14 days with the 14 days before. Tags are self-reported, never block completion, and do not measure skill. They are stored as an optional `mistakes` array of tag IDs on each attempt (`src/mistakes.ts`), so older attempts and backups load unchanged; backup import drops unknown tag IDs and rejects a malformed field, and tags stay with their profile. Progress → Skill map (`#/skillmap`) draws each skill of a track as a node on the trail, labelled Not started, Practiced, Independent, Retained, or Review due, with a link to the next useful rep. It reads the same recorded journey evidence as Skills and adds no storage; the labels describe recorded practice, not mastery. Home links to progress; the starting-point choice lives on All tracks.
+Trail is home: your chosen track drawn as stages, with lessons placed before the reps that use them, and your next rep beside it, with one compact list for a saved draft and a due review. All tracks shows Foundations and the tracks that build on it, and holds the starting-point choice. Saved goals that name a retired path (typescript-browser, practical-concepts, real-world, ai-era, interviews) move to the track that absorbed it. Library holds exercises, lessons, projects, and interviews. Progress holds your skills and the Journal: completed attempts, notes, and mistakes in one place.
+
+Progress shows your local profile, completion badges, completed-rep calendar streaks, and the evidence behind **Learning**, **Practicing**, **Independent**, and **Retained**. Progress → Skill map (`#/skillmap`) draws each skill of a track as a node labelled Not started, Practiced, Independent, Retained, or Review due, with a link to the next useful rep; the labels describe recorded practice, not mastery.
+
+- **Badges** (`src/badges.ts`) are derived from completed attempts: a first-rep badge, one per track stage, and one per track. Progress lists only earned badges, quietly, with no upcoming list. Each distinct rep counts once at its earliest valid completion; hinted attempts count, and drafts and invalid or future dates do not. An earned date is the latest first completion among a badge's reps. Badges follow the current track definitions: a required rep added to an earned stage stops showing that badge as earned while its completed reps are kept. A newly earned badge shows a quiet notice once per browser session. Nothing is stored, so backups are unchanged. Badges do not establish mastery and are separate from independent and retained evidence.
+- **Streaks** group completed attempts by calendar day in the current local timezone; yesterday keeps the current streak active until today ends. Imported completion history counts.
+- **Mistake tags:** while reviewing a rep you can optionally tag mistakes from a fixed list (off-by-one, mutated input, missed empty case, wrong boundary condition, misread contract, type or null handling, other). Journal → Mistakes counts each tag, lists recent attempts, and compares the last 14 days with the 14 days before. Tags are self-reported, never block completion, and do not measure skill. They are stored as an optional `mistakes` array on each attempt (`src/mistakes.ts`), so older attempts and backups load unchanged.
+
+Practice sessions were retired from the interface. Existing `sessions:v1` records stay in storage and backups and still import, but they are no longer created or shown, and the old `#/sessions` bookmark opens the Journal.
 
 Practical-concept traces check authored application policies; they do not establish live network or timer behavior. See the [learning tools and verification boundaries](./docs/FLUENCY_PLATFORM.md) for details.
 
@@ -56,42 +65,14 @@ Practical-concept traces check authored application policies; they do not establ
 
 Requires **Node.js 24+** and **Yarn Classic 1.22.22**.
 
-### Development
-
 ```sh
 yarn install --frozen-lockfile
-yarn dev
+yarn dev          # development: saves work in the browser, no SQLite service needed
 ```
 
-Open the address printed by Vite. Development saves learner work in the browser and works without the SQLite service.
+To run the local app with SQLite instead, run `yarn build` and then `yarn serve`. It binds to `127.0.0.1` and stores learner data in `~/.code-reps/progress.sqlite`. `yarn package` builds a portable local web bundle with its own Node runtime; see the [portable bundle guide](./docs/PORTABLE_BUNDLE.md).
 
-### Local app with SQLite
-
-After installing dependencies:
-
-```sh
-yarn build
-yarn serve
-```
-
-Open the address printed by the server. It binds to `127.0.0.1` and stores learner data in `~/.code-reps/progress.sqlite`.
-
-### Portable bundle
-
-```sh
-yarn package
-```
-
-This creates a portable local web bundle with its own Node runtime. It opens in your browser rather than installing a desktop app. See the [portable bundle guide](./docs/PORTABLE_BUNDLE.md) for instructions and platform verification limits.
-
-## Your work stays local
-
-- **Separate profiles** keep each learner’s drafts, attempts, and progress apart.
-- **Portable JSON backups** are available through **Progress → Download backup**, with import for restores and transfers.
-- **Automatic SQLite backups** run on startup and daily while the local server is running. The seven most recent daily backups stay in `~/.code-reps/backups`.
-- **Browser migration** imports existing browser data on first use of the local server at the same address. If you used a different port, download a backup there and import it into the local app.
-
-The [local setup guide](./docs/LOCAL_SETUP.md) covers installation, updates, backups, and restores.
+Your work stays local: separate profiles keep each learner's work apart, **Progress → Download backup** exports a portable JSON backup, and the local server keeps daily SQLite snapshots. The [local setup guide](./docs/LOCAL_SETUP.md) covers installation, updates, backups, restores, and moving browser data to the local app.
 
 ## A focused workspace
 
@@ -106,24 +87,9 @@ Monaco is the code editor, with a plain text fallback if it cannot load. Desktop
 
 Function reps execute authored code in a browser worker with a five-second timeout. Frontend reps use a sandboxed browser frame for previews and DOM checks, without an external service. These runners are for personal practice with code you write yourself, not secure isolation for arbitrary third-party exercises.
 
-## Development checks
+## Development
 
-| Command | Checks |
-| --- | --- |
-| `yarn lint` | Source linting with Oxlint |
-| `yarn test` | Unit and integration tests with Node’s test runner |
-| `yarn content:check` | Authored content and depth coverage |
-| `yarn build` | TypeScript, production build, and JavaScript bundle-size budgets |
-| `yarn test:e2e` | Real-browser flows with Chromium and Monaco |
-
-Install Chromium once before running the browser suite:
-
-```sh
-yarn playwright install chromium
-yarn test:e2e
-```
-
-Pull requests and pushes to main run these checks in CI. Portable release builds also run a bundle smoke test. See [browser testing](./docs/BROWSER_TESTING.md) for coverage, data isolation, and debugging.
+[Maintaining](./docs/MAINTAINING.md) lists every command, what each gate catches, and when to run it; [AGENTS.md](./AGENTS.md) is the same contract for coding agents. `just check` runs lint, build, tests, and content validation; `just check-all` adds the Chromium suite. Pull requests and pushes to main run these checks in CI.
 
 Automated checks do not establish learning effectiveness, full disconnected-browser operation, cross-platform behavior, visual fidelity, or assistive-technology support. Those remain separate validation tasks.
 
@@ -131,26 +97,33 @@ Automated checks do not establish learning effectiveness, full disconnected-brow
 
 | Guide | What it covers |
 | --- | --- |
-| [Project plan](./PROJECT.md) | Product intent, learning loop, and scope |
+| [Project plan](./PROJECT.md) | Product intent, learning loop, content model, and scope |
 | [Roadmap](./ROADMAP.md) | Shipped foundations, planned work, and release gates |
 | [Local setup](./docs/LOCAL_SETUP.md) | Installation, updates, backups, and restores |
 | [Portable bundles](./docs/PORTABLE_BUNDLE.md) | Distribution with a bundled Node runtime |
 | [UI guide](./docs/UI_GUIDE.md) | Routes, keyboard controls, and saved state |
-| [Design system](./docs/DESIGN_SYSTEM.md) | Code Reps palette, app-owned controls, and motion |
+| [Design system](./docs/DESIGN_SYSTEM.md) | Page structure, tokens, shared components, and motion |
 | [Fluency platform](./docs/FLUENCY_PLATFORM.md) | Learning tools and progress evidence |
-| [Algorithms & Data Structures](./docs/ALGORITHMS_DATA_STRUCTURES.md) | Beginner progression and planned expansion |
+| [Algorithms & Data Structures](./docs/ALGORITHMS_DATA_STRUCTURES.md) | Problem solving and Pattern Recognition progression |
 | [Practical concepts](./docs/PRACTICAL_CONCEPTS.md) | Application policies and transfer practice |
+| [Browser application journey](./docs/TYPESCRIPT_BROWSER_JOURNEY.md) | Plain TypeScript browser projects and their evidence limits |
+| [Richer exercises](./docs/RICH_EXERCISES.md) | Debugging, reading, frontend, backend, multi-file, testing, and React formats |
+| [Find the bug](./docs/FIND_THE_BUG.md) | Learner-written test cases that expose faulty implementations |
+| [Maintenance journey](./docs/MAINTENANCE_JOURNEY.md) | Reading, reproducing, fixing, and adapting unfamiliar code |
 | [Content authoring](./docs/CONTENT_AUTHORING.md) | Internal exercise and lesson standards |
 | [Content gap map](./docs/CONTENT_GAPS.md) | Topics without dedicated journeys, and how to choose the next batch |
+| [Maintaining](./docs/MAINTAINING.md) | Commands, gates, adding reps and lessons, common failures, and backups |
 | [Browser testing](./docs/BROWSER_TESTING.md) | Real-browser coverage and verification limits |
-| [Maintaining](./docs/MAINTAINING.md) | Daily loop, adding reps and lessons, gates, common failures, and backups |
+| [Local reliability](./docs/LOCAL_RELIABILITY.md) | Reliability checks still pending |
+| [Performance](./docs/PERFORMANCE.md) | Bundle budgets and editor-loading measurements |
+| [Accessibility review](./docs/ACCESSIBILITY_REVIEW.md) | Manual screen-reader, zoom, and contrast walkthrough |
+| [Learner validation](./docs/LEARNER_VALIDATION.md) | Protocol for observing learners |
+| [Decision records](./docs/adr/README.md) | Architecture decisions and their status |
+
+Finished reviews and plans are kept in [docs/archive](./docs/archive/) as historical records.
 
 ---
 
 Code Reps values independent work, plain-English explanations, useful retries, and learning data that stays on the learner’s machine. Accounts, cloud sync, leaderboards, certificates, and AI tutoring are outside the current scope.
 
 **Free to use.** Source rights are reserved for now; the core app is intended to remain free.
-
-Progress lists only earned badges, quietly, with no upcoming list. Completion badges (`src/badges.ts`) are derived from completed attempts: a first-rep badge, one per path stage, and one per path. Each distinct rep counts once at its earliest valid completion, hinted attempts count, and drafts, ended sessions, and invalid or future dates do not. An earned date is the latest first completion among a badge's reps. Nothing is stored, so backups are unchanged. Badges follow the current path definitions: a required rep added to an earned stage stops showing that badge as earned while its completed reps are kept, and a rep removed from a stage stops being required. When a badge is newly earned during a session, a quiet notice appears once; the acknowledged badge IDs live in per-profile session state, so they are not repeated on reload, are never exported, and need no storage key. Badges do not establish mastery and are separate from independent and retained evidence. Streaks use completed attempts grouped by calendar day in the current local timezone; yesterday keeps the current streak active until today ends. Imported completion history contributes to these summaries. All summaries are derived per profile without new storage or accounts.
-
-Local async practice now awaits deterministic injected fetchers: sequential records, parallel panel outcomes, and cancellable exports with resource release. These runtime checks use microtasks without network or timer waits; existing request-ownership exercises remain authored policy traces. See [Practical concepts](./docs/PRACTICAL_CONCEPTS.md) for evidence limits.

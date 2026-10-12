@@ -26,7 +26,7 @@ Main navigation has three areas. Each area's section tabs list only its own page
 
 Journal is one section with an Attempts / Notebook / Mistakes switch (`JournalTabs`); each view keeps its own route (`#/history`, `#/notebook`, `#/mistakes`; the retired `#/sessions` redirects to `#/history`). The skill map (`#/skillmap`), weekly plan (`#/plan`), self-assessment (`#/assessment`), and timed interview (`#/interview`) are not tabs; their routes still work and `sectionView` highlights the page that links to them. Quick lessons (`#/learn`) belongs to Lessons. `ui-navigation.ts` owns sections and the `sectionView` aliases; do not add a fourth main area or a second navigation row inside a page. Old bookmarks must keep resolving.
 
-Foundations (`typescript`) is the shared root track. Other tracks are grouped in `curriculum.ts` (`trackGroups`) and declare it implicitly; a stage made only of Foundations reps is shown as covered by Foundations rather than repeated. Path IDs, rep lists, badges, and recommendations are unchanged by this presentation.
+Foundations (`typescript`) is the shared root track. The tracks that build on it (Problem solving, Pattern Recognition, Frontend, and Backend) are grouped in `curriculum.ts` (`trackGroups`) and declare it implicitly; a stage made only of Foundations reps is shown as covered by Foundations rather than repeated. Path IDs, rep lists, badges, and recommendations are unchanged by this presentation.
 
 ## Page frame and layout
 

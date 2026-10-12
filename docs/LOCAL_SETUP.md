@@ -4,8 +4,8 @@ Code Reps is free and does not need an account or internet connection after depe
 
 ## First run
 
-1. Install Node.js 24 or later and Yarn 1.
-2. In this project folder, run `yarn install`, then `yarn build`.
+1. Install Node.js 24 or later and Yarn Classic 1.22.22.
+2. In this project folder, run `yarn install --frozen-lockfile`, then `yarn build`.
 3. Run `yarn serve` and open `http://127.0.0.1:4173`.
 
 The server listens only on your own laptop. It saves progress in `~/.code-reps/progress.sqlite`. The browser also keeps a local copy for quick startup and for the development server.
@@ -14,11 +14,11 @@ The server listens only on your own laptop. It saves progress in `~/.code-reps/p
 
 If you used the earlier preview on `http://127.0.0.1:4173`, the first launch migrates its browser data automatically when the SQLite database is empty. If you used another address or port, open the old app, choose **Progress → Download backup**, then use **Import backup** in the local app.
 
-Keep the downloaded JSON file until you have checked that your attempts appear in History and Progress.
+Keep the downloaded JSON file until you have checked that your attempts appear in **Progress → Journal → Attempts**.
 
 ## Update
 
-Stop the server, update the project files, then run `yarn install`, `yarn build`, and `yarn serve`. The database lives outside the project folder and remains in place. Export a JSON backup before a major update.
+Stop the server, update the project files, then run `yarn install --frozen-lockfile`, `yarn build`, and `yarn serve`. The database lives outside the project folder and remains in place. Export a JSON backup before a major update.
 
 ## Restore
 
@@ -29,7 +29,7 @@ To restore a SQLite snapshot:
 1. Stop the server and close app tabs.
 2. Move `progress.sqlite` and any `progress.sqlite-wal` and `progress.sqlite-shm` files into a separate recovery folder. Keep them until recovery is confirmed.
 3. Copy your chosen dated snapshot into the data directory and name the copy `progress.sqlite`. Keep the original snapshot.
-4. Restart the server and check History and Progress. Pending browser saves may be replayed onto the restored database to recover recent work.
+4. Restart the server and check **Progress → Journal → Attempts** and your skills. Pending browser saves may be replayed onto the restored database to recover recent work.
 
 If you need a different data location or port, set `CODE_REPS_DATA_DIR` or `CODE_REPS_PORT` when starting the server. Keep the port stable: browsers separate local data by address and port.
 
@@ -39,4 +39,4 @@ The app keeps pending server writes in the browser and retries them before loadi
 
 Backup imports are committed to SQLite as one batch. Invalid batches leave stored progress unchanged. An import that cannot reach the server stays pending in the browser until saving succeeds.
 
-See [local reliability verification](LOCAL_RELIABILITY.md) for tested behavior and remaining platform checks.
+See [Maintaining](./MAINTAINING.md#backups-and-data) for where each kind of data lives, and [local reliability](./LOCAL_RELIABILITY.md) for checks still pending on other platforms.

@@ -1,6 +1,6 @@
 # Richer exercises
 
-The catalog now contains 34 reps, including five complete small tasks across the Frontend and Backend tracks. Existing rep IDs and saved-attempt formats are unchanged.
+This guide covers the formats beyond single-function reps: debugging, code reading, DOM interfaces, request handlers, refactoring, multi-file projects, learner-written test cases, maintenance, and React. The SQLite task is covered in [content authoring](./CONTENT_AUTHORING.md) and [ADR 0002](./adr/0002-in-memory-sqlite-practice.md). The first five complete small tasks across the Frontend and Backend tracks are:
 
 | Rep | Learner work | Checks |
 | --- | --- | --- |
