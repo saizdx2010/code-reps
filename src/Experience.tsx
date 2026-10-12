@@ -13,13 +13,16 @@ type ScreenState = { windowY: number; scroll: [number, number][]; open: Record<s
 const screens = new Map<string, ScreenState>()
 // The screen the page last showed. Undefined until the first screen mounts, so a fresh load never moves focus.
 let shownScreen: string | undefined
+// Whether the shown screen should hand focus to a late-arriving heading; Strict Mode's repeat run reuses the first run's answer.
+let shownHandoff = false
 export function ScreenMemory({ screenKey, children }: { screenKey: string; children: ReactNode }) {
   const memoryKey = `${getActiveProfile()}:${screenKey}`
   const root = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
     const element = root.current!
     // Strict Mode runs this effect twice for one screen; the second run sees the same key and does not count as navigation.
-    const navigated = shownScreen !== undefined && shownScreen !== memoryKey
+    const repeat = shownScreen === memoryKey
+    const navigated = shownScreen !== undefined && !repeat
     shownScreen = memoryKey
     // Only ever set on navigation: the Strict Mode second run must not clear what the first run recorded.
     if (navigated) setScreenNavigated(true)
@@ -43,11 +46,15 @@ export function ScreenMemory({ screenKey, children }: { screenKey: string; child
       try { sessionStorage.setItem(`code-reps:screen:${memoryKey}`, JSON.stringify(state)) } catch { /* Continue without session persistence. */ }
     }
     // A lazy page replaces its loading heading after arrival; if that drops focus to the body, hand it to the new heading.
-    const settle = navigated && !saved && typeof MutationObserver !== 'undefined' ? new MutationObserver(() => {
+    // Watching ends once no loading placeholder remains, so a slow load keeps the handoff without a fixed short window.
+    // The first run's cleanup saves state, so a repeat run would otherwise see a restore and drop the handoff.
+    if (!repeat) shownHandoff = navigated && !saved
+    const settle = shownHandoff && typeof MutationObserver !== 'undefined' ? new MutationObserver(() => {
       if (document.activeElement === document.body) element.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true })
+      if (!element.querySelector('[aria-busy="true"]')) settle?.disconnect()
     }) : undefined
     settle?.observe(element, { childList: true, subtree: true })
-    const settleTimer = settle ? window.setTimeout(() => settle.disconnect(), 5000) : undefined
+    const settleTimer = settle ? window.setTimeout(() => settle.disconnect(), 30000) : undefined
     window.addEventListener('pagehide', capture)
     return () => { settle?.disconnect(); window.clearTimeout(settleTimer); capture(); window.removeEventListener('pagehide', capture) }
   }, [memoryKey])

@@ -54,6 +54,16 @@ test('a fresh load starts at the skip link, and in-app navigation moves focus to
   await expect(page.getByRole('heading', { level: 1 })).not.toBeFocused()
 })
 
+test('a slow lazy page still hands focus to its heading after the loading heading is replaced', async ({ page }) => {
+  // Hold the Progress module longer than any fixed settle window so a busy machine's late arrival is reproduced.
+  await page.route(/\/src\/ProgressPage\.tsx/, async route => { await new Promise(resolve => setTimeout(resolve, 7000)); await route.continue() })
+  await page.goto('/#/home')
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name: 'Progress', exact: true }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Opening your progress' })).toBeVisible()
+  await expect(page.locator('main:not([aria-busy="true"]) h1')).toBeFocused({ timeout: 15000 })
+})
+
 test('grouped navigation supports direct links, refresh, and Back and Forward', async ({ page }) => {
   await page.goto('/#/home')
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
