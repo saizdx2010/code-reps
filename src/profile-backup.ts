@@ -1,14 +1,15 @@
 import { parseSessions } from './practice-sessions.ts'
 import { parseBackup } from './portability.ts'
 import { parseFluency } from './fluency.ts'
+import { isPlainObject } from './guards.ts'
 type ProfileBackup = { format: 'code-reps-profile'; version: 1; name: string; exportedAt: string; entries: Record<string,string> }
 export function parseProfileBackup(text: string, repIds: Set<string>): ProfileBackup {
   if(text.length>2_000_000)throw new Error('Profile file exceeds the local import limit of 2 MB.')
   let value: unknown
   try{value=JSON.parse(text)}catch{throw new Error('Profile file is not valid JSON.')}
-  if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('This is not a valid local profile export.')
+  if(!isPlainObject(value))throw new Error('This is not a valid local profile export.')
   const raw=value as Record<string,unknown>
-  if(raw.format!=='code-reps-profile'||raw.version!==1||typeof raw.name!=='string'||!raw.name.trim()||raw.name.length>60||!raw.entries||typeof raw.entries!=='object'||Array.isArray(raw.entries)||Object.keys(raw.entries).length>1000)throw new Error('This is not a valid local profile export.')
+  if(raw.format!=='code-reps-profile'||raw.version!==1||typeof raw.name!=='string'||!raw.name.trim()||raw.name.length>60||!isPlainObject(raw.entries)||Object.keys(raw.entries).length>1000)throw new Error('This is not a valid local profile export.')
   const entries=raw.entries as Record<string,string>
   const allowed=new Set(['history:v1','learner-start:v1','fluency:v1','sessions:v1','selected-rep','split-width',...Array.from(repIds,id=>`attempt:${id}:v1`)])
   if(Object.entries(entries).some(([k,v])=>!allowed.has(k)||typeof v!=='string'||v.length>1_000_000))throw new Error('This profile contains unsupported or invalid entries.')

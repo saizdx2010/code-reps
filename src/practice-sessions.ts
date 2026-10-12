@@ -1,3 +1,4 @@
+import { isDateString, isPlainObject } from './guards.ts'
 export const sessionsKey = 'code-reps:sessions:v1'
 export const sessionLimit = 1000
 const reflectionLimit = 2000
@@ -13,16 +14,14 @@ export type PracticeSession = {
 }
 export type SessionState = { version: 1; revision: string; records: PracticeSession[] }
 export const emptySessions = (): SessionState => ({ version: 1, revision: '', records: [] })
-const object = (value: unknown): value is Record<string, unknown> => Boolean(value && typeof value === 'object' && !Array.isArray(value))
 const identity = (value: unknown): value is string => typeof value === 'string' && /^[a-zA-Z0-9-]{1,100}$/.test(value)
-const date = (value: unknown): value is string => typeof value === 'string' && value.length <= 40 && Number.isFinite(Date.parse(value))
 
 export function parseSessions(value: unknown, repIds: Set<string>): SessionState {
-  if (!object(value) || value.version !== 1 || typeof value.revision !== 'string' || (value.revision !== '' && !identity(value.revision)) || !Array.isArray(value.records)) throw new Error('Practice history is invalid. Your saved copy has been kept.')
+  if (!isPlainObject(value) || value.version !== 1 || typeof value.revision !== 'string' || (value.revision !== '' && !identity(value.revision)) || !Array.isArray(value.records)) throw new Error('Practice history is invalid. Your saved copy has been kept.')
   if (value.records.length > sessionLimit || new TextEncoder().encode(JSON.stringify(value)).byteLength > 800_000) throw new Error('Practice history is full. Export a backup and remove records before adding more.')
   const records = value.records.map((record): PracticeSession => {
-    if (!object(record) || !identity(record.id) || typeof record.repId !== 'string' || !repIds.has(record.repId) || !date(record.startedAt) || typeof record.reflection !== 'string' || record.reflection.length > reflectionLimit || !Number.isInteger(record.hintCount) || Number(record.hintCount) < 0 || Number(record.hintCount) > 100 ||
-      (record.endedAt !== undefined && (!date(record.endedAt) || Date.parse(record.endedAt) < Date.parse(record.startedAt) || !record.reflection.trim())) ||
+    if (!isPlainObject(record) || !identity(record.id) || typeof record.repId !== 'string' || !repIds.has(record.repId) || !isDateString(record.startedAt, 40) || typeof record.reflection !== 'string' || record.reflection.length > reflectionLimit || !Number.isInteger(record.hintCount) || Number(record.hintCount) < 0 || Number(record.hintCount) > 100 ||
+      (record.endedAt !== undefined && (!isDateString(record.endedAt, 40) || Date.parse(record.endedAt) < Date.parse(record.startedAt) || !record.reflection.trim())) ||
       (record.difficulty !== undefined && !['none', 'wording', 'approach', 'typescript', 'edge-cases'].includes(String(record.difficulty))) || (record.attemptId !== undefined && !identity(record.attemptId))) throw new Error('Practice history contains an invalid session. Your work has been kept.')
     return { id: record.id, repId: record.repId, startedAt: record.startedAt, reflection: record.reflection, hintCount: Number(record.hintCount),
       ...(record.endedAt === undefined ? {} : { endedAt: record.endedAt as string }), ...(record.difficulty === undefined ? {} : { difficulty: record.difficulty as PracticeSession['difficulty'] }), ...(record.attemptId === undefined ? {} : { attemptId: record.attemptId as string }) }

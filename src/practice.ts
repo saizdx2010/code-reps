@@ -8,9 +8,11 @@ import { foundationRepIds, repIndex as reps } from './catalog-index.ts'
 import { getAllJourneys } from './learning.ts'
 import type { LearnerStart } from './learning.ts'
 import type { PortableAttempt, PortableRecord } from './portability.ts'
+import { byCompletedAt, DAY_MS } from './dates.ts'
+import { isDateString } from './guards.ts'
 
 export type PracticeAction = { repId: string; reason: string; mode: 'start' | 'resume' | 'review' | 'retry' }
-const delay = 3 * 86_400_000
+const delay = 3 * DAY_MS
 
 /** `code` is undefined while the starter has not loaded yet; that counts as unchanged. */
 type DraftAttempt = Omit<PortableAttempt, 'code'> & { code?: string }
@@ -43,7 +45,7 @@ export function getPracticePlan(drafts: Record<string, DraftAttempt>, history: P
   const progress = getAllJourneys(history, now)
   const latest = new Map<string, PortableRecord>()
   for (const record of history) {
-    if (!reps.some(rep => rep.id === record.repId) || !Number.isFinite(Date.parse(record.completedAt))) continue
+    if (!reps.some(rep => rep.id === record.repId) || !isDateString(record.completedAt)) continue
     const previous = latest.get(record.repId)
     if (!previous || Date.parse(record.completedAt) > Date.parse(previous.completedAt)) latest.set(record.repId, record)
   }
@@ -58,7 +60,7 @@ export function getPracticePlan(drafts: Record<string, DraftAttempt>, history: P
   const reviews: PracticeAction[] = [...latest.values()]
     .filter(record => !journeyIds.has(record.repId) && status(record.repId) !== 'In progress' && now - Date.parse(record.completedAt) >= delay &&
       (record.hintCount > 0 || record.confidence !== 'confident' || Boolean(record.difficulty && record.difficulty !== 'none')))
-    .sort((a, b) => Date.parse(a.completedAt) - Date.parse(b.completedAt))
+    .sort(byCompletedAt)
     .map(record => ({ repId: record.repId, mode: 'review', reason: `${difficultyReason(record)} At least three days have passed; try again from the starter.` }))
   const recurring: PracticeAction[] = recurringReviews(history, now).filter(review => review.due).map(review => ({ repId: review.repId, mode: status(review.repId) === 'In progress' ? 'resume' : 'review', reason: review.reason }))
   const due = [...new Map([...recalls, ...recurring, ...reviews].map(action => [action.repId, action])).values()]
