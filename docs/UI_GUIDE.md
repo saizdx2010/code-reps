@@ -4,12 +4,13 @@
 
 Use US English: **practice** is both a noun and a verb. Write directly to the learner in plain English.
 
-- **Track:** a curriculum, such as Foundations or Frontend.
-- **Goal:** the track the learner chose to follow.
+- **Track:** a curriculum, such as Foundations or Frontend. Code and saved data call it a path (`src/path.ts`, `goal.pathId`); learner-facing text says track.
+- **Goal:** the track the learner chose as their current focus. A suggested default becomes the goal only when the learner chooses it, and browsing another track does not change it. Avoid “assigned course”.
 - **Trail:** the visual path of stages on the Trail page.
 - **Stage:** a group of related reps within a track.
 - **Rep:** one coding exercise and its understand, plan, solve, explain, and review loop.
 - **Lesson:** an explanation with examples and knowledge checks.
+- **Due recall:** a scheduled chance to apply a previously practiced skill after a gap. It comes first in recommendations. Avoid “overdue assignment” or “mastery test”.
 
 A completed stage replaces its description with a short recap of the work practiced. It does not establish independent fluency or retention. The editor header follows the active project file.
 
