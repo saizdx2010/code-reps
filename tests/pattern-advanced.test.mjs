@@ -6,6 +6,7 @@ import { paths } from '../src/path.ts'
 import { skills } from '../src/knowledge.ts'
 import { runRep } from '../src/runner.ts'
 import { dsaSolutions } from './fixtures/dsa-solutions.mjs'
+import { assertMutantsFail } from './helpers/checks.mjs'
 
 const ids = ['next-warmer-day', 'top-k-frequent-tags', 'course-order', 'longest-shared-sequence']
 for (const id of ids) {
@@ -40,7 +41,7 @@ test('checks expose strict-warmth, cutoff ties, eligible ordering, cycles, and s
     ['longest-shared-sequence', 'function longestSharedSequence(a,b) { let n=0; for(const c of a){const i=b.indexOf(c);if(i>=0){n++;b=b.slice(0,i)+b.slice(i+1)}}return n }'],
     ['longest-shared-sequence', 'function longestSharedSequence(a,b) { let best=0;for(let i=0;i<a.length;i++)for(let j=i+1;j<=a.length;j++)if(b.includes(a.slice(i,j)))best=Math.max(best,j-i);return best }'],
   ]
-  for (const [id, source] of wrong) assert.ok(runRep(source, id).some(result => !result.passed), id)
+  assertMutantsFail(wrong)
 })
 
 test('new mixed stage alternates patterns and keeps every new rep in Problem solving', () => {

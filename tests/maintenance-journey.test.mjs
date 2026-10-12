@@ -4,10 +4,9 @@ import { journeys } from '../src/learning.ts'
 import { recallVariants } from '../src/fluency.ts'
 import { maintenanceJourneyReps } from '../src/maintenance-journey-reps.ts'
 import { reps } from '../src/rep.ts'
-import { runRep } from '../src/runner.ts'
 import { bookingRegression, finesRegression, reproExposes, shippingRegression, solve } from './fixtures/maintenance-journey-solutions.mjs'
+import { failedChecks as failed } from './helpers/checks.mjs'
 
-const failed = (code, id) => runRep(code, id).filter(result => !result.passed).map(result => result.name)
 const rep = id => reps.find(item => item.id === id)
 const repro = (cases, tail) => solve('reproduce-quote-bug', { 'repro.ts': tail ? reproExposes(cases).replace(/export function exposes[\s\S]*$/, tail) : reproExposes(cases) })
 const emptyGuard = source => source.replace(/export const regression: Case\[\] = \[[\s\S]*\]$/, 'export const regression: Case[] = []')

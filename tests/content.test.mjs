@@ -28,6 +28,7 @@ import { appSolutions } from './fixtures/app-solutions.mjs'
 import { domSolutions } from './fixtures/dom-solutions.mjs'
 import { testingJourneySolutions } from './fixtures/testing-journey-solutions.mjs'
 import { maintenanceSolutions } from './fixtures/maintenance-journey-solutions.mjs'
+import { assertMutantsFail } from './helpers/checks.mjs'
 
 // These independent implementations check authored expected results, not learner prose.
 const SQL = await initSqlJs()
@@ -105,9 +106,7 @@ test('authored checks reject omitted normalization and paging boundaries', () =>
     'remaining-actions': 'function remainingActions(actions:string[]) { const result:string[] = []; for (const action of actions) { if (action.toUpperCase() === "UNDO") result.pop(); else result.push(action) } return result }',
     'validate-page-query': 'function validatePaging(input:unknown) { if (!input || typeof input !== "object" || Array.isArray(input)) return null; const x = input as Record<string,unknown>; if (typeof x.page !== "number" || !Number.isInteger(x.page) || x.page < 1 || typeof x.size !== "number" || x.size > 50) return null; return {page:x.page,size:x.size} }',
   }
-  for (const [id, code] of Object.entries(incorrectSolutions)) {
-    assert.ok(runRep(code, id).some(result => !result.passed), `${id}: accepted a known contract violation`)
-  }
+  assertMutantsFail(Object.entries(incorrectSolutions))
 })
 
 test('behavioral success does not hide prohibited input mutation', () => {
@@ -154,7 +153,7 @@ test('control-flow journey reps reject boundary and padding mistakes', () => {
     ['countdown-labels', s['countdown-labels'].replace('String(seconds).padStart(2, "0")', 'String(seconds)')],
     ['countdown-labels', s['countdown-labels'].replace('Math.floor(value / 60)', 'Math.round(value / 60)')],
   ]
-  for (const [index, [id, code]] of mutants.entries()) assert.ok(runRep(code, id).some(result => !result.passed), `mutant ${index} of ${id} escaped the checks`)
+  assertMutantsFail(mutants)
 })
 
 test('DSA application checks reject changed order, deduplication, leaf rules, and route semantics', () => {
@@ -177,9 +176,7 @@ test('DSA application checks reject changed order, deduplication, leaf rules, an
     'graph-connected-groups': 'function connectedGroups(graph:number[][]) { return graph.filter(neighbors=>neighbors.length===0).length }',
     'simplify-file-path': 'function simplifyPath(path:string) { return "/"+path.split("/").filter(part=>part && !part.startsWith(".")).join("/") }',
   }
-  for (const [id, code] of Object.entries(incorrect)) {
-    assert.ok(runRep(code, id).some(result => !result.passed), `${id}: incorrect contract passed`)
-  }
+  assertMutantsFail(Object.entries(incorrect))
 })
 
 test('extra journey practice rejects boundary, ordering, and command mistakes', () => {
@@ -193,5 +190,5 @@ test('extra journey practice rejects boundary, ordering, and command mistakes', 
     'undo-word-actions': 'function applyWordActions(actions) { const out=[]; for(const a of actions) { if(a === "UNDO") out.shift(); else out.push(a) } return out }',
     'erase-text-markers': 'function eraseMarkers(text) { return text.replaceAll("#", "") }',
   }
-  for (const [id, code] of Object.entries(incorrect)) assert.ok(runRep(code, id).some(result => !result.passed), `${id}: incorrect contract passed`)
+  assertMutantsFail(Object.entries(incorrect))
 })

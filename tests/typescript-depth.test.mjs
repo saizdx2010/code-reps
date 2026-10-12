@@ -8,6 +8,7 @@ import { typescriptDepthSolutions } from './fixtures/typescript-depth-solutions.
 import { runRep } from '../src/runner.ts'
 import { compileSolution } from '../src/compile-solution.ts'
 import { journeys, getJourney } from '../src/learning.ts'
+import { assertMutantsFail } from './helpers/checks.mjs'
 
 function diagnostics(source) {
   const directory = mkdtempSync(join(tmpdir(), 'code-reps-ts-depth-'))
@@ -53,7 +54,7 @@ test('boundary checks reject coercion, changed duplicate precedence, and lost ze
     ['sensor-import-report', typescriptDepthSolutions['sensor-import-report'].replace('[...groups].map', '[...groups].filter(([,total])=>total!==0).map')],
     ['generic-prefix-copy', typescriptDepthSolutions['generic-prefix-copy'].replace('output.push(items[i])', 'if (items[i]) output.push(items[i])')],
   ]
-  for (const [id, code] of mutants) assert.ok(runRep(code, id).some(result => !result.passed), id)
+  assertMutantsFail(mutants)
 })
 
 test('typed boundaries recall needs fresh unhinted work after the delay', () => {
