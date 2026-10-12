@@ -52,6 +52,9 @@ for (const layout of layouts) {
       await page.reload()
       await page.getByRole('navigation', { name: 'Practice steps' }).getByRole('button', { name: 'Solve', exact: true }).click()
       await expect(editor(page)).toBeVisible()
+      // Monaco renders only the lines in view; on narrow wrapped layouts the last line starts below it, so jump there first.
+      await editorFocus(page)
+      await page.keyboard.press('ControlOrMeta+End')
       await expect(page.locator('.view-lines')).toContainText('typed during the layout walkthrough')
       await page.getByRole('button', { name: 'Plan', exact: true }).click()
       await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue(planDraft)
