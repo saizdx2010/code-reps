@@ -73,12 +73,10 @@ export function LearningNotebook({ state, update }: Props) {
       <Button variant="primary" type="button" onClick={newNote}>New entry</Button>
     </div>
     <label>Search notes<Input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search a concept or mistake" /></label>
-    {replacement && editing && <div className="hub-panel" role="group" aria-labelledby="notebook-unsaved">
+    {replacement && editing && <div className="delete-confirm" role="group" aria-labelledby="notebook-unsaved">
       <p id="notebook-unsaved">Your open entry has unsaved changes. Discard them and open another entry?</p>
-      <div className="hub-actions">
-        <Button variant="danger" type="button" onClick={discardDraft}>Discard changes</Button>
-        <Button type="button" autoFocus onClick={keepDraft}>Keep editing</Button>
-      </div>
+      <Button variant="danger" type="button" onClick={discardDraft}>Discard changes</Button>
+      <Button type="button" autoFocus onClick={keepDraft}>Keep editing</Button>
     </div>}
     {editing && <NoteForm form={form} editing={editing} isNew={!state.notes.some(n => n.id === editing.id)} onChange={setEditing} onSubmit={save} onCancel={cancel} />}
     {message && <p className="hub-message feedback-note" data-state={message === 'Entry saved.' ? 'success' : 'error'} role="status">
