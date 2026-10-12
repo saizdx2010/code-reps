@@ -17,7 +17,7 @@ The [accepted plan](./DAILY_PRACTICE_PLAN.md) and [learner observation packet](.
 - Portable macOS arm64 bundle: packaged and passed `node scripts/verify-portable.mjs` (24 local assets, first run, paths with spaces, bundled runtime, save, restart, snapshot, clean shutdown). The verifier used temporary data.
 - Chromium: initial full run had 44 passes and one test-fixture failure described below. The corrected focused recall-session test passed. The final full rerun passed all 45 tests without retries.
 
-Coverage includes explicit path choice, early recall boundaries, narrow/keyboard flows, unfinished session endings, reload/new-session resume, immutable attempt links, profile separation, malformed imports, cross-tab conflicts, quota recovery, pending SQLite replay, and unchanged recall/independence evidence. See [browser testing](./BROWSER_TESTING.md) for detailed coverage and limits.
+Coverage includes explicit path choice, early recall boundaries, narrow/keyboard flows, unfinished session endings, reload/new-session resume, immutable attempt links, profile separation, malformed imports, cross-tab conflicts, quota recovery, pending SQLite replay, and unchanged recall/independence evidence. See [browser testing](../BROWSER_TESTING.md) for detailed coverage and limits.
 
 ## Stage 4 findings and response
 
