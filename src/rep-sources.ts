@@ -3,7 +3,8 @@ import { asyncRuntimeReps } from './async-runtime-reps.ts'
 import { sqliteReps } from './sqlite-reps.ts'
 // Node-only: tests, scripts, and the practice worker see every rep synchronously through this list.
 // The app never imports it; it loads one source at a time through src/rep-content.ts.
-// The order here is the catalog order. Add a new rep module to this list, to src/rep-content.ts, and run `yarn content:index`.
+// This is the one list of rep sources, and its order is the catalog order. After adding a rep module here, run
+// `yarn content:index`: it generates the app's lazy loader for each source in src/rep-chunks.ts.
 import { aiEraReps, coreLessons } from './ai-era-reps.ts'
 import { appReps } from './app-reps.ts'
 import { typescriptDepthReps } from './typescript-depth-reps.ts'
@@ -28,10 +29,10 @@ import { richReps } from './rich-reps.ts'
 import { testingJourneyReps } from './testing-journey-reps.ts'
 import { transferReps } from './transfer-reps.ts'
 import { validationReps } from './validation-reps.ts'
+import type { RepLesson } from './rep-source-loader.ts'
 import type { Rep } from './rep-types.ts'
 
-export type RepSourceLesson = { repId: string; title: string; explanation: string; example: string; tip: string }
-export const repSources: { name: string; reps: Rep[]; lessons?: readonly RepSourceLesson[] }[] = [
+export const repSources: { name: string; reps: Rep[]; lessons?: readonly RepLesson[] }[] = [
   { name: 'async-runtime-reps', reps: asyncRuntimeReps },
   { name: 'sqlite-reps', reps: sqliteReps },
   { name: 'practical-concepts', reps: practicalReps },

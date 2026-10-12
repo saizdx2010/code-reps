@@ -1,6 +1,7 @@
 import { writeFile } from 'node:fs/promises'
-import { renderCatalogIndex } from './catalog-index.mjs'
+import { renderCatalogIndex, renderRepChunks } from './catalog-index.mjs'
 
 const target = new URL('../src/catalog-index.ts', import.meta.url)
 await writeFile(target, renderCatalogIndex())
-console.log('Wrote src/catalog-index.ts')
+await writeFile(new URL('../src/rep-chunks.ts', import.meta.url), renderRepChunks())
+console.log('Wrote src/catalog-index.ts and src/rep-chunks.ts')
