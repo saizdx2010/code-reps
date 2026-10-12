@@ -139,7 +139,9 @@ free of implementation clues; disclose fixture semantics and expected ownership.
 The synchronous `runRep` API remains for existing Node callers; async fixture reps
 require `runAsyncRep`. The browser worker uses the asynchronous entry point for all
 function reps, including Promise-returning solutions to ordinary reps. The existing
-five-second limit covers the entire run. Stop, edit, or timeout terminates the worker
+five-second limit covers compiling and running the learner's code once the worker
+reports that it has loaded; loading gets a separate 30-second allowance so a cold or
+busy start is not reported as an endless loop. Stop, edit, or timeout terminates the worker
 and suppresses stale replies; termination cannot guarantee learner `finally` runs.
 Cooperative AbortSignal cancellation inside a fixture is a separate checked behavior.
 

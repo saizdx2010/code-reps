@@ -8,10 +8,14 @@ function setup(overrides = {}) {
   const worker = { onmessage: null, onerror: null, postMessage: message => { sent = message }, terminate: () => { terminated++ } }
   const options = {
     createWorker: () => worker, onResults: value => results.push(value), onError: value => errors.push(value),
-    schedule: (callback, ms) => { assert.equal(ms, 5000); scheduled = callback; return 1 },
+    schedule: (callback, ms) => { assert.equal(ms, delays.length ? 5000 : 30000); delays.push(ms); scheduled = callback; return 1 },
     clearTimer: id => { assert.equal(id, 1); cleared++ }, ...overrides,
   }
+  const delays = []
   const cancel = startCheckRun('saved solution', 'rep-id', options)
+  // The worker reports that it has loaded before the five-second check limit begins; the load allowance is cleared.
+  worker.onmessage?.({ data: { ready: true } })
+  if (delays.length === 2) cleared = 0
   return { worker, cancel, results, errors, timeout: () => scheduled(), counts: () => ({ terminated, cleared }), sent: () => sent }
 }
 
@@ -123,4 +127,17 @@ test('the SQLite rep gets a separate load allowance, then the usual five seconds
   assert.deepEqual(delays, [30000, 5000])
   callback()
   assert.match(errors[0], /took too long/)
+})
+
+test('every rep gets a load allowance, so a slow worker start is not reported as an endless loop', () => {
+  const delays = [], errors = []
+  let callback
+  const worker = { onmessage: null, onerror: null, postMessage() {}, terminate() {} }
+  startCheckRun('code', 'rep-id', {
+    createWorker: () => worker, onResults() {}, onError: value => errors.push(value),
+    schedule: (run, ms) => { delays.push(ms); callback = run; return 1 }, clearTimer() {},
+  })
+  assert.deepEqual(delays, [30000])
+  callback()
+  assert.match(errors[0], /could not load in time.*code is still here/)
 })

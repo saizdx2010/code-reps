@@ -41,8 +41,8 @@ export function startCheckRun(code: string, repId: string, options: RunOptions):
     worker.onmessage = event => {
       if (disposed) return
       const data: unknown = event.data
-      // The SQLite rep reports when its bundled engine has loaded; only learner code and checks get the five seconds.
-      if (repId === SQLITE_REP_ID && data && typeof data === 'object' && (data as Record<string, unknown>).ready === true) { limit(); return }
+      // The worker reports when its script (and any bundled engine) has loaded; only learner code and checks get the five seconds.
+      if (data && typeof data === 'object' && (data as Record<string, unknown>).ready === true) { limit(); return }
       dispose()
       if (data && typeof data === 'object') {
         const reply = data as Record<string, unknown>
@@ -67,14 +67,14 @@ export function startCheckRun(code: string, repId: string, options: RunOptions):
       dispose()
       options.onError('The checks could not run. Your code is still here; try running them again.')
     }
-    if (repId === SQLITE_REP_ID) {
-      // Loading the engine gets a separate allowance so a cold or busy start is not reported as an endless loop.
-      timer = options.schedule(() => {
-        if (disposed) return
-        dispose()
-        options.onError('The SQLite engine could not load in time. Your code is still here; try running the checks again.')
-      }, 30000)
-    } else limit()
+    // Loading the worker gets a separate allowance so a cold or busy start is not reported as an endless loop.
+    timer = options.schedule(() => {
+      if (disposed) return
+      dispose()
+      options.onError(repId === SQLITE_REP_ID
+        ? 'The SQLite engine could not load in time. Your code is still here; try running the checks again.'
+        : 'The checker could not load in time. Your code is still here; try running the checks again.')
+    }, 30000)
     worker.postMessage({ code, repId })
   } catch {
     dispose()
