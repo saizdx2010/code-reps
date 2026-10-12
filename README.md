@@ -141,7 +141,7 @@ Automated checks do not establish learning effectiveness, full disconnected-brow
 | [Algorithms & Data Structures](./docs/ALGORITHMS_DATA_STRUCTURES.md) | Beginner progression and planned expansion |
 | [Practical concepts](./docs/PRACTICAL_CONCEPTS.md) | Application policies and transfer practice |
 | [Content authoring](./docs/CONTENT_AUTHORING.md) | Internal exercise and lesson standards |
-| [Content gap map](./docs/CONTENT_GAPS.md) | Priorities for future practice content |
+| [Content gap map](./docs/CONTENT_GAPS.md) | Topics without dedicated journeys, and how to choose the next batch |
 | [Browser testing](./docs/BROWSER_TESTING.md) | Real-browser coverage and verification limits |
 | [Maintaining](./docs/MAINTAINING.md) | Daily loop, adding reps and lessons, gates, common failures, and backups |
 
