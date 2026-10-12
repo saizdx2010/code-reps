@@ -60,3 +60,26 @@ test('a load that keeps failing offers Reload app and still keeps the draft', as
   await expect(page.locator('#brief-section').getByText('appears most often')).toBeVisible()
   await expect(page.locator('.view-lines')).toContainText('counts')
 })
+
+test('a rep with no saved draft shows its starter', async ({ page }) => {
+  await page.goto(route)
+  await expect(page.locator('.view-lines')).toContainText('Write your solution here')
+  await expect(page.locator('.view-lines')).toContainText('function mostFrequent')
+})
+
+test('a failed load with no saved draft never saves a placeholder, and Retry brings the starter', async ({ page }) => {
+  let blocked = true
+  await page.route(contentModule, route => blocked ? route.abort() : route.continue())
+  await page.goto(route)
+  const alert = page.getByRole('alert').filter({ hasText: 'brief could not load' })
+  await expect(alert).toBeVisible()
+  await expect(page.getByText('The starter code could not load')).toBeVisible()
+  await expect(editor(page)).toHaveCount(0)
+  await page.reload()
+  await expect(alert).toBeVisible()
+  expect(await page.evaluate(() => Object.keys(localStorage).filter(key => key.includes('attempt:most-frequent-number')))).toEqual([])
+
+  blocked = false
+  await alert.getByRole('button', { name: 'Retry' }).click()
+  await expect(page.locator('.view-lines')).toContainText('function mostFrequent')
+})

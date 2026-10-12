@@ -2,6 +2,7 @@ import { repPracticeContext } from './curriculum.ts'
 import { migratePathId, paths } from './path.ts'
 import { recurringReviews } from './fluency.ts'
 import type { RepSummary } from './catalog-index.ts'
+import { starterHash } from './starter-hash.ts'
 import { repLevel } from './rep-levels.ts'
 import { foundationRepIds, repIndex as reps } from './catalog-index.ts'
 import { getAllJourneys } from './learning.ts'
@@ -11,10 +12,12 @@ import type { PortableAttempt, PortableRecord } from './portability.ts'
 export type PracticeAction = { repId: string; reason: string; mode: 'start' | 'resume' | 'review' | 'retry' }
 const delay = 3 * 86_400_000
 
-export function attemptStatus(repId: string, attempt?: PortableAttempt) {
+/** `code` is undefined while the starter has not loaded yet; that counts as unchanged. */
+export type DraftAttempt = Omit<PortableAttempt, 'code'> & { code?: string }
+export function attemptStatus(repId: string, attempt?: DraftAttempt) {
   const rep = reps.find(item => item.id === repId)
   if (attempt?.completedAt) return 'Completed'
-  if (attempt && rep && (attempt.plan.trim() || attempt.code !== rep.starter || attempt.explanation.trim() || attempt.hintCount > 0)) return 'In progress'
+  if (attempt && rep && (attempt.plan.trim() || (attempt.code !== undefined && starterHash(attempt.code) !== rep.starterHash) || attempt.explanation.trim() || attempt.hintCount > 0)) return 'In progress'
   return 'Not started'
 }
 
@@ -35,7 +38,7 @@ export function nextRepInPath(pathId: string, repId: string, completed: (id: str
   return repIds.slice(index + 1).find(id => reps.some(rep => rep.id === id) && !completed(id))
 }
 
-export function getPracticePlan(drafts: Record<string, PortableAttempt>, history: PortableRecord[], learnerStart: LearnerStart | null, selectedRepId: string, now = Date.now(), goalPathId = 'typescript') {
+export function getPracticePlan(drafts: Record<string, DraftAttempt>, history: PortableRecord[], learnerStart: LearnerStart | null, selectedRepId: string, now = Date.now(), goalPathId = 'typescript') {
   const status = (id: string) => attemptStatus(id, drafts[id])
   const progress = getAllJourneys(history, now)
   const latest = new Map<string, PortableRecord>()

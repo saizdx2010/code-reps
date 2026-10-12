@@ -25,6 +25,14 @@ test('unfinished work takes precedence over new content, with the selected draft
   assert.equal(attemptStatus('create-objects', draft('create-objects')), 'Not started')
 })
 
+test('code equal to the starter is not progress, while an edit or a still-loading starter is judged correctly', () => {
+  const id = 'count-words'
+  assert.equal(attemptStatus(id, draft(id)), 'Not started')
+  assert.equal(attemptStatus(id, { ...draft(id), code: undefined }), 'Not started')
+  assert.equal(attemptStatus(id, draft(id, { code: draft(id).code + '\n// changed' })), 'In progress')
+  assert.equal(attemptStatus(id, draft(id, { code: '' })), 'In progress')
+})
+
 test('all due recalls remain visible, and a saved recall is resumed', () => {
   const history = [record('sum-positive-numbers'), record('count-even-numbers', { completedAt: '2026-09-21T12:00:00Z' }), record('has-duplicate'), record('most-frequent-number', { completedAt: '2026-09-21T12:00:00Z' })]
   const plan = getPracticePlan({ 'count-above-threshold': draft('count-above-threshold', { plan: 'Compare the limit' }) }, history, 'returning', '', now)

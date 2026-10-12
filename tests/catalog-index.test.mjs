@@ -5,6 +5,7 @@ import test from 'node:test'
 import { renderCatalogIndex } from '../scripts/catalog-index.mjs'
 import { foundationRepIds, repIndex, skillIndex } from '../src/catalog-index.ts'
 import { loadAllReps, loadRepContent } from '../src/rep-content.ts'
+import { starterHash } from '../src/starter-hash.ts'
 import { skills } from '../src/knowledge.ts'
 import { reps } from '../src/rep.ts'
 
@@ -17,7 +18,7 @@ test('the index lists every rep and skill in catalog order with stable ids', () 
   assert.deepEqual(skillIndex.map(skill => skill.id), skills.map(skill => skill.id))
   for (const [position, item] of repIndex.entries()) {
     const rep = reps[position]
-    assert.deepEqual([item.title, item.category, item.format, item.starter, item.hintTotal], [rep.title, rep.category, rep.format, rep.starter, rep.hints.length])
+    assert.deepEqual([item.title, item.category, item.format, item.starterHash, item.hintTotal], [rep.title, rep.category, rep.format, starterHash(rep.starter), rep.hints.length])
   }
   for (const [position, summary] of skillIndex.entries()) {
     const skill = skills[position]
@@ -25,6 +26,21 @@ test('the index lists every rep and skill in catalog order with stable ids', () 
     assert.deepEqual([summary.title, summary.prerequisites, summary.related, summary.repIds, summary.firstMistake], [skill.title, skill.prerequisites, skill.related, skill.repIds, skill.mistakes[0]])
   }
   assert.ok(foundationRepIds.length > 0 && foundationRepIds.every(id => repIndex.some(item => item.id === id)))
+})
+
+test('the startup catalog keeps a starter fingerprint, never the starter text', () => {
+  const source = readFileSync(new URL('../src/catalog-index.ts', import.meta.url), 'utf8')
+  for (const item of repIndex) {
+    assert.equal('starter' in item, false, item.id)
+    assert.match(item.starterHash, /^[0-9a-f]{16}$/, item.id)
+  }
+  for (const rep of reps) assert.equal(source.includes(JSON.stringify(rep.starter)), false, `${rep.id} starter text leaked into the catalog`)
+})
+
+test('starter fingerprints are stable and sensitive to every character', () => {
+  assert.equal(starterHash('let x = 1'), starterHash('let x = 1'))
+  assert.notEqual(starterHash('let x = 1'), starterHash('let x = 1 '))
+  assert.notEqual(starterHash('let x = 1'), starterHash('let x = 2'))
 })
 
 test('loading a rep returns the same authored content the full catalog holds', async () => {

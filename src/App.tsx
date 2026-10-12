@@ -26,6 +26,7 @@ import type { TestResult } from './runner.types'
 import { repIndex as reps } from './catalog-index'
 import type { RepSummary } from './catalog-index'
 import { useRepContent } from './useRepContent'
+import { peekRepContent } from './rep-content'
 import { paths } from './path'
 import { buildTrail } from './trail-map'
 import { JournalTabs } from './Journal'
@@ -67,11 +68,16 @@ const HistoryPage = lazy(() => import('./HistoryPage').then(module => ({ default
 const LearningHub = lazy(() => import('./LearningHub').then(module => ({ default: module.LearningHub })).catch(() => ({ default: () => <main className="learning-hub"><h1>Learning tools could not load</h1><p>Reload to try again. Your saved work is kept.</p><button className="primary-button" type="button" onClick={() => window.location.reload()}>Reload app</button></main> })))
 const FrontendPreview = lazy(() => import('./FrontendPreview').catch(() => ({ default: () => <section className="panel frontend-preview" role="alert"><p>The preview could not load. Reload to try again; your draft will be kept.</p><button className="primary-button" type="button" onClick={() => window.location.reload()}>Reload app</button></section> })))
 const storageKey = (repId: string) => `code-reps:attempt:${repId}:v1`
+/** A draft with no code yet is skipped: it would be read back as a saved draft and fail backup validation. */
+function saveAttempt(repId: string, attempt: Attempt) {
+  if (attempt.code !== undefined) localStore.setItem(storageKey(repId), JSON.stringify(attempt))
+}
 const historyKey = 'code-reps:history:v1'
 const learnerStartKey = 'code-reps:learner-start:v1'
 
-type Attempt = { plan: string; code: string; explanation: string; hintCount: number; difficulty?: Difficulty; confidence?: Confidence; mistakes?: string[]; completedAt?: string }
-type AttemptRecord = Attempt & { id: string; repId: string; completedAt: string }
+// `code` is undefined only while the rep's starter has not loaded and the learner has no saved draft. It is never written to storage.
+type Attempt = { plan: string; code?: string; explanation: string; hintCount: number; difficulty?: Difficulty; confidence?: Confidence; mistakes?: string[]; completedAt?: string }
+type AttemptRecord = Attempt & { code: string; id: string; repId: string; completedAt: string }
 function readHistory(): AttemptRecord[] {
   try {
     const saved: unknown = JSON.parse(localStore.getItem(historyKey) || '[]')
@@ -86,7 +92,7 @@ function readAttempt(rep: RepSummary): Attempt {
     const saved = JSON.parse(localStore.getItem(storageKey(rep.id)) || 'null') as Partial<Attempt> | null
     return {
       plan: typeof saved?.plan === 'string' ? saved.plan : '',
-      code: typeof saved?.code === 'string' ? saved.code : rep.starter,
+      code: typeof saved?.code === 'string' ? saved.code : peekRepContent(rep.id)?.rep.starter,
       explanation: typeof saved?.explanation === 'string' ? saved.explanation : '',
       hintCount: typeof saved?.hintCount === 'number' ? Math.min(rep.hintTotal, Math.max(0, saved.hintCount)) : 0,
       difficulty: saved?.difficulty && saved.difficulty in difficultyLabels ? saved.difficulty : undefined,
@@ -94,7 +100,7 @@ function readAttempt(rep: RepSummary): Attempt {
       mistakes: normalizeMistakes(saved?.mistakes),
       completedAt: typeof saved?.completedAt === 'string' ? saved.completedAt : undefined,
     }
-  } catch { return { plan: '', code: rep.starter, explanation: '', hintCount: 0 } }
+  } catch { return { plan: '', code: peekRepContent(rep.id)?.rep.starter, explanation: '', hintCount: 0 } }
 }
 
 // UI-only renders reuse the same learner summary. Consumers read only draft status, so typing that keeps the status changes nothing here.
@@ -205,7 +211,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     const generation = ++pendingSave.current
     const timer = window.setTimeout(() => {
       try {
-        localStore.setItem(storageKey(repId), JSON.stringify(attempt))
+        saveAttempt(repId, attempt)
         void flushStorage().then(() => {
           if (generation === pendingSave.current) setSaveState(isServerReady() ? 'Saved on this laptop' : 'Saved in browser')
         }).catch(() => {
@@ -228,7 +234,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   useEffect(() => {
     const saveDraft = (event?: Event) => {
       const { repId, attempt } = latestWork.current
-      try { localStore.setItem(storageKey(repId), JSON.stringify(attempt)) }
+      try { saveAttempt(repId, attempt) }
       catch { event?.preventDefault(); setSaveState('Could not save on this device; download a backup') }
     }
     const saveWhenHidden = () => { if (document.visibilityState === 'hidden') saveDraft() }
@@ -279,7 +285,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     if (!nextRep) return
     stopRun()
     try {
-      localStore.setItem(storageKey(repId), JSON.stringify(attempt))
+      saveAttempt(repId, attempt)
       localStore.setItem('code-reps:selected-rep', nextId)
       setSaveState('Saving…')
     } catch { setSaveState('Could not save on this device') }
@@ -340,7 +346,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     openRep(nextId)
     const nextRep = reps.find((item) => item.id === nextId)
     if (nextRep && (nextId === repId ? attempt.completedAt : readAttempt(nextRep).completedAt)) {
-      setAttempt({ plan: '', code: nextRep.starter, explanation: '', hintCount: 0 })
+      setAttempt({ plan: '', code: peekRepContent(nextId)?.rep.starter, explanation: '', hintCount: 0 })
       setResults(null)
       setSaveState('Saving…')
     }
@@ -357,9 +363,10 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
       const drafts: Backup['drafts'] = {}
       for (const item of reps) {
         const saved = localStore.getItem(storageKey(item.id))
-        if (saved) drafts[item.id] = readAttempt(item)
+        const draft = readAttempt(item)
+        if (saved && draft.code !== undefined) drafts[item.id] = { ...draft, code: draft.code }
       }
-      drafts[repId] = attempt
+      if (attempt.code !== undefined) drafts[repId] = { ...attempt, code: attempt.code }
       const backup: Backup = { format: 'code-reps-backup', version: 1, exportedAt: new Date().toISOString(), learnerStart, history, drafts, learning: fluency.state, sessions: sessions.backup() }
       const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }))
       const link = document.createElement('a')
@@ -403,31 +410,32 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   async function retrySaving() {
     setSaveState('Saving…')
     try {
-      localStore.setItem(storageKey(repId), JSON.stringify(attempt))
+      saveAttempt(repId, attempt)
       await retryStorage()
       setSaveState(isServerReady() ? 'Saved on this laptop' : 'Saved in browser')
     } catch (error) { setSaveState(error instanceof Error ? error.message : 'Could not save; download a backup') }
   }
 
   function runChecks() {
-    if (running || !full) return
+    if (running || !full || attempt.code === undefined) return
     stopRun(); setResults(null); setRunError(''); setRunNotice(''); setRunning(true)
     setMobileTab('workspace')
     setActiveStep('solve')
     setChecksOpen(true)
+    const code = attempt.code
     if (full.format === 'frontend') {
       let cancelled = false
       let cancelFrame = () => {}
       cancelRunRef.current = () => { cancelled = true; cancelFrame() }
       void import('./frontend-run').then(({ startFrontendRun }) => {
         if (cancelled) return
-        cancelFrame = startFrontendRun(attempt.code, full,
+        cancelFrame = startFrontendRun(code, full,
           nextResults => { setRunning(false); setResults(nextResults) },
           message => { setRunning(false); setRunError(message) })
       }).catch(() => { if (!cancelled) { setRunning(false); setRunError('Browser checks could not load. Your code is still here; try again.') } })
       return
     }
-    cancelRunRef.current = startCheckRun(attempt.code, repId, {
+    cancelRunRef.current = startCheckRun(code, repId, {
       createWorker: () => new Worker(new URL('./runner.worker.ts', import.meta.url), { type: 'module' }),
       schedule: (callback, milliseconds) => window.setTimeout(callback, milliseconds),
       clearTimer: id => window.clearTimeout(id),
@@ -438,6 +446,11 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
 
   const repContent = useRepContent(repId, view === 'workspace')
   const full = repContent.status === 'ready' ? repContent.content.rep : undefined
+  // The starter arrives with the rep's content; only an attempt still waiting for it takes it, so a saved draft is never replaced.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- adopts the starter once its content has loaded.
+    if (full && full.id === repId) setAttempt(current => current.code === undefined ? { ...current, code: full.starter } : current)
+  }, [full, repId])
   const allPassed = !!full && results?.length === full.checks.length && results.every((result) => result.passed)
   const repContentNotice = repContent.status === 'error'
     ? <div className="rep-content-notice" role="alert"><p>This rep's brief could not load. Your draft is safe.{repContent.failures > 1 && ' Retrying did not help; reloading the app usually does.'}</p><Button type="button" onClick={repContent.retry}>Retry</Button>{repContent.failures > 1 && <Button type="button" onClick={() => { if (window.dispatchEvent(new Event('code-reps-save-current', { cancelable: true }))) window.location.reload() }}>Reload app</Button>}</div>
@@ -507,10 +520,10 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     completing.current = true
     const completedAt = new Date().toISOString()
     const completed = { ...attempt, completedAt }
-    const record = { ...completed, id: crypto.randomUUID(), repId }
+    const record = { ...completed, code: completed.code ?? '', id: crypto.randomUUID(), repId }
     const nextHistory = [record, ...history]
     try {
-      const entries = () => ({ [historyKey]: JSON.stringify(nextHistory), [storageKey(repId)]: JSON.stringify(latestWork.current.repId === repId ? latestWork.current.attempt === attempt ? completed : latestWork.current.attempt : readAttempt(rep)) })
+      const entries = () => ({ [historyKey]: JSON.stringify(nextHistory), [storageKey(repId)]: JSON.stringify(latestWork.current.repId === repId ? latestWork.current.attempt === attempt || latestWork.current.attempt.code === undefined ? completed : latestWork.current.attempt : readAttempt(rep)) })
       localStore.setEntries(entries())
       setHistory(nextHistory)
       // The clock ticks once a minute; refresh it so a completion moments old is not dated in the future.
@@ -523,7 +536,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   function startNewAttempt() {
     if (!attempt.completedAt) return
     stopRun()
-    setAttempt({ plan: '', code: rep.starter, explanation: '', hintCount: 0 })
+    setAttempt({ plan: '', code: full?.starter, explanation: '', hintCount: 0 })
     setResults(null)
     setRunError('')
     setRunNotice('')
@@ -534,7 +547,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   function resetRep() {
     resetDialogRef.current?.close()
     stopRun()
-    setAttempt({ plan: '', code: rep.starter, explanation: '', hintCount: 0 })
+    setAttempt({ plan: '', code: full?.starter, explanation: '', hintCount: 0 })
     setResults(null)
     setRunError('')
     setRunNotice('')
@@ -579,9 +592,9 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
         </div></div>
         <WorkspaceSplit value={splitWidth} onChange={resizeSplit} onCommit={saveSplit} />
         <div id="code-workspace" key={`code-${rep.id}`} className={`code-column ${activeStep === 'solve' ? 'mobile-active' : ''}`} role="region" aria-label="Code and preview" tabIndex={0}>
-          <section id="solution-section" tabIndex={-1} className="panel code-panel">{walkthrough === 'active' && repId === 'declare-variables' && activeStep === 'solve' && <Suspense fallback={null}><FirstRepWalkthrough step={activeStep} completed={!!attempt.completedAt} onNext={revealSection} onDismiss={dismissWalkthrough} /></Suspense>}<div className="editor-wrap"><ProjectEditor showHeader key={rep.id} focusRequest={editorFocusRequest} height="100%" path={`code-reps://${getActiveProfile()}/${rep.id}/solution.${full?.reactPreview ? 'tsx' : 'ts'}`} language="typescript" value={attempt.code} onChange={(value) => update('code', value ?? '')} onRunChecks={runChecks} options={{ ariaLabel: `TypeScript solution for ${rep.title}. Press Control or Command Enter to run checks. Tab moves focus out of the editor.`, tabFocusMode: true, minimap: { enabled: false }, fontFamily: 'Maple Mono, monospace', fontLigatures: true, fontSize: 14, lineHeight: 24, padding: { top: 18 }, scrollBeyondLastLine: false, scrollbar: { alwaysConsumeMouseWheel: false }, automaticLayout: true, tabSize: 2, wordWrap: 'on' }} /></div></section>
+          <section id="solution-section" tabIndex={-1} className="panel code-panel">{walkthrough === 'active' && repId === 'declare-variables' && activeStep === 'solve' && <Suspense fallback={null}><FirstRepWalkthrough step={activeStep} completed={!!attempt.completedAt} onNext={revealSection} onDismiss={dismissWalkthrough} /></Suspense>}<div className="editor-wrap">{attempt.code === undefined ? <p className="rep-content-notice" role="status">{repContent.status === 'error' ? 'The starter code could not load. Retry above; your other work is safe.' : 'Loading the starter code…'}</p> : <ProjectEditor showHeader key={rep.id} focusRequest={editorFocusRequest} height="100%" path={`code-reps://${getActiveProfile()}/${rep.id}/solution.${full?.reactPreview ? 'tsx' : 'ts'}`} language="typescript" value={attempt.code} onChange={(value) => update('code', value ?? '')} onRunChecks={runChecks} options={{ ariaLabel: `TypeScript solution for ${rep.title}. Press Control or Command Enter to run checks. Tab moves focus out of the editor.`, tabFocusMode: true, minimap: { enabled: false }, fontFamily: 'Maple Mono, monospace', fontLigatures: true, fontSize: 14, lineHeight: 24, padding: { top: 18 }, scrollBeyondLastLine: false, scrollbar: { alwaysConsumeMouseWheel: false }, automaticLayout: true, tabSize: 2, wordWrap: 'on' }} />}</div></section>
 
-          {rep.format === 'frontend' && (full ? <Suspense fallback={<PreviewLoading />}><FrontendPreview key={rep.id} rep={full} code={attempt.code} /></Suspense> : repContent.status === 'loading' && <PreviewLoading />)}
+          {rep.format === 'frontend' && (full ? <Suspense fallback={<PreviewLoading />}><FrontendPreview key={rep.id} rep={full} code={attempt.code ?? full.starter} /></Suspense> : repContent.status === 'loading' && <PreviewLoading />)}
           <section id="checks-section" tabIndex={-1} className={`checks-drawer ${running ? 'running' : runError ? 'failed' : results ? allPassed ? 'passed' : 'failed' : ''}`} aria-live="polite" aria-busy={running}><button type="button" className="checks-toggle" aria-expanded={checksOpen} aria-controls="check-details" onClick={() => setChecksOpen(!checksOpen)}><span>Checks</span><span>{running ? 'Running…' : results ? `${results.filter(result => result.passed).length} of ${results.length} passed` : runError ? 'Needs attention' : 'Not run yet'} <Icon name="chevron" /></span></button><div id="check-details" hidden={!checksOpen}>{running ? <div className="result-running"><span className="result-running-track" aria-hidden="true"><span /></span><strong>Running checks</strong><p>Checking your solution against {full?.checks.length} cases.</p></div> : runError ? <div className="error-message" role="alert">{runError}</div> : results ? <><div className={`result-summary ${allPassed ? 'passed' : 'failed'}`}><span><Icon name={allPassed ? 'check' : 'alert'} /></span><div><strong>{allPassed ? 'All checks passed' : `${results.filter((result) => result.passed).length} of ${results.length} checks passed`}</strong></div></div><CheckFeedback results={results} />{allPassed && !attempt.completedAt && <button type="button" className="primary-button checks-next" onClick={() => revealSection('explain-section')}>Explain your solution</button>}{!allPassed && <aside className="mistake-help"><h3>Explore the concepts behind these checks</h3><p>These references may help you trace the failure. They are suggestions, not a diagnosis of your code.</p>{relatedHelp(repId, results.filter(r => !r.passed).map(r => r.name)).map(skill => <div key={skill.id}><button type="button" onClick={() => openKnowledge(skill.id)}>{skill.title}</button><p>{skill.firstMistake}</p></div>)}</aside>}</> : <div className="empty-results"><span className="empty-icon"><Icon name="code" /></span><div><strong>{runNotice ? 'Run checks again when ready' : 'Ready when you are'}</strong><p>{runNotice || 'Run checks to see how your solution handles the examples and edge cases.'}</p></div></div>}</div></section>
           <div ref={toolbarRef} className="workspace-toolbar"><div className="workspace-toolbar-links">{(results || runError) && <button type="button" onClick={() => revealSection('checks-section')}>{results?.some(result => !result.passed) ? 'View failed checks' : 'Results'}</button>}</div><div className="workspace-toolbar-run"><span role="status">{running ? 'Running checks…' : results ? `${results.filter(result => result.passed).length}/${results.length} passed` : 'Ready to run'}</span>{running ? <button type="button" className="stop-checks-button" onClick={cancelChecks}>Stop checks</button> : <button className="primary-button" type="button" disabled={!full} onClick={runChecks}><Icon name="play" />Run checks</button>}</div></div>
         </div>
