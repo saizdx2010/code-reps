@@ -12,6 +12,7 @@ import { coreSolutions } from './fixtures/core-solutions.mjs'
 import { asyncSolutions } from './fixtures/async-solutions.mjs'
 import { practicalSolutions } from './fixtures/practical-solutions.mjs'
 import { validateContentDepth } from '../src/content-depth.ts'
+import { validateReps } from '../src/rep-validation.ts'
 import { repDepth } from '../src/rep-depth.ts'
 import { lessonDepth } from '../src/lesson-depth.ts'
 import { skills } from '../src/knowledge.ts'
@@ -53,17 +54,17 @@ const solutions = {
 
 test('every rep has reference-solution coverage and a complete learning brief', () => {
   const covered = new Set([...Object.keys(solutions), ...Object.keys(richSolutions), ...Object.keys(capstoneSolutions), ...Object.keys(domSolutions), ...Object.keys(connectedSolutionsById), ...aiEraReps.map(rep => rep.id), ...Object.keys({ 'react-channel-counter': reactSolution })])
-  assert.equal(new Set(reps.map(rep => rep.id)).size, reps.length, 'Rep IDs must be unique')
   assert.deepEqual([...covered].sort(), reps.map(rep => rep.id).sort())
-  for (const rep of reps) {
-    assert.ok(reflectionGuides[rep.id]?.plan.length && reflectionGuides[rep.id]?.explanation.length && reflectionGuides[rep.id]?.example, `${rep.id}: missing authored self-review`)
-    for (const field of ['title', 'category', 'prompt', 'note', 'planPrompt', 'starter', 'functionName']) {
-      assert.ok(rep[field].trim(), `${rep.id}: missing ${field}`)
-    }
-    assert.ok(rep.example.input && rep.example.output, `${rep.id}: missing example`)
-    assert.ok(rep.vocabulary.length && rep.hints.length >= 3 && rep.checks.length >= 3, `${rep.id}: incomplete support`)
-    assert.equal(new Set(rep.checks.map(check => check.name)).size, rep.checks.length, `${rep.id}: duplicate check names`)
-  }
+  assert.deepEqual(validateReps(reps, reflectionGuides), [])
+})
+
+test('the shared rep validator names each incomplete authoring field', () => {
+  const [rep] = reps
+  const broken = { ...rep, note: ' ', example: { input: '', output: '' }, hints: rep.hints.slice(0, 2), checks: [rep.checks[0], rep.checks[0]] }
+  assert.deepEqual(validateReps([broken, broken], {}), [
+    'Exercise IDs must be unique.',
+    ...[1, 2].flatMap(() => [`${rep.id}: missing note`, `${rep.id}: missing example`, `${rep.id}: missing or duplicate checks`, `${rep.id}: incomplete support (needs vocabulary, three hints, and three checks)`, `${rep.id}: missing self-review`]),
+  ])
 })
 
 for (const [id, code] of Object.entries(solutions)) {

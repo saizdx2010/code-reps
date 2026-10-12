@@ -4,14 +4,9 @@ import { reps } from '../src/rep.ts'
 import { skills, contentVersion } from '../src/knowledge.ts'
 import { validateKnowledge } from '../src/knowledge-validation.ts'
 import { reflectionGuides } from '../src/reflection-guides.ts'
+import { validateReps } from '../src/rep-validation.ts'
 const ids = new Set(reps.map(rep => rep.id))
-const errors = [...validateKnowledge(ids), ...validateContentDepth(ids, new Set(skills.map(skill => skill.id)))]
-if (ids.size !== reps.length) errors.push('Exercise IDs must be unique.')
-for (const rep of reps) {
-  for (const field of ['title','category','prompt','note','planPrompt','starter','functionName']) if (!rep[field]?.trim()) errors.push(`${rep.id}: missing ${field}`)
-  if (!rep.checks.length || new Set(rep.checks.map(c=>c.name)).size !== rep.checks.length) errors.push(`${rep.id}: missing or duplicate checks`)
-  if (!reflectionGuides[rep.id]) errors.push(`${rep.id}: missing self-review`)
-}
+const errors = [...validateKnowledge(ids), ...validateContentDepth(ids, new Set(skills.map(skill => skill.id))), ...validateReps(reps, reflectionGuides)]
 for (const project of browserProjects) {
   if (!project.requirements.length || !project.verification.length || !project.examples.length || !project.transfer || !project.readiness) errors.push(`${project.id}: incomplete external project`)
   for (const id of project.preparation) if (!ids.has(id)) errors.push(`${project.id}: missing preparation rep ${id}`)
