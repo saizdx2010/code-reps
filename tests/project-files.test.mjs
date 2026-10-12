@@ -1,19 +1,18 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { JSDOM } from 'jsdom'
 import { decodeFiles, encodeFiles } from '../src/project-files.ts'
 import { compileSolution } from '../src/compile-solution.ts'
 import { runRep } from '../src/runner.ts'
-import { buildFrontendFrame } from '../src/frontend-frame.ts'
 import { capstoneReps } from '../src/capstone-reps.ts'
 import { capstoneSolutions } from './fixtures/capstone-solutions.mjs'
+import { runFrame } from './helpers/frame.mjs'
 test('multi-file backend reference passes request and query boundary integration checks',()=>{
   assert.deepEqual(runRep(capstoneSolutions['project-ticket-api'],'project-ticket-api').filter(r=>!r.passed),[])
 })
 test('multi-file frontend reference passes the real DOM interaction checks',()=>{
-  const rep=capstoneReps.find(r=>r.id==='project-team-directory');let report
-  const dom=new JSDOM(buildFrontendFrame(capstoneSolutions[rep.id],rep,'capstone','checks'),{runScripts:'dangerously',beforeParse(window){window.postMessage=value=>report=value}})
-  try {assert.ok(report.results.every(r=>r.passed),JSON.stringify(report))} finally{dom.window.close()}
+  const rep=capstoneReps.find(r=>r.id==='project-team-directory')
+  const {report}=runFrame(capstoneSolutions[rep.id],rep)
+  assert.ok(report.results.every(r=>r.passed),JSON.stringify(report))
 })
 test('module loader reports missing or external imports without exposing host require',()=>{
   for(const specifier of ['./missing','node:fs','../escape']) {

@@ -1,18 +1,16 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { JSDOM } from 'jsdom'
 import { bundleReactFrame } from '../scripts/react-frame-bundle.mjs'
-import { buildFrontendFrame } from '../src/frontend-frame.ts'
 import { reactReps } from '../src/react-reps.ts'
 import { reflectionGuides } from '../src/reflection-guides.ts'
 import { repDepth } from '../src/rep-depth.ts'
 import { reactSolution } from './fixtures/react-solution.mjs'
+import { runFrame } from './helpers/frame.mjs'
 const runtime = await bundleReactFrame()
 const rep = reactReps[0]
 function run(code, mode = 'checks') {
-  let report
-  const dom = new JSDOM(buildFrontendFrame(code, rep, 'react-test', mode, undefined, runtime), { runScripts: 'dangerously', beforeParse(window) { window.postMessage = data => { report = data } } })
-  try { return { report, text: dom.window.document.querySelector('#exercise-root').textContent } } finally { dom.window.close() }
+  const { report, value } = runFrame(code, rep, { mode, runtime }, window => window.document.querySelector('#exercise-root').textContent)
+  return { report, text: value }
 }
 test('one complete React rep compiles TSX and passes all six checks', () => {
   assert.equal(reactReps.length, 1)

@@ -1,23 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { JSDOM } from 'jsdom'
 import { domReps } from '../src/dom-reps.ts'
 import { reps } from '../src/rep.ts'
-import { buildFrontendFrame } from '../src/frontend-frame.ts'
 import { reflectionGuides } from '../src/reflection-guides.ts'
 import { repDepth } from '../src/rep-depth.ts'
 import { domSolutions } from './fixtures/dom-solutions.mjs'
+import { frameFailures, runFrame } from './helpers/frame.mjs'
 
-function run(code, rep, mode = 'checks') {
-  let report
-  const dom = new JSDOM(buildFrontendFrame(code, rep, 'test-token', mode), { runScripts: 'dangerously', beforeParse(window) { window.postMessage = data => { report = data } } })
-  return { dom, report }
-}
-function failed(rep, code) {
-  const { dom, report } = run(code, rep)
-  try { return report.error ? [report.error] : Array.from(report.results).filter(result => !result.passed).map(result => result.name) }
-  finally { dom.window.close() }
-}
+const failed = (rep, code) => frameFailures(code, rep)
 
 test('DOM reps are registered, complete, and have independent reference solutions', () => {
   assert.deepEqual(domReps.map(rep => rep.id).sort(), Object.keys(domSolutions).sort())
@@ -42,8 +32,8 @@ test('starter code does not pass its checks', () => {
 
 test('previews mount the authored props without the directory scenarios', () => {
   for (const rep of domReps) {
-    const { dom } = run(domSolutions[rep.id], rep, 'preview')
-    try { assert.ok(dom.window.document.querySelector('#exercise-root').children.length > 0, rep.id) } finally { dom.window.close() }
+    const { value: rendered } = runFrame(domSolutions[rep.id], rep, { mode: 'preview' }, window => window.document.querySelector('#exercise-root').children.length)
+    assert.ok(rendered > 0, rep.id)
   }
 })
 
