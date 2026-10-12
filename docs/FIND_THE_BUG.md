@@ -27,7 +27,7 @@ The checks establish that the learner's cases distinguish the supplied variants.
 9. **Write self-review** in your `review-*.ts` module: a `RepDepth` entry (reasoning, concrete trace, alternative, counterexample, transfer) and a guide (`plan`, `explanation`, `example`) for each rep. The counterexample should name a table that would miss a specific variant.
 10. **Write the reference solutions** in a fixture file. For expose reps, write a learner-style solution (case table plus `exposes`). For repair, write a correct function.
 11. **Write tests**: the reference passes (add it to `tests/content.test.mjs` through the fixture), the starter fails, an empty table exposes nothing, a weak table misses a named variant (for example, one that never compares inputs), and a shortcut such as `return true` fails the `correct` check. See `tests/testing-journey.test.mjs`.
-12. **Register everything** (next section), then run the commands below.
+12. **Register everything** (next section), then run the commands below; `yarn content:index` regenerates the lazy loaders.
 
 ## Files to touch
 
@@ -35,7 +35,6 @@ The checks establish that the learner's cases distinguish the supplied variants.
 | --- | --- |
 | `src/<name>-reps.ts` | The new `Rep[]` export |
 | `src/rep-sources.ts` | Import and add `{ name, reps }` (catalog order) |
-| `src/rep-content.ts` | Add the lazy loader for the same source name |
 | `src/review-<name>.ts` | Depth entries and self-review guides |
 | The review registries | Spread the new depth and guide records (`yarn rep:new` prints where) |
 | `src/rep-levels.ts` | A level for each rep |

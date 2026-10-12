@@ -59,7 +59,7 @@ Then work through the checklist:
 
 - [ ] Add the rep to a stage in `src/path.ts` if it belongs on a path. Add its difficulty to `repLevels` in `src/rep-levels.ts` (1 Beginner, 2 Intermediate, 3 Advanced). `yarn test` names any rep without a level.
 - [ ] Add an Indonesian gloss for every vocabulary term in `indonesianGlossary` in `src/vocabulary-id.ts`. See [the glossary rule](#the-indonesian-glossary-rule).
-- [ ] If the module is new, list it in `src/rep-sources.ts` and `src/rep-content.ts`. Existing modules are already registered.
+- [ ] If the module is new, list it in `src/rep-sources.ts` and run `yarn content:index`, which regenerates the lazy loaders in `src/rep-chunks.ts`. Existing modules are already registered.
 - [ ] `yarn content:index` to regenerate `src/catalog-index.ts`.
 - [ ] `yarn content:check` for the content rules.
 - [ ] `node --experimental-strip-types --test tests/content.test.mjs` to confirm the reference solution passes every check.
@@ -128,7 +128,7 @@ Every vocabulary term on a rep needs a gloss in `indonesianGlossary` in `src/voc
 Parallel content branches often edit the same generated and registry files.
 
 - **`src/catalog-index.ts` conflicts: regenerate, do not hand-merge.** Take either side of the conflicted file (for example `git checkout --ours -- src/catalog-index.ts`), then run `yarn content:index`, `git add src/catalog-index.ts`, and continue the merge. The generated output depends on the final catalog, so hand edits are wrong even when they look plausible.
-- **Registry conflicts (`src/rep-sources.ts`, `src/rep-content.ts`, `src/path.ts`, `src/rep-levels.ts`, `src/vocabulary-id.ts`, and the review registries) are hand-merged.** Keep both sides' entries. Check for duplicate keys, and check the lists are in the order the file expects.
+- **Registry conflicts (`src/rep-sources.ts`, `src/path.ts`, `src/rep-levels.ts`, `src/vocabulary-id.ts`, and the review registries) are hand-merged.** Keep both sides' entries, then regenerate `src/catalog-index.ts` and `src/rep-chunks.ts` with `yarn content:index` instead of merging them. Check for duplicate keys, and check the lists are in the order the file expects.
 - **After any merge that touches content:** run `yarn content:index`, `yarn content:check`, `yarn test`, `yarn lint`, and `yarn build`. A clean textual merge can still break a rep ID, a glossary key, or a level.
 - Give each parallel checkout its own `E2E_PORT` if you run the browser suite at the same time.
 
