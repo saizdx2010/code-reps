@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { BackupTooLargeError, backupFileText, backupTextLimit, backupTooLargeMessage, mergeHistory, parseBackup } from '../src/portability.ts'
+import {
+  BackupTooLargeError, backupFileText, backupTextLimit, backupTooLargeMessage, mergeHistory, parseBackup,
+} from '../src/portability.ts'
 import { parseProfileBackup } from '../src/profile-backup.ts'
 
 const known = new Set(['sum-positive-numbers'])

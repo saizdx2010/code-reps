@@ -1,119 +1,75 @@
 import { repNotes } from './rep-notes.ts'
-import { catalogTopic } from './catalog-labels.ts'
-import { InlineCode } from './InlineCode'
 import { usePracticeSessions } from './usePracticeSessions'
-import { emptySessions } from './practice-sessions'
-import { Input, Textarea } from './Input'
-import { difficultyLabels, confidenceLabels } from './attempt-labels.ts'
-import type { Difficulty, Confidence } from './attempt-labels.ts'
 import { AppNavigation } from './AppNavigation'
-import { hubTabs, isHubTab } from './learning-pages'
-import type { HubTab } from './learning-pages'
 import { InterviewStatus } from './InterviewStatus'
 import { useFluency } from './useFluency'
-import { relatedHelp, parseFluency } from './fluency'
-import { skillSummariesForRep as skillsForRep } from './skill-index'
 import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { CheckFeedback, CommandPalette, GlossaryDrawer, ScreenMemory, WorkspaceSplit } from './Experience'
+import { CommandPalette, GlossaryDrawer, ScreenMemory, WorkspaceSplit } from './Experience'
 import { useSessionPreference } from './useSessionPreference'
 import { useNavigation } from './useNavigation'
-import { preloadEditor } from './editor-loader'
-import { readRoute } from './ui-navigation'
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
 import type { View } from './ui-navigation'
 import { ProjectEditor } from './ProjectEditor'
-import { getActiveProfile } from './local-store'
-import { startCheckRun } from './check-run'
-import type { TestResult } from './runner.types'
+import { getActiveProfile, localStore } from './local-store'
 import { repIndex as reps } from './catalog-index'
 import type { RepSummary } from './catalog-index'
 import { useRepContent } from './useRepContent'
 import { peekRepContent } from './rep-content'
 import { paths } from './path'
-import { buildTrail } from './trail-map'
 import { JournalTabs } from './Journal'
-import { InfoNote } from './Layout'
-import { foundationsPathId, repCurriculumEvidence } from './curriculum'
-import { HomePage } from './HomePage'
-import { Button } from './Button'
 import { useReviewContent } from './useReviewContent'
-import { attemptStatus, getPracticePlan, nextRepInPath, practiceWritingPrompts, appendSentenceStarter } from './practice'
+import { attemptStatus, getPracticePlan, nextRepInPath, practiceWritingPrompts } from './practice'
 import type { LearnerStart } from './learning'
-import { BackupTooLargeError, backupFileText, mergeHistory, parseBackup } from './portability'
-import type { Backup } from './portability'
-import { flushStorage, isServerReady, localStore, retryStorage, storageIssue } from './local-store'
-import { mistakeTags, normalizeMistakes } from './mistakes'
 import { BadgeNotice } from './BadgeNotice'
 import './design.css'
 import './motion.css'
 import './trail.css'
 import { StepIndicator } from './StepIndicator'
-import { PageLoading, PreviewLoading, RouteLoading } from './LoadingStates'
-import { lazyRoute } from './lazy-route'
-import { Icon } from './Icon'
-import { StatusChip } from './Layout'
-import { statusTone } from './ui-status'
-import { repLevelLabel } from './rep-levels.ts'
+import { PreviewLoading } from './LoadingStates'
 import { revealElement } from './ui-motion'
-import { savedMessage } from './save-status'
+import { hubTabs } from './learning-pages'
+import { learnerStartKey, readAttempt, readLearnerStart } from './attempt-store'
+import type { Attempt, AttemptRecord } from './attempt-store'
+import { useAttempt } from './useAttempt'
+import { useCheckRun } from './useCheckRun'
+import { downloadBackup, restoreBackup } from './backup'
+import { AppRoutes } from './AppRoutes'
+import { actionLabel } from './practice-actions'
+import { WorkspaceHeader } from './WorkspaceHeader'
+import { BriefSection, ExplainSection, PlanSection, RepContentNotice, ReviewSection } from './PracticeSections'
+import type { UpdateAttempt } from './PracticeSections'
+import { ChecksDrawer, WorkspaceToolbar } from './ChecksDrawer'
+import { practiceSteps, sectionStep, stepSection } from './practice-steps'
 
 const repIds = reps.map(rep => rep.id)
-const PathsPage = lazyRoute(() => import('./PathsPage').then(module => module.PathsPage), 'The tracks')
-const ProgressPage = lazyRoute(() => import('./ProgressPage').then(module => module.ProgressPage), 'Progress')
-const MistakesPage = lazyRoute(() => import('./MistakesPage').then(module => module.MistakesPage), 'Mistakes')
-const SkillMapPage = lazyRoute(() => import('./SkillMapPage').then(module => module.SkillMapPage), 'The skill map')
-const TraceViewer = lazyRoute(() => import('./TraceViewer').then(module => module.TraceViewer), 'The trace')
-const PracticeCatalog = lazyRoute(() => import('./PracticeCatalog').then(module => module.PracticeCatalog), 'The library')
-const QuickLessons = lazyRoute(() => import('./QuickLessons').then(module => module.default), 'The lessons', 'learn-main')
-const RepGuidance = lazy(() => import('./RepGuidance'))
-const FirstRepWalkthrough = lazy(() => import('./FirstRepWalkthrough').then(module => ({ default: module.FirstRepWalkthrough })).catch(() => ({ default: ({ onDismiss }: { onDismiss: () => void }) => <aside aria-label="First rep walkthrough"><p>Guide unavailable. Reload to try again, or continue practice.</p><button type="button" className="text-button" onClick={onDismiss}>Skip walkthrough</button></aside> })))
-const HistoryPage = lazyRoute(() => import('./HistoryPage').then(module => module.HistoryPage), 'Attempt history', 'history-main')
-const LearningHub = lazyRoute(() => import('./LearningHub').then(module => module.LearningHub), 'Learning tools', 'learning-hub')
-const FrontendPreview = lazy(() => import('./FrontendPreview').catch(() => ({ default: () => <section className="panel frontend-preview" role="alert"><p>The preview could not load. Reload to try again; your draft will be kept.</p><button className="primary-button" type="button" onClick={() => window.location.reload()}>Reload app</button></section> })))
-const storageKey = (repId: string) => `code-reps:attempt:${repId}:v1`
-/** A draft with no code yet is skipped: it would be read back as a saved draft and fail backup validation. */
-function saveAttempt(repId: string, attempt: Attempt) {
-  if (attempt.code !== undefined) localStore.setItem(storageKey(repId), JSON.stringify(attempt))
-}
-const historyKey = 'code-reps:history:v1'
-const learnerStartKey = 'code-reps:learner-start:v1'
-
-// `code` is undefined only while the rep's starter has not loaded and the learner has no saved draft. It is never written to storage.
-type Attempt = { plan: string; code?: string; explanation: string; hintCount: number; difficulty?: Difficulty; confidence?: Confidence; mistakes?: string[]; completedAt?: string }
-type AttemptRecord = Attempt & { code: string; id: string; repId: string; completedAt: string }
-function readHistory(): AttemptRecord[] {
-  try {
-    const saved: unknown = JSON.parse(localStore.getItem(historyKey) || '[]')
-    return Array.isArray(saved) ? saved.filter((item): item is AttemptRecord =>
-      typeof item?.id === 'string' && typeof item?.repId === 'string' && typeof item?.completedAt === 'string' &&
-      typeof item?.plan === 'string' && typeof item?.code === 'string' && typeof item?.explanation === 'string').map(item => ({ ...item, mistakes: normalizeMistakes(item.mistakes) })) : []
-  } catch { return [] }
-}
-
-function readAttempt(rep: RepSummary): Attempt {
-  try {
-    const saved = JSON.parse(localStore.getItem(storageKey(rep.id)) || 'null') as Partial<Attempt> | null
-    return {
-      plan: typeof saved?.plan === 'string' ? saved.plan : '',
-      code: typeof saved?.code === 'string' ? saved.code : peekRepContent(rep.id)?.rep.starter,
-      explanation: typeof saved?.explanation === 'string' ? saved.explanation : '',
-      hintCount: typeof saved?.hintCount === 'number' ? Math.min(rep.hintTotal, Math.max(0, saved.hintCount)) : 0,
-      difficulty: saved?.difficulty && saved.difficulty in difficultyLabels ? saved.difficulty : undefined,
-      confidence: saved?.confidence && saved.confidence in confidenceLabels ? saved.confidence : undefined,
-      mistakes: normalizeMistakes(saved?.mistakes),
-      completedAt: typeof saved?.completedAt === 'string' ? saved.completedAt : undefined,
-    }
-  } catch { return { plan: '', code: peekRepContent(rep.id)?.rep.starter, explanation: '', hintCount: 0 } }
-}
+const FirstRepWalkthrough = lazy(() => import('./FirstRepWalkthrough')
+  .then(module => ({ default: module.FirstRepWalkthrough }))
+  .catch(() => ({
+    default: ({ onDismiss }: { onDismiss: () => void }) => <aside aria-label="First rep walkthrough">
+      <p>Guide unavailable. Reload to try again, or continue practice.</p>
+      <button type="button" className="text-button" onClick={onDismiss}>Skip walkthrough</button>
+    </aside>,
+  })))
+const FrontendPreview = lazy(() => import('./FrontendPreview').catch(() => ({
+  default: () => <section className="panel frontend-preview" role="alert">
+    <p>The preview could not load. Reload to try again; your draft will be kept.</p>
+    <button className="primary-button" type="button" onClick={() => window.location.reload()}>Reload app</button>
+  </section>,
+})))
 
 // UI-only renders reuse the same learner summary. Consumers read only draft status, so typing that keeps the status changes nothing here.
-function usePracticeOverview(repId: string, attempt: Attempt, history: AttemptRecord[], learnerStart: LearnerStart | null, now: number, goalPathId: string) {
-  // Other reps' saved drafts change only on rep switch or completion (history); re-reading every one on each keystroke dominated typing cost.
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- history signals a completion write to another rep's draft.
-  const savedDrafts = useMemo(() => Object.fromEntries(reps.filter(item => item.id !== repId).map(item => [item.id, readAttempt(item)])), [repId, history])
+function usePracticeOverview(repId: string, attempt: Attempt, history: AttemptRecord[], learnerStart: LearnerStart | null, now: number,
+  goalPathId: string) {
+  // Other reps' saved drafts change only on rep switch or completion (history); re-reading every one on each keystroke
+  // dominated typing cost.
+  const savedDrafts = useMemo(() => Object.fromEntries(reps.filter(item => item.id !== repId).map(item => [item.id, readAttempt(item)])),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- history signals a completion write to another rep's draft.
+    [repId, history])
   const currentStatus = attemptStatus(repId, attempt)
   // eslint-disable-next-line react-hooks/exhaustive-deps -- the current attempt is refreshed whenever its status changes.
   const drafts = useMemo(() => ({ ...savedDrafts, [repId]: attempt }), [savedDrafts, repId, currentStatus])
-  const practicePlan = useMemo(() => getPracticePlan(drafts, history, learnerStart, repId, now, goalPathId), [drafts, history, learnerStart, repId, now, goalPathId])
+  const practicePlan = useMemo(() => getPracticePlan(drafts, history, learnerStart, repId, now, goalPathId),
+    [drafts, history, learnerStart, repId, now, goalPathId])
   return { drafts, practicePlan }
 }
 
@@ -121,21 +77,27 @@ const repById = new Map(reps.map(item => [item.id, item]))
 // Pages the command palette can open, in its order. Pages not named here are labelled by their route.
 const commandPages: View[] = ['home', 'paths', 'catalog', 'learn', ...hubTabs, 'mistakes', 'progress', 'skillmap', 'history']
 const commandPageLabels: Partial<Record<View, string>> = {
-  home: 'Home: your trail', paths: 'all tracks', catalog: 'practice library', learn: 'quick lessons', plan: 'this week', skillmap: 'skill map',
+  home: 'Home: your trail', paths: 'all tracks', catalog: 'practice library', learn: 'quick lessons',
+  plan: 'this week', skillmap: 'skill map',
 }
-const categories = [...new Set(reps.map(catalogTopic))].sort()
+const splitWidthKey = 'code-reps:split-width'
+const editorOptions = {
+  tabFocusMode: true, minimap: { enabled: false }, fontFamily: 'Maple Mono, monospace', fontLigatures: true, fontSize: 14, lineHeight: 24,
+  padding: { top: 18 }, scrollBeyondLastLine: false, scrollbar: { alwaysConsumeMouseWheel: false }, automaticLayout: true, tabSize: 2,
+  wordWrap: 'on',
+} as const
+type IndonesianHelp = Pick<typeof import('./vocabulary-id'), 'indonesianGlossary' | 'englishTipsForIndonesianSpeakers'>
 
 function App({ profileName = 'My learning', onManageProfiles }: { profileName?: string; onManageProfiles?: () => void }) {
   const fluency = useFluency()
   const sessions = usePracticeSessions()
-  function setHubTab(tab: HubTab) { setView(tab) }
   const [knowledgeSkill, setKnowledgeSkill] = useSessionPreference<string>('knowledge-skill', 'values')
   function openKnowledge(id: string) { setKnowledgeSkill(id); setView('knowledge') }
 
-  function setView(next: View, id?: string) { if (next !== 'workspace') setEditorFocusRequest(0); navigate(next, next === 'workspace' ? id ?? repId : undefined) }
-  const [catalogSkill, setCatalogSkill] = useSessionPreference<string>('catalogSkill', '')
-  const [catalogFormat, setCatalogFormat] = useSessionPreference<string>('catalogFormat', '')
-  const [catalogStatus, setCatalogStatus] = useSessionPreference<string>('catalogStatus', '')
+  function setView(next: View, id?: string) {
+    if (next !== 'workspace') setEditorFocusRequest(0)
+    navigate(next, next === 'workspace' ? id ?? repId : undefined)
+  }
   const [glossaryOpen, setGlossaryOpen] = useState(false)
   const [commandsOpen, setCommandsOpen] = useState(false)
   const [focusMode, setFocusMode] = useState(false)
@@ -144,40 +106,41 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   const toolbarRef = useRef<HTMLDivElement | null>(null)
   const tabsRef = useRef<HTMLDivElement | null>(null)
   const [editorFocusRequest, setEditorFocusRequest] = useState(0)
-  const [splitWidth, setSplitWidth] = useState(() => { try { return Math.max(25, Math.min(60, Number(localStore.getItem('code-reps:split-width')) || 40)) } catch { return 40 } })
-  function resizeSplit(value: number) { setSplitWidth(value) }
-  function saveSplit(value: number) { try { localStore.setItem('code-reps:split-width', String(value)) } catch { /* Layout preference is optional. */ } }
+  const [splitWidth, setSplitWidth] = useState(() => {
+    try { return Math.max(25, Math.min(60, Number(localStore.getItem(splitWidthKey)) || 40)) } catch { return 40 }
+  })
+  function saveSplit(value: number) {
+    try { localStore.setItem(splitWidthKey, String(value)) } catch { /* Layout preference is optional. */ }
+  }
   const sectionRequest = useRef(0)
   function revealSection(id: string) {
     const request = ++sectionRequest.current
     if (id === 'checks-section') setChecksOpen(true)
     const pane = id === 'solution-section' || id === 'checks-section' ? 'workspace' : 'task'
     setMobileTab(pane)
-    setActiveStep(({ 'brief-section': 'understand', 'plan-section': 'plan', 'solution-section': 'solve', 'checks-section': 'solve', 'explain-section': 'explain', 'review-section': 'review' } as Record<string, string>)[id] ?? 'solve')
+    setActiveStep(sectionStep(id))
     if (pane === 'task') setFocusMode(false)
     requestAnimationFrame(() => {
       if (request !== sectionRequest.current) return
       const target = document.getElementById(id)
       if (matchMedia('(min-width: 901px)').matches) {
         const task = target?.closest<HTMLElement>('.task-column')
-        if (task && target) task.scrollTo({ top: task.scrollTop + target.getBoundingClientRect().top - task.getBoundingClientRect().top, behavior: 'instant' })
+        if (task && target) {
+          const top = task.scrollTop + target.getBoundingClientRect().top - task.getBoundingClientRect().top
+          task.scrollTo({ top, behavior: 'instant' })
+        }
       } else target?.scrollIntoView({ block: 'start', behavior: 'instant' })
       target?.focus({ preventScroll: true })
     })
   }
-  const [catalogQuery, setCatalogQuery] = useSessionPreference<string>('catalogQuery', '')
   const [pathId, setPathId] = useSessionPreference<(typeof paths)[number]['id']>('path', 'typescript')
-  const [pathPicker, setPathPicker] = useSessionPreference<'open' | 'closed'>('path-picker', matchMedia('(min-width: 901px)').matches ? 'open' : 'closed')
-  const [learnerStart, setLearnerStart] = useState<LearnerStart | null>(() => {
-    try { const saved = localStore.getItem(learnerStartKey); return saved === 'new' || saved === 'returning' ? saved : null }
-    catch { return null }
-  })
+  const [pathPicker, setPathPicker] = useSessionPreference<'open' | 'closed'>('path-picker',
+    matchMedia('(min-width: 901px)').matches ? 'open' : 'closed')
+  const [learnerStart, setLearnerStart] = useState(readLearnerStart)
   const [mobileTab, setMobileTab] = useSessionPreference<'task' | 'workspace'>('workspace-tab', 'task')
   const [walkthrough, setWalkthrough] = useSessionPreference<'new' | 'active' | 'dismissed'>('first-rep-walkthrough', 'new')
-  const planField = useRef<HTMLTextAreaElement>(null)
-  const explanationField = useRef<HTMLTextAreaElement>(null)
   const [indonesianHelp, setIndonesianHelp] = useSessionPreference<'off' | 'on'>('indonesian-help', 'off')
-  const [indonesianHelpContent, setIndonesianHelpContent] = useState<Pick<typeof import('./vocabulary-id'), 'indonesianGlossary' | 'englishTipsForIndonesianSpeakers'> | null>(null)
+  const [indonesianHelpContent, setIndonesianHelpContent] = useState<IndonesianHelp | null>(null)
   useEffect(() => {
     if (indonesianHelp !== 'on' || indonesianHelpContent) return
     let active = true
@@ -185,124 +148,37 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     import('./vocabulary-id').then(module => { if (active) setIndonesianHelpContent(module) }, () => {})
     return () => { active = false }
   }, [indonesianHelp, indonesianHelpContent])
+  const indonesianHelpShown = indonesianHelp === 'on' ? indonesianHelpContent : null
   const [activeStep, setActiveStep] = useSessionPreference<string>('practice-step', mobileTab === 'task' ? 'understand' : 'solve')
   function dismissWalkthrough() {
     setWalkthrough('dismissed')
-    revealSection(practiceSteps.find(step => step.id === activeStep)!.section)
+    revealSection(stepSection(activeStep))
   }
-  const [history, setHistory] = useState(readHistory)
-  const [repId, setRepId] = useState(() => {
-    const bookmarked = readRoute(location.hash, repIds).repId
-    if (bookmarked) return bookmarked
-    try { return reps.find((item) => item.id === localStore.getItem('code-reps:selected-rep'))?.id ?? reps[0].id }
-    catch { return reps[0].id }
-  })
-  const rep = reps.find((item) => item.id === repId) ?? reps[0]
-  const [attempt, setAttempt] = useState(() => readAttempt(rep))
-  const latestWork = useRef({ repId, attempt })
-  useLayoutEffect(() => { latestWork.current = { repId, attempt } }, [repId, attempt])
-  const completing = useRef(false)
-  const [results, setResults] = useState<TestResult[] | null>(null)
-  const [runError, setRunError] = useState('')
-  const [running, setRunning] = useState(false)
-  const [saveState, setSaveState] = useState(storageIssue() || savedMessage())
-  const cancelRunRef = useRef<(() => void) | null>(null)
-  const saveGenerationRef = useRef(0)
-  const [runNotice, setRunNotice] = useState('')
-  const resetDialogRef = useRef<HTMLDialogElement | null>(null)
+  const { repId, rep, attempt, history, saveState, setSaveState, ...attempts } = useAttempt()
+  const checks = useCheckRun()
+  const { results, runError, running, runNotice } = checks
   const [transferMessage, setTransferMessage] = useState('')
   const [now, setNow] = useState(Date.now)
 
-  useEffect(() => {
-    const pendingSave = saveGenerationRef
-    const generation = ++pendingSave.current
-    const timer = window.setTimeout(() => {
-      try {
-        saveAttempt(repId, attempt)
-        void flushStorage().then(() => {
-          if (generation === pendingSave.current) setSaveState(savedMessage())
-        }).catch(() => {
-          if (generation === pendingSave.current) setSaveState('Could not save to the local server; download a backup')
-        })
-      } catch { setSaveState('Could not save on this device') }
-    }, 300)
-    return () => { window.clearTimeout(timer); pendingSave.current++ }
-  }, [attempt, repId])
-
-  useEffect(() => {
-    const activeRun = cancelRunRef
-    return () => activeRun.current?.()
-  }, [])
-  useEffect(() => {
-    const onError = () => setSaveState(storageIssue() || 'Local server save failed; download a backup')
-    window.addEventListener('code-reps-storage-error', onError)
-    return () => window.removeEventListener('code-reps-storage-error', onError)
-  }, [])
-  useEffect(() => {
-    const saveDraft = (event?: Event) => {
-      const { repId, attempt } = latestWork.current
-      try { saveAttempt(repId, attempt) }
-      catch { event?.preventDefault(); setSaveState('Could not save on this device; download a backup') }
-    }
-    const saveWhenHidden = () => { if (document.visibilityState === 'hidden') saveDraft() }
-    window.addEventListener('code-reps-save-current', saveDraft)
-    window.addEventListener('pagehide', saveDraft)
-    document.addEventListener('visibilitychange', saveWhenHidden)
-    return () => { window.removeEventListener('code-reps-save-current', saveDraft); window.removeEventListener('pagehide', saveDraft); document.removeEventListener('visibilitychange', saveWhenHidden) }
-  }, [])
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 60_000)
     return () => window.clearInterval(timer)
   }, [])
 
-  function update<K extends keyof Attempt>(key: K, value: Attempt[K]) {
-    setAttempt((current) => ({ ...current, [key]: value, completedAt: key === 'hintCount' ? current.completedAt : undefined }))
-    setSaveState('Saving…')
-    if (key === 'code') {
-      if (running || results || runError) setRunNotice('Your code changed. Run checks again to check this version.')
-      stopRun(); setResults(null); setRunError('')
-    }
-  }
-
-  function insertStarter(key: 'plan' | 'explanation', starter: string) {
-    update(key, appendSentenceStarter(attempt[key], starter))
-    const field = key === 'plan' ? planField.current : explanationField.current
-    field?.focus()
-    requestAnimationFrame(() => field?.setSelectionRange(field.value.length, field.value.length))
-  }
-
-  function sentenceStarters(key: 'plan' | 'explanation') {
-    return <div className="sentence-starters" role="group" aria-label={`${key === 'plan' ? 'Plan' : 'Explanation'} sentence starters`}>{writing.starters[key].map(starter => <Button key={starter} onClick={() => insertStarter(key, starter)}>{starter}</Button>)}</div>
-  }
-
-  function stopRun() {
-    cancelRunRef.current?.()
-    cancelRunRef.current = null
-    setRunning(false)
-  }
-
-  function cancelChecks() {
-    stopRun()
-    setRunNotice('Checks stopped. Your code is unchanged; run again when you are ready.')
+  // Editing code makes earlier check feedback obsolete.
+  const update: UpdateAttempt = (key, value) => {
+    attempts.update(key, value)
+    if (key === 'code') checks.invalidate()
   }
 
   function selectRep(nextId: string) {
     if (nextId === repId) return
-    const nextRep = reps.find((item) => item.id === nextId)
+    const nextRep = repById.get(nextId)
     if (!nextRep) return
-    stopRun()
-    try {
-      saveAttempt(repId, attempt)
-      localStore.setItem('code-reps:selected-rep', nextId)
-      setSaveState('Saving…')
-    } catch { setSaveState('Could not save on this device') }
+    checks.reset()
+    attempts.select(nextRep)
     setEditorFocusRequest(0)
     setActiveStep('understand')
-    setRepId(nextId)
-    setAttempt(readAttempt(nextRep))
-    setResults(null)
-    setRunError('')
-    setRunNotice('')
   }
 
   const { route, navigate } = useNavigation(repIds, next => { if (next.view === 'workspace' && next.repId) selectRep(next.repId) })
@@ -342,20 +218,23 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
 
   useEffect(() => {
     const keyboard = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); setCommandsOpen(current => !current) }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setCommandsOpen(current => !current)
+      }
       if (event.key === 'Escape' && !document.querySelector('dialog[open]')) setFocusMode(false)
     }
     window.addEventListener('keydown', keyboard)
     return () => window.removeEventListener('keydown', keyboard)
   }, [])
 
+  // Reviewing a completed rep starts a blank attempt; the completed one stays in history.
   function openReview(nextId: string) {
     openRep(nextId)
-    const nextRep = reps.find((item) => item.id === nextId)
+    const nextRep = repById.get(nextId)
     if (nextRep && (nextId === repId ? attempt.completedAt : readAttempt(nextRep).completedAt)) {
-      setAttempt({ plan: '', code: peekRepContent(nextId)?.rep.starter, explanation: '', hintCount: 0 })
-      setResults(null)
-      setSaveState('Saving…')
+      attempts.restart(peekRepContent(nextId)?.rep.starter)
+      checks.clearResults()
     }
   }
 
@@ -366,109 +245,39 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   }
 
   function exportData() {
-    try {
-      const drafts: Backup['drafts'] = {}
-      for (const item of reps) {
-        const saved = localStore.getItem(storageKey(item.id))
-        const draft = readAttempt(item)
-        if (saved && draft.code !== undefined) drafts[item.id] = { ...draft, code: draft.code }
-      }
-      if (attempt.code !== undefined) drafts[repId] = { ...attempt, code: attempt.code }
-      const backup: Backup = { format: 'code-reps-backup', version: 1, exportedAt: new Date().toISOString(), learnerStart, history, drafts, learning: fluency.state, sessions: sessions.backup() }
-      // Refuses, rather than writes, a file that import would reject.
-      const url = URL.createObjectURL(new Blob([backupFileText(backup)], { type: 'application/json' }))
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `code-reps-backup-${new Date().toISOString().slice(0, 10)}.json`
-      link.click()
-      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
-      setTransferMessage('Backup downloaded to this device.')
-    } catch (error) {
-      setTransferMessage(error instanceof BackupTooLargeError ? error.message : 'The backup could not be created on this device.')
-    }
+    setTransferMessage(downloadBackup({ attempt, repId, learnerStart, history, learning: fluency.state, sessions }))
   }
 
   async function importData(file: File) {
-    try {
-      await sessions.flush()
-      sessions.verifyRevision()
-      const backup = parseBackup(await file.text(), new Set(reps.map((item) => item.id)))
-      const merged = mergeHistory(history, backup.history).sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt))
-      const updates: [string, string][] = [[historyKey, JSON.stringify(merged)]]
-      for (const [id, draft] of Object.entries(backup.drafts)) {
-        const key = storageKey(id)
-        if (localStore.getItem(key) === null) updates.push([key, JSON.stringify(draft)])
-      }
-      if (!learnerStart && backup.learnerStart) updates.push([learnerStartKey, backup.learnerStart])
-      if (backup.learning) {
-        const current = fluency.state
-        const incoming = backup.learning
-        updates.push(['code-reps:fluency:v1', JSON.stringify(parseFluency({ ...incoming, ...current,
-          answers: { ...incoming.answers, ...current.answers }, reviews: { ...incoming.reviews, ...current.reviews },
-          notes: mergeHistory(current.notes, incoming.notes), rounds: mergeHistory(current.rounds, incoming.rounds),
-          bookmarks: [...new Set([...current.bookmarks, ...incoming.bookmarks])],
-        }))])
-      }
-      sessions.verifyRevision()
-      if (backup.sessions || sessions.state.records.length) await sessions.importRecords(backup.sessions ?? emptySessions(), Object.fromEntries(updates))
-      else localStore.setEntries(Object.fromEntries(updates))
-      await flushStorage()
-      window.location.reload()
-    } catch (error) { setTransferMessage(error instanceof Error ? error.message : 'The backup could not be imported.') }
-  }
-
-  async function retrySaving() {
-    setSaveState('Saving…')
-    try {
-      saveAttempt(repId, attempt)
-      await retryStorage()
-      setSaveState(savedMessage())
-    } catch (error) { setSaveState(error instanceof Error ? error.message : 'Could not save; download a backup') }
+    try { await restoreBackup(file, { learnerStart, history, learning: fluency.state, sessions }) }
+    catch (error) { setTransferMessage(error instanceof Error ? error.message : 'The backup could not be imported.') }
   }
 
   function runChecks() {
     if (running || !full || attempt.code === undefined) return
-    stopRun(); setResults(null); setRunError(''); setRunNotice(''); setRunning(true)
+    checks.run(attempt.code, full, repId)
     setMobileTab('workspace')
     setActiveStep('solve')
     setChecksOpen(true)
-    const code = attempt.code
-    if (full.format === 'frontend') {
-      let cancelled = false
-      let cancelFrame = () => {}
-      cancelRunRef.current = () => { cancelled = true; cancelFrame() }
-      void import('./frontend-run').then(({ startFrontendRun }) => {
-        if (cancelled) return
-        cancelFrame = startFrontendRun(code, full,
-          nextResults => { setRunning(false); setResults(nextResults) },
-          message => { setRunning(false); setRunError(message) })
-      }).catch(() => { if (!cancelled) { setRunning(false); setRunError('Browser checks could not load. Your code is still here; try again.') } })
-      return
-    }
-    cancelRunRef.current = startCheckRun(code, repId, {
-      createWorker: () => new Worker(new URL('./runner.worker.ts', import.meta.url), { type: 'module' }),
-      schedule: (callback, milliseconds) => window.setTimeout(callback, milliseconds),
-      clearTimer: id => window.clearTimeout(id),
-      onResults: nextResults => { setRunning(false); setResults(nextResults) },
-      onError: message => { setRunning(false); setRunError(message) },
-    })
   }
 
   const repContent = useRepContent(repId, view === 'workspace')
   const full = repContent.status === 'ready' ? repContent.content.rep : undefined
   // The starter arrives with the rep's content; only an attempt still waiting for it takes it, so a saved draft is never replaced.
+  const { setAttempt } = attempts
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- adopts the starter once its content has loaded.
     if (full && full.id === repId) setAttempt(current => current.code === undefined ? { ...current, code: full.starter } : current)
-  }, [full, repId])
+  }, [full, repId, setAttempt])
   const allPassed = !!full && results?.length === full.checks.length && results.every((result) => result.passed)
-  const repContentNotice = repContent.status === 'error'
-    ? <div className="rep-content-notice" role="alert"><p>This rep's brief could not load. Your draft is safe.{repContent.failures > 1 && ' Retrying did not help; reloading the app usually does.'}</p><Button type="button" onClick={repContent.retry}>Retry</Button>{repContent.failures > 1 && <Button type="button" onClick={() => { if (window.dispatchEvent(new Event('code-reps-save-current', { cancelable: true }))) window.location.reload() }}>Reload app</Button>}</div>
-    : <p className="rep-content-notice" role="status">Loading the brief…</p>
+  const contentNotice = <RepContentNotice content={repContent} />
   const writing = practiceWritingPrompts({ id: rep.id, format: rep.format, planPrompt: full?.planPrompt ?? '' })
   // Small reps keep plan and explanation optional; reasoned reps still require both. Difficulty is always optional.
   const writingRequired = writing.scale === 'reasoned'
-  const stepDone: Record<string, boolean> = { plan: !!attempt.plan.trim(), solve: !!allPassed || !!attempt.completedAt, explain: !!attempt.explanation.trim(), review: !!attempt.difficulty }
+  const stepDone: Record<string, boolean> & { plan: boolean; solve: boolean; explain: boolean; review: boolean } = {
+    plan: !!attempt.plan.trim(), solve: !!allPassed || !!attempt.completedAt,
+    explain: !!attempt.explanation.trim(), review: !!attempt.difficulty,
+  }
   const planMissing = writingRequired && !stepDone.plan
   const explainMissing = writingRequired && !stepDone.explain
   const missingStep = planMissing ? 'plan' : !stepDone.solve ? 'solve' : explainMissing ? 'explain' : undefined
@@ -477,7 +286,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   const canComplete = !!canFinish && !attempt.completedAt
   // Complete stays a normal button. When something is missing, it moves the learner to that step instead of doing nothing.
   function showMissingStep() {
-    if (missingStep) revealSection(practiceSteps.find(step => step.id === missingStep)!.section)
+    if (missingStep) revealSection(stepSection(missingStep))
   }
   const [badgeSlot, setBadgeSlot] = useState<HTMLElement | null>(null)
 
@@ -487,138 +296,175 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   const currentLesson = repContent.status === 'ready' ? repContent.content.lesson : undefined
   const journeyStates = practicePlan.progress
   const review = useReviewContent()
-  const reflectionGuide = review.status === 'ready' ? review.content.reflectionGuides[rep.id] : undefined
-  const depth = review.status === 'ready' ? review.content.repDepth[rep.id] : undefined
   const recommendation = practicePlan.next
   const recommendedRep = recommendation && repById.get(recommendation.repId)
-  const actionLabel = (mode: string) => mode === 'resume' ? 'Continue rep' : mode === 'review' ? 'Start review' : mode === 'retry' ? 'Retry without hints' : 'Start rep'
-  const openPracticeAction = (action: { repId: string; mode: string }) => action.mode === 'review' || action.mode === 'retry' ? openReview(action.repId) : openRep(action.repId)
+  const openPracticeAction = (action: { repId: string; mode: string }) =>
+    action.mode === 'review' || action.mode === 'retry' ? openReview(action.repId) : openRep(action.repId)
   const completedPathIds = useMemo(() => new Set(history.map(record => record.repId)), [history])
   const recallReady = (id: string) => !journeyStates.some(state => state.journey.recall === id && !state.recallDue && !state.retained)
   // Due reviews and hint-free retries outrank path order; recall reps wait until they are due.
-  const pathNextRep = recommendation?.mode === 'review' || recommendation?.mode === 'retry' ? undefined : reps.find(item => item.id === nextRepInPath(fluency.state.goal.pathId, repId, id => completedPathIds.has(id) || !recallReady(id)))
-  const goalPathId = fluency.state.goal.pathId
-  const answers = fluency.state.answers
-  const [goalTrail, browsedTrail] = useMemo(() => {
-    const ready = (id: string) => !journeyStates.some(state => state.journey.recall === id && !state.recallDue && !state.retained)
-    const checkedSkills = new Set(Object.keys(answers).filter(key => key.includes(':')).map(key => key.slice(0, key.indexOf(':'))))
-    const input = (id: string) => ({ completed: (repId: string) => completedPathIds.has(repId), inProgress: (repId: string) => attemptStatus(repId, drafts[repId]) === 'In progress', recallReady: ready, lessonChecked: (skillId: string) => checkedSkills.has(skillId), skipStages: learnerStart === 'returning' && id === foundationsPathId ? 1 : 0 })
-    return [buildTrail(goalPathId, input(goalPathId)), buildTrail(pathId, input(pathId))]
-  }, [goalPathId, pathId, completedPathIds, journeyStates, drafts, answers, learnerStart])
+  const pathNextRep = recommendation?.mode === 'review' || recommendation?.mode === 'retry'
+    ? undefined
+    : reps.find(item => item.id === nextRepInPath(fluency.state.goal.pathId, repId, id => completedPathIds.has(id) || !recallReady(id)))
   const completionNext = pathNextRep ? { repId: pathNextRep.id, mode: 'start' } : recommendation
-  const completionLabel = pathNextRep ? `Next rep: ${pathNextRep.title}` : recommendedRep && recommendation ? `${actionLabel(recommendation.mode)}: ${recommendedRep.title}` : 'Return to your trail'
-  const trailEvidence = (id: string) => repCurriculumEvidence(id, journeyStates)
+  const completionLabel = pathNextRep ? `Next rep: ${pathNextRep.title}`
+    : recommendedRep && recommendation ? `${actionLabel(recommendation.mode)}: ${recommendedRep.title}` : 'Return to your trail'
   const journalTabs = <JournalTabs view={view} onNavigate={setView} />
   const notes = repNotes(full?.note ?? '')
-  const dueIds = useMemo(() => new Set(practicePlan.due.map(item => item.repId)), [practicePlan])
-  const visibleReps = useMemo(() => reps.filter(item => `${item.title} ${catalogTopic(item)} ${item.category} ${item.format ?? 'algorithm'}`.toLowerCase().includes(catalogQuery.trim().toLowerCase()) && (!catalogSkill || catalogTopic(item) === catalogSkill) && (!catalogFormat || (item.format ?? 'algorithm') === catalogFormat) && (!catalogStatus || (catalogStatus === 'review' ? dueIds.has(item.id) : attemptStatus(item.id, drafts[item.id]) === catalogStatus))), [catalogQuery, catalogSkill, catalogFormat, catalogStatus, dueIds, drafts])
+  const focusEditor = () => { setFocusMode(true); revealSection('solution-section'); setEditorFocusRequest(current => current + 1) }
+  const toggleFocusMode = () => { setFocusMode(!focusMode); setMobileTab('workspace'); setActiveStep('solve') }
   const commands = [
     ...commandPages.map(page => ({ label: `Go to ${commandPageLabels[page] ?? page}`, run: () => setView(page) })),
     { label: 'Open glossary', run: () => setGlossaryOpen(true) },
     ...(view === 'workspace' ? [
       { label: 'Run checks', shortcut: 'Ctrl / ⌘ Enter', run: runChecks },
-      { label: 'Focus editor', run: () => { setFocusMode(true); revealSection('solution-section'); setEditorFocusRequest(current => current + 1) } },
-      { label: focusMode ? 'Leave focus mode' : 'Enter focus mode', run: () => { setFocusMode(!focusMode); setMobileTab('workspace'); setActiveStep('solve') } },
+      { label: 'Focus editor', run: focusEditor },
+      { label: focusMode ? 'Leave focus mode' : 'Enter focus mode', run: toggleFocusMode },
       { label: 'Read brief and hints', run: () => revealSection('brief-section') },
       { label: 'View check results', run: () => revealSection('checks-section') },
       { label: 'Explain solution', run: () => revealSection('explain-section') },
     ] : []),
   ]
 
-  async function completeRep() {
-    if (completing.current || !canFinish || attempt.completedAt) return
-    completing.current = true
-    const completedAt = new Date().toISOString()
-    const completed = { ...attempt, completedAt }
-    const record = { ...completed, code: completed.code ?? '', id: crypto.randomUUID(), repId }
-    const nextHistory = [record, ...history]
-    try {
-      const entries = () => ({ [historyKey]: JSON.stringify(nextHistory), [storageKey(repId)]: JSON.stringify(latestWork.current.repId === repId ? latestWork.current.attempt === attempt || latestWork.current.attempt.code === undefined ? completed : latestWork.current.attempt : readAttempt(rep)) })
-      localStore.setEntries(entries())
-      setHistory(nextHistory)
-      // The clock ticks once a minute; refresh it so a completion moments old is not dated in the future.
-      setNow(Date.now())
-      setAttempt(current => current === attempt ? completed : current)
-      setSaveState('Saving…')
-    } catch { setSaveState('Could not save on this device') } finally { completing.current = false }
+  function completeRep() {
+    if (!canFinish) return
+    // The clock ticks once a minute; refresh it so a completion moments old is not dated in the future.
+    if (attempts.complete()) setNow(Date.now())
   }
 
   function startNewAttempt() {
     if (!attempt.completedAt) return
-    stopRun()
-    setAttempt({ plan: '', code: full?.starter, explanation: '', hintCount: 0 })
-    setResults(null)
-    setRunError('')
-    setRunNotice('')
-    setSaveState('Saving…')
+    checks.reset()
+    attempts.restart(full?.starter)
     window.scrollTo(0, 0)
   }
 
+  const resetDialogRef = useRef<HTMLDialogElement | null>(null)
   function resetRep() {
     resetDialogRef.current?.close()
-    stopRun()
-    setAttempt({ plan: '', code: full?.starter, explanation: '', hintCount: 0 })
-    setResults(null)
-    setRunError('')
-    setRunNotice('')
+    checks.reset()
+    attempts.restart(full?.starter)
     setMobileTab('task')
     setActiveStep('understand')
-    setSaveState('Saving…')
   }
 
+  const walkthroughActive = walkthrough === 'active' && repId === 'declare-variables'
+  const walkthroughGuide = <Suspense fallback={null}>
+    <FirstRepWalkthrough step={activeStep} completed={!!attempt.completedAt} onNext={revealSection} onDismiss={dismissWalkthrough} />
+  </Suspense>
+  const stepStatus = (stepId: string) => stepId === 'understand' ? 'Read' : stepDone[stepId] ? 'Done'
+    : stepId === 'solve' || (writingRequired && stepId !== 'review') ? 'Needed' : 'Optional'
+  const layoutColumns = focusMode ? 'auto minmax(0, 1fr)' : `minmax(0, ${splitWidth}fr) 12px minmax(0, ${100 - splitWidth}fr)`
+  const activeRound = fluency.state.rounds.find(round => !round.endedAt && round.repId === repId)
+  const editorPath = `code-reps://${getActiveProfile()}/${rep.id}/solution.${full?.reactPreview ? 'tsx' : 'ts'}`
+  const editorLabel = `TypeScript solution for ${rep.title}. Press Control or Command Enter to run checks. `
+    + 'Tab moves focus out of the editor.'
 
-  const startingPoint = <section className="starting-point" aria-labelledby="starting-point-title"><div><span className="home-label">Your starting point</span><h2 id="starting-point-title">Where are you starting?</h2><p>This only changes your next suggested rep. You can open any rep at any time.</p></div><div className="starting-options"><button type="button" aria-pressed={learnerStart === 'new'} onClick={() => chooseStart('new')}><strong>New to coding</strong><span>Start with TypeScript building blocks.</span></button><button type="button" aria-pressed={learnerStart === 'returning'} onClick={() => chooseStart('returning')}><strong>Returning to coding</strong><span>Start with guided problem solving.</span></button></div></section>
-  const practiceSteps = [
-    { id: 'understand', label: 'Understand', section: 'brief-section' },
-    { id: 'plan', label: 'Plan', section: 'plan-section' },
-    { id: 'solve', label: 'Solve', section: 'solution-section' },
-    { id: 'explain', label: 'Explain', section: 'explain-section' },
-    { id: 'review', label: 'Review', section: 'review-section' },
-  ] as const
-
-  return <div className="app-shell">
-    <AppNavigation view={view} profileName={profileName} saveState={saveState} onNavigate={setView} onManageProfiles={onManageProfiles} onCommands={() => setCommandsOpen(true)} notice={view !== 'workspace' ? <BadgeNotice history={history} now={now} onView={() => setView('progress')} /> : undefined} />
-    {view === 'workspace' && <BadgeNotice portalTarget={attempt.completedAt ? badgeSlot : null} history={history} now={now} onView={() => setView('progress')} />}
-    {saveState !== 'Saving…' && !saveState.startsWith('Saved') && <div className="storage-recovery" role="status"><p>{saveState}</p><button type="button" onClick={() => { void retrySaving() }}>Retry saving</button><button className="reset-button" type="button" onClick={exportData}>Download backup</button></div>}
-    <ScreenMemory key={`${view}:${view === 'workspace' ? repId : ''}`} screenKey={`${view}:${view === 'workspace' ? repId : ''}`}>
-    {isHubTab(view) ? <Suspense fallback={<PageLoading journalTabs={journalTabs} page={view} notebookHasDraft={Boolean(fluency.state.noteDraft)} notebookHasEntries={fluency.state.notes.length > 0} />}><LearningHub journalTabs={journalTabs} onQuickLessons={() => setView('learn')} tab={view} setTab={setHubTab} state={fluency.state} update={fluency.update} error={fluency.error} history={history} openRep={openRep} reviewRep={openReview} skillId={knowledgeSkill} onSkill={setKnowledgeSkill} candidates={[...practicePlan.due, ...practicePlan.unfinished, ...(practicePlan.next ? [practicePlan.next] : []), ...((paths.find(p => p.id === fluency.state.goal.pathId) ?? paths[0]).stages.flatMap(stage => stage.repIds).filter(id => !history.some(a => a.repId === id)).map(repId => ({ repId, reason: 'Build toward your selected track.' })))]} /></Suspense> : view === 'home' ? <HomePage walkthroughSeen={walkthrough !== 'new'} launchWalkthrough={() => { setWalkthrough('active'); openRep('declare-variables') }} goalPathId={fluency.state.goal.pathId} onPath={id => { setPathId(id); setView('paths') }} practicePlan={practicePlan} repStatus={repStatus} openPracticeAction={openPracticeAction} actionLabel={actionLabel} onProgress={() => setView('progress')} onLibrary={() => setView('catalog')} trail={goalTrail} evidence={trailEvidence} openRep={openRep} openLesson={openKnowledge} /> : view === 'catalog' ? <Suspense fallback={<main aria-busy="true"><p role="status">Loading the library…</p></main>}><PracticeCatalog goalPathId={fluency.state.goal.pathId} filters={{ query: catalogQuery, skill: catalogSkill, format: catalogFormat, status: catalogStatus }} onFilter={(field, value) => ({ query: setCatalogQuery, skill: setCatalogSkill, format: setCatalogFormat, status: setCatalogStatus })[field](value)} clearFilters={() => { setCatalogQuery(''); setCatalogSkill(''); setCatalogFormat(''); setCatalogStatus('') }} categories={categories} visibleReps={visibleReps} dueIds={dueIds} repStatus={repStatus} openRep={openRep} /></Suspense> : view === 'paths' ? <Suspense fallback={<RouteLoading title="Choose a track." status="Opening tracks…" />}><PathsPage goalPathId={fluency.state.goal.pathId} setGoalPath={id => fluency.update({ ...fluency.state, goal: { ...fluency.state.goal, pathId: id } })} goalError={fluency.error} pathId={pathId} setPathId={setPathId} pathPicker={pathPicker} setPathPicker={setPathPicker} learnerStart={learnerStart} startingPoint={startingPoint} completedPathIds={completedPathIds} trail={browsedTrail} evidence={trailEvidence} openRep={openRep} openLesson={openKnowledge} /></Suspense> : view === 'skillmap' ? <Suspense fallback={<RouteLoading title="Skill map." status="Opening the skill map…" />}><SkillMapPage goalPathId={fluency.state.goal.pathId} progress={journeyStates} openRep={openRep} reviewRep={openReview} /></Suspense> : view === 'mistakes' ? <Suspense fallback={<RouteLoading title="Mistakes" status="Opening mistakes…" />}><MistakesPage history={history} now={now} onOpenRep={openRep} /></Suspense> : view === 'progress' ? <Suspense fallback={<RouteLoading title="Your progress" status="Opening your progress…" />}><ProgressPage profileName={profileName} history={history} now={now} onManageProfiles={onManageProfiles} onOpenPath={id => { setPathId(id); setView('paths') }} progress={journeyStates} recommendation={recommendation && recommendedRep ? { title: recommendedRep.title, reason: recommendation.reason, label: actionLabel(recommendation.mode), open: () => openPracticeAction(recommendation) } : undefined} dueReviews={practicePlan.due.map(action => ({ title: reps.find(item => item.id === action.repId)!.title, reason: action.reason, open: () => openPracticeAction(action), label: actionLabel(action.mode), repId: action.repId }))} onOpenRep={openRep} onReviewRep={openReview} onExport={exportData} onImport={(file) => { void importData(file) }} transferMessage={transferMessage} serverReady={isServerReady()} /></Suspense> : view === 'learn' ? <Suspense fallback={<main className="learn-main" aria-busy="true"><p role="status">Loading the lessons…</p></main>}><QuickLessons openRep={openRep} onBrowse={() => setView('knowledge')} /></Suspense> : view === 'history' ? <Suspense fallback={<main className="history-main" aria-busy="true"><p role="status">Loading your attempt history…</p></main>}><HistoryPage history={history} categories={categories} journalTabs={journalTabs} openRep={openRep} /></Suspense> : <main ref={workspaceRef} className={`practice-main ${focusMode ? 'focus-mode' : ''}`} data-step={activeStep} id="main-content" onKeyDown={event => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); runChecks() } }}>
-      <header className="workspace-header">
-        <div className="workspace-title"><button type="button" className="breadcrumb-link" onClick={() => setView('catalog')}><Icon name="left" />Library</button><h1 tabIndex={-1}>{rep.title}</h1>{repLevelLabel(rep.id) && <StatusChip>{repLevelLabel(rep.id)}</StatusChip>}<StatusChip tone={statusTone(currentStatus)}>{currentStatus}</StatusChip><span className="workspace-category">{rep.category}</span></div>
-        <div className="workspace-actions"><p className="workspace-save-status" role="status">{saveState}</p><button className="reset-button" type="button" onClick={() => setGlossaryOpen(true)}>Glossary</button><details className="workspace-options" onClick={event => { if ((event.target as HTMLElement).closest('button')) event.currentTarget.open = false }} onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); event.currentTarget.open = false; event.currentTarget.querySelector('summary')?.focus() } }}><summary>Tools</summary><div><button className="reset-button" type="button" onClick={() => { setFocusMode(!focusMode); revealSection('solution-section') }}>{focusMode ? 'Exit focus' : 'Focus mode'}</button><button className="reset-button" type="button" onClick={() => resetDialogRef.current?.showModal()}>Reset rep</button>{skillsForRep(repId).length > 0 && <div className="workspace-knowledge"><span>Related concepts</span>{skillsForRep(repId).slice(0,3).map(skill => <button type="button" key={skill.id} onClick={() => openKnowledge(skill.id)}>{skill.title}</button>)}</div>}</div></details></div>
-      </header>
-      {fluency.state.rounds.find(r => !r.endedAt && r.repId === repId) && <InterviewStatus round={fluency.state.rounds.find(r => !r.endedAt && r.repId === repId)!} onControls={() => { setHubTab('interview') }} />}
-      <div className="workspace-layout" style={{ gridTemplateColumns: focusMode ? 'auto minmax(0, 1fr)' : `minmax(0, ${splitWidth}fr) 12px minmax(0, ${100 - splitWidth}fr)` }}>
-        <div className="task-pane">
-          <div ref={tabsRef} className="practice-steps" role="navigation" aria-label="Practice steps">
-            <StepIndicator active={activeStep} />
-            {practiceSteps.map(step => <button key={step.id} type="button" aria-label={step.label} aria-current={activeStep === step.id ? 'step' : undefined} aria-describedby={`step-status-${step.id}`} aria-controls={step.section} onClick={() => revealSection(step.section)}><span>{step.label}</span><small id={`step-status-${step.id}`}>{step.id === 'understand' ? 'Read' : stepDone[step.id] ? 'Done' : step.id === 'solve' || (writingRequired && step.id !== 'review') ? 'Needed' : 'Optional'}</small></button>)}
-          </div>
-        <div id="task-workspace" key={`task-${rep.id}`} className={`task-column ${activeStep !== 'solve' ? 'mobile-active' : ''}`} role="region" aria-label="Task and plan" tabIndex={0}>
-          {walkthrough === 'active' && repId === 'declare-variables' && activeStep !== 'solve' && <Suspense fallback={null}><FirstRepWalkthrough step={activeStep} completed={!!attempt.completedAt} onNext={revealSection} onDismiss={dismissWalkthrough} /></Suspense>}
-          <section id="brief-section" hidden={activeStep !== 'understand' && activeStep !== 'solve'} tabIndex={-1} className="panel task-panel">{currentLesson && <div className="rep-lesson"><span className="home-label">Lesson before this rep</span><h2>{currentLesson.title}</h2><p><InlineCode text={currentLesson.explanation} /></p><pre><code>{currentLesson.example}</code></pre><p className="foundation-tip"><InlineCode text={currentLesson.tip} /></p></div>}<div className="panel-heading"><h2>The brief</h2></div><Suspense fallback={null}><RepGuidance repId={repId} history={history} openRep={openRep} openLesson={openKnowledge} /></Suspense>{full ? <>{full.context && <p className="rep-context"><InlineCode text={full.context} /></p>}{full.brief ? <div className="brief-structure"><p><InlineCode text={full.brief.summary} /></p><h3 className="brief-subhead">Rules, in order</h3><ol className="brief-rules">{full.brief.rules.map(rule => <li key={rule}><InlineCode text={rule} /></li>)}</ol>{full.brief.edgeCases && <><h3 className="brief-subhead">Edge cases</h3><ul className="brief-rules">{full.brief.edgeCases.map(edge => <li key={edge}><InlineCode text={edge} /></li>)}</ul></>}</div> : <p><InlineCode text={full.prompt} /></p>}{full.acceptanceCriteria && <ul className="acceptance-criteria">{full.acceptanceCriteria.map(point => <li key={point}><InlineCode text={point} /></li>)}</ul>}<div className="example"><div className="example-label">Example</div><code>{full.example.input}</code><span className="example-arrow"><Icon name="arrow" /></span><code>{full.example.output}</code></div>{notes.brief && <p className="task-note"><InlineCode text={notes.brief} /></p>}<InfoNote label="How this is checked"><p>Checks show how your code behaves in the tested cases. You review your plan and explanation yourself, including any variations.</p>{notes.checking && <p><InlineCode text={notes.checking} /></p>}</InfoNote><label className="indonesian-help"><Input type="checkbox" checked={indonesianHelp === 'on'} onChange={event => setIndonesianHelp(event.target.checked ? 'on' : 'off')} />Show Indonesian help</label><details className="vocab"><summary>Quick vocabulary</summary><div><p>{full.vocabulary.map((item, index) => <span key={item.term}>{index > 0 && ' ' }<b>{item.term}</b> means <InlineCode text={item.meaning} />.{indonesianHelp === 'on' && indonesianHelpContent?.indonesianGlossary[item.term] && <span className="indonesian-gloss" lang="id"> {indonesianHelpContent.indonesianGlossary[item.term]}.</span>}</span>)}</p></div></details><div className="hint-control"><button className="hint-button" type="button" disabled={attempt.hintCount >= full.hints.length} onClick={() => { update('hintCount', attempt.hintCount + 1); setMobileTab('task') }}><Icon name="hint" />{attempt.hintCount >= full.hints.length ? 'All hints revealed' : `Reveal hint ${attempt.hintCount + 1}`}</button><span>{attempt.hintCount} of {full.hints.length} revealed</span></div>{attempt.hintCount > 0 && <div className="task-hints" aria-live="polite"><div className="hint-heading"><span className="hint-spark"><Icon name="hint" /></span><strong>Hints revealed</strong></div><ol className="hint-list">{full.hints.slice(0, attempt.hintCount).map((hint) => <li key={hint}><InlineCode text={hint} /></li>)}</ol></div>}</> : repContentNotice}<button className="text-button step-next" type="button" onClick={() => revealSection('plan-section')}>Plan your approach<Icon name="arrow" /></button></section>
-          <section id="plan-section" hidden={activeStep !== 'plan'} tabIndex={-1} className="panel plan-panel"><div className="panel-heading"><h2>Plan your approach</h2></div><details className="plan-brief" open><summary>The brief</summary><div>{!full ? repContentNotice : full.brief ? <><p><InlineCode text={full.brief.summary} /></p><ol className="brief-rules">{full.brief.rules.map(rule => <li key={rule}><InlineCode text={rule} /></li>)}</ol></> : <p><InlineCode text={full.prompt} /></p>}</div></details>{writing.plan && <p>{writing.plan}</p>}<label className="field-label" htmlFor="plan">Your plan</label>{sentenceStarters('plan')}<Textarea ref={planField} id="plan" value={attempt.plan} onChange={(event) => update('plan', event.target.value)} placeholder="I'll start by…" rows={writing.rows} /><div className="field-foot">{writing.planHelp}</div><button className="text-button plan-to-code" type="button" onClick={() => revealSection('solution-section')}>Go to code<Icon name="arrow" /></button></section>
-        <section id="explain-section" hidden={activeStep !== 'explain'} tabIndex={-1} className="panel explain-panel"><div className="explain-intro"><div className="panel-heading"><h2>Explain your thinking</h2></div><p>{writing.explanation}</p></div><div className="explain-form"><label className="field-label" htmlFor="explanation">Your explanation</label>{sentenceStarters('explanation')}<Textarea ref={explanationField} id="explanation" value={attempt.explanation} onChange={(event) => update('explanation', event.target.value)} placeholder="My solution works by…" rows={writing.rows} />{indonesianHelp === 'on' && indonesianHelpContent && <InfoNote label="English tips for Indonesian speakers"><ul>{indonesianHelpContent.englishTipsForIndonesianSpeakers.map(tip => <li key={tip}>{tip}</li>)}</ul></InfoNote>}{allPassed && <details className="reflection-guide"><summary>Compare your plan and explanation</summary><div className="reflection-guide-columns"><div><strong>Plan</strong><ul>{(reflectionGuide?.plan ?? ['Describe how you will use the inputs.', 'Name an edge case from the task.', 'Explain the steps before coding.']).map((point) => <li key={point}>{point}</li>)}</ul></div><div><strong>Explanation</strong><ul>{(reflectionGuide?.explanation ?? ['Explain why the code handles the example and edge cases.', 'Describe the time and extra space used.']).map((point) => <li key={point}>{point}</li>)}</ul></div></div>{review.status === 'loading' && <p role="status">Loading the review…</p>}{review.status === 'error' && <div role="alert"><p>The review could not load. Your draft is safe.</p><Button type="button" onClick={review.retry}>Retry</Button></div>}{reflectionGuide && <div className="reflection-example"><strong>Example to compare with</strong><p>{reflectionGuide.example}</p></div>}{depth && <div className="reflection-example"><h3>Why this works</h3><p>{depth.reasoning}</p><h3>Trace a boundary case</h3><p>{depth.trace}</p>{depth.traceSteps && <Suspense fallback={<p className="loading-status" role="status">Opening trace…</p>}><TraceViewer key={rep.id} trace={depth.traceSteps} /></Suspense>}<h3>Compare approaches</h3><p>{depth.alternative}</p><h3>A tempting mistake</h3><p>{depth.counterexample}</p><h3>Try a variation</h3><p>{depth.transfer}</p><p>Write your prediction in your notes, then compare your reasoning.</p></div>}</details>}<button className="primary-button step-next" type="button" onClick={() => revealSection('review-section')}>Review attempt<Icon name="arrow" /></button></div></section>
-          <section id="review-section" hidden={activeStep !== 'review'} tabIndex={-1} className="reflection-section"><h3>Review this attempt</h3><div className="reflection-fields"><div role="group" aria-labelledby="difficulty-label"><span className="field-label"><span id="difficulty-label">What was hardest?</span> <span className="optional-note">Optional</span></span><div id="difficulty-choice" className="segmented-control reflection-choice"><StepIndicator active={attempt.difficulty ?? ''} selector="button[aria-pressed=true]" />{Object.entries(difficultyLabels).map(([value, label]) => <button key={value} type="button" aria-pressed={attempt.difficulty === value} onClick={() => update('difficulty', attempt.difficulty === value ? undefined : value as Difficulty)}>{label}</button>)}</div></div><div role="group" aria-labelledby="confidence-label"><span className="field-label"><span id="confidence-label">How confident do you feel?</span> <span className="optional-note">Optional</span></span><div className="segmented-control reflection-choice"><StepIndicator active={attempt.confidence ?? ''} selector="button[aria-pressed=true]" />{Object.entries(confidenceLabels).map(([value, label]) => <button key={value} type="button" aria-pressed={attempt.confidence === value} onClick={() => update('confidence', attempt.confidence === value ? undefined : value as Confidence)}>{label}</button>)}</div></div><div role="group" aria-labelledby="mistakes-label"><span className="field-label"><span id="mistakes-label">Mistakes you made</span> <span className="optional-note">Optional</span></span><div className="segmented-control reflection-choice">{mistakeTags.map(tag => { const chosen = attempt.mistakes?.includes(tag.id) ?? false; return <button key={tag.id} type="button" aria-pressed={chosen} disabled={!!attempt.completedAt} onClick={() => { const next = chosen ? (attempt.mistakes ?? []).filter(id => id !== tag.id) : [...(attempt.mistakes ?? []), tag.id]; update('mistakes', next.length ? next : undefined) }}>{tag.label}</button> })}</div><small className="optional-note">Your own note for the Mistakes page. It never blocks finishing.</small></div></div><ul className="completion-checklist" aria-label="Completion requirements">{[['Plan', stepDone.plan, 'a plan', writingRequired], ['Checks', stepDone.solve, 'passing checks', true], ['Explanation', stepDone.explain, 'an explanation', writingRequired], ['Difficulty', stepDone.review, 'a difficulty choice', false]].map(([label, done, needed, required]) => <li key={String(label)} className={done ? 'done' : ''}><Icon name={done ? 'check' : 'circle'} /> {label} {done ? label === 'Checks' ? 'passed' : 'added' : required ? <span className="checklist-need">Still needed: {needed}</span> : <span className="optional-note">Optional</span>}</li>)}</ul><div className="explain-actions"><div>{!attempt.completedAt && missingStep && <button type="button" className="text-button missing-work" onClick={() => revealSection(practiceSteps.find(step => step.id === missingStep)!.section)}>Continue: {missingStep}</button>}{finishMissing && !attempt.completedAt && <p className="finish-note" id="finish-note">Still needed: {finishMissing}.</p>}</div>{attempt.completedAt ? <p className="finish-status" role="status"><Icon name="check" />Rep completed</p> : <button className="finish-button" type="button" aria-describedby={finishMissing ? 'finish-note' : undefined} onClick={canComplete ? completeRep : showMissingStep}>Complete rep</button>}</div>{attempt.completedAt && <section className="completion-panel" aria-labelledby="completion-title"><h3 id="completion-title">You finished {rep.title}.</h3><p>Your attempt is saved in the Journal.</p><div ref={setBadgeSlot} className="badge-slot" /><div><button type="button" className="primary-button" onMouseEnter={preloadEditor} onFocus={preloadEditor} onClick={() => completionNext ? openPracticeAction(completionNext) : setView('home')}>{completionLabel}</button><button type="button" className="text-button" onClick={() => setView('home')}>Done for today</button></div><p className="stop-for-today">Stop here; continue from Trail next time.</p></section>}{attempt.completedAt && <button className="text-button retry-button" type="button" onClick={startNewAttempt}>Start a fresh attempt</button>}</section>
-        </div></div>
-        <WorkspaceSplit value={splitWidth} onChange={resizeSplit} onCommit={saveSplit} />
-        <div id="code-workspace" key={`code-${rep.id}`} className={`code-column ${activeStep === 'solve' ? 'mobile-active' : ''}`} role="region" aria-label="Code and preview" tabIndex={0}>
-          <section id="solution-section" tabIndex={-1} className="panel code-panel">{walkthrough === 'active' && repId === 'declare-variables' && activeStep === 'solve' && <Suspense fallback={null}><FirstRepWalkthrough step={activeStep} completed={!!attempt.completedAt} onNext={revealSection} onDismiss={dismissWalkthrough} /></Suspense>}<div className="editor-wrap">{attempt.code === undefined ? <p className="rep-content-notice" role="status">{repContent.status === 'error' ? 'The starter code could not load. Retry above; your other work is safe.' : 'Loading the starter code…'}</p> : <ProjectEditor showHeader key={rep.id} focusRequest={editorFocusRequest} height="100%" path={`code-reps://${getActiveProfile()}/${rep.id}/solution.${full?.reactPreview ? 'tsx' : 'ts'}`} language="typescript" value={attempt.code} onChange={(value) => update('code', value ?? '')} onRunChecks={runChecks} options={{ ariaLabel: `TypeScript solution for ${rep.title}. Press Control or Command Enter to run checks. Tab moves focus out of the editor.`, tabFocusMode: true, minimap: { enabled: false }, fontFamily: 'Maple Mono, monospace', fontLigatures: true, fontSize: 14, lineHeight: 24, padding: { top: 18 }, scrollBeyondLastLine: false, scrollbar: { alwaysConsumeMouseWheel: false }, automaticLayout: true, tabSize: 2, wordWrap: 'on' }} />}</div></section>
-
-          {rep.format === 'frontend' && (full ? <Suspense fallback={<PreviewLoading />}><FrontendPreview key={rep.id} rep={full} code={attempt.code ?? full.starter} /></Suspense> : repContent.status === 'loading' && <PreviewLoading />)}
-          <section id="checks-section" tabIndex={-1} className={`checks-drawer ${running ? 'running' : runError ? 'failed' : results ? allPassed ? 'passed' : 'failed' : ''}`} aria-live="polite" aria-busy={running}><button type="button" className="checks-toggle" aria-expanded={checksOpen} aria-controls="check-details" onClick={() => setChecksOpen(!checksOpen)}><span>Checks</span><span>{running ? 'Running…' : results ? `${results.filter(result => result.passed).length} of ${results.length} passed` : runError ? 'Needs attention' : 'Not run yet'} <Icon name="chevron" /></span></button><div id="check-details" hidden={!checksOpen}>{running ? <div className="result-running"><span className="result-running-track" aria-hidden="true"><span /></span><strong>Running checks</strong><p>Checking your solution against {full?.checks.length} cases.</p></div> : runError ? <div className="error-message" role="alert">{runError}</div> : results ? <><div className={`result-summary ${allPassed ? 'passed' : 'failed'}`}><span><Icon name={allPassed ? 'check' : 'alert'} /></span><div><strong>{allPassed ? 'All checks passed' : `${results.filter((result) => result.passed).length} of ${results.length} checks passed`}</strong></div></div><CheckFeedback results={results} />{allPassed && !attempt.completedAt && <button type="button" className="primary-button checks-next" onClick={() => revealSection('explain-section')}>Explain your solution</button>}{!allPassed && <aside className="mistake-help"><h3>Explore the concepts behind these checks</h3><p>These references may help you trace the failure. They are suggestions, not a diagnosis of your code.</p>{relatedHelp(repId, results.filter(r => !r.passed).map(r => r.name)).map(skill => <div key={skill.id}><button type="button" onClick={() => openKnowledge(skill.id)}>{skill.title}</button><p>{skill.firstMistake}</p></div>)}</aside>}</> : <div className="empty-results"><span className="empty-icon"><Icon name="code" /></span><div><strong>{runNotice ? 'Run checks again when ready' : 'Ready when you are'}</strong><p>{runNotice || 'Run checks to see how your solution handles the examples and edge cases.'}</p></div></div>}</div></section>
-          <div ref={toolbarRef} className="workspace-toolbar"><div className="workspace-toolbar-links">{(results || runError) && <button type="button" onClick={() => revealSection('checks-section')}>{results?.some(result => !result.passed) ? 'View failed checks' : 'Results'}</button>}</div><div className="workspace-toolbar-run"><span role="status">{running ? 'Running checks…' : results ? `${results.filter(result => result.passed).length}/${results.length} passed` : 'Ready to run'}</span>{running ? <button type="button" className="stop-checks-button" onClick={cancelChecks}>Stop checks</button> : <button className="primary-button" type="button" disabled={!full} onClick={runChecks}><Icon name="play" />Run checks</button>}</div></div>
+  const runChecksShortcut = (event: ReactKeyboardEvent) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); runChecks() }
+  }
+  const workspace = <main ref={workspaceRef} className={`practice-main ${focusMode ? 'focus-mode' : ''}`} data-step={activeStep}
+    id="main-content" onKeyDown={runChecksShortcut}>
+    <WorkspaceHeader rep={rep} status={currentStatus} saveState={saveState} focusMode={focusMode} onLibrary={() => setView('catalog')}
+      onGlossary={() => setGlossaryOpen(true)} onFocusMode={() => { setFocusMode(!focusMode); revealSection('solution-section') }}
+      onReset={() => resetDialogRef.current?.showModal()} openLesson={openKnowledge} />
+    {activeRound && <InterviewStatus round={activeRound} onControls={() => { setView('interview') }} />}
+    <div className="workspace-layout" style={{ gridTemplateColumns: layoutColumns }}>
+      <div className="task-pane">
+        <div ref={tabsRef} className="practice-steps" role="navigation" aria-label="Practice steps">
+          <StepIndicator active={activeStep} />
+          {practiceSteps.map(step => <button key={step.id} type="button" aria-label={step.label}
+            aria-current={activeStep === step.id ? 'step' : undefined} aria-describedby={`step-status-${step.id}`}
+            aria-controls={step.section} onClick={() => revealSection(step.section)}>
+            <span>{step.label}</span><small id={`step-status-${step.id}`}>{stepStatus(step.id)}</small>
+          </button>)}
+        </div>
+        <div id="task-workspace" key={`task-${rep.id}`} className={`task-column ${activeStep !== 'solve' ? 'mobile-active' : ''}`}
+          role="region" aria-label="Task and plan" tabIndex={0}>
+          {walkthroughActive && activeStep !== 'solve' && walkthroughGuide}
+          <BriefSection hidden={activeStep !== 'understand' && activeStep !== 'solve'} repId={repId} full={full} lesson={currentLesson}
+            notes={notes} contentNotice={contentNotice} history={history} openRep={openRep} openLesson={openKnowledge}
+            indonesianHelp={indonesianHelp === 'on'} onIndonesianHelp={on => setIndonesianHelp(on ? 'on' : 'off')}
+            glossary={indonesianHelpShown?.indonesianGlossary} hintCount={attempt.hintCount}
+            onRevealHint={() => { update('hintCount', attempt.hintCount + 1); setMobileTab('task') }} onReveal={revealSection} />
+          <PlanSection hidden={activeStep !== 'plan'} full={full} contentNotice={contentNotice} writing={writing} plan={attempt.plan}
+            onPlan={plan => update('plan', plan)} onReveal={revealSection} />
+          <ExplainSection hidden={activeStep !== 'explain'} repId={repId} writing={writing} explanation={attempt.explanation}
+            onExplanation={explanation => update('explanation', explanation)}
+            englishTips={indonesianHelpShown?.englishTipsForIndonesianSpeakers} allPassed={allPassed} review={review}
+            onReveal={revealSection} />
+          <ReviewSection hidden={activeStep !== 'review'} rep={rep} attempt={attempt} update={update} stepDone={stepDone}
+            writingRequired={writingRequired} missingStep={missingStep} finishMissing={finishMissing} canComplete={canComplete}
+            onComplete={completeRep} onShowMissing={showMissingStep} badgeSlot={setBadgeSlot} completionLabel={completionLabel}
+            onCompletionNext={() => completionNext ? openPracticeAction(completionNext) : setView('home')} onDone={() => setView('home')}
+            onFreshAttempt={startNewAttempt} />
         </div>
       </div>
-    </main>}
+      <WorkspaceSplit value={splitWidth} onChange={setSplitWidth} onCommit={saveSplit} />
+      <div id="code-workspace" key={`code-${rep.id}`} className={`code-column ${activeStep === 'solve' ? 'mobile-active' : ''}`}
+        role="region" aria-label="Code and preview" tabIndex={0}>
+        <section id="solution-section" tabIndex={-1} className="panel code-panel">
+          {walkthroughActive && activeStep === 'solve' && walkthroughGuide}
+          <div className="editor-wrap">{attempt.code === undefined
+            ? <p className="rep-content-notice" role="status">
+              {repContent.status === 'error'
+                ? 'The starter code could not load. Retry above; your other work is safe.'
+                : 'Loading the starter code…'}
+            </p>
+            : <ProjectEditor showHeader key={rep.id} focusRequest={editorFocusRequest} height="100%" path={editorPath} language="typescript"
+              value={attempt.code} onChange={(value) => update('code', value ?? '')} onRunChecks={runChecks}
+              options={{ ariaLabel: editorLabel, ...editorOptions }} />}</div>
+        </section>
+
+        {rep.format === 'frontend' && (full
+          ? <Suspense fallback={<PreviewLoading />}>
+            <FrontendPreview key={rep.id} rep={full} code={attempt.code ?? full.starter} />
+          </Suspense>
+          : repContent.status === 'loading' && <PreviewLoading />)}
+        <ChecksDrawer run={checks} allPassed={allPassed} checkCount={full?.checks.length} open={checksOpen}
+          onToggle={() => setChecksOpen(!checksOpen)} completed={!!attempt.completedAt} repId={repId} openLesson={openKnowledge}
+          onExplain={() => revealSection('explain-section')} />
+        <WorkspaceToolbar ref={toolbarRef} run={checks} canRun={!!full} onRun={runChecks} onStop={checks.cancel}
+          onResults={() => revealSection('checks-section')} />
+      </div>
+    </div>
+  </main>
+
+  return <div className="app-shell">
+    <AppNavigation view={view} profileName={profileName} saveState={saveState} onNavigate={setView} onManageProfiles={onManageProfiles}
+      onCommands={() => setCommandsOpen(true)}
+      notice={view !== 'workspace' ? <BadgeNotice history={history} now={now} onView={() => setView('progress')} /> : undefined} />
+    {view === 'workspace' && <BadgeNotice portalTarget={attempt.completedAt ? badgeSlot : null} history={history} now={now}
+      onView={() => setView('progress')} />}
+    {saveState !== 'Saving…' && !saveState.startsWith('Saved') && <div className="storage-recovery" role="status">
+      <p>{saveState}</p>
+      <button type="button" onClick={() => { void attempts.retrySaving() }}>Retry saving</button>
+      <button className="reset-button" type="button" onClick={exportData}>Download backup</button>
+    </div>}
+    <ScreenMemory key={`${view}:${view === 'workspace' ? repId : ''}`} screenKey={`${view}:${view === 'workspace' ? repId : ''}`}>
+      <AppRoutes view={view} journalTabs={journalTabs} profileName={profileName} onManageProfiles={onManageProfiles} fluency={fluency}
+        history={history} now={now} learnerStart={learnerStart} onLearnerStart={chooseStart} drafts={drafts} practicePlan={practicePlan}
+        completedPathIds={completedPathIds} repStatus={repStatus} pathId={pathId} setPathId={setPathId} pathPicker={pathPicker}
+        setPathPicker={setPathPicker} knowledgeSkill={knowledgeSkill} setKnowledgeSkill={setKnowledgeSkill}
+        walkthroughSeen={walkthrough !== 'new'} launchWalkthrough={() => { setWalkthrough('active'); openRep('declare-variables') }}
+        setView={setView} openRep={openRep} openReview={openReview} openLesson={openKnowledge} openPracticeAction={openPracticeAction}
+        onExport={exportData} onImport={(file) => { void importData(file) }} transferMessage={transferMessage}>
+        {workspace}
+      </AppRoutes>
     </ScreenMemory>
     {glossaryOpen && <GlossaryDrawer onClose={() => setGlossaryOpen(false)} />}
     {commandsOpen && <CommandPalette reps={reps} commands={commands} onOpenRep={openRep} onClose={() => setCommandsOpen(false)} />}
     <dialog className="reset-dialog" ref={resetDialogRef} aria-labelledby="reset-dialog-title" aria-describedby="reset-dialog-description">
       <span className="reset-dialog-label">Start again</span>
       <h2 id="reset-dialog-title">Reset this rep?</h2>
-      <p id="reset-dialog-description">Your plan, code, explanation, revealed hints, and check results will be cleared. The starter code will be restored.</p>
+      <p id="reset-dialog-description">
+        Your plan, code, explanation, revealed hints, and check results will be cleared. The starter code will be restored.
+      </p>
       <p className="reset-dialog-note">Completed attempts in History will stay saved.</p>
-      <div className="reset-dialog-actions"><button className="reset-dialog-cancel" type="button" autoFocus onClick={() => resetDialogRef.current?.close()}>Cancel</button><button className="reset-dialog-confirm" type="button" onClick={resetRep}>Reset rep</button></div>
+      <div className="reset-dialog-actions">
+        <button className="reset-dialog-cancel" type="button" autoFocus onClick={() => resetDialogRef.current?.close()}>Cancel</button>
+        <button className="reset-dialog-confirm" type="button" onClick={resetRep}>Reset rep</button>
+      </div>
     </dialog>
     {view !== 'workspace' && <footer><span>Code Reps</span><span>Free practice. Saved locally.</span></footer>}
   </div>

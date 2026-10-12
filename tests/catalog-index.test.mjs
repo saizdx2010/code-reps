@@ -79,7 +79,9 @@ test('startup modules never statically import heavy content', () => {
 
 // Route pages other than Home load on demand so each new rep does not spend initial JavaScript budget.
 test('App loads secondary route pages and the trace viewer dynamically', () => {
-  const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
+  // The app shell spans App, its route component, and the practice sections that show the trace.
+  const app = ['App.tsx', 'AppRoutes.tsx', 'PracticeSections.tsx']
+    .map(file => readFileSync(new URL(`../src/${file}`, import.meta.url), 'utf8')).join('\n')
   for (const name of ['PathsPage', 'ProgressPage', 'MistakesPage', 'SkillMapPage', 'TraceViewer']) {
     assert.doesNotMatch(app, new RegExp(`^import .* from '\\./${name}'`, 'm'), `${name} must stay lazy`)
     assert.match(app, new RegExp(`import\\('\\./${name}'\\)`), `${name} should load through lazyRoute`)
