@@ -35,6 +35,7 @@ const sources: Record<RepSourceName, Loader> = {
   'dom-reps': source(() => import('./dom-reps.ts'), module => ({ reps: module.domReps })),
   'connected-feature-reps': source(() => import('./connected-feature-reps.ts'), module => ({ reps: module.connectedFeatureReps })),
   'testing-journey-reps': source(() => import('./testing-journey-reps.ts'), module => ({ reps: module.testingJourneyReps })),
+  'maintenance-journey-reps': source(() => import('./maintenance-journey-reps.ts'), module => ({ reps: module.maintenanceJourneyReps })),
 }
 
 const pending = new Map<RepSourceName, Promise<Source>>()

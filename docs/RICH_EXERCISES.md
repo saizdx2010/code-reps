@@ -82,3 +82,7 @@ click, props replacement, and unmount. They observe DOM text and active registra
 counts, including zero after unmount. This establishes behavior under this harness,
 not useEffect usage, real timer scheduling, network behavior, accessible announcements,
 or disconnected-browser operation. Effect structure and dependencies are self-reviewed.
+
+## Maintenance journey
+
+`src/maintenance-journey-reps.ts` holds six Backend reps that follow one maintenance story, with reference solutions in `tests/fixtures/maintenance-journey-solutions.mjs`. See [Maintenance journey](./MAINTENANCE_JOURNEY.md) for how the checks work and how to author another.

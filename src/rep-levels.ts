@@ -43,6 +43,12 @@ export const repLevels: Record<string, RepLevel> = {
   'undo-word-actions': 2,
   'erase-text-markers': 2,
 
+  'read-shipping-quote': 2,
+  'reproduce-quote-bug': 2,
+  'fix-quote-bug': 2,
+  'adapt-quote-rule': 2,
+  'maintain-library-fines': 3,
+  'maintain-room-booking': 3,
   'expose-page-bugs': 2,
   'repair-range-label': 2,
   'expose-overlap-bugs': 2,
