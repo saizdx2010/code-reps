@@ -49,16 +49,6 @@ export async function startServer({ port = Number(process.env.CODE_REPS_PORT || 
         store.applyEntries(body.entries)
         return sendJson(response, 200, { saved: true })
       }
-      if (pathname === '/api/entry' && request.method === 'PUT') {
-        const body = await readJson(request)
-        store.set(body.key, body.value)
-        return sendJson(response, 200, { saved: true })
-      }
-      if (pathname === '/api/entry' && request.method === 'DELETE') {
-        const body = await readJson(request)
-        store.unset(body.key)
-        return sendJson(response, 200, { saved: true })
-      }
       if (pathname.startsWith('/api/')) return sendJson(response, 404, { error: 'Unknown endpoint.' })
       if (request.method !== 'GET' && request.method !== 'HEAD') return sendJson(response, 405, { error: 'Method not allowed.' })
       const candidate = resolve(appDir, `.${pathname}`)

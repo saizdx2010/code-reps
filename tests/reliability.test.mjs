@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createStore } from '../server/store.mjs'
 import { startServer } from '../server/index.mjs'
+import { writeAppAssets } from './helpers/app-assets.mjs'
 
 test('batch writes are atomic and snapshots restore independently after queued shutdown', async () => {
   const root = await mkdtemp(join(tmpdir(), 'code reps reliability '))
@@ -12,7 +13,7 @@ test('batch writes are atomic and snapshots restore independently after queued s
   let restored
   try {
     store = createStore(join(root, 'original'))
-    store.set('code-reps:draft:one', 'original')
+    store.applyEntries({ 'code-reps:draft:one': 'original' })
     assert.throws(() => store.applyEntries({ 'code-reps:draft:one': 'changed', invalid: 'bad' }))
     assert.deepEqual(store.entries(), { 'code-reps:draft:one': 'original' })
     store.applyEntries({ 'code-reps:draft:one': null, 'code-reps:history:v1': '[]' })
@@ -59,9 +60,7 @@ test('server handles missing assets, atomic imports, upgrades, and startup failu
   try {
     await assert.rejects(startServer({ port: 0, assetsDir, dataDir }), /built app is missing/)
     await assert.rejects(readdir(dataDir), /ENOENT/)
-    await mkdir(join(assetsDir, 'assets'), { recursive: true })
-    await writeFile(join(assetsDir, 'index.html'), '<main>Code Reps</main>')
-    await writeFile(join(assetsDir, 'assets', 'app-123.js'), 'export {}')
+    await writeAppAssets(assetsDir)
     running = await startServer({ port: 0, assetsDir, dataDir })
     const patch = entries => fetch(`${running.url}/api/entries`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ entries }) })
     assert.equal((await patch({ 'code-reps:draft:one': 'saved' })).status, 200)

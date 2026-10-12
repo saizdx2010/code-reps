@@ -1,16 +1,19 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { mkdtemp, readdir, rm } from 'node:fs/promises'
+import { cp, mkdtemp, readdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { request as httpRequest } from 'node:http'
 import { startServer } from '../server/index.mjs'
+import { writeAppAssets } from './helpers/app-assets.mjs'
 
 test('local server migrates once, persists data, and backs up on restart', async () => {
-  const dataDir = await mkdtemp(join(tmpdir(), 'code-reps-test-'))
+  const root = await mkdtemp(join(tmpdir(), 'code-reps-test-'))
+  const dataDir = join(root, 'data')
+  const assetsDir = await writeAppAssets(join(root, 'app'))
   let running
   try {
-    running = await startServer({ port: 0, dataDir })
+    running = await startServer({ port: 0, dataDir, assetsDir })
     const origin = running.url
     const request = (path, method = 'GET', body) => fetch(`${origin}${path}`, {
       method, headers: { 'Content-Type': 'application/json', Origin: origin },
@@ -27,22 +30,33 @@ test('local server migrates once, persists data, and backs up on restart', async
       req.end()
     })
     assert.equal(badHostStatus, 403)
-    assert.equal((await request('/api/entry', 'PUT', { key: 'code-reps:selected-rep', value: 'sum-positive-numbers' })).status, 200)
+    assert.equal((await request('/api/entries', 'PATCH', { entries: { 'code-reps:selected-rep': 'sum-positive-numbers', 'code-reps:draft:one': 'draft' } })).status, 200)
+    assert.equal((await request('/api/entries', 'PATCH', { entries: { 'code-reps:draft:one': null } })).status, 200)
+    assert.equal((await request('/api/entries', 'PATCH', { entries: { 'Code-Reps:Bad': 'value' } })).status, 400)
+    // The single-entry endpoints were retired; the client saves only through PATCH /api/entries.
+    assert.equal((await request('/api/entry', 'PUT', { key: 'code-reps:selected-rep', value: 'other' })).status, 404)
+    assert.equal((await request('/api/entry', 'DELETE', { key: 'code-reps:selected-rep' })).status, 404)
     await running.close()
-    running = await startServer({ port: 0, dataDir })
-    assert.equal((await (await fetch(`${running.url}/api/state`)).json()).entries['code-reps:selected-rep'], 'sum-positive-numbers')
+    running = await startServer({ port: 0, dataDir, assetsDir })
+    const restarted = (await (await fetch(`${running.url}/api/state`)).json()).entries
+    assert.equal(restarted['code-reps:selected-rep'], 'sum-positive-numbers')
+    assert.equal(restarted['code-reps:draft:one'], undefined)
     assert.equal((await readdir(join(dataDir, 'backups'))).length, 1)
   } finally {
     await running?.close()
-    await rm(dataDir, { recursive: true, force: true })
+    await rm(root, { recursive: true, force: true })
   }
 })
 
 test('CLI closes through its parent IPC channel without exposing a shutdown endpoint', async () => {
   const { spawn } = await import('node:child_process')
   const { once } = await import('node:events')
-  const dataDir = await mkdtemp(join(tmpdir(), 'code-reps-ipc-'))
-  const child = spawn(process.execPath, ['server/index.mjs'], {
+  const root = await mkdtemp(join(tmpdir(), 'code-reps-ipc-'))
+  const dataDir = join(root, 'data')
+  // Mirror the portable layout (server/ beside dist/) so the CLI finds fixture assets, not the real build.
+  await cp(new URL('../server/', import.meta.url), join(root, 'server'), { recursive: true })
+  await writeAppAssets(join(root, 'dist'))
+  const child = spawn(process.execPath, [join(root, 'server', 'index.mjs')], {
     stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
     env: { ...process.env, CODE_REPS_DATA_DIR: dataDir, CODE_REPS_PORT: '0' },
   })
@@ -68,6 +82,6 @@ test('CLI closes through its parent IPC channel without exposing a shutdown endp
   } finally {
     clearTimeout(timeout)
     if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL')
-    await rm(dataDir, { recursive: true, force: true })
+    await rm(root, { recursive: true, force: true })
   }
 })
