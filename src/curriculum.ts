@@ -1,5 +1,5 @@
 import { skillSummariesForRep as skillsForRep } from './skill-index.ts'
-import { repIndex as reps } from './catalog-index.ts'
+import { repTitle } from './rep-index.ts'
 import { paths } from './path.ts'
 import { journeys, stageLabels } from './learning.ts'
 import type { JourneyProgress } from './learning.ts'
@@ -43,11 +43,10 @@ export function stageCoveredByFoundations(pathId: string, repIds: readonly strin
 export function repPracticeContext(repId: string) {
   const journey = journeys.find(item => [item.guided, item.independent, item.recall].includes(repId))
   const focus = journey?.title ?? skillsForRep(repId)[0]?.title
-  const nextTitle = (id: string) => reps.find(rep => rep.id === id)?.title ?? id
   const afterward = journey?.guided === repId
-    ? `Next: ${nextTitle(journey.independent)} applies the same skill independently.`
+    ? `Next: ${repTitle(journey.independent)} applies the same skill independently.`
     : journey?.independent === repId
-      ? `After solving it without hints, return for ${nextTitle(journey.recall)} in ${journey.delayDays} days.`
+      ? `After solving it without hints, return for ${repTitle(journey.recall)} in ${journey.delayDays} days.`
       : journey?.recall === repId
         ? 'Afterward, review your skill evidence and choose the next unfinished rep on your trail.'
         : 'Afterward, continue to the next unfinished rep in your trail.'

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from './Button'
 import type { RepTrace, TraceStep, TraceStructure, TraceTreeNode } from './rep-depth'
+import { plural } from './ui-copy.ts'
 
 const outline = (node: TraceTreeNode): string => `${node.value}${node.note ? ` (${node.note})` : ''}${node.children?.length ? ` with children ${node.children.map(outline).join(', ')}` : ''}`
 const nodeValue = (root: TraceTreeNode, id?: string): string | undefined => {
@@ -23,7 +24,7 @@ const tableFocus = (table: TableStructure) => {
 const isCell = (cells: [number, number][] | undefined, row: number, col: number) => Boolean(cells?.some(cell => cell[0] === row && cell[1] === col))
 
 function describe(structure: TraceStructure) {
-  if (structure.kind === 'table') return `Table with ${structure.cells.length} ${structure.cells.length === 1 ? 'row' : 'rows'}: ${structure.cells.map((row, r) => `${structure.rowLabels ? `row ${structure.rowLabels[r]}: ` : ''}${row.map((value, c) => `${structure.colLabels?.[c] ?? c} = ${value ?? 'not filled yet'}`).join(', ')}`).join('; ')}. ${tableFocus(structure)}`
+  if (structure.kind === 'table') return `Table with ${structure.cells.length} ${plural(structure.cells.length, 'row')}: ${structure.cells.map((row, r) => `${structure.rowLabels ? `row ${structure.rowLabels[r]}: ` : ''}${row.map((value, c) => `${structure.colLabels?.[c] ?? c} = ${value ?? 'not filled yet'}`).join(', ')}`).join('; ')}. ${tableFocus(structure)}`
   if (structure.kind === 'map') return `Map entries: ${structure.entries.map(([key, value]) => `${key}: ${value}`).join(', ') || 'empty'}.`
   if (structure.kind === 'tree') return `Tree, root first: ${outline(structure.root)}. Current node: ${nodeValue(structure.root, structure.current) ?? 'none'}. Visited nodes: ${nodeValues(structure.root, structure.visited)}.`
   if (structure.kind === 'calls') {

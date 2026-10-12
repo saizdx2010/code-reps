@@ -4,7 +4,7 @@ import { Select } from './Input'
 import { EmptyState, InfoNote, PageHeader, StatusChip } from './Layout'
 import { preloadEditor } from './editor-loader'
 import { paths } from './path'
-import { repIndex as reps } from './catalog-index'
+import { repTitle } from './rep-index.ts'
 import { buildSkillMap, skillStateLabels, skillStateMeaning } from './skill-map'
 import type { SkillNode, SkillState } from './skill-map'
 import type { JourneyProgress } from './learning'
@@ -22,7 +22,6 @@ type Props = {
 const tones: Record<SkillState, ChipTone> = { untouched: 'neutral', practiced: 'progress', independent: 'progress', retained: 'success', due: 'attention' }
 const markers = { untouched: 'circle', practiced: 'code', independent: 'check', retained: 'flag', due: 'repeat' } as const
 const order: SkillState[] = ['untouched', 'practiced', 'independent', 'retained', 'due']
-const repTitle = (id: string) => reps.find(rep => rep.id === id)?.title ?? id
 
 function detail(node: SkillNode) {
   if (node.state === 'independent') return node.recallAt ? `Fresh recall ready ${formatDate(node.recallAt)}.` : 'Fresh recall comes after a break.'

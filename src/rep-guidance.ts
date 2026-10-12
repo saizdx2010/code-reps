@@ -2,6 +2,7 @@ import { firstPath, paths } from './path.ts'
 import { skillSummaryById as skillById, skillSummariesForRep as skillsForRep } from './skill-index.ts'
 import { repLevel, repLevelLabels, type RepLevel } from './rep-levels.ts'
 import { repIndex as reps } from './catalog-index.ts'
+import { repTitle } from './rep-index.ts'
 
 // Guidance is derived from authored levels, path order, and linked lessons. It is a planning aid:
 // nothing here gates access, and nothing infers proficiency from how quickly a learner works.
@@ -43,7 +44,7 @@ export function effortRange(repId: string): string {
   return entry?.format && longerFormats.has(entry.format) && level !== 3 ? `${base}, plus time to build` : base
 }
 
-const summary = (id: string): GuidanceRep => ({ id, title: reps.find(rep => rep.id === id)?.title ?? id, level: repLevel(id) })
+const summary = (id: string): GuidanceRep => ({ id, title: repTitle(id), level: repLevel(id) })
 
 /** The first path listing the rep, with the reps before it in order and its stage. */
 function pathPosition(repId: string) {

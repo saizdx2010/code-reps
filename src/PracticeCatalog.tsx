@@ -10,6 +10,7 @@ import { repLevel, repLevelLabel } from './rep-levels.ts'
 import { startHereReps } from './catalog-sample.ts'
 import { foundationsPathId } from './curriculum'
 import { paths } from './path'
+import { plural } from './ui-copy.ts'
 
 type Filter = 'query' | 'skill' | 'format' | 'status'
 type Props = {
@@ -55,7 +56,7 @@ export function PracticeCatalog({ filters, onFilter, clearFilters, categories, v
     {!filtering && startHere.length > 0 && <div className="catalog-start"><ListGroup title="Start here" count={startHere.length} open>{startHere.map(renderRow)}</ListGroup></div>}
     <div className="catalog-list-heading">
       <h2>{filters.query.trim() ? 'Search results' : 'All exercises'}</h2>
-      <span aria-live="polite">{visibleReps.length} {visibleReps.length === 1 ? 'rep' : 'reps'}</span>
+      <span aria-live="polite">{visibleReps.length} {plural(visibleReps.length, 'rep')}</span>
     </div>
     <div className="catalog-list" data-filtering={filtering} role="region" aria-label="Exercise list">{visibleReps.length ? categories.map(category => {
       const items = visibleReps.filter(item => catalogTopic(item) === category)

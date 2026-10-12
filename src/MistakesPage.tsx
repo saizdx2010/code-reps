@@ -1,6 +1,6 @@
 import { EmptyState, InfoNote, ListGroup, ListRow, PageHeader, StatusChip } from './Layout'
 import { formatDate, plural } from './ui-copy.ts'
-import { repIndex as reps } from './catalog-index'
+import { repTitle } from './rep-index.ts'
 import { summarizeMistakes, trendWindowDays } from './mistakes'
 import type { MistakeTrend } from './mistakes'
 import type { PortableRecord } from './portability'
@@ -17,7 +17,7 @@ export function MistakesPage({ history, now, onOpenRep }: { history: PortableRec
     {groups.length === 0 ? <EmptyState title="No mistakes tagged yet">When you review a finished rep, you can tag mistakes you noticed. They will collect here.</EmptyState> : <section aria-label="Mistake tags">
       {groups.map(group => <ListGroup key={group.id} title={group.label} count={group.total}>
         <ListRow title={`${group.total} ${plural(group.total, 'time')} in total`} meta={`Last ${trendWindowDays} days: ${group.recent}. Before that: ${group.earlier}.`} status={<StatusChip tone={group.trend === 'fewer' ? 'success' : 'neutral'}>{trendText[group.trend]}</StatusChip>} />
-        {group.occurrences.map(item => <ListRow key={item.attemptId} title={reps.find(rep => rep.id === item.repId)?.title ?? item.repId} meta={`Attempt on ${formatDate(item.completedAt)}`} onOpen={() => onOpenRep(item.repId)} />)}
+        {group.occurrences.map(item => <ListRow key={item.attemptId} title={repTitle(item.repId)} meta={`Attempt on ${formatDate(item.completedAt)}`} onOpen={() => onOpenRep(item.repId)} />)}
       </ListGroup>)}
     </section>}
   </main>

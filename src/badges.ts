@@ -1,5 +1,6 @@
 import { firstPath, paths } from './path.ts'
 import type { PortableRecord } from './portability.ts'
+import { plural } from './ui-copy.ts'
 
 /** The path shape badges read. Passing a changed catalog shows how badges follow a path edit. */
 export type BadgeCatalog = readonly { id: string; title: string; stages: readonly { title: string; repIds: readonly string[] }[] }[]
@@ -61,7 +62,7 @@ export function profileBadges(history: PortableRecord[], now = new Date(), catal
       const ids = [...new Set<string>(stage.repIds)]
       // Stages made only of Foundations reps are earned in Foundations, not repeated.
       if (path.id !== firstPath.id && ids.every(id => firstPathReps.has(id))) return
-      badges.push(build(first, { id: `${path.id}:stage:${index}`, kind: 'stage', name: stage.title, rule: `Complete all ${ids.length} ${ids.length === 1 ? 'rep' : 'reps'} in “${stage.title}” (${path.title}).`, pathId: path.id }, ids))
+      badges.push(build(first, { id: `${path.id}:stage:${index}`, kind: 'stage', name: stage.title, rule: `Complete all ${ids.length} ${plural(ids.length, 'rep')} in “${stage.title}” (${path.title}).`, pathId: path.id }, ids))
     })
     const ids = [...new Set(path.stages.flatMap(stage => [...stage.repIds]))]
     badges.push(build(first, { id: `${path.id}:path`, kind: 'path', name: `${path.title} track`, rule: `Complete every rep in the ${path.title} track.`, pathId: path.id }, ids))
