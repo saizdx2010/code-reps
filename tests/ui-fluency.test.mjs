@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdtemp, readFile, readdir, writeFile, rm } from 'node:fs/promises'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import ts from 'typescript'
 import { JSDOM } from 'jsdom'
@@ -32,6 +32,8 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
       source=source.replace(/import ['"]\.\/[^'"]+\.css['"]\s*;?/g,'')
       let js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX}}).outputText
       js=js.replace(/(from\s*['"]|import\(['"])(\.\/[^'"]+)(['"])/g,(_,prefix,path,suffix)=>prefix+path.replace(/\.(ts|tsx)$/,'')+'.js'+suffix)
+      // Shared plain-JavaScript modules in server/ (such as the saved-key allow-list) load from the real folder.
+      js=js.replace(/(from\s*['"])\.\.\/server\//g,`$1${pathToFileURL(resolve('server'))}/`)
       if(name==='CodeEditor.tsx')js='import {jsx} from "react/jsx-runtime"; export default function Editor(props){return jsx("textarea",{"aria-label":"Test code editor",value:props.value,onChange:e=>props.onChange(e.target.value)})}'
       await writeFile(join(rootDir,name.replace(/\.tsx?$/,'.js')),js)
     }
