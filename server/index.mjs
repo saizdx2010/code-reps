@@ -1,5 +1,6 @@
 import { createServer } from 'node:http'
 import { readFile, stat } from 'node:fs/promises'
+import { realpathSync } from 'node:fs'
 import { join, resolve, extname, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createStore } from './store.mjs'
@@ -85,7 +86,13 @@ export async function startServer({ port = Number(process.env.CODE_REPS_PORT || 
   return { server, store, close, url: `http://127.0.0.1:${server.address().port}` }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// Node resolves symlinks for the main module, so compare real paths (a bundle may sit under a symlinked folder).
+function isEntryPoint() {
+  try { return Boolean(process.argv[1]) && realpathSync(resolve(process.argv[1])) === fileURLToPath(import.meta.url) }
+  catch { return false }
+}
+
+if (isEntryPoint()) {
   startServer().then(({ url, store, close }) => {
     process.stdout.write(`Code Reps is running at ${url}\nData: ${store.dbPath}\n`)
     const shutdown = () => { void close().catch(error => { process.stderr.write(`${error}\n`); process.exitCode = 1 }).finally(() => { if (process.connected) process.disconnect() }) }
