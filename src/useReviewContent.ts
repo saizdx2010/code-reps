@@ -3,7 +3,7 @@ import { loadReviewContent, type ReviewContent } from './load-review-content.ts'
 
 type Settled = { attempt: number; content?: ReviewContent }
 
-export type ReviewContentState = { status: 'loading' } | { status: 'error' } | { status: 'ready'; content: ReviewContent }
+type ReviewContentState = { status: 'loading' } | { status: 'error' } | { status: 'ready'; content: ReviewContent }
 
 export function useReviewContent(): ReviewContentState & { retry: () => void } {
   const [attempt, setAttempt] = useState(0)

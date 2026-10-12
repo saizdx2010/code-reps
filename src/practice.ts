@@ -13,7 +13,7 @@ export type PracticeAction = { repId: string; reason: string; mode: 'start' | 'r
 const delay = 3 * 86_400_000
 
 /** `code` is undefined while the starter has not loaded yet; that counts as unchanged. */
-export type DraftAttempt = Omit<PortableAttempt, 'code'> & { code?: string }
+type DraftAttempt = Omit<PortableAttempt, 'code'> & { code?: string }
 export function attemptStatus(repId: string, attempt?: DraftAttempt) {
   const rep = reps.find(item => item.id === repId)
   if (attempt?.completedAt) return 'Completed'

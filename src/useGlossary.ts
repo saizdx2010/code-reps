@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { loadAllReps } from './rep-content.ts'
 
-export type GlossaryTerm = { term: string; meaning: string }
+type GlossaryTerm = { term: string; meaning: string }
 type Settled = { attempt: number; terms?: GlossaryTerm[] }
-export type GlossaryState = { status: 'loading' } | { status: 'error' } | { status: 'ready'; terms: GlossaryTerm[] }
+type GlossaryState = { status: 'loading' } | { status: 'error' } | { status: 'ready'; terms: GlossaryTerm[] }
 
 /** Collects every rep's vocabulary. The material loads when a view that shows the glossary opens, not at startup. */
 export function useGlossary(): GlossaryState & { retry: () => void } {

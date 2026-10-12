@@ -1,7 +1,7 @@
 import { parseSessions } from './practice-sessions.ts'
 import { parseBackup } from './portability.ts'
 import { parseFluency } from './fluency.ts'
-export type ProfileBackup = { format: 'code-reps-profile'; version: 1; name: string; exportedAt: string; entries: Record<string,string> }
+type ProfileBackup = { format: 'code-reps-profile'; version: 1; name: string; exportedAt: string; entries: Record<string,string> }
 export function parseProfileBackup(text: string, repIds: Set<string>): ProfileBackup {
   if(text.length>2_000_000)throw new Error('Profile file exceeds the local import limit of 2 MB.')
   let value: unknown

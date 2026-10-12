@@ -9,9 +9,9 @@ export const mistakeTags = [
   { id: 'other', label: 'Something else' },
 ] as const
 
-export type MistakeTagId = typeof mistakeTags[number]['id']
+type MistakeTagId = typeof mistakeTags[number]['id']
 const known = new Set<string>(mistakeTags.map(tag => tag.id))
-export const isMistakeTag = (value: unknown): value is MistakeTagId => typeof value === 'string' && known.has(value)
+const isMistakeTag = (value: unknown): value is MistakeTagId => typeof value === 'string' && known.has(value)
 
 /** Keeps known tag IDs once each, in catalog order. Anything else (unknown IDs, non-strings, non-arrays) is dropped. Returns undefined when no tag remains. */
 export function normalizeMistakes(value: unknown): MistakeTagId[] | undefined {
@@ -21,10 +21,10 @@ export function normalizeMistakes(value: unknown): MistakeTagId[] | undefined {
   return tags.length ? tags : undefined
 }
 
-export type MistakeSource = { id: string; repId: string; completedAt: string; mistakes?: unknown }
-export type MistakeOccurrence = { attemptId: string; repId: string; completedAt: string }
+type MistakeSource = { id: string; repId: string; completedAt: string; mistakes?: unknown }
+type MistakeOccurrence = { attemptId: string; repId: string; completedAt: string }
 export type MistakeTrend = 'new' | 'more' | 'fewer' | 'same' | 'none'
-export type MistakeGroup = { id: MistakeTagId; label: string; total: number; recent: number; earlier: number; trend: MistakeTrend; occurrences: MistakeOccurrence[] }
+type MistakeGroup = { id: MistakeTagId; label: string; total: number; recent: number; earlier: number; trend: MistakeTrend; occurrences: MistakeOccurrence[] }
 
 const day = 86_400_000
 export const trendWindowDays = 14

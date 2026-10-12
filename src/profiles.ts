@@ -1,5 +1,5 @@
 export type LocalProfile = { id: string; name: string; createdAt: string }
-export type ProfileRegistry = { version: 1; profiles: LocalProfile[] }
+type ProfileRegistry = { version: 1; profiles: LocalProfile[] }
 export const profileRegistryKey = 'code-reps:profiles:v1'
 export const profilePrefix = (id: string) => `code-reps:profile:${id}:`
 export function scopedKey(id: string, key: string) {

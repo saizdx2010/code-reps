@@ -3,13 +3,13 @@ import { skillSummariesForRep as skillsForRep } from './skill-index.ts'
 import { paths } from './path.ts'
 import { repIndex as reps } from './catalog-index.ts'
 
-export type TrailNodeState = 'done' | 'next' | 'draft' | 'later' | 'open'
+type TrailNodeState = 'done' | 'next' | 'draft' | 'later' | 'open'
 export type TrailNode =
   | { kind: 'lesson'; id: string; skillId: string; title: string; state: 'done' | 'open' }
   | { kind: 'rep'; id: string; repId: string; title: string; role: string; state: TrailNodeState }
   | { kind: 'project'; id: string; repId: string; title: string; reason: string; state: 'done' | 'open' }
 export type TrailStage = { title: string; description: string; recap?: string; nodes: TrailNode[]; covered: boolean; done: number; total: number; current: boolean }
-export type TrailInput = {
+type TrailInput = {
   completed: (repId: string) => boolean
   inProgress: (repId: string) => boolean
   recallReady: (repId: string) => boolean

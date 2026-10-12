@@ -15,8 +15,8 @@ export type SkillNode = {
   actionLabel: string
   recallAt: string | null
 }
-export type SkillStage = { title: string; nodes: SkillNode[] }
-export type SkillMap = { stages: SkillStage[]; counts: Record<SkillState, number>; total: number }
+type SkillStage = { title: string; nodes: SkillNode[] }
+type SkillMap = { stages: SkillStage[]; counts: Record<SkillState, number>; total: number }
 
 export const skillStateLabels: Record<SkillState, string> = {
   untouched: 'Not started', practiced: 'Practiced', independent: 'Independent', retained: 'Retained', due: 'Review due',

@@ -1,12 +1,12 @@
 export type LearnerStart = 'new' | 'returning'
 
-export type LearningRecord = {
+type LearningRecord = {
   repId: string
   completedAt: string
   hintCount: number
 }
 
-export type Journey = { id: string; title: string; guided: string; independent: string; recall: string; practice?: string[]; delayDays: number }
+type Journey = { id: string; title: string; guided: string; independent: string; recall: string; practice?: string[]; delayDays: number }
 
 export const journeys: Journey[] = [
   { id: 'arrays', title: 'Work through arrays', guided: 'sum-positive-numbers', independent: 'count-even-numbers', recall: 'count-above-threshold', practice: ['sum-in-range', 'adjacent-rise-count'], delayDays: 3 },
@@ -38,7 +38,7 @@ export const journeys: Journey[] = [
 
 export const arrayJourney = journeys[0]
 
-export type JourneyStage = 'learning' | 'practising' | 'independent' | 'retained'
+type JourneyStage = 'learning' | 'practising' | 'independent' | 'retained'
 
 export function getJourney(journey: Journey, records: LearningRecord[], now = Date.now()) {
   const chronological = [...records].filter((record) => Number.isFinite(Date.parse(record.completedAt)))

@@ -1,4 +1,4 @@
-export type PathStage = { title: string; description: string; recap?: string; repIds: readonly string[] }
+type PathStage = { title: string; description: string; recap?: string; repIds: readonly string[] }
 
 export const firstPath = {
   id: 'typescript',
