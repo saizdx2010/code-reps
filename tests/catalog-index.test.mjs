@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import test from 'node:test'
+import ts from 'typescript'
 import { renderCatalogIndex } from '../scripts/catalog-index.mjs'
 import { foundationRepIds, repIndex, skillIndex } from '../src/catalog-index.ts'
 import { loadAllReps, loadRepContent } from '../src/rep-content.ts'
@@ -61,12 +62,15 @@ test('startup modules never statically import heavy content', () => {
   const visit = file => {
     if (seen.has(file)) return
     seen.add(file)
-    const source = readFileSync(file, 'utf8')
-    for (const match of source.matchAll(/^(?:import|export)\s[^'"\n]*?from\s+['"](\.[^'"]+)['"]|^import\s+['"](\.[^'"]+)['"]/gm)) {
-      if (/^import\s+type\b|^export\s+type\b/.test(match[0])) continue
-      const specifier = (match[1] ?? match[2]).replace(/\.(tsx?|css)$/, '')
-      if ((match[1] ?? match[2]).endsWith('.css')) continue
-      const target = resolve(file, specifier)
+    // Parse rather than pattern-match, so formatted multi-line imports are still followed.
+    const source = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest)
+    for (const statement of source.statements) {
+      const runtime = ts.isImportDeclaration(statement) ? !statement.importClause?.isTypeOnly
+        : ts.isExportDeclaration(statement) && Boolean(statement.moduleSpecifier) && !statement.isTypeOnly
+      if (!runtime || !ts.isStringLiteral(statement.moduleSpecifier)) continue
+      const path = statement.moduleSpecifier.text
+      if (!path.startsWith('.') || path.endsWith('.css')) continue
+      const target = resolve(file, path.replace(/\.tsx?$/, ''))
       if (!target) continue
       const name = target.split('/').pop().replace(/\.tsx?$/, '')
       if (heavy.test(name)) offenders.push(`${file.split('/src/')[1]} -> ${name}`)
