@@ -197,7 +197,16 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
     assert.equal(document.querySelector('input[maxlength="120"]').value, 'An unfinished thought')
     await click('Cancel')
     await click('Progress')
-    await click('Plan a practice week')
+    await click('Look back and plan a practice week')
+    assert.ok(document.body.textContent.includes('Look back at the last seven days'))
+    const notesBefore = JSON.parse(localStorage.getItem('code-reps:profile:default:fluency:v1')).notes.length
+    await input(document.querySelector('.week-review-question textarea'), 'Finished two reps without hints.')
+    await click('Save to Notebook')
+    const savedNotes = JSON.parse(localStorage.getItem('code-reps:profile:default:fluency:v1')).notes
+    assert.equal(savedNotes.length, notesBefore + 1)
+    assert.match(savedNotes[0].title, /^Week in review/)
+    assert.match(savedNotes[0].body, /What went well this week\?\nFinished two reps without hints\./)
+    assert.ok(document.body.textContent.includes('Saved to your Notebook.'))
     const goal = document.querySelector('.hub-form-row select')
     await input(goal, 'backend')
     assert.equal(JSON.parse(localStorage.getItem('code-reps:profile:default:fluency:v1')).goal.pathId, 'backend')

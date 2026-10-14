@@ -320,3 +320,141 @@ button[aria-expanded='true'] > span > .icon-chevron {
 .mistake-lessons {
   margin-left: auto;
 }
+
+/* Progress: a calendar of completed attempts. Shading steps with the count; the summary sentence states the numbers. */
+.activity-calendar {
+  margin: 20px 0;
+}
+.activity-calendar h2 {
+  margin: 0 0 4px;
+  font-size: var(--type-section);
+}
+.activity-calendar > p {
+  margin: 0 0 12px;
+  color: var(--muted);
+}
+.activity-scroll {
+  overflow-x: auto;
+  padding-bottom: 4px;
+  border-radius: var(--radius-control);
+}
+.activity-scroll:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.activity-body {
+  display: flex;
+  gap: 6px;
+  width: max-content;
+  font-size: 11px;
+  color: var(--muted);
+}
+.activity-weekdays,
+.activity-week {
+  display: grid;
+  grid-template-rows: 16px repeat(7, 14px);
+  gap: 3px;
+}
+.activity-weekdays {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  padding-right: 4px;
+  background: var(--bg);
+}
+.activity-weekdays span {
+  line-height: 14px;
+}
+.activity-weeks {
+  display: flex;
+  gap: 3px;
+}
+.activity-month {
+  white-space: nowrap;
+  width: 14px;
+  overflow: visible;
+}
+.activity-cell {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.activity-cell[data-level='1'] {
+  background: color-mix(in srgb, var(--accent) 30%, var(--surface));
+  border-color: transparent;
+}
+.activity-cell[data-level='2'] {
+  background: color-mix(in srgb, var(--accent) 55%, var(--surface));
+  border-color: transparent;
+}
+.activity-cell[data-level='3'] {
+  background: color-mix(in srgb, var(--accent) 80%, var(--surface));
+  border-color: transparent;
+}
+.activity-cell[data-level='4'] {
+  background: var(--accent);
+  border-color: var(--text);
+}
+.activity-cell[data-level='future'] {
+  visibility: hidden;
+}
+.activity-legend {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.activity-legend .activity-cell {
+  margin: 0 1px;
+}
+
+/* Weekly plan: the look back at the last seven days. */
+.week-review-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+.week-review-facts div {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+}
+.week-review-facts dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+.week-review-facts dd {
+  margin: 2px 0 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.week-review-facts small {
+  display: block;
+  font-weight: 400;
+  color: var(--muted);
+}
+.week-review-reps {
+  color: var(--muted);
+}
+.week-review-question {
+  display: grid;
+  gap: 4px;
+  margin: 12px 0;
+  font-weight: 650;
+}
+.week-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.week-review-actions p {
+  margin: 0;
+}

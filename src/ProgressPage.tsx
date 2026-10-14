@@ -1,3 +1,4 @@
+import { ActivityCalendar } from './ActivityCalendar'
 import { repTitle } from './rep-index.ts'
 import { formatDate, plural } from './ui-copy.ts'
 import { InfoNote, PageHeader, StatusChip } from './Layout'
@@ -105,6 +106,7 @@ export function ProgressPage(props: Props) {
           writing. These records are not an overall coding score.
         </p>
       </InfoNote>
+      <ActivityCalendar history={history} now={now} />
       <section className="profile-badges" aria-labelledby="profile-badges-title">
         <h2 id="profile-badges-title">Badges earned</h2>
         <p className="badge-count" role="status">
@@ -145,7 +147,7 @@ export function ProgressPage(props: Props) {
       <p className="progress-quiet-links">
         Also:{' '}
         <Button variant="text" onClick={() => goToView('plan')}>
-          Plan a practice week
+          Look back and plan a practice week
         </Button>{' '}
         <Button variant="text" onClick={() => goToView('assessment')}>
           Take the self-assessment
