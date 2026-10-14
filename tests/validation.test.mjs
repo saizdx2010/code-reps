@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { runRep } from '../src/runner.ts'
 import { journeys, getJourney } from '../src/learning.ts'
 import { recurringReviews } from '../src/fluency.ts'
 import { validationSolutions } from './fixtures/validation-solutions.mjs'
+import { assertMutantsFail } from './helpers/checks.mjs'
 
 test('validation checks reject coercion, changed precedence, partial output, and mutation', () => {
   const mutants = [
@@ -18,7 +18,7 @@ test('validation checks reject coercion, changed precedence, partial output, and
     ['validate-import-batch', validationSolutions['validate-import-batch'].replace("return {ok: false, index, error: 'INVALID_ROW'}", 'return {ok: true, rows}')],
     ['validate-import-batch', validationSolutions['validate-import-batch'].replace('rows.push({id, amount: row.amount})', 'row.id = id; rows.push({id, amount: row.amount})')],
   ]
-  for (const [id, code] of mutants) assert.ok(runRep(code, id).some(result => !result.passed), `${id}: incorrect solution escaped authored checks`)
+  assertMutantsFail(mutants)
 })
 
 test('validation evidence requires ordered, unhinted independent work and a distinct delayed recall', () => {

@@ -1,5 +1,6 @@
 import { createServer } from 'node:http'
 import { readFile, stat } from 'node:fs/promises'
+import { realpathSync } from 'node:fs'
 import { join, resolve, extname, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createStore } from './store.mjs'
@@ -48,16 +49,6 @@ export async function startServer({ port = Number(process.env.CODE_REPS_PORT || 
         store.applyEntries(body.entries)
         return sendJson(response, 200, { saved: true })
       }
-      if (pathname === '/api/entry' && request.method === 'PUT') {
-        const body = await readJson(request)
-        store.set(body.key, body.value)
-        return sendJson(response, 200, { saved: true })
-      }
-      if (pathname === '/api/entry' && request.method === 'DELETE') {
-        const body = await readJson(request)
-        store.unset(body.key)
-        return sendJson(response, 200, { saved: true })
-      }
       if (pathname.startsWith('/api/')) return sendJson(response, 404, { error: 'Unknown endpoint.' })
       if (request.method !== 'GET' && request.method !== 'HEAD') return sendJson(response, 405, { error: 'Method not allowed.' })
       const candidate = resolve(appDir, `.${pathname}`)
@@ -85,7 +76,13 @@ export async function startServer({ port = Number(process.env.CODE_REPS_PORT || 
   return { server, store, close, url: `http://127.0.0.1:${server.address().port}` }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// Node resolves symlinks for the main module, so compare real paths (a bundle may sit under a symlinked folder).
+function isEntryPoint() {
+  try { return Boolean(process.argv[1]) && realpathSync(resolve(process.argv[1])) === fileURLToPath(import.meta.url) }
+  catch { return false }
+}
+
+if (isEntryPoint()) {
   startServer().then(({ url, store, close }) => {
     process.stdout.write(`Code Reps is running at ${url}\nData: ${store.dbPath}\n`)
     const shutdown = () => { void close().catch(error => { process.stderr.write(`${error}\n`); process.exitCode = 1 }).finally(() => { if (process.connected) process.disconnect() }) }

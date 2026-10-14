@@ -22,11 +22,16 @@ lint:
 test:
     yarn test
 
-# Run all project checks.
+# Run lint, build, tests, and content validation.
 check:
     yarn lint
-    yarn test
     yarn build
+    yarn test
+    yarn content:check
+
+# Run every check, including the Chromium browser flows (reuses the build from check).
+check-all: check
+    E2E_SKIP_BUILD=1 yarn test:e2e
 
 # Preview the production build.
 preview:

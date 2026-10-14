@@ -6,9 +6,10 @@ import { getArrayJourney, getJourney, journeys } from '../src/learning.ts'
 import { reps } from '../src/rep.ts'
 import { paths } from '../src/path.ts'
 import { coreLessons } from '../src/ai-era-reps.ts'
+import { completion, utcDay } from './helpers/records.mjs'
 
-const record = (repId, day, hintCount = 0) => ({ repId, completedAt: `2026-09-${String(day).padStart(2, '0')}T00:00:00.000Z`, hintCount })
-const at = (day) => Date.parse(`2026-09-${String(day).padStart(2, '0')}T00:00:00.000Z`)
+const record = (repId, day, hintCount = 0) => completion(repId, utcDay(2026, 9, day), hintCount)
+const at = (day) => Date.parse(utcDay(2026, 9, day))
 
 test('guides a learner from first rep to delayed recall', () => {
   assert.equal(getArrayJourney([], at(25)).nextRepId, 'sum-positive-numbers')
@@ -116,10 +117,12 @@ test('practice exposes chronological hint-free records without gating stage or r
   assert.deepEqual(getJourney({ ...journeys[0], practice: undefined }, [], at(25)).practiced, [])
 })
 
-test('knowledge validation rejects missing, duplicate, and overlapping practice targets', () => {
+test('knowledge validation accepts the catalog and rejects missing, duplicate, and overlapping practice targets', () => {
   const journey = journeys[0]
   const original = journey.practice
   const ids = new Set(reps.map(rep => rep.id))
+  // References, the prerequisite graph, questions, projects, and recall variants are valid as authored.
+  assert.deepEqual(validateKnowledge(ids), [])
   try {
     journey.practice = ['missing-practice', journey.guided, journey.independent, journey.recall, recallVariants[journey.id][0], 'missing-practice']
     const problems = validateKnowledge(ids)

@@ -1,7 +1,13 @@
+import { existsSync } from 'node:fs'
 import { defineConfig } from '@playwright/test'
 
 // E2E_PORT lets separate checkouts run the suite side by side without sharing a server.
 const port = Number(process.env.E2E_PORT) || 4175
+
+const skipBuild = process.env.E2E_SKIP_BUILD === '1'
+if (skipBuild && !existsSync('dist/index.html')) {
+  throw new Error('E2E_SKIP_BUILD=1 needs an existing build: run yarn build first')
+}
 
 const expectTimeout = Number(process.env.E2E_EXPECT_TIMEOUT ?? 10_000)
 if (!Number.isInteger(expectTimeout) || expectTimeout <= 0) {
@@ -23,9 +29,10 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [{ name: 'chromium', use: { browserName: 'chromium', viewport: { width: 1280, height: 900 } } }],
-  // Build fresh assets for isolated SQLite tests, then start dedicated Vite.
+  // SQLite tests serve dist/, so build fresh assets first unless E2E_SKIP_BUILD=1 says the caller
+  // (CI or `just check-all`) just built them. Then start a dedicated loopback Vite server.
   webServer: {
-    command: `yarn build && yarn dev --host 127.0.0.1 --port ${port} --strictPort`,
+    command: `${skipBuild ? '' : 'yarn build && '}yarn dev --host 127.0.0.1 --port ${port} --strictPort`,
     url: `http://127.0.0.1:${port}`,
     reuseExistingServer: false,
     timeout: 120_000,

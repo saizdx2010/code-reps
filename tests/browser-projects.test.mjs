@@ -6,6 +6,7 @@ import { reps } from '../src/rep.ts'
 import { journeys, getJourney } from '../src/learning.ts'
 import { runRep } from '../src/runner.ts'
 import { browserStateSolutions } from './fixtures/browser-state-solutions.mjs'
+import { assertMutantsFail } from './helpers/checks.mjs'
 
 test('external project levels link real preparation and create portable notebook-sized reviews', () => {
   assert.deepEqual(browserProjects.map(project => project.level), [1, 2, 3])
@@ -37,7 +38,7 @@ test('state checks reject normalization, truthiness, deduplication and mutation 
     'saved-record-status': `function saveStatus(s) { return s.status === 'idle' ? {text:'Not saved',retry:false} : s.status === 'saved' ? {text:'Saved '+s.count+' books',retry:false} : {text:s.reason,retry:Boolean(s.reason)} }`,
     'catalog-request-summary': `function requestSummary(xs) { return {pending:[...new Set(xs.filter(x=>x.status==='pending').map(x=>x.id))],empty:xs.filter(x=>x.status==='ready'&&x.titles.every(t=>!t)).map(x=>x.id),errors:xs.filter(x=>x.status==='failed').map(x=>({id:x.id,message:x.error}))} }`,
   }
-  for (const [id, code] of Object.entries(incorrect)) assert.ok(runRep(code, id).some(result => !result.passed), id)
+  assertMutantsFail(Object.entries(incorrect))
   const mutating = browserStateSolutions['catalog-request-summary'].replace('return {', 'requests.reverse(); return {')
   assert.ok(runRep(mutating, 'catalog-request-summary').some(result => result.message?.includes('changed its input')))
 })

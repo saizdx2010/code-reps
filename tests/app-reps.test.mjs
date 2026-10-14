@@ -3,6 +3,7 @@ import test from 'node:test'
 import { runRep } from '../src/runner.ts'
 import { appReps } from '../src/app-reps.ts'
 import { appSolutions } from './fixtures/app-solutions.mjs'
+import { assertMutantsFail } from './helpers/checks.mjs'
 
 test('app reps all have an independent reference solution', () => {
   assert.deepEqual(appReps.map(rep => rep.id).sort(), [...Object.keys(appSolutions), ...['selection-action-state', 'navigation-window', 'conditional-resource-response', 'retry-response-policy']].sort())
@@ -34,7 +35,7 @@ test('app rep checks reject common contract mistakes', () => {
     ['backend-error-response', s['backend-error-response'].replace("message: entry[1]", "message: (error as any).message ?? entry[1]")],
     ['backend-error-response', s['backend-error-response'].replace("typeof code === 'string' ? known.get(code) : undefined", "known.get(String(code).toUpperCase())")],
   ]
-  for (const [index, [id, code]] of mutants.entries()) assert.ok(runRep(code, id).some(result => !result.passed), `mutant ${index} of ${id} escaped the checks`)
+  assertMutantsFail(mutants)
 })
 
 test('app reps are not solved by their starter code', () => {
@@ -53,5 +54,5 @@ test('journey app reps reject common contract mistakes', () => {
     ['page-response-envelope', s['page-response-envelope'].replace('Math.ceil(totalItems / pageSize)', 'Math.floor(totalItems / pageSize)')],
     ['page-response-envelope', s['page-response-envelope'].replace('page < totalPages ? link(page + 1)', 'true ? link(page + 1)')],
   ]
-  for (const [index, [id, code]] of mutants.entries()) assert.ok(runRep(code, id).some(result => !result.passed), `mutant ${index} of ${id} escaped the checks`)
+  assertMutantsFail(mutants)
 })

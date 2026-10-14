@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createLocalStore } from '../src/local-store.ts'
+import { createLocalStore, keyAllowed } from '../src/local-store.ts'
+import { storageKeyAllowed } from '../server/storage-keys.mjs'
 
 const draftKey = 'code-reps:attempt:sum-positive-numbers:v1'
 const journalKey = 'code-reps:pending-writes:v1'
@@ -121,4 +122,16 @@ test('browser-only development still saves without a server journal', async () =
   await store.flushStorage()
   assert.equal(store.isServerReady(), false)
   assert.equal(cached.getItem(journalKey), null)
+})
+
+test('browser and server share one saved-key allow-list; browser-only keys never sync', () => {
+  const shared = ['code-reps:history:v1', 'code-reps:profile:default:draft:sum-evens', `code-reps:${'a'.repeat(149)}`]
+  const rejected = ['Code-Reps:history', 'code-reps:', 'code-reps:has space', 'code-reps:under_score', 'other:key', `code-reps:${'a'.repeat(150)}`]
+  for (const key of shared) assert.ok(storageKeyAllowed(key) && keyAllowed(key), key)
+  for (const key of rejected) assert.ok(!storageKeyAllowed(key) && !keyAllowed(key), key)
+  for (const key of ['code-reps:pending-writes:v1', 'code-reps:server-mode:v1']) {
+    assert.ok(storageKeyAllowed(key), key)
+    assert.ok(!keyAllowed(key), key)
+  }
+  assert.equal(storageKeyAllowed(42), false)
 })

@@ -1,16 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { dsaAdvancedReps } from '../src/dsa-advanced-reps.ts'
 import { compileSolution } from '../src/compile-solution.ts'
 import { runRep } from '../src/runner.ts'
 import { dsaSolutions } from './fixtures/dsa-solutions.mjs'
 
-for (const rep of dsaAdvancedReps) {
-  test(`advanced reference meets every authored check: ${rep.id}`, () => {
-    assert.ok(runRep(dsaSolutions[rep.id], rep.id).every(check => check.passed))
-  })
-}
-
+// tests/content.test.mjs runs every advanced reference against its authored checks.
 test('advanced checks reject endpoint, ordering, base-case, greedy, and stack mistakes', () => {
   const mistakes = {
     'algo-prefix-sums': 'function rangeSums(a,q) { return q.map(([l,r])=>a.slice(l,r).reduce((s,v)=>s+v,0)) }',

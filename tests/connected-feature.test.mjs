@@ -5,15 +5,14 @@ import { join } from 'node:path'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { isDeepStrictEqual } from 'node:util'
-import { JSDOM } from 'jsdom'
 import { connectedFeatureReps } from '../src/connected-feature-reps.ts'
 import { connectedSolutions } from './fixtures/connected-feature-solutions.mjs'
 import { encodeFiles, decodeFiles } from '../src/project-files.ts'
 import { compileSolution } from '../src/compile-solution.ts'
-import { buildFrontendFrame } from '../src/frontend-frame.ts'
 import { repDepth } from '../src/rep-depth.ts'
 import { reflectionGuides } from '../src/reflection-guides.ts'
 import { reps } from '../src/rep.ts'
+import { runFrame } from './helpers/frame.mjs'
 
 function failures(rep, files) {
   const code = typeof files === 'string' ? files : encodeFiles({ entry: 'main.ts', files })
@@ -25,12 +24,9 @@ function failures(rep, files) {
       return !isDeepStrictEqual(fn(...args), check.expected) || JSON.stringify(args) !== before
     }).map(check => check.name)
   }
-  let report
-  const dom = new JSDOM(buildFrontendFrame(code, rep, 'connected', 'checks'), { runScripts: 'dangerously', beforeParse(window) { window.postMessage = data => { report = data } } })
-  try {
-    assert.ok(report, rep.id)
-    return report.error ? [report.error] : Array.from(report.results).filter(result => !result.passed).map(result => `${result.name}: ${result.message}`)
-  } finally { dom.window.close() }
+  const { report } = runFrame(code, rep)
+  assert.ok(report, rep.id)
+  return report.error ? [report.error] : Array.from(report.results).filter(result => !result.passed).map(result => `${result.name}: ${result.message}`)
 }
 
 test('connected feature references pass every checkpoint and starters need work', () => {

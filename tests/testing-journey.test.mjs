@@ -1,11 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { reps } from '../src/rep.ts'
-import { runRep } from '../src/runner.ts'
 import { testingJourneyReps } from '../src/testing-journey-reps.ts'
 import { exposeOverlapSolution, exposePageSolution } from './fixtures/testing-journey-solutions.mjs'
+import { failedChecks as failed } from './helpers/checks.mjs'
 
-const failed = (code, id) => runRep(code, id).filter(result => !result.passed).map(result => result.name)
 const rep = id => reps.find(item => item.id === id)
 
 test('the find-the-bug journey ships the original reps and two additional recall tasks', () => {

@@ -1,5 +1,6 @@
 import { scopedKey, profileRegistryKey, parseProfiles } from './profiles.ts'
 import { isPlainObject } from './guards.ts'
+import { storageKeyAllowed } from '../server/storage-keys.mjs'
 const journalKey = 'code-reps:pending-writes:v1'
 const serverModeKey = 'code-reps:server-mode:v1'
 type Entries = Record<string, string | null>
@@ -8,7 +9,8 @@ type Environment = {
   request: (url: string, options?: RequestInit) => Promise<Response>
   onError: () => void
 }
-const keyAllowed = (key: string) => /^code-reps:[a-z0-9:-]+$/.test(key) && key.length < 160 && key !== journalKey && key !== serverModeKey
+// The pending-write journal and server-mode flag stay in this browser and never reach the server.
+export const keyAllowed = (key: string) => storageKeyAllowed(key) && key !== journalKey && key !== serverModeKey
 const validEntries = (value: unknown, nullable = false): value is Entries =>
   isPlainObject(value) && Object.entries(value).every(([key, entry]) => keyAllowed(key) && ((nullable && entry === null) || (typeof entry === 'string' && entry.length <= 1_000_000)))
 

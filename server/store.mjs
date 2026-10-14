@@ -3,8 +3,7 @@ import { existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 import { DatabaseSync, backup } from 'node:sqlite'
-
-const keyAllowed = (key) => typeof key === 'string' && /^code-reps:[a-z0-9:-]+$/.test(key) && key.length < 160
+import { storageKeyAllowed as keyAllowed } from './storage-keys.mjs'
 
 export function createStore(dataDir = process.env.CODE_REPS_DATA_DIR || join(homedir(), '.code-reps')) {
   mkdirSync(dataDir, { recursive: true, mode: 0o700 })
@@ -18,14 +17,6 @@ export function createStore(dataDir = process.env.CODE_REPS_DATA_DIR || join(hom
   const count = db.prepare('SELECT COUNT(*) AS count FROM entries')
 
   function entries() { return Object.fromEntries(read.all().map((row) => [row.key, row.value])) }
-  function set(key, value) {
-    if (!keyAllowed(key) || typeof value !== 'string' || value.length > 1_000_000) throw new Error('Invalid saved entry.')
-    put.run(key, value, new Date().toISOString())
-  }
-  function unset(key) {
-    if (!keyAllowed(key)) throw new Error('Invalid saved entry.')
-    remove.run(key)
-  }
   function migrate(candidate) {
     if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) throw new Error('Invalid migration data.')
     const pairs = Object.entries(candidate)
@@ -83,5 +74,5 @@ export function createStore(dataDir = process.env.CODE_REPS_DATA_DIR || join(hom
     }
     return closing
   }
-  return { entries, set, unset, migrate, applyEntries, makeBackup, close, existed, dbPath }
+  return { entries, migrate, applyEntries, makeBackup, close, existed, dbPath }
 }
