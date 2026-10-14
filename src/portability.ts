@@ -2,6 +2,7 @@ import { parseSessions } from './practice-sessions.ts'
 import type { SessionState } from './practice-sessions.ts'
 import { parseFluency } from './fluency.ts'
 import type { FluencyState } from './fluency.ts'
+import { isDifficulty } from './attempt-labels.ts'
 import { normalizeMistakes } from './mistakes.ts'
 import { isDateString, isPlainObject } from './guards.ts'
 export type PortableAttempt = {
@@ -62,7 +63,7 @@ function attempt(value: unknown): value is PortableAttempt {
     Number.isInteger(value.hintCount) &&
     Number(value.hintCount) >= 0 &&
     Number(value.hintCount) <= 100 &&
-    (value.difficulty === undefined || ['none', 'wording', 'approach', 'typescript', 'edge-cases'].includes(String(value.difficulty))) &&
+    (value.difficulty === undefined || isDifficulty(value.difficulty)) &&
     (value.confidence === undefined || ['need-practice', 'getting-there', 'confident'].includes(String(value.confidence))) &&
     (value.mistakes === undefined ||
       (Array.isArray(value.mistakes) &&

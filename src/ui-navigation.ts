@@ -13,6 +13,7 @@ const views = [
   'plan',
   'assessment',
   'mistakes',
+  'stuck',
   'projects',
   'interview',
 ] as const
@@ -42,6 +43,7 @@ const sectionAliases: Partial<Record<View, View>> = {
   sessions: 'history',
   notebook: 'history',
   mistakes: 'history',
+  stuck: 'history',
   learn: 'knowledge',
   skillmap: 'progress',
   plan: 'progress',

@@ -97,7 +97,7 @@ function usePracticeOverview(
 
 const repById = new Map(reps.map(item => [item.id, item]))
 // Pages the command palette can open, in its order. Pages not named here are labelled by their route.
-const commandPages: View[] = ['home', 'paths', 'catalog', 'learn', ...hubTabs, 'mistakes', 'progress', 'skillmap', 'history']
+const commandPages: View[] = ['home', 'paths', 'catalog', 'learn', ...hubTabs, 'mistakes', 'stuck', 'progress', 'skillmap', 'history']
 const commandPageLabels: Partial<Record<View, string>> = {
   home: 'Home: your trail',
   paths: 'all tracks',
@@ -105,6 +105,7 @@ const commandPageLabels: Partial<Record<View, string>> = {
   learn: 'quick lessons',
   plan: 'this week',
   skillmap: 'skill map',
+  stuck: 'stuck points',
 }
 const splitWidthKey = 'code-reps:split-width'
 const editorOptions = {

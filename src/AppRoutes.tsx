@@ -23,6 +23,7 @@ import { useSessionPreference } from './useSessionPreference'
 const PathsPage = lazyRoute(() => import('./PathsPage').then(module => module.PathsPage), 'The tracks')
 const ProgressPage = lazyRoute(() => import('./ProgressPage').then(module => module.ProgressPage), 'Progress')
 const MistakesPage = lazyRoute(() => import('./MistakesPage').then(module => module.MistakesPage), 'Mistakes')
+const StuckPage = lazyRoute(() => import('./StuckPage').then(module => module.StuckPage), 'Stuck points')
 const SkillMapPage = lazyRoute(() => import('./SkillMapPage').then(module => module.SkillMapPage), 'The skill map')
 const PracticeCatalog = lazyRoute(() => import('./PracticeCatalog').then(module => module.PracticeCatalog), 'The library')
 const QuickLessons = lazyRoute(() => import('./QuickLessons').then(module => module.default), 'The lessons', 'learn-main')
@@ -216,7 +217,13 @@ export function AppRoutes(props: Props) {
     case 'mistakes':
       return (
         <Suspense fallback={<RouteLoading title="Mistakes" status="Opening mistakes…" />}>
-          <MistakesPage history={history} now={now} onOpenRep={openRep} />
+          <MistakesPage history={history} now={now} onOpenRep={openRep} onOpenLesson={openLesson} />
+        </Suspense>
+      )
+    case 'stuck':
+      return (
+        <Suspense fallback={<RouteLoading title="Stuck points" status="Opening stuck points…" />}>
+          <StuckPage history={history} drafts={drafts} now={now} onOpenRep={openRep} onOpenLesson={openLesson} />
         </Suspense>
       )
     case 'progress': {

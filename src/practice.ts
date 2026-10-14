@@ -38,6 +38,8 @@ function difficultyReason(record: PortableRecord) {
     approach: 'You marked finding an approach as difficult.',
     typescript: 'You marked writing TypeScript as difficult.',
     'edge-cases': 'You marked edge cases as difficult.',
+    prerequisite: 'You marked a missing prerequisite.',
+    integration: 'You marked combining the pieces as difficult.',
   }
   return (
     reasons[record.difficulty ?? ''] ??

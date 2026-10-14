@@ -1,4 +1,4 @@
-import { confidenceLabels, difficultyLabels } from './attempt-labels.ts'
+import { confidenceLabels, isDifficulty } from './attempt-labels.ts'
 import type { Confidence, Difficulty } from './attempt-labels.ts'
 import type { RepSummary } from './catalog-index.ts'
 import type { LearnerStart } from './learning.ts'
@@ -60,7 +60,7 @@ export function readAttempt(rep: RepSummary): Attempt {
       code: typeof saved?.code === 'string' ? saved.code : peekRepContent(rep.id)?.rep.starter,
       explanation: typeof saved?.explanation === 'string' ? saved.explanation : '',
       hintCount: typeof saved?.hintCount === 'number' ? Math.min(rep.hintTotal, Math.max(0, saved.hintCount)) : 0,
-      difficulty: saved?.difficulty && saved.difficulty in difficultyLabels ? saved.difficulty : undefined,
+      difficulty: isDifficulty(saved?.difficulty) ? saved.difficulty : undefined,
       confidence: saved?.confidence && saved.confidence in confidenceLabels ? saved.confidence : undefined,
       mistakes: normalizeMistakes(saved?.mistakes),
       completedAt: typeof saved?.completedAt === 'string' ? saved.completedAt : undefined,

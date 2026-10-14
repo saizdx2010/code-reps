@@ -20,6 +20,7 @@ test('exercise bookmarks, library, and every product page round-trip', () => {
     'notebook',
     'assessment',
     'mistakes',
+    'stuck',
     'plan',
   ]) {
     assert.deepEqual(readRoute(routeHash({ view }), ['one']), { view })
@@ -53,7 +54,14 @@ test('every tool has one navigation home while legacy lessons and exercises stay
     ['Skills', 'Journal'],
   )
   // Old routes resolve and highlight the page that now holds them.
-  const homes = { mistakes: 'history', skillmap: 'progress', plan: 'progress', assessment: 'progress', interview: 'projects' }
+  const homes = {
+    mistakes: 'history',
+    stuck: 'history',
+    skillmap: 'progress',
+    plan: 'progress',
+    assessment: 'progress',
+    interview: 'projects',
+  }
   for (const [view, home] of Object.entries(homes)) assert.equal(sectionView(view), home)
   assert.equal(navigationArea('interview'), 'library')
   assert.equal(navigationArea('mistakes'), 'progress')

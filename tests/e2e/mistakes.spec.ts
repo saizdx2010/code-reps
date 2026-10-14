@@ -83,3 +83,31 @@ test('finishing without any tag still works', async ({ page }) => {
   await page.goto('/#/mistakes')
   await expect(page.getByText('No mistakes tagged yet')).toBeVisible()
 })
+
+test('a stuck point shows on Stuck points with a focus, and a mistake links to a lesson', async ({ page }) => {
+  await page.goto('/#/stuck')
+  await expect(page.getByRole('heading', { level: 1, name: 'Stuck points' })).toBeVisible()
+  await expect(page.getByText('No stuck points yet')).toBeVisible()
+  await prepareReview(page)
+  await chooseSegment(page, 'What was hardest?', 'Something I had not learned yet')
+  await page.getByRole('group', { name: 'Mistakes you made' }).getByRole('button', { name: 'Off-by-one', exact: true }).click()
+  await page.getByRole('button', { name: 'Complete rep', exact: true }).click()
+  await expect(page.getByText('Your attempt is saved in the Journal.', { exact: true })).toBeVisible()
+
+  await page.goto('/#/stuck')
+  await expect(page.getByRole('group', { name: 'Journal' }).getByRole('button', { name: 'Stuck points' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  const focus = page.getByRole('region', { name: /./ }).filter({ has: page.getByText('Where to focus next') })
+  await expect(focus).toContainText('1 recent stuck point')
+  await expect(focus.getByRole('button', { name: /Return to/ })).toBeVisible()
+  await page.getByText('Something I had not learned yet', { exact: true }).click()
+  await expect(page.getByRole('button', { name: /Most Frequent Number/i }).first()).toBeVisible()
+
+  await page.goto('/#/mistakes')
+  await page.getByText('Off-by-one', { exact: true }).click()
+  await page.getByRole('button', { name: 'Lesson: Making decisions and repeating work' }).click()
+  await expect(page).toHaveURL(/#\/knowledge/)
+  await expect(page.getByRole('heading', { name: 'Making decisions and repeating work' }).first()).toBeVisible()
+})

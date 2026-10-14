@@ -279,3 +279,44 @@ button[aria-expanded='true'] > span > .icon-chevron {
     transition: none;
   }
 }
+
+/* Journal: stuck points and mistake follow-ups. */
+.stuck-focus {
+  display: grid;
+  gap: 8px;
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid var(--feature-border);
+  border-radius: var(--radius);
+  background: var(--feature);
+  color: var(--feature-text);
+}
+.stuck-focus .home-label {
+  color: var(--feature-muted);
+  font-weight: 650;
+}
+.stuck-focus h2 {
+  margin: 0;
+  font-size: var(--type-feature);
+}
+.stuck-focus p {
+  margin: 0;
+  color: var(--feature-muted);
+  max-width: 70ch;
+}
+.stuck-actions,
+.mistake-lessons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.stuck-section-title {
+  margin: 24px 0 8px;
+  font-size: var(--type-section);
+}
+.stuck-topics {
+  padding: 0;
+}
+.mistake-lessons {
+  margin-left: auto;
+}
