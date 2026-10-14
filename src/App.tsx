@@ -40,6 +40,7 @@ import { BriefSection, ExplainSection, PlanSection, RepContentNotice, ReviewSect
 import type { UpdateAttempt } from './PracticeSections'
 import { ChecksDrawer, WorkspaceToolbar } from './ChecksDrawer'
 import { practiceSteps, sectionStep, stepSection } from './practice-steps'
+import { formatWarmup, parseWarmup, pickWarmup, warmupPosition } from './warmup'
 
 const repIds = reps.map(rep => rep.id)
 const FirstRepWalkthrough = lazy(() =>
@@ -376,11 +377,36 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
       ? undefined
       : reps.find(item => item.id === nextRepInPath(fluency.state.goal.pathId, repId, id => completedPathIds.has(id) || !recallReady(id)))
   const completionNext = pathNextRep ? { repId: pathNextRep.id, mode: 'start' } : recommendation
-  const completionLabel = pathNextRep
-    ? `Next rep: ${pathNextRep.title}`
-    : recommendedRep && recommendation
-      ? `${actionLabel(recommendation.mode)}: ${recommendedRep.title}`
-      : 'Return to your trail'
+  // A running warm-up takes over the next action until its last rep, then hands back to the trail.
+  const [warmup, setWarmup] = useSessionPreference<string>('warmup', '')
+  const warmupAt = warmupPosition(parseWarmup(warmup), repId)
+  const completionLabel = warmupAt
+    ? warmupAt.next
+      ? `Warm-up ${warmupAt.index + 2} of ${warmupAt.total}: ${repById.get(warmupAt.next)?.title}`
+      : 'Finish warm-up'
+    : pathNextRep
+      ? `Next rep: ${pathNextRep.title}`
+      : recommendedRep && recommendation
+        ? `${actionLabel(recommendation.mode)}: ${recommendedRep.title}`
+        : 'Return to your trail'
+  function continueAfterCompletion() {
+    if (warmupAt?.next) return openReview(warmupAt.next)
+    if (warmupAt) {
+      setWarmup('')
+      return setView('home')
+    }
+    if (completionNext) openPracticeAction(completionNext)
+    else setView('home')
+  }
+  const warmupChoices = useMemo(
+    () => pickWarmup(history, journeyStates, id => attemptStatus(id, drafts[id]) === 'In progress', now),
+    [history, journeyStates, drafts, now],
+  )
+  function startWarmup() {
+    if (!warmupChoices.length) return
+    setWarmup(formatWarmup(warmupChoices))
+    openReview(warmupChoices[0])
+  }
   const journalTabs = <JournalTabs view={view} onNavigate={setView} />
   const notes = repNotes(full?.note ?? '')
   const focusEditor = () => {
@@ -569,7 +595,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
               onShowMissing={showMissingStep}
               badgeSlot={setBadgeSlot}
               completionLabel={completionLabel}
-              onCompletionNext={() => (completionNext ? openPracticeAction(completionNext) : setView('home'))}
+              onCompletionNext={continueAfterCompletion}
               onDone={() => setView('home')}
               onFreshAttempt={startNewAttempt}
               history={history}
@@ -704,6 +730,8 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
           openReview={openReview}
           openLesson={openKnowledge}
           openPracticeAction={openPracticeAction}
+          warmup={warmupChoices}
+          startWarmup={startWarmup}
           onExport={exportData}
           onImport={file => {
             void importData(file)

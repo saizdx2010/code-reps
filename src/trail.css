@@ -441,3 +441,20 @@
   background: var(--feature);
   color: var(--feature-text);
 }
+
+/* A quiet daily option beside the next action: a short warm-up of reps finished before. */
+.trail-aside .warmup-panel {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.warmup-panel h2 {
+  margin: 0 0 6px;
+  font-size: var(--type-card);
+}
+.warmup-panel p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 14px;
+}

@@ -66,6 +66,9 @@ type Props = {
   openReview: (id: string) => void
   openLesson: (id: string) => void
   openPracticeAction: (action: Action) => void
+  /** Reps a warm-up would start with now, least recently practiced first. */
+  warmup: string[]
+  startWarmup: () => void
   onExport: () => void
   onImport: (file: File) => void
   transferMessage: string
@@ -173,6 +176,8 @@ export function AppRoutes(props: Props) {
           evidence={trailEvidence}
           openRep={openRep}
           openLesson={openLesson}
+          warmup={props.warmup}
+          startWarmup={props.startWarmup}
         />
       )
     case 'catalog':

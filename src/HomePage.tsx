@@ -25,6 +25,8 @@ type Props = {
   evidence: (repId: string) => string
   openRep: (id: string) => void
   openLesson: (skillId: string) => void
+  warmup: string[]
+  startWarmup: () => void
 }
 
 const modeLabel = (mode?: string) => (mode === 'review' ? 'Ready to review' : mode === 'resume' ? 'Your saved draft' : 'Next practice')
@@ -32,7 +34,7 @@ const modeLabel = (mode?: string) => (mode === 'review' ? 'Ready to review' : mo
 /** Home is the learner's trail: the goal drawn as connected stages, with the next useful action beside it. */
 export function HomePage(props: Props) {
   const { walkthroughSeen, launchWalkthrough, goalPathId, onPath, practicePlan, repStatus, openPracticeAction, actionLabel } = props
-  const { onProgress, onLibrary, trail, evidence, openRep, openLesson } = props
+  const { onProgress, onLibrary, trail, evidence, openRep, openLesson, warmup, startWarmup } = props
   const goal = paths.find(path => path.id === goalPathId) ?? paths[0]
   const recommendation = practicePlan.next
   const recommendedRep = recommendation && repSummaryById.get(recommendation.repId)
@@ -121,6 +123,18 @@ export function HomePage(props: Props) {
                 </button>
               )}
             </p>
+          )}
+          {warmup.length >= 2 && (
+            <section className="warmup-panel" aria-labelledby="warmup-heading">
+              <h2 id="warmup-heading">Quick warm-up</h2>
+              <p>
+                {warmup.length} short reps you finished before, least recent first: {warmup.map(repTitle).join(', ')}. Each starts from the
+                starter, and finishing one counts like any other attempt.
+              </p>
+              <Button onMouseEnter={preloadEditor} onFocus={preloadEditor} onClick={startWarmup}>
+                Start warm-up
+              </Button>
+            </section>
           )}
           <nav className="trail-links" aria-label="Progress">
             <button type="button" className="text-button" onClick={onProgress}>
