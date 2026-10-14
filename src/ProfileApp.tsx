@@ -1,6 +1,7 @@
 import { Button } from './Button'
 import { Input, Select } from './Input'
 import { parseProfileBackup } from './profile-backup'
+import { backupFileText } from './portability'
 import { repIndex as reps } from './catalog-index'
 import { useRef, useState } from 'react'
 import App from './App'
@@ -16,7 +17,8 @@ function cachedEntries() {
   return entries
 }
 function download(value: unknown, name: string) {
-  const url = URL.createObjectURL(new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' }))
+  // Throws instead of writing a file that import would reject; the export notice shows why.
+  const url = URL.createObjectURL(new Blob([backupFileText(value)], { type: 'application/json' }))
   const link = document.createElement('a'); link.href=url; link.download=name; link.click(); setTimeout(()=>URL.revokeObjectURL(url),1000)
 }
 export default function ProfileApp() {

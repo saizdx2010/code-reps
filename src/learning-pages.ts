@@ -1,4 +1,9 @@
-export type HubTab = 'knowledge' | 'assessment' | 'plan' | 'notebook' | 'projects' | 'interview'
+import type { View } from './ui-navigation.ts'
+
+/** Pages that open inside the learning hub, in the order the command palette lists them. */
+export const hubTabs = ['knowledge', 'notebook', 'plan', 'projects', 'interview', 'assessment'] as const satisfies readonly View[]
+export type HubTab = (typeof hubTabs)[number]
+export const isHubTab = (view: View): view is HubTab => (hubTabs as readonly View[]).includes(view)
 
 /** Shared by compact loaded and pending PageHeader surfaces. */
 export const learningPageTitles: Record<HubTab, { title: string; description: string }> = {

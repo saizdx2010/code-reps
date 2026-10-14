@@ -29,6 +29,26 @@ export type Backup = {
   learning?: FluencyState
 }
 
+/**
+ * The largest backup or profile file, in characters, that import accepts. Export uses the same limit, so a file it
+ * writes can always be read back. A year of daily practice with reviews stays at a few million characters.
+ */
+export const backupTextLimit = 20_000_000
+export const backupLimitLabel = '20 MB'
+export const backupTooLargeMessage =
+  `This backup is larger than the ${backupLimitLabel} Code Reps can restore, so it was not downloaded. Your saved work is unchanged.`
+
+export class BackupTooLargeError extends Error {
+  constructor() { super(backupTooLargeMessage) }
+}
+
+/** Serializes a backup or profile export, refusing one that import would reject as too large. */
+export function backupFileText(value: unknown): string {
+  const text = JSON.stringify(value, null, 2)
+  if (text.length > backupTextLimit) throw new BackupTooLargeError()
+  return text
+}
+
 function attempt(value: unknown): value is PortableAttempt {
   if (!isPlainObject(value)) return false
   return typeof value.plan === 'string' && value.plan.length <= 100_000 &&
@@ -37,7 +57,8 @@ function attempt(value: unknown): value is PortableAttempt {
     Number.isInteger(value.hintCount) && Number(value.hintCount) >= 0 && Number(value.hintCount) <= 100 &&
     (value.difficulty === undefined || ['none', 'wording', 'approach', 'typescript', 'edge-cases'].includes(String(value.difficulty))) &&
     (value.confidence === undefined || ['need-practice', 'getting-there', 'confident'].includes(String(value.confidence))) &&
-    (value.mistakes === undefined || (Array.isArray(value.mistakes) && value.mistakes.length <= 50 && value.mistakes.every(tag => typeof tag === 'string' && tag.length <= 80))) &&
+    (value.mistakes === undefined || (Array.isArray(value.mistakes) && value.mistakes.length <= 50 &&
+      value.mistakes.every(tag => typeof tag === 'string' && tag.length <= 80))) &&
     (value.completedAt === undefined || isDateString(value.completedAt))
 }
 
@@ -50,7 +71,7 @@ function withKnownMistakes<T extends PortableAttempt>(value: T): T {
 }
 
 export function parseBackup(text: string, knownRepIds: Set<string>): Backup {
-  if (text.length > 2_000_000) throw new Error('This backup is too large to import.')
+  if (text.length > backupTextLimit) throw new Error('This backup is too large to import.')
   let raw: unknown
   try { raw = JSON.parse(text) } catch { throw new Error('This file is not valid JSON.') }
   if (!isPlainObject(raw) || raw.format !== 'code-reps-backup' || raw.version !== 1 ||
@@ -78,7 +99,9 @@ export function parseBackup(text: string, knownRepIds: Set<string>): Backup {
   }
   return { format: 'code-reps-backup', version: 1,
     exportedAt: typeof raw.exportedAt === 'string' ? raw.exportedAt : '',
-    learnerStart: raw.learnerStart, history, drafts, ...(raw.sessions === undefined ? {} : { sessions: parseSessions(raw.sessions, knownRepIds) }), ...(raw.learning === undefined ? {} : { learning: parseFluency(raw.learning) }) }
+    learnerStart: raw.learnerStart, history, drafts,
+    ...(raw.sessions === undefined ? {} : { sessions: parseSessions(raw.sessions, knownRepIds) }),
+    ...(raw.learning === undefined ? {} : { learning: parseFluency(raw.learning) }) }
 }
 
 export function mergeHistory<T extends { id: string }>(current: T[], imported: T[]): T[] {
