@@ -35,7 +35,9 @@ export function LearningKnowledge({ state, update, history, openRep, skillId, on
   const [bookmarkFilter, setBookmarkFilter] = useSessionPreference<'all' | 'bookmarked'>('knowledge-bookmarks', 'all')
   const bookmarked = bookmarkFilter === 'bookmarked'
   const [topic, setTopic] = useSessionPreference<string>('knowledge-topic', '')
-  const [indexOpen, setIndexOpen] = useSessionPreference<'open' | 'closed'>('lesson-index', matchMedia('(min-width: 901px)').matches ? 'open' : 'closed')
+  const [indexOpen, setIndexOpen] = useSessionPreference<'open' | 'closed'>(
+    'lesson-index', matchMedia('(min-width: 901px)').matches ? 'open' : 'closed',
+  )
   const matching = useMemo(() => {
     const needle = query.toLowerCase()
     return skills.filter(s => (!bookmarked || state.bookmarks.includes(s.id)) && skillSearchText(s).includes(needle))

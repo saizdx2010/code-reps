@@ -7,7 +7,9 @@ import type { PortableRecord } from './portability'
 import { JournalTabs } from './Journal'
 import { goToView } from './ui-navigation'
 
-const trendText: Record<MistakeTrend, string> = { new: 'New recently', more: 'More often recently', fewer: 'Less often recently', same: 'About the same', none: 'None recently' }
+const trendText: Record<MistakeTrend, string> = {
+  new: 'New recently', more: 'More often recently', fewer: 'Less often recently', same: 'About the same', none: 'None recently',
+}
 
 export function MistakesPage({ history, now, onOpenRep }: { history: PortableRecord[]; now: number; onOpenRep: (id: string) => void }) {
   const groups = summarizeMistakes(history, now)
@@ -26,11 +28,11 @@ export function MistakesPage({ history, now, onOpenRep }: { history: PortableRec
       When you review a finished rep, you can tag mistakes you noticed. They will collect here.
     </EmptyState> : <section aria-label="Mistake tags">
       {groups.map(group => <ListGroup key={group.id} title={group.label} count={group.total}>
-        <ListRow title={`${group.total} ${plural(group.total, 'time')} in total`} meta={`Last ${trendWindowDays} days: ${group.recent}. Before that: ${group.earlier}.`} status={<StatusChip
-          tone={group.trend === 'fewer' ? 'success' : 'neutral'}
-        >
-          {trendText[group.trend]}
-        </StatusChip>} />
+        <ListRow
+          title={`${group.total} ${plural(group.total, 'time')} in total`}
+          meta={`Last ${trendWindowDays} days: ${group.recent}. Before that: ${group.earlier}.`}
+          status={<StatusChip tone={group.trend === 'fewer' ? 'success' : 'neutral'}>{trendText[group.trend]}</StatusChip>}
+        />
         {group.occurrences.map(item => <ListRow
           key={item.attemptId} title={repTitle(item.repId)} meta={`Attempt on ${formatDate(item.completedAt)}`}
           onOpen={() => onOpenRep(item.repId)}

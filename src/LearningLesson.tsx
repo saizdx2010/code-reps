@@ -18,7 +18,8 @@ import { repTitle } from './rep-index.ts'
 import { useSessionPreference } from './useSessionPreference'
 
 const defaultReview = (): SelfReview => ({
-  understanding: 'not-yet', approach: 'not-yet', implementation: 'not-yet', explanation: 'not-yet', evidence: '', updatedAt: new Date().toISOString(),
+  understanding: 'not-yet', approach: 'not-yet', implementation: 'not-yet', explanation: 'not-yet',
+  evidence: '', updatedAt: new Date().toISOString(),
 })
 const sectionLabels: Record<string, string> = { read: 'Read', predict: 'Predict', practise: 'Practice', review: 'Review' }
 
@@ -125,7 +126,8 @@ function LessonQuestions({ skill, state, update }: { skill: Skill; state: Fluenc
     function check() {
       const correct = question.completion ? response.trim() === question.options[question.answer] : choice === question.answer
       update({ ...state, answers: { ...state.answers, [id]: {
-        choice: question.completion ? question.answer : choice!, correct, answeredAt: new Date().toISOString(), ...(question.completion ? { response } : {}),
+        choice: question.completion ? question.answer : choice!, correct, answeredAt: new Date().toISOString(),
+        ...(question.completion ? { response } : {}),
       } } })
     }
     return <fieldset className="lesson-question" key={id}>
@@ -133,7 +135,8 @@ function LessonQuestions({ skill, state, update }: { skill: Skill; state: Fluenc
       {question.code && <pre><code>{question.code}</code></pre>}
       {question.completion
         ? <label>Missing code<Input
-          type="text" value={response} maxLength={300} onChange={e => setResponses({ ...responses, [id]: e.target.value })} spellCheck={false}
+          type="text" value={response} maxLength={300} spellCheck={false}
+          onChange={e => setResponses({ ...responses, [id]: e.target.value })}
         /></label>
         : question.options.map((option, i) => <label key={option}>
           <Input type="radio" name={id} checked={choice === i} onChange={() => setChoices({ ...choices, [id]: i })} />

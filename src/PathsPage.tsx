@@ -30,34 +30,50 @@ type Props = {
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /** All tracks: Foundations first, then the tracks that build on it, and the selected track's trail. */
-export function PathsPage({ goalPathId, setGoalPath, goalError, pathId, setPathId, pathPicker, setPathPicker, learnerStart, startingPoint, completedPathIds, trail, evidence, openRep, openLesson }: Props) {
+export function PathsPage(props: Props) {
+  const { goalPathId, setGoalPath, goalError, pathId, setPathId, pathPicker, setPathPicker, learnerStart, startingPoint } = props
+  const { completedPathIds, trail, evidence, openRep, openLesson } = props
   const selectedPath = paths.find((path) => path.id === pathId) ?? paths[0]
   const refresher = learnerStart === 'returning' && selectedPath.id === foundationsPathId
   const pathIntroduction = refresher
-    ? { ...selectedPath.introduction, title: 'A quick TypeScript refresher', next: 'You can revisit the language basics above whenever you need them. Start with a guided array rep, then solve a related task on your own.' }
+    ? {
+      ...selectedPath.introduction,
+      title: 'A quick TypeScript refresher',
+      next: 'You can revisit the language basics above whenever you need them. '
+        + 'Start with a guided array rep, then solve a related task on your own.',
+    }
     : selectedPath.introduction
   const firstRepId = trail.stages.flatMap(stage => stage.nodes).find(node => node.kind === 'rep')?.id.slice(4)
-  const count = (id: string) => { const ids = [...new Set(paths.find(path => path.id === id)!.stages.flatMap(stage => stage.repIds))]; return `${ids.filter(item => completedPathIds.has(item)).length} of ${ids.length} reps completed` }
+  const count = (id: string) => {
+    const ids = [...new Set(paths.find(path => path.id === id)!.stages.flatMap(stage => stage.repIds))]
+    return `${ids.filter(item => completedPathIds.has(item)).length} of ${ids.length} reps completed`
+  }
   function choose(id: PathId) {
     setPathId(id)
     if (matchMedia('(max-width: 900px)').matches) setPathPicker('closed')
-    requestAnimationFrame(() => { const heading = document.getElementById('path-title'); heading?.scrollIntoView({ block: 'center', behavior: reduceMotion() ? 'instant' : 'smooth' }); heading?.focus({ preventScroll: true }) })
+    requestAnimationFrame(() => {
+      const heading = document.getElementById('path-title')
+      heading?.scrollIntoView({ block: 'center', behavior: reduceMotion() ? 'instant' : 'smooth' })
+      heading?.focus({ preventScroll: true })
+    })
   }
-  const choice = (id: PathId, wide = false) => { const path = paths.find(item => item.id === id)!; return <button
-    key={id} type="button" className={wide ? 'track-root' : undefined} aria-pressed={pathId === id} onClick={() => choose(id)}
-  >
-    <strong>{path.title}</strong>
-    <span>{path.description}</span>
-    <small>{count(id)}{goalPathId === id ? ' · Your goal' : ''}</small>
-  </button> }
+  const choice = (id: PathId, wide = false) => {
+    const path = paths.find(item => item.id === id)!
+    return <button key={id} type="button" className={wide ? 'track-root' : undefined} aria-pressed={pathId === id} onClick={() => choose(id)}>
+      <strong>{path.title}</strong>
+      <span>{path.description}</span>
+      <small>{count(id)}{goalPathId === id ? ' · Your goal' : ''}</small>
+    </button>
+  }
   return <main className="paths-main">
-    <PageHeader title="Choose a track." description="Every track builds on Foundations. Follow one as your goal or browse any of them freely." actions={<label
-      className="path-select"
-    >Choose track
-      <Select value={selectedPath.id} onChange={event => setPathId(event.target.value as PathId)}>
-        {paths.map(path => <option key={path.id} value={path.id}>{path.title}</option>)}
-      </Select>
-    </label>} />
+    <PageHeader
+      title="Choose a track." description="Every track builds on Foundations. Follow one as your goal or browse any of them freely."
+      actions={<label className="path-select">Choose track
+        <Select value={selectedPath.id} onChange={event => setPathId(event.target.value as PathId)}>
+          {paths.map(path => <option key={path.id} value={path.id}>{path.title}</option>)}
+        </Select>
+      </label>}
+    />
     {startingPoint && <details className="starting-point-settings">
       <summary>
         Starting as: <strong>
@@ -90,9 +106,7 @@ export function PathsPage({ goalPathId, setGoalPath, goalError, pathId, setPathI
           <p>
             {goalPathId === selectedPath.id ? 'Your current learning goal.' : 'Browsing this track does not change your learning goal.'}
           </p>
-          <button
-            type="button" className="text-button" disabled={goalPathId === selectedPath.id} onClick={() => setGoalPath(selectedPath.id)}
-          >
+          <button type="button" className="text-button" disabled={goalPathId === selectedPath.id} onClick={() => setGoalPath(selectedPath.id)}>
             Use this as my learning goal
           </button>
           {goalError && <p role="alert">{goalError}</p>}
@@ -107,8 +121,8 @@ export function PathsPage({ goalPathId, setGoalPath, goalError, pathId, setPathI
       </div>
     </section>
     <div
-      className="path-progress" role="progressbar" aria-label="Track progress" aria-valuenow={trail.done} aria-valuemin={0}
-      aria-valuemax={trail.total}
+      className="path-progress" role="progressbar" aria-label="Track progress"
+      aria-valuenow={trail.done} aria-valuemin={0} aria-valuemax={trail.total}
     >
       <span style={{ width: `${trail.total ? trail.done / trail.total * 100 : 0}%` }} />
     </div>

@@ -27,14 +27,31 @@ type Props = {
 
 const pathRepIds = (id: string): string[] => paths.find(path => path.id === id)?.stages.flatMap(stage => [...stage.repIds]) ?? []
 
-export function PracticeCatalog({ filters, onFilter, clearFilters, categories, visibleReps, dueIds, repStatus, openRep, goalPathId = foundationsPathId }: Props) {
-  const [filterPanel, setFilterPanel] = useSessionPreference<'open' | 'closed'>('catalog-filters', matchMedia('(min-width: 901px)').matches ? 'open' : 'closed')
+/** Session-stored group names; a missing or invalid preference starts every group collapsed. */
+function parseOpenGroups(value: string): string[] {
+  try {
+    const saved: unknown = JSON.parse(value)
+    if (Array.isArray(saved)) return saved.filter((item): item is string => typeof item === 'string')
+  } catch { /* Start collapsed if the session preference is unavailable. */ }
+  return []
+}
+
+export function PracticeCatalog(props: Props) {
+  const { filters, onFilter, clearFilters, categories, visibleReps, dueIds, repStatus, openRep, goalPathId = foundationsPathId } = props
+  const [filterPanel, setFilterPanel] = useSessionPreference<'open' | 'closed'>(
+    'catalog-filters', matchMedia('(min-width: 901px)').matches ? 'open' : 'closed',
+  )
   const activeFilters = [filters.skill, filters.format, filters.status].filter(Boolean).length
   const [openGroups, setOpenGroups] = useSessionPreference<string>('catalog-groups', '[]')
-  let expanded: string[] = []
-  try { const saved: unknown = JSON.parse(openGroups); if (Array.isArray(saved)) expanded = saved.filter((value): value is string => typeof value === 'string') } catch { /* Start collapsed if the session preference is unavailable. */ }
+  const expanded = parseOpenGroups(openGroups)
   const filtering = Boolean(filters.query.trim() || activeFilters)
-  const startHere = startHereReps(visibleReps, { pathRepIds: pathRepIds(goalPathId), isDone: item => repStatus(item) === 'Completed', level: repLevel })
+  const startHere = startHereReps(visibleReps, {
+    pathRepIds: pathRepIds(goalPathId), isDone: item => repStatus(item) === 'Completed', level: repLevel,
+  })
+  function toggleGroup(category: string, open: boolean) {
+    if (filtering) return
+    setOpenGroups(JSON.stringify(open ? [...new Set([...expanded, category])] : expanded.filter(value => value !== category)))
+  }
   const renderRow = (item: RepSummary) => <ListRow key={item.id} title={item.title} meta={<>
     {formatLabels[item.format ?? 'algorithm']}
     {dueIds.has(item.id) && ' · Review due'}
@@ -90,7 +107,7 @@ export function PracticeCatalog({ filters, onFilter, clearFilters, categories, v
       const items = visibleReps.filter(item => catalogTopic(item) === category)
       return items.length > 0 && <ListGroup
         key={category} title={category} count={items.length} open={filtering || expanded.includes(category)}
-        onToggle={open => { if (!filtering) setOpenGroups(JSON.stringify(open ? [...new Set([...expanded, category])] : expanded.filter(value => value !== category))) }}
+        onToggle={open => toggleGroup(category, open)}
       >
         {items.map(renderRow)}
       </ListGroup>

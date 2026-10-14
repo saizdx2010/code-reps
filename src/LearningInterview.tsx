@@ -22,9 +22,12 @@ type Props = {
 export function LearningInterview({ state, update, openRep, reviewRep, minutes, setMinutes }: Props) {
   const [roundRep, setRoundRep] = useSessionPreference<string>('interview-focus', 'interview-frontend')
   const currentRound = state.rounds.find(r => !r.endedAt)
-  const editRound = (id: string, change: Partial<Round>) => update({ ...state, rounds: state.rounds.map(r => r.id === id ? { ...r, ...change } : r) })
+  const editRound = (id: string, change: Partial<Round>) => update({
+    ...state, rounds: state.rounds.map(r => r.id === id ? { ...r, ...change } : r),
+  })
   function startRound() {
-    update({ ...state, rounds: [{ id: crypto.randomUUID(), repId: roundRep, minutes, startedAt: new Date().toISOString(), clarification: '', debrief: '' }, ...state.rounds] })
+    const round = { id: crypto.randomUUID(), repId: roundRep, minutes, startedAt: new Date().toISOString(), clarification: '', debrief: '' }
+    update({ ...state, rounds: [round, ...state.rounds] })
     reviewRep(roundRep)
   }
   return <>
@@ -52,7 +55,8 @@ export function LearningInterview({ state, update, openRep, reviewRep, minutes, 
         : <>
           <p><strong>{repTitle(currentRound.repId)}</strong> · <RoundRemaining round={currentRound} /> minutes remaining</p>
           <label>Clarifications and assumptions<Textarea
-            rows={3} maxLength={20_000} value={currentRound.clarification} onChange={e => editRound(currentRound.id, { clarification: e.target.value })}
+            rows={3} maxLength={20_000} value={currentRound.clarification}
+            onChange={e => editRound(currentRound.id, { clarification: e.target.value })}
           /></label>
           <div className="hub-actions">
             <Button variant="primary" type="button" onClick={() => openRep(currentRound.repId)}>Continue coding</Button>

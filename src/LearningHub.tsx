@@ -35,19 +35,24 @@ type Props = {
 
 export function LearningHub(props: Props) {
   useEffect(() => {
-    // Restore the page heading after a focused loading placeholder is replaced, but only after in-app navigation; a page load keeps focus at the top.
-    if (screenNavigated() && document.activeElement === document.body) document.querySelector<HTMLElement>('.learning-hub h1')?.focus({ preventScroll: true })
+    // Restore the page heading after a focused loading placeholder is replaced, but only after in-app navigation;
+    // a page load keeps focus at the top.
+    if (screenNavigated() && document.activeElement === document.body) {
+      document.querySelector<HTMLElement>('.learning-hub h1')?.focus({ preventScroll: true })
+    }
   }, [])
   const { tab, setTab, state, update, history, openRep, reviewRep, onSkill } = props
   const [interviewMinutes, setInterviewMinutes] = useState(30)
   return <main className="learning-hub">
     <PageHeader
-      eyebrow={tab === 'notebook' ? 'Journal' : undefined} title={learningPageTitles[tab].title} description={learningPageTitles[tab].description}
+      eyebrow={tab === 'notebook' ? 'Journal' : undefined}
+      title={learningPageTitles[tab].title} description={learningPageTitles[tab].description}
       actions={tab === 'notebook' ? props.journalTabs : undefined}
     />
     {props.error && <p role="alert">{props.error}</p>}
     {tab === 'knowledge' && <LearningKnowledge
-      state={state} update={update} history={history} openRep={openRep} skillId={props.skillId} onSkill={onSkill} onQuickLessons={props.onQuickLessons}
+      state={state} update={update} history={history} openRep={openRep}
+      skillId={props.skillId} onSkill={onSkill} onQuickLessons={props.onQuickLessons}
     />}
     {tab === 'assessment' && <LearningAssessment
       state={state} update={update} history={history} reviewRep={reviewRep} onReviewSkill={id => { onSkill(id); setTab('knowledge') }}

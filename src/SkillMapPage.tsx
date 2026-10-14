@@ -19,12 +19,16 @@ type Props = {
   reviewRep: (id: string) => void
 }
 
-const tones: Record<SkillState, ChipTone> = { untouched: 'neutral', practiced: 'progress', independent: 'progress', retained: 'success', due: 'attention' }
+const tones: Record<SkillState, ChipTone> = {
+  untouched: 'neutral', practiced: 'progress', independent: 'progress', retained: 'success', due: 'attention',
+}
 const markers = { untouched: 'circle', practiced: 'code', independent: 'check', retained: 'flag', due: 'repeat' } as const
 const order: SkillState[] = ['untouched', 'practiced', 'independent', 'retained', 'due']
 
 function detail(node: SkillNode) {
-  if (node.state === 'independent') return node.recallAt ? `Fresh recall ready ${formatDate(node.recallAt)}.` : 'Fresh recall comes after a break.'
+  if (node.state === 'independent') {
+    return node.recallAt ? `Fresh recall ready ${formatDate(node.recallAt)}.` : 'Fresh recall comes after a break.'
+  }
   if (node.state === 'retained') return 'Fresh recall is recorded.'
   return node.repId ? `Next: ${repTitle(node.repId)}.` : ''
 }
@@ -35,14 +39,17 @@ export function SkillMapPage({ goalPathId, progress, openRep, reviewRep }: Props
   const path = paths.find(item => item.id === pathId) ?? paths[0]
   const map = useMemo(() => buildSkillMap(path.id, progress), [path.id, progress])
   return <main className="skill-map-main">
-    <PageHeader eyebrow="Skills" title="Skill map." description="Every skill in a track, shown by the practice evidence recorded so far." actions={<><SkillsSwitch
-      view="skillmap"
+    <PageHeader
+      eyebrow="Skills" title="Skill map." description="Every skill in a track, shown by the practice evidence recorded so far."
+      actions={<>
+        <SkillsSwitch view="skillmap" />
+        <label className="path-select">Track
+          <Select value={path.id} onChange={event => setPathId(event.target.value)}>
+            {paths.map(item => <option key={item.id} value={item.id}>{item.title}{item.id === goalPathId ? ' (your goal)' : ''}</option>)}
+          </Select>
+        </label>
+      </>}
     />
-      <label className="path-select">Track
-      <Select value={path.id} onChange={event => setPathId(event.target.value)}>
-        {paths.map(item => <option key={item.id} value={item.id}>{item.title}{item.id === goalPathId ? ' (your goal)' : ''}</option>)}
-      </Select>
-    </label></>} />
     <InfoNote label="What this map shows">
       <p>
         Each state describes recorded practice evidence, not mastery. Practiced means a guided rep is completed, even with hints.

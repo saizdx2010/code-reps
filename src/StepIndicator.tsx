@@ -1,6 +1,10 @@
 import { useLayoutEffect, useRef } from 'react'
 
-/** Follows the real active button without replacing it or changing its focus behavior. It measures both axes, so the same indicator serves the horizontal bar, the vertical desktop rail, and segmented switches. It glides only when the selection changes; first placement and layout resizes snap into place. */
+/**
+ * Follows the real active button without replacing it or changing its focus behavior. It measures both axes,
+ * so the same indicator serves the horizontal bar, the vertical desktop rail, and segmented switches.
+ * It glides only when the selection changes; first placement and layout resizes snap into place.
+ */
 export function StepIndicator({ active, selector = 'button[aria-current]' }: { active: string; selector?: string }) {
   const indicator = useRef<HTMLSpanElement>(null)
   const placed = useRef(false)
@@ -16,7 +20,9 @@ export function StepIndicator({ active, selector = 'button[aria-current]' }: { a
       if (!glide) node.style.transition = 'none'
       node.style.width = `${button.width}px`
       node.style.height = `${button.height}px`
-      node.style.transform = `translate(${button.left - parent.left - container.clientLeft + container.scrollLeft}px, ${button.top - parent.top - container.clientTop + container.scrollTop}px)`
+      const x = button.left - parent.left - container.clientLeft + container.scrollLeft
+      const y = button.top - parent.top - container.clientTop + container.scrollTop
+      node.style.transform = `translate(${x}px, ${y}px)`
       if (!glide) {
         void node.offsetWidth
         node.style.transition = ''

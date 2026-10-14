@@ -19,7 +19,8 @@ type Props = {
 /** The optional self-assessment: four short tasks, then the evidence gathered for every skill. */
 export function LearningAssessment({ state, update, history, reviewRep, onReviewSkill }: Props) {
   const diagnostic = diagnosticRepIds.map(id => {
-    const attempts = history.filter(r => r.repId === id && state.diagnosticStartedAt && Date.parse(r.completedAt) >= Date.parse(state.diagnosticStartedAt))
+    const started = state.diagnosticStartedAt
+    const attempts = history.filter(r => r.repId === id && started && Date.parse(r.completedAt) >= Date.parse(started))
     return { rep: repSummaryById.get(id)!, attempt: attempts[0] }
   })
   const missing = diagnostic.find(d => !d.attempt || d.attempt.hintCount)

@@ -3,10 +3,16 @@ import { Button } from './Button'
 import type { RepTrace, TraceStep, TraceStructure, TraceTreeNode } from './rep-depth'
 import { plural } from './ui-copy.ts'
 
-const outline = (node: TraceTreeNode): string => `${node.value}${node.note ? ` (${node.note})` : ''}${node.children?.length ? ` with children ${node.children.map(outline).join(', ')}` : ''}`
+const outline = (node: TraceTreeNode): string => {
+  const children = node.children?.length ? ` with children ${node.children.map(outline).join(', ')}` : ''
+  return `${node.value}${node.note ? ` (${node.note})` : ''}${children}`
+}
 const nodeValue = (root: TraceTreeNode, id?: string): string | undefined => {
   if (root.id === id) return String(root.value)
-  for (const child of root.children ?? []) { const found = nodeValue(child, id); if (found !== undefined) return found }
+  for (const child of root.children ?? []) {
+    const found = nodeValue(child, id)
+    if (found !== undefined) return found
+  }
 }
 const nodeValues = (root: TraceTreeNode, ids: string[] = []) => ids.map(id => nodeValue(root, id)).filter(Boolean).join(', ') || 'none'
 
@@ -18,24 +24,54 @@ const tableName = (table: TableStructure, [row, col]: [number, number]) => {
 const joinAnd = (items: string[]) => items.length < 3 ? items.join(' and ') : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`
 const tableFocus = (table: TableStructure) => {
   const reads = table.reads ?? []
-  if (!table.current) return reads.length ? `Reading ${joinAnd(reads.map(cell => tableName(table, cell)))}.` : 'No cell is being filled.'
-  return `Filling ${tableName(table, table.current)}${reads.length ? `, which reads ${joinAnd(reads.map(cell => tableName(table, cell)))}` : ', which reads no other cell'}.`
+  const readNames = joinAnd(reads.map(cell => tableName(table, cell)))
+  if (!table.current) return reads.length ? `Reading ${readNames}.` : 'No cell is being filled.'
+  return `Filling ${tableName(table, table.current)}${reads.length ? `, which reads ${readNames}` : ', which reads no other cell'}.`
 }
-const isCell = (cells: [number, number][] | undefined, row: number, col: number) => Boolean(cells?.some(cell => cell[0] === row && cell[1] === col))
+const isCell = (cells: [number, number][] | undefined, row: number, col: number) => (
+  Boolean(cells?.some(cell => cell[0] === row && cell[1] === col))
+)
+
+function describeTable(table: TableStructure) {
+  const rows = table.cells.map((row, r) => {
+    const cells = row.map((value, c) => `${table.colLabels?.[c] ?? c} = ${value ?? 'not filled yet'}`).join(', ')
+    return `${table.rowLabels ? `row ${table.rowLabels[r]}: ` : ''}${cells}`
+  })
+  return `Table with ${table.cells.length} ${plural(table.cells.length, 'row')}: ${rows.join('; ')}. ${tableFocus(table)}`
+}
+
+function describeCalls(calls: Extract<TraceStructure, { kind: 'calls' }>) {
+  const frames = [...calls.frames].reverse().map((frame, index) => {
+    const locals = frame.locals ? `, ${frame.locals}` : ''
+    const returns = frame.returns !== undefined ? `, returns ${frame.returns}` : ''
+    return `${index === 0 ? 'top' : 'below'}: ${frame.call}${locals}${returns}`
+  }).join('; ')
+  const event = calls.event === 'call' ? ' The top frame was just pushed.'
+    : calls.event === 'return' ? ' The top frame is returning and will be popped.'
+    : ''
+  return `Call stack, top first: ${frames}.${event}`
+}
 
 function describe(structure: TraceStructure) {
-  if (structure.kind === 'table') return `Table with ${structure.cells.length} ${plural(structure.cells.length, 'row')}: ${structure.cells.map((row, r) => `${structure.rowLabels ? `row ${structure.rowLabels[r]}: ` : ''}${row.map((value, c) => `${structure.colLabels?.[c] ?? c} = ${value ?? 'not filled yet'}`).join(', ')}`).join('; ')}. ${tableFocus(structure)}`
+  if (structure.kind === 'table') return describeTable(structure)
   if (structure.kind === 'map') return `Map entries: ${structure.entries.map(([key, value]) => `${key}: ${value}`).join(', ') || 'empty'}.`
-  if (structure.kind === 'tree') return `Tree, root first: ${outline(structure.root)}. Current node: ${nodeValue(structure.root, structure.current) ?? 'none'}. Visited nodes: ${nodeValues(structure.root, structure.visited)}.`
-  if (structure.kind === 'calls') {
-    const frames = [...structure.frames].reverse().map((frame, index) => `${index === 0 ? 'top' : 'below'}: ${frame.call}${frame.locals ? `, ${frame.locals}` : ''}${frame.returns !== undefined ? `, returns ${frame.returns}` : ''}`).join('; ')
-    const event = structure.event === 'call' ? ' The top frame was just pushed.' : structure.event === 'return' ? ' The top frame is returning and will be popped.' : ''
-    return `Call stack, top first: ${frames}.${event}`
+  if (structure.kind === 'tree') {
+    const current = nodeValue(structure.root, structure.current) ?? 'none'
+    const visited = nodeValues(structure.root, structure.visited)
+    return `Tree, root first: ${outline(structure.root)}. Current node: ${current}. Visited nodes: ${visited}.`
   }
-  if (structure.kind === 'state') return `State: ${structure.entries.map(([label, value]) => `${label} = ${String(value)}`).join(', ')}.${structure.events ? ` Events: ${structure.events.map((event, index) => `${index === structure.eventIndex ? 'current ' : ''}${event}`).join(', ')}.` : ''}`
+  if (structure.kind === 'calls') return describeCalls(structure)
+  if (structure.kind === 'state') {
+    const entries = structure.entries.map(([label, value]) => `${label} = ${String(value)}`).join(', ')
+    const events = structure.events
+      ? ` Events: ${structure.events.map((event, index) => `${index === structure.eventIndex ? 'current ' : ''}${event}`).join(', ')}.`
+      : ''
+    return `State: ${entries}.${events}`
+  }
   const values = structure.values.map((value, index) => `${index}: ${value}`).join(', ') || 'empty'
   if (structure.kind === 'stack') return `Stack, bottom to top: ${values}.`
-  return `Array: ${values}. Pointers: ${Object.entries(structure.pointers ?? {}).map(([name, index]) => `${name} at index ${index}`).join(', ') || 'none'}. Dimmed indices: ${structure.dimmed?.join(', ') || 'none'}.`
+  const pointers = Object.entries(structure.pointers ?? {}).map(([name, index]) => `${name} at index ${index}`).join(', ') || 'none'
+  return `Array: ${values}. Pointers: ${pointers}. Dimmed indices: ${structure.dimmed?.join(', ') || 'none'}.`
 }
 
 type Placed = { node: TraceTreeNode; x: number; y: number; parent?: Placed }
@@ -102,7 +138,9 @@ function StatePanel({ structure, previous }: { structure: Extract<TraceStructure
     {structure.events && <ol className="trace-events">
       {structure.events.map((event, index) => <li
         key={index}
-        className={index === structure.eventIndex ? 'trace-event-current' : index < (structure.eventIndex ?? -1) ? 'trace-event-done' : undefined}
+        className={index === structure.eventIndex ? 'trace-event-current'
+          : index < (structure.eventIndex ?? -1) ? 'trace-event-done'
+          : undefined}
       >
         <code>{event}</code>
       </li>)}
@@ -138,7 +176,8 @@ function TableView({ structure }: { structure: TableStructure }) {
     </div> : <div className="trace-table-wrap" aria-hidden="true">{rows}</div>}
     <p className="trace-table-focus" aria-hidden="true">{tableFocus(structure)}</p>
     <p className="trace-legend" aria-hidden="true">
-      Solid: filled. Dashed “empty”: not filled yet. Thick outline “now”: cell being filled. Double outline “↑ reads”: cells it uses.
+      Solid: filled. Dashed “empty”: not filled yet.
+      Thick outline “now”: cell being filled. Double outline “↑ reads”: cells it uses.
     </p>
     <p className="sr-only">{describe(structure)}</p>
   </div>

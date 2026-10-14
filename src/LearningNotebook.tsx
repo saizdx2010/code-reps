@@ -11,7 +11,9 @@ import { repTitle } from './rep-index.ts'
 
 type Props = { state: FluencyState; update: (next: FluencyState) => boolean }
 
-const blankNote = (): LearningNote => ({ id: crypto.randomUUID(), title: '', body: '', skillId: '', repId: '', kind: 'note', updatedAt: new Date().toISOString() })
+const blankNote = (): LearningNote => ({
+  id: crypto.randomUUID(), title: '', body: '', skillId: '', repId: '', kind: 'note', updatedAt: new Date().toISOString(),
+})
 
 /** Whether replacing the open entry would lose writing the learner has not saved. */
 function hasUnsavedChanges(draft: LearningNote | null, notes: LearningNote[]) {

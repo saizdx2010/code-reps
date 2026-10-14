@@ -14,7 +14,9 @@ export function Tooltip({ text, children }: { text: string; children: ReactEleme
     if (!open) return
     const rect = trigger.current!.getBoundingClientRect()
     const box = hint.current!.getBoundingClientRect()
-    setPosition({ left: Math.max(8, Math.min(rect.left, innerWidth - box.width - 8)), top: rect.bottom + box.height + 6 <= innerHeight ? rect.bottom + 6 : Math.max(8, rect.top - box.height - 6) })
+    // Prefer below the trigger; flip above when there is no room.
+    const top = rect.bottom + box.height + 6 <= innerHeight ? rect.bottom + 6 : Math.max(8, rect.top - box.height - 6)
+    setPosition({ left: Math.max(8, Math.min(rect.left, innerWidth - box.width - 8)), top })
   }, [open, text])
   useEffect(() => {
     if (!open) return

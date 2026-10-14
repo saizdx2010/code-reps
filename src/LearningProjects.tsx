@@ -24,7 +24,9 @@ type Props = {
 /** Projects: the in-browser projects, then capstones as milestones with a final self-review. */
 export function LearningProjects({ state, update, history, openRep, openNotebook }: Props) {
   function recordReflection(title: string, body: string) {
-    const note: LearningNote = { id: crypto.randomUUID(), title, body, skillId: 'frontend', repId: '', kind: 'note', updatedAt: new Date().toISOString() }
+    const note: LearningNote = {
+      id: crypto.randomUUID(), title, body, skillId: 'frontend', repId: '', kind: 'note', updatedAt: new Date().toISOString(),
+    }
     if (update({ ...state, notes: [note, ...state.notes] })) openNotebook()
   }
   return <>

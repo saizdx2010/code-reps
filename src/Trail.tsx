@@ -12,17 +12,25 @@ type Props = {
   onOpenFoundations?: () => void
 }
 
-const stateLabels: Record<string, string> = { done: 'Completed', next: 'Next on your trail', draft: 'In progress', later: 'Recall available later', open: 'Not started' }
-const markerIcon = (node: TrailNode) => node.state === 'done' ? 'check' : node.kind === 'lesson' ? 'book' : node.kind === 'project' ? 'flag' : node.role === 'Recall' ? 'repeat' : 'circle'
+const stateLabels: Record<string, string> = {
+  done: 'Completed', next: 'Next on your trail', draft: 'In progress', later: 'Recall available later', open: 'Not started',
+}
+const markerIcon = (node: TrailNode) => node.state === 'done' ? 'check'
+  : node.kind === 'lesson' ? 'book'
+  : node.kind === 'project' ? 'flag'
+  : node.role === 'Recall' ? 'repeat'
+  : 'circle'
+type Stage = Props['stages'][number]
+const stageDone = (stage: Stage) => stage.total > 0 && stage.done === stage.total
+const stageSummary = (stage: Stage) => stageDone(stage) && stage.recap ? stage.recap
+  : stage.covered ? 'Covered in Foundations. Open it to revisit these reps here.'
+  : stage.description
 const levelRange = (stage: TrailStage) => stageLevelRange(stage.nodes.flatMap(node => node.kind === 'lesson' ? [] : [node.repId]))
 
 /** A path drawn as stages of connected nodes: lessons before the reps that use them, then recall and projects. */
 export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenFoundations }: Props) {
-  return <ol
-    className="trail path-stages"
-  >{stages.map((stage, index) => <li
-    key={stage.title}
-    className={`trail-stage${stage.current ? ' is-current' : ''}${stage.total > 0 && stage.done === stage.total ? ' is-done' : ''}`}
+  return <ol className="trail path-stages">{stages.map((stage, index) => <li
+    key={stage.title} className={`trail-stage${stage.current ? ' is-current' : ''}${stageDone(stage) ? ' is-done' : ''}`}
   >
     <details
       className="path-stage"
@@ -30,12 +38,12 @@ export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenFoundat
     >
       <summary className="path-stage-heading">
         <span className="trail-stage-index" aria-hidden="true">
-          {stage.total > 0 && stage.done === stage.total ? <Icon name="check" /> : String(index + 1).padStart(2, '0')}
+          {stageDone(stage) ? <Icon name="check" /> : String(index + 1).padStart(2, '0')}
         </span>
         <div>
           <h3>{stage.title}</h3>
           <p>
-            {stage.total > 0 && stage.done === stage.total && stage.recap ? stage.recap : stage.covered ? 'Covered in Foundations. Open it to revisit these reps here.' : stage.description}
+            {stageSummary(stage)}
           </p>
           {levelRange(stage) && <StatusChip>{levelRange(stage)}</StatusChip>}
         </div>
