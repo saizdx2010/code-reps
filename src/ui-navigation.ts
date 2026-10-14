@@ -14,6 +14,7 @@ const views = [
   'assessment',
   'mistakes',
   'stuck',
+  'patterns',
   'projects',
   'interview',
 ] as const
@@ -45,6 +46,7 @@ const sectionAliases: Partial<Record<View, View>> = {
   mistakes: 'history',
   stuck: 'history',
   learn: 'knowledge',
+  patterns: 'knowledge',
   skillmap: 'progress',
   plan: 'progress',
   assessment: 'progress',

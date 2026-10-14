@@ -21,6 +21,7 @@ test('exercise bookmarks, library, and every product page round-trip', () => {
     'assessment',
     'mistakes',
     'stuck',
+    'patterns',
     'plan',
   ]) {
     assert.deepEqual(readRoute(routeHash({ view }), ['one']), { view })
@@ -57,6 +58,7 @@ test('every tool has one navigation home while legacy lessons and exercises stay
   const homes = {
     mistakes: 'history',
     stuck: 'history',
+    patterns: 'knowledge',
     skillmap: 'progress',
     plan: 'progress',
     assessment: 'progress',

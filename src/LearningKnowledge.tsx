@@ -7,6 +7,7 @@ import { skills, knowledgeGroups } from './knowledge'
 import type { FluencyState } from './fluency'
 import type { PortableRecord } from './portability'
 import { useSessionPreference } from './useSessionPreference'
+import { goToView } from './ui-navigation'
 
 type Props = {
   state: FluencyState
@@ -99,6 +100,9 @@ export function LearningKnowledge({ state, update, history, openRep, skillId, on
             </label>
             <Button variant="text" onClick={onQuickLessons}>
               Quick lessons
+            </Button>
+            <Button variant="text" onClick={() => goToView('patterns')}>
+              Pattern cards
             </Button>
           </div>
           <nav aria-label="Skills">

@@ -458,3 +458,78 @@ button[aria-expanded='true'] > span > .icon-chevron {
 .week-review-actions p {
   margin: 0;
 }
+
+/* Lessons: pattern cards. The chosen and best-fit options carry text tags, not colour alone. */
+.pattern-card {
+  max-width: 760px;
+  margin: 20px 0;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.pattern-card h2 {
+  margin: 4px 0 16px;
+  font-size: var(--type-feature);
+  line-height: 1.35;
+}
+.pattern-card-count {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.pattern-choices {
+  display: grid;
+  gap: 8px;
+}
+.pattern-choice {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--control-height);
+  padding: 8px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.pattern-choice:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+.pattern-choice:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.pattern-choice:disabled {
+  cursor: default;
+  color: var(--muted);
+}
+.pattern-choice[data-result='answer'] {
+  border: 2px solid var(--success);
+  background: var(--success-soft);
+  font-weight: 700;
+}
+.pattern-choice[data-result='missed'] {
+  border-style: dashed;
+}
+.pattern-choice-tag {
+  font-size: 13px;
+  font-weight: 700;
+}
+.pattern-feedback {
+  margin-top: 16px;
+}
+.pattern-feedback p {
+  margin: 10px 0;
+  max-width: 70ch;
+}
+.pattern-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}

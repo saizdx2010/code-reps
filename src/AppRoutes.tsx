@@ -23,6 +23,7 @@ import { useSessionPreference } from './useSessionPreference'
 const PathsPage = lazyRoute(() => import('./PathsPage').then(module => module.PathsPage), 'The tracks')
 const ProgressPage = lazyRoute(() => import('./ProgressPage').then(module => module.ProgressPage), 'Progress')
 const MistakesPage = lazyRoute(() => import('./MistakesPage').then(module => module.MistakesPage), 'Mistakes')
+const PatternCardsPage = lazyRoute(() => import('./PatternCardsPage').then(module => module.PatternCardsPage), 'Pattern cards')
 const StuckPage = lazyRoute(() => import('./StuckPage').then(module => module.StuckPage), 'Stuck points')
 const SkillMapPage = lazyRoute(() => import('./SkillMapPage').then(module => module.SkillMapPage), 'The skill map')
 const PracticeCatalog = lazyRoute(() => import('./PracticeCatalog').then(module => module.PracticeCatalog), 'The library')
@@ -271,6 +272,12 @@ export function AppRoutes(props: Props) {
         </Suspense>
       )
     }
+    case 'patterns':
+      return (
+        <Suspense fallback={<RouteLoading title="Pattern cards" status="Opening pattern cards…" />}>
+          <PatternCardsPage openRep={openRep} onLessons={() => setView('knowledge')} />
+        </Suspense>
+      )
     case 'learn':
       return (
         <Suspense
