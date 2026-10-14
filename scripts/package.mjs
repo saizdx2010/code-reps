@@ -14,10 +14,16 @@ await cp(process.execPath, join(output, executable))
 await cp(join(root, 'docs', 'PORTABLE_BUNDLE.md'), join(output, 'README.md'))
 
 if (process.platform === 'win32') {
-  await writeFile(join(output, 'Start Code Reps.cmd'), '@echo off\r\ncd /d "%~dp0"\r\nif "%CODE_REPS_PORT%"=="" set CODE_REPS_PORT=4173\r\necho Open http://127.0.0.1:%CODE_REPS_PORT% in your browser.\r\n"%~dp0node.exe" "%~dp0server\\index.mjs"\r\npause\r\n')
+  await writeFile(
+    join(output, 'Start Code Reps.cmd'),
+    '@echo off\r\ncd /d "%~dp0"\r\nif "%CODE_REPS_PORT%"=="" set CODE_REPS_PORT=4173\r\necho Open http://127.0.0.1:%CODE_REPS_PORT% in your browser.\r\n"%~dp0node.exe" "%~dp0server\\index.mjs"\r\npause\r\n',
+  )
 } else {
   const launcher = join(output, 'start-code-reps.sh')
-  await writeFile(launcher, '#!/bin/sh\ncd "$(dirname "$0")" || exit 1\necho "Open http://127.0.0.1:${CODE_REPS_PORT:-4173} in your browser."\nexec ./node server/index.mjs\n')
+  await writeFile(
+    launcher,
+    '#!/bin/sh\ncd "$(dirname "$0")" || exit 1\necho "Open http://127.0.0.1:${CODE_REPS_PORT:-4173} in your browser."\nexec ./node server/index.mjs\n',
+  )
   await chmod(launcher, 0o755)
 }
 

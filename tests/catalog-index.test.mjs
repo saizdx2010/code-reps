@@ -11,20 +11,39 @@ import { skills } from '../src/knowledge.ts'
 import { reps } from '../src/rep.ts'
 
 test('the generated catalog index matches the authored reps and lessons', () => {
-  assert.equal(readFileSync(new URL('../src/catalog-index.ts', import.meta.url), 'utf8'), renderCatalogIndex(), 'Run `yarn content:index` and commit src/catalog-index.ts.')
+  assert.equal(
+    readFileSync(new URL('../src/catalog-index.ts', import.meta.url), 'utf8'),
+    renderCatalogIndex(),
+    'Run `yarn content:index` and commit src/catalog-index.ts.',
+  )
 })
 
 test('the index lists every rep and skill in catalog order with stable ids', () => {
-  assert.deepEqual(repIndex.map(item => item.id), reps.map(rep => rep.id))
-  assert.deepEqual(skillIndex.map(skill => skill.id), skills.map(skill => skill.id))
+  assert.deepEqual(
+    repIndex.map(item => item.id),
+    reps.map(rep => rep.id),
+  )
+  assert.deepEqual(
+    skillIndex.map(skill => skill.id),
+    skills.map(skill => skill.id),
+  )
   for (const [position, item] of repIndex.entries()) {
     const rep = reps[position]
-    assert.deepEqual([item.title, item.category, item.format, item.starterHash, item.hintTotal], [rep.title, rep.category, rep.format, starterHash(rep.starter), rep.hints.length])
+    assert.deepEqual(
+      [item.title, item.category, item.format, item.starterHash, item.hintTotal],
+      [rep.title, rep.category, rep.format, starterHash(rep.starter), rep.hints.length],
+    )
   }
   for (const [position, summary] of skillIndex.entries()) {
     const skill = skills[position]
-    assert.deepEqual(summary.questions.map(question => [question.id, question.answer, question.optionCount]), skill.questions.map(question => [question.id, question.answer, question.options.length]))
-    assert.deepEqual([summary.title, summary.prerequisites, summary.related, summary.repIds, summary.firstMistake], [skill.title, skill.prerequisites, skill.related, skill.repIds, skill.mistakes[0]])
+    assert.deepEqual(
+      summary.questions.map(question => [question.id, question.answer, question.optionCount]),
+      skill.questions.map(question => [question.id, question.answer, question.options.length]),
+    )
+    assert.deepEqual(
+      [summary.title, summary.prerequisites, summary.related, summary.repIds, summary.firstMistake],
+      [skill.title, skill.prerequisites, skill.related, skill.repIds, skill.mistakes[0]],
+    )
   }
   assert.ok(foundationRepIds.length > 0 && foundationRepIds.every(id => repIndex.some(item => item.id === id)))
 })
@@ -35,7 +54,8 @@ test('the startup catalog keeps a starter fingerprint, never the starter text', 
     assert.equal('starter' in item, false, item.id)
     assert.match(item.starterHash, /^[0-9a-f]{16}$/, item.id)
   }
-  for (const rep of reps) assert.equal(source.includes(JSON.stringify(rep.starter)), false, `${rep.id} starter text leaked into the catalog`)
+  for (const rep of reps)
+    assert.equal(source.includes(JSON.stringify(rep.starter)), false, `${rep.id} starter text leaked into the catalog`)
 })
 
 test('starter fingerprints are stable and sensitive to every character', () => {
@@ -45,8 +65,16 @@ test('starter fingerprints are stable and sensitive to every character', () => {
 })
 
 test('loading a rep returns the same authored content the full catalog holds', async () => {
-  for (const rep of reps) assert.equal((await loadRepContent(rep.id)).rep, reps.find(item => item.id === rep.id), rep.id)
-  assert.deepEqual((await loadAllReps()).map(rep => rep.id), reps.map(rep => rep.id))
+  for (const rep of reps)
+    assert.equal(
+      (await loadRepContent(rep.id)).rep,
+      reps.find(item => item.id === rep.id),
+      rep.id,
+    )
+  assert.deepEqual(
+    (await loadAllReps()).map(rep => rep.id),
+    reps.map(rep => rep.id),
+  )
   const lesson = await loadRepContent(foundationRepIds[0])
   assert.equal(lesson.lesson?.repId, foundationRepIds[0])
   await assert.rejects(loadRepContent('not-a-rep'), /Unknown rep/)
@@ -54,8 +82,13 @@ test('loading a rep returns the same authored content the full catalog holds', a
 
 // The startup bundle must not pull rep or lesson content back in through a static import.
 test('startup modules never statically import heavy content', () => {
-  const heavy = /^(rep|rep-sources|knowledge|knowledge-validation|foundations|practical-concepts|[a-z-]+-knowledge|rep-depth|lesson-depth|reflection-guides|runner|review-[a-z-]+|[a-z-]+-reps)$/
-  const resolve = (from, specifier) => ['.ts', '.tsx'].map(ext => join(dirname(from), specifier + ext)).concat(join(dirname(from), specifier)).find(file => existsSync(file) && /\.tsx?$/.test(file))
+  const heavy =
+    /^(rep|rep-sources|knowledge|knowledge-validation|foundations|practical-concepts|[a-z-]+-knowledge|rep-depth|lesson-depth|reflection-guides|runner|review-[a-z-]+|[a-z-]+-reps)$/
+  const resolve = (from, specifier) =>
+    ['.ts', '.tsx']
+      .map(ext => join(dirname(from), specifier + ext))
+      .concat(join(dirname(from), specifier))
+      .find(file => existsSync(file) && /\.tsx?$/.test(file))
   const root = new URL('../src/main.tsx', import.meta.url).pathname
   const seen = new Set()
   const offenders = []
@@ -65,14 +98,18 @@ test('startup modules never statically import heavy content', () => {
     // Parse rather than pattern-match, so formatted multi-line imports are still followed.
     const source = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest)
     for (const statement of source.statements) {
-      const runtime = ts.isImportDeclaration(statement) ? !statement.importClause?.isTypeOnly
+      const runtime = ts.isImportDeclaration(statement)
+        ? !statement.importClause?.isTypeOnly
         : ts.isExportDeclaration(statement) && Boolean(statement.moduleSpecifier) && !statement.isTypeOnly
       if (!runtime || !ts.isStringLiteral(statement.moduleSpecifier)) continue
       const path = statement.moduleSpecifier.text
       if (!path.startsWith('.') || path.endsWith('.css')) continue
       const target = resolve(file, path.replace(/\.tsx?$/, ''))
       if (!target) continue
-      const name = target.split('/').pop().replace(/\.tsx?$/, '')
+      const name = target
+        .split('/')
+        .pop()
+        .replace(/\.tsx?$/, '')
       if (heavy.test(name)) offenders.push(`${file.split('/src/')[1]} -> ${name}`)
       else visit(target)
     }
@@ -85,7 +122,8 @@ test('startup modules never statically import heavy content', () => {
 test('App loads secondary route pages and the trace viewer dynamically', () => {
   // The app shell spans App, its route component, and the practice sections that show the trace.
   const app = ['App.tsx', 'AppRoutes.tsx', 'PracticeSections.tsx']
-    .map(file => readFileSync(new URL(`../src/${file}`, import.meta.url), 'utf8')).join('\n')
+    .map(file => readFileSync(new URL(`../src/${file}`, import.meta.url), 'utf8'))
+    .join('\n')
   for (const name of ['PathsPage', 'ProgressPage', 'MistakesPage', 'SkillMapPage', 'TraceViewer']) {
     assert.doesNotMatch(app, new RegExp(`^import .* from '\\./${name}'`, 'm'), `${name} must stay lazy`)
     assert.match(app, new RegExp(`import\\('\\./${name}'\\)`), `${name} should load through lazyRoute`)

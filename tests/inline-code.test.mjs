@@ -17,7 +17,10 @@ test('inline code uses semantic code elements and escapes all text', async () =>
     const { InlineCode } = await import(pathToFileURL(file))
     const render = text => renderToStaticMarkup(createElement(InlineCode, { text }))
     assert.equal(render('Use `form.noValidate` and `aria-invalid`.'), 'Use <code>form.noValidate</code> and <code>aria-invalid</code>.')
-    assert.equal(render('<img src=x onerror=alert(1)> `<script>&</script>`'), '&lt;img src=x onerror=alert(1)&gt; <code>&lt;script&gt;&amp;&lt;/script&gt;</code>')
+    assert.equal(
+      render('<img src=x onerror=alert(1)> `<script>&</script>`'),
+      '&lt;img src=x onerror=alert(1)&gt; <code>&lt;script&gt;&amp;&lt;/script&gt;</code>',
+    )
     assert.equal(render('Keep `an unfinished span'), 'Keep `an unfinished span')
     assert.equal(render('Empty `` stays text'), 'Empty `` stays text')
   } finally {

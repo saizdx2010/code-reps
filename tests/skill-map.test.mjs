@@ -6,15 +6,21 @@ import { completion } from './helpers/records.mjs'
 
 const day = 86_400_000
 const t0 = Date.parse('2026-01-01T00:00:00Z')
-const at = (n) => new Date(t0 + n * day).toISOString()
+const at = n => new Date(t0 + n * day).toISOString()
 const rec = (repId, n, hintCount = 0) => completion(repId, at(n), hintCount)
-const arrays = (records, now = t0 + 30 * day) => buildSkillMap('typescript', getAllJourneys(records, now)).stages.flatMap(s => s.nodes).find(n => n.id === 'arrays')
+const arrays = (records, now = t0 + 30 * day) =>
+  buildSkillMap('typescript', getAllJourneys(records, now))
+    .stages.flatMap(s => s.nodes)
+    .find(n => n.id === 'arrays')
 
 test('an untouched profile shows every skill as not started with a guided link', () => {
   const map = buildSkillMap('typescript', getAllJourneys([], t0))
   assert.ok(map.total > 0)
   assert.equal(map.counts.untouched, map.total)
-  for (const node of map.stages.flatMap(s => s.nodes)) { assert.equal(node.state, 'untouched'); assert.ok(node.repId) }
+  for (const node of map.stages.flatMap(s => s.nodes)) {
+    assert.equal(node.state, 'untouched')
+    assert.ok(node.repId)
+  }
   assert.equal(arrays([]).repId, 'sum-positive-numbers')
 })
 

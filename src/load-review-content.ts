@@ -8,7 +8,14 @@ export type ReviewContent = {
 let pending: Promise<ReviewContent> | undefined
 export function loadReviewContent(): Promise<ReviewContent> {
   // A failed import is forgotten so Retry can request the chunk again.
-  return pending ??= Promise.all([import('./rep-depth.ts'), import('./lesson-depth.ts'), import('./reflection-guides.ts')])
-    .then(([reps, lessons, guides]) => ({ repDepth: reps.repDepth, lessonDepth: lessons.lessonDepth, reflectionGuides: guides.reflectionGuides }))
-    .catch(error => { pending = undefined; throw error })
+  return (pending ??= Promise.all([import('./rep-depth.ts'), import('./lesson-depth.ts'), import('./reflection-guides.ts')])
+    .then(([reps, lessons, guides]) => ({
+      repDepth: reps.repDepth,
+      lessonDepth: lessons.lessonDepth,
+      reflectionGuides: guides.reflectionGuides,
+    }))
+    .catch(error => {
+      pending = undefined
+      throw error
+    }))
 }

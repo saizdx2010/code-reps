@@ -8,7 +8,9 @@ test('all project levels are freely accessible and self-review preserves an exis
   await page.goto('/#/projects')
   await expect(page.getByRole('heading', { name: 'Build outside Code Reps' })).toBeVisible()
   await page.screenshot({ path: 'test-results/browser-projects-desktop.png' })
-  const level = page.locator('.project-overview').filter({ has: page.getByRole('heading', { name: 'Level 3: Build an asynchronous local catalog' }) })
+  const level = page
+    .locator('.project-overview')
+    .filter({ has: page.getByRole('heading', { name: 'Level 3: Build an asynchronous local catalog' }) })
   await level.locator(':scope > summary').focus()
   await page.keyboard.press('Enter')
   await expect(level.getByRole('heading', { name: 'Detailed requirements' })).toBeVisible()

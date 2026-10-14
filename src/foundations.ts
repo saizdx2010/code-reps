@@ -2,68 +2,92 @@ import type { Rep } from './rep-types.ts'
 
 export const foundations = [
   {
-    repId: 'declare-variables', title: 'Variables with const and let',
-    explanation: 'A variable gives a value a name. Use const when you will not reassign that name. Use let when its value needs to change. TypeScript usually infers the type from the first value.',
+    repId: 'declare-variables',
+    title: 'Variables with const and let',
+    explanation:
+      'A variable gives a value a name. Use const when you will not reassign that name. Use let when its value needs to change. TypeScript usually infers the type from the first value.',
     example: 'const name = "Ada" // inferred as string\nlet score = 0     // inferred as number\nscore = score + 1',
     tip: 'const prevents reassignment. It does not make an object or array immutable.',
   },
   {
-    repId: 'basic-types', title: 'Strings, numbers, and booleans',
-    explanation: 'A string is text, a number is numeric, and a boolean is true or false. Add a type after a colon when it makes the code clearer or when there is no starting value to infer from.',
+    repId: 'basic-types',
+    title: 'Strings, numbers, and booleans',
+    explanation:
+      'A string is text, a number is numeric, and a boolean is true or false. Add a type after a colon when it makes the code clearer or when there is no starting value to infer from.',
     example: 'const city: string = "Jakarta"\nconst visits: number = 3\nconst isOpen: boolean = true',
     tip: 'Use quotes for strings. The values true and false have no quotes.',
   },
   {
-    repId: 'create-objects', title: 'Create and type objects',
-    explanation: 'An object groups named values called properties. Read a property with a dot. A type describes the properties an object must have.',
-    example: 'type Person = { name: string; age: number }\nconst person: Person = { name: "Ada", age: 28 }\nconst greeting = `Hello, ${person.name}`',
+    repId: 'create-objects',
+    title: 'Create and type objects',
+    explanation:
+      'An object groups named values called properties. Read a property with a dot. A type describes the properties an object must have.',
+    example:
+      'type Person = { name: string; age: number }\nconst person: Person = { name: "Ada", age: 28 }\nconst greeting = `Hello, ${person.name}`',
     tip: 'Use commas between values in an object. In a type, semicolons or new lines separate properties.',
   },
   {
-    repId: 'make-arrays', title: 'Work with arrays',
-    explanation: 'An array keeps values in order. Write number[] for an array of numbers, and use square brackets to read a value by its zero-based index.',
+    repId: 'make-arrays',
+    title: 'Work with arrays',
+    explanation:
+      'An array keeps values in order. Write number[] for an array of numbers, and use square brackets to read a value by its zero-based index.',
     example: 'const scores: number[] = [4, 7, 9]\nconst first = scores[0] // 4\nconst count = scores.length // 3',
     tip: 'The first item is at index 0, not index 1.',
   },
   {
-    repId: 'write-functions', title: 'Write a function',
-    explanation: 'A function accepts inputs called parameters and returns an output. TypeScript can describe each parameter and the returned value.',
+    repId: 'write-functions',
+    title: 'Write a function',
+    explanation:
+      'A function accepts inputs called parameters and returns an output. TypeScript can describe each parameter and the returned value.',
     example: 'function greet(name: string): string {\n  return `Hello, ${name}`\n}\nconst message = greet("Ada")',
     tip: 'The type after the closing parenthesis describes the return value.',
   },
   {
-    repId: 'pass-or-retry', title: 'Choose between two results',
-    explanation: 'An if statement runs its block only when a condition is true. When the condition is false, the code after it runs instead. A comparison such as score >= 50 is true at 50 itself, so the edge value belongs to the branch you wrote.',
+    repId: 'pass-or-retry',
+    title: 'Choose between two results',
+    explanation:
+      'An if statement runs its block only when a condition is true. When the condition is false, the code after it runs instead. A comparison such as score >= 50 is true at 50 itself, so the edge value belongs to the branch you wrote.',
     example: 'function label(age: number): string {\n  if (age >= 18) return "Adult"\n  return "Minor"\n}',
     tip: 'Use >= when the edge value is included and > when it is not.',
   },
   {
-    repId: 'use-conditions', title: 'Make a decision with if',
-    explanation: 'An if statement runs its block only when a condition is true. else if and else handle the other cases. The first true condition wins, so put the highest boundary first when you compare ranges.',
-    example: 'function label(score: number): string {\n  if (score >= 90) return "A"\n  if (score >= 80) return "B"\n  return "C or lower"\n}',
+    repId: 'use-conditions',
+    title: 'Make a decision with if',
+    explanation:
+      'An if statement runs its block only when a condition is true. else if and else handle the other cases. The first true condition wins, so put the highest boundary first when you compare ranges.',
+    example:
+      'function label(score: number): string {\n  if (score >= 90) return "A"\n  if (score >= 80) return "B"\n  return "C or lower"\n}',
     tip: 'Test a boundary value and the value just below it, such as 90 and 89.9, to see which branch wins.',
   },
   {
-    repId: 'loop-with-for', title: 'Repeat work with a for loop',
-    explanation: 'A for loop repeats a block while its condition is true. It has a starting value, a condition, and an update. Use it when you know which values you need to visit.',
+    repId: 'loop-with-for',
+    title: 'Repeat work with a for loop',
+    explanation:
+      'A for loop repeats a block while its condition is true. It has a starting value, a condition, and an update. Use it when you know which values you need to visit.',
     example: 'let total = 0\nfor (let i = 1; i <= 3; i++) {\n  total += i\n}\n// total is 6',
     tip: 'The condition i <= 3 includes 3. Use i < 3 only when you want to stop before 3.',
   },
   {
-    repId: 'loop-while', title: 'Repeat until a condition ends it',
-    explanation: 'A while loop checks its condition before each pass. Use it when you do not know in advance how many passes you need, but you know what ends the loop. Each pass should move closer to that end.',
+    repId: 'loop-while',
+    title: 'Repeat until a condition ends it',
+    explanation:
+      'A while loop checks its condition before each pass. Use it when you do not know in advance how many passes you need, but you know what ends the loop. Each pass should move closer to that end.',
     example: 'let n = 3\nlet count = 0\nwhile (n > 0) {\n  n = n - 1\n  count++\n}\n// count is 3',
     tip: 'If nothing inside the loop changes the value the condition checks, the loop never ends.',
   },
   {
-    repId: 'string-basics', title: 'Work with text',
-    explanation: 'Strings have methods that return new strings. trim removes spaces at the ends, toUpperCase changes letter case, and slice(start, end) copies part of the text. The original string stays the same.',
+    repId: 'string-basics',
+    title: 'Work with text',
+    explanation:
+      'Strings have methods that return new strings. trim removes spaces at the ends, toUpperCase changes letter case, and slice(start, end) copies part of the text. The original string stays the same.',
     example: 'const name = "  ada  "\nconst clean = name.trim()       // "ada"\nconst first = clean.slice(0, 1) // "a"',
     tip: 'slice(0, 1) returns the first character. On an empty string it returns an empty string instead of an error.',
   },
   {
-    repId: 'object-update', title: 'Copy an object before changing a field',
-    explanation: 'A spread copies the fields of an object into a new object. A field listed after the spread replaces the copied field with the same name. Returning the new object leaves the object you received unchanged.',
+    repId: 'object-update',
+    title: 'Copy an object before changing a field',
+    explanation:
+      'A spread copies the fields of an object into a new object. A field listed after the spread replaces the copied field with the same name. Returning the new object leaves the object you received unchanged.',
     example: 'const task = { title: "Write", done: false }\nconst finished = { ...task, done: true }\n// task.done is still false',
     tip: 'Writing task.done = true changes the original object for every code path that shares it.',
   },
@@ -71,15 +95,25 @@ export const foundations = [
 
 export const foundationReps: Rep[] = [
   {
-    id: 'declare-variables', title: 'Declare a value', category: 'TypeScript basics',
-    prompt: 'Create a const named greeting with the text "Hello, ". Create a let named message, combine greeting and the given name, and return message.',
+    id: 'declare-variables',
+    title: 'Declare a value',
+    category: 'TypeScript basics',
+    prompt:
+      'Create a const named greeting with the text "Hello, ". Create a let named message, combine greeting and the given name, and return message.',
     example: { input: "makeGreeting('Ada')", output: "'Hello, Ada'" },
     note: 'Keep the function name and parameter from the starter code. Checks verify the greeting; review your own use of const and let.',
-    vocabulary: [{ term: 'Variable', meaning: 'a name for a value' }, { term: 'Reassign', meaning: 'give an existing variable a new value' }],
+    vocabulary: [
+      { term: 'Variable', meaning: 'a name for a value' },
+      { term: 'Reassign', meaning: 'give an existing variable a new value' },
+    ],
     planPrompt: 'Which value stays the same? Which variable will receive the combined message?',
     starter: 'function makeGreeting(name: string): string {\n  // Create greeting with const and message with let.\n  return ""\n}\n',
     functionName: 'makeGreeting',
-    hints: ['Text values go inside quotes.', 'Use const greeting = "Hello, " and let message = greeting + name.', 'Return message after assigning it.'],
+    hints: [
+      'Text values go inside quotes.',
+      'Use const greeting = "Hello, " and let message = greeting + name.',
+      'Return message after assigning it.',
+    ],
     checks: [
       { name: 'Greets Ada', input: ['Ada'], expected: 'Hello, Ada' },
       { name: 'Greets another name', input: ['Sam'], expected: 'Hello, Sam' },
@@ -87,15 +121,25 @@ export const foundationReps: Rep[] = [
     ],
   },
   {
-    id: 'basic-types', title: 'Use basic types', category: 'TypeScript basics',
-    prompt: 'Return a sentence describing the given name, age, and whether the person is active. Use the exact format "{name} is {age}. Active: {active}", substituting the supplied values and writing the boolean as true or false.',
+    id: 'basic-types',
+    title: 'Use basic types',
+    category: 'TypeScript basics',
+    prompt:
+      'Return a sentence describing the given name, age, and whether the person is active. Use the exact format "{name} is {age}. Active: {active}", substituting the supplied values and writing the boolean as true or false.',
     example: { input: "describePerson('Ada', 28, true)", output: "'Ada is 28. Active: true'" },
     note: 'The starter shows string, number, and boolean parameter types. A template string can combine them.',
-    vocabulary: [{ term: 'Boolean', meaning: 'a value that is either true or false' }, { term: 'Type annotation', meaning: 'a type written after a colon' }],
+    vocabulary: [
+      { term: 'Boolean', meaning: 'a value that is either true or false' },
+      { term: 'Type annotation', meaning: 'a type written after a colon' },
+    ],
     planPrompt: 'Which input is text, which is a number, and which is a boolean?',
     starter: 'function describePerson(name: string, age: number, active: boolean): string {\n  // Use all three values.\n  return ""\n}\n',
     functionName: 'describePerson',
-    hints: ['The output must be one string.', 'A template string uses backticks and ${value}.', 'Try return `${name} is ${age}. Active: ${active}`.'],
+    hints: [
+      'The output must be one string.',
+      'A template string uses backticks and ${value}.',
+      'Try return `${name} is ${age}. Active: ${active}`.',
+    ],
     checks: [
       { name: 'Describes Ada', input: ['Ada', 28, true], expected: 'Ada is 28. Active: true' },
       { name: 'Handles false', input: ['Bo', 0, false], expected: 'Bo is 0. Active: false' },
@@ -103,15 +147,26 @@ export const foundationReps: Rep[] = [
     ],
   },
   {
-    id: 'create-objects', title: 'Create an object', category: 'TypeScript basics',
-    prompt: 'Inside the function, create a person object with name and age properties from the inputs. Return a sentence using those properties in the exact format "{name} is {age} years old", substituting the supplied values.',
+    id: 'create-objects',
+    title: 'Create an object',
+    category: 'TypeScript basics',
+    prompt:
+      'Inside the function, create a person object with name and age properties from the inputs. Return a sentence using those properties in the exact format "{name} is {age} years old", substituting the supplied values.',
     example: { input: "introduce('Ada', 28)", output: "'Ada is 28 years old'" },
     note: 'Use the Person type supplied in the starter code. Checks verify the returned sentence; review your own use of the object and its properties.',
-    vocabulary: [{ term: 'Object', meaning: 'a value with named properties' }, { term: 'Property', meaning: 'one named value inside an object' }],
+    vocabulary: [
+      { term: 'Object', meaning: 'a value with named properties' },
+      { term: 'Property', meaning: 'one named value inside an object' },
+    ],
     planPrompt: 'What properties belong in Person? How will you read them from the object?',
-    starter: 'type Person = { name: string; age: number }\n\nfunction introduce(name: string, age: number): string {\n  // Create a person object, then read its properties.\n  return ""\n}\n',
+    starter:
+      'type Person = { name: string; age: number }\n\nfunction introduce(name: string, age: number): string {\n  // Create a person object, then read its properties.\n  return ""\n}\n',
     functionName: 'introduce',
-    hints: ['Use const person: Person = { name, age }.', 'Read properties with person.name and person.age.', 'Return `${person.name} is ${person.age} years old`.'],
+    hints: [
+      'Use const person: Person = { name, age }.',
+      'Read properties with person.name and person.age.',
+      'Return `${person.name} is ${person.age} years old`.',
+    ],
     checks: [
       { name: 'Introduces Ada', input: ['Ada', 28], expected: 'Ada is 28 years old' },
       { name: 'Uses another person', input: ['Sam', 19], expected: 'Sam is 19 years old' },
@@ -119,15 +174,24 @@ export const foundationReps: Rep[] = [
     ],
   },
   {
-    id: 'make-arrays', title: 'Read an array', category: 'TypeScript basics',
+    id: 'make-arrays',
+    title: 'Read an array',
+    category: 'TypeScript basics',
     prompt: 'Return the first item of the names array. Return null when the array is empty.',
     example: { input: "firstName(['Ada', 'Sam'])", output: "'Ada'" },
     note: 'Arrays start at index 0. Check length before reading the first item.',
-    vocabulary: [{ term: 'Array', meaning: 'an ordered list of values' }, { term: 'Index', meaning: 'the position of an item, starting at zero' }],
+    vocabulary: [
+      { term: 'Array', meaning: 'an ordered list of values' },
+      { term: 'Index', meaning: 'the position of an item, starting at zero' },
+    ],
     planPrompt: 'How will you detect an empty array? Which index contains its first item?',
     starter: 'function firstName(names: string[]): string | null {\n  // Check whether the array is empty.\n  return null\n}\n',
     functionName: 'firstName',
-    hints: ['The length of the array tells you how many items it holds.', 'If that count is zero, the answer is null.', 'Otherwise, read the item at index zero, the first position.'],
+    hints: [
+      'The length of the array tells you how many items it holds.',
+      'If that count is zero, the answer is null.',
+      'Otherwise, read the item at index zero, the first position.',
+    ],
     checks: [
       { name: 'Returns the first name', input: [['Ada', 'Sam']], expected: 'Ada' },
       { name: 'Handles an empty array', input: [[]], expected: null },
@@ -136,15 +200,24 @@ export const foundationReps: Rep[] = [
     ],
   },
   {
-    id: 'write-functions', title: 'Return from a function', category: 'TypeScript basics',
+    id: 'write-functions',
+    title: 'Return from a function',
+    category: 'TypeScript basics',
     prompt: 'Complete the function so it returns the price multiplied by the quantity.',
     example: { input: 'totalPrice(5, 3)', output: '15' },
     note: 'The values passed to a function are arguments. Its parameter names let you use them inside.',
-    vocabulary: [{ term: 'Parameter', meaning: 'an input named in a function definition' }, { term: 'Return', meaning: 'send a value back from a function' }],
+    vocabulary: [
+      { term: 'Parameter', meaning: 'an input named in a function definition' },
+      { term: 'Return', meaning: 'send a value back from a function' },
+    ],
     planPrompt: 'What are the two inputs? What expression produces the output?',
     starter: 'function totalPrice(price: number, quantity: number): number {\n  // Return the total.\n  return 0\n}\n',
     functionName: 'totalPrice',
-    hints: ['Use the two parameter names inside the function.', 'Decide which operation turns a price and a quantity into a total.', 'Return the result of multiplying the two parameters so the caller receives it.'],
+    hints: [
+      'Use the two parameter names inside the function.',
+      'Decide which operation turns a price and a quantity into a total.',
+      'Return the result of multiplying the two parameters so the caller receives it.',
+    ],
     checks: [
       { name: 'Calculates the example', input: [5, 3], expected: 15 },
       { name: 'Handles zero quantity', input: [8, 0], expected: 0 },
@@ -152,11 +225,17 @@ export const foundationReps: Rep[] = [
     ],
   },
   {
-    id: 'pass-or-retry', title: 'Pass or retry a quiz score', category: 'TypeScript basics',
-    prompt: 'Return "Pass" when a quiz score is 50 or more, and "Retry" when it is below 50. A score of exactly 50 passes. Scores are whole numbers from 0 to 100.',
+    id: 'pass-or-retry',
+    title: 'Pass or retry a quiz score',
+    category: 'TypeScript basics',
+    prompt:
+      'Return "Pass" when a quiz score is 50 or more, and "Retry" when it is below 50. A score of exactly 50 passes. Scores are whole numbers from 0 to 100.',
     example: { input: 'passLabel(72)', output: "'Pass'" },
     note: 'Checks cover both branches and the edge at 50. Review your comparison yourself.',
-    vocabulary: [{ term: 'Condition', meaning: 'a true or false test that decides which code runs' }, { term: 'Boundary', meaning: 'a value where the result changes' }],
+    vocabulary: [
+      { term: 'Condition', meaning: 'a true or false test that decides which code runs' },
+      { term: 'Boundary', meaning: 'a value where the result changes' },
+    ],
     planPrompt: 'Which comparison is true for 50? What does the code return when it is false?',
     starter: 'function passLabel(score: number): string {\n  // Return "Pass" at 50 or more, otherwise "Retry".\n  return ""\n}\n',
     functionName: 'passLabel',
@@ -174,11 +253,17 @@ export const foundationReps: Rep[] = [
     ],
   },
   {
-    id: 'use-conditions', title: 'Choose a grade from a score', category: 'TypeScript basics',
-    prompt: 'Return a grade label for a score. A score from 90 to 100 is "A". A score from 80 up to 90 is "B", with 80 included and 90 excluded. A score from 70 up to 80 is "C", and a score from 60 up to 70 is "D". A score below 60 is "F". Return "Invalid" for any score below 0 or above 100. Decimal scores use the same boundaries.',
+    id: 'use-conditions',
+    title: 'Choose a grade from a score',
+    category: 'TypeScript basics',
+    prompt:
+      'Return a grade label for a score. A score from 90 to 100 is "A". A score from 80 up to 90 is "B", with 80 included and 90 excluded. A score from 70 up to 80 is "C", and a score from 60 up to 70 is "D". A score below 60 is "F". Return "Invalid" for any score below 0 or above 100. Decimal scores use the same boundaries.',
     example: { input: 'gradeLabel(85)', output: "'B'" },
     note: 'Checks cover the band boundaries and out-of-range scores. Review your branch order yourself.',
-    vocabulary: [{ term: 'Branch', meaning: 'code that runs only when a condition is true' }, { term: 'Boundary', meaning: 'a value where the result changes' }],
+    vocabulary: [
+      { term: 'Branch', meaning: 'code that runs only when a condition is true' },
+      { term: 'Boundary', meaning: 'a value where the result changes' },
+    ],
     planPrompt: 'Which invalid scores should you handle first? Which boundary does each branch test?',
     starter: 'function gradeLabel(score: number): string {\n  // Check the invalid range, then the grade bands.\n  return ""\n}\n',
     functionName: 'gradeLabel',
@@ -202,11 +287,17 @@ export const foundationReps: Rep[] = [
     ],
   },
   {
-    id: 'loop-with-for', title: 'Sum numbers with a for loop', category: 'TypeScript basics',
-    prompt: 'Return the sum of the whole numbers from 1 through n, including n. Use a for loop that counts up from 1. Inputs are whole numbers from 0 to 1000. When n is 0, there are no numbers to add, so return 0.',
+    id: 'loop-with-for',
+    title: 'Sum numbers with a for loop',
+    category: 'TypeScript basics',
+    prompt:
+      'Return the sum of the whole numbers from 1 through n, including n. Use a for loop that counts up from 1. Inputs are whole numbers from 0 to 1000. When n is 0, there are no numbers to add, so return 0.',
     example: { input: 'sumUpTo(4)', output: '10' },
     note: 'The example is 1 + 2 + 3 + 4. Checks cover zero, one, and the largest allowed input. Review where your loop starts and stops yourself.',
-    vocabulary: [{ term: 'Loop', meaning: 'code that repeats while a condition holds' }, { term: 'Running total', meaning: 'a variable that collects values as a loop visits them' }],
+    vocabulary: [
+      { term: 'Loop', meaning: 'code that repeats while a condition holds' },
+      { term: 'Running total', meaning: 'a variable that collects values as a loop visits them' },
+    ],
     planPrompt: 'What is the total before the loop? Which number starts the loop and which is added last?',
     starter: 'function sumUpTo(n: number): number {\n  // Add 1 through n with a for loop.\n  return 0\n}\n',
     functionName: 'sumUpTo',
@@ -225,11 +316,17 @@ export const foundationReps: Rep[] = [
     ],
   },
   {
-    id: 'loop-while', title: 'Count halving steps with while', category: 'TypeScript basics',
-    prompt: 'Count how many steps it takes to reach 1 by halving. Start with the given whole number n. Each step replaces the current value with Math.floor(value / 2), which rounds down, and counts as one step. Stop when the value is 1, then return the number of steps. Inputs are whole numbers from 1 to 1000000. When n is 1, return 0.',
+    id: 'loop-while',
+    title: 'Count halving steps with while',
+    category: 'TypeScript basics',
+    prompt:
+      'Count how many steps it takes to reach 1 by halving. Start with the given whole number n. Each step replaces the current value with Math.floor(value / 2), which rounds down, and counts as one step. Stop when the value is 1, then return the number of steps. Inputs are whole numbers from 1 to 1000000. When n is 1, return 0.',
     example: { input: 'stepsToOne(9)', output: '3' },
     note: 'Math.floor keeps every value whole. Checks cover the smallest input, the example, and the largest allowed input. Review your stopping condition yourself.',
-    vocabulary: [{ term: 'While loop', meaning: 'code that repeats while its condition is true' }, { term: 'Round down', meaning: 'move to the nearest whole number at or below a value' }],
+    vocabulary: [
+      { term: 'While loop', meaning: 'code that repeats while its condition is true' },
+      { term: 'Round down', meaning: 'move to the nearest whole number at or below a value' },
+    ],
     planPrompt: 'Which condition keeps the loop running? Predict the number of steps for 9 before you run the checks.',
     starter: 'function stepsToOne(n: number): number {\n  // Halve with Math.floor until the value is 1.\n  return 0\n}\n',
     functionName: 'stepsToOne',
@@ -248,11 +345,19 @@ export const foundationReps: Rep[] = [
     ],
   },
   {
-    id: 'string-basics', title: 'Build initials from a name', category: 'TypeScript basics',
-    prompt: 'Return the initials of a full name as uppercase letters with no spaces between them. Ignore spaces at the start and end of the name. Words are separated by one or more spaces. Use the first letter of each word. Inputs use basic Latin letters and spaces only. An empty name, or a name with only spaces, returns an empty string.',
+    id: 'string-basics',
+    title: 'Build initials from a name',
+    category: 'TypeScript basics',
+    prompt:
+      'Return the initials of a full name as uppercase letters with no spaces between them. Ignore spaces at the start and end of the name. Words are separated by one or more spaces. Use the first letter of each word. Inputs use basic Latin letters and spaces only. An empty name, or a name with only spaces, returns an empty string.',
     example: { input: "initials('ada lovelace')", output: "'AL'" },
     note: 'Checks cover extra spaces, a middle name, and empty input. Review how you split the words yourself.',
-    vocabulary: [{ term: 'Trim', meaning: 'remove spaces from the start and end of text' }, { term: 'Slice', meaning: 'copy part of a string by its positions' }, { term: 'Split', meaning: 'turn text into an array of parts using a separator' }, { term: 'Join', meaning: 'combine array items into text with a chosen separator' }],
+    vocabulary: [
+      { term: 'Trim', meaning: 'remove spaces from the start and end of text' },
+      { term: 'Slice', meaning: 'copy part of a string by its positions' },
+      { term: 'Split', meaning: 'turn text into an array of parts using a separator' },
+      { term: 'Join', meaning: 'combine array items into text with a chosen separator' },
+    ],
     planPrompt: 'Which spaces go first? How will you split words separated by several spaces?',
     starter: 'function initials(fullName: string): string {\n  // Trim, split into words, then take each first letter.\n  return ""\n}\n',
     functionName: 'initials',
@@ -272,13 +377,23 @@ export const foundationReps: Rep[] = [
     ],
   },
   {
-    id: 'object-update', title: 'Update an object without changing it', category: 'TypeScript basics',
-    prompt: 'A task has a title, a done flag, and a priority number. Return a new task with the same title and priority, and with done set to the supplied value. Do not change the task you received. If done already has the requested value, still return a new object.',
-    example: { input: "setDone({ title: 'Write', done: false, priority: 2 }, true)", output: "{ title: 'Write', done: true, priority: 2 }" },
+    id: 'object-update',
+    title: 'Update an object without changing it',
+    category: 'TypeScript basics',
+    prompt:
+      'A task has a title, a done flag, and a priority number. Return a new task with the same title and priority, and with done set to the supplied value. Do not change the task you received. If done already has the requested value, still return a new object.',
+    example: {
+      input: "setDone({ title: 'Write', done: false, priority: 2 }, true)",
+      output: "{ title: 'Write', done: true, priority: 2 }",
+    },
     note: 'The supplied task must stay unchanged. Checks compare the returned task and also detect changes made to the supplied object.',
-    vocabulary: [{ term: 'Spread', meaning: 'copy the fields of an object into a new object with three dots' }, { term: 'Mutation', meaning: 'changing an existing value instead of creating a new one' }],
+    vocabulary: [
+      { term: 'Spread', meaning: 'copy the fields of an object into a new object with three dots' },
+      { term: 'Mutation', meaning: 'changing an existing value instead of creating a new one' },
+    ],
     planPrompt: 'Which field changes? Should the function return the object it received or a new object?',
-    starter: 'type Task = { title: string; done: boolean; priority: number }\n\nfunction setDone(task: Task, done: boolean): Task {\n  // Return a new task. Do not assign to task.done.\n  return { title: "", done: false, priority: 0 }\n}\n',
+    starter:
+      'type Task = { title: string; done: boolean; priority: number }\n\nfunction setDone(task: Task, done: boolean): Task {\n  // Return a new task. Do not assign to task.done.\n  return { title: "", done: false, priority: 0 }\n}\n',
     functionName: 'setDone',
     preserveInput: true,
     hints: [
@@ -287,17 +402,37 @@ export const foundationReps: Rep[] = [
       'Put done after the spread so it replaces the copied done value, then return the new object.',
     ],
     checks: [
-      { name: 'Marks an open task done', input: [{ title: 'Write', done: false, priority: 2 }, true], expected: { title: 'Write', done: true, priority: 2 } },
-      { name: 'Reopens a done task', input: [{ title: 'Review', done: true, priority: 1 }, false], expected: { title: 'Review', done: false, priority: 1 } },
-      { name: 'Keeps a done value that is already set', input: [{ title: 'Plan', done: true, priority: 3 }, true], expected: { title: 'Plan', done: true, priority: 3 } },
-      { name: 'Keeps priority zero', input: [{ title: 'Rest', done: false, priority: 0 }, true], expected: { title: 'Rest', done: true, priority: 0 } },
+      {
+        name: 'Marks an open task done',
+        input: [{ title: 'Write', done: false, priority: 2 }, true],
+        expected: { title: 'Write', done: true, priority: 2 },
+      },
+      {
+        name: 'Reopens a done task',
+        input: [{ title: 'Review', done: true, priority: 1 }, false],
+        expected: { title: 'Review', done: false, priority: 1 },
+      },
+      {
+        name: 'Keeps a done value that is already set',
+        input: [{ title: 'Plan', done: true, priority: 3 }, true],
+        expected: { title: 'Plan', done: true, priority: 3 },
+      },
+      {
+        name: 'Keeps priority zero',
+        input: [{ title: 'Rest', done: false, priority: 0 }, true],
+        expected: { title: 'Rest', done: true, priority: 0 },
+      },
     ],
   },
   {
-    id: 'shipping-cost-tiers', title: 'Price a shipment by weight tiers', category: 'TypeScript basics',
-    prompt: 'Return the shipping cost in cents for an order. The order is a list of lines, and each line has weightGrams and quantity, both whole numbers. The total weight is the sum of weightGrams times quantity over every line. Charge 300 cents when the total is 500 grams or less, 600 cents when it is above 500 up to and including 2000 grams, and 1200 cents when it is above 2000 grams. An empty order costs 0 cents. Add one handling charge of 200 cents when any line has a quantity above 10, however many lines are bulky.',
+    id: 'shipping-cost-tiers',
+    title: 'Price a shipment by weight tiers',
+    category: 'TypeScript basics',
+    prompt:
+      'Return the shipping cost in cents for an order. The order is a list of lines, and each line has weightGrams and quantity, both whole numbers. The total weight is the sum of weightGrams times quantity over every line. Charge 300 cents when the total is 500 grams or less, 600 cents when it is above 500 up to and including 2000 grams, and 1200 cents when it is above 2000 grams. An empty order costs 0 cents. Add one handling charge of 200 cents when any line has a quantity above 10, however many lines are bulky.',
     brief: {
-      summary: 'Return the shipping cost in cents for an order. The order is a list of lines, and each line has weightGrams and quantity, both whole numbers.',
+      summary:
+        'Return the shipping cost in cents for an order. The order is a list of lines, and each line has weightGrams and quantity, both whole numbers.',
       rules: [
         'The total weight is the sum of weightGrams times quantity over every line.',
         'Charge 300 cents when the total is 500 grams or less, 600 cents when it is above 500 up to and including 2000 grams, and 1200 cents when it is above 2000 grams.',
@@ -307,9 +442,13 @@ export const foundationReps: Rep[] = [
     },
     example: { input: 'shippingCost([{weightGrams: 300, quantity: 2}, {weightGrams: 150, quantity: 1}])', output: '600' },
     note: 'The total weight is 750 grams in the example, which falls in the middle tier. Checks cover the tier edges, the fee threshold, a fee added once, and a heavy order with a fee. Do not change the lines. Review your loop and tier order yourself.',
-    vocabulary: [{ term: 'Accumulator', meaning: 'a variable that collects a value as a loop visits each item' }, { term: 'Boundary', meaning: 'a value where the result changes' }],
+    vocabulary: [
+      { term: 'Accumulator', meaning: 'a variable that collects a value as a loop visits each item' },
+      { term: 'Boundary', meaning: 'a value where the result changes' },
+    ],
     planPrompt: 'How will you total the weight and pick a tier? When does the handling charge apply?',
-    starter: 'type Line = { weightGrams: number; quantity: number }\n\nfunction shippingCost(lines: Line[]): number {\n  // Loop over the lines, then choose the tier and add any handling charge.\n  return 0\n}\n',
+    starter:
+      'type Line = { weightGrams: number; quantity: number }\n\nfunction shippingCost(lines: Line[]): number {\n  // Loop over the lines, then choose the tier and add any handling charge.\n  return 0\n}\n',
     functionName: 'shippingCost',
     preserveInput: true,
     hints: [
@@ -318,20 +457,50 @@ export const foundationReps: Rep[] = [
       'Keep a yes-or-no flag that turns on when a line is bulky. Apply the handling charge once after the loop finishes.',
     ],
     checks: [
-      { name: 'Charges the light tier for a light order', input: [[{ weightGrams: 100, quantity: 1 }, { weightGrams: 200, quantity: 2 }]], expected: 300 },
+      {
+        name: 'Charges the light tier for a light order',
+        input: [
+          [
+            { weightGrams: 100, quantity: 1 },
+            { weightGrams: 200, quantity: 2 },
+          ],
+        ],
+        expected: 300,
+      },
       { name: 'Costs nothing for an empty order', input: [[]], expected: 0 },
       { name: 'Moves to the middle tier just above 500 grams', input: [[{ weightGrams: 501, quantity: 1 }]], expected: 600 },
       { name: 'Keeps 2000 grams in the middle tier', input: [[{ weightGrams: 1000, quantity: 2 }]], expected: 600 },
       { name: 'Moves to the heavy tier just above 2000 grams', input: [[{ weightGrams: 2001, quantity: 1 }]], expected: 1200 },
       { name: 'Adds the handling charge above ten items', input: [[{ weightGrams: 10, quantity: 11 }]], expected: 500 },
       { name: 'Does not add the handling charge at exactly ten items', input: [[{ weightGrams: 10, quantity: 10 }]], expected: 300 },
-      { name: 'Adds the handling charge once for several bulky lines', input: [[{ weightGrams: 10, quantity: 11 }, { weightGrams: 20, quantity: 12 }]], expected: 500 },
-      { name: 'Combines the heavy tier with the handling charge', input: [[{ weightGrams: 1000, quantity: 3 }, { weightGrams: 5, quantity: 11 }]], expected: 1400 },
+      {
+        name: 'Adds the handling charge once for several bulky lines',
+        input: [
+          [
+            { weightGrams: 10, quantity: 11 },
+            { weightGrams: 20, quantity: 12 },
+          ],
+        ],
+        expected: 500,
+      },
+      {
+        name: 'Combines the heavy tier with the handling charge',
+        input: [
+          [
+            { weightGrams: 1000, quantity: 3 },
+            { weightGrams: 5, quantity: 11 },
+          ],
+        ],
+        expected: 1400,
+      },
     ],
   },
   {
-    id: 'countdown-labels', title: 'Format a countdown timer', category: 'TypeScript basics',
-    prompt: 'Return the labels a countdown timer shows. Start at startSeconds and subtract stepSeconds each time, stopping before the value would drop below 0. Format each value as minutes, a colon, and two-digit seconds, such as 2:05 or 0:30. Minutes are not padded. Keep counting whole minutes past 59; there are no hours (3600 seconds is 60:00). Return the labels in the order shown, starting with the largest value. Inputs are whole numbers: startSeconds from 0 to 3600 and stepSeconds from 1 to 600. When startSeconds is 0, return ["0:00"].',
+    id: 'countdown-labels',
+    title: 'Format a countdown timer',
+    category: 'TypeScript basics',
+    prompt:
+      'Return the labels a countdown timer shows. Start at startSeconds and subtract stepSeconds each time, stopping before the value would drop below 0. Format each value as minutes, a colon, and two-digit seconds, such as 2:05 or 0:30. Minutes are not padded. Keep counting whole minutes past 59; there are no hours (3600 seconds is 60:00). Return the labels in the order shown, starting with the largest value. Inputs are whole numbers: startSeconds from 0 to 3600 and stepSeconds from 1 to 600. When startSeconds is 0, return ["0:00"].',
     brief: {
       summary: 'Return the labels a countdown timer shows, counting down from startSeconds in steps of stepSeconds.',
       rules: [
@@ -339,13 +508,21 @@ export const foundationReps: Rep[] = [
         'Format each value as minutes, a colon, and two-digit seconds, such as 2:05 or 0:30. Minutes are not padded.',
         'Return the labels in the order shown, starting with the largest value.',
       ],
-      edgeCases: ['Keep counting whole minutes past 59; there are no hours (3600 seconds is 60:00).', 'Inputs are whole numbers: startSeconds from 0 to 3600 and stepSeconds from 1 to 600.', 'When startSeconds is 0, return ["0:00"].'],
+      edgeCases: [
+        'Keep counting whole minutes past 59; there are no hours (3600 seconds is 60:00).',
+        'Inputs are whole numbers: startSeconds from 0 to 3600 and stepSeconds from 1 to 600.',
+        'When startSeconds is 0, return ["0:00"].',
+      ],
     },
     example: { input: 'countdownLabels(130, 60)', output: "['2:10', '1:10', '0:10']" },
     note: 'The example stops at 0:10 because the next value would be negative. Checks cover steps that land exactly on zero, steps that do not, and the largest input. Review your stopping condition yourself.',
-    vocabulary: [{ term: 'Countdown', meaning: 'a sequence of values that gets smaller until it reaches a limit' }, { term: 'Padding', meaning: 'adding leading characters so text has a fixed width' }],
+    vocabulary: [
+      { term: 'Countdown', meaning: 'a sequence of values that gets smaller until it reaches a limit' },
+      { term: 'Padding', meaning: 'adding leading characters so text has a fixed width' },
+    ],
     planPrompt: 'What is the first value, and when do you stop? Predict the labels for 130 with a 60-second step.',
-    starter: 'function countdownLabels(startSeconds: number, stepSeconds: number): string[] {\n  // Count down by stepSeconds and format each value as m:ss.\n  return []\n}\n',
+    starter:
+      'function countdownLabels(startSeconds: number, stepSeconds: number): string[] {\n  // Count down by stepSeconds and format each value as m:ss.\n  return []\n}\n',
     functionName: 'countdownLabels',
     hints: [
       'Keep one current value that starts at startSeconds and gets smaller by stepSeconds on each pass.',
@@ -360,8 +537,16 @@ export const foundationReps: Rep[] = [
       { name: 'Pads seconds but not minutes', input: [605, 300], expected: ['10:05', '5:05', '0:05'] },
       { name: 'Returns only the start when the step is too large', input: [30, 600], expected: ['0:30'] },
       { name: 'Counts down by one second to zero', input: [3, 1], expected: ['0:03', '0:02', '0:01', '0:00'] },
-      { name: 'Handles an uneven step near the end', input: [100, 7], expected: ['1:40', '1:33', '1:26', '1:19', '1:12', '1:05', '0:58', '0:51', '0:44', '0:37', '0:30', '0:23', '0:16', '0:09', '0:02'] },
-      { name: 'Handles the largest allowed input', input: [3600, 600], expected: ['60:00', '50:00', '40:00', '30:00', '20:00', '10:00', '0:00'] },
+      {
+        name: 'Handles an uneven step near the end',
+        input: [100, 7],
+        expected: ['1:40', '1:33', '1:26', '1:19', '1:12', '1:05', '0:58', '0:51', '0:44', '0:37', '0:30', '0:23', '0:16', '0:09', '0:02'],
+      },
+      {
+        name: 'Handles the largest allowed input',
+        input: [3600, 600],
+        expected: ['60:00', '50:00', '40:00', '30:00', '20:00', '10:00', '0:00'],
+      },
     ],
   },
   {
@@ -370,14 +555,17 @@ export const foundationReps: Rep[] = [
     category: 'TypeScript basics',
     prompt:
       'Write batchLabels(total, capacity). Return one label for each nonempty packing batch, in order, using exactly "Batch N: K items". N starts at 1 and K is the number of items in that batch. All but possibly the last batch contain capacity items. A total of 0 returns []. total is an integer from 0 to 1000; capacity is an integer from 1 to 1000. Do not add an empty final batch.',
-    brief: { summary: 'Write batchLabels(total, capacity).', rules: [
-      'Return one label for each nonempty packing batch, in order, using exactly "Batch N: K items".',
-      'N starts at 1 and K is the number of items in that batch.',
-      'All but possibly the last batch contain capacity items.',
-      'A total of 0 returns [].',
-      'total is an integer from 0 to 1000; capacity is an integer from 1 to 1000.',
-      'Do not add an empty final batch.',
-    ] },
+    brief: {
+      summary: 'Write batchLabels(total, capacity).',
+      rules: [
+        'Return one label for each nonempty packing batch, in order, using exactly "Batch N: K items".',
+        'N starts at 1 and K is the number of items in that batch.',
+        'All but possibly the last batch contain capacity items.',
+        'A total of 0 returns [].',
+        'total is an integer from 0 to 1000; capacity is an integer from 1 to 1000.',
+        'Do not add an empty final batch.',
+      ],
+    },
     example: {
       input: 'batchLabels(7, 3)',
       output: '["Batch 1: 3 items", "Batch 2: 3 items", "Batch 3: 1 items"]',
@@ -387,10 +575,8 @@ export const foundationReps: Rep[] = [
       { term: 'Capacity', meaning: 'the maximum number of items in one batch' },
       { term: 'Remainder', meaning: 'items left after full batches' },
     ],
-    planPrompt:
-      'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
-    starter:
-      "function batchLabels(total: number, capacity: number): string[] {\n  throw new Error('Not implemented')\n}\n",
+    planPrompt: 'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    starter: "function batchLabels(total: number, capacity: number): string[] {\n  throw new Error('Not implemented')\n}\n",
     functionName: 'batchLabels',
     preserveInput: true,
     hints: [
@@ -417,21 +603,23 @@ export const foundationReps: Rep[] = [
     category: 'TypeScript basics',
     prompt:
       'Write inspectionSummary(readings, limit). Return { alerts, longestRun }: alerts counts readings strictly above limit; longestRun is the largest number of consecutive readings strictly above limit. A reading equal to limit is not an alert. Empty readings return both counts as 0. readings has at most 1000 integers between -1000 and 1000; limit is an integer in that range. Preserve readings.',
-    brief: { summary: 'Write inspectionSummary(readings, limit).', rules: [
-      'Return { alerts, longestRun }: alerts counts readings strictly above limit; longestRun is the largest number of consecutive readings strictly above limit.',
-      'A reading equal to limit is not an alert.',
-      'Empty readings return both counts as 0.',
-      'readings has at most 1000 integers between -1000 and 1000; limit is an integer in that range.',
-      'Preserve readings.',
-    ] },
+    brief: {
+      summary: 'Write inspectionSummary(readings, limit).',
+      rules: [
+        'Return { alerts, longestRun }: alerts counts readings strictly above limit; longestRun is the largest number of consecutive readings strictly above limit.',
+        'A reading equal to limit is not an alert.',
+        'Empty readings return both counts as 0.',
+        'readings has at most 1000 integers between -1000 and 1000; limit is an integer in that range.',
+        'Preserve readings.',
+      ],
+    },
     example: { input: 'inspectionSummary([4, 7, 8, 5, 9], 5)', output: '{"alerts": 3, "longestRun": 2}' },
     note: 'Inputs stay unchanged. Use integer inputs within the stated limits.',
     vocabulary: [
       { term: 'Consecutive', meaning: 'next to each other with no gap' },
       { term: 'Threshold', meaning: 'a value that separates two categories' },
     ],
-    planPrompt:
-      'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    planPrompt: 'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
     starter:
       "function inspectionSummary(readings: number[], limit: number): { alerts: number; longestRun: number } {\n  throw new Error('Not implemented')\n}\n",
     functionName: 'inspectionSummary',
@@ -451,15 +639,27 @@ export const foundationReps: Rep[] = [
     ],
   },
   {
-    id: 'function-returns-function', title: 'Make a function that returns a function', category: 'TypeScript basics',
-    prompt: 'Implement makeAdder(amount), which returns a new function. That function takes a number and returns it plus amount. Then implement addAll(amount, values): build one adder with makeAdder and return a new array holding the adder\'s result for each value.',
+    id: 'function-returns-function',
+    title: 'Make a function that returns a function',
+    category: 'TypeScript basics',
+    prompt:
+      "Implement makeAdder(amount), which returns a new function. That function takes a number and returns it plus amount. Then implement addAll(amount, values): build one adder with makeAdder and return a new array holding the adder's result for each value.",
     example: { input: 'addAll(5, [1, 2])', output: '[6, 7]' },
     note: 'Amount and values are finite integers; values may be empty. Return a new array and do not change values. The checks inspect outputs only, so review yourself that addAll calls makeAdder once and uses the function it returns.',
-    vocabulary: [{ term: 'Returned function', meaning: 'a function created inside another function and handed back to the caller' }, { term: 'Callback', meaning: 'a function passed to another function so it can be called for each item' }],
+    vocabulary: [
+      { term: 'Returned function', meaning: 'a function created inside another function and handed back to the caller' },
+      { term: 'Callback', meaning: 'a function passed to another function so it can be called for each item' },
+    ],
     planPrompt: 'What does makeAdder(5) give back? What happens when you call that result with 3?',
-    starter: 'function makeAdder(amount: number): (x: number) => number {\n  return x => x\n}\nfunction addAll(amount: number, values: number[]): number[] {\n  // Build one adder, then apply it to each value.\n  return []\n}\n',
-    functionName: 'addAll', preserveInput: true,
-    hints: ['makeAdder returns a function, so its body should end with an arrow function that uses x.', 'Inside the arrow function you can read amount, which belongs to the makeAdder call.', 'In addAll, store makeAdder(amount) in a const, then map values with it.'],
+    starter:
+      'function makeAdder(amount: number): (x: number) => number {\n  return x => x\n}\nfunction addAll(amount: number, values: number[]): number[] {\n  // Build one adder, then apply it to each value.\n  return []\n}\n',
+    functionName: 'addAll',
+    preserveInput: true,
+    hints: [
+      'makeAdder returns a function, so its body should end with an arrow function that uses x.',
+      'Inside the arrow function you can read amount, which belongs to the makeAdder call.',
+      'In addAll, store makeAdder(amount) in a const, then map values with it.',
+    ],
     checks: [
       { name: 'Adds to each value', input: [5, [1, 2]], expected: [6, 7] },
       { name: 'Returns an empty array for no values', input: [5, []], expected: [] },

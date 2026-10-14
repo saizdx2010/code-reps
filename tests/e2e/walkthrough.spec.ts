@@ -47,7 +47,9 @@ test('walkthrough uses real checks, hints, writing and completion without granti
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await help(page).getByRole('button', { name: 'Walkthrough: explain next' }).click()
-  await page.getByLabel('Your explanation', { exact: true }).fill('I combine the greeting and name, then return the message. I reviewed const and let myself.')
+  await page
+    .getByLabel('Your explanation', { exact: true })
+    .fill('I combine the greeting and name, then return the message. I reviewed const and let myself.')
   await help(page).getByRole('button', { name: 'Walkthrough: review next' }).click()
   // Difficulty is optional, so nothing is missing once checks pass.
   await expect(page.getByRole('button', { name: 'Complete rep', exact: true })).toBeEnabled()
@@ -66,15 +68,32 @@ test('walkthrough uses real checks, hints, writing and completion without granti
   await page.goto('/#/home')
   await expect(page.getByRole('button', { name: 'Replay walkthrough' })).toBeVisible()
   await page.getByRole('button', { name: 'Replay walkthrough' }).click()
-  for (const [number, action] of [[1, 'plan'], [2, 'solve'], [3, 'explain'], [4, 'review']] as const) {
+  for (const [number, action] of [
+    [1, 'plan'],
+    [2, 'solve'],
+    [3, 'explain'],
+    [4, 'review'],
+  ] as const) {
     await expect(help(page)).toContainText(`${number} of 5`)
-    await help(page).getByRole('button', { name: `Walkthrough: ${action} next` }).click()
+    await help(page)
+      .getByRole('button', { name: `Walkthrough: ${action} next` })
+      .click()
   }
   await expect(help(page)).toContainText('Your attempt is saved')
   expect(await page.evaluate(() => Object.entries(localStorage).filter(([key]) => key.includes('declare-variables')))).toEqual(work)
   await page.goto('/#/progress')
-  await expect(page.locator('[aria-label="Practice summary"] > div').filter({ has: page.locator('dt', { hasText: 'Independent skills' }) }).locator('dd')).toHaveText('0')
-  await expect(page.locator('[aria-label="Practice summary"] > div').filter({ has: page.locator('dt', { hasText: 'Retained skills' }) }).locator('dd')).toHaveText('0')
+  await expect(
+    page
+      .locator('[aria-label="Practice summary"] > div')
+      .filter({ has: page.locator('dt', { hasText: 'Independent skills' }) })
+      .locator('dd'),
+  ).toHaveText('0')
+  await expect(
+    page
+      .locator('[aria-label="Practice summary"] > div')
+      .filter({ has: page.locator('dt', { hasText: 'Retained skills' }) })
+      .locator('dd'),
+  ).toHaveText('0')
 })
 
 test('walkthrough preference is session-only and separate for each profile', async ({ page }) => {
@@ -118,7 +137,10 @@ test('an unavailable walkthrough leaves practice usable', async ({ page }) => {
   await saved(page)
 })
 
-for (const viewport of [{ width: 1280, height: 600 }, { width: 390, height: 600 }]) {
+for (const viewport of [
+  { width: 1280, height: 600 },
+  { width: 390, height: 600 },
+]) {
   test(`walkthrough leaves a usable desk at ${viewport.width}×${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport)
     await page.goto('/#/home')

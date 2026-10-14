@@ -13,12 +13,18 @@ const none = () => false
 
 test('path reps come first in path order, skipping finished and unknown ids', () => {
   const picked = startHereReps(items, { pathRepIds: ['e', 'missing', 'c', 'a', 'b'], isDone: item => item.id === 'a', level, limit: 3 })
-  assert.deepEqual(picked.map(item => item.id), ['e', 'c', 'b'])
+  assert.deepEqual(
+    picked.map(item => item.id),
+    ['e', 'c', 'b'],
+  )
 })
 
 test('falls back to the easiest unfinished reps, keeping catalog order for ties', () => {
   const picked = startHereReps(items, { pathRepIds: ['a'], isDone: item => item.id === 'b', level, limit: 4 })
-  assert.deepEqual(picked.map(item => item.id), ['a', 'd', 'c', 'e'])
+  assert.deepEqual(
+    picked.map(item => item.id),
+    ['a', 'd', 'c', 'e'],
+  )
 })
 
 test('unplaced reps sort after every placed level', () => {

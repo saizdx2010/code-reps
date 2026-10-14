@@ -51,7 +51,13 @@ function pathPosition(repId: string) {
   for (const path of paths) {
     const ordered = path.stages.flatMap(stage => [...stage.repIds] as string[])
     const index = ordered.indexOf(repId)
-    if (index >= 0) return { path, ordered, before: ordered.slice(0, index), stage: path.stages.find(stage => (stage.repIds as readonly string[]).includes(repId))! }
+    if (index >= 0)
+      return {
+        path,
+        ordered,
+        before: ordered.slice(0, index),
+        stage: path.stages.find(stage => (stage.repIds as readonly string[]).includes(repId))!,
+      }
   }
   return undefined
 }
@@ -87,11 +93,15 @@ export function getRepGuidance(repId: string, completedRepIds: Iterable<string>)
   const trackGap = level !== undefined && level >= 2 && !!track && !trackBeginners.some(id => completed.has(id))
   if (level && (jump || trackGap)) {
     const bridgeId = jump
-      ? (position?.before ?? []).filter(id => !completed.has(id) && (repLevel(id) ?? 3) < level).sort((a, b) => (repLevel(b) ?? 0) - (repLevel(a) ?? 0))[0]
+      ? (position?.before ?? [])
+          .filter(id => !completed.has(id) && (repLevel(id) ?? 3) < level)
+          .sort((a, b) => (repLevel(b) ?? 0) - (repLevel(a) ?? 0))[0]
       : trackBeginners[0]
     const lesson = [...lessons.values()].find(item => linked.every(skill => skill.id !== item.id)) ?? [...lessons.values()][0]
     const progress = jump
-      ? (highest ? `and the highest level you have finished is ${repLevelLabels[highest as RepLevel]}` : 'and you have not finished a rep yet')
+      ? highest
+        ? `and the highest level you have finished is ${repLevelLabels[highest as RepLevel]}`
+        : 'and you have not finished a rep yet'
       : `and you have not finished a Beginner rep in ${track!.path.title} yet`
     checkpoint = {
       message: `This is ${repLevelLabels[level]} work, ${progress}. Skim the lesson or try a nearer step first if the task looks unfamiliar. You can also continue with this rep now.`,

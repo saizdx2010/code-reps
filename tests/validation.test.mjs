@@ -7,16 +7,48 @@ import { assertMutantsFail } from './helpers/checks.mjs'
 
 test('validation checks reject coercion, changed precedence, partial output, and mutation', () => {
   const mutants = [
-    ['validate-stock-adjustment', validationSolutions['validate-stock-adjustment'].replace("typeof row.change !== 'number'", 'false').replace('const sku =', 'row.change = Number(row.change); const sku =')],
+    [
+      'validate-stock-adjustment',
+      validationSolutions['validate-stock-adjustment']
+        .replace("typeof row.change !== 'number'", 'false')
+        .replace('const sku =', 'row.change = Number(row.change); const sku ='),
+    ],
     ['validate-stock-adjustment', validationSolutions['validate-stock-adjustment'].replace('row.change === 0 || ', '')],
-    ['validate-stock-adjustment', validationSolutions['validate-stock-adjustment'].replace('return {sku, change: row.change}', 'row.sku = sku; return {sku, change: row.change}')],
-    ['parse-delivery-window', validationSolutions['parse-delivery-window'].replace('request.minutes === undefined ? 20 : request.minutes', 'request.minutes || 20')],
-    ['parse-delivery-window', validationSolutions['parse-delivery-window'].replace('request.minutes === undefined ? 20 : request.minutes', 'request.minutes ?? 20')],
+    [
+      'validate-stock-adjustment',
+      validationSolutions['validate-stock-adjustment'].replace(
+        'return {sku, change: row.change}',
+        'row.sku = sku; return {sku, change: row.change}',
+      ),
+    ],
+    [
+      'parse-delivery-window',
+      validationSolutions['parse-delivery-window'].replace('request.minutes === undefined ? 20 : request.minutes', 'request.minutes || 20'),
+    ],
+    [
+      'parse-delivery-window',
+      validationSolutions['parse-delivery-window'].replace('request.minutes === undefined ? 20 : request.minutes', 'request.minutes ?? 20'),
+    ],
     ['parse-delivery-window', validationSolutions['parse-delivery-window'].replace("if (request.mode === 'delivery')", 'if (true)')],
-    ['parse-delivery-window', validationSolutions['parse-delivery-window'].replace("if (address.length < 1 || address.length > 80) return fail('INVALID_ADDRESS')", "if (address.length < 1 || address.length > 80) return fail('INVALID_MINUTES')")],
+    [
+      'parse-delivery-window',
+      validationSolutions['parse-delivery-window'].replace(
+        "if (address.length < 1 || address.length > 80) return fail('INVALID_ADDRESS')",
+        "if (address.length < 1 || address.length > 80) return fail('INVALID_MINUTES')",
+      ),
+    ],
     ['validate-import-batch', validationSolutions['validate-import-batch'].replace('row.id.trim().toLowerCase()', 'row.id.trim()')],
-    ['validate-import-batch', validationSolutions['validate-import-batch'].replace("return {ok: false, index, error: 'INVALID_ROW'}", 'return {ok: true, rows}')],
-    ['validate-import-batch', validationSolutions['validate-import-batch'].replace('rows.push({id, amount: row.amount})', 'row.id = id; rows.push({id, amount: row.amount})')],
+    [
+      'validate-import-batch',
+      validationSolutions['validate-import-batch'].replace("return {ok: false, index, error: 'INVALID_ROW'}", 'return {ok: true, rows}'),
+    ],
+    [
+      'validate-import-batch',
+      validationSolutions['validate-import-batch'].replace(
+        'rows.push({id, amount: row.amount})',
+        'row.id = id; rows.push({id, amount: row.amount})',
+      ),
+    ],
   ]
   assertMutantsFail(mutants)
 })
@@ -24,7 +56,17 @@ test('validation checks reject coercion, changed precedence, partial output, and
 test('validation evidence requires ordered, unhinted independent work and a distinct delayed recall', () => {
   const journey = journeys.find(journey => journey.id === 'validation')
   const day = n => new Date(Date.UTC(2026, 9, n)).toISOString()
-  const record = (repId, n, hintCount = 0) => ({id: `${repId}-${n}`, repId, completedAt: day(n), hintCount, plan: 'plan', code: 'code', explanation: 'explanation', confidence: 'confident', difficulty: 'none'})
+  const record = (repId, n, hintCount = 0) => ({
+    id: `${repId}-${n}`,
+    repId,
+    completedAt: day(n),
+    hintCount,
+    plan: 'plan',
+    code: 'code',
+    explanation: 'explanation',
+    confidence: 'confident',
+    difficulty: 'none',
+  })
   const guided = record(journey.guided, 1)
   const independent = record(journey.independent, 2)
   const at = n => Date.parse(day(n))

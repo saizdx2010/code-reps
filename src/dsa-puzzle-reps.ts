@@ -17,7 +17,8 @@ export const dsaPuzzleReps: Rep[] = [
       edgeCases: ['Empty or blank-only input returns 0.', 'A final newline is allowed; it does not create a tray.'],
     },
     category: 'Algorithm applications',
-    prompt: 'The night gardener records lamp readings for each greenhouse tray, one tray per nonblank line. For the first part, return the sum of the strongest reading on each tray. Negative readings still count: use the greatest value, not zero.',
+    prompt:
+      'The night gardener records lamp readings for each greenhouse tray, one tray per nonblank line. For the first part, return the sum of the strongest reading on each tray. Negative readings still count: use the greatest value, not zero.',
     example: { input: 'strongestTotal("1 4 3\\n-5 -2 -4")', output: '2' },
     note: 'Input uses ASCII lines separated only by \\n, with an optional final newline. Each nonblank line contains 1 to 20 readings separated by one or more ASCII spaces or tabs; leading and trailing spaces or tabs are allowed. Empty or space/tab-only lines are ignored, including blank section separators. Readings are base-10 integers from -1000 to 1000: optional minus, no plus, no leading zeros except 0, and no -0. There are at most 1000 nonblank lines and 100000 characters. Empty or blank-only input returns 0. CRLF, malformed tokens, and inputs beyond these limits are outside the contract; no error handling is required. Do not change the input.',
     vocabulary: [
@@ -55,14 +56,15 @@ export const dsaPuzzleReps: Rep[] = [
     brief: {
       summary: 'This is part 2 of puzzle-parse-part-one. Reuse your parser if useful: the greenhouse log format is unchanged.',
       rules: [
-        'Replace the part 1 sum with the total count of readings at least their own tray\'s strongest reading minus 2.',
+        "Replace the part 1 sum with the total count of readings at least their own tray's strongest reading minus 2.",
         'Count every occurrence, including duplicates, and include readings exactly at the cutoff.',
         'The same ASCII text and number limits apply; see the input contract below.',
       ],
       edgeCases: ['Empty or blank-only input returns 0.', 'Blank separators and a final newline do not create trays.'],
     },
     category: 'Algorithm applications',
-    prompt: 'This is part 2 of the previous greenhouse rep, puzzle-parse-part-one. Reuse your parser if useful: the log format is unchanged. The gardener now wants the total number of readings that are at least the strongest reading on their own tray minus 2. Count every occurrence, including equal readings. Return this count instead of the part 1 sum.',
+    prompt:
+      'This is part 2 of the previous greenhouse rep, puzzle-parse-part-one. Reuse your parser if useful: the log format is unchanged. The gardener now wants the total number of readings that are at least the strongest reading on their own tray minus 2. Count every occurrence, including equal readings. Return this count instead of the part 1 sum.',
     example: { input: 'nearPeakCount("1 4 3\\n-5 -2 -4")', output: '4' },
     note: 'Input uses ASCII lines separated only by \\n, with an optional final newline. Each nonblank line contains 1 to 20 readings separated by one or more ASCII spaces or tabs; leading and trailing spaces or tabs are allowed. Empty or space/tab-only lines are ignored, including blank section separators. Readings are base-10 integers from -1000 to 1000: optional minus, no plus, no leading zeros except 0, and no -0. There are at most 1000 nonblank lines and 100000 characters. Empty or blank-only input returns 0. CRLF, malformed tokens, and inputs beyond these limits are outside the contract; no error handling is required. Do not change the input.',
     vocabulary: [

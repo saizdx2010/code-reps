@@ -12,11 +12,26 @@ export function useRepContent(repId: string, enabled = true): RepContentState & 
   useEffect(() => {
     if (!enabled) return
     let current = true
-    loadRepContent(repId).then(content => { if (current) setSettled({ repId, attempt, content }) }, () => { if (current) setSettled(previous => ({ repId, attempt, failures: previous?.repId === repId ? (previous.failures ?? 0) + 1 : 1 })) })
-    return () => { current = false }
+    loadRepContent(repId).then(
+      content => {
+        if (current) setSettled({ repId, attempt, content })
+      },
+      () => {
+        if (current) setSettled(previous => ({ repId, attempt, failures: previous?.repId === repId ? (previous.failures ?? 0) + 1 : 1 }))
+      },
+    )
+    return () => {
+      current = false
+    }
   }, [repId, attempt, enabled])
   const retry = useCallback(() => setAttempt(value => value + 1), [])
   const cached = enabled ? peekRepContent(repId) : undefined
-  const state: RepContentState = cached ? { status: 'ready', content: cached } : settled?.repId !== repId || settled.attempt !== attempt ? { status: 'loading' } : settled.content ? { status: 'ready', content: settled.content } : { status: 'error', failures: settled.failures ?? 1 }
+  const state: RepContentState = cached
+    ? { status: 'ready', content: cached }
+    : settled?.repId !== repId || settled.attempt !== attempt
+      ? { status: 'loading' }
+      : settled.content
+        ? { status: 'ready', content: settled.content }
+        : { status: 'error', failures: settled.failures ?? 1 }
   return { ...state, retry }
 }

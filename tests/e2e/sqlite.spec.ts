@@ -15,11 +15,14 @@ const test = base.extend<{ service: Service }>({
     let running = await startServer({ port: 0, dataDir })
     const url = running.url
     try {
-      await provide({ url, restart: async () => {
-        const port = (running.server.address() as AddressInfo).port
-        await running.close()
-        running = await startServer({ port, dataDir })
-      } })
+      await provide({
+        url,
+        restart: async () => {
+          const port = (running.server.address() as AddressInfo).port
+          await running.close()
+          running = await startServer({ port, dataDir })
+        },
+      })
     } finally {
       await running.close()
       await rm(dataDir, { recursive: true, force: true })
@@ -44,7 +47,8 @@ test('records local Home and editor readiness alongside bundle budgets', async (
 
 async function serverPlan(url: string) {
   const { entries } = await (await fetch(`${url}/api/state`)).json()
-  return Object.entries(entries).filter(([key]) => key.includes('most-frequent-number'))
+  return Object.entries(entries)
+    .filter(([key]) => key.includes('most-frequent-number'))
     .map(([, value]) => JSON.parse(String(value)).plan)
 }
 
@@ -54,8 +58,9 @@ test('SQLite save failure, retry, and restart preserve the newest browser draft'
   await page.getByLabel('Your plan', { exact: true }).fill('Already saved plan')
   await expect.poll(() => serverPlan(service.url)).toContain('Already saved plan')
   let failWrites = true
-  await page.route('**/api/entries', request => failWrites
-    ? request.fulfill({ status: 503, json: { error: 'Test save failure' } }) : request.continue())
+  await page.route('**/api/entries', request =>
+    failWrites ? request.fulfill({ status: 503, json: { error: 'Test save failure' } }) : request.continue(),
+  )
   await page.getByLabel('Your plan', { exact: true }).fill('Newest plan kept during failure')
   const recovery = page.locator('.storage-recovery')
   await expect(recovery.getByRole('button', { name: 'Retry saving' })).toBeVisible()
@@ -82,14 +87,18 @@ test('SQLite save failure, retry, and restart preserve the newest browser draft'
     await restored.getByRole('button', { name: 'Plan', exact: true }).click()
     await expect(restored.getByLabel('Your plan', { exact: true })).toHaveValue('Newest plan kept during failure')
     await expect(restored.getByText('Saved on this laptop', { exact: true }).filter({ visible: true })).toBeVisible()
-  } finally { await clean.close() }
+  } finally {
+    await clean.close()
+  }
 })
 
 test('an older SQLite acknowledgement cannot discard a newer pending edit', async ({ page, service }) => {
   await page.goto(service.url + route)
   await expect(page.getByText('Saved on this laptop', { exact: true }).filter({ visible: true })).toBeVisible()
   let release = () => {}
-  const gate = new Promise<void>(resolve => { release = resolve })
+  const gate = new Promise<void>(resolve => {
+    release = resolve
+  })
   let held = false
   await page.route('**/api/entries', async request => {
     if (!held && request.request().postData()?.includes('Older edit awaiting acknowledgement')) {
@@ -103,14 +112,18 @@ test('an older SQLite acknowledgement cannot discard a newer pending edit', asyn
     await page.getByLabel('Your plan', { exact: true }).fill('Older edit awaiting acknowledgement')
     await expect.poll(() => held).toBe(true)
     await page.getByLabel('Your plan', { exact: true }).fill('Newer edit awaiting acknowledgement')
-    await expect.poll(() => page.evaluate(() => localStorage.getItem('code-reps:pending-writes:v1'))).toContain('Newer edit awaiting acknowledgement')
+    await expect
+      .poll(() => page.evaluate(() => localStorage.getItem('code-reps:pending-writes:v1')))
+      .toContain('Newer edit awaiting acknowledgement')
     release()
     await expect.poll(() => serverPlan(service.url)).toContain('Newer edit awaiting acknowledgement')
     await expect.poll(() => page.evaluate(() => localStorage.getItem('code-reps:pending-writes:v1'))).toBeNull()
     await page.reload()
     await page.getByRole('button', { name: 'Plan', exact: true }).click()
     await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue('Newer edit awaiting acknowledgement')
-  } finally { release() }
+  } finally {
+    release()
+  }
 })
 
 test('browser backup validation preserves work and a valid restore reaches SQLite', async ({ page, service }) => {
@@ -123,7 +136,9 @@ test('browser backup validation preserves work and a valid restore reaches SQLit
   const downloadPromise = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Download backup', exact: true }).click()
   const contents = await readFile((await (await downloadPromise).path())!)
-  await page.getByLabel('Choose Code Reps backup').setInputFiles({ name: 'broken.json', mimeType: 'application/json', buffer: Buffer.from('{broken') })
+  await page
+    .getByLabel('Choose Code Reps backup')
+    .setInputFiles({ name: 'broken.json', mimeType: 'application/json', buffer: Buffer.from('{broken') })
   await expect(page.locator('.transfer-message')).toBeVisible()
   await expect(page.locator('.transfer-message')).not.toContainText('Backup downloaded')
   await page.goto(service.url + route)
@@ -177,15 +192,35 @@ test('cold local-server editing, worker checks, and previews need no external re
 
 test('legacy session records in a learner backup still import into SQLite without a sessions page', async ({ page, service }) => {
   const sessionKey = 'code-reps:profile:default:sessions:v1'
-  const sessions = { version: 1, revision: 'legacy-revision', records: [{ id: 'legacy-session', repId: 'sum-positive-numbers', startedAt: '2026-10-06T10:00:00Z', endedAt: '2026-10-06T10:20:00Z', reflection: 'Session saved before sessions were retired', hintCount: 0 }] }
-  const contents = Buffer.from(JSON.stringify({ format: 'code-reps-backup', version: 1, learnerStart: null, history: [], drafts: {}, sessions }))
+  const sessions = {
+    version: 1,
+    revision: 'legacy-revision',
+    records: [
+      {
+        id: 'legacy-session',
+        repId: 'sum-positive-numbers',
+        startedAt: '2026-10-06T10:00:00Z',
+        endedAt: '2026-10-06T10:20:00Z',
+        reflection: 'Session saved before sessions were retired',
+        hintCount: 0,
+      },
+    ],
+  }
+  const contents = Buffer.from(
+    JSON.stringify({ format: 'code-reps-backup', version: 1, learnerStart: null, history: [], drafts: {}, sessions }),
+  )
   await page.goto(service.url + '/#/progress')
   await page.locator('.local-data > summary').click()
-  await Promise.all([page.waitForEvent('load'), page.getByLabel('Choose Code Reps backup').setInputFiles({ name: 'sessions.json', mimeType: 'application/json', buffer: contents })])
-  await expect.poll(async () => {
-    const { entries } = await (await fetch(service.url + '/api/state')).json()
-    return JSON.parse(entries[sessionKey] || '{"records":[]}').records[0]?.reflection
-  }).toBe('Session saved before sessions were retired')
+  await Promise.all([
+    page.waitForEvent('load'),
+    page.getByLabel('Choose Code Reps backup').setInputFiles({ name: 'sessions.json', mimeType: 'application/json', buffer: contents }),
+  ])
+  await expect
+    .poll(async () => {
+      const { entries } = await (await fetch(service.url + '/api/state')).json()
+      return JSON.parse(entries[sessionKey] || '{"records":[]}').records[0]?.reflection
+    })
+    .toBe('Session saved before sessions were retired')
   await page.goto(service.url + '/#/sessions')
   await expect(page).toHaveURL(/#\/history$/)
   await page.goto(service.url + '/#/practice/sum-positive-numbers')

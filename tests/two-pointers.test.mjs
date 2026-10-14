@@ -30,7 +30,10 @@ const pointerSolutions = {
 
 test('two-pointer review approaches satisfy every authored boundary', () => {
   for (const [id, code] of Object.entries(pointerSolutions)) {
-    assert.ok(runRep(code, id).every(result => result.passed), id)
+    assert.ok(
+      runRep(code, id).every(result => result.passed),
+      id,
+    )
     assert.equal(reps.find(rep => rep.id === id).preserveInput, true)
   }
 })
@@ -39,13 +42,23 @@ test('two-pointer tasks reject correct output accompanied by input mutation', ()
   for (const [id, code] of Object.entries(pointerSolutions)) {
     const input = id === 'sorted-offset-squares' ? 'offsets' : 'readings'
     const mutated = code.replace('return result', `${input}.fill(999); return result`)
-    assert.ok(runRep(mutated, id).some(result => !result.passed), id)
+    assert.ok(
+      runRep(mutated, id).some(result => !result.passed),
+      id,
+    )
   }
 })
 
 test('two-pointers journey is linked to its lesson and algorithm stage', () => {
   const journey = journeys.find(item => item.id === 'two-pointers')
-  assert.deepEqual(journey, { id: 'two-pointers', title: 'Coordinate positions in sorted data', guided: 'algo-sorted-pair', independent: 'sorted-offset-squares', recall: 'reading-run-summary', delayDays: 3 })
+  assert.deepEqual(journey, {
+    id: 'two-pointers',
+    title: 'Coordinate positions in sorted data',
+    guided: 'algo-sorted-pair',
+    independent: 'sorted-offset-squares',
+    recall: 'reading-run-summary',
+    delayDays: 3,
+  })
   const ids = [journey.guided, journey.independent, journey.recall]
   const lesson = skills.find(skill => skill.id === 'array-techniques')
   const stage = paths.flatMap(path => path.stages).find(stage => stage.title === 'Search sorted data and scan windows')

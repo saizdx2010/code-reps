@@ -28,10 +28,14 @@ export const dsaPlanPrompts = {
   'algo-graph-reachable': 'What makes a node valid? How will you avoid repeating work around a cycle and handle start equal to target?',
   'sort-score-records': 'Which rule wins when scores differ? What should happen when both keys match?',
   'kth-smallest-copy': 'How do duplicates affect rank? What should happen when the requested position is absent?',
-  'count-unique-windows': 'What do you need to remember about the labels currently inside a window? What must change when the window moves one position?',
-  'shortest-run-reaching-target': 'When should a run grow, and when may it give up its oldest item? Why does positivity make giving up safe?',
-  'first-insertion-point': 'Which yes/no question about one value tells you which side of the answer it is on? What index is returned when the answer is "no" everywhere?',
-  'smallest-daily-capacity': 'What are the smallest and largest capacities worth considering? If one capacity works, what does that tell you about larger ones?',
+  'count-unique-windows':
+    'What do you need to remember about the labels currently inside a window? What must change when the window moves one position?',
+  'shortest-run-reaching-target':
+    'When should a run grow, and when may it give up its oldest item? Why does positivity make giving up safe?',
+  'first-insertion-point':
+    'Which yes/no question about one value tells you which side of the answer it is on? What index is returned when the answer is "no" everywhere?',
+  'smallest-daily-capacity':
+    'What are the smallest and largest capacities worth considering? If one capacity works, what does that tell you about larger ones?',
   'flatten-nested-numbers': 'What is the output order across nested boundaries? What contribution does an empty list make?',
   'count-object-leaves': 'Which supplied values count even when falsy? What does an empty nested object contribute?',
   'tree-depth-sum': 'Which nodes qualify at depth zero? How do absent branches affect the total?',
@@ -41,8 +45,10 @@ export const dsaPlanPrompts = {
   'simplify-file-path': 'Which segments are special? What happens when a parent segment appears with no remaining name?',
   'sorted-offset-squares': 'How do negative offsets affect output order? Which boundary will you check before coding?',
   'reading-run-summary': 'What information must each record retain? What should happen for one reading or for all equal readings?',
-  'puzzle-parse-part-one': 'What does part 1 compute, what data shape would make part 2 cheap? Name a boundary that could disprove your plan.',
-  'puzzle-adapt-part-two': 'What does part 1 compute, what data shape would make part 2 cheap? Name a boundary that could disprove your plan.',
+  'puzzle-parse-part-one':
+    'What does part 1 compute, what data shape would make part 2 cheap? Name a boundary that could disprove your plan.',
+  'puzzle-adapt-part-two':
+    'What does part 1 compute, what data shape would make part 2 cheap? Name a boundary that could disprove your plan.',
   'next-warmer-day': 'Which later day qualifies first? Explain how equal readings and a final day affect your answer.',
   'top-k-frequent-tags': 'How will you rank equal counts and choose exactly k distinct results without changing the input?',
   'course-order': 'When is a course eligible, how do you choose among eligible courses, and how will you detect an impossible schedule?',

@@ -1,372 +1,726 @@
 import type { Skill } from './knowledge.ts'
 
-export const dsaSkills: Skill[] = [{
-    'id': 'collection-operations',
-    'title': 'Use collections before solving problems',
-    'summary': 'Declare arrays, sets, and maps; practice their operations and distinguish absence from stored values.',
-    'prerequisites': ['values'],
-    'objectives': ['Create typed collections and read their contents.', 'Distinguish array order, set membership, and map associations.', 'Copy caller-owned arrays before updating them.'],
-    'sections': [{
-        'title': 'An ordered array',
-        'body': 'The declaration `const values: number[] = []` creates an empty array of numbers. push adds at the end; pop removes and returns the last item, or undefined when empty. values.length counts items. values[index] reads a zero-based position. Spread, [...values], creates a separate shallow array: nested objects would still share references. const prevents reassignment of the name, not changes to the array.'
-      }, {
-        'title': 'Distinct values in a set',
-        'body': 'The declaration `const seen = new Set<number>()` creates an empty set. add(value) inserts a value; has(value) checks membership; delete(value) removes it; size counts distinct values. Adding the same number twice keeps one member. Deleting an absent member is allowed. Use for...of to visit values in insertion order. A set does not offer array-style indexing.'
-      }, {
-        'title': 'Associated values in a map',
-        'body': 'The declaration `const counts = new Map<string, number>()` associates text keys with numbers. set(key, value) creates or replaces an association; get(key) reads it; has(key) distinguishes presence; delete(key) removes it; size counts keys. for (const [key, value] of counts) visits entries in insertion order. A missing get returns undefined. A stored zero is still present: use ?? rather than || when defaulting only missing values.'
-      }, {
-        'title': 'Choose by the question',
-        'body': 'Use an array when position and repeated values matter, a set for distinct membership, and a map for values associated with keys. Copying n array items takes O(n) time and space. Sets and maps store their distinct members or keys; access is efficient on average, without a universal worst-case constant-time promise. Output checks cannot establish which API you used: inspect your implementation after checking.'
-      }],
-    'example': 'const values: number[] = [0, 2]\nconst copy = [...values]\ncopy.push(2) // [0, 2, 2]\nconst seen = new Set<number>(copy) // {0, 2}\nconst scores = new Map<string, number>()\nscores.set("Ada", 0)\nscores.get("Ada") ?? null // 0',
-    'walkthrough': ['The copy has a separate array identity; values remains [0, 2].', 'Appending keeps repeated values in the array.', 'Constructing a set keeps only the two distinct numbers.', 'The map stores zero for Ada; reading a missing key would produce undefined instead.'],
-    'mistakes': ['Using array.length on a Set instead of size.', 'Using map[key] rather than get(key).', 'Using || null and discarding a legitimate zero.', 'Mutating the original array through a second name pointing at it.'],
-    'questions': [{
-        'id': 'set-size-v1',
-        'prompt': 'What is the final size?',
-        'code': 'const seen = new Set([2, 2])\nseen.add(3)\nseen.delete(2)',
-        'options': ['0', '1', '2'],
-        'answer': 1,
-        'explanation': 'Only 3 remains. Repeated 2 was one member.'
-      }, {
-        'id': 'map-zero-v1',
-        'prompt': 'What does this expression return?',
-        'code': 'const scores = new Map([["Ada", 0]])\nscores.get("Ada") ?? null',
-        'options': ['null', '0', 'undefined'],
-        'answer': 1,
-        'explanation': 'Nullish coalescing keeps zero; only null and undefined trigger the fallback.'
-      }],
-    'repIds': ['ds-array-operations', 'ds-set-operations', 'ds-map-operations'],
-    'related': ['arrays', 'lookup', 'stacks', 'queues']
-  }, {
-    'id': 'queues',
-    'title': 'Stack and queue operations',
-    'summary': 'Trace last-in, first-out and first-in, first-out before applying them to a larger task.',
-    'prerequisites': ['collection-operations'],
-    'objectives': ['Trace push, pop, enqueue, dequeue, and peek.', 'Handle an empty structure without discarding zero.', 'Explain the cost of an array-backed queue.'],
-    'sections': [{
-        'title': 'A stack serves the newest item',
-        'body': 'An array can be a stack: push adds at its end, pop removes from that end, and stack[stack.length - 1] peeks without removing. Last in, first out suits unfinished nested work and undo. An empty pop or peek yields undefined; translate that to null only when your contract asks for it.'
-      }, {
-        'title': 'A queue serves the oldest item',
-        'body': 'For a small queue, push adds at the back and shift removes the front. queue[0] peeks at the next item. First in, first out suits a waiting line: an earlier arrival is served before a later one. TypeScript has no built-in Queue class; here we use a typed array.'
-      }, {
-        'title': 'Operations have costs',
-        'body': 'Copy the input when it belongs to the caller. An array shift can move the remaining items, so repeated dequeue operations can be costly. A head index can avoid shifting on every removal, but consumed entries still occupy storage until you reclaim them. Introduce that implementation after the ordering behavior is understood.'
-      }],
-    'example': 'const stack: number[] = [4, 7]\nstack.push(9)\nstack.pop() // 9\nconst queue: number[] = [4, 7]\nqueue.push(9)\nqueue.shift() // 4',
-    'walkthrough': ['Both structures start with 4 then 7 and receive 9.', 'The stack removes the most recent value, 9; its new top is 7.', 'The queue removes the oldest value, 4; its new front is 7.', 'With only [4] initially, push 9 then pop leaves 4, while push 9 then shift leaves 9.'],
-    'mistakes': ['Using pop when a task needs first-in, first-out.', 'Treating zero at the front as an empty queue.', 'Assuming repeated shift operations always take constant time.'],
-    'questions': [{
-        'id': 'fifo-v1',
-        'prompt': 'What remains after this dequeue?',
-        'code': 'const queue = [4]\nqueue.push(9)\nqueue.shift()',
-        'options': ['[4]', '[9]', '[]'],
-        'answer': 1,
-        'explanation': '4 arrived first and leaves first; 9 remains.'
-      }, {
-        'id': 'empty-peek-v1',
-        'prompt': 'What does this peek return?',
-        'code': 'const stack: number[] = []\nstack[stack.length - 1] ?? null',
-        'options': ['0', 'undefined', 'null'],
-        'answer': 2,
-        'explanation': 'The read is undefined; the explicit fallback converts absence to null.'
-      }],
-    'repIds': ['ds-stack-operations', 'ds-queue-operations', 'remaining-actions', 'ticket-service-times', 'parcel-loading-turns'],
-    'related': ['collection-operations', 'stacks', 'complexity']
-  }, {
-    'id': 'array-techniques',
-    'title': 'Two pointers, windows, and binary search',
-    'summary': 'Use ordering or a maintained interval to avoid repeating work.',
-    'prerequisites': ['arrays', 'collection-operations'],
-    'objectives': ['Justify two-pointer moves using sorted order.', 'Maintain the sum of exactly k consecutive values.', 'Shrink a binary-search interval on every unsuccessful comparison.'],
-    'sections': [{
-        'title': 'Two pointers',
-        'body': 'For a sorted pair-sum task, start at the left and right ends. A sum below the target means the left value cannot work with any remaining partner, so move left forward. A sum above the target similarly discards the right value. Stop when they meet: two different positions are required. Each move discards a position, giving O(n) time and O(1) extra space.'
-      }, {
-        'title': 'A fixed-size window',
-        'body': 'First sum k consecutive values. When the window moves one place, subtract the outgoing value and add the incoming one. Initialize the best sum from a real complete window, not zero: all values may be negative. Each value enters and leaves at most once, so the scan takes O(n) time and O(1) extra space. This fixed-size rule does not by itself justify variable-size windows with negative values.'
-      }, {
-        'title': 'Binary search',
-        'body': 'Binary search needs sorted input. Keep an inclusive interval [left, right], read its middle, and compare with the target. On a mismatch, set left to middle + 1 or right to middle - 1. Excluding the middle makes progress even for a two-item interval. An exhausted interval has left > right. Each step approximately halves the candidates: O(log n) comparisons and O(1) extra space. Finding the first of duplicate values needs a different boundary rule.'
-      }, {
-        'title': 'Explain before optimizing',
-        'body': 'A simple scan or nested loop can be a useful baseline. Compare it with the optimized approach and identify the assumption that makes skipping work safe. Behavioral checks establish returned results on authored inputs; they do not establish the algorithm, its complexity, or independent understanding.'
-      }],
-    'example': '// Binary search for 4 in [1, 3, 5]:\n// left=0, right=2, middle=1: value 3 < 4\n// left=2, right=2, middle=2: value 5 > 4\n// left=2, right=1: interval exhausted, return -1',
-    'walkthrough': ['Sorted order allows discarding 1 and 3 after inspecting 3.', 'Inspecting 5 discards the last remaining candidate.', 'left exceeds right, so absence is established.', 'The original array is never changed.'],
-    'mistakes': ['Applying the sorted pair strategy to an unsorted array.', 'Initializing a maximum window sum to zero.', 'Keeping the middle in a failed search interval and looping forever.', 'Claiming passing output checks proves logarithmic time.'],
-    'questions': [{
-        'id': 'negative-window-v1',
-        'prompt': 'What is the largest sum of two consecutive values?',
-        'code': '[-5, -2, -7]',
-        'options': ['0', '-7', '-9'],
-        'answer': 1,
-        'explanation': 'The complete windows sum to -7 and -9. Zero is not a window sum.'
-      }, {
-        'id': 'search-progress-v1',
-        'prompt': 'If the middle value is below target, which update discards it?',
-        'code': '// Inclusive [left, right] interval',
-        'options': ['left = middle', 'right = middle - 1', 'left = middle + 1'],
-        'answer': 2,
-        'explanation': 'The middle does not match and every value to its left is too small. Exclude it to guarantee progress.'
-      }],
-    'repIds': ['algo-sorted-pair', 'sorted-offset-squares', 'reading-run-summary', 'algo-window-sum', 'count-unique-windows', 'shortest-run-reaching-target', 'algo-binary-search', 'first-insertion-point', 'smallest-daily-capacity'],
-    'related': ['arrays', 'lookup', 'complexity']
-  }, {
-    'id': 'sorting-basics',
-    'title': 'Sort without changing the original',
-    'summary': 'Order values by building a sorted portion, merge two sorted lists, and choose comparison rules deliberately.',
-    'prerequisites': ['array-techniques', 'collection-operations'],
-    'objectives': ['Trace insertion sort and state what is already ordered after each step.', 'Merge two sorted lists by comparing their next unused values.', 'Write a comparator that orders numbers, ties, and records as the contract says.'],
-    'sections': [{
-        'title': 'Grow a sorted portion',
-        'body': 'Insertion sort keeps the left part of a copied array in order. Take the next value, shift larger sorted values one place right, and drop the value into the gap. After step i the first i + 1 values are ordered, though not yet final for the whole array. Shifting only while the neighbour is strictly larger keeps equal values in their original order. Worst-case time is O(n squared); an already-sorted input needs only about n comparisons. Copy first with [...values] when the caller owns the array.'
-      }, {
-        'title': 'Merge two sorted lists',
-        'body': 'Two sorted lists need no new sort. Keep one index in each list, compare the two next unused values, append the smaller, and advance that index. When one list is exhausted, append the rest of the other. Taking the left value on a tie keeps equal values stable. Every value is appended once: O(n + m) time and O(n + m) output space. Neither input is changed.'
-      }, {
-        'title': 'Say what the order means',
-        'body': 'JavaScript sort without a comparator compares values as text, so [10, 9, 1].sort() gives [1, 10, 9]. Pass a comparator such as (a, b) => a - b for numbers: negative puts a first, positive puts b first, zero keeps their relative order (sort is stable). Sort changes the array it is called on, so copy first. For records, compare score, then break ties by name; the contract must name the string rule, such as character codes or case-insensitive. A rank counts duplicate positions separately.'
-      }, {
-        'title': 'Check the claim, not only the output',
-        'body': 'Passing checks show results on the authored inputs. They do not show that you implemented insertion sort, kept the input unchanged under every call, or kept ties stable. Inspect your code against those claims after the checks pass.'
-      }],
-    'example': '// insertionSort([3, 1, 3, -2]) on a copy\n// [3 | 1, 3, -2]  start: first value is a sorted portion\n// [1, 3 | 3, -2]  1 shifts 3 right\n// [1, 3, 3 | -2]  3 is not larger than 3, so it stays\n// [-2, 1, 3, 3]  -2 shifts three values right',
-    'walkthrough': ['The bar separates the sorted portion from values not yet placed.', 'Each new value moves left only past strictly larger values, so the equal 3s keep their order.', 'After the last placement the sorted portion is the whole array.', 'The caller\'s array is still [3, 1, 3, -2] because only the copy was shifted.'],
-    'mistakes': ['Calling sort() on numbers without a comparator and getting text order.', 'Sorting the caller\'s array in place when the contract says not to change it.', 'Shifting while the neighbour is larger or equal, which reorders equal values.', 'Forgetting to append the leftover tail after one merge input runs out.'],
-    'questions': [{
-        'id': 'sort-default-order-v1',
-        'prompt': 'What does this expression return?',
-        'code': '[10, 9, 1].sort()',
-        'options': ['[1, 9, 10]', '[1, 10, 9]', '[10, 9, 1]'],
-        'answer': 1,
-        'explanation': 'Without a comparator the values are compared as text, and "10" comes before "9". Numbers need (a, b) => a - b.'
-      }, {
-        'id': 'merge-tail-v1',
-        'prompt': 'After comparing values, the left list is used up. What must the merge do next?',
-        'code': 'left = [1], right = [2, 3, 4]\nresult so far: [1]',
-        'options': ['Stop, because the result already has the smallest value', 'Append the rest of right in its existing order', 'Sort the result again'],
-        'answer': 1,
-        'explanation': 'The remaining right values are sorted and all at least as large as what was taken. Append them; no new sort is needed.'
-      }, {
-        'id': 'insertion-tie-v1',
-        'prompt': 'Which shift rule keeps equal values in their original order?',
-        'code': '// moving value into the sorted portion',
-        'options': ['Shift while the neighbour is strictly larger', 'Shift while the neighbour is larger or equal', 'Shift every value in the sorted portion'],
-        'answer': 0,
-        'explanation': 'Stopping at an equal neighbour leaves the earlier equal value in front. Shifting past equals would swap them.'
-      }],
-    'repIds': ['algo-insertion-sort', 'algo-merge-sorted', 'sort-score-records', 'kth-smallest-copy', 'closest-value-gap'],
-    'related': ['array-techniques', 'complexity', 'arrays']
-  }, {
-    'id': 'recursion-basics',
-    'title': 'Recursion: a base case and a smaller problem',
-    'summary': 'Solve nested data by handling the simplest case directly and letting a smaller copy of the task do the rest.',
-    'prerequisites': ['control-flow', 'arrays'],
-    'objectives': ['Name the base case and the smaller problem for a recursive function.', 'Trace calls and returns for a nested list.', 'Explain what happens when the base case is missing or the input does not shrink.'],
-    'sections': [{
-        'title': 'Two parts, always',
-        'body': 'A recursive function calls itself. It needs a base case, an input simple enough to answer directly, and a recursive case that passes a smaller or simpler input to the same function and combines the result. For summing a nested list, the base cases are a plain number (answer: itself) and an empty list (answer: 0). The recursive case sums every item of a list, treating each nested list as the same task. If the input never gets closer to a base case, calls never stop.'
-      }, {
-        'title': 'Trace calls and returns',
-        'body': 'Each call waits on the calls it made until they return, so unfinished work is stacked up. Trace by writing the call, the smaller calls it makes, and what each returns. For [1, [2, []]], the outer call adds 1 to the result of the call on [2, []], which adds 2 to the result for [], which is 0. Results combine on the way back: 0, then 2, then 3. Very deep nesting can exhaust the call stack and throw a RangeError, so recursion suits data whose depth is modest.'
-      }, {
-        'title': 'Nested arrays and objects',
-        'body': 'Use Array.isArray(item) to tell a nested list from a number. For objects, loop over Object.values and recurse into values that are objects; null needs its own check because typeof null is "object". Flattening collects numbers into one new array in left-to-right order: build a result, then append what each recursive call returns. Do not change the input while walking it.'
-      }, {
-        'title': 'Cost and limits',
-        'body': 'When each value is visited once, time is O(n) for n values and the extra stack space is O(depth). A function that makes two recursive calls on nearly the same input can repeat work exponentially; that is a different problem from nested data. Checks show results on authored inputs, not that your function is recursive or terminates on every input.'
-      }],
-    'example': '// recursiveSum([1, [2, [], [-3]], 4])\n// 1                      -> 1\n// [2, [], [-3]]  -> 2 + 0 + (-3) = -1\n// 4                      -> 4\n// total: 1 + (-1) + 4 = 4',
-    'walkthrough': ['Plain numbers are base cases and return themselves.', 'The empty list is a base case and returns 0 without any calls.', 'The nested list [-3] is a smaller copy of the same task and returns -3.', 'Results combine as the calls return, giving 4, and the input arrays are unchanged.'],
-    'mistakes': ['Omitting the empty-list base case and indexing past the end.', 'Recursing on the same input, so calls never end.', 'Treating null as an object and reading its properties.', 'Pushing into a shared result in a way that mutates the caller\'s data.'],
-    'questions': [{
-        'id': 'recursion-base-case-v1',
-        'prompt': 'What is the missing base case for summing a list of numbers recursively?',
-        'code': 'function total(items: number[]): number {\n  return items[0] + total(items.slice(1))\n}',
-        'options': ['An empty list returns 0', 'A list of length 3 returns 3', 'A list with a negative first value returns 0'],
-        'answer': 0,
-        'explanation': 'Each call shortens the list. Without a stop at the empty list, items[0] becomes undefined and the calls continue until the stack overflows.'
-      }, {
-        'id': 'recursion-trace-v1',
-        'prompt': 'What does this call return?',
-        'code': 'recursiveSum([1, [2, []]])',
-        'options': ['1', '3', '5'],
-        'answer': 1,
-        'explanation': 'The empty list contributes 0, the inner list contributes 2 + 0, and the outer call adds 1 to give 3.'
-      }, {
-        'id': 'recursion-null-leaf-v1',
-        'prompt': 'Why check for null before treating a value as a nested object?',
-        'code': 'typeof null === "object"',
-        'options': ['null is an array', 'typeof reports null as "object", but it has no properties to walk', 'null is slower to read'],
-        'answer': 1,
-        'explanation': 'A typeof test alone would send null into Object.values and throw. In a leaf count, null is a leaf.'
-      }],
-    'repIds': ['algo-recursive-sum', 'flatten-nested-numbers', 'count-object-leaves'],
-    'related': ['sorting-basics', 'arrays', 'stacks']
-  }]
+export const dsaSkills: Skill[] = [
+  {
+    id: 'collection-operations',
+    title: 'Use collections before solving problems',
+    summary: 'Declare arrays, sets, and maps; practice their operations and distinguish absence from stored values.',
+    prerequisites: ['values'],
+    objectives: [
+      'Create typed collections and read their contents.',
+      'Distinguish array order, set membership, and map associations.',
+      'Copy caller-owned arrays before updating them.',
+    ],
+    sections: [
+      {
+        title: 'An ordered array',
+        body: 'The declaration `const values: number[] = []` creates an empty array of numbers. push adds at the end; pop removes and returns the last item, or undefined when empty. values.length counts items. values[index] reads a zero-based position. Spread, [...values], creates a separate shallow array: nested objects would still share references. const prevents reassignment of the name, not changes to the array.',
+      },
+      {
+        title: 'Distinct values in a set',
+        body: 'The declaration `const seen = new Set<number>()` creates an empty set. add(value) inserts a value; has(value) checks membership; delete(value) removes it; size counts distinct values. Adding the same number twice keeps one member. Deleting an absent member is allowed. Use for...of to visit values in insertion order. A set does not offer array-style indexing.',
+      },
+      {
+        title: 'Associated values in a map',
+        body: 'The declaration `const counts = new Map<string, number>()` associates text keys with numbers. set(key, value) creates or replaces an association; get(key) reads it; has(key) distinguishes presence; delete(key) removes it; size counts keys. for (const [key, value] of counts) visits entries in insertion order. A missing get returns undefined. A stored zero is still present: use ?? rather than || when defaulting only missing values.',
+      },
+      {
+        title: 'Choose by the question',
+        body: 'Use an array when position and repeated values matter, a set for distinct membership, and a map for values associated with keys. Copying n array items takes O(n) time and space. Sets and maps store their distinct members or keys; access is efficient on average, without a universal worst-case constant-time promise. Output checks cannot establish which API you used: inspect your implementation after checking.',
+      },
+    ],
+    example:
+      'const values: number[] = [0, 2]\nconst copy = [...values]\ncopy.push(2) // [0, 2, 2]\nconst seen = new Set<number>(copy) // {0, 2}\nconst scores = new Map<string, number>()\nscores.set("Ada", 0)\nscores.get("Ada") ?? null // 0',
+    walkthrough: [
+      'The copy has a separate array identity; values remains [0, 2].',
+      'Appending keeps repeated values in the array.',
+      'Constructing a set keeps only the two distinct numbers.',
+      'The map stores zero for Ada; reading a missing key would produce undefined instead.',
+    ],
+    mistakes: [
+      'Using array.length on a Set instead of size.',
+      'Using map[key] rather than get(key).',
+      'Using || null and discarding a legitimate zero.',
+      'Mutating the original array through a second name pointing at it.',
+    ],
+    questions: [
+      {
+        id: 'set-size-v1',
+        prompt: 'What is the final size?',
+        code: 'const seen = new Set([2, 2])\nseen.add(3)\nseen.delete(2)',
+        options: ['0', '1', '2'],
+        answer: 1,
+        explanation: 'Only 3 remains. Repeated 2 was one member.',
+      },
+      {
+        id: 'map-zero-v1',
+        prompt: 'What does this expression return?',
+        code: 'const scores = new Map([["Ada", 0]])\nscores.get("Ada") ?? null',
+        options: ['null', '0', 'undefined'],
+        answer: 1,
+        explanation: 'Nullish coalescing keeps zero; only null and undefined trigger the fallback.',
+      },
+    ],
+    repIds: ['ds-array-operations', 'ds-set-operations', 'ds-map-operations'],
+    related: ['arrays', 'lookup', 'stacks', 'queues'],
+  },
+  {
+    id: 'queues',
+    title: 'Stack and queue operations',
+    summary: 'Trace last-in, first-out and first-in, first-out before applying them to a larger task.',
+    prerequisites: ['collection-operations'],
+    objectives: [
+      'Trace push, pop, enqueue, dequeue, and peek.',
+      'Handle an empty structure without discarding zero.',
+      'Explain the cost of an array-backed queue.',
+    ],
+    sections: [
+      {
+        title: 'A stack serves the newest item',
+        body: 'An array can be a stack: push adds at its end, pop removes from that end, and stack[stack.length - 1] peeks without removing. Last in, first out suits unfinished nested work and undo. An empty pop or peek yields undefined; translate that to null only when your contract asks for it.',
+      },
+      {
+        title: 'A queue serves the oldest item',
+        body: 'For a small queue, push adds at the back and shift removes the front. queue[0] peeks at the next item. First in, first out suits a waiting line: an earlier arrival is served before a later one. TypeScript has no built-in Queue class; here we use a typed array.',
+      },
+      {
+        title: 'Operations have costs',
+        body: 'Copy the input when it belongs to the caller. An array shift can move the remaining items, so repeated dequeue operations can be costly. A head index can avoid shifting on every removal, but consumed entries still occupy storage until you reclaim them. Introduce that implementation after the ordering behavior is understood.',
+      },
+    ],
+    example:
+      'const stack: number[] = [4, 7]\nstack.push(9)\nstack.pop() // 9\nconst queue: number[] = [4, 7]\nqueue.push(9)\nqueue.shift() // 4',
+    walkthrough: [
+      'Both structures start with 4 then 7 and receive 9.',
+      'The stack removes the most recent value, 9; its new top is 7.',
+      'The queue removes the oldest value, 4; its new front is 7.',
+      'With only [4] initially, push 9 then pop leaves 4, while push 9 then shift leaves 9.',
+    ],
+    mistakes: [
+      'Using pop when a task needs first-in, first-out.',
+      'Treating zero at the front as an empty queue.',
+      'Assuming repeated shift operations always take constant time.',
+    ],
+    questions: [
+      {
+        id: 'fifo-v1',
+        prompt: 'What remains after this dequeue?',
+        code: 'const queue = [4]\nqueue.push(9)\nqueue.shift()',
+        options: ['[4]', '[9]', '[]'],
+        answer: 1,
+        explanation: '4 arrived first and leaves first; 9 remains.',
+      },
+      {
+        id: 'empty-peek-v1',
+        prompt: 'What does this peek return?',
+        code: 'const stack: number[] = []\nstack[stack.length - 1] ?? null',
+        options: ['0', 'undefined', 'null'],
+        answer: 2,
+        explanation: 'The read is undefined; the explicit fallback converts absence to null.',
+      },
+    ],
+    repIds: ['ds-stack-operations', 'ds-queue-operations', 'remaining-actions', 'ticket-service-times', 'parcel-loading-turns'],
+    related: ['collection-operations', 'stacks', 'complexity'],
+  },
+  {
+    id: 'array-techniques',
+    title: 'Two pointers, windows, and binary search',
+    summary: 'Use ordering or a maintained interval to avoid repeating work.',
+    prerequisites: ['arrays', 'collection-operations'],
+    objectives: [
+      'Justify two-pointer moves using sorted order.',
+      'Maintain the sum of exactly k consecutive values.',
+      'Shrink a binary-search interval on every unsuccessful comparison.',
+    ],
+    sections: [
+      {
+        title: 'Two pointers',
+        body: 'For a sorted pair-sum task, start at the left and right ends. A sum below the target means the left value cannot work with any remaining partner, so move left forward. A sum above the target similarly discards the right value. Stop when they meet: two different positions are required. Each move discards a position, giving O(n) time and O(1) extra space.',
+      },
+      {
+        title: 'A fixed-size window',
+        body: 'First sum k consecutive values. When the window moves one place, subtract the outgoing value and add the incoming one. Initialize the best sum from a real complete window, not zero: all values may be negative. Each value enters and leaves at most once, so the scan takes O(n) time and O(1) extra space. This fixed-size rule does not by itself justify variable-size windows with negative values.',
+      },
+      {
+        title: 'Binary search',
+        body: 'Binary search needs sorted input. Keep an inclusive interval [left, right], read its middle, and compare with the target. On a mismatch, set left to middle + 1 or right to middle - 1. Excluding the middle makes progress even for a two-item interval. An exhausted interval has left > right. Each step approximately halves the candidates: O(log n) comparisons and O(1) extra space. Finding the first of duplicate values needs a different boundary rule.',
+      },
+      {
+        title: 'Explain before optimizing',
+        body: 'A simple scan or nested loop can be a useful baseline. Compare it with the optimized approach and identify the assumption that makes skipping work safe. Behavioral checks establish returned results on authored inputs; they do not establish the algorithm, its complexity, or independent understanding.',
+      },
+    ],
+    example:
+      '// Binary search for 4 in [1, 3, 5]:\n// left=0, right=2, middle=1: value 3 < 4\n// left=2, right=2, middle=2: value 5 > 4\n// left=2, right=1: interval exhausted, return -1',
+    walkthrough: [
+      'Sorted order allows discarding 1 and 3 after inspecting 3.',
+      'Inspecting 5 discards the last remaining candidate.',
+      'left exceeds right, so absence is established.',
+      'The original array is never changed.',
+    ],
+    mistakes: [
+      'Applying the sorted pair strategy to an unsorted array.',
+      'Initializing a maximum window sum to zero.',
+      'Keeping the middle in a failed search interval and looping forever.',
+      'Claiming passing output checks proves logarithmic time.',
+    ],
+    questions: [
+      {
+        id: 'negative-window-v1',
+        prompt: 'What is the largest sum of two consecutive values?',
+        code: '[-5, -2, -7]',
+        options: ['0', '-7', '-9'],
+        answer: 1,
+        explanation: 'The complete windows sum to -7 and -9. Zero is not a window sum.',
+      },
+      {
+        id: 'search-progress-v1',
+        prompt: 'If the middle value is below target, which update discards it?',
+        code: '// Inclusive [left, right] interval',
+        options: ['left = middle', 'right = middle - 1', 'left = middle + 1'],
+        answer: 2,
+        explanation: 'The middle does not match and every value to its left is too small. Exclude it to guarantee progress.',
+      },
+    ],
+    repIds: [
+      'algo-sorted-pair',
+      'sorted-offset-squares',
+      'reading-run-summary',
+      'algo-window-sum',
+      'count-unique-windows',
+      'shortest-run-reaching-target',
+      'algo-binary-search',
+      'first-insertion-point',
+      'smallest-daily-capacity',
+    ],
+    related: ['arrays', 'lookup', 'complexity'],
+  },
+  {
+    id: 'sorting-basics',
+    title: 'Sort without changing the original',
+    summary: 'Order values by building a sorted portion, merge two sorted lists, and choose comparison rules deliberately.',
+    prerequisites: ['array-techniques', 'collection-operations'],
+    objectives: [
+      'Trace insertion sort and state what is already ordered after each step.',
+      'Merge two sorted lists by comparing their next unused values.',
+      'Write a comparator that orders numbers, ties, and records as the contract says.',
+    ],
+    sections: [
+      {
+        title: 'Grow a sorted portion',
+        body: 'Insertion sort keeps the left part of a copied array in order. Take the next value, shift larger sorted values one place right, and drop the value into the gap. After step i the first i + 1 values are ordered, though not yet final for the whole array. Shifting only while the neighbour is strictly larger keeps equal values in their original order. Worst-case time is O(n squared); an already-sorted input needs only about n comparisons. Copy first with [...values] when the caller owns the array.',
+      },
+      {
+        title: 'Merge two sorted lists',
+        body: 'Two sorted lists need no new sort. Keep one index in each list, compare the two next unused values, append the smaller, and advance that index. When one list is exhausted, append the rest of the other. Taking the left value on a tie keeps equal values stable. Every value is appended once: O(n + m) time and O(n + m) output space. Neither input is changed.',
+      },
+      {
+        title: 'Say what the order means',
+        body: 'JavaScript sort without a comparator compares values as text, so [10, 9, 1].sort() gives [1, 10, 9]. Pass a comparator such as (a, b) => a - b for numbers: negative puts a first, positive puts b first, zero keeps their relative order (sort is stable). Sort changes the array it is called on, so copy first. For records, compare score, then break ties by name; the contract must name the string rule, such as character codes or case-insensitive. A rank counts duplicate positions separately.',
+      },
+      {
+        title: 'Check the claim, not only the output',
+        body: 'Passing checks show results on the authored inputs. They do not show that you implemented insertion sort, kept the input unchanged under every call, or kept ties stable. Inspect your code against those claims after the checks pass.',
+      },
+    ],
+    example:
+      '// insertionSort([3, 1, 3, -2]) on a copy\n// [3 | 1, 3, -2]  start: first value is a sorted portion\n// [1, 3 | 3, -2]  1 shifts 3 right\n// [1, 3, 3 | -2]  3 is not larger than 3, so it stays\n// [-2, 1, 3, 3]  -2 shifts three values right',
+    walkthrough: [
+      'The bar separates the sorted portion from values not yet placed.',
+      'Each new value moves left only past strictly larger values, so the equal 3s keep their order.',
+      'After the last placement the sorted portion is the whole array.',
+      "The caller's array is still [3, 1, 3, -2] because only the copy was shifted.",
+    ],
+    mistakes: [
+      'Calling sort() on numbers without a comparator and getting text order.',
+      "Sorting the caller's array in place when the contract says not to change it.",
+      'Shifting while the neighbour is larger or equal, which reorders equal values.',
+      'Forgetting to append the leftover tail after one merge input runs out.',
+    ],
+    questions: [
+      {
+        id: 'sort-default-order-v1',
+        prompt: 'What does this expression return?',
+        code: '[10, 9, 1].sort()',
+        options: ['[1, 9, 10]', '[1, 10, 9]', '[10, 9, 1]'],
+        answer: 1,
+        explanation: 'Without a comparator the values are compared as text, and "10" comes before "9". Numbers need (a, b) => a - b.',
+      },
+      {
+        id: 'merge-tail-v1',
+        prompt: 'After comparing values, the left list is used up. What must the merge do next?',
+        code: 'left = [1], right = [2, 3, 4]\nresult so far: [1]',
+        options: [
+          'Stop, because the result already has the smallest value',
+          'Append the rest of right in its existing order',
+          'Sort the result again',
+        ],
+        answer: 1,
+        explanation:
+          'The remaining right values are sorted and all at least as large as what was taken. Append them; no new sort is needed.',
+      },
+      {
+        id: 'insertion-tie-v1',
+        prompt: 'Which shift rule keeps equal values in their original order?',
+        code: '// moving value into the sorted portion',
+        options: [
+          'Shift while the neighbour is strictly larger',
+          'Shift while the neighbour is larger or equal',
+          'Shift every value in the sorted portion',
+        ],
+        answer: 0,
+        explanation: 'Stopping at an equal neighbour leaves the earlier equal value in front. Shifting past equals would swap them.',
+      },
+    ],
+    repIds: ['algo-insertion-sort', 'algo-merge-sorted', 'sort-score-records', 'kth-smallest-copy', 'closest-value-gap'],
+    related: ['array-techniques', 'complexity', 'arrays'],
+  },
+  {
+    id: 'recursion-basics',
+    title: 'Recursion: a base case and a smaller problem',
+    summary: 'Solve nested data by handling the simplest case directly and letting a smaller copy of the task do the rest.',
+    prerequisites: ['control-flow', 'arrays'],
+    objectives: [
+      'Name the base case and the smaller problem for a recursive function.',
+      'Trace calls and returns for a nested list.',
+      'Explain what happens when the base case is missing or the input does not shrink.',
+    ],
+    sections: [
+      {
+        title: 'Two parts, always',
+        body: 'A recursive function calls itself. It needs a base case, an input simple enough to answer directly, and a recursive case that passes a smaller or simpler input to the same function and combines the result. For summing a nested list, the base cases are a plain number (answer: itself) and an empty list (answer: 0). The recursive case sums every item of a list, treating each nested list as the same task. If the input never gets closer to a base case, calls never stop.',
+      },
+      {
+        title: 'Trace calls and returns',
+        body: 'Each call waits on the calls it made until they return, so unfinished work is stacked up. Trace by writing the call, the smaller calls it makes, and what each returns. For [1, [2, []]], the outer call adds 1 to the result of the call on [2, []], which adds 2 to the result for [], which is 0. Results combine on the way back: 0, then 2, then 3. Very deep nesting can exhaust the call stack and throw a RangeError, so recursion suits data whose depth is modest.',
+      },
+      {
+        title: 'Nested arrays and objects',
+        body: 'Use Array.isArray(item) to tell a nested list from a number. For objects, loop over Object.values and recurse into values that are objects; null needs its own check because typeof null is "object". Flattening collects numbers into one new array in left-to-right order: build a result, then append what each recursive call returns. Do not change the input while walking it.',
+      },
+      {
+        title: 'Cost and limits',
+        body: 'When each value is visited once, time is O(n) for n values and the extra stack space is O(depth). A function that makes two recursive calls on nearly the same input can repeat work exponentially; that is a different problem from nested data. Checks show results on authored inputs, not that your function is recursive or terminates on every input.',
+      },
+    ],
+    example:
+      '// recursiveSum([1, [2, [], [-3]], 4])\n// 1                      -> 1\n// [2, [], [-3]]  -> 2 + 0 + (-3) = -1\n// 4                      -> 4\n// total: 1 + (-1) + 4 = 4',
+    walkthrough: [
+      'Plain numbers are base cases and return themselves.',
+      'The empty list is a base case and returns 0 without any calls.',
+      'The nested list [-3] is a smaller copy of the same task and returns -3.',
+      'Results combine as the calls return, giving 4, and the input arrays are unchanged.',
+    ],
+    mistakes: [
+      'Omitting the empty-list base case and indexing past the end.',
+      'Recursing on the same input, so calls never end.',
+      'Treating null as an object and reading its properties.',
+      "Pushing into a shared result in a way that mutates the caller's data.",
+    ],
+    questions: [
+      {
+        id: 'recursion-base-case-v1',
+        prompt: 'What is the missing base case for summing a list of numbers recursively?',
+        code: 'function total(items: number[]): number {\n  return items[0] + total(items.slice(1))\n}',
+        options: ['An empty list returns 0', 'A list of length 3 returns 3', 'A list with a negative first value returns 0'],
+        answer: 0,
+        explanation:
+          'Each call shortens the list. Without a stop at the empty list, items[0] becomes undefined and the calls continue until the stack overflows.',
+      },
+      {
+        id: 'recursion-trace-v1',
+        prompt: 'What does this call return?',
+        code: 'recursiveSum([1, [2, []]])',
+        options: ['1', '3', '5'],
+        answer: 1,
+        explanation: 'The empty list contributes 0, the inner list contributes 2 + 0, and the outer call adds 1 to give 3.',
+      },
+      {
+        id: 'recursion-null-leaf-v1',
+        prompt: 'Why check for null before treating a value as a nested object?',
+        code: 'typeof null === "object"',
+        options: ['null is an array', 'typeof reports null as "object", but it has no properties to walk', 'null is slower to read'],
+        answer: 1,
+        explanation: 'A typeof test alone would send null into Object.values and throw. In a leaf count, null is a leaf.',
+      },
+    ],
+    repIds: ['algo-recursive-sum', 'flatten-nested-numbers', 'count-object-leaves'],
+    related: ['sorting-basics', 'arrays', 'stacks'],
+  },
+]
 
 // Appended together to keep parallel lesson additions independent.
-dsaSkills.push({
-  id: 'trees',
-  title: 'Trees: routes, levels, and child results',
-  summary: 'Read a branching structure and combine smaller results without changing its nodes.',
-  prerequisites: ['arrays', 'control-flow'],
-  objectives: ['Identify roots, children, leaves, and subtrees.', 'Distinguish node-count depth from zero-based levels.', 'Trace recursive child results and compare depth-first with breadth-first traversal.'],
-  sections: [{
-    title: 'A tree describes a hierarchy',
-    body: 'A node holds a value and a children array. The root is the starting node; a child is one step below its parent; a leaf has no children. A subtree is a node together with all its descendants. These reps use finite rooted trees with no cycles or shared child nodes, not necessarily binary trees. Depth and level-sum trees may contain repeated values; the route rep requires unique values. Zero is valid data, not an absent node. Read the diagram in the worked example from top to bottom.'
-  }, {
-    title: 'Count nodes or edges deliberately',
-    body: 'For maximum depth, the existing rep counts nodes on the longest root-to-leaf route: null has depth 0 and a lone root has depth 1. For a level sum, the root is at level (depth) 0 and each edge adds 1. A root with one child therefore has maximum node-count depth 2, but its child is at level 1. Always state the convention before calculating.'
-  }, {
-    title: 'Solve the same smaller question',
-    body: 'Recursion means a function calls itself on a smaller part. For maximum depth, an absent tree returns 0; a real node returns 1 plus the largest child depth, using 0 when there are no children. Each call moves to a descendant, so a finite tree eventually reaches leaves. For a level sum, carry the level or decrease the requested remaining depth; add only values at the requested level. Keep caller-owned nodes and child arrays unchanged.'
-  }, {
-    title: 'Search for a value',
-    body: 'A search may find its target in one branch and not another. Each branch reports either what it found (a depth, or a route) or a distinct "not found" value, so a parent can move on to its next child. Pick a "not found" value that cannot be a real answer: a depth of 0 is valid, so -1 or null is safer than 0. Stop as soon as one branch finds the target; with unique values at most one branch can.'
-  }, {
-    title: 'Choose the visiting order',
-    body: 'Depth-first search finishes a child subtree before moving to its sibling. Recursion keeps unfinished work on the call stack; an explicit stack is an alternative that avoids deep recursive calls. Breadth-first search uses a queue to visit one level before the next. For an n-node tree of height h, depth-first traversal takes O(n) time and O(h) working stack space; breadth-first traversal needs working queue space proportional to the widest level when consumed entries are reclaimed. A skewed tree can make h equal n. Path output needs additional storage. For the route rep, unique values mean at most one route matches. Return its values including both endpoints; no match or a null root returns null.'
-  }],
-  example: '// Values (each position is a separate node):\n//       5          level 0\n//      / \\         \n//     0   8        level 1\n//    / \\          \n//   2   3          level 2\n// Node-count depths: leaves=1, node 0=2, root=3.\n// Sum at level 1: 0 + 8 = 8.\n// First route to value 3: [5, 0, 3].',
-  walkthrough: ['Leaves 2, 3, and 8 each have no children, so each returns depth 1.', 'Node 0 combines its child depths: 1 + max(1, 1) = 2. Its zero value does not make it absent.', 'Root 5 combines depths 2 and 1: 1 + max(2, 1) = 3, rather than adding both branches.', 'At level 1 only nodes 0 and 8 contribute. At level 3 no nodes contribute, so the sum is 0.', 'Depth-first child-order search visits 5, 0, 2, 3 before 8; breadth-first order is 5, 0, 8, 2, 3.'],
-  mistakes: ['Adding child depths instead of taking their maximum.', 'Mixing zero-based levels with node-count maximum depth.', 'Treating a zero-valued node as missing.', 'Assuming every tree has two children or is balanced.', 'Changing children with sort, shift, or splice while traversing.'],
-  questions: [{
-    id: 'trees-node-depth-v1',
-    prompt: 'Using node-count maximum depth, what depth does this tree have?',
-    code: '// 7\n// |\n// 0\n// |\n// 4',
-    options: ['2', '3', '11'],
-    answer: 1,
-    explanation: 'The longest route contains three nodes. Two counts its edges; summing values does not measure depth.'
-  }, {
-    id: 'trees-level-sum-v1',
-    prompt: 'With the root at level 0, what is the sum at level 1?',
-    code: '//     4\n//    / \\\n//   0  -2\n//   |\n//   9',
-    options: ['11', '9', '-2'],
-    answer: 2,
-    explanation: 'Only 0 and -2 are at level 1. The 9 is at level 2; the root is at level 0.'
-  }],
-  repIds: ['algo-tree-depth', 'tree-depth-sum', 'tree-value-depth', 'tree-leaf-count', 'tree-value-path'],
-  related: ['graphs', 'stacks', 'queues', 'complexity']
-}, {
-  id: 'graphs',
-  title: 'Graphs: connections, discovery, and shortest hops',
-  summary: 'Follow adjacency lists safely through cycles and distinguish reachability, shortest routes, and connected groups.',
-  prerequisites: ['collection-operations', 'queues'],
-  objectives: ['Read directed and undirected adjacency lists.', 'Use visited membership to avoid rediscovering nodes.', 'Explain why BFS finds shortest unweighted routes and why group counting needs every node.'],
-  sections: [{
-    title: 'Nodes and edges',
-    body: 'A graph contains nodes (vertices) and connections (edges). In these reps, a node is an array index: graph[i] lists outgoing neighbors of node i. A directed edge 0 -> 1 allows travel from 0 to 1, not automatically back. An undirected edge is represented in both neighbor lists. Unlike these rooted trees, graphs may have cycles, self-links, duplicate edges, and disconnected nodes. An empty neighbor list means a node has no outgoing edges; it does not mean the node is absent.'
-  }, {
-    title: 'Separate discovery from processing',
-    body: 'Breadth-first search (BFS) starts by marking the valid start visited and placing it in a queue. Remove the oldest pending node, inspect its outgoing neighbors, and mark each unseen neighbor visited before enqueueing it. Visited means already discovered, even if not yet processed. This prevents duplicate pending work when two routes meet, and stops cycles and self-links from continuing forever. Use a Set of node indices, not a test of their numeric truthiness: node 0 is valid.'
-  }, {
-    title: 'Reachability and shortest hops',
-    body: 'Reachability asks whether any route exists; depth-first search can answer it too. Shortest hops counts edges, with every edge costing one. BFS processes distance 0, then 1, then 2, so the first discovery of a node gives its minimum hop count. Carry a distance with each queue entry or process complete levels. DFS may encounter a longer route first. BFS does not solve arbitrary weighted shortest paths. Validate endpoints first: a valid start reaches itself in zero hops; invalid endpoints return false for reachability and null for shortest hops. An unreachable valid target also returns null for shortest hops.'
-  }, {
-    title: 'Count all connected groups',
-    body: 'The connected-groups rep uses reciprocal, undirected edges. Scan every node; when it is not visited, count a new group and traverse from it using one shared visited set. An isolated node counts as its own group, and an empty graph has zero groups. One traversal from one start cannot count disconnected groups. For V nodes and E neighbor entries, traversal takes O(V + E) time and O(V) working storage with a queue head index instead of repeated array shifts. That bound includes duplicate neighbor entries. Do not change the input graph. Recognition answers and behavioral checks do not establish which traversal the learner implemented.'
-  }],
-  example: '// Directed edges:\n// 0 --> 1 --> 3\n// |           ^\n// +---> 2 ----+     4 (isolated)\nconst graph = [[1, 2], [3], [3], [], []]\n// Queue entries are [node, distance].\n// Start: [[0, 0]], visited={0}\n// Process 0: [[1, 1], [2, 1]], visited={0,1,2}\n// Process 1: [[2, 1], [3, 2]], visited={0,1,2,3}\n// Process 2: 3 is already discovered; do not enqueue again.\n// Minimum hops 0 -> 3: 2. Hops 0 -> 4: null.',
-  walkthrough: ['Index 4 exists even though graph[4] is empty. It cannot be reached from 0.', 'Processing 0 discovers 1 and 2 at distance 1 in neighbor-list order.', 'Processing 1 discovers 3 at distance 2; processing 2 does not duplicate it.', 'There is no edge out of 3, so 3 cannot reach 0 in this directed graph.', 'If every depicted edge were made reciprocal, scanning all nodes would find two undirected groups: {0,1,2,3} and {4}.'],
-  mistakes: ['Assuming an outgoing edge also allows reverse travel.', 'Forgetting visited membership on a cycle or self-link.', 'Enqueueing a neighbor before checking and recording discovery.', 'Using the first DFS route as the shortest unweighted route.', 'Counting only the group containing node 0.', 'Returning zero for an invalid endpoint before validating it.'],
-  questions: [{
-    id: 'graphs-directed-reachability-v1',
-    prompt: 'Can node 2 reach node 0 by following the directed edges?',
-    code: 'const graph = [[1], [2], []]\n// 0 -> 1 -> 2',
-    options: ['Yes, because all nodes are connected in the drawing', 'No, node 2 has no outgoing edges', 'Yes, every edge works in both directions'],
-    answer: 1,
-    explanation: 'Adjacency lists here contain outgoing edges only. No route leaves 2 toward 0.'
-  }, {
-    id: 'graphs-bfs-shortest-hops-v1',
-    prompt: 'What is the minimum hop count from 0 to 3?',
-    code: 'const graph = [[1, 3], [2], [3], [0]]\n// 0 -> 1 -> 2 -> 3\n// 0 ----------> 3 -> 0',
-    options: ['1', '3', 'No route, because there is a cycle'],
-    answer: 0,
-    explanation: 'The direct edge reaches 3 in one hop. BFS discovers it while processing 0; a visited set handles the cycle.'
-  }],
-  repIds: ['algo-graph-reachable', 'graph-reachable-count', 'graph-incoming-counts', 'graph-shortest-hops', 'graph-connected-groups'],
-  related: ['trees', 'lookup', 'queues', 'complexity']
-})
+dsaSkills.push(
+  {
+    id: 'trees',
+    title: 'Trees: routes, levels, and child results',
+    summary: 'Read a branching structure and combine smaller results without changing its nodes.',
+    prerequisites: ['arrays', 'control-flow'],
+    objectives: [
+      'Identify roots, children, leaves, and subtrees.',
+      'Distinguish node-count depth from zero-based levels.',
+      'Trace recursive child results and compare depth-first with breadth-first traversal.',
+    ],
+    sections: [
+      {
+        title: 'A tree describes a hierarchy',
+        body: 'A node holds a value and a children array. The root is the starting node; a child is one step below its parent; a leaf has no children. A subtree is a node together with all its descendants. These reps use finite rooted trees with no cycles or shared child nodes, not necessarily binary trees. Depth and level-sum trees may contain repeated values; the route rep requires unique values. Zero is valid data, not an absent node. Read the diagram in the worked example from top to bottom.',
+      },
+      {
+        title: 'Count nodes or edges deliberately',
+        body: 'For maximum depth, the existing rep counts nodes on the longest root-to-leaf route: null has depth 0 and a lone root has depth 1. For a level sum, the root is at level (depth) 0 and each edge adds 1. A root with one child therefore has maximum node-count depth 2, but its child is at level 1. Always state the convention before calculating.',
+      },
+      {
+        title: 'Solve the same smaller question',
+        body: 'Recursion means a function calls itself on a smaller part. For maximum depth, an absent tree returns 0; a real node returns 1 plus the largest child depth, using 0 when there are no children. Each call moves to a descendant, so a finite tree eventually reaches leaves. For a level sum, carry the level or decrease the requested remaining depth; add only values at the requested level. Keep caller-owned nodes and child arrays unchanged.',
+      },
+      {
+        title: 'Search for a value',
+        body: 'A search may find its target in one branch and not another. Each branch reports either what it found (a depth, or a route) or a distinct "not found" value, so a parent can move on to its next child. Pick a "not found" value that cannot be a real answer: a depth of 0 is valid, so -1 or null is safer than 0. Stop as soon as one branch finds the target; with unique values at most one branch can.',
+      },
+      {
+        title: 'Choose the visiting order',
+        body: 'Depth-first search finishes a child subtree before moving to its sibling. Recursion keeps unfinished work on the call stack; an explicit stack is an alternative that avoids deep recursive calls. Breadth-first search uses a queue to visit one level before the next. For an n-node tree of height h, depth-first traversal takes O(n) time and O(h) working stack space; breadth-first traversal needs working queue space proportional to the widest level when consumed entries are reclaimed. A skewed tree can make h equal n. Path output needs additional storage. For the route rep, unique values mean at most one route matches. Return its values including both endpoints; no match or a null root returns null.',
+      },
+    ],
+    example:
+      '// Values (each position is a separate node):\n//       5          level 0\n//      / \\         \n//     0   8        level 1\n//    / \\          \n//   2   3          level 2\n// Node-count depths: leaves=1, node 0=2, root=3.\n// Sum at level 1: 0 + 8 = 8.\n// First route to value 3: [5, 0, 3].',
+    walkthrough: [
+      'Leaves 2, 3, and 8 each have no children, so each returns depth 1.',
+      'Node 0 combines its child depths: 1 + max(1, 1) = 2. Its zero value does not make it absent.',
+      'Root 5 combines depths 2 and 1: 1 + max(2, 1) = 3, rather than adding both branches.',
+      'At level 1 only nodes 0 and 8 contribute. At level 3 no nodes contribute, so the sum is 0.',
+      'Depth-first child-order search visits 5, 0, 2, 3 before 8; breadth-first order is 5, 0, 8, 2, 3.',
+    ],
+    mistakes: [
+      'Adding child depths instead of taking their maximum.',
+      'Mixing zero-based levels with node-count maximum depth.',
+      'Treating a zero-valued node as missing.',
+      'Assuming every tree has two children or is balanced.',
+      'Changing children with sort, shift, or splice while traversing.',
+    ],
+    questions: [
+      {
+        id: 'trees-node-depth-v1',
+        prompt: 'Using node-count maximum depth, what depth does this tree have?',
+        code: '// 7\n// |\n// 0\n// |\n// 4',
+        options: ['2', '3', '11'],
+        answer: 1,
+        explanation: 'The longest route contains three nodes. Two counts its edges; summing values does not measure depth.',
+      },
+      {
+        id: 'trees-level-sum-v1',
+        prompt: 'With the root at level 0, what is the sum at level 1?',
+        code: '//     4\n//    / \\\n//   0  -2\n//   |\n//   9',
+        options: ['11', '9', '-2'],
+        answer: 2,
+        explanation: 'Only 0 and -2 are at level 1. The 9 is at level 2; the root is at level 0.',
+      },
+    ],
+    repIds: ['algo-tree-depth', 'tree-depth-sum', 'tree-value-depth', 'tree-leaf-count', 'tree-value-path'],
+    related: ['graphs', 'stacks', 'queues', 'complexity'],
+  },
+  {
+    id: 'graphs',
+    title: 'Graphs: connections, discovery, and shortest hops',
+    summary: 'Follow adjacency lists safely through cycles and distinguish reachability, shortest routes, and connected groups.',
+    prerequisites: ['collection-operations', 'queues'],
+    objectives: [
+      'Read directed and undirected adjacency lists.',
+      'Use visited membership to avoid rediscovering nodes.',
+      'Explain why BFS finds shortest unweighted routes and why group counting needs every node.',
+    ],
+    sections: [
+      {
+        title: 'Nodes and edges',
+        body: 'A graph contains nodes (vertices) and connections (edges). In these reps, a node is an array index: graph[i] lists outgoing neighbors of node i. A directed edge 0 -> 1 allows travel from 0 to 1, not automatically back. An undirected edge is represented in both neighbor lists. Unlike these rooted trees, graphs may have cycles, self-links, duplicate edges, and disconnected nodes. An empty neighbor list means a node has no outgoing edges; it does not mean the node is absent.',
+      },
+      {
+        title: 'Separate discovery from processing',
+        body: 'Breadth-first search (BFS) starts by marking the valid start visited and placing it in a queue. Remove the oldest pending node, inspect its outgoing neighbors, and mark each unseen neighbor visited before enqueueing it. Visited means already discovered, even if not yet processed. This prevents duplicate pending work when two routes meet, and stops cycles and self-links from continuing forever. Use a Set of node indices, not a test of their numeric truthiness: node 0 is valid.',
+      },
+      {
+        title: 'Reachability and shortest hops',
+        body: 'Reachability asks whether any route exists; depth-first search can answer it too. Shortest hops counts edges, with every edge costing one. BFS processes distance 0, then 1, then 2, so the first discovery of a node gives its minimum hop count. Carry a distance with each queue entry or process complete levels. DFS may encounter a longer route first. BFS does not solve arbitrary weighted shortest paths. Validate endpoints first: a valid start reaches itself in zero hops; invalid endpoints return false for reachability and null for shortest hops. An unreachable valid target also returns null for shortest hops.',
+      },
+      {
+        title: 'Count all connected groups',
+        body: 'The connected-groups rep uses reciprocal, undirected edges. Scan every node; when it is not visited, count a new group and traverse from it using one shared visited set. An isolated node counts as its own group, and an empty graph has zero groups. One traversal from one start cannot count disconnected groups. For V nodes and E neighbor entries, traversal takes O(V + E) time and O(V) working storage with a queue head index instead of repeated array shifts. That bound includes duplicate neighbor entries. Do not change the input graph. Recognition answers and behavioral checks do not establish which traversal the learner implemented.',
+      },
+    ],
+    example:
+      '// Directed edges:\n// 0 --> 1 --> 3\n// |           ^\n// +---> 2 ----+     4 (isolated)\nconst graph = [[1, 2], [3], [3], [], []]\n// Queue entries are [node, distance].\n// Start: [[0, 0]], visited={0}\n// Process 0: [[1, 1], [2, 1]], visited={0,1,2}\n// Process 1: [[2, 1], [3, 2]], visited={0,1,2,3}\n// Process 2: 3 is already discovered; do not enqueue again.\n// Minimum hops 0 -> 3: 2. Hops 0 -> 4: null.',
+    walkthrough: [
+      'Index 4 exists even though graph[4] is empty. It cannot be reached from 0.',
+      'Processing 0 discovers 1 and 2 at distance 1 in neighbor-list order.',
+      'Processing 1 discovers 3 at distance 2; processing 2 does not duplicate it.',
+      'There is no edge out of 3, so 3 cannot reach 0 in this directed graph.',
+      'If every depicted edge were made reciprocal, scanning all nodes would find two undirected groups: {0,1,2,3} and {4}.',
+    ],
+    mistakes: [
+      'Assuming an outgoing edge also allows reverse travel.',
+      'Forgetting visited membership on a cycle or self-link.',
+      'Enqueueing a neighbor before checking and recording discovery.',
+      'Using the first DFS route as the shortest unweighted route.',
+      'Counting only the group containing node 0.',
+      'Returning zero for an invalid endpoint before validating it.',
+    ],
+    questions: [
+      {
+        id: 'graphs-directed-reachability-v1',
+        prompt: 'Can node 2 reach node 0 by following the directed edges?',
+        code: 'const graph = [[1], [2], []]\n// 0 -> 1 -> 2',
+        options: [
+          'Yes, because all nodes are connected in the drawing',
+          'No, node 2 has no outgoing edges',
+          'Yes, every edge works in both directions',
+        ],
+        answer: 1,
+        explanation: 'Adjacency lists here contain outgoing edges only. No route leaves 2 toward 0.',
+      },
+      {
+        id: 'graphs-bfs-shortest-hops-v1',
+        prompt: 'What is the minimum hop count from 0 to 3?',
+        code: 'const graph = [[1, 3], [2], [3], [0]]\n// 0 -> 1 -> 2 -> 3\n// 0 ----------> 3 -> 0',
+        options: ['1', '3', 'No route, because there is a cycle'],
+        answer: 0,
+        explanation: 'The direct edge reaches 3 in one hop. BFS discovers it while processing 0; a visited set handles the cycle.',
+      },
+    ],
+    repIds: ['algo-graph-reachable', 'graph-reachable-count', 'graph-incoming-counts', 'graph-shortest-hops', 'graph-connected-groups'],
+    related: ['trees', 'lookup', 'queues', 'complexity'],
+  },
+)
 
 dsaSkills.push({
   id: 'recognize-the-pattern',
   title: 'Recognize the pattern',
   summary: 'See the shape, then solve the problem: use the contract to choose a candidate and test its assumptions.',
-  prerequisites: ['collection-operations', 'lookup', 'stacks', 'array-techniques', 'sorting-basics', 'recursion-basics', 'graphs', 'complexity'],
-  objectives: ['Identify decisive signals in an unlabeled problem.', 'Explain why a candidate fits and why a near-miss fails.', 'Separate recognizing an approach from implementing it independently.'],
-  sections: [
-    { title: 'Read the output and constraints first', body: 'Ask what must be returned: existence, a count, a best value, a route, or every possible result? Then ask what is guaranteed: sorted order, positive values, equal-cost moves, or repeated questions over unchanged data? Write a tiny example and a candidate invariant before coding. Signals suggest an approach; they are not proof or a unique solution.' },
-    { title: 'Remember, match, or keep a contiguous run', body: '“Have I seen this?” suggests a set; “how often?” or “what belongs to this key?” suggests a map. “Nearest unmatched” or “undo the latest unfinished action” suggests a stack. Sorted values plus a pair target suggest two pointers: order justifies discarding candidates. A contiguous run plus a limit suggests a sliding window only when extending and shrinking have predictable effects. Positive costs support shrinking an over-budget run; negative costs can invalidate that rule.' },
-    { title: 'Search, explore, or reuse', body: 'A minimum feasible value with a yes/no test suggests binary search on the answer only when feasibility is monotone: once a value works, every larger candidate works. Levels or fewest steps suggest BFS when each move has equal cost. All combinations suggest backtracking, with choices undone before another branch. Overlapping subproblems suggest dynamic programming: define the state and its dependencies so an answer can be reused. Listing all answers still costs at least the size of that output.' },
-    { title: 'Near-misses matter', body: 'Many totals for arbitrary ranges of an unchanged list suggest prefix sums, not a moving window: prefix[right + 1] - prefix[left] answers each range after one preprocessing scan, even with negative values. A changing stream where only the smallest outstanding job is needed suggests a min-heap; sorting everything after each arrival does unnecessary work. Sorting remains reasonable for a one-off request for the entire order. Choose from the workload, not a familiar word.' },
+  prerequisites: [
+    'collection-operations',
+    'lookup',
+    'stacks',
+    'array-techniques',
+    'sorting-basics',
+    'recursion-basics',
+    'graphs',
+    'complexity',
   ],
-  example: '// Consecutive daily costs: [2, 1, 4, 1], budget 5\n// Longest affordable run has length 2.\n// Unchanged daily changes: [2, -1, 4]\n// Prefix totals: [0, 2, 1, 5]\n// Days 1 through 2 total 5 - 2 = 3 (zero-based).',
-  walkthrough: ['For positive costs, extend [2, 1] to [2, 1, 4]: total 7 exceeds 5. Remove 2 to reach 5; the surviving run is [1, 4].', 'Adding the final 1 exceeds the budget again; remove 1 to keep [4, 1]. No length-three run fits.', 'For repeated arbitrary range questions, boundaries need not advance together. Subtract two prefix totals instead.', 'Before implementing, say which guarantee made each decision safe. Recognition checks below do not establish independent coding fluency.'],
-  mistakes: ['Choosing from a noun in the story rather than the required output and constraints.', 'Treating any contiguous range as a window: repeated arbitrary totals favor prefix sums, and negative values can break shrinking rules.', 'Sorting the entire collection after every arrival when only the smallest outstanding item is needed.', 'Using a first-found route as the shortest route without equal-cost level ordering.', 'Calling repeated recursive work DP without defining reusable state and base cases.'],
+  objectives: [
+    'Identify decisive signals in an unlabeled problem.',
+    'Explain why a candidate fits and why a near-miss fails.',
+    'Separate recognizing an approach from implementing it independently.',
+  ],
+  sections: [
+    {
+      title: 'Read the output and constraints first',
+      body: 'Ask what must be returned: existence, a count, a best value, a route, or every possible result? Then ask what is guaranteed: sorted order, positive values, equal-cost moves, or repeated questions over unchanged data? Write a tiny example and a candidate invariant before coding. Signals suggest an approach; they are not proof or a unique solution.',
+    },
+    {
+      title: 'Remember, match, or keep a contiguous run',
+      body: '“Have I seen this?” suggests a set; “how often?” or “what belongs to this key?” suggests a map. “Nearest unmatched” or “undo the latest unfinished action” suggests a stack. Sorted values plus a pair target suggest two pointers: order justifies discarding candidates. A contiguous run plus a limit suggests a sliding window only when extending and shrinking have predictable effects. Positive costs support shrinking an over-budget run; negative costs can invalidate that rule.',
+    },
+    {
+      title: 'Search, explore, or reuse',
+      body: 'A minimum feasible value with a yes/no test suggests binary search on the answer only when feasibility is monotone: once a value works, every larger candidate works. Levels or fewest steps suggest BFS when each move has equal cost. All combinations suggest backtracking, with choices undone before another branch. Overlapping subproblems suggest dynamic programming: define the state and its dependencies so an answer can be reused. Listing all answers still costs at least the size of that output.',
+    },
+    {
+      title: 'Near-misses matter',
+      body: 'Many totals for arbitrary ranges of an unchanged list suggest prefix sums, not a moving window: prefix[right + 1] - prefix[left] answers each range after one preprocessing scan, even with negative values. A changing stream where only the smallest outstanding job is needed suggests a min-heap; sorting everything after each arrival does unnecessary work. Sorting remains reasonable for a one-off request for the entire order. Choose from the workload, not a familiar word.',
+    },
+  ],
+  example:
+    '// Consecutive daily costs: [2, 1, 4, 1], budget 5\n// Longest affordable run has length 2.\n// Unchanged daily changes: [2, -1, 4]\n// Prefix totals: [0, 2, 1, 5]\n// Days 1 through 2 total 5 - 2 = 3 (zero-based).',
+  walkthrough: [
+    'For positive costs, extend [2, 1] to [2, 1, 4]: total 7 exceeds 5. Remove 2 to reach 5; the surviving run is [1, 4].',
+    'Adding the final 1 exceeds the budget again; remove 1 to keep [4, 1]. No length-three run fits.',
+    'For repeated arbitrary range questions, boundaries need not advance together. Subtract two prefix totals instead.',
+    'Before implementing, say which guarantee made each decision safe. Recognition checks below do not establish independent coding fluency.',
+  ],
+  mistakes: [
+    'Choosing from a noun in the story rather than the required output and constraints.',
+    'Treating any contiguous range as a window: repeated arbitrary totals favor prefix sums, and negative values can break shrinking rules.',
+    'Sorting the entire collection after every arrival when only the smallest outstanding item is needed.',
+    'Using a first-found route as the shortest route without equal-cost level ordering.',
+    'Calling repeated recursive work DP without defining reusable state and base cases.',
+  ],
   questions: [
     {
       id: 'recognition-greenhouse-shape-v1',
-      prompt: 'A greenhouse log has one tray per line. Part 1 sums tray maxima. Part 2 will count readings near each tray maximum, including duplicates. Which parsed data shape supports both requests without rereading the text?',
+      prompt:
+        'A greenhouse log has one tray per line. Part 1 sums tray maxima. Part 2 will count readings near each tray maximum, including duplicates. Which parsed data shape supports both requests without rereading the text?',
       code: '',
-      options: ['One maximum per tray', 'One numeric array per tray, retaining every occurrence', 'One flat array of all readings', 'One set of distinct readings per tray'],
-      answer: 1,
-      explanation: 'Keep a numeric array per tray: it retains boundaries and duplicates, and permits both maxima and local counts. Maxima alone lose the other readings; flattening loses tray identity; sets lose repeated occurrences. Recognition does not establish coding independence.'
-    },
-    { id: 'recognition-repeated-badge-v1', prompt: 'At a conference, badge numbers arrive one at a time. After each arrival, report whether that exact number appeared earlier. No ordering or counts are needed. Which approach fits?', code: '', options: ['Sorting', 'Set / map lookup', 'Backtracking'], answer: 1, explanation: 'Only membership in the previously seen numbers matters. A set answers that directly; check before adding the new number. Repeated sorting adds unnecessary work.' },
-    { id: 'recognition-crate-pair-v1', prompt: 'Crate weights are already in increasing order. Find whether two different crates weigh exactly 50 kg together. You want one pass and constant extra storage. Which approach fits?', code: '', options: ['Set / map lookup', 'Two pointers', 'Binary search for each crate'], answer: 1, explanation: 'Try the lightest and heaviest remaining crates. If their sum is too small, the lightest cannot work with any remaining partner; if too large, the heaviest cannot work. Sorted order makes each discard safe; distinct positions prevent reusing a crate. A set of seen weights also finds the pair, but it needs extra storage the contract rules out.' },
-    { id: 'recognition-reading-budget-v1', prompt: 'A reader has a list of chapters with strictly positive reading times. Find the greatest number of consecutive chapters they can finish within 60 minutes, in one pass. Which approach fits?', code: '', options: ['Prefix sums alone', 'Stack', 'Sliding window'], answer: 2, explanation: 'Maintain a consecutive run and shrink its front while its total exceeds 60. Positive times ensure shrinking reduces the total and extension increases it. Prefix sums alone still leave the search for the longest valid range unresolved.' },
-    { id: 'recognition-nested-parcels-v1', prompt: 'A packing log opens and closes parcels of several kinds. Every closing must match the most recently opened parcel that is still unfinished. Decide whether the whole log is valid. Which approach fits?', code: '', options: ['Queue', 'Counting opens and closes', 'Stack'], answer: 2, explanation: 'The latest unfinished opening must be checked first. A stack preserves that order. Reject an unmatched or wrong-kind closing and leftover openings; counts alone lose nesting.' },
-    { id: 'recognition-delivery-capacity-v1', prompt: 'Boxes must be shipped in their listed order within five days. Each box has a positive weight, and a day has a shared whole-number weight allowance. A trial allowance can be checked by filling each day in order. Find the smallest allowance that works. Which approach fits?', code: '', options: ['Binary search on the answer', 'Backtracking', 'Set / map lookup'], answer: 0, explanation: 'Feasibility is monotone: a working allowance remains workable when increased. Search between the heaviest box and the total weight. The ordered positive weights let a greedy trial compute the fewest days for a candidate.' },
-    { id: 'recognition-station-hops-v1', prompt: 'Stations are connected by routes. Every ride counts as one step, and cycles are possible. Find the fewest rides from a starting station to a destination. Which approach fits?', code: '', options: ['DFS', 'BFS', 'Backtracking over every route'], answer: 1, explanation: 'Explore all stations one ride away before those two rides away. With equal-cost rides, first discovery gives minimum steps. Track visited stations to avoid cycling. DFS can find a route, but the first route it finds need not be the shortest.' },
-    {
-      'id': 'recognition-warehouse-grid-v1',
-      'prompt': 'A warehouse floor plan has open cells and walls. A robot moves only between cells sharing a side; each move costs one. Find the fewest moves from its dock to a delivery cell, or report no route. Which approach fits?',
-      'code': '',
-      'options': [
-        'DFS and return the first route',
-        'BFS with visited cells',
-        'Greedy moves toward the delivery cell'
+      options: [
+        'One maximum per tray',
+        'One numeric array per tray, retaining every occurrence',
+        'One flat array of all readings',
+        'One set of distinct readings per tray',
       ],
-      'answer': 1,
-      'explanation': 'BFS explores all cells at distance one before distance two, so first discovery gives the fewest equal-cost moves. Mark cells when discovered to avoid cycles. DFS can find a route but its first route may take a long detour. Greedy moves toward the target can become trapped behind walls or miss a route that initially moves away.'
+      answer: 1,
+      explanation:
+        'Keep a numeric array per tray: it retains boundaries and duplicates, and permits both maxima and local counts. Maxima alone lose the other readings; flattening loses tray identity; sets lose repeated occurrences. Recognition does not establish coding independence.',
     },
-    { id: 'recognition-picnic-choices-v1', prompt: 'A picnic has six distinct optional dishes. List every possible selection, including choosing none. Each dish may be chosen at most once. Which approach fits?', code: '', options: ['Dynamic programming', 'Backtracking', 'Greedy selection'], answer: 1, explanation: 'Branch on including or excluding each dish and restore the partial selection between branches. This enumerates all 64 selections. A count-only task would be different; here every selection must be produced.' },
-    { id: 'recognition-step-routes-v1', prompt: 'A child can move up a staircase by one or two steps at a time. For a staircase of n steps, return only the number of different ways to reach the top. Repeatedly recounting routes to the same height is too slow. Which approach fits?', code: '', options: ['Backtracking', 'Dynamic programming', 'BFS'], answer: 1, explanation: 'Ways to height h depend on ways to h - 1 and h - 2. Reuse those totals instead of enumerating routes repeatedly. Define ways(0) = 1 and ways(1) = 1; the state is height, not the full route.' },
-    { id: 'recognition-meter-ranges-v1', prompt: 'Daily meter changes can be positive or negative. The records never change, but customers ask thousands of totals for arbitrary inclusive date ranges. Which approach gives constant-time answers after one preprocessing pass?', code: '', options: ['Sliding window', 'Prefix sums', 'Sort the changes first'], answer: 1, explanation: 'Store totals before each position and subtract the total before the left boundary from the total through the right boundary. Arbitrary query order and negative values are fine; no shrinking rule is required.' },
-    { id: 'recognition-next-job-v1', prompt: 'Jobs with numeric urgency ranks keep arriving. Between arrivals, remove the outstanding job with the smallest rank. You never need to display all jobs in order. Which approach avoids rebuilding the entire order each time?', code: '', options: ['Min-heap', 'Sort all jobs after every arrival', 'Queue'], answer: 0, explanation: 'A min-heap keeps the smallest rank at its root and supports insertion and removal in logarithmic time. Full repeated sorting maintains more order than this workload needs; a one-off full ordering would favor sorting.' },
+    {
+      id: 'recognition-repeated-badge-v1',
+      prompt:
+        'At a conference, badge numbers arrive one at a time. After each arrival, report whether that exact number appeared earlier. No ordering or counts are needed. Which approach fits?',
+      code: '',
+      options: ['Sorting', 'Set / map lookup', 'Backtracking'],
+      answer: 1,
+      explanation:
+        'Only membership in the previously seen numbers matters. A set answers that directly; check before adding the new number. Repeated sorting adds unnecessary work.',
+    },
+    {
+      id: 'recognition-crate-pair-v1',
+      prompt:
+        'Crate weights are already in increasing order. Find whether two different crates weigh exactly 50 kg together. You want one pass and constant extra storage. Which approach fits?',
+      code: '',
+      options: ['Set / map lookup', 'Two pointers', 'Binary search for each crate'],
+      answer: 1,
+      explanation:
+        'Try the lightest and heaviest remaining crates. If their sum is too small, the lightest cannot work with any remaining partner; if too large, the heaviest cannot work. Sorted order makes each discard safe; distinct positions prevent reusing a crate. A set of seen weights also finds the pair, but it needs extra storage the contract rules out.',
+    },
+    {
+      id: 'recognition-reading-budget-v1',
+      prompt:
+        'A reader has a list of chapters with strictly positive reading times. Find the greatest number of consecutive chapters they can finish within 60 minutes, in one pass. Which approach fits?',
+      code: '',
+      options: ['Prefix sums alone', 'Stack', 'Sliding window'],
+      answer: 2,
+      explanation:
+        'Maintain a consecutive run and shrink its front while its total exceeds 60. Positive times ensure shrinking reduces the total and extension increases it. Prefix sums alone still leave the search for the longest valid range unresolved.',
+    },
+    {
+      id: 'recognition-nested-parcels-v1',
+      prompt:
+        'A packing log opens and closes parcels of several kinds. Every closing must match the most recently opened parcel that is still unfinished. Decide whether the whole log is valid. Which approach fits?',
+      code: '',
+      options: ['Queue', 'Counting opens and closes', 'Stack'],
+      answer: 2,
+      explanation:
+        'The latest unfinished opening must be checked first. A stack preserves that order. Reject an unmatched or wrong-kind closing and leftover openings; counts alone lose nesting.',
+    },
+    {
+      id: 'recognition-delivery-capacity-v1',
+      prompt:
+        'Boxes must be shipped in their listed order within five days. Each box has a positive weight, and a day has a shared whole-number weight allowance. A trial allowance can be checked by filling each day in order. Find the smallest allowance that works. Which approach fits?',
+      code: '',
+      options: ['Binary search on the answer', 'Backtracking', 'Set / map lookup'],
+      answer: 0,
+      explanation:
+        'Feasibility is monotone: a working allowance remains workable when increased. Search between the heaviest box and the total weight. The ordered positive weights let a greedy trial compute the fewest days for a candidate.',
+    },
+    {
+      id: 'recognition-station-hops-v1',
+      prompt:
+        'Stations are connected by routes. Every ride counts as one step, and cycles are possible. Find the fewest rides from a starting station to a destination. Which approach fits?',
+      code: '',
+      options: ['DFS', 'BFS', 'Backtracking over every route'],
+      answer: 1,
+      explanation:
+        'Explore all stations one ride away before those two rides away. With equal-cost rides, first discovery gives minimum steps. Track visited stations to avoid cycling. DFS can find a route, but the first route it finds need not be the shortest.',
+    },
+    {
+      id: 'recognition-warehouse-grid-v1',
+      prompt:
+        'A warehouse floor plan has open cells and walls. A robot moves only between cells sharing a side; each move costs one. Find the fewest moves from its dock to a delivery cell, or report no route. Which approach fits?',
+      code: '',
+      options: ['DFS and return the first route', 'BFS with visited cells', 'Greedy moves toward the delivery cell'],
+      answer: 1,
+      explanation:
+        'BFS explores all cells at distance one before distance two, so first discovery gives the fewest equal-cost moves. Mark cells when discovered to avoid cycles. DFS can find a route but its first route may take a long detour. Greedy moves toward the target can become trapped behind walls or miss a route that initially moves away.',
+    },
+    {
+      id: 'recognition-picnic-choices-v1',
+      prompt:
+        'A picnic has six distinct optional dishes. List every possible selection, including choosing none. Each dish may be chosen at most once. Which approach fits?',
+      code: '',
+      options: ['Dynamic programming', 'Backtracking', 'Greedy selection'],
+      answer: 1,
+      explanation:
+        'Branch on including or excluding each dish and restore the partial selection between branches. This enumerates all 64 selections. A count-only task would be different; here every selection must be produced.',
+    },
+    {
+      id: 'recognition-step-routes-v1',
+      prompt:
+        'A child can move up a staircase by one or two steps at a time. For a staircase of n steps, return only the number of different ways to reach the top. Repeatedly recounting routes to the same height is too slow. Which approach fits?',
+      code: '',
+      options: ['Backtracking', 'Dynamic programming', 'BFS'],
+      answer: 1,
+      explanation:
+        'Ways to height h depend on ways to h - 1 and h - 2. Reuse those totals instead of enumerating routes repeatedly. Define ways(0) = 1 and ways(1) = 1; the state is height, not the full route.',
+    },
+    {
+      id: 'recognition-meter-ranges-v1',
+      prompt:
+        'Daily meter changes can be positive or negative. The records never change, but customers ask thousands of totals for arbitrary inclusive date ranges. Which approach gives constant-time answers after one preprocessing pass?',
+      code: '',
+      options: ['Sliding window', 'Prefix sums', 'Sort the changes first'],
+      answer: 1,
+      explanation:
+        'Store totals before each position and subtract the total before the left boundary from the total through the right boundary. Arbitrary query order and negative values are fine; no shrinking rule is required.',
+    },
+    {
+      id: 'recognition-next-job-v1',
+      prompt:
+        'Jobs with numeric urgency ranks keep arriving. Between arrivals, remove the outstanding job with the smallest rank. You never need to display all jobs in order. Which approach avoids rebuilding the entire order each time?',
+      code: '',
+      options: ['Min-heap', 'Sort all jobs after every arrival', 'Queue'],
+      answer: 0,
+      explanation:
+        'A min-heap keeps the smallest rank at its root and supports insertion and removal in logarithmic time. Full repeated sorting maintains more order than this workload needs; a one-off full ordering would favor sorting.',
+    },
   ],
-  repIds: ['algo-sorted-pair', 'has-duplicate', 'valid-parentheses', 'algo-window-sum', 'most-frequent-number', 'simplify-file-path', 'count-unique-windows', 'puzzle-parse-part-one', 'puzzle-adapt-part-two'],
+  repIds: [
+    'algo-sorted-pair',
+    'has-duplicate',
+    'valid-parentheses',
+    'algo-window-sum',
+    'most-frequent-number',
+    'simplify-file-path',
+    'count-unique-windows',
+    'puzzle-parse-part-one',
+    'puzzle-adapt-part-two',
+  ],
   related: ['array-techniques', 'lookup', 'stacks', 'graphs', 'recursion-basics'],
 })
 
 // Add new question identities without changing previously saved answer contracts.
-dsaSkills.find(skill => skill.id === 'recognize-the-pattern')!.questions.push(
-  {
-    'id': 'recognition-warmer-readings-v1',
-    'prompt': 'For every sensor reading, find the first later strictly higher reading. Equal readings do not qualify. You need linear total work. Which approach fits?',
-    'code': '',
-    'options': ['Monotonic stack of unresolved indices', 'Sort readings by value', 'Scan every later reading for each position'],
-    'answer': 0,
-    'explanation': 'A monotonic stack retains unresolved positions; each is pushed and popped at most once, giving linear work. Strictly higher readings resolve popped positions. Sorting loses original position order and the first-later requirement. Repeated suffix scans can take quadratic work on equal readings.',
-  },
-  {
-    'id': 'recognition-course-dependencies-v1',
-    'prompt': 'Courses have prerequisites. Produce every course in a valid order, choosing the smallest eligible ID after each completion, or report a cycle. Which approach fits?',
-    'code': '',
-    'options': ['BFS from course 0 by distance', 'Topological order with smallest eligible selection', 'Sort IDs once and return them'],
-    'answer': 1,
-    'explanation': 'Topological ordering tracks unmet prerequisites and selects the smallest currently eligible course; an incomplete result detects a cycle. BFS distance from 0 neither checks all prerequisites nor covers disconnected courses. Sorting IDs once can put a dependent before its prerequisite and cannot detect cycles.',
-  },
-  {
-    'id': 'recognition-shared-message-v1',
-    'prompt': 'Two messages contain lowercase letters. Find only the longest length obtainable by selecting positions in order from each, allowing gaps. Which approach fits?',
-    'code': '',
-    'options': ['Sliding window for a shared substring', 'Count each letter and sum minimum counts', 'Dynamic programming over two prefix lengths'],
-    'answer': 2,
-    'explanation': 'Two-prefix dynamic programming reuses the best shared lengths: a match extends the diagonal; a mismatch compares dropping one endpoint. A substring window requires adjacency and misses gapped matches. Minimum letter counts ignore order: ab and ba share two letters but the longest ordered sequence has length one.',
-  }
-)
+dsaSkills
+  .find(skill => skill.id === 'recognize-the-pattern')!
+  .questions.push(
+    {
+      id: 'recognition-warmer-readings-v1',
+      prompt:
+        'For every sensor reading, find the first later strictly higher reading. Equal readings do not qualify. You need linear total work. Which approach fits?',
+      code: '',
+      options: ['Monotonic stack of unresolved indices', 'Sort readings by value', 'Scan every later reading for each position'],
+      answer: 0,
+      explanation:
+        'A monotonic stack retains unresolved positions; each is pushed and popped at most once, giving linear work. Strictly higher readings resolve popped positions. Sorting loses original position order and the first-later requirement. Repeated suffix scans can take quadratic work on equal readings.',
+    },
+    {
+      id: 'recognition-course-dependencies-v1',
+      prompt:
+        'Courses have prerequisites. Produce every course in a valid order, choosing the smallest eligible ID after each completion, or report a cycle. Which approach fits?',
+      code: '',
+      options: ['BFS from course 0 by distance', 'Topological order with smallest eligible selection', 'Sort IDs once and return them'],
+      answer: 1,
+      explanation:
+        'Topological ordering tracks unmet prerequisites and selects the smallest currently eligible course; an incomplete result detects a cycle. BFS distance from 0 neither checks all prerequisites nor covers disconnected courses. Sorting IDs once can put a dependent before its prerequisite and cannot detect cycles.',
+    },
+    {
+      id: 'recognition-shared-message-v1',
+      prompt:
+        'Two messages contain lowercase letters. Find only the longest length obtainable by selecting positions in order from each, allowing gaps. Which approach fits?',
+      code: '',
+      options: [
+        'Sliding window for a shared substring',
+        'Count each letter and sum minimum counts',
+        'Dynamic programming over two prefix lengths',
+      ],
+      answer: 2,
+      explanation:
+        'Two-prefix dynamic programming reuses the best shared lengths: a match extends the diagonal; a mismatch compares dropping one endpoint. A substring window requires adjacency and misses gapped matches. Minimum letter counts ignore order: ab and ba share two letters but the longest ordered sequence has length one.',
+    },
+  )

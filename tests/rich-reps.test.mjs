@@ -14,8 +14,15 @@ test('each rich format has a reference solution and its full authored contract p
   for (const rep of richReps) {
     if (rep.format === 'frontend') {
       const { report } = frame(richSolutions[rep.id])
-      assert.ok(report.results.every(result => result.passed), JSON.stringify(report))
-    } else assert.deepEqual(runRep(richSolutions[rep.id], rep.id).filter(result => !result.passed), [])
+      assert.ok(
+        report.results.every(result => result.passed),
+        JSON.stringify(report),
+      )
+    } else
+      assert.deepEqual(
+        runRep(richSolutions[rep.id], rep.id).filter(result => !result.passed),
+        [],
+      )
   }
 })
 
@@ -34,7 +41,10 @@ test('frontend checks reject missing interaction wiring and accessible labelling
     richSolutions[frontend.id].replace('item.textContent = person.name', 'item.innerHTML = person.name'),
   ]) {
     const { report } = frame(code)
-    assert.ok(report.results.some(result => !result.passed), 'An incomplete interface must fail')
+    assert.ok(
+      report.results.some(result => !result.passed),
+      'An incomplete interface must fail',
+    )
   }
 })
 
@@ -52,7 +62,10 @@ test('interactive preview supports search changes and retry feedback', () => {
     const input = window.document.querySelector('input')
     input.value = ' AD '
     input.dispatchEvent(new window.Event('input', { bubbles: true }))
-    assert.deepEqual([...window.document.querySelectorAll('li')].map(item => item.textContent), ['Ada', 'Adam'])
+    assert.deepEqual(
+      [...window.document.querySelectorAll('li')].map(item => item.textContent),
+      ['Ada', 'Adam'],
+    )
   })
   frame(richSolutions[frontend.id], { mode: 'preview', scenario: previewScenarios.error }, window => {
     window.document.querySelector('button').click()
@@ -61,10 +74,18 @@ test('interactive preview supports search changes and retry feedback', () => {
 })
 
 test('frame generation escapes script-closing text and exposes runtime errors safely', () => {
-  const escaped = frame(richSolutions[frontend.id] + '\nconst example = "</script><script>throw 42</script>"', {}, window => window.document.querySelectorAll('script').length)
+  const escaped = frame(
+    richSolutions[frontend.id] + '\nconst example = "</script><script>throw 42</script>"',
+    {},
+    window => window.document.querySelectorAll('script').length,
+  )
   assert.equal(escaped.value, 1)
   assert.ok(escaped.report.results.every(result => result.passed))
-  const error = frame('function mountDirectory() { throw new Error("Repair this") }', { mode: 'preview' }, window => window.document.querySelector('[role="alert"]').textContent)
+  const error = frame(
+    'function mountDirectory() { throw new Error("Repair this") }',
+    { mode: 'preview' },
+    window => window.document.querySelector('[role="alert"]').textContent,
+  )
   assert.equal(error.report.error, 'Repair this')
   assert.equal(error.value, 'Repair this')
 })

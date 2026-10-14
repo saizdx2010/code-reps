@@ -43,38 +43,85 @@ export function LearningHub(props: Props) {
   }, [])
   const { tab, setTab, state, update, history, openRep, reviewRep, onSkill } = props
   const [interviewMinutes, setInterviewMinutes] = useState(30)
-  return <main className="learning-hub">
-    <PageHeader
-      eyebrow={tab === 'notebook' ? 'Journal' : undefined}
-      title={learningPageTitles[tab].title} description={learningPageTitles[tab].description}
-      actions={tab === 'notebook' ? props.journalTabs : undefined}
-    />
-    {props.error && <p role="alert">{props.error}</p>}
-    {tab === 'knowledge' && <LearningKnowledge
-      state={state} update={update} history={history} openRep={openRep}
-      skillId={props.skillId} onSkill={onSkill} onQuickLessons={props.onQuickLessons}
-    />}
-    {tab === 'assessment' && <LearningAssessment
-      state={state} update={update} history={history} reviewRep={reviewRep} onReviewSkill={id => { onSkill(id); setTab('knowledge') }}
-    />}
-    {tab === 'plan' && <LearningPlan
-      state={state} update={update} history={history} openRep={openRep} reviewRep={reviewRep} candidates={props.candidates}
-    />}
-    {tab === 'notebook' && <LearningNotebook state={state} update={update} />}
-    {tab === 'projects' && <LearningProjects
-      state={state} update={update} history={history} openRep={openRep} openNotebook={() => setTab('notebook')}
-    />}
-    {tab === 'interview' && <LearningInterview
-      state={state} update={update} openRep={openRep} reviewRep={reviewRep} minutes={interviewMinutes} setMinutes={setInterviewMinutes}
-    />}
-    {(tab === 'plan' || tab === 'assessment') && <p className="projects-more">
-      <Button variant="text" onClick={() => goToView('progress')}>Back to Skills</Button>
-    </p>}
-    {tab === 'interview' && <p className="projects-more">
-      <Button variant="text" onClick={() => setTab('projects')}>Back to Projects</Button>
-    </p>}
-    {tab === 'projects' && <p className="projects-more">
-      Optional: <Button variant="text" onClick={() => setTab('interview')}>Timed interview practice<Icon name="arrow" /></Button>
-    </p>}
-  </main>
+  return (
+    <main className="learning-hub">
+      <PageHeader
+        eyebrow={tab === 'notebook' ? 'Journal' : undefined}
+        title={learningPageTitles[tab].title}
+        description={learningPageTitles[tab].description}
+        actions={tab === 'notebook' ? props.journalTabs : undefined}
+      />
+      {props.error && <p role="alert">{props.error}</p>}
+      {tab === 'knowledge' && (
+        <LearningKnowledge
+          state={state}
+          update={update}
+          history={history}
+          openRep={openRep}
+          skillId={props.skillId}
+          onSkill={onSkill}
+          onQuickLessons={props.onQuickLessons}
+        />
+      )}
+      {tab === 'assessment' && (
+        <LearningAssessment
+          state={state}
+          update={update}
+          history={history}
+          reviewRep={reviewRep}
+          onReviewSkill={id => {
+            onSkill(id)
+            setTab('knowledge')
+          }}
+        />
+      )}
+      {tab === 'plan' && (
+        <LearningPlan
+          state={state}
+          update={update}
+          history={history}
+          openRep={openRep}
+          reviewRep={reviewRep}
+          candidates={props.candidates}
+        />
+      )}
+      {tab === 'notebook' && <LearningNotebook state={state} update={update} />}
+      {tab === 'projects' && (
+        <LearningProjects state={state} update={update} history={history} openRep={openRep} openNotebook={() => setTab('notebook')} />
+      )}
+      {tab === 'interview' && (
+        <LearningInterview
+          state={state}
+          update={update}
+          openRep={openRep}
+          reviewRep={reviewRep}
+          minutes={interviewMinutes}
+          setMinutes={setInterviewMinutes}
+        />
+      )}
+      {(tab === 'plan' || tab === 'assessment') && (
+        <p className="projects-more">
+          <Button variant="text" onClick={() => goToView('progress')}>
+            Back to Skills
+          </Button>
+        </p>
+      )}
+      {tab === 'interview' && (
+        <p className="projects-more">
+          <Button variant="text" onClick={() => setTab('projects')}>
+            Back to Projects
+          </Button>
+        </p>
+      )}
+      {tab === 'projects' && (
+        <p className="projects-more">
+          Optional:{' '}
+          <Button variant="text" onClick={() => setTab('interview')}>
+            Timed interview practice
+            <Icon name="arrow" />
+          </Button>
+        </p>
+      )}
+    </main>
+  )
 }

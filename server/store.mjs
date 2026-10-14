@@ -10,13 +10,19 @@ export function createStore(dataDir = process.env.CODE_REPS_DATA_DIR || join(hom
   const dbPath = join(dataDir, 'progress.sqlite')
   const existed = existsSync(dbPath)
   const db = new DatabaseSync(dbPath)
-  db.exec('PRAGMA journal_mode = WAL; CREATE TABLE IF NOT EXISTS entries (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TEXT NOT NULL) STRICT;')
+  db.exec(
+    'PRAGMA journal_mode = WAL; CREATE TABLE IF NOT EXISTS entries (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TEXT NOT NULL) STRICT;',
+  )
   const read = db.prepare('SELECT key, value FROM entries')
-  const put = db.prepare('INSERT INTO entries (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at')
+  const put = db.prepare(
+    'INSERT INTO entries (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at',
+  )
   const remove = db.prepare('DELETE FROM entries WHERE key = ?')
   const count = db.prepare('SELECT COUNT(*) AS count FROM entries')
 
-  function entries() { return Object.fromEntries(read.all().map((row) => [row.key, row.value])) }
+  function entries() {
+    return Object.fromEntries(read.all().map(row => [row.key, row.value]))
+  }
   function migrate(candidate) {
     if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) throw new Error('Invalid migration data.')
     const pairs = Object.entries(candidate)
@@ -25,16 +31,26 @@ export function createStore(dataDir = process.env.CODE_REPS_DATA_DIR || join(hom
     }
     db.exec('BEGIN IMMEDIATE')
     try {
-      if (count.get().count !== 0) { db.exec('ROLLBACK'); return { migrated: false, entries: entries() } }
+      if (count.get().count !== 0) {
+        db.exec('ROLLBACK')
+        return { migrated: false, entries: entries() }
+      }
       for (const [key, value] of pairs) put.run(key, value, new Date().toISOString())
       db.exec('COMMIT')
       return { migrated: true, entries: entries() }
-    } catch (error) { db.exec('ROLLBACK'); throw error }
+    } catch (error) {
+      db.exec('ROLLBACK')
+      throw error
+    }
   }
   function applyEntries(candidate) {
     if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) throw new Error('Invalid saved entries.')
     const pairs = Object.entries(candidate)
-    if (pairs.length > 500 || pairs.some(([key, value]) => !keyAllowed(key) || (value !== null && (typeof value !== 'string' || value.length > 1_000_000)))) throw new Error('Invalid saved entries.')
+    if (
+      pairs.length > 500 ||
+      pairs.some(([key, value]) => !keyAllowed(key) || (value !== null && (typeof value !== 'string' || value.length > 1_000_000)))
+    )
+      throw new Error('Invalid saved entries.')
     db.exec('BEGIN IMMEDIATE')
     try {
       for (const [key, value] of pairs) {
@@ -42,7 +58,10 @@ export function createStore(dataDir = process.env.CODE_REPS_DATA_DIR || join(hom
         else put.run(key, value, new Date().toISOString())
       }
       db.exec('COMMIT')
-    } catch (error) { db.exec('ROLLBACK'); throw error }
+    } catch (error) {
+      db.exec('ROLLBACK')
+      throw error
+    }
   }
   let backupQueue = Promise.resolve()
   let closed = false
@@ -54,11 +73,18 @@ export function createStore(dataDir = process.env.CODE_REPS_DATA_DIR || join(hom
     const target = join(backupDir, `${date}.sqlite`)
     if (!existsSync(target)) {
       const temporary = `${target}.${process.pid}.tmp`
-      try { await backup(db, temporary); await rename(temporary, target) }
-      finally { await rm(temporary, { force: true }) }
+      try {
+        await backup(db, temporary)
+        await rename(temporary, target)
+      } finally {
+        await rm(temporary, { force: true })
+      }
     }
-    const files = (await readdir(backupDir)).filter((file) => /^\d{4}-\d{2}-\d{2}\.sqlite$/.test(file)).sort().reverse()
-    await Promise.all(files.slice(7).map((file) => rm(join(backupDir, file))))
+    const files = (await readdir(backupDir))
+      .filter(file => /^\d{4}-\d{2}-\d{2}\.sqlite$/.test(file))
+      .sort()
+      .reverse()
+    await Promise.all(files.slice(7).map(file => rm(join(backupDir, file))))
     return target
   }
   function makeBackup() {

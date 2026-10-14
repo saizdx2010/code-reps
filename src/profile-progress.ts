@@ -23,6 +23,9 @@ export function profileProgress(history: PortableRecord[], now = new Date()) {
   let currentStreak = 0
   let cursor = days.includes(today) ? today : today - 1
   const activeDays = new Set(days)
-  while (activeDays.has(cursor)) { currentStreak++; cursor-- }
+  while (activeDays.has(cursor)) {
+    currentStreak++
+    cursor--
+  }
   return { currentStreak, longestStreak, practiceDays: days.length, completedReps: completed.size, attempts: records.length }
 }

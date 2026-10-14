@@ -4,7 +4,13 @@ import type { TestResult } from './runner.types'
 
 type FrameEnvironment = { document: Document; window: Window; token: string }
 
-export function startFrontendRun(code: string, rep: Rep, onResults: (results: TestResult[]) => void, onError: (message: string) => void, environment: FrameEnvironment = { document, window, token: crypto.randomUUID() }): () => void {
+export function startFrontendRun(
+  code: string,
+  rep: Rep,
+  onResults: (results: TestResult[]) => void,
+  onError: (message: string) => void,
+  environment: FrameEnvironment = { document, window, token: crypto.randomUUID() },
+): () => void {
   const { document: frameDocument, window: frameWindow, token } = environment
   const frame = frameDocument.createElement('iframe')
   frame.title = 'Frontend interaction checks'
@@ -24,19 +30,27 @@ export function startFrontendRun(code: string, rep: Rep, onResults: (results: Te
     if (timer !== undefined) frameWindow.clearTimeout(timer)
     const frameHadFocus = frameDocument.activeElement === frame
     frame.remove()
-    if (frameHadFocus && previousFocus?.isConnected && 'focus' in previousFocus) (previousFocus as HTMLElement).focus({ preventScroll: true })
+    if (frameHadFocus && previousFocus?.isConnected && 'focus' in previousFocus)
+      (previousFocus as HTMLElement).focus({ preventScroll: true })
   }
   const receive = (event: MessageEvent) => {
     if (disposed || event.source !== frame.contentWindow || event.data?.token !== token) return
     const data = event.data as { results?: TestResult[]; error?: string }
-    if (typeof data.error === 'string') { dispose(); onError(data.error) }
-    else if (Array.isArray(data.results)) {
-      const complete = data.results.length === rep.checks.length && data.results.every((result, index) =>
-        result?.name === rep.checks[index].name && typeof result.passed === 'boolean' &&
-        (result.input === undefined || typeof result.input === 'string') &&
-        (result.message === undefined || typeof result.message === 'string') &&
-        (result.expected === undefined || typeof result.expected === 'string') &&
-        (result.actual === undefined || typeof result.actual === 'string'))
+    if (typeof data.error === 'string') {
+      dispose()
+      onError(data.error)
+    } else if (Array.isArray(data.results)) {
+      const complete =
+        data.results.length === rep.checks.length &&
+        data.results.every(
+          (result, index) =>
+            result?.name === rep.checks[index].name &&
+            typeof result.passed === 'boolean' &&
+            (result.input === undefined || typeof result.input === 'string') &&
+            (result.message === undefined || typeof result.message === 'string') &&
+            (result.expected === undefined || typeof result.expected === 'string') &&
+            (result.actual === undefined || typeof result.actual === 'string'),
+        )
       dispose()
       if (complete) onResults(data.results)
       else onError('Browser checks returned incomplete feedback. Your code is still here; try again.')
@@ -47,11 +61,27 @@ export function startFrontendRun(code: string, rep: Rep, onResults: (results: Te
     try {
       frame.srcdoc = buildFrontendFrame(code, rep, token, 'checks', undefined, runtime)
       frameWindow.addEventListener('message', receive)
-      timer = frameWindow.setTimeout(() => { if (disposed) return; dispose(); onError('The browser checks did not finish. Your code is still here; review it and try again.') }, 5000)
+      timer = frameWindow.setTimeout(() => {
+        if (disposed) return
+        dispose()
+        onError('The browser checks did not finish. Your code is still here; review it and try again.')
+      }, 5000)
       frameDocument.body.append(frame)
-    } catch (error) { dispose(); onError(error instanceof Error ? error.message : 'The browser checks could not start.') }
+    } catch (error) {
+      dispose()
+      onError(error instanceof Error ? error.message : 'The browser checks could not start.')
+    }
   }
-  if (rep.reactPreview) import('virtual:react-frame').then(module => launch(module.default), error => { if (!disposed) { dispose(); onError(error instanceof Error ? error.message : 'React could not load.') } })
+  if (rep.reactPreview)
+    import('virtual:react-frame').then(
+      module => launch(module.default),
+      error => {
+        if (!disposed) {
+          dispose()
+          onError(error instanceof Error ? error.message : 'React could not load.')
+        }
+      },
+    )
   else launch()
   return dispose
 }

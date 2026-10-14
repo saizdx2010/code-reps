@@ -15,7 +15,10 @@ test('plural labels use the count of the named thing', () => {
 test('Journal and Progress dates use readable local calendar dates', () => {
   const date = new Date(2026, 9, 10, 14, 30)
   assert.equal(formatDate(date.getTime()), date.toLocaleString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }))
-  assert.equal(formatDate(date.toISOString(), true), date.toLocaleString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }))
+  assert.equal(
+    formatDate(date.toISOString(), true),
+    date.toLocaleString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }),
+  )
 })
 
 test('catalog gives each rep one primary topic without overlapping array labels', () => {
@@ -36,18 +39,25 @@ test('catalog gives each rep one primary topic without overlapping array labels'
 test('task limits stay in the brief and assessment sentences move without rewriting', async () => {
   const { repNotes } = await import('../src/rep-notes.ts')
   assert.deepEqual(repNotes('Numbers may be decimals. Return 0 for empty input.'), {
-    brief: 'Numbers may be decimals. Return 0 for empty input.', checking: '',
+    brief: 'Numbers may be decimals. Return 0 for empty input.',
+    checking: '',
   })
   assert.deepEqual(repNotes('Keep the starter name. Checks verify the greeting; review your use of const and let.'), {
-    brief: 'Keep the starter name.', checking: 'Checks verify the greeting; review your use of const and let.',
+    brief: 'Keep the starter name.',
+    checking: 'Checks verify the greeting; review your use of const and let.',
   })
   assert.deepEqual(repNotes('Review your types yourself. No network or packages are available.'), {
-    brief: 'No network or packages are available.', checking: 'Review your types yourself.',
+    brief: 'No network or packages are available.',
+    checking: 'Review your types yourself.',
   })
   // Every authored sentence stays available; none are discarded or reworded.
   for (const rep of reps) {
     const notes = repNotes(rep.note)
-    const sentences = text => text.split(/(?<=[.!?])\s+(?=[A-Z])/).filter(Boolean).sort()
+    const sentences = text =>
+      text
+        .split(/(?<=[.!?])\s+(?=[A-Z])/)
+        .filter(Boolean)
+        .sort()
     assert.deepEqual(sentences(`${notes.brief} ${notes.checking}`.trim()), sentences(rep.note))
   }
 })
@@ -59,12 +69,20 @@ test('visible UI and authored content use US English and the shared term list', 
     if (!/\.tsx?$/.test(name)) continue
     const source = ts.createSourceFile(name, await readFile(`src/${name}`, 'utf8'), ts.ScriptTarget.Latest, true)
     const visit = node => {
-      if (ts.isStringLiteralLike(node) || ts.isJsxText(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) {
+      if (
+        ts.isStringLiteralLike(node) ||
+        ts.isJsxText(node) ||
+        ts.isTemplateHead(node) ||
+        ts.isTemplateMiddle(node) ||
+        ts.isTemplateTail(node)
+      ) {
         const text = node.text
         // Existing evidence-state and lesson-section IDs are compatibility contracts.
-        const internalId = text === 'practising' && ['learning.ts', 'practice.ts'].includes(name)
-          || name === 'LearningLesson.tsx' && (text === 'practise' && (ts.isArrayLiteralExpression(node.parent) || ts.isBinaryExpression(node.parent))
-            || text === 'lesson-practise' && ts.isJsxAttribute(node.parent) && node.parent.name.text === 'id')
+        const internalId =
+          (text === 'practising' && ['learning.ts', 'practice.ts'].includes(name)) ||
+          (name === 'LearningLesson.tsx' &&
+            ((text === 'practise' && (ts.isArrayLiteralExpression(node.parent) || ts.isBinaryExpression(node.parent))) ||
+              (text === 'lesson-practise' && ts.isJsxAttribute(node.parent) && node.parent.name.text === 'id')))
         if (!internalId) assert.doesNotMatch(text, /\bpractis(?:e[ds]?|ing)\b|\bgoal (?:trail|path)\b/i, `${name}: ${text}`)
       }
       ts.forEachChild(node, visit)

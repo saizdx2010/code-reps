@@ -1,28 +1,117 @@
 import { see } from './rep-helpers.ts'
 import type { Rep } from './rep-types.ts'
-const check = (name: string, steps: unknown[], expected: unknown[], channel = 'north') => ({ name, input: [{ props: { channel }, steps }], expected })
-export const reactReps: Rep[] = [{
-  id: 'react-channel-counter', title: 'Subscribe with a React effect', category: 'Frontend', format: 'frontend', reactPreview: true,
-  functionName: 'ChannelCounter',
-  prompt: 'Write ChannelCounter({ channel, source }) as a React component using state and an effect. React is supplied as a global; do not import packages. Return TSX. source.subscribe(channel, listener) registers a listener and returns an unsubscribe function. Each emitted integer is added to the total, initially zero. Render a paragraph data-testid="total" with exactly channel + ": " + total, and a native button data-testid="reset" labelled Reset that resets the total to zero. Subscribe only to the current channel. When channel changes, retain the total, unsubscribe from the old channel, and subscribe to the new one. On unmount remove every subscription. Keep exactly one active subscription while mounted, including after reset and repeated updates. Channels are nonempty ASCII words; emitted integers are between -10 and 10, with at most 20 events per check. Do not change props or source. Use React.useState and React.useEffect; these implementation choices remain self-reviewed. The source is deterministic, not a real timer or network connection.',
-  brief: { summary: 'Build a React counter subscribed to one event channel.', rules: ['Write ChannelCounter({ channel, source }) returning TSX; React is a supplied global, with no package imports.', 'Use state and an effect. source.subscribe(channel, listener) returns unsubscribe. Add each emitted integer to total, initially zero.', 'Render total as channel + ": " + total in data-testid="total", and a native Reset button data-testid="reset" that sets total to zero.', 'Keep exactly one subscription while mounted. On channel change retain total, release the old subscription, and subscribe to the new channel. On unmount release all subscriptions.', 'Do not change props or source. Channels are nonempty ASCII words; each check has at most 20 events, with integers from -10 to 10.'], edgeCases: ['Ignore events from other channels; support negative and zero increments and repeated events.', 'Reset must not duplicate subscriptions; repeated channel changes must release old listeners.'] },
-  example: { input: 'north emits 2, then -1; switch to south; south emits 3', output: 'south: 4; one active subscription, then zero after unmount' },
-  note: 'Checks establish rendered behavior and subscription counts in the sandbox. They do not prove effect usage, visual quality, accessibility, or real timer/network behavior.',
-  vocabulary: [{ term: 'Effect cleanup', meaning: 'A function React calls before replacing an effect or removing its component.' }, { term: 'Subscription', meaning: 'A registration that receives events until it is removed.' }],
-  planPrompt: 'What state must survive a channel change? Which resource belongs to one effect lifetime, and how will you release it?',
-  starter: `type CounterProps = { channel: string; source: { subscribe: (channel: string, listener: (value: number) => void) => () => void } }
+const check = (name: string, steps: unknown[], expected: unknown[], channel = 'north') => ({
+  name,
+  input: [{ props: { channel }, steps }],
+  expected,
+})
+export const reactReps: Rep[] = [
+  {
+    id: 'react-channel-counter',
+    title: 'Subscribe with a React effect',
+    category: 'Frontend',
+    format: 'frontend',
+    reactPreview: true,
+    functionName: 'ChannelCounter',
+    prompt:
+      'Write ChannelCounter({ channel, source }) as a React component using state and an effect. React is supplied as a global; do not import packages. Return TSX. source.subscribe(channel, listener) registers a listener and returns an unsubscribe function. Each emitted integer is added to the total, initially zero. Render a paragraph data-testid="total" with exactly channel + ": " + total, and a native button data-testid="reset" labelled Reset that resets the total to zero. Subscribe only to the current channel. When channel changes, retain the total, unsubscribe from the old channel, and subscribe to the new one. On unmount remove every subscription. Keep exactly one active subscription while mounted, including after reset and repeated updates. Channels are nonempty ASCII words; emitted integers are between -10 and 10, with at most 20 events per check. Do not change props or source. Use React.useState and React.useEffect; these implementation choices remain self-reviewed. The source is deterministic, not a real timer or network connection.',
+    brief: {
+      summary: 'Build a React counter subscribed to one event channel.',
+      rules: [
+        'Write ChannelCounter({ channel, source }) returning TSX; React is a supplied global, with no package imports.',
+        'Use state and an effect. source.subscribe(channel, listener) returns unsubscribe. Add each emitted integer to total, initially zero.',
+        'Render total as channel + ": " + total in data-testid="total", and a native Reset button data-testid="reset" that sets total to zero.',
+        'Keep exactly one subscription while mounted. On channel change retain total, release the old subscription, and subscribe to the new channel. On unmount release all subscriptions.',
+        'Do not change props or source. Channels are nonempty ASCII words; each check has at most 20 events, with integers from -10 to 10.',
+      ],
+      edgeCases: [
+        'Ignore events from other channels; support negative and zero increments and repeated events.',
+        'Reset must not duplicate subscriptions; repeated channel changes must release old listeners.',
+      ],
+    },
+    example: {
+      input: 'north emits 2, then -1; switch to south; south emits 3',
+      output: 'south: 4; one active subscription, then zero after unmount',
+    },
+    note: 'Checks establish rendered behavior and subscription counts in the sandbox. They do not prove effect usage, visual quality, accessibility, or real timer/network behavior.',
+    vocabulary: [
+      { term: 'Effect cleanup', meaning: 'A function React calls before replacing an effect or removing its component.' },
+      { term: 'Subscription', meaning: 'A registration that receives events until it is removed.' },
+    ],
+    planPrompt: 'What state must survive a channel change? Which resource belongs to one effect lifetime, and how will you release it?',
+    starter: `type CounterProps = { channel: string; source: { subscribe: (channel: string, listener: (value: number) => void) => () => void } }
 function ChannelCounter({ channel, source }: CounterProps) {
   // React.useState and React.useEffect are available here.
   return <p data-testid="total">{channel}: 0</p>
 }`,
-  hints: ['Separate the displayed total from the subscription lifetime.', 'An event handler needs the latest total even when several events arrive. Think about the updater form of the state setter.', 'Use an effect depending on channel and source. Return the unsubscribe function from that effect; add each event with setTotal(previous => previous + value).'],
-  domPreview: { title: 'Your React channel counter', description: 'Inspect the initial counter and try Reset. Event emissions, channel changes, and unmount are exercised by Run checks.', props: { channel: 'north' }, review: ['Inspect your state and effect dependencies, and trace the returned cleanup.', 'Tab to Reset and activate it with Enter and Space.', 'Check readability at phone width; subscription checks do not prove accessible announcements.'] },
-  checks: [
-    check('Initial render and subscription', [], [see('total', 'text', 'north: 0'), see('reset', 'text', 'Reset'), see('reset', 'tag', 'button'), see('harness', 'subscriptions', 1)]),
-    check('Repeated events use current state', [{ do: 'emit', channel: 'north', value: 2 }, { do: 'emit', channel: 'north', value: -1 }, { do: 'emit', channel: 'other', value: 9 }], [see('total', 'text', 'north: 1'), see('harness', 'subscriptions', 1)]),
-    check('Reset keeps the subscription', [{ do: 'emit', channel: 'north', value: 5 }, { do: 'click', target: 'reset' }, { do: 'emit', channel: 'north', value: -2 }], [see('total', 'text', 'north: -2'), see('harness', 'subscriptions', 1)]),
-    check('Dependency change cleans up the old channel', [{ do: 'emit', channel: 'north', value: 2 }, { do: 'props', props: { channel: 'south' } }, { do: 'emit', channel: 'north', value: 8 }, { do: 'emit', channel: 'south', value: 3 }], [see('total', 'text', 'south: 5'), see('harness', 'subscriptions', 1)]),
-    check('Repeated dependency changes retain one subscription', [{ do: 'props', props: { channel: 'south' } }, { do: 'props', props: { channel: 'north' } }, { do: 'emit', channel: 'north', value: 0 }], [see('total', 'text', 'north: 0'), see('harness', 'subscriptions', 1)]),
-    check('Unmount releases the subscription', [{ do: 'props', props: { channel: 'south' } }, { do: 'unmount' }, { do: 'emit', channel: 'south', value: 5 }], [see('total', 'exists', false), see('harness', 'subscriptions', 0)]),
-  ],
-}]
+    hints: [
+      'Separate the displayed total from the subscription lifetime.',
+      'An event handler needs the latest total even when several events arrive. Think about the updater form of the state setter.',
+      'Use an effect depending on channel and source. Return the unsubscribe function from that effect; add each event with setTotal(previous => previous + value).',
+    ],
+    domPreview: {
+      title: 'Your React channel counter',
+      description: 'Inspect the initial counter and try Reset. Event emissions, channel changes, and unmount are exercised by Run checks.',
+      props: { channel: 'north' },
+      review: [
+        'Inspect your state and effect dependencies, and trace the returned cleanup.',
+        'Tab to Reset and activate it with Enter and Space.',
+        'Check readability at phone width; subscription checks do not prove accessible announcements.',
+      ],
+    },
+    checks: [
+      check(
+        'Initial render and subscription',
+        [],
+        [
+          see('total', 'text', 'north: 0'),
+          see('reset', 'text', 'Reset'),
+          see('reset', 'tag', 'button'),
+          see('harness', 'subscriptions', 1),
+        ],
+      ),
+      check(
+        'Repeated events use current state',
+        [
+          { do: 'emit', channel: 'north', value: 2 },
+          { do: 'emit', channel: 'north', value: -1 },
+          { do: 'emit', channel: 'other', value: 9 },
+        ],
+        [see('total', 'text', 'north: 1'), see('harness', 'subscriptions', 1)],
+      ),
+      check(
+        'Reset keeps the subscription',
+        [
+          { do: 'emit', channel: 'north', value: 5 },
+          { do: 'click', target: 'reset' },
+          { do: 'emit', channel: 'north', value: -2 },
+        ],
+        [see('total', 'text', 'north: -2'), see('harness', 'subscriptions', 1)],
+      ),
+      check(
+        'Dependency change cleans up the old channel',
+        [
+          { do: 'emit', channel: 'north', value: 2 },
+          { do: 'props', props: { channel: 'south' } },
+          { do: 'emit', channel: 'north', value: 8 },
+          { do: 'emit', channel: 'south', value: 3 },
+        ],
+        [see('total', 'text', 'south: 5'), see('harness', 'subscriptions', 1)],
+      ),
+      check(
+        'Repeated dependency changes retain one subscription',
+        [
+          { do: 'props', props: { channel: 'south' } },
+          { do: 'props', props: { channel: 'north' } },
+          { do: 'emit', channel: 'north', value: 0 },
+        ],
+        [see('total', 'text', 'north: 0'), see('harness', 'subscriptions', 1)],
+      ),
+      check(
+        'Unmount releases the subscription',
+        [{ do: 'props', props: { channel: 'south' } }, { do: 'unmount' }, { do: 'emit', channel: 'south', value: 5 }],
+        [see('total', 'exists', false), see('harness', 'subscriptions', 0)],
+      ),
+    ],
+  },
+]

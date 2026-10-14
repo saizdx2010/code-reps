@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 import { cancelReveals, reducedMotion, revealElement } from './ui-motion'
 
-const actionSelector = '.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button, .profile-trigger'
+const actionSelector =
+  '.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button, .profile-trigger'
 
 /** One interaction treatment includes existing buttons as well as the shared Button. */
 export function useAppMotion() {
@@ -18,12 +19,18 @@ export function useAppMotion() {
       ripple.style.left = `${event.clientX - rect.left}px`
       ripple.style.top = `${event.clientY - rect.top}px`
       button.append(ripple)
-      const animation = ripple.animate([
-        { opacity: .16, transform: 'translate(-50%, -50%) scale(.5)' },
-        { opacity: 0, transform: `translate(-50%, -50%) scale(${Math.max(rect.width, rect.height) / 9})` },
-      ], { duration: 430, easing: 'ease-out' })
+      const animation = ripple.animate(
+        [
+          { opacity: 0.16, transform: 'translate(-50%, -50%) scale(.5)' },
+          { opacity: 0, transform: `translate(-50%, -50%) scale(${Math.max(rect.width, rect.height) / 9})` },
+        ],
+        { duration: 430, easing: 'ease-out' },
+      )
       ripples.set(ripple, animation)
-      const clean = () => { ripple.remove(); ripples.delete(ripple) }
+      const clean = () => {
+        ripple.remove()
+        ripples.delete(ripple)
+      }
       void animation.finished.then(clean, clean)
     }
     function expand(event: Event) {
@@ -35,8 +42,15 @@ export function useAppMotion() {
       })
     }
     const preference = typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-reduced-motion: reduce)') : null
-    const cancelRipples = () => { ripples.forEach(animation => animation.cancel()) }
-    const onPreference = () => { if (preference?.matches) { cancelRipples(); cancelReveals() } }
+    const cancelRipples = () => {
+      ripples.forEach(animation => animation.cancel())
+    }
+    const onPreference = () => {
+      if (preference?.matches) {
+        cancelRipples()
+        cancelReveals()
+      }
+    }
     document.addEventListener('pointerdown', press)
     document.addEventListener('toggle', expand, true)
     preference?.addEventListener('change', onPreference)

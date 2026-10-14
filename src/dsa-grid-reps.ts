@@ -8,9 +8,10 @@ export const dsaGridReps: Rep[] = [
     id: 'grid-fewest-steps',
     title: 'Guide the warehouse robot',
     category: 'Algorithm applications',
-    prompt: 'A warehouse robot starts at \'S\' and must reach \'E\'. Return the fewest moves needed, or -1 when no route exists or either endpoint is missing. Each move goes up, right, down, or left to \'.\' or \'E\'; \'#\' is a wall. No diagonal moves. Empty grids and zero-width rows return -1. \'S\' and \'E\' are distinct cells, so start equal to end is outside the contract. Coordinates are [row, col]. Do not mutate grid.',
+    prompt:
+      "A warehouse robot starts at 'S' and must reach 'E'. Return the fewest moves needed, or -1 when no route exists or either endpoint is missing. Each move goes up, right, down, or left to '.' or 'E'; '#' is a wall. No diagonal moves. Empty grids and zero-width rows return -1. 'S' and 'E' are distinct cells, so start equal to end is outside the contract. Coordinates are [row, col]. Do not mutate grid.",
     example: { input: 'fewestSteps(["S#E", "..."])', output: '4' },
-    note: 'grid contains 0 to 30 equal-length rows, each 0 to 30 ASCII characters. Ragged rows and other characters are outside the contract. Allowed characters: \'.\', \'#\', \'S\', \'E\'. At most one S and one E; missing endpoints are allowed.',
+    note: "grid contains 0 to 30 equal-length rows, each 0 to 30 ASCII characters. Ragged rows and other characters are outside the contract. Allowed characters: '.', '#', 'S', 'E'. At most one S and one E; missing endpoints are allowed.",
     vocabulary: [
       { term: 'Grid', meaning: 'a rectangular map indexed first by row, then by column' },
       { term: 'Move', meaning: 'one step between cells sharing a side' },
@@ -48,9 +49,10 @@ export const dsaGridReps: Rep[] = [
     id: 'grid-count-rooms',
     title: 'Count rooms in a floor plan',
     category: 'Algorithm applications',
-    prompt: 'A floor plan uses \'.\' for floor and \'#\' for walls. Return the number of separate rooms: two floor cells belong to the same room when a route of up, right, down, or left moves through floor cells connects them. Diagonal contact does not connect rooms. Empty grids, zero-width rows, and maps with no floor return 0. Coordinates are [row, col]. Do not mutate grid.',
+    prompt:
+      "A floor plan uses '.' for floor and '#' for walls. Return the number of separate rooms: two floor cells belong to the same room when a route of up, right, down, or left moves through floor cells connects them. Diagonal contact does not connect rooms. Empty grids, zero-width rows, and maps with no floor return 0. Coordinates are [row, col]. Do not mutate grid.",
     example: { input: 'countRooms(["..#.", ".##.", "#..."])', output: '2' },
-    note: 'grid contains 0 to 30 equal-length rows, each 0 to 30 ASCII characters. Ragged rows and other characters are outside the contract. Allowed characters: \'.\' and \'#\'.',
+    note: "grid contains 0 to 30 equal-length rows, each 0 to 30 ASCII characters. Ragged rows and other characters are outside the contract. Allowed characters: '.' and '#'.",
     vocabulary: [
       { term: 'Grid', meaning: 'a rectangular map indexed first by row, then by column' },
       { term: 'Region', meaning: 'floor cells linked by side-to-side routes' },
@@ -82,9 +84,10 @@ export const dsaGridReps: Rep[] = [
     id: 'grid-open-neighbours',
     title: 'Inspect open neighbours',
     category: 'Algorithm applications',
-    prompt: 'Return the coordinates of open (\'.\') cells immediately next to position, in the fixed order up, right, down, left, omitting walls and out-of-bounds cells. Coordinates are [row, col]. The origin may be a wall. An out-of-bounds origin, empty grid, or zero-width rows returns []. No diagonals. Do not mutate grid or position.',
+    prompt:
+      "Return the coordinates of open ('.') cells immediately next to position, in the fixed order up, right, down, left, omitting walls and out-of-bounds cells. Coordinates are [row, col]. The origin may be a wall. An out-of-bounds origin, empty grid, or zero-width rows returns []. No diagonals. Do not mutate grid or position.",
     example: { input: 'openNeighbours(["...", ".#.", "..."], [1, 1])', output: '[[0, 1], [1, 2], [2, 1], [1, 0]]' },
-    note: 'grid contains 0 to 30 equal-length rows, each 0 to 30 ASCII characters. Ragged rows and other characters are outside the contract. Allowed characters: \'.\' and \'#\'. position contains integers from -1 to 30.',
+    note: "grid contains 0 to 30 equal-length rows, each 0 to 30 ASCII characters. Ragged rows and other characters are outside the contract. Allowed characters: '.' and '#'. position contains integers from -1 to 30.",
     vocabulary: [
       { term: 'Grid', meaning: 'a rectangular map indexed first by row, then by column' },
       { term: 'Bounds', meaning: 'the valid row and column positions inside a map' },
@@ -99,20 +102,87 @@ export const dsaGridReps: Rep[] = [
       'Consider offsets [-1,0], [0,1], [1,0], [0,-1] in that order; append only in-bounds dots.',
     ],
     checks: [
-      { name: 'Maximum map bottom right', input: [Array(30).fill('.'.repeat(30)), [29, 29]], expected: [[28, 29], [29, 28]] },
-      { name: 'Four in order', input: [['...', '.#.', '...'], [1, 1]], expected: [[0, 1], [1, 2], [2, 1], [1, 0]] },
-      { name: 'Top left', input: [['..', '..'], [0, 0]], expected: [[0, 1], [1, 0]] },
-      { name: 'Walls', input: [['###', '#.#', '###'], [1, 1]], expected: [] },
+      {
+        name: 'Maximum map bottom right',
+        input: [Array(30).fill('.'.repeat(30)), [29, 29]],
+        expected: [
+          [28, 29],
+          [29, 28],
+        ],
+      },
+      {
+        name: 'Four in order',
+        input: [
+          ['...', '.#.', '...'],
+          [1, 1],
+        ],
+        expected: [
+          [0, 1],
+          [1, 2],
+          [2, 1],
+          [1, 0],
+        ],
+      },
+      {
+        name: 'Top left',
+        input: [
+          ['..', '..'],
+          [0, 0],
+        ],
+        expected: [
+          [0, 1],
+          [1, 0],
+        ],
+      },
+      {
+        name: 'Walls',
+        input: [
+          ['###', '#.#', '###'],
+          [1, 1],
+        ],
+        expected: [],
+      },
       { name: 'One open cell', input: [['.'], [0, 0]], expected: [] },
       { name: 'One wall cell', input: [['#'], [0, 0]], expected: [] },
       { name: 'Empty', input: [[], [0, 0]], expected: [] },
-      { name: 'Zero width', input: [['', ''], [0, 0]], expected: [] },
-      { name: 'Single row', input: [['...'], [0, 1]], expected: [[0, 2], [0, 0]] },
-      { name: 'Single column', input: [['.', '.', '.'], [1, 0]], expected: [[0, 0], [2, 0]] },
+      {
+        name: 'Zero width',
+        input: [
+          ['', ''],
+          [0, 0],
+        ],
+        expected: [],
+      },
+      {
+        name: 'Single row',
+        input: [['...'], [0, 1]],
+        expected: [
+          [0, 2],
+          [0, 0],
+        ],
+      },
+      {
+        name: 'Single column',
+        input: [
+          ['.', '.', '.'],
+          [1, 0],
+        ],
+        expected: [
+          [0, 0],
+          [2, 0],
+        ],
+      },
       { name: 'Negative coordinate', input: [['..'], [-1, 0]], expected: [] },
       { name: 'Outside column', input: [['..'], [0, 2]], expected: [] },
       { name: 'Outside row', input: [['..'], [1, 0]], expected: [] },
-      { name: 'No diagonals', input: [['.#', '#.'], [0, 0]], expected: [] },
+      {
+        name: 'No diagonals',
+        input: [
+          ['.#', '#.'],
+          [0, 0],
+        ],
+        expected: [],
+      },
     ],
   },
 ]

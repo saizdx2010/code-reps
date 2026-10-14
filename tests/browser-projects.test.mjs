@@ -9,10 +9,17 @@ import { browserStateSolutions } from './fixtures/browser-state-solutions.mjs'
 import { assertMutantsFail } from './helpers/checks.mjs'
 
 test('external project levels link real preparation and create portable notebook-sized reviews', () => {
-  assert.deepEqual(browserProjects.map(project => project.level), [1, 2, 3])
+  assert.deepEqual(
+    browserProjects.map(project => project.level),
+    [1, 2, 3],
+  )
   assert.equal(new Set(browserProjects.map(project => project.id)).size, 3)
   for (const project of browserProjects) {
-    for (const id of project.preparation) assert.ok(reps.some(rep => rep.id === id), id)
+    for (const id of project.preparation)
+      assert.ok(
+        reps.some(rep => rep.id === id),
+        id,
+      )
     const reflection = projectReflection(project)
     assert.ok(reflection.includes('learner-reported'))
     assert.ok(reflection.includes('Not checked'))
@@ -24,7 +31,7 @@ test('external project levels link real preparation and create portable notebook
 test('state modeling requires unhinted distinct recall after three days', () => {
   const journey = journeys.find(item => item.id === 'state-modeling')
   const time = Date.parse('2026-10-01T12:00:00Z')
-  const record = (repId, days, hintCount = 0) => ({repId, completedAt: new Date(time + days * 86_400_000).toISOString(), hintCount})
+  const record = (repId, days, hintCount = 0) => ({ repId, completedAt: new Date(time + days * 86_400_000).toISOString(), hintCount })
   const history = [record(journey.guided, 0), record(journey.independent, 1)]
   assert.equal(getJourney(journey, [history[0], record(journey.independent, 1, 1)]).stage, 'practising')
   assert.equal(getJourney(journey, [...history, record(journey.recall, 3)]).stage, 'independent')
@@ -46,15 +53,19 @@ test('state checks reject normalization, truthiness, deduplication and mutation 
 test('authored state reference solutions pass strict semantic checks; invalid field access fails', () => {
   function diagnostics(code) {
     const filename = '/virtual/solution.ts'
-    const options = {strict: true, noEmit: true, target: ts.ScriptTarget.ES2022, skipLibCheck: true, types: []}
+    const options = { strict: true, noEmit: true, target: ts.ScriptTarget.ES2022, skipLibCheck: true, types: [] }
     const host = ts.createCompilerHost(options)
     const read = host.readFile.bind(host)
     const exists = host.fileExists.bind(host)
-    host.readFile = name => name === filename ? code : read(name)
+    host.readFile = name => (name === filename ? code : read(name))
     host.fileExists = name => name === filename || exists(name)
     const program = ts.createProgram([filename], options, host)
     return ts.getPreEmitDiagnostics(program)
   }
   for (const [id, code] of Object.entries(browserStateSolutions)) assert.equal(diagnostics(code).length, 0, id)
-  assert.ok(diagnostics("type State = {status: 'pending'} | {status: 'ready'; data: string[]}\nfunction count(s: State) { return s.data.length }").some(diagnostic => diagnostic.code === 2339))
+  assert.ok(
+    diagnostics(
+      "type State = {status: 'pending'} | {status: 'ready'; data: string[]}\nfunction count(s: State) { return s.data.length }",
+    ).some(diagnostic => diagnostic.code === 2339),
+  )
 })

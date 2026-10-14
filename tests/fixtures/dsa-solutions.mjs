@@ -1,76 +1,128 @@
 // Independent reference implementations; intentionally differ from several taught approaches.
 export const dsaSolutions = {
-  'grid-open-neighbours': 'function openNeighbours(g:string[], p:[number,number]) { const [r,c]=p; if(r<0||r>=g.length||c<0||c>=(g[0]?.length??0)) return []; return [[r-1,c],[r,c+1],[r+1,c],[r,c-1]].filter(([y,x])=>y>=0&&y<g.length&&x>=0&&x<g[y].length&&g[y][x]===\'.\') }',
-  'grid-count-rooms': 'function countRooms(g:string[]) { const seen=new Set<string>(); let rooms=0; for(let r=0;r<g.length;r++) for(let c=0;c<g[r].length;c++) { if(g[r][c]!==\'.\'||seen.has(`${r},${c}`)) continue; rooms++; const stack=[[r,c]]; while(stack.length) { const [y,x]=stack.pop()!; const key=`${y},${x}`; if(seen.has(key)) continue; seen.add(key); for(const [ny,nx] of [[y-1,x],[y+1,x],[y,x-1],[y,x+1]]) if(g[ny]?.[nx]===\'.\'&&!seen.has(`${ny},${nx}`)) stack.push([ny,nx]); } } return rooms }',
-  'grid-fewest-steps': 'function fewestSteps(g:string[]) { const d=g.map(row=>Array(row.length).fill(Infinity)); let end:number[]=[]; for(let r=0;r<g.length;r++) for(let c=0;c<g[r].length;c++) {if(g[r][c]===\'S\') d[r][c]=0; if(g[r][c]===\'E\') end=[r,c]} for(let pass=0;pass<g.length*(g[0]?.length??0);pass++) for(let r=0;r<g.length;r++) for(let c=0;c<g[r].length;c++) if(g[r][c]!==\'#\') for(const [y,x] of [[r-1,c],[r+1,c],[r,c-1],[r,c+1]]) if(g[y]?.[x]!==undefined&&g[y][x]!==\'#\') d[r][c]=Math.min(d[r][c],d[y][x]+1); return end.length&&Number.isFinite(d[end[0]][end[1]])?d[end[0]][end[1]]:-1 }',
+  'grid-open-neighbours':
+    "function openNeighbours(g:string[], p:[number,number]) { const [r,c]=p; if(r<0||r>=g.length||c<0||c>=(g[0]?.length??0)) return []; return [[r-1,c],[r,c+1],[r+1,c],[r,c-1]].filter(([y,x])=>y>=0&&y<g.length&&x>=0&&x<g[y].length&&g[y][x]==='.') }",
+  'grid-count-rooms':
+    "function countRooms(g:string[]) { const seen=new Set<string>(); let rooms=0; for(let r=0;r<g.length;r++) for(let c=0;c<g[r].length;c++) { if(g[r][c]!=='.'||seen.has(`${r},${c}`)) continue; rooms++; const stack=[[r,c]]; while(stack.length) { const [y,x]=stack.pop()!; const key=`${y},${x}`; if(seen.has(key)) continue; seen.add(key); for(const [ny,nx] of [[y-1,x],[y+1,x],[y,x-1],[y,x+1]]) if(g[ny]?.[nx]==='.'&&!seen.has(`${ny},${nx}`)) stack.push([ny,nx]); } } return rooms }",
+  'grid-fewest-steps':
+    "function fewestSteps(g:string[]) { const d=g.map(row=>Array(row.length).fill(Infinity)); let end:number[]=[]; for(let r=0;r<g.length;r++) for(let c=0;c<g[r].length;c++) {if(g[r][c]==='S') d[r][c]=0; if(g[r][c]==='E') end=[r,c]} for(let pass=0;pass<g.length*(g[0]?.length??0);pass++) for(let r=0;r<g.length;r++) for(let c=0;c<g[r].length;c++) if(g[r][c]!=='#') for(const [y,x] of [[r-1,c],[r+1,c],[r,c-1],[r,c+1]]) if(g[y]?.[x]!==undefined&&g[y][x]!=='#') d[r][c]=Math.min(d[r][c],d[y][x]+1); return end.length&&Number.isFinite(d[end[0]][end[1]])?d[end[0]][end[1]]:-1 }",
 
-'quiet-sensor-span': 'function quietSpan(readings,threshold,allowance) { let best=0; for(let i=0;i<readings.length;i++) { let noise=0; for(let j=i;j<readings.length;j++) { noise+=Number(readings[j]>threshold); if(noise<=allowance) best=Math.max(best,j-i+1) } } return best }',
-'shared-seat-occurrences': 'function sharedSeats(left,right) { const counts=new Map(); for(const x of right) counts.set(x,(counts.get(x)||0)+1); return left.filter(x=>{ const n=counts.get(x)||0; if(!n) return false; counts.set(x,n-1); return true }) }',
-'dispatch-priority-order': 'function dispatchOrder(requests) { const pending=requests.map((r,i)=>({...r,i})), out=[]; while(pending.length) { let best=0; for(let i=1;i<pending.length;i++) { const a=pending[i],b=pending[best]; if(a.urgency>b.urgency || (a.urgency===b.urgency && a.deadline<b.deadline)) best=i } out.push(pending.splice(best,1)[0].id) } return out }',
-'first-affordable-edition': 'function firstAffordable(costs,budget) { return costs.findIndex(cost=>cost<=budget) }',
-'nested-parcel-load': 'function parcelLoad(parcel) { const pending=[[parcel,1]]; let total=0; while(pending.length) { const [item,depth]=pending.pop(); if(typeof item==="number") total+=item*depth; else for(const child of item) pending.push([child,depth+1]) } return total }',
-'terminal-folder-paths': 'function folderPaths(root) { if(!root) return []; const pending=[[root,[]]],out=[]; while(pending.length) { const [node,prefix]=pending.pop(), path=[...prefix,node.name]; if(!node.children.length) out.push(path); for(let i=node.children.length-1;i>=0;i--) pending.push([node.children[i],path]) } return out }',
-'broadcast-unreached-stations': 'function unreachedStations(links,seeds) { const reached=new Set(seeds); let changed=true; while(changed) { changed=false; for(let i=0;i<links.length;i++) if(reached.has(i)) for(const next of links[i]) if(!reached.has(next)) { reached.add(next); changed=true } } return links.map((_,i)=>i).filter(i=>!reached.has(i)) }',
+  'quiet-sensor-span':
+    'function quietSpan(readings,threshold,allowance) { let best=0; for(let i=0;i<readings.length;i++) { let noise=0; for(let j=i;j<readings.length;j++) { noise+=Number(readings[j]>threshold); if(noise<=allowance) best=Math.max(best,j-i+1) } } return best }',
+  'shared-seat-occurrences':
+    'function sharedSeats(left,right) { const counts=new Map(); for(const x of right) counts.set(x,(counts.get(x)||0)+1); return left.filter(x=>{ const n=counts.get(x)||0; if(!n) return false; counts.set(x,n-1); return true }) }',
+  'dispatch-priority-order':
+    'function dispatchOrder(requests) { const pending=requests.map((r,i)=>({...r,i})), out=[]; while(pending.length) { let best=0; for(let i=1;i<pending.length;i++) { const a=pending[i],b=pending[best]; if(a.urgency>b.urgency || (a.urgency===b.urgency && a.deadline<b.deadline)) best=i } out.push(pending.splice(best,1)[0].id) } return out }',
+  'first-affordable-edition': 'function firstAffordable(costs,budget) { return costs.findIndex(cost=>cost<=budget) }',
+  'nested-parcel-load':
+    'function parcelLoad(parcel) { const pending=[[parcel,1]]; let total=0; while(pending.length) { const [item,depth]=pending.pop(); if(typeof item==="number") total+=item*depth; else for(const child of item) pending.push([child,depth+1]) } return total }',
+  'terminal-folder-paths':
+    'function folderPaths(root) { if(!root) return []; const pending=[[root,[]]],out=[]; while(pending.length) { const [node,prefix]=pending.pop(), path=[...prefix,node.name]; if(!node.children.length) out.push(path); for(let i=node.children.length-1;i>=0;i--) pending.push([node.children[i],path]) } return out }',
+  'broadcast-unreached-stations':
+    'function unreachedStations(links,seeds) { const reached=new Set(seeds); let changed=true; while(changed) { changed=false; for(let i=0;i<links.length;i++) if(reached.has(i)) for(const next of links[i]) if(!reached.has(next)) { reached.add(next); changed=true } } return links.map((_,i)=>i).filter(i=>!reached.has(i)) }',
 
-  'ticket-service-times': 'function ticketTimes(tickets) { let available=0; return tickets.map(ticket => { const start=Math.max(available,ticket.arrival); available=start+ticket.minutes; return {id:ticket.id,start,finish:available} }) }',
-  'parcel-loading-turns': 'function loadingTurn(parcels,targetIndex) { const k=parcels[targetIndex]; return parcels.reduce((turns,count,index)=>turns+Math.min(count,index<=targetIndex?k:k-1),0) }',
+  'ticket-service-times':
+    'function ticketTimes(tickets) { let available=0; return tickets.map(ticket => { const start=Math.max(available,ticket.arrival); available=start+ticket.minutes; return {id:ticket.id,start,finish:available} }) }',
+  'parcel-loading-turns':
+    'function loadingTurn(parcels,targetIndex) { const k=parcels[targetIndex]; return parcels.reduce((turns,count,index)=>turns+Math.min(count,index<=targetIndex?k:k-1),0) }',
   'algo-prefix-sums': 'function rangeSums(numbers, queries) { return queries.map(([l,r]) => numbers.slice(l,r+1).reduce((a,b)=>a+b,0)) }',
-  'algo-merge-intervals': 'function mergeIntervals(intervals) { const pending=intervals.map(x=>[...x]); let changed=true; while(changed) { changed=false; outer: for(let i=0;i<pending.length;i++) for(let j=i+1;j<pending.length;j++) if(pending[i][0]<=pending[j][1] && pending[j][0]<=pending[i][1]) { pending[i]=[Math.min(pending[i][0],pending[j][0]),Math.max(pending[i][1],pending[j][1])]; pending.splice(j,1); changed=true; break outer } } return pending.sort((a,b)=>a[0]-b[0]) }',
-  'algo-linked-list-reverse': 'function reverseList(head) { const values=[]; for(let p=head;p;p=p.next) values.push(p.value); let result=null; for(const value of values) result={value,next:result}; return result }',
-  'algo-min-heap': 'function heapPops(operations) { const bag=[], out=[]; for(const op of operations) { if(op.type==="push") bag.push(op.value); else { bag.sort((a,b)=>a-b); out.push(bag.length ? bag.shift() : null) } } return out }',
-  'algo-subsets': 'function subsets(numbers) { const result=[]; for(let mask=0;mask<2**numbers.length;mask++) result.push(numbers.filter((_,i)=>mask & (1<<i))); return result.sort((a,b)=>{ for(let i=0;i<Math.min(a.length,b.length);i++) { const d=numbers.indexOf(a[i])-numbers.indexOf(b[i]); if(d) return d } return a.length-b.length }) }',
-  'algo-climb-stairs': 'function climbStairs(n) { let count=0; let combinations=1; for(let twos=0;twos<=Math.floor(n/2);twos++) { if(twos===0) combinations=1; else { const slots=n-twos; combinations=1; for(let j=1;j<=twos;j++) combinations=combinations*(slots-j+1)/j } count+=Math.round(combinations) } return count }',
-  'algo-coin-change': 'function coinChange(coins, amount) { const seen=new Set([0]); let layer=[0], count=0; while(layer.length) { if(layer.includes(amount)) return count; const next=[]; for(const sum of layer) for(const coin of coins) { const value=sum+coin; if(value<=amount && !seen.has(value)) { seen.add(value); next.push(value) } } layer=next; count++ } return -1 }',
+  'algo-merge-intervals':
+    'function mergeIntervals(intervals) { const pending=intervals.map(x=>[...x]); let changed=true; while(changed) { changed=false; outer: for(let i=0;i<pending.length;i++) for(let j=i+1;j<pending.length;j++) if(pending[i][0]<=pending[j][1] && pending[j][0]<=pending[i][1]) { pending[i]=[Math.min(pending[i][0],pending[j][0]),Math.max(pending[i][1],pending[j][1])]; pending.splice(j,1); changed=true; break outer } } return pending.sort((a,b)=>a[0]-b[0]) }',
+  'algo-linked-list-reverse':
+    'function reverseList(head) { const values=[]; for(let p=head;p;p=p.next) values.push(p.value); let result=null; for(const value of values) result={value,next:result}; return result }',
+  'algo-min-heap':
+    'function heapPops(operations) { const bag=[], out=[]; for(const op of operations) { if(op.type==="push") bag.push(op.value); else { bag.sort((a,b)=>a-b); out.push(bag.length ? bag.shift() : null) } } return out }',
+  'algo-subsets':
+    'function subsets(numbers) { const result=[]; for(let mask=0;mask<2**numbers.length;mask++) result.push(numbers.filter((_,i)=>mask & (1<<i))); return result.sort((a,b)=>{ for(let i=0;i<Math.min(a.length,b.length);i++) { const d=numbers.indexOf(a[i])-numbers.indexOf(b[i]); if(d) return d } return a.length-b.length }) }',
+  'algo-climb-stairs':
+    'function climbStairs(n) { let count=0; let combinations=1; for(let twos=0;twos<=Math.floor(n/2);twos++) { if(twos===0) combinations=1; else { const slots=n-twos; combinations=1; for(let j=1;j<=twos;j++) combinations=combinations*(slots-j+1)/j } count+=Math.round(combinations) } return count }',
+  'algo-coin-change':
+    'function coinChange(coins, amount) { const seen=new Set([0]); let layer=[0], count=0; while(layer.length) { if(layer.includes(amount)) return count; const next=[]; for(const sum of layer) for(const coin of coins) { const value=sum+coin; if(value<=amount && !seen.has(value)) { seen.add(value); next.push(value) } } layer=next; count++ } return -1 }',
 
   'algo-insertion-sort': 'function insertionSort(numbers: number[]) { return numbers.slice().sort((a, b) => a - b) }',
   'algo-merge-sorted': 'function mergeSorted(left: number[], right: number[]) { return [...left, ...right].sort((a, b) => a - b) }',
-  'algo-recursive-sum': 'type NestedNumber = number | NestedNumber[]; function recursiveSum(items: NestedNumber[]) { const pending: NestedNumber[] = [...items]; let sum = 0; while (pending.length) { const next = pending.pop(); if (Array.isArray(next)) pending.push(...next); else sum += next } return sum }',
-  'algo-tree-depth': 'type TreeNode = { value: number; children: TreeNode[] }; function treeDepth(root: TreeNode | null) { if (root === null) return 0; let level = [root], depth = 0; while (level.length) { depth++; level = level.flatMap(node => node.children) } return depth }',
-  'algo-graph-reachable': 'function graphReachable(graph: number[][], start: number, target: number) { if (start < 0 || target < 0 || start >= graph.length || target >= graph.length) return false; const pending = [start], visited = new Set<number>(); while (pending.length) { const node = pending.pop()!; if (node === target) return true; if (visited.has(node)) continue; visited.add(node); pending.push(...graph[node]) } return false }',
+  'algo-recursive-sum':
+    'type NestedNumber = number | NestedNumber[]; function recursiveSum(items: NestedNumber[]) { const pending: NestedNumber[] = [...items]; let sum = 0; while (pending.length) { const next = pending.pop(); if (Array.isArray(next)) pending.push(...next); else sum += next } return sum }',
+  'algo-tree-depth':
+    'type TreeNode = { value: number; children: TreeNode[] }; function treeDepth(root: TreeNode | null) { if (root === null) return 0; let level = [root], depth = 0; while (level.length) { depth++; level = level.flatMap(node => node.children) } return depth }',
+  'algo-graph-reachable':
+    'function graphReachable(graph: number[][], start: number, target: number) { if (start < 0 || target < 0 || start >= graph.length || target >= graph.length) return false; const pending = [start], visited = new Set<number>(); while (pending.length) { const node = pending.pop()!; if (node === target) return true; if (visited.has(node)) continue; visited.add(node); pending.push(...graph[node]) } return false }',
 
-  'ds-array-operations': 'function appendAndRead(numbers: number[], extra: number) { const result: number[] = numbers.slice(); result.push(extra); return result.at(-1)! }',
-  'ds-set-operations': 'function updateDistinct(numbers: number[], extra: number, removed: number) { const values = new Set(numbers); values.add(extra); values.delete(removed); return values.size }',
-  'ds-map-operations': 'function updateLookup(entries: [string, number][], key: string, value: number, query: string) { const lookup = new Map<string, number>(); for (const [k,v] of entries) lookup.set(k,v); lookup.set(key,value); return lookup.has(query) ? lookup.get(query)! : null }',
-  'ds-stack-operations': 'function stackTop(numbers: number[], extra: number) { const stack = numbers.slice(); stack.push(extra); stack.pop(); return stack.at(-1) ?? null }',
-  'ds-queue-operations': 'function queueFront(numbers: number[], extra: number) { const queue = [...numbers, extra]; queue.splice(0, 1); return queue[0] ?? null }',
-  'algo-sorted-pair': 'function hasSortedPair(numbers: number[], target: number) { for (let a=0; a<numbers.length; a++) for (let b=a+1; b<numbers.length; b++) if (numbers[a]+numbers[b]===target) return true; return false }',
-  'algo-window-sum': 'function largestWindowSum(numbers: number[], k: number) { if (numbers.length < k) return null; let best = -Infinity; for (let i=0; i<=numbers.length-k; i++) { let sum=0; for (let j=i; j<i+k; j++) sum+=numbers[j]; best=Math.max(best,sum) } return best }',
+  'ds-array-operations':
+    'function appendAndRead(numbers: number[], extra: number) { const result: number[] = numbers.slice(); result.push(extra); return result.at(-1)! }',
+  'ds-set-operations':
+    'function updateDistinct(numbers: number[], extra: number, removed: number) { const values = new Set(numbers); values.add(extra); values.delete(removed); return values.size }',
+  'ds-map-operations':
+    'function updateLookup(entries: [string, number][], key: string, value: number, query: string) { const lookup = new Map<string, number>(); for (const [k,v] of entries) lookup.set(k,v); lookup.set(key,value); return lookup.has(query) ? lookup.get(query)! : null }',
+  'ds-stack-operations':
+    'function stackTop(numbers: number[], extra: number) { const stack = numbers.slice(); stack.push(extra); stack.pop(); return stack.at(-1) ?? null }',
+  'ds-queue-operations':
+    'function queueFront(numbers: number[], extra: number) { const queue = [...numbers, extra]; queue.splice(0, 1); return queue[0] ?? null }',
+  'algo-sorted-pair':
+    'function hasSortedPair(numbers: number[], target: number) { for (let a=0; a<numbers.length; a++) for (let b=a+1; b<numbers.length; b++) if (numbers[a]+numbers[b]===target) return true; return false }',
+  'algo-window-sum':
+    'function largestWindowSum(numbers: number[], k: number) { if (numbers.length < k) return null; let best = -Infinity; for (let i=0; i<=numbers.length-k; i++) { let sum=0; for (let j=i; j<i+k; j++) sum+=numbers[j]; best=Math.max(best,sum) } return best }',
   'algo-binary-search': 'function sortedIndex(numbers: number[], target: number) { return numbers.indexOf(target) }',
   'sorted-offset-squares': 'function squareOffsets(offsets:number[]) { return offsets.map(value=>value*value).sort((a,b)=>a-b) }',
-  'reading-run-summary': 'function summarizeReadings(readings:number[]) { const counts=new Map<number,number>(); for(const value of readings) counts.set(value,(counts.get(value) ?? 0)+1); return Array.from(counts,([value,count])=>({value,count})) }',
-  'sort-score-records': 'type ScoreRecord={id:string;score:number;name:string}; function orderRecords(records:ScoreRecord[]) { return records.map((record,index)=>({record,index})).sort((a,b)=>a.record.score-b.record.score || (a.record.name<b.record.name?-1:a.record.name>b.record.name?1:a.index-b.index)).map(x=>x.record) }',
-  'kth-smallest-copy': 'function kthSmallest(numbers:number[],k:number) { if(k>numbers.length)return null; return numbers.slice().sort((a,b)=>a-b)[k-1] }',
-  'count-unique-windows': 'function countUniqueWindows(labels: string[], k: number) { let count=0; for (let start=0; start+k<=labels.length; start++) { if (new Set(labels.slice(start,start+k)).size===k) count++ } return count }',
-  'shortest-run-reaching-target': 'function shortestRun(numbers: number[], target: number) { let best=0; for (let start=0; start<numbers.length; start++) { let total=0; for (let end=start; end<numbers.length; end++) { total+=numbers[end]; if (total>=target) { if (best===0 || end-start+1<best) best=end-start+1; break } } } return best }',
-  'first-insertion-point': 'function insertionPoint(numbers: number[], target: number) { let low = 0, high = numbers.length; while (low < high) { const mid = (low + high) >> 1; if (numbers[mid] >= target) high = mid; else low = mid + 1 } return low }',
-  'smallest-daily-capacity': 'function smallestCapacity(weights: number[], days: number) { if (!weights.length) return 0; let low = Math.max(...weights), high = weights.reduce((a, b) => a + b, 0); const fits = (cap: number) => { let used = 1, load = 0; for (const w of weights) { if (load + w > cap) { used++; load = 0 } load += w } return used <= days }; while (low < high) { const mid = (low + high) >> 1; if (fits(mid)) high = mid; else low = mid + 1 } return low }',
-  'flatten-nested-numbers': 'type NestedNumber=number|NestedNumber[]; function flattenNumbers(items:NestedNumber[]) { const out:number[]=[]; const pending:NestedNumber[]=[...items].reverse(); while(pending.length){ const x=pending.pop()!; if(Array.isArray(x))pending.push(...x.slice().reverse());else out.push(x) }return out }',
-  'count-object-leaves': 'type NestedObject={ [key:string]:number|string|boolean|null|NestedObject }; function countLeaves(input:NestedObject){ let total=0; const pending:NestedObject[]=[input]; while(pending.length)for(const value of Object.values(pending.pop()!)){if(value!==null&&typeof value==="object")pending.push(value);else total++}return total }',
-  'tree-depth-sum': 'type TreeNode = { value: number; children: TreeNode[] }\n\nfunction sumAtDepth(root:TreeNode|null,depth:number){let level=root?[root]:[];for(let d=0;d<depth;d++)level=level.flatMap(x=>x.children);return level.reduce((sum,x)=>sum+x.value,0)}',
-  'tree-value-path': 'type TreeNode = { value: number; children: TreeNode[] }\n\nfunction pathToValue(root:TreeNode|null,target:number){if(!root)return null;const pending=[{node:root,path:[root.value]}];while(pending.length){const {node,path}=pending.pop()!;if(node.value===target)return path;for(const child of node.children)pending.push({node:child,path:[...path,child.value]})}return null}',
-  'graph-shortest-hops': 'function shortestHops(graph:number[][],start:number,target:number){if(start<0||target<0||start>=graph.length||target>=graph.length)return null;const distances=Array(graph.length).fill(Infinity);distances[start]=0;for(let pass=0;pass<graph.length;pass++)for(let node=0;node<graph.length;node++)for(const next of graph[node])distances[next]=Math.min(distances[next],distances[node]+1);return Number.isFinite(distances[target])?distances[target]:null}',
-  'graph-connected-groups': 'function connectedGroups(graph:number[][]){const parent=graph.map((_,i)=>i);function find(x:number):number{return parent[x]===x?x:find(parent[x])}for(let i=0;i<graph.length;i++)for(const j of graph[i])parent[find(i)]=find(j);return new Set(parent.map((_,i)=>find(i))).size}',
-  'simplify-file-path': 'function simplifyPath(path:string){const names:string[]=[];for(const part of path.split("/")){if(part===".."){if(names.length)names.splice(names.length-1,1)}else if(part!==""&&part!==".")names.push(part)}return "/"+names.join("/")}',
+  'reading-run-summary':
+    'function summarizeReadings(readings:number[]) { const counts=new Map<number,number>(); for(const value of readings) counts.set(value,(counts.get(value) ?? 0)+1); return Array.from(counts,([value,count])=>({value,count})) }',
+  'sort-score-records':
+    'type ScoreRecord={id:string;score:number;name:string}; function orderRecords(records:ScoreRecord[]) { return records.map((record,index)=>({record,index})).sort((a,b)=>a.record.score-b.record.score || (a.record.name<b.record.name?-1:a.record.name>b.record.name?1:a.index-b.index)).map(x=>x.record) }',
+  'kth-smallest-copy':
+    'function kthSmallest(numbers:number[],k:number) { if(k>numbers.length)return null; return numbers.slice().sort((a,b)=>a-b)[k-1] }',
+  'count-unique-windows':
+    'function countUniqueWindows(labels: string[], k: number) { let count=0; for (let start=0; start+k<=labels.length; start++) { if (new Set(labels.slice(start,start+k)).size===k) count++ } return count }',
+  'shortest-run-reaching-target':
+    'function shortestRun(numbers: number[], target: number) { let best=0; for (let start=0; start<numbers.length; start++) { let total=0; for (let end=start; end<numbers.length; end++) { total+=numbers[end]; if (total>=target) { if (best===0 || end-start+1<best) best=end-start+1; break } } } return best }',
+  'first-insertion-point':
+    'function insertionPoint(numbers: number[], target: number) { let low = 0, high = numbers.length; while (low < high) { const mid = (low + high) >> 1; if (numbers[mid] >= target) high = mid; else low = mid + 1 } return low }',
+  'smallest-daily-capacity':
+    'function smallestCapacity(weights: number[], days: number) { if (!weights.length) return 0; let low = Math.max(...weights), high = weights.reduce((a, b) => a + b, 0); const fits = (cap: number) => { let used = 1, load = 0; for (const w of weights) { if (load + w > cap) { used++; load = 0 } load += w } return used <= days }; while (low < high) { const mid = (low + high) >> 1; if (fits(mid)) high = mid; else low = mid + 1 } return low }',
+  'flatten-nested-numbers':
+    'type NestedNumber=number|NestedNumber[]; function flattenNumbers(items:NestedNumber[]) { const out:number[]=[]; const pending:NestedNumber[]=[...items].reverse(); while(pending.length){ const x=pending.pop()!; if(Array.isArray(x))pending.push(...x.slice().reverse());else out.push(x) }return out }',
+  'count-object-leaves':
+    'type NestedObject={ [key:string]:number|string|boolean|null|NestedObject }; function countLeaves(input:NestedObject){ let total=0; const pending:NestedObject[]=[input]; while(pending.length)for(const value of Object.values(pending.pop()!)){if(value!==null&&typeof value==="object")pending.push(value);else total++}return total }',
+  'tree-depth-sum':
+    'type TreeNode = { value: number; children: TreeNode[] }\n\nfunction sumAtDepth(root:TreeNode|null,depth:number){let level=root?[root]:[];for(let d=0;d<depth;d++)level=level.flatMap(x=>x.children);return level.reduce((sum,x)=>sum+x.value,0)}',
+  'tree-value-path':
+    'type TreeNode = { value: number; children: TreeNode[] }\n\nfunction pathToValue(root:TreeNode|null,target:number){if(!root)return null;const pending=[{node:root,path:[root.value]}];while(pending.length){const {node,path}=pending.pop()!;if(node.value===target)return path;for(const child of node.children)pending.push({node:child,path:[...path,child.value]})}return null}',
+  'graph-shortest-hops':
+    'function shortestHops(graph:number[][],start:number,target:number){if(start<0||target<0||start>=graph.length||target>=graph.length)return null;const distances=Array(graph.length).fill(Infinity);distances[start]=0;for(let pass=0;pass<graph.length;pass++)for(let node=0;node<graph.length;node++)for(const next of graph[node])distances[next]=Math.min(distances[next],distances[node]+1);return Number.isFinite(distances[target])?distances[target]:null}',
+  'graph-connected-groups':
+    'function connectedGroups(graph:number[][]){const parent=graph.map((_,i)=>i);function find(x:number):number{return parent[x]===x?x:find(parent[x])}for(let i=0;i<graph.length;i++)for(const j of graph[i])parent[find(i)]=find(j);return new Set(parent.map((_,i)=>find(i))).size}',
+  'simplify-file-path':
+    'function simplifyPath(path:string){const names:string[]=[];for(const part of path.split("/")){if(part===".."){if(names.length)names.splice(names.length-1,1)}else if(part!==""&&part!==".")names.push(part)}return "/"+names.join("/")}',
 }
 
 Object.assign(dsaSolutions, {
-  'next-warmer-day': 'function nextWarmerDay(temperatures: number[]): number[] { return temperatures.map((t,i)=>{ for(let j=i+1;j<temperatures.length;j++) if(temperatures[j]>t) return j-i; return 0 }) }',
-  'top-k-frequent-tags': 'function topKFrequentTags(tags: string[], k: number): string[] { const counts = new Map<string,number>(); for(const tag of tags) counts.set(tag,(counts.get(tag) ?? 0)+1); return [...counts.keys()].sort((a,b)=>counts.get(b)!-counts.get(a)! || (a<b?-1:a>b?1:0)).slice(0,k) }',
-  'course-order': 'function courseOrder(courseCount: number, prerequisites: [number,number][]): number[] { const done = new Set<number>(), result:number[]=[]; while(done.size<courseCount) { let found=-1; for(let c=0;c<courseCount;c++) if(!done.has(c)&&prerequisites.every(([course,p])=>course!==c||done.has(p))) { found=c; break } if(found<0)return []; done.add(found);result.push(found) } return result }',
-  'longest-shared-sequence': 'function longestSharedSequence(left: string, right: string): number { const memo=new Map<string,number>(); function solve(i:number,j:number):number { if(i===left.length||j===right.length)return 0; const key=i+","+j; if(memo.has(key))return memo.get(key)!; const n=left[i]===right[j]?1+solve(i+1,j+1):Math.max(solve(i+1,j),solve(i,j+1));memo.set(key,n);return n } return solve(0,0) }',
+  'next-warmer-day':
+    'function nextWarmerDay(temperatures: number[]): number[] { return temperatures.map((t,i)=>{ for(let j=i+1;j<temperatures.length;j++) if(temperatures[j]>t) return j-i; return 0 }) }',
+  'top-k-frequent-tags':
+    'function topKFrequentTags(tags: string[], k: number): string[] { const counts = new Map<string,number>(); for(const tag of tags) counts.set(tag,(counts.get(tag) ?? 0)+1); return [...counts.keys()].sort((a,b)=>counts.get(b)!-counts.get(a)! || (a<b?-1:a>b?1:0)).slice(0,k) }',
+  'course-order':
+    'function courseOrder(courseCount: number, prerequisites: [number,number][]): number[] { const done = new Set<number>(), result:number[]=[]; while(done.size<courseCount) { let found=-1; for(let c=0;c<courseCount;c++) if(!done.has(c)&&prerequisites.every(([course,p])=>course!==c||done.has(p))) { found=c; break } if(found<0)return []; done.add(found);result.push(found) } return result }',
+  'longest-shared-sequence':
+    'function longestSharedSequence(left: string, right: string): number { const memo=new Map<string,number>(); function solve(i:number,j:number):number { if(i===left.length||j===right.length)return 0; const key=i+","+j; if(memo.has(key))return memo.get(key)!; const n=left[i]===right[j]?1+solve(i+1,j+1):Math.max(solve(i+1,j),solve(i,j+1));memo.set(key,n);return n } return solve(0,0) }',
 })
 
-dsaSolutions['puzzle-parse-part-one'] = 'function strongestTotal(input) { const trays = input.split("\\n").flatMap(line => { const tokens = line.match(/-?\\d+/g); return tokens ? [tokens.map(Number)] : [] }); return trays.reduce((total, tray) => { const peak = tray.reduce((a,b) => a > b ? a : b); return total + peak }, 0) }'
+dsaSolutions['puzzle-parse-part-one'] =
+  'function strongestTotal(input) { const trays = input.split("\\n").flatMap(line => { const tokens = line.match(/-?\\d+/g); return tokens ? [tokens.map(Number)] : [] }); return trays.reduce((total, tray) => { const peak = tray.reduce((a,b) => a > b ? a : b); return total + peak }, 0) }'
 
-dsaSolutions['puzzle-adapt-part-two'] = 'function nearPeakCount(input) { const trays = input.split("\\n").flatMap(line => { const tokens = line.match(/-?\\d+/g); return tokens ? [tokens.map(Number)] : [] }); return trays.reduce((total, tray) => { const peak = tray.reduce((a,b) => a > b ? a : b); return total + tray.reduce((count, value) => count + Number(value >= peak - 2), 0) }, 0) }'
+dsaSolutions['puzzle-adapt-part-two'] =
+  'function nearPeakCount(input) { const trays = input.split("\\n").flatMap(line => { const tokens = line.match(/-?\\d+/g); return tokens ? [tokens.map(Number)] : [] }); return trays.reduce((total, tray) => { const peak = tray.reduce((a,b) => a > b ? a : b); return total + tray.reduce((count, value) => count + Number(value >= peak - 2), 0) }, 0) }'
 
 Object.assign(dsaSolutions, {
-  'closest-value-gap': 'function closestGap(numbers: number[]): number | null { let best: number | null = null; for (let a = 0; a < numbers.length; a++) for (let b = a + 1; b < numbers.length; b++) { const gap = Math.abs(numbers[a] - numbers[b]); if (best === null || gap < best) best = gap } return best }',
-  'tree-value-depth': 'type TreeNode = { value: number; children: TreeNode[] }\n\nfunction depthOfValue(root: TreeNode | null, target: number): number { if (!root) return -1; let pending = [root], depth = 0; while (pending.length) { if (pending.some(node => node.value === target)) return depth; pending = pending.flatMap(node => node.children); depth++ } return -1 }',
-  'graph-reachable-count': 'function reachableCount(graph: number[][], start: number): number { if (start < 0 || start >= graph.length) return 0; const seen = new Set([start]); const stack = [start]; while (stack.length) { const node = stack.pop()!; for (const next of graph[node]) if (!seen.has(next)) { seen.add(next); stack.push(next) } } return seen.size }',
+  'closest-value-gap':
+    'function closestGap(numbers: number[]): number | null { let best: number | null = null; for (let a = 0; a < numbers.length; a++) for (let b = a + 1; b < numbers.length; b++) { const gap = Math.abs(numbers[a] - numbers[b]); if (best === null || gap < best) best = gap } return best }',
+  'tree-value-depth':
+    'type TreeNode = { value: number; children: TreeNode[] }\n\nfunction depthOfValue(root: TreeNode | null, target: number): number { if (!root) return -1; let pending = [root], depth = 0; while (pending.length) { if (pending.some(node => node.value === target)) return depth; pending = pending.flatMap(node => node.children); depth++ } return -1 }',
+  'graph-reachable-count':
+    'function reachableCount(graph: number[][], start: number): number { if (start < 0 || start >= graph.length) return 0; const seen = new Set([start]); const stack = [start]; while (stack.length) { const node = stack.pop()!; for (const next of graph[node]) if (!seen.has(next)) { seen.add(next); stack.push(next) } } return seen.size }',
 })
 
 Object.assign(dsaSolutions, {
-  'tree-leaf-count': 'type TreeNode = { value: number; children: TreeNode[] }\n\nfunction countTreeLeaves(root: TreeNode | null): number { if (!root) return 0; if (!root.children.length) return 1; return root.children.reduce((total, child) => total + countTreeLeaves(child), 0) }',
-  'graph-incoming-counts': 'function incomingCounts(graph: number[][]): number[] { const counts = graph.map(() => 0); graph.forEach(list => list.forEach(next => { counts[next]++ })); return counts }',
+  'tree-leaf-count':
+    'type TreeNode = { value: number; children: TreeNode[] }\n\nfunction countTreeLeaves(root: TreeNode | null): number { if (!root) return 0; if (!root.children.length) return 1; return root.children.reduce((total, child) => total + countTreeLeaves(child), 0) }',
+  'graph-incoming-counts':
+    'function incomingCounts(graph: number[][]): number[] { const counts = graph.map(() => 0); graph.forEach(list => list.forEach(next => { counts[next]++ })); return counts }',
 })

@@ -1,7 +1,11 @@
 import ts from 'typescript'
 import { decodeFiles } from './project-files.ts'
 function transpile(code: string, filename: string, module: ts.ModuleKind) {
-  const result = ts.transpileModule(code, { fileName: filename, compilerOptions: { target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React, module }, reportDiagnostics: true })
+  const result = ts.transpileModule(code, {
+    fileName: filename,
+    compilerOptions: { target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.React, module },
+    reportDiagnostics: true,
+  })
   const error = result.diagnostics?.find(d => d.category === ts.DiagnosticCategory.Error)
   if (error) throw new Error(`${filename}: ${ts.flattenDiagnosticMessageText(error.messageText, '\n')}`)
   return result.outputText
@@ -12,7 +16,9 @@ export function compileSolution(code: string, functionName: string, jsx = false)
   if (!/^[A-Za-z_$][\w$]*$/.test(functionName)) throw new Error('Invalid entry function.')
   const project = decodeFiles(code)
   if (!project) return transpile(code, jsx ? 'solution.tsx' : 'solution.ts', ts.ModuleKind.ESNext)
-  const modules = Object.fromEntries(Object.entries(project.files).map(([name, source]) => [name, transpile(source, name, ts.ModuleKind.CommonJS)]))
+  const modules = Object.fromEntries(
+    Object.entries(project.files).map(([name, source]) => [name, transpile(source, name, ts.ModuleKind.CommonJS)]),
+  )
   return `const ${functionName} = (() => {
     const modules = ${JSON.stringify(modules)};
     const cache = Object.create(null);

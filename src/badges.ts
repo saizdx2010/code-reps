@@ -41,7 +41,14 @@ function build(first: Map<string, number>, base: Pick<Badge, 'id' | 'kind' | 'na
   const completed = repIds.filter(id => first.has(id)).length
   const earned = repIds.length > 0 && completed === repIds.length
   const next = repIds.find(id => !first.has(id)) ?? repIds[0]
-  return { ...base, earned, completed, total: repIds.length, repId: next, earnedAt: earned ? new Date(Math.max(...repIds.map(id => first.get(id)!))).toISOString() : undefined }
+  return {
+    ...base,
+    earned,
+    completed,
+    total: repIds.length,
+    repId: next,
+    earnedAt: earned ? new Date(Math.max(...repIds.map(id => first.get(id)!))).toISOString() : undefined,
+  }
 }
 
 /**
@@ -56,16 +63,50 @@ export function profileBadges(history: PortableRecord[], now = new Date(), catal
   // "Any rep" has no fixed rep list, so its progress is capped at one.
   const earliest = first.size ? Math.min(...first.values()) : undefined
   const earliestId = [...first].find(([, time]) => time === earliest)?.[0]
-  badges.push({ id: 'first-rep', kind: 'first', name: 'First rep', rule: 'Complete any one rep.', earned: first.size > 0, completed: Math.min(first.size, 1), total: 1, earnedAt: earliest === undefined ? undefined : new Date(earliest).toISOString(), repId: earliestId ?? starter })
+  badges.push({
+    id: 'first-rep',
+    kind: 'first',
+    name: 'First rep',
+    rule: 'Complete any one rep.',
+    earned: first.size > 0,
+    completed: Math.min(first.size, 1),
+    total: 1,
+    earnedAt: earliest === undefined ? undefined : new Date(earliest).toISOString(),
+    repId: earliestId ?? starter,
+  })
   for (const path of catalog) {
     path.stages.forEach((stage, index) => {
       const ids = [...new Set<string>(stage.repIds)]
       // Stages made only of Foundations reps are earned in Foundations, not repeated.
       if (path.id !== firstPath.id && ids.every(id => firstPathReps.has(id))) return
-      badges.push(build(first, { id: `${path.id}:stage:${index}`, kind: 'stage', name: stage.title, rule: `Complete all ${ids.length} ${plural(ids.length, 'rep')} in “${stage.title}” (${path.title}).`, pathId: path.id }, ids))
+      badges.push(
+        build(
+          first,
+          {
+            id: `${path.id}:stage:${index}`,
+            kind: 'stage',
+            name: stage.title,
+            rule: `Complete all ${ids.length} ${plural(ids.length, 'rep')} in “${stage.title}” (${path.title}).`,
+            pathId: path.id,
+          },
+          ids,
+        ),
+      )
     })
     const ids = [...new Set(path.stages.flatMap(stage => [...stage.repIds]))]
-    badges.push(build(first, { id: `${path.id}:path`, kind: 'path', name: `${path.title} track`, rule: `Complete every rep in the ${path.title} track.`, pathId: path.id }, ids))
+    badges.push(
+      build(
+        first,
+        {
+          id: `${path.id}:path`,
+          kind: 'path',
+          name: `${path.title} track`,
+          rule: `Complete every rep in the ${path.title} track.`,
+          pathId: path.id,
+        },
+        ids,
+      ),
+    )
   }
   return badges
 }

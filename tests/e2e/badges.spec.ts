@@ -28,7 +28,10 @@ async function finishRep(page: Page, rep: { id: string; plan: string; code: stri
   await page.getByLabel('Your plan', { exact: true }).fill(rep.plan)
   await page.getByRole('button', { name: 'Solve', exact: true }).first().click()
   await replaceCode(page, rep.code, rep.id)
-  await page.locator('.workspace-toolbar').getByRole('button', { name: /Run checks/ }).click()
+  await page
+    .locator('.workspace-toolbar')
+    .getByRole('button', { name: /Run checks/ })
+    .click()
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await page.getByRole('button', { name: 'Explain', exact: true }).first().click()
   await page.getByLabel('Your explanation', { exact: true }).fill(rep.explanation)
@@ -40,7 +43,12 @@ async function finishRep(page: Page, rep: { id: string; plan: string; code: stri
 
 async function completeFirstRep(page: Page) {
   await page.goto(route)
-  await finishRep(page, { id: firstRep, plan: 'Count each value, then keep the most frequent one with the smallest tie-break.', code: solution, explanation: 'I counted each number in a map, then compared counts and kept the smallest value on ties.' })
+  await finishRep(page, {
+    id: firstRep,
+    plan: 'Count each value, then keep the most frequent one with the smallest tie-break.',
+    code: solution,
+    explanation: 'I counted each number in a map, then compared counts and kept the smallest value on ties.',
+  })
 }
 
 async function createProfile(page: Page, name: string) {
@@ -94,7 +102,10 @@ test('two reps back to back show the first-rep notice once, even when the learne
   await expect(page.locator('.completion-panel .badge-notice')).toHaveText(noticeText)
   // Move on at once, well inside the eight-second notice window. Negative checks read the page once after a short settle:
   // a retrying assertion would wait out the timer and pass even if the notice had been repeated.
-  await page.locator('.completion-panel').getByRole('button', { name: /^Next rep/ }).click()
+  await page
+    .locator('.completion-panel')
+    .getByRole('button', { name: /^Next rep/ })
+    .click()
   await page.waitForTimeout(500)
   expect(await page.locator('.badge-notice').count()).toBe(0)
   await finishRep(page, secondRep)

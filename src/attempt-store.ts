@@ -37,11 +37,19 @@ export function readHistory(): AttemptRecord[] {
     const saved: unknown = JSON.parse(localStore.getItem(historyKey) || '[]')
     if (!Array.isArray(saved)) return []
     return saved
-      .filter((item): item is AttemptRecord =>
-        typeof item?.id === 'string' && typeof item?.repId === 'string' && typeof item?.completedAt === 'string' &&
-        typeof item?.plan === 'string' && typeof item?.code === 'string' && typeof item?.explanation === 'string')
+      .filter(
+        (item): item is AttemptRecord =>
+          typeof item?.id === 'string' &&
+          typeof item?.repId === 'string' &&
+          typeof item?.completedAt === 'string' &&
+          typeof item?.plan === 'string' &&
+          typeof item?.code === 'string' &&
+          typeof item?.explanation === 'string',
+      )
       .map(item => ({ ...item, mistakes: normalizeMistakes(item.mistakes) }))
-  } catch { return [] }
+  } catch {
+    return []
+  }
 }
 
 export function readAttempt(rep: RepSummary): Attempt {
@@ -57,12 +65,16 @@ export function readAttempt(rep: RepSummary): Attempt {
       mistakes: normalizeMistakes(saved?.mistakes),
       completedAt: typeof saved?.completedAt === 'string' ? saved.completedAt : undefined,
     }
-  } catch { return freshAttempt(peekRepContent(rep.id)?.rep.starter) }
+  } catch {
+    return freshAttempt(peekRepContent(rep.id)?.rep.starter)
+  }
 }
 
 export function readLearnerStart(): LearnerStart | null {
   try {
     const saved = localStore.getItem(learnerStartKey)
     return saved === 'new' || saved === 'returning' ? saved : null
-  } catch { return null }
+  } catch {
+    return null
+  }
 }

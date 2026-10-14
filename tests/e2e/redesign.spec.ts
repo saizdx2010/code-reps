@@ -21,7 +21,10 @@ test('focused writing steps preserve the real editor and hide unrelated forms', 
   await expect(page.getByLabel('What was hardest?', { exact: true })).not.toBeVisible()
   await replaceCode(page, solution)
   await editor(page).press('ArrowDown')
-  const cursor = await page.locator('.monaco-editor .cursor').first().evaluate(element => ({ top: (element as HTMLElement).style.top, left: (element as HTMLElement).style.left }))
+  const cursor = await page
+    .locator('.monaco-editor .cursor')
+    .first()
+    .evaluate(element => ({ top: (element as HTMLElement).style.top, left: (element as HTMLElement).style.left }))
   await page.getByRole('button', { name: 'Plan', exact: true }).click()
   await page.getByLabel('Your plan', { exact: true }).fill('Count values and use the smaller value to resolve a tie.')
   await expect(editor(page)).toBeVisible()
@@ -30,7 +33,12 @@ test('focused writing steps preserve the real editor and hide unrelated forms', 
   await expect(page.getByLabel('Your plan', { exact: true })).not.toBeVisible()
   await page.getByRole('button', { name: 'Solve', exact: true }).click()
   await expect(page.getByLabel('Your explanation', { exact: true })).not.toBeVisible()
-  expect(await page.locator('.monaco-editor .cursor').first().evaluate(element => ({ top: (element as HTMLElement).style.top, left: (element as HTMLElement).style.left }))).toEqual(cursor)
+  expect(
+    await page
+      .locator('.monaco-editor .cursor')
+      .first()
+      .evaluate(element => ({ top: (element as HTMLElement).style.top, left: (element as HTMLElement).style.left })),
+  ).toEqual(cursor)
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await page.getByRole('button', { name: /^Checks/ }).click()
@@ -56,7 +64,10 @@ test('a fresh load starts at the skip link, and in-app navigation moves focus to
 
 test('a slow lazy page still hands focus to its heading after the loading heading is replaced', async ({ page }) => {
   // Hold the Progress module longer than any fixed settle window so a busy machine's late arrival is reproduced.
-  await page.route(/\/src\/ProgressPage\.tsx/, async route => { await new Promise(resolve => setTimeout(resolve, 7000)); await route.continue() })
+  await page.route(/\/src\/ProgressPage\.tsx/, async route => {
+    await new Promise(resolve => setTimeout(resolve, 7000))
+    await route.continue()
+  })
   await page.goto('/#/home')
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name: 'Progress', exact: true }).click()
@@ -82,7 +93,9 @@ test('grouped navigation supports direct links, refresh, and Back and Forward', 
   await expect(main.getByRole('button', { name: 'Library', exact: true })).toHaveAttribute('aria-current', 'page')
   await expect(page.getByRole('navigation', { name: 'Library pages' }).getByRole('button')).toHaveText(['Exercises', 'Lessons', 'Projects'])
   await page.getByRole('button', { name: 'Timed interview practice' }).click()
-  await expect(page.getByRole('navigation', { name: 'Library pages' }).getByRole('button', { name: 'Projects', exact: true })).toHaveAttribute('aria-current', 'page')
+  await expect(
+    page.getByRole('navigation', { name: 'Library pages' }).getByRole('button', { name: 'Projects', exact: true }),
+  ).toHaveAttribute('aria-current', 'page')
   await chooseOption(page.getByLabel('Interview focus', { exact: true }), 'interview-backend')
   await page.goBack()
   await expect(page).toHaveURL(/#\/projects$/)
@@ -95,8 +108,13 @@ test('grouped navigation supports direct links, refresh, and Back and Forward', 
   await expect(page).toHaveURL(/#\/notebook$/)
   await page.reload()
   await expect(main.getByRole('button', { name: 'Progress', exact: true })).toHaveAttribute('aria-current', 'page')
-  await expect(page.getByRole('navigation', { name: 'Progress pages' }).getByRole('button', { name: 'Journal', exact: true })).toHaveAttribute('aria-current', 'page')
-  await expect(page.getByRole('group', { name: 'Journal' }).getByRole('button', { name: 'Notebook', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(
+    page.getByRole('navigation', { name: 'Progress pages' }).getByRole('button', { name: 'Journal', exact: true }),
+  ).toHaveAttribute('aria-current', 'page')
+  await expect(page.getByRole('group', { name: 'Journal' }).getByRole('button', { name: 'Notebook', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
   await page.goBack()
   await expect(page).toHaveURL(/#\/history$/)
   await page.goForward()
@@ -114,7 +132,20 @@ test('grouped navigation supports direct links, refresh, and Back and Forward', 
 
 test('all product pages fit a narrow screen and lessons open without the topic list', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 })
-  for (const view of ['home', 'practice', 'paths', 'knowledge', 'notebook', 'plan', 'projects', 'interview', 'assessment', 'progress', 'history', 'learn']) {
+  for (const view of [
+    'home',
+    'practice',
+    'paths',
+    'knowledge',
+    'notebook',
+    'plan',
+    'projects',
+    'interview',
+    'assessment',
+    'progress',
+    'history',
+    'learn',
+  ]) {
     await page.goto(`/#/${view}`)
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), view).toBe(true)
@@ -142,7 +173,9 @@ test('exercise topics start collapsed, remember expansion, and reveal search mat
   await first.locator('summary').click()
   await expect(first).toHaveAttribute('open', '')
   await expect(first.locator('.list-row > button').first()).toBeVisible()
-  expect(await first.locator('.list-row-text strong').allTextContents()).toEqual(reps.filter(rep => catalogTopic(rep) === topic).map(rep => rep.title))
+  expect(await first.locator('.list-row-text strong').allTextContents()).toEqual(
+    reps.filter(rep => catalogTopic(rep) === topic).map(rep => rep.title),
+  )
   await page.reload()
   await expect(groups.filter({ has: page.locator('.list-group-title', { hasText: topic }) }).first()).toHaveAttribute('open', '')
   await page.getByLabel('Find a rep', { exact: true }).fill('stock adjustment')

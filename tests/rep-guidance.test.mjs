@@ -37,8 +37,14 @@ test('the checkpoint clears once the learner has completed nearby-level work', (
 
 test('prerequisite reps are earlier unfinished reps from the same stage', () => {
   const stage = paths[0].stages[0]
-  assert.deepEqual(getRepGuidance(stage.repIds[3], []).priorReps.map(rep => rep.id), [stage.repIds[1], stage.repIds[2]])
-  assert.deepEqual(getRepGuidance(stage.repIds[3], [stage.repIds[2]]).priorReps.map(rep => rep.id), [stage.repIds[0], stage.repIds[1]])
+  assert.deepEqual(
+    getRepGuidance(stage.repIds[3], []).priorReps.map(rep => rep.id),
+    [stage.repIds[1], stage.repIds[2]],
+  )
+  assert.deepEqual(
+    getRepGuidance(stage.repIds[3], [stage.repIds[2]]).priorReps.map(rep => rep.id),
+    [stage.repIds[0], stage.repIds[1]],
+  )
   assert.deepEqual(getRepGuidance(stage.repIds[0], []).priorReps, [])
 })
 
@@ -54,15 +60,26 @@ test('effort follows brief length and check count, so heavy Beginner reps do not
 })
 
 test('effort rises with load inside a level and stays a range of minutes', () => {
-  const bands = repIndex.filter(rep => repLevel(rep.id) === 2).map(rep => ({ load: effortLoad(rep), effort: effortRange(rep.id).split(',')[0] }))
+  const bands = repIndex
+    .filter(rep => repLevel(rep.id) === 2)
+    .map(rep => ({ load: effortLoad(rep), effort: effortRange(rep.id).split(',')[0] }))
   assert.ok(bands.every(band => Number.isFinite(band.load)) && new Set(bands.map(band => band.effort)).size > 1)
   const start = effort => Number(effort.match(/^\d+/)[0])
-  for (const a of bands) for (const b of bands) if (a.load <= b.load) assert.ok(start(a.effort) <= start(b.effort), `${a.load} before ${b.load}`)
+  for (const a of bands)
+    for (const b of bands) if (a.load <= b.load) assert.ok(start(a.effort) <= start(b.effort), `${a.load} before ${b.load}`)
   for (const { effort } of bands) assert.match(effort, /^\d+–\d+ minutes$/)
 })
 
 test('effort wording stays guidance and ignores what the learner has finished', () => {
-  for (const rep of reps) assert.equal(getRepGuidance(rep.id, []).effort, getRepGuidance(rep.id, reps.map(item => item.id)).effort, rep.id)
+  for (const rep of reps)
+    assert.equal(
+      getRepGuidance(rep.id, []).effort,
+      getRepGuidance(
+        rep.id,
+        reps.map(item => item.id),
+      ).effort,
+      rep.id,
+    )
 })
 
 function trackOf(id) {
@@ -78,7 +95,10 @@ test('a track opens with a Beginner bridge rep', () => {
 })
 
 test('an Intermediate track rep raises a non-blocking checkpoint until a Beginner rep of that track is done', () => {
-  for (const [trackId, bridge] of [['frontend', 'frontend-screen-message'], ['backend', 'backend-check-quantity']]) {
+  for (const [trackId, bridge] of [
+    ['frontend', 'frontend-screen-message'],
+    ['backend', 'backend-check-quantity'],
+  ]) {
     const target = trackReps(trackOf(trackId)).find(id => repLevel(id) === 2)
     const beginnerElsewhere = reps.map(rep => rep.id).find(id => repLevel(id) === 1 && !trackReps(trackOf(trackId)).includes(id))
     const guidance = getRepGuidance(target, [beginnerElsewhere])

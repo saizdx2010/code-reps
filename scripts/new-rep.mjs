@@ -11,7 +11,8 @@ const modulePattern = /^src\/[a-z0-9-]+\.ts$/
 
 export function validateRepId(id, usedIds) {
   if (!id) return 'Give a rep id, for example: yarn rep:new sum-evens src/foundations.ts'
-  if (!idPattern.test(id)) return `"${id}" is not kebab-case. Use lowercase letters and digits joined by single hyphens, starting with a letter (for example sum-evens).`
+  if (!idPattern.test(id))
+    return `"${id}" is not kebab-case. Use lowercase letters and digits joined by single hyphens, starting with a letter (for example sum-evens).`
   if (usedIds.has(id)) return `"${id}" is already used by another rep. Rep IDs are saved keys, so choose a new one.`
   return null
 }
@@ -19,7 +20,8 @@ export function validateRepId(id, usedIds) {
 export function validateModuleFile(moduleFile) {
   if (!moduleFile) return 'Give the content module, for example: src/foundations.ts'
   if (!modulePattern.test(moduleFile)) return `"${moduleFile}" must be a .ts file directly in src/, for example src/foundations.ts.`
-  if (moduleFile.split('/').pop().startsWith('review-')) return `"${moduleFile}" is a review module. Reps go in content modules; review-*.ts files hold depth and self-review guides.`
+  if (moduleFile.split('/').pop().startsWith('review-'))
+    return `"${moduleFile}" is a review module. Reps go in content modules; review-*.ts files hold depth and self-review guides.`
   return null
 }
 
@@ -29,7 +31,10 @@ export function renderRepSkeleton({ id, moduleFile }) {
   const functionName = camelCase(id)
   const section = (heading, where) => `\n${'='.repeat(72)}\n${heading}\n${where}\n${'='.repeat(72)}\n`
   return [
-    section('1. Rep object', `Paste into the rep array exported by ${moduleFile}. Replace every TODO. Optional fields (format, context, acceptanceCriteria, brief, preserveInput, domPreview) are listed in src/rep-types.ts.`),
+    section(
+      '1. Rep object',
+      `Paste into the rep array exported by ${moduleFile}. Replace every TODO. Optional fields (format, context, acceptanceCriteria, brief, preserveInput, domPreview) are listed in src/rep-types.ts.`,
+    ),
     `{
   id: '${id}',
   title: 'TODO: short title a new learner can scan',
@@ -55,7 +60,10 @@ export function renderRepSkeleton({ id, moduleFile }) {
     { name: 'TODO boundary case', input: [/* TODO arguments */], expected: /* TODO */ undefined },
   ],
 }`,
-    section('2. Depth entry', 'Post-attempt review. Add it to the matching src/review-*.ts depth export; src/rep-depth.ts aggregates it. Keep it out of the prompt.'),
+    section(
+      '2. Depth entry',
+      'Post-attempt review. Add it to the matching src/review-*.ts depth export; src/rep-depth.ts aggregates it. Keep it out of the prompt.',
+    ),
     `'${id}': {
   reasoning: 'TODO: why the approach meets the contract (invariant, precedence, or validation argument)',
   trace: 'TODO: follow concrete values through a boundary or conflicting case',
@@ -63,13 +71,19 @@ export function renderRepSkeleton({ id, moduleFile }) {
   counterexample: 'TODO: a tempting mistake and the input that exposes it',
   transfer: 'TODO: an unfamiliar variation and the decision it requires (self-reviewed)',
 },`,
-    section('3. Self-review guide', 'Paste into the matching src/review-*.ts guide export (new review modules are listed in src/review-registry.ts). content:check fails without it.'),
+    section(
+      '3. Self-review guide',
+      'Paste into the matching src/review-*.ts guide export (new review modules are listed in src/review-registry.ts). content:check fails without it.',
+    ),
     `'${id}': {
   plan: ['TODO: planning question the learner answers before coding'],
   explanation: ['TODO: explanation question about the decision'],
   example: 'TODO: a short example answer the learner can compare against',
 },`,
-    section('4. Reference solution', 'Independent implementation for tests/fixtures. Use the fixture file for your module, for example tests/fixtures/foundations-solutions.mjs.'),
+    section(
+      '4. Reference solution',
+      'Independent implementation for tests/fixtures. Use the fixture file for your module, for example tests/fixtures/foundations-solutions.mjs.',
+    ),
     `'${id}': 'TODO: a complete TypeScript function named ${functionName} that passes every check',`,
     section('5. Follow-up checklist', 'Run these after pasting the blocks above.'),
     [

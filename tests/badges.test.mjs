@@ -12,7 +12,10 @@ const stageIds = [...new Set(stage.repIds)]
 
 test('an empty profile has no earned badges and a stable catalog', () => {
   const badges = profileBadges([], now)
-  assert.equal(badges.some(badge => badge.earned), false)
+  assert.equal(
+    badges.some(badge => badge.earned),
+    false,
+  )
   assert.equal(new Set(badges.map(badge => badge.id)).size, badges.length)
   assert.ok(badges.every(badge => badge.total >= 1 && badge.rule && badge.repId))
   for (const path of paths) assert.ok(byId(badges, `${path.id}:path`))
@@ -50,27 +53,43 @@ test('stage and path badges need every distinct rep, allow hints, and date the l
 test('invalid and future dates never count', () => {
   const history = [{ id: 'x', repId: 'basic-types', completedAt: 'bad', hintCount: 0 }, record('write-functions', at(9))]
   const badges = profileBadges(history, now)
-  assert.equal(badges.some(badge => badge.earned), false)
+  assert.equal(
+    badges.some(badge => badge.earned),
+    false,
+  )
   assert.equal(byId(badges, 'first-rep').earnedAt, undefined)
 })
 
 test('badges derive from the history given, so profiles stay separate', () => {
-  const a = profileBadges(stageIds.map(id => record(id, at(1))), now)
+  const a = profileBadges(
+    stageIds.map(id => record(id, at(1))),
+    now,
+  )
   const b = profileBadges([], now)
   assert.equal(byId(a, 'typescript:stage:0').earned, true)
   assert.equal(byId(b, 'typescript:stage:0').earned, false)
-  assert.deepEqual(profileBadges(stageIds.map(id => record(id, at(1))), now), a)
+  assert.deepEqual(
+    profileBadges(
+      stageIds.map(id => record(id, at(1))),
+      now,
+    ),
+    a,
+  )
 })
 
 test('stages made only of Foundations reps are not repeated in other paths', () => {
   const ids = profileBadges([], now).map(badge => badge.id)
   const foundations = new Set(firstPath.stages.flatMap(item => [...item.repIds]))
-  for (const path of paths.slice(1)) path.stages.forEach((item, index) => {
-    assert.equal(ids.includes(`${path.id}:stage:${index}`), !item.repIds.every(id => foundations.has(id)))
-  })
+  for (const path of paths.slice(1))
+    path.stages.forEach((item, index) => {
+      assert.equal(ids.includes(`${path.id}:stage:${index}`), !item.repIds.every(id => foundations.has(id)))
+    })
 })
 
-const withStage0 = repIds => paths.map(path => path.id === firstPath.id ? { ...path, stages: path.stages.map((item, index) => index === 0 ? { ...item, repIds } : item) } : path)
+const withStage0 = repIds =>
+  paths.map(path =>
+    path.id === firstPath.id ? { ...path, stages: path.stages.map((item, index) => (index === 0 ? { ...item, repIds } : item)) } : path,
+  )
 
 test('a required rep added to an earned stage moves its badge back to upcoming and keeps completed reps', () => {
   const history = stageIds.map((id, index) => record(id, at(1 + index)))
@@ -92,11 +111,20 @@ test('a rep removed from a stage stops being required, so the badge is earned fr
 })
 
 test('unacknowledged badges are only the earned ones not yet acknowledged', () => {
-  const badges = profileBadges(stageIds.map((id, index) => record(id, at(1 + index))), now)
+  const badges = profileBadges(
+    stageIds.map((id, index) => record(id, at(1 + index))),
+    now,
+  )
   const fresh = unacknowledgedBadges(badges, ['first-rep']).map(badge => badge.id)
   assert.ok(fresh.includes('typescript:stage:0'))
   assert.ok(!fresh.includes('first-rep'))
   assert.ok(fresh.every(id => byId(badges, id).earned))
-  assert.deepEqual(unacknowledgedBadges(badges, badges.filter(badge => badge.earned).map(badge => badge.id)), [])
+  assert.deepEqual(
+    unacknowledgedBadges(
+      badges,
+      badges.filter(badge => badge.earned).map(badge => badge.id),
+    ),
+    [],
+  )
   assert.deepEqual(unacknowledgedBadges(profileBadges([], now), []), [])
 })

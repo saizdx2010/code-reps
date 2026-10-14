@@ -13,7 +13,12 @@ for (const width of [1280, 320]) {
     await expect(page.locator('.indonesian-gloss')).toHaveCount(0)
     await help.focus()
     await help.press('Space')
-    await expect(page.locator('.vocab p > span').filter({ has: page.locator('b', { hasText: /^Mutation$/ }) }).locator('[lang="id"]')).toContainText('mengubah data yang sudah ada')
+    await expect(
+      page
+        .locator('.vocab p > span')
+        .filter({ has: page.locator('b', { hasText: /^Mutation$/ }) })
+        .locator('[lang="id"]'),
+    ).toContainText('mengubah data yang sudah ada')
     await page.getByRole('button', { name: 'Plan', exact: true }).click()
     const plan = page.getByLabel('Your plan', { exact: true })
     await plan.fill('Keep the input unchanged.')

@@ -10,7 +10,9 @@ async function finish(page: Page, id: string, code: string) {
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await page.getByRole('button', { name: 'Explain', exact: true }).click()
-  await page.getByLabel('Your explanation', { exact: true }).fill('I traced the boundary and conflicting invalid cases. I return a new object and keep the documented error order.')
+  await page
+    .getByLabel('Your explanation', { exact: true })
+    .fill('I traced the boundary and conflicting invalid cases. I return a new object and keep the documented error order.')
   await page.getByRole('button', { name: 'Review', exact: true }).click()
   await chooseSegment(page, 'What was hardest?', 'Nothing in particular')
   // Confidence is optional: completing without it must work.
@@ -34,7 +36,9 @@ test('validation journey requires a fresh delayed recall and remains discoverabl
   }`
   await finish(page, 'backend-validate-user', guided)
   await page.goto('/#/progress')
-  const journey = page.locator('.progress-journey').filter({ has: page.getByRole('heading', { name: 'Validate data at a boundary', exact: true }) })
+  const journey = page
+    .locator('.progress-journey')
+    .filter({ has: page.getByRole('heading', { name: 'Validate data at a boundary', exact: true }) })
   await journey.locator('summary').click()
   await expect(journey.locator('.journey-markers')).toHaveAttribute('aria-label', 'Practicing')
   await expect(journey.locator('.journey-markers [data-complete=true]')).toHaveCount(1)
@@ -73,11 +77,15 @@ test('validation prompts and catalogue remain usable at 320 CSS pixels', async (
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/#/practice/parse-delivery-window')
   await expect(page.getByRole('heading', { name: 'Validate a delivery window', exact: true })).toBeVisible()
-  expect(await page.locator('.practice-steps').evaluate(nav => Array.from(nav.querySelectorAll('button')).every(button => {
-    const label = button.querySelector('span')!.getBoundingClientRect()
-    const bounds = button.getBoundingClientRect()
-    return label.left >= bounds.left && label.right <= bounds.right
-  }))).toBe(true)
+  expect(
+    await page.locator('.practice-steps').evaluate(nav =>
+      Array.from(nav.querySelectorAll('button')).every(button => {
+        const label = button.querySelector('span')!.getBoundingClientRect()
+        const bounds = button.getBoundingClientRect()
+        return label.left >= bounds.left && label.right <= bounds.right
+      }),
+    ),
+  ).toBe(true)
   await page.getByRole('button', { name: 'Plan', exact: true }).click()
   await expect(page.locator('#plan-section')).toBeFocused()
   await page.getByLabel('Your plan', { exact: true }).fill('Small-screen plan with precedence cases.')

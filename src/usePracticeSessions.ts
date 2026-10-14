@@ -8,14 +8,17 @@ import { savedMessage } from './save-status'
 
 const repIds = new Set(reps.map(rep => rep.id))
 type Entries = Record<string, string> | (() => Record<string, string>)
-const mapRecords = (map: (record: PracticeSession) => PracticeSession) =>
+const mapRecords =
+  (map: (record: PracticeSession) => PracticeSession) =>
   (current: SessionState): SessionState => ({ ...current, records: current.records.map(map) })
 export function usePracticeSessions() {
   const [loaded] = useState(() => {
     try {
       const raw = localStore.getItem(sessionsKey)
       return { raw, state: raw === null ? emptySessions() : parseSessions(JSON.parse(raw), repIds), error: '' }
-    } catch (error) { return { raw: null, state: emptySessions(), error: String(error) } }
+    } catch (error) {
+      return { raw: null, state: emptySessions(), error: String(error) }
+    }
   })
   const [state, setState] = useState(loaded.state)
   const stateRef = useRef(loaded.state)
@@ -32,7 +35,12 @@ export function usePracticeSessions() {
   const pendingCount = useRef(0)
   const lockName = scopedKey(profile, sessionsKey)
   const mounted = useRef(true)
-  useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+    }
+  }, [])
 
   function commit(change: (current: SessionState) => SessionState, entries: Entries = {}) {
     pendingCount.current++
@@ -47,20 +55,30 @@ export function usePracticeSessions() {
         localStore.setEntries({ ...(typeof entries === 'function' ? entries() : entries), [sessionsKey]: raw })
         expected.current = raw
         stateRef.current = next
-        if (mounted.current) { setState(next); setError(''); setMessage('Saved in browser') }
+        if (mounted.current) {
+          setState(next)
+          setError('')
+          setMessage('Saved in browser')
+        }
       }
       // Serialize same-origin session writes across tabs, then reject a stale loaded revision.
       if (navigator.locks) await navigator.locks.request(lockName, write)
       else {
-        throw new Error('This browser cannot coordinate session saves safely. Use a browser with Web Locks; your coding drafts remain usable.')
+        throw new Error(
+          'This browser cannot coordinate session saves safely. Use a browser with Web Locks; your coding drafts remain usable.',
+        )
       }
-      void flushStorage().then(() => {
-        if (mounted.current) setMessage(savedMessage())
-      }).catch(() => {
-        if (mounted.current) setMessage('Saved in browser; waiting for the local server. Retry saving or download a backup.')
-      })
+      void flushStorage()
+        .then(() => {
+          if (mounted.current) setMessage(savedMessage())
+        })
+        .catch(() => {
+          if (mounted.current) setMessage('Saved in browser; waiting for the local server. Retry saving or download a backup.')
+        })
     }
-    const result = pending.current.then(work).finally(() => { pendingCount.current-- })
+    const result = pending.current.then(work).finally(() => {
+      pendingCount.current--
+    })
     pending.current = result.catch(problem => {
       if (mounted.current) setError(problem instanceof Error ? problem.message : 'Practice could not save. Retry or download a backup.')
       if (problem instanceof Error && /another tab|Reload session/.test(problem.message)) blocked.current = true
@@ -68,20 +86,24 @@ export function usePracticeSessions() {
     return result
   }
 
-  function reflection(id: string) { return reflections[id] ?? state.records.find(record => record.id === id)?.reflection ?? '' }
+  function reflection(id: string) {
+    return reflections[id] ?? state.records.find(record => record.id === id)?.reflection ?? ''
+  }
   function currentReflection(id: string) {
     return reflectionRef.current[id] ?? stateRef.current.records.find(record => record.id === id)?.reflection ?? ''
   }
   function setReflection(id: string, value: string) {
     reflectionRef.current = { ...reflectionRef.current, [id]: value }
     setReflections(reflectionRef.current)
-    void commit(mapRecords(record => record.id === id ? { ...record, reflection: value } : record)).then(() => {
-      if (reflectionRef.current[id] !== value) return
-      const next = { ...reflectionRef.current }
-      delete next[id]
-      reflectionRef.current = next
-      if (mounted.current) setReflections(next)
-    }).catch(() => {})
+    void commit(mapRecords(record => (record.id === id ? { ...record, reflection: value } : record)))
+      .then(() => {
+        if (reflectionRef.current[id] !== value) return
+        const next = { ...reflectionRef.current }
+        delete next[id]
+        reflectionRef.current = next
+        if (mounted.current) setReflections(next)
+      })
+      .catch(() => {})
   }
   async function start(repId: string, hintCount: number, entries: Entries) {
     setBusy(true)
@@ -90,48 +112,77 @@ export function usePracticeSessions() {
       await commit(current => ({ ...current, records: [record, ...current.records] }), entries)
       setActiveId(record.id)
       return true
-    } catch { return false } finally { setBusy(false) }
+    } catch {
+      return false
+    } finally {
+      setBusy(false)
+    }
   }
   async function end(id: string, hintCount: number, difficulty: PracticeSession['difficulty'], entries: Entries) {
     setBusy(true)
     try {
-      const finish = (record: PracticeSession) => finishSession({
-        ...record, reflection: currentReflection(id), hintCount: Math.max(record.hintCount, hintCount),
-        ...(difficulty ? { difficulty } : {}),
-      }, new Date().toISOString())
-      await commit(mapRecords(record => record.id === id ? finish(record) : record), entries)
+      const finish = (record: PracticeSession) =>
+        finishSession(
+          {
+            ...record,
+            reflection: currentReflection(id),
+            hintCount: Math.max(record.hintCount, hintCount),
+            ...(difficulty ? { difficulty } : {}),
+          },
+          new Date().toISOString(),
+        )
+      await commit(
+        mapRecords(record => (record.id === id ? finish(record) : record)),
+        entries,
+      )
       setActiveId(null)
       return stateRef.current.records.find(record => record.id === id)
-    } catch { return false } finally { setBusy(false) }
+    } catch {
+      return false
+    } finally {
+      setBusy(false)
+    }
   }
   function recordCompletion(attemptId: string, repId: string, hintCount: number, entries: Entries) {
     const completes = (record: PracticeSession) => record.id === activeId && record.repId === repId && !record.endedAt
-    return commit(mapRecords(record => completes(record)
-      ? { ...record, attemptId, hintCount: Math.max(record.hintCount, hintCount) }
-      : record), entries)
+    return commit(
+      mapRecords(record => (completes(record) ? { ...record, attemptId, hintCount: Math.max(record.hintCount, hintCount) } : record)),
+      entries,
+    )
   }
   async function remove(id: string) {
     try {
       await commit(current => ({ ...current, records: current.records.filter(record => record.id !== id) }))
       if (activeId === id) setActiveId(null)
-    } catch { /* Recovery controls show the failure. */ }
+    } catch {
+      /* Recovery controls show the failure. */
+    }
   }
   async function retry() {
     try {
       await commit(mapRecords(record => ({ ...record, reflection: currentReflection(record.id) })))
-      reflectionRef.current = {}; setReflections({})
+      reflectionRef.current = {}
+      setReflections({})
       await retryStorage()
       setMessage(savedMessage())
-    } catch (problem) { setError(String(problem)) }
+    } catch (problem) {
+      setError(String(problem))
+    }
   }
   function reload() {
     try {
       const raw = localStore.getItem(sessionsKey)
       const next = raw === null ? emptySessions() : parseSessions(JSON.parse(raw), repIds)
-      expected.current = raw; stateRef.current = next; blocked.current = false
-      setState(next); setActiveId(null); setError('')
+      expected.current = raw
+      stateRef.current = next
+      blocked.current = false
+      setState(next)
+      setActiveId(null)
+      setError('')
       setMessage('Session records reloaded. Unsaved reflection text is kept; retry saving to apply it.')
-    } catch (problem) { setError(String(problem)) }
+    } catch (problem) {
+      setError(String(problem))
+    }
   }
   useEffect(() => {
     const receive = (event: StorageEvent) => {
@@ -145,7 +196,10 @@ export function usePracticeSessions() {
       if (pendingCount.current || busy || (error && Object.keys(reflectionRef.current).length > 0)) event.preventDefault()
     }
     window.addEventListener('code-reps-save-current', saveCurrent)
-    return () => { window.removeEventListener('storage', receive); window.removeEventListener('code-reps-save-current', saveCurrent) }
+    return () => {
+      window.removeEventListener('storage', receive)
+      window.removeEventListener('code-reps-save-current', saveCurrent)
+    }
   }, [lockName, error, busy])
   function backup() {
     // A finished session keeps its saved reflection when the one being edited is blank.
@@ -156,14 +210,30 @@ export function usePracticeSessions() {
   function observeHints(id: string, hintCount: number) {
     if (hintCount <= (stateRef.current.records.find(record => record.id === id)?.hintCount ?? 0)) return
     const raise = (record: PracticeSession) => ({ ...record, hintCount: Math.max(record.hintCount, hintCount) })
-    void commit(mapRecords(record => record.id === id ? raise(record) : record)).catch(() => {})
+    void commit(mapRecords(record => (record.id === id ? raise(record) : record))).catch(() => {})
   }
   function importRecords(incoming: SessionState, entries: Record<string, string>) {
     return commit(current => mergeSessions(current, incoming, repIds), entries)
   }
   return {
-    pause: () => setActiveId(null), importRecords, state, activeId, error, message, busy, reflection, setReflection,
-    start, end, remove, retry, reload, backup, recordCompletion, observeHints,
-    flush: () => pending.current, verifyRevision: () => assertSessionRevision(expected.current, localStore.getItem(sessionsKey)),
+    pause: () => setActiveId(null),
+    importRecords,
+    state,
+    activeId,
+    error,
+    message,
+    busy,
+    reflection,
+    setReflection,
+    start,
+    end,
+    remove,
+    retry,
+    reload,
+    backup,
+    recordCompletion,
+    observeHints,
+    flush: () => pending.current,
+    verifyRevision: () => assertSessionRevision(expected.current, localStore.getItem(sessionsKey)),
   }
 }

@@ -1,6 +1,8 @@
 export const richSolutions = {
-  'debug-cart-total': 'function cartTotal(items: {priceCents:number;quantity:number;available:boolean}[], discountCents:number) { return Math.max(0, items.reduce((sum,item) => sum + (item.available ? item.priceCents * item.quantity : 0), 0) - discountCents) }',
-  'read-batch-labels': 'function predictLabels(caseName: string): string[] { const predictions: Record<string,string[]> = { repeat: ["Ada","Bo"], empty: [], blank: ["Bo"], case: ["Ada","ada"] }; return predictions[caseName] }',
+  'debug-cart-total':
+    'function cartTotal(items: {priceCents:number;quantity:number;available:boolean}[], discountCents:number) { return Math.max(0, items.reduce((sum,item) => sum + (item.available ? item.priceCents * item.quantity : 0), 0) - discountCents) }',
+  'read-batch-labels':
+    'function predictLabels(caseName: string): string[] { const predictions: Record<string,string[]> = { repeat: ["Ada","Bo"], empty: [], blank: ["Bo"], case: ["Ada","ada"] }; return predictions[caseName] }',
   'backend-ticket-handler': `
 function handleTickets(request: {method:string;query:unknown}, tickets: {id:string;title:string;status:string}[]) {
   if (request.method !== 'GET') return {status:405,body:{error:'METHOD_NOT_ALLOWED'}}

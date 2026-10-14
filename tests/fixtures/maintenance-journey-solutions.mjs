@@ -49,8 +49,8 @@ export const regression: Case[] = [
   { parcel: { country: 'SG', weightKg: 2.5, express: false }, subtotal: 40, expected: 17 },
 ]`
 
-const adaptedRates = (source) => source
-  .replace('export const FREE_FROM = 100', 'export const FREE_FROM = 120\nexport const HEAVY_KG = 20\nexport const HEAVY_FEE = 15')
+const adaptedRates = source =>
+  source.replace('export const FREE_FROM = 100', 'export const FREE_FROM = 120\nexport const HEAVY_KG = 20\nexport const HEAVY_FEE = 15')
 export const adaptedQuote = `import { BASE, FREE_FROM, HEAVY_FEE, HEAVY_KG, PER_KG, zoneFor } from './rates'
 export type Parcel = { country: string; weightKg: number; express: boolean }
 export function quote(parcel: Parcel, subtotal: number): number | null {
@@ -90,11 +90,21 @@ export const maintenanceSolutions = {
     'quote.ts': adaptedQuote,
   }),
   'maintain-library-fines': solve('maintain-library-fines', {
-    'fines.ts': replaceIn('maintain-library-fines', 'fines.ts', 'const chargeable = daysLate(loan.due, loan.returned) - GRACE_DAYS', 'const chargeable = Math.max(0, daysLate(loan.due, loan.returned) - GRACE_DAYS)'),
+    'fines.ts': replaceIn(
+      'maintain-library-fines',
+      'fines.ts',
+      'const chargeable = daysLate(loan.due, loan.returned) - GRACE_DAYS',
+      'const chargeable = Math.max(0, daysLate(loan.due, loan.returned) - GRACE_DAYS)',
+    ),
     'guard.ts': finesRegression,
   }),
   'maintain-room-booking': solve('maintain-room-booking', {
-    'pricing.ts': replaceIn('maintain-room-booking', 'pricing.ts', 'for (let hour = start; hour < end; hour++) total += isPeak(hour) ? PEAK_RATE : OFF_PEAK_RATE', 'for (let hour = start; hour < end; hour++) {\n    const rate = isPeak(hour) ? PEAK_RATE : OFF_PEAK_RATE\n    total += hour - start >= 3 ? rate / 2 : rate\n  }'),
+    'pricing.ts': replaceIn(
+      'maintain-room-booking',
+      'pricing.ts',
+      'for (let hour = start; hour < end; hour++) total += isPeak(hour) ? PEAK_RATE : OFF_PEAK_RATE',
+      'for (let hour = start; hour < end; hour++) {\n    const rate = isPeak(hour) ? PEAK_RATE : OFF_PEAK_RATE\n    total += hour - start >= 3 ? rate / 2 : rate\n  }',
+    ),
     'guard.ts': bookingRegression,
   }),
 }

@@ -18,15 +18,21 @@ function failures(rep, files) {
   const code = typeof files === 'string' ? files : encodeFiles({ entry: 'main.ts', files })
   if (!rep.domPreview) {
     const fn = new Function(compileSolution(code, rep.functionName) + '\nreturn inspect')()
-    return rep.checks.filter(check => {
-      const args = structuredClone(check.input)
-      const before = JSON.stringify(args)
-      return !isDeepStrictEqual(fn(...args), check.expected) || JSON.stringify(args) !== before
-    }).map(check => check.name)
+    return rep.checks
+      .filter(check => {
+        const args = structuredClone(check.input)
+        const before = JSON.stringify(args)
+        return !isDeepStrictEqual(fn(...args), check.expected) || JSON.stringify(args) !== before
+      })
+      .map(check => check.name)
   }
   const { report } = runFrame(code, rep)
   assert.ok(report, rep.id)
-  return report.error ? [report.error] : Array.from(report.results).filter(result => !result.passed).map(result => `${result.name}: ${result.message}`)
+  return report.error
+    ? [report.error]
+    : Array.from(report.results)
+        .filter(result => !result.passed)
+        .map(result => `${result.name}: ${result.message}`)
 }
 
 test('connected feature references pass every checkpoint and starters need work', () => {
@@ -67,7 +73,6 @@ test('integration checks reject broken save, recovery, safe rendering, and learn
   }
 })
 
-
 test('reference project files typecheck separately from behavioral checks', () => {
   const directory = mkdtempSync(join(tmpdir(), 'connected-feature-'))
   try {
@@ -75,14 +80,27 @@ test('reference project files typecheck separately from behavioral checks', () =
       const project = join(directory, String(index))
       mkdirSync(project)
       for (const [name, source] of Object.entries(files)) writeFileSync(join(project, name), source)
-      const program = ts.createProgram(Object.keys(files).map(name => join(project, name)), {
-        noEmit: true, strict: true, skipLibCheck: true, types: [],
-        target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext,
-        moduleResolution: ts.ModuleResolutionKind.Bundler,
-        lib: ['lib.es2022.d.ts', 'lib.dom.d.ts'],
-      })
+      const program = ts.createProgram(
+        Object.keys(files).map(name => join(project, name)),
+        {
+          noEmit: true,
+          strict: true,
+          skipLibCheck: true,
+          types: [],
+          target: ts.ScriptTarget.ES2022,
+          module: ts.ModuleKind.ESNext,
+          moduleResolution: ts.ModuleResolutionKind.Bundler,
+          lib: ['lib.es2022.d.ts', 'lib.dom.d.ts'],
+        },
+      )
       const diagnostics = ts.getPreEmitDiagnostics(program)
-      assert.deepEqual(diagnostics.map(item => ts.flattenDiagnosticMessageText(item.messageText, '\n')), [], connectedFeatureReps[index].id)
+      assert.deepEqual(
+        diagnostics.map(item => ts.flattenDiagnosticMessageText(item.messageText, '\n')),
+        [],
+        connectedFeatureReps[index].id,
+      )
     }
-  } finally { rmSync(directory, { recursive: true, force: true }) }
+  } finally {
+    rmSync(directory, { recursive: true, force: true })
+  }
 })

@@ -27,68 +27,110 @@ export function LearningAssessment({ state, update, history, reviewRep, onReview
   const focus = missing
     ? `${missing.rep.category}: ${missing.attempt ? 'try a related problem without hints.' : 'start here to gather evidence.'}`
     : 'You completed these tasks without revealed hints. Try a practical project and later recall to gather broader evidence.'
-  return <>
-    <section className="hub-panel">
-      <h2>A short self-assessment</h2>
-      <InfoNote><p>
-        Optional: solve four short tasks before using hints. Your code checks show behavior; review your reasoning separately.
-        This is a snapshot of these skills, not an overall coding score.
-      </p></InfoNote>
-      <Button variant="primary" type="button" onClick={() => update({ ...state, diagnosticStartedAt: new Date().toISOString() })}>
-        {state.diagnosticStartedAt ? 'Start a new assessment' : 'Start assessment'}
-      </Button>
-      {state.diagnosticStartedAt && <>
-        <p>Started {formatDate(state.diagnosticStartedAt, true)}. Earlier attempts remain in History.</p>
-        <ol className="milestone-list">{diagnostic.map(({ rep, attempt }) => <li key={rep.id}>
-          <div>
-            <strong>{rep.title}</strong>
-            <p>{attempt
-              ? `${attempt.hintCount ? 'Completed with help' : 'Completed without hints'} · ${formatDate(attempt.completedAt)}`
-              : 'No completed attempt since this assessment started.'}</p>
-          </div>
-          <Button variant="text" type="button" onClick={() => reviewRep(rep.id)}>Try from a fresh start</Button>
-        </li>)}</ol>
-        <p><strong>Suggested focus:</strong> {focus}</p>
-      </>}
-    </section>
-    <div className="hub-evidence">{knowledgeGroups.map(group => (
-      <ListGroup key={group.id} title={group.title} count={group.skillIds.length}>
-        {skills.filter(skill => group.skillIds.includes(skill.id)).map(skill => (
-          <SkillEvidenceCard
-            key={skill.id} skillId={skill.id} title={skill.title} state={state} history={history} onReview={onReviewSkill}
-          />
+  return (
+    <>
+      <section className="hub-panel">
+        <h2>A short self-assessment</h2>
+        <InfoNote>
+          <p>
+            Optional: solve four short tasks before using hints. Your code checks show behavior; review your reasoning separately. This is a
+            snapshot of these skills, not an overall coding score.
+          </p>
+        </InfoNote>
+        <Button variant="primary" type="button" onClick={() => update({ ...state, diagnosticStartedAt: new Date().toISOString() })}>
+          {state.diagnosticStartedAt ? 'Start a new assessment' : 'Start assessment'}
+        </Button>
+        {state.diagnosticStartedAt && (
+          <>
+            <p>Started {formatDate(state.diagnosticStartedAt, true)}. Earlier attempts remain in History.</p>
+            <ol className="milestone-list">
+              {diagnostic.map(({ rep, attempt }) => (
+                <li key={rep.id}>
+                  <div>
+                    <strong>{rep.title}</strong>
+                    <p>
+                      {attempt
+                        ? `${attempt.hintCount ? 'Completed with help' : 'Completed without hints'} · ${formatDate(attempt.completedAt)}`
+                        : 'No completed attempt since this assessment started.'}
+                    </p>
+                  </div>
+                  <Button variant="text" type="button" onClick={() => reviewRep(rep.id)}>
+                    Try from a fresh start
+                  </Button>
+                </li>
+              ))}
+            </ol>
+            <p>
+              <strong>Suggested focus:</strong> {focus}
+            </p>
+          </>
+        )}
+      </section>
+      <div className="hub-evidence">
+        {knowledgeGroups.map(group => (
+          <ListGroup key={group.id} title={group.title} count={group.skillIds.length}>
+            {skills
+              .filter(skill => group.skillIds.includes(skill.id))
+              .map(skill => (
+                <SkillEvidenceCard
+                  key={skill.id}
+                  skillId={skill.id}
+                  title={skill.title}
+                  state={state}
+                  history={history}
+                  onReview={onReviewSkill}
+                />
+              ))}
+          </ListGroup>
         ))}
-      </ListGroup>
-    ))}</div>
-  </>
+      </div>
+    </>
+  )
 }
 
 type CardProps = { skillId: string; title: string; state: FluencyState; history: PortableRecord[]; onReview: (id: string) => void }
 
 function SkillEvidenceCard({ skillId, title, state, history, onReview }: CardProps) {
   const evidence = skillEvidence(skillId, history, state)
-  const stage = evidence.retained ? 'Recall recorded'
-    : evidence.independent.length ? 'Checked without hints'
-    : evidence.attempts.length ? 'Practicing'
-    : 'Start practicing'
+  const stage = evidence.retained
+    ? 'Recall recorded'
+    : evidence.independent.length
+      ? 'Checked without hints'
+      : evidence.attempts.length
+        ? 'Practicing'
+        : 'Start practicing'
   const selfReview = evidence.selfReview
-  return <li>
-    <details className="hub-panel evidence-card">
-      <summary><h3>{title}</h3><span className="evidence-stage">{stage}</span></summary>
-      <div className="evidence-card-body">
-        <p>
-          {evidence.attempts.length} checked completions · {evidence.independent.length} without hints
-          {' '}· {evidence.lessonCorrect}/{evidence.lessonTotal} latest predictions
-        </p>
-        <p>
-          {evidence.retained ? 'Delayed recall recorded' : 'Later recall not recorded'}
-          {selfReview ? ` · Self-reviewed ${formatDate(selfReview.updatedAt)}` : ' · No self-review yet'}
-        </p>
-        {selfReview && <dl className="compact-rubric">{(Object.keys(rubrics) as (keyof typeof rubrics)[]).map(key => (
-          <div key={key}><dt>{key}</dt><dd>{judgmentLabels[selfReview[key]]}</dd></div>
-        ))}</dl>}
-        <Button variant="text" type="button" onClick={() => onReview(skillId)}>Review your progress</Button>
-      </div>
-    </details>
-  </li>
+  return (
+    <li>
+      <details className="hub-panel evidence-card">
+        <summary>
+          <h3>{title}</h3>
+          <span className="evidence-stage">{stage}</span>
+        </summary>
+        <div className="evidence-card-body">
+          <p>
+            {evidence.attempts.length} checked completions · {evidence.independent.length} without hints · {evidence.lessonCorrect}/
+            {evidence.lessonTotal} latest predictions
+          </p>
+          <p>
+            {evidence.retained ? 'Delayed recall recorded' : 'Later recall not recorded'}
+            {selfReview ? ` · Self-reviewed ${formatDate(selfReview.updatedAt)}` : ' · No self-review yet'}
+          </p>
+          {selfReview && (
+            <dl className="compact-rubric">
+              {(Object.keys(rubrics) as (keyof typeof rubrics)[]).map(key => (
+                <div key={key}>
+                  <dt>{key}</dt>
+                  <dd>{judgmentLabels[selfReview[key]]}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+          <Button variant="text" type="button" onClick={() => onReview(skillId)}>
+            Review your progress
+          </Button>
+        </div>
+      </details>
+    </li>
+  )
 }

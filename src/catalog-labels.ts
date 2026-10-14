@@ -2,21 +2,38 @@ import { paths } from './path.ts'
 import type { RepSummary } from './catalog-index'
 
 export const formatLabels: Record<string, string> = {
-  algorithm: 'Exercise', debug: 'Debugging', read: 'Reading code', transform: 'Working with data',
-  frontend: 'Frontend', backend: 'Backend', refactor: 'Improving code',
+  algorithm: 'Exercise',
+  debug: 'Debugging',
+  read: 'Reading code',
+  transform: 'Working with data',
+  frontend: 'Frontend',
+  backend: 'Backend',
+  refactor: 'Improving code',
 }
 
 const topicLabels: Record<string, string> = {
-  'Arrays & strings': 'Arrays', 'Arrays & sets': 'Maps and sets', 'Strings & maps': 'Maps and sets',
-  'Stacks & strings': 'Stacks and queues', Stacks: 'Stacks and queues', 'Stacks & queues': 'Stacks and queues',
-  Strings: 'Text', 'Collection basics': 'Collections',
-  'AI-era coding': 'Checking suggested code', 'TypeScript modeling': 'Modeling states',
-  'Frontend core': 'Interface logic', 'Frontend state': 'Interface logic',
-  'Frontend implementation': 'Frontend projects', 'Frontend accessibility': 'Accessible interactions',
-  'Backend core': 'Requests and validation', 'Backend validation': 'Requests and validation',
-  'Backend implementation': 'Backend projects', 'Real-world debugging': 'Debugging',
-  'Connected browser feature': 'Building a browser feature', 'Data transformation': 'Working with data',
-  'Code reading': 'Reading code', Refactoring: 'Improving code',
+  'Arrays & strings': 'Arrays',
+  'Arrays & sets': 'Maps and sets',
+  'Strings & maps': 'Maps and sets',
+  'Stacks & strings': 'Stacks and queues',
+  Stacks: 'Stacks and queues',
+  'Stacks & queues': 'Stacks and queues',
+  Strings: 'Text',
+  'Collection basics': 'Collections',
+  'AI-era coding': 'Checking suggested code',
+  'TypeScript modeling': 'Modeling states',
+  'Frontend core': 'Interface logic',
+  'Frontend state': 'Interface logic',
+  'Frontend implementation': 'Frontend projects',
+  'Frontend accessibility': 'Accessible interactions',
+  'Backend core': 'Requests and validation',
+  'Backend validation': 'Requests and validation',
+  'Backend implementation': 'Backend projects',
+  'Real-world debugging': 'Debugging',
+  'Connected browser feature': 'Building a browser feature',
+  'Data transformation': 'Working with data',
+  'Code reading': 'Reading code',
+  Refactoring: 'Improving code',
 }
 const problemStages = paths.find(path => path.id === 'algorithms-data-structures')!.stages
 const lookupReps = new Set(['most-frequent-number', 'first-unique-character', 'first-duplicate-label', 'count-statuses'])

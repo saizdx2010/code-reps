@@ -8,10 +8,14 @@ export const dsaBasicsReps: Rep[] = [
     id: 'ds-array-operations',
     title: 'Copy, append, and read an array',
     category: 'Collection basics',
-    prompt: 'Create a new number array containing all supplied values followed by extra. Return its last value. Practice declaring number[], copying with spread, appending with push, and reading by index. Do not change numbers.',
+    prompt:
+      'Create a new number array containing all supplied values followed by extra. Return its last value. Practice declaring number[], copying with spread, appending with push, and reading by index. Do not change numbers.',
     example: { input: 'appendAndRead([4, 7], 0)', output: '0' },
     note: 'numbers contains at most 100 integers from -1000 to 1000; extra has the same range. Checks verify the returned value and unchanged input; review the requested operations yourself.',
-    vocabulary: [{ term: 'Copy', meaning: 'a separate array with the same values' }, { term: 'Index', meaning: 'a position starting at zero' }],
+    vocabulary: [
+      { term: 'Copy', meaning: 'a separate array with the same values' },
+      { term: 'Index', meaning: 'a position starting at zero' },
+    ],
     planPrompt: dsaPlanPrompts['ds-array-operations'],
     starter: starter('function appendAndRead(numbers: number[], extra: number): number', '0'),
     functionName: 'appendAndRead',
@@ -32,10 +36,14 @@ export const dsaBasicsReps: Rep[] = [
     id: 'ds-set-operations',
     title: 'Create and update a set',
     category: 'Collection basics',
-    prompt: 'Create a Set<number> from numbers, add extra, delete removed, and return the number of remaining distinct values. Apply those operations in that order.',
+    prompt:
+      'Create a Set<number> from numbers, add extra, delete removed, and return the number of remaining distinct values. Apply those operations in that order.',
     example: { input: 'updateDistinct([2, 2, 3], 4, 2)', output: '2' },
     note: 'At most 100 integers, each from -1000 to 1000. extra and removed use the same range. Equality is numeric; do not change numbers. Practice new Set, add, delete, and size; checks verify behavior, not API choice.',
-    vocabulary: [{ term: 'Set', meaning: 'a collection of distinct values' }, { term: 'Membership', meaning: 'whether a collection contains a value' }],
+    vocabulary: [
+      { term: 'Set', meaning: 'a collection of distinct values' },
+      { term: 'Membership', meaning: 'whether a collection contains a value' },
+    ],
     planPrompt: dsaPlanPrompts['ds-set-operations'],
     starter: starter('function updateDistinct(numbers: number[], extra: number, removed: number): number', '0'),
     functionName: 'updateDistinct',
@@ -56,7 +64,8 @@ export const dsaBasicsReps: Rep[] = [
     id: 'ds-map-operations',
     title: 'Set, overwrite, and read a map',
     category: 'Collection basics',
-    prompt: 'Create a Map<string, number> from entries in order. Set key to value, then return the value associated with query, or null when query is absent. Later entries overwrite earlier values for the same key. Do not change entries.',
+    prompt:
+      'Create a Map<string, number> from entries in order. Set key to value, then return the value associated with query, or null when query is absent. Later entries overwrite earlier values for the same key. Do not change entries.',
     example: { input: 'updateLookup([["a", 2]], "a", 0, "a")', output: '0' },
     note: 'entries has at most 100 [string, integer] pairs. Strings contain at most 20 ASCII characters and are case-sensitive, with no trimming; empty strings are valid. Integers are -1000 to 1000. Practice new Map, set, get, and has; API choice is self-reviewed.',
     vocabulary: [
@@ -64,7 +73,10 @@ export const dsaBasicsReps: Rep[] = [
       { term: 'Key', meaning: 'the value used to look up an associated value' },
     ],
     planPrompt: dsaPlanPrompts['ds-map-operations'],
-    starter: starter('function updateLookup(entries: [string, number][], key: string, value: number, query: string): number | null', 'null'),
+    starter: starter(
+      'function updateLookup(entries: [string, number][], key: string, value: number, query: string): number | null',
+      'null',
+    ),
     functionName: 'updateLookup',
     preserveInput: true,
     hints: [
@@ -75,7 +87,19 @@ export const dsaBasicsReps: Rep[] = [
     checks: [
       { name: 'Overwrites with zero', input: [[['a', 2]], 'a', 0, 'a'], expected: 0 },
       { name: 'Missing query', input: [[], 'a', 2, 'b'], expected: null },
-      { name: 'Last entry wins', input: [[['a', 1], ['a', 3]], 'b', 4, 'a'], expected: 3 },
+      {
+        name: 'Last entry wins',
+        input: [
+          [
+            ['a', 1],
+            ['a', 3],
+          ],
+          'b',
+          4,
+          'a',
+        ],
+        expected: 3,
+      },
       { name: 'Empty key', input: [[['', -2]], 'x', 4, ''], expected: -2 },
       { name: 'Case-sensitive keys', input: [[['A', 8]], 'a', 2, 'A'], expected: 8 },
     ],
@@ -84,7 +108,8 @@ export const dsaBasicsReps: Rep[] = [
     id: 'ds-stack-operations',
     title: 'Push, pop, and peek a stack',
     category: 'Stacks & queues',
-    prompt: 'Treat numbers as a stack whose top is its last item. Copy it, push extra, pop once, then return the remaining top without removing it. Return null if no item remains. Do not change numbers.',
+    prompt:
+      'Treat numbers as a stack whose top is its last item. Copy it, push extra, pop once, then return the remaining top without removing it. Return null if no item remains. Do not change numbers.',
     example: { input: 'stackTop([4, 7], 9)', output: '7' },
     note: 'At most 100 integers from -1000 to 1000; extra has the same range. Practice a typed array, push, pop, and peeking by index. Checks do not prove that you used a stack.',
     vocabulary: [
@@ -111,7 +136,8 @@ export const dsaBasicsReps: Rep[] = [
     id: 'ds-queue-operations',
     title: 'Enqueue, dequeue, and peek a queue',
     category: 'Stacks & queues',
-    prompt: 'Treat numbers as a queue whose front is its first item. Copy it, enqueue extra at the back, dequeue once from the front, then return the remaining front without removing it. Return null when no item remains. Do not change numbers.',
+    prompt:
+      'Treat numbers as a queue whose front is its first item. Copy it, enqueue extra at the back, dequeue once from the front, then return the remaining front without removing it. Return null when no item remains. Do not change numbers.',
     example: { input: 'queueFront([4, 7], 9)', output: '7' },
     note: 'At most 100 integers from -1000 to 1000; extra has the same range. For this small introduction, use an array with push and shift. Checks verify behavior; operations are self-reviewed.',
     vocabulary: [
@@ -140,10 +166,14 @@ export const dsaBasicsReps: Rep[] = [
     id: 'algo-sorted-pair',
     title: 'Find a pair in sorted numbers',
     category: 'Algorithm techniques',
-    prompt: 'Return true if two different positions in numbers sum to target, otherwise false. numbers is sorted in ascending order; duplicate values are allowed. Practice moving a left and right pointer toward each other. Do not change numbers.',
+    prompt:
+      'Return true if two different positions in numbers sum to target, otherwise false. numbers is sorted in ascending order; duplicate values are allowed. Practice moving a left and right pointer toward each other. Do not change numbers.',
     example: { input: 'hasSortedPair([1, 3, 5, 8], 11)', output: 'true' },
     note: 'At most 100 integers from -1000 to 1000; target is -2000 to 2000. Empty and one-item inputs return false. Behavior checks do not prove two pointers or linear time; review those separately.',
-    vocabulary: [{ term: 'Pointer', meaning: 'an index marking a current position' }, { term: 'Sorted', meaning: 'arranged in a defined order' }],
+    vocabulary: [
+      { term: 'Pointer', meaning: 'an index marking a current position' },
+      { term: 'Sorted', meaning: 'arranged in a defined order' },
+    ],
     planPrompt: dsaPlanPrompts['algo-sorted-pair'],
     starter: starter('function hasSortedPair(numbers: number[], target: number): boolean', 'false'),
     functionName: 'hasSortedPair',
@@ -166,7 +196,8 @@ export const dsaBasicsReps: Rep[] = [
     id: 'algo-window-sum',
     title: 'Find the largest fixed-window sum',
     category: 'Algorithm techniques',
-    prompt: 'Return the largest sum of any k consecutive items. k is a positive integer. Return null if numbers has fewer than k items. Practice maintaining a running sum as a fixed-size window moves. Do not change numbers.',
+    prompt:
+      'Return the largest sum of any k consecutive items. k is a positive integer. Return null if numbers has fewer than k items. Practice maintaining a running sum as a fixed-size window moves. Do not change numbers.',
     example: { input: 'largestWindowSum([2, -1, 4, 3], 2)', output: '7' },
     note: 'numbers has at most 100 integers from -1000 to 1000; k is 1 to 101. Values may all be negative. Behavior checks do not prove a sliding-window approach or complexity.',
     vocabulary: [
@@ -196,7 +227,8 @@ export const dsaBasicsReps: Rep[] = [
     id: 'algo-binary-search',
     title: 'Search sorted numbers',
     category: 'Algorithm techniques',
-    prompt: 'Return the index of target in a strictly increasing number array, or -1 when it is absent. Practice binary search: inspect the middle of the remaining interval and discard the half that cannot contain target. Do not change numbers.',
+    prompt:
+      'Return the index of target in a strictly increasing number array, or -1 when it is absent. Practice binary search: inspect the middle of the remaining interval and discard the half that cannot contain target. Do not change numbers.',
     example: { input: 'sortedIndex([-3, 0, 4, 9], 4)', output: '2' },
     note: 'At most 100 distinct integers from -1000 to 1000 in ascending order; target uses the same range. Empty input returns -1. Checks verify the index, not logarithmic time or a particular search approach.',
     vocabulary: [
@@ -227,7 +259,8 @@ export const dsaBasicsReps: Rep[] = [
     id: 'algo-insertion-sort',
     title: 'Insert numbers into sorted order',
     category: 'Algorithm techniques',
-    prompt: 'Return a new array containing every number in ascending numeric order, including duplicates. Practice insertion sort: grow an ordered portion by placing each next value where it belongs. Do not change numbers, even if already sorted.',
+    prompt:
+      'Return a new array containing every number in ascending numeric order, including duplicates. Practice insertion sort: grow an ordered portion by placing each next value where it belongs. Do not change numbers, even if already sorted.',
     example: { input: 'insertionSort([3, 1, 3, -2])', output: '[-2, 1, 3, 3]' },
     note: 'At most 100 integers from -1000 to 1000. Empty input returns a new empty array. Equal values are all retained; their order is indistinguishable for numbers. Review insertion sort and the separate returned array yourself; checks verify values and visible input mutation.',
     vocabulary: [
@@ -251,14 +284,19 @@ export const dsaBasicsReps: Rep[] = [
       { name: 'Reverse order', input: [[4, 3, 2, 1]], expected: [1, 2, 3, 4] },
       { name: 'All equal', input: [[2, 2, 2]], expected: [2, 2, 2] },
       { name: 'Numeric not text order', input: [[10, 2, -1000, 1000]], expected: [-1000, 2, 10, 1000] },
-      { name: 'Maximum length', input: [Array.from({ length: 100 }, (_, i) => 99 - i)], expected: Array.from({ length: 100 }, (_, i) => i) },
+      {
+        name: 'Maximum length',
+        input: [Array.from({ length: 100 }, (_, i) => 99 - i)],
+        expected: Array.from({ length: 100 }, (_, i) => i),
+      },
     ],
   },
   {
     id: 'algo-merge-sorted',
     title: 'Merge two ordered lists',
     category: 'Algorithm techniques',
-    prompt: 'Return a new ascending array containing every value from left and right. Both inputs are already sorted. Practice comparing the next unused value in each list instead of sorting again. Do not change either array.',
+    prompt:
+      'Return a new ascending array containing every value from left and right. Both inputs are already sorted. Practice comparing the next unused value in each list instead of sorting again. Do not change either array.',
     example: { input: 'mergeSorted([1, 3], [2, 3, 4])', output: '[1, 2, 3, 3, 4]' },
     note: 'Each input has at most 100 integers from -1000 to 1000 in ascending order, allowing equal neighbors. Empty lists contribute no values; two empty lists return a new empty array. Keep all duplicates. On equality, take the left value first in your practice approach; numeric output checks cannot distinguish equal-value order.',
     vocabulary: [
@@ -275,13 +313,27 @@ export const dsaBasicsReps: Rep[] = [
       'Once one list is exhausted, decide how to keep every item in the other list without reading beyond an end.',
     ],
     checks: [
-      { name: 'Interleaved with a tie', input: [[1, 3], [2, 3, 4]], expected: [1, 2, 3, 3, 4] },
+      {
+        name: 'Interleaved with a tie',
+        input: [
+          [1, 3],
+          [2, 3, 4],
+        ],
+        expected: [1, 2, 3, 3, 4],
+      },
       { name: 'Both empty', input: [[], []], expected: [] },
       { name: 'Left empty', input: [[], [-2, 0]], expected: [-2, 0] },
       { name: 'Right empty', input: [[1, 2], []], expected: [1, 2] },
       { name: 'Left finishes first', input: [[1], [2, 3, 4]], expected: [1, 2, 3, 4] },
       { name: 'Right finishes first', input: [[2, 3, 4], [1]], expected: [1, 2, 3, 4] },
-      { name: 'Repeated limits', input: [[-1000, 0, 1000], [-1000, 1000]], expected: [-1000, -1000, 0, 1000, 1000] },
+      {
+        name: 'Repeated limits',
+        input: [
+          [-1000, 0, 1000],
+          [-1000, 1000],
+        ],
+        expected: [-1000, -1000, 0, 1000, 1000],
+      },
       { name: 'Both maximum lengths', input: [Array(100).fill(0), Array(100).fill(0)], expected: Array(200).fill(0) },
     ],
   },
@@ -289,7 +341,8 @@ export const dsaBasicsReps: Rep[] = [
     id: 'algo-recursive-sum',
     title: 'Sum numbers inside nested lists',
     category: 'Algorithm techniques',
-    prompt: 'Return the sum of every number inside items, including numbers in nested arrays. Practice recursion: let a smaller nested list solve the same task. Give an empty list a clear base case. Do not change any array.',
+    prompt:
+      'Return the sum of every number inside items, including numbers in nested arrays. Practice recursion: let a smaller nested list solve the same task. Give an empty list a clear base case. Do not change any array.',
     example: { input: 'recursiveSum([1, [2, [], [-3]], 4])', output: '4' },
     note: 'items contains only integers from -1000 to 1000 and nested arrays, with no cycles or shared arrays. At most 100 entries across all arrays and at most 10 array levels including items. Empty arrays contribute 0. Repeated numbers each contribute; cancellation and zero are valid. Checks do not prove recursion; review the base case and smaller calls yourself.',
     vocabulary: [
@@ -321,7 +374,8 @@ export const dsaBasicsReps: Rep[] = [
     id: 'algo-tree-depth',
     title: 'Find the deepest tree level',
     category: 'Algorithm techniques',
-    prompt: 'Return the maximum number of nodes on a route from the root to a leaf. A leaf has no children. A missing tree (null) has depth 0; a root alone has depth 1. Practice solving the same depth task for each child. Do not change any node or child array.',
+    prompt:
+      'Return the maximum number of nodes on a route from the root to a leaf. A leaf has no children. A missing tree (null) has depth 0; a root alone has depth 1. Practice solving the same depth task for each child. Do not change any node or child array.',
     example: { input: 'treeDepth({value: 5, children: [{value: 0, children: []}]})', output: '2' },
     note: 'A node has {value: number, children: TreeNode[]}. Trees have at most 100 nodes, at most 10 levels, integer values from -1000 to 1000, no cycles, and no shared nodes. Values do not affect depth. Equal-depth branches give the same numeric result; return the depth, not a chosen branch. Checks do not prove recursion.',
     vocabulary: [
@@ -344,10 +398,30 @@ export const dsaBasicsReps: Rep[] = [
       { name: 'One child', input: [{ value: 5, children: [{ value: 0, children: [] }] }], expected: 2 },
       {
         name: 'Unequal branches',
-        input: [{ value: 1, children: [{ value: 9, children: [] }, { value: -2, children: [{ value: 3, children: [] }] }] }],
+        input: [
+          {
+            value: 1,
+            children: [
+              { value: 9, children: [] },
+              { value: -2, children: [{ value: 3, children: [] }] },
+            ],
+          },
+        ],
         expected: 3,
       },
-      { name: 'Tied branches', input: [{ value: 1000, children: [{ value: -1000, children: [] }, { value: 1000, children: [] }] }], expected: 2 },
+      {
+        name: 'Tied branches',
+        input: [
+          {
+            value: 1000,
+            children: [
+              { value: -1000, children: [] },
+              { value: 1000, children: [] },
+            ],
+          },
+        ],
+        expected: 2,
+      },
       {
         name: 'Ten levels',
         input: [
@@ -368,7 +442,9 @@ export const dsaBasicsReps: Rep[] = [
                             children: [
                               {
                                 value: 0,
-                                children: [{ value: 0, children: [{ value: 0, children: [{ value: 0, children: [{ value: 0, children: [] }] }] }] }],
+                                children: [
+                                  { value: 0, children: [{ value: 0, children: [{ value: 0, children: [{ value: 0, children: [] }] }] }] },
+                                ],
                               },
                             ],
                           },
@@ -383,14 +459,19 @@ export const dsaBasicsReps: Rep[] = [
         ],
         expected: 10,
       },
-      { name: 'Wide maximum node count', input: [{ value: 0, children: Array.from({ length: 99 }, () => ({ value: 0, children: [] })) }], expected: 2 },
+      {
+        name: 'Wide maximum node count',
+        input: [{ value: 0, children: Array.from({ length: 99 }, () => ({ value: 0, children: [] })) }],
+        expected: 2,
+      },
     ],
   },
   {
     id: 'algo-graph-reachable',
     title: 'Follow connections to a destination',
     category: 'Algorithm techniques',
-    prompt: 'Return whether target can be reached from start by following directed connections in graph. Return false if start or target is outside the graph; a valid node reaches itself without any connection. graph is an adjacency list: graph[i] lists the nodes you can visit directly from node i. Practice breadth-first search (BFS), visiting pending nodes in the order they were discovered. Do not change graph or any of its nested arrays.',
+    prompt:
+      'Return whether target can be reached from start by following directed connections in graph. Return false if start or target is outside the graph; a valid node reaches itself without any connection. graph is an adjacency list: graph[i] lists the nodes you can visit directly from node i. Practice breadth-first search (BFS), visiting pending nodes in the order they were discovered. Do not change graph or any of its nested arrays.',
     brief: {
       summary: 'Return whether target can be reached from start by following directed connections in graph.',
       rules: [
@@ -431,7 +512,7 @@ export const dsaBasicsReps: Rep[] = [
       { name: 'Disconnected cycle', input: [[[1], [0], []], 0, 2], expected: false },
       { name: 'Self links and repeated neighbors', input: [[[0, 1, 1], [0, 2], []], 0, 2], expected: true },
       { name: 'Branch beyond dead end', input: [[[1, 2], [], [3], []], 0, 3], expected: true },
-      { name: 'Maximum length chain', input: [Array.from({ length: 100 }, (_, i) => i < 99 ? [i + 1] : []), 0, 99], expected: true },
+      { name: 'Maximum length chain', input: [Array.from({ length: 100 }, (_, i) => (i < 99 ? [i + 1] : [])), 0, 99], expected: true },
       { name: 'Maximum repeated neighbors', input: [[Array(100).fill(1), []], 0, 1], expected: true },
     ],
   },

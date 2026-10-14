@@ -9,21 +9,28 @@ test('connected multi-file feature checks execute in the real sandbox', async ({
   for (const [index, rep] of connectedFeatureReps.entries()) {
     if (!rep.domPreview) continue
     const source = buildFrontendFrame(encodeFiles({ entry: 'main.ts', files: connectedSolutions[index] }), rep, 'browser-check', 'checks')
-    const report = await page.evaluate(source => new Promise<{ error?: string; results: { passed: boolean; name: string }[] }>(resolve => {
-      const frame = document.createElement('iframe')
-      frame.sandbox.add('allow-scripts')
-      const receive = (event: MessageEvent) => {
-        if (event.source !== frame.contentWindow || event.data.token !== 'browser-check') return
-        window.removeEventListener('message', receive)
-        frame.remove()
-        resolve(event.data)
-      }
-      window.addEventListener('message', receive)
-      frame.srcdoc = source
-      document.body.append(frame)
-    }), source)
+    const report = await page.evaluate(
+      source =>
+        new Promise<{ error?: string; results: { passed: boolean; name: string }[] }>(resolve => {
+          const frame = document.createElement('iframe')
+          frame.sandbox.add('allow-scripts')
+          const receive = (event: MessageEvent) => {
+            if (event.source !== frame.contentWindow || event.data.token !== 'browser-check') return
+            window.removeEventListener('message', receive)
+            frame.remove()
+            resolve(event.data)
+          }
+          window.addEventListener('message', receive)
+          frame.srcdoc = source
+          document.body.append(frame)
+        }),
+      source,
+    )
     expect(report.error, rep.id).toBeUndefined()
-    expect(report.results.filter(result => !result.passed), rep.id).toEqual([])
+    expect(
+      report.results.filter(result => !result.passed),
+      rep.id,
+    ).toEqual([])
   }
 })
 
@@ -81,7 +88,10 @@ test('checkpoint files remain playable through Monaco, checks, and draft reload'
   await page.goto('/#/practice/' + rep.id)
   const editor = page.getByRole('textbox', { name: /^TypeScript solution for/ })
   for (const filename of ['main.ts', 'storage.ts']) {
-    await page.getByRole('group', { name: 'Project files' }).getByRole('button', { name: filename, exact: filename !== 'main.ts' }).click()
+    await page
+      .getByRole('group', { name: 'Project files' })
+      .getByRole('button', { name: filename, exact: filename !== 'main.ts' })
+      .click()
     await expect(page.locator('.file-tab')).toContainText(filename)
     await expect(editor).toBeVisible()
     await editor.focus()
@@ -91,14 +101,28 @@ test('checkpoint files remain playable through Monaco, checks, and draft reload'
       clipboardData.setData('text/plain', text)
       element.dispatchEvent(new ClipboardEvent('paste', { clipboardData, bubbles: true, cancelable: true }))
     }, files[filename])
-    await expect.poll(() => page.evaluate(({ id, filename }) => Object.entries(localStorage)
-      .filter(([key]) => key.includes(id))
-      .map(([, value]) => JSON.parse(JSON.parse(value).code).files[filename]), { id: rep.id, filename })).toContain(files[filename])
+    await expect
+      .poll(() =>
+        page.evaluate(
+          ({ id, filename }) =>
+            Object.entries(localStorage)
+              .filter(([key]) => key.includes(id))
+              .map(([, value]) => JSON.parse(JSON.parse(value).code).files[filename]),
+          { id: rep.id, filename },
+        ),
+      )
+      .toContain(files[filename])
   }
-  await page.locator('.workspace-toolbar').getByRole('button', { name: /Run checks/ }).click()
+  await page
+    .locator('.workspace-toolbar')
+    .getByRole('button', { name: /Run checks/ })
+    .click()
   await expect(page.getByText('All checks passed', { exact: true })).toBeVisible({ timeout: 30_000 })
   await page.reload()
   await expect(editor).toBeVisible()
-  await page.locator('.workspace-toolbar').getByRole('button', { name: /Run checks/ }).click()
+  await page
+    .locator('.workspace-toolbar')
+    .getByRole('button', { name: /Run checks/ })
+    .click()
   await expect(page.getByText('All checks passed', { exact: true })).toBeVisible({ timeout: 30_000 })
 })

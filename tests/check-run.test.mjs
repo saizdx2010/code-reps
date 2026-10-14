@@ -3,13 +3,37 @@ import test from 'node:test'
 import { startCheckRun } from '../src/check-run.ts'
 
 function setup(overrides = {}) {
-  const results = [], errors = []
-  let scheduled, terminated = 0, cleared = 0, sent
-  const worker = { onmessage: null, onerror: null, postMessage: message => { sent = message }, terminate: () => { terminated++ } }
+  const results = [],
+    errors = []
+  let scheduled,
+    terminated = 0,
+    cleared = 0,
+    sent
+  const worker = {
+    onmessage: null,
+    onerror: null,
+    postMessage: message => {
+      sent = message
+    },
+    terminate: () => {
+      terminated++
+    },
+  }
   const options = {
-    createWorker: () => worker, onResults: value => results.push(value), onError: value => errors.push(value),
-    schedule: (callback, ms) => { assert.equal(ms, delays.length ? 5000 : 30000); delays.push(ms); scheduled = callback; return 1 },
-    clearTimer: id => { assert.equal(id, 1); cleared++ }, ...overrides,
+    createWorker: () => worker,
+    onResults: value => results.push(value),
+    onError: value => errors.push(value),
+    schedule: (callback, ms) => {
+      assert.equal(ms, delays.length ? 5000 : 30000)
+      delays.push(ms)
+      scheduled = callback
+      return 1
+    },
+    clearTimer: id => {
+      assert.equal(id, 1)
+      cleared++
+    },
+    ...overrides,
   }
   const delays = []
   const cancel = startCheckRun('saved solution', 'rep-id', options)
@@ -33,7 +57,8 @@ test('a successful check run publishes once and releases its worker and timer', 
 
 test('stopped or superseded runs cannot publish late results or errors', () => {
   const run = setup()
-  run.cancel(); run.cancel()
+  run.cancel()
+  run.cancel()
   run.worker.onmessage({ data: { results: [{ name: 'Old code', passed: true }] } })
   run.worker.onerror()
   run.timeout()
@@ -59,9 +84,22 @@ test('worker execution errors are reported with code-preserving recovery', () =>
 })
 
 test('worker construction and message-send failures do not leave a run active', () => {
-  const construction = setup({ createWorker: () => { throw new Error('unavailable') } })
+  const construction = setup({
+    createWorker: () => {
+      throw new Error('unavailable')
+    },
+  })
   assert.match(construction.errors[0], /could not start/)
-  const worker = { onmessage: null, onerror: null, postMessage: () => { throw new Error('send failed') }, terminate: () => { worker.terminated = true } }
+  const worker = {
+    onmessage: null,
+    onerror: null,
+    postMessage: () => {
+      throw new Error('send failed')
+    },
+    terminate: () => {
+      worker.terminated = true
+    },
+  }
   const send = setup({ createWorker: () => worker })
   assert.match(send.errors[0], /could not start/)
   assert.equal(worker.terminated, true)
@@ -76,10 +114,20 @@ test('authored runner errors appear once without being treated as successful che
 })
 
 test('malformed worker replies report recovery and never publish check evidence', () => {
-  for (const data of [null, undefined, 'done', {}, { error: '' }, { error: 42 },
-    { results: null }, { results: {} }, { results: [null] }, { results: new Array(1) },
+  for (const data of [
+    null,
+    undefined,
+    'done',
+    {},
+    { error: '' },
+    { error: 42 },
+    { results: null },
+    { results: {} },
+    { results: [null] },
+    { results: new Array(1) },
     { results: [{ name: 'Example', passed: 'true' }] },
-    { results: [{ name: 'Example', passed: true, actual: {} }] }]) {
+    { results: [{ name: 'Example', passed: true, actual: {} }] },
+  ]) {
     const run = setup()
     run.worker.onmessage({ data })
     run.worker.onmessage({ data: { results: [{ name: 'Late', passed: true }] } })
@@ -116,12 +164,20 @@ test('structured failed-check feedback is preserved', () => {
 })
 
 test('the SQLite rep gets a separate load allowance, then the usual five seconds after the engine is ready', () => {
-  const delays = [], errors = []
+  const delays = [],
+    errors = []
   let callback
   const worker = { onmessage: null, onerror: null, postMessage() {}, terminate() {} }
   startCheckRun('code', 'sqlite-stock-transfer', {
-    createWorker: () => worker, onResults() {}, onError: value => errors.push(value),
-    schedule: (run, ms) => { delays.push(ms); callback = run; return 1 }, clearTimer() {},
+    createWorker: () => worker,
+    onResults() {},
+    onError: value => errors.push(value),
+    schedule: (run, ms) => {
+      delays.push(ms)
+      callback = run
+      return 1
+    },
+    clearTimer() {},
   })
   worker.onmessage({ data: { ready: true } })
   assert.deepEqual(delays, [30000, 5000])
@@ -130,12 +186,20 @@ test('the SQLite rep gets a separate load allowance, then the usual five seconds
 })
 
 test('every rep gets a load allowance, so a slow worker start is not reported as an endless loop', () => {
-  const delays = [], errors = []
+  const delays = [],
+    errors = []
   let callback
   const worker = { onmessage: null, onerror: null, postMessage() {}, terminate() {} }
   startCheckRun('code', 'rep-id', {
-    createWorker: () => worker, onResults() {}, onError: value => errors.push(value),
-    schedule: (run, ms) => { delays.push(ms); callback = run; return 1 }, clearTimer() {},
+    createWorker: () => worker,
+    onResults() {},
+    onError: value => errors.push(value),
+    schedule: (run, ms) => {
+      delays.push(ms)
+      callback = run
+      return 1
+    },
+    clearTimer() {},
   })
   assert.deepEqual(delays, [30000])
   callback()

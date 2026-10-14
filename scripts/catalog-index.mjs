@@ -11,7 +11,12 @@ import { starterHash } from '../src/starter-hash.ts'
 
 const words = text => text.split(/\s+/).filter(Boolean).length
 /** Words in the brief the learner reads: the structured brief when there is one, otherwise the prompt. */
-const briefWords = rep => rep.brief ? words(rep.brief.summary) + rep.brief.rules.reduce((sum, rule) => sum + words(rule), 0) + (rep.brief.edgeCases ?? []).reduce((sum, item) => sum + words(item), 0) : words(rep.prompt)
+const briefWords = rep =>
+  rep.brief
+    ? words(rep.brief.summary) +
+      rep.brief.rules.reduce((sum, rule) => sum + words(rule), 0) +
+      (rep.brief.edgeCases ?? []).reduce((sum, item) => sum + words(item), 0)
+    : words(rep.prompt)
 
 const line = value => `  ${JSON.stringify(value)},`
 
@@ -19,12 +24,15 @@ const line = value => `  ${JSON.stringify(value)},`
 function sourceLoaders() {
   const text = readFileSync(new URL('../src/rep-sources.ts', import.meta.url), 'utf8')
   const modules = new Map()
-  for (const [, names, path] of text.matchAll(/^import \{ ([^}]+) \} from '(\.\/[^']+)'$/gm)) for (const name of names.split(', ')) modules.set(name, path)
+  for (const [, names, path] of text.matchAll(/^import \{ ([^}]+) \} from '(\.\/[^']+)'$/gm))
+    for (const name of names.split(', ')) modules.set(name, path)
   const entries = [...text.matchAll(/^  \{ name: '([^']+)', reps: (\w+)(?:, lessons: (\w+))? \},$/gm)]
-  if (entries.map(entry => entry[1]).join() !== repSources.map(source => source.name).join()) throw new Error('Could not read every entry of src/rep-sources.ts; keep each on one line as { name, reps, lessons? }')
+  if (entries.map(entry => entry[1]).join() !== repSources.map(source => source.name).join())
+    throw new Error('Could not read every entry of src/rep-sources.ts; keep each on one line as { name, reps, lessons? }')
   return entries.map(([, name, reps, lessons]) => {
     const path = modules.get(reps)
-    if (!path || (lessons && modules.get(lessons) !== path)) throw new Error(`Import the reps and lessons of ${name} from one module in src/rep-sources.ts`)
+    if (!path || (lessons && modules.get(lessons) !== path))
+      throw new Error(`Import the reps and lessons of ${name} from one module in src/rep-sources.ts`)
     return `  '${name}': source(() => import('${path}'), module => ({ reps: module.${reps}${lessons ? `, lessons: module.${lessons}` : ''} })),`
   })
 }
@@ -49,21 +57,39 @@ export function renderCatalogIndex() {
     for (const rep of source.reps) {
       if (seen.has(rep.id)) throw new Error(`Duplicate rep id ${rep.id}`)
       seen.add(rep.id)
-      repEntries.push({ id: rep.id, title: rep.title, category: rep.category, ...(rep.format ? { format: rep.format } : {}), starterHash: starterHash(rep.starter), hintTotal: rep.hints.length, briefWords: briefWords(rep), checkTotal: rep.checks.length, source: source.name })
+      repEntries.push({
+        id: rep.id,
+        title: rep.title,
+        category: rep.category,
+        ...(rep.format ? { format: rep.format } : {}),
+        starterHash: starterHash(rep.starter),
+        hintTotal: rep.hints.length,
+        briefWords: briefWords(rep),
+        checkTotal: rep.checks.length,
+        source: source.name,
+      })
     }
   }
   const foundationRepIds = []
   for (const source of repSources) {
     for (const lesson of source.lessons ?? []) {
-      if (!source.reps.some(rep => rep.id === lesson.repId)) throw new Error(`Lesson for ${lesson.repId} must live in the same source as its rep (${source.name})`)
+      if (!source.reps.some(rep => rep.id === lesson.repId))
+        throw new Error(`Lesson for ${lesson.repId} must live in the same source as its rep (${source.name})`)
       if (source.name === 'foundations') foundationRepIds.push(lesson.repId)
     }
   }
   const skillEntries = skills.map(skill => ({
-    id: skill.id, title: skill.title, summary: skill.summary, prerequisites: skill.prerequisites, related: skill.related, repIds: skill.repIds,
+    id: skill.id,
+    title: skill.title,
+    summary: skill.summary,
+    prerequisites: skill.prerequisites,
+    related: skill.related,
+    repIds: skill.repIds,
     firstMistake: skill.mistakes[0] ?? '',
     questions: skill.questions.map(question => ({
-      id: question.id, optionCount: question.options.length, answer: question.answer,
+      id: question.id,
+      optionCount: question.options.length,
+      answer: question.answer,
       ...(question.completion ? { completion: true, answerText: question.options[question.answer] } : {}),
     })),
   }))
@@ -91,8 +117,11 @@ ${skillEntries.map(line).join('\n')}
 }
 
 function isEntryPoint() {
-  try { return Boolean(process.argv[1]) && realpathSync(resolve(process.argv[1])) === fileURLToPath(import.meta.url) }
-  catch { return false }
+  try {
+    return Boolean(process.argv[1]) && realpathSync(resolve(process.argv[1])) === fileURLToPath(import.meta.url)
+  } catch {
+    return false
+  }
 }
 
 if (isEntryPoint()) {

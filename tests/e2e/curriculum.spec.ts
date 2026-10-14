@@ -80,12 +80,26 @@ for (const width of [1280, 390]) {
     await card.screenshot({ path: `/tmp/code-reps-polish/6/next-practice-${width}.png` })
     // Only this test's fresh browser context receives sample completion history.
     await page.evaluate(() => {
-      const base = { plan: 'Recorded plan', code: 'Recorded code', explanation: 'Recorded explanation', hintCount: 0, confidence: 'confident', difficulty: 'none' }
-      const history = ['declare-variables', 'basic-types', 'create-objects', 'make-arrays', 'write-functions'].map((repId, index) => ({ ...base, id: `stage-${index}`, repId, completedAt: new Date().toISOString() }))
+      const base = {
+        plan: 'Recorded plan',
+        code: 'Recorded code',
+        explanation: 'Recorded explanation',
+        hintCount: 0,
+        confidence: 'confident',
+        difficulty: 'none',
+      }
+      const history = ['declare-variables', 'basic-types', 'create-objects', 'make-arrays', 'write-functions'].map((repId, index) => ({
+        ...base,
+        id: `stage-${index}`,
+        repId,
+        completedAt: new Date().toISOString(),
+      }))
       localStorage.setItem('code-reps:profile:default:history:v1', JSON.stringify(history))
     })
     await page.reload()
-    await expect(firstStage.locator('summary')).toContainText('You can now declare values, use types, create objects and arrays, and write small functions.')
+    await expect(firstStage.locator('summary')).toContainText(
+      'You can now declare values, use types, create objects and arrays, and write small functions.',
+    )
     await expect(firstStage).not.toHaveAttribute('open')
     await firstStage.screenshot({ path: `/tmp/code-reps-polish/6/completed-stage-${width}.png` })
     await firstStage.locator('summary').focus()

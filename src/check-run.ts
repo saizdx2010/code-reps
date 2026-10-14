@@ -13,8 +13,11 @@ type RunOptions = {
 function isTestResult(value: unknown): value is TestResult {
   if (!value || typeof value !== 'object') return false
   const result = value as Record<string, unknown>
-  return typeof result.name === 'string' && typeof result.passed === 'boolean'
-    && ['message', 'input', 'expected', 'actual'].every(key => result[key] === undefined || typeof result[key] === 'string')
+  return (
+    typeof result.name === 'string' &&
+    typeof result.passed === 'boolean' &&
+    ['message', 'input', 'expected', 'actual'].every(key => result[key] === undefined || typeof result[key] === 'string')
+  )
 }
 
 /** One run owns its worker and timer. Disposed runs cannot publish stale feedback. */
@@ -42,7 +45,10 @@ export function startCheckRun(code: string, repId: string, options: RunOptions):
       if (disposed) return
       const data: unknown = event.data
       // The worker reports when its script (and any bundled engine) has loaded; only learner code and checks get the five seconds.
-      if (data && typeof data === 'object' && (data as Record<string, unknown>).ready === true) { limit(); return }
+      if (data && typeof data === 'object' && (data as Record<string, unknown>).ready === true) {
+        limit()
+        return
+      }
       dispose()
       if (data && typeof data === 'object') {
         const reply = data as Record<string, unknown>
@@ -71,9 +77,11 @@ export function startCheckRun(code: string, repId: string, options: RunOptions):
     timer = options.schedule(() => {
       if (disposed) return
       dispose()
-      options.onError(repId === SQLITE_REP_ID
-        ? 'The SQLite engine could not load in time. Your code is still here; try running the checks again.'
-        : 'The checker could not load in time. Your code is still here; try running the checks again.')
+      options.onError(
+        repId === SQLITE_REP_ID
+          ? 'The SQLite engine could not load in time. Your code is still here; try running the checks again.'
+          : 'The checker could not load in time. Your code is still here; try running the checks again.',
+      )
     }, 30000)
     worker.postMessage({ code, repId })
   } catch {

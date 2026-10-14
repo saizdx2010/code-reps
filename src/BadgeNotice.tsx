@@ -14,7 +14,9 @@ function acknowledgedIds(value: string): string[] | null {
   try {
     const parsed: unknown = JSON.parse(value)
     return Array.isArray(parsed) && parsed.every(item => typeof item === 'string') ? parsed : null
-  } catch { return null }
+  } catch {
+    return null
+  }
 }
 
 /**
@@ -35,7 +37,9 @@ export function BadgeNotice({ history, now, onView, portalTarget }: Props) {
   const [shown, setShown] = useState<Badge[]>([])
   // The effects read the latest acknowledgement without restarting every time the app re-renders.
   const latest = useRef({ known, fresh })
-  useEffect(() => { latest.current = { known, fresh } })
+  useEffect(() => {
+    latest.current = { known, fresh }
+  })
 
   useEffect(() => {
     if (!freshKey) return
@@ -63,9 +67,22 @@ export function BadgeNotice({ history, now, onView, portalTarget }: Props) {
   }, [shown])
 
   if (shown.length === 0) return null
-  const notice = <div ref={noticeRef} className={`badge-notice${portalTarget ? ' in-panel' : ' in-bar'}`} role="status">
-    <p><strong>{plural(shown.length, 'Badge')} earned:</strong> {shown.map(badge => badge.name).join(', ')}</p>
-    <button type="button" className="text-button" onClick={() => { setShown([]); onView() }}>View badges</button>
-  </div>
+  const notice = (
+    <div ref={noticeRef} className={`badge-notice${portalTarget ? ' in-panel' : ' in-bar'}`} role="status">
+      <p>
+        <strong>{plural(shown.length, 'Badge')} earned:</strong> {shown.map(badge => badge.name).join(', ')}
+      </p>
+      <button
+        type="button"
+        className="text-button"
+        onClick={() => {
+          setShown([])
+          onView()
+        }}
+      >
+        View badges
+      </button>
+    </div>
+  )
   return portalTarget ? createPortal(notice, portalTarget) : notice
 }

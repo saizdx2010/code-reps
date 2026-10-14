@@ -49,7 +49,10 @@ test('failed snapshots can be retried without poisoning the backup queue', async
     await rm(join(root, 'backups'))
     await store.makeBackup()
     assert.equal((await readdir(join(root, 'backups'))).length, 1)
-  } finally { await store.close(); await rm(root, { recursive: true, force: true }) }
+  } finally {
+    await store.close()
+    await rm(root, { recursive: true, force: true })
+  }
 })
 
 test('server handles missing assets, atomic imports, upgrades, and startup failures', async () => {
@@ -62,7 +65,12 @@ test('server handles missing assets, atomic imports, upgrades, and startup failu
     await assert.rejects(readdir(dataDir), /ENOENT/)
     await writeAppAssets(assetsDir)
     running = await startServer({ port: 0, assetsDir, dataDir })
-    const patch = entries => fetch(`${running.url}/api/entries`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ entries }) })
+    const patch = entries =>
+      fetch(`${running.url}/api/entries`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entries }),
+      })
     assert.equal((await patch({ 'code-reps:draft:one': 'saved' })).status, 200)
     assert.equal((await patch({ 'code-reps:draft:one': 'bad', invalid: 'bad' })).status, 400)
     assert.deepEqual((await (await fetch(`${running.url}/api/state`)).json()).entries, { 'code-reps:draft:one': 'saved' })
@@ -78,5 +86,8 @@ test('server handles missing assets, atomic imports, upgrades, and startup failu
     running = await startServer({ port: 0, assetsDir, dataDir })
     assert.equal((await (await fetch(`${running.url}/api/state`)).json()).entries['code-reps:draft:one'], 'saved')
     assert.equal((await readdir(join(dataDir, 'backups'))).length, 1)
-  } finally { await running?.close(); await rm(root, { recursive: true, force: true }) }
+  } finally {
+    await running?.close()
+    await rm(root, { recursive: true, force: true })
+  }
 })

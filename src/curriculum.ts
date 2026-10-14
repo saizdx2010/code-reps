@@ -6,7 +6,9 @@ import type { JourneyProgress } from './learning.ts'
 import { formatDate } from './ui-copy.ts'
 
 export const pathApplications: Partial<Record<(typeof paths)[number]['id'], { repId: string; reason: string }[]>> = {
-  frontend: [{ repId: 'project-team-directory', reason: 'Combine visible data, request states, and browser interaction in a team directory.' }],
+  frontend: [
+    { repId: 'project-team-directory', reason: 'Combine visible data, request states, and browser interaction in a team directory.' },
+  ],
   backend: [{ repId: 'project-ticket-api', reason: 'Combine validation, filtering, and paging in a ticket API.' }],
 }
 
@@ -44,12 +46,13 @@ export function stageCoveredByFoundations(pathId: string, repIds: readonly strin
 export function repPracticeContext(repId: string) {
   const journey = journeys.find(item => [item.guided, item.independent, item.recall].includes(repId))
   const focus = journey?.title ?? skillsForRep(repId)[0]?.title
-  const afterward = journey?.guided === repId
-    ? `Next: ${repTitle(journey.independent)} applies the same skill independently.`
-    : journey?.independent === repId
-      ? `After solving it without hints, return for ${repTitle(journey.recall)} in ${journey.delayDays} days.`
-      : journey?.recall === repId
-        ? 'Afterward, review your skill evidence and choose the next unfinished rep on your trail.'
-        : 'Afterward, continue to the next unfinished rep in your trail.'
+  const afterward =
+    journey?.guided === repId
+      ? `Next: ${repTitle(journey.independent)} applies the same skill independently.`
+      : journey?.independent === repId
+        ? `After solving it without hints, return for ${repTitle(journey.recall)} in ${journey.delayDays} days.`
+        : journey?.recall === repId
+          ? 'Afterward, review your skill evidence and choose the next unfinished rep on your trail.'
+          : 'Afterward, continue to the next unfinished rep in your trail.'
   return { reason: focus ? `Skill: ${focus}.` : 'A good next step on your trail.', afterward }
 }

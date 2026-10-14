@@ -2,44 +2,58 @@ import type { Rep } from './rep-types.ts'
 
 export const coreLessons = [
   {
-    repId: 'verify-generated-code', title: 'Check a suggested solution',
-    explanation: 'Code suggested by an AI tool is a draft. Read the requirement, trace a normal input and an edge case, then run checks. A passing example alone does not prove the code is correct.',
+    repId: 'verify-generated-code',
+    title: 'Check a suggested solution',
+    explanation:
+      'Code suggested by an AI tool is a draft. Read the requirement, trace a normal input and an edge case, then run checks. A passing example alone does not prove the code is correct.',
     example: 'function first(items: string[]): string | null {\n  return items[0] ?? null\n}\n// Check both ["Ada"] and [].',
     tip: 'When a suggestion fails, describe the exact input, expected result, and actual result before changing it.',
   },
   {
-    repId: 'frontend-visible-items', title: 'Derive UI data',
-    explanation: 'A UI often shows a filtered view of data. Derive the visible items from the current inputs so the display stays predictable when data or search text changes.',
+    repId: 'frontend-visible-items',
+    title: 'Derive UI data',
+    explanation:
+      'A UI often shows a filtered view of data. Derive the visible items from the current inputs so the display stays predictable when data or search text changes.',
     example: 'const visible = items.filter(item => item.active)',
     tip: 'Check empty input, case differences, and whitespace in search text.',
   },
   {
-    repId: 'frontend-view-state', title: 'Model loading and empty states',
-    explanation: 'Loading, error, empty, and ready describe different UI states. Decide their order explicitly so an unfinished request does not briefly show “No results”.',
+    repId: 'frontend-view-state',
+    title: 'Model loading and empty states',
+    explanation:
+      'Loading, error, empty, and ready describe different UI states. Decide their order explicitly so an unfinished request does not briefly show “No results”.',
     example: 'if (loading) return "loading"\nif (error) return "error"\nif (count === 0) return "empty"\nreturn "ready"',
     tip: 'The order of conditions is part of the behavior.',
   },
   {
-    repId: 'backend-validate-user', title: 'Validate data at an API boundary',
-    explanation: 'An API receives values it cannot assume are valid. Check the shape and rules before using input, and return a clear result for invalid data.',
-    example: 'function hasName(input: unknown): boolean {\n  if (input === null || typeof input !== "object" || Array.isArray(input)) return false\n  const value = input as Record<string, unknown>\n  return typeof value.name === "string" && value.name.trim().length > 0\n}',
+    repId: 'backend-validate-user',
+    title: 'Validate data at an API boundary',
+    explanation:
+      'An API receives values it cannot assume are valid. Check the shape and rules before using input, and return a clear result for invalid data.',
+    example:
+      'function hasName(input: unknown): boolean {\n  if (input === null || typeof input !== "object" || Array.isArray(input)) return false\n  const value = input as Record<string, unknown>\n  return typeof value.name === "string" && value.name.trim().length > 0\n}',
     tip: 'A type annotation describes your code. It does not validate data received at runtime.',
   },
   {
-    repId: 'backend-page-results', title: 'Return a bounded page',
+    repId: 'backend-page-results',
+    title: 'Return a bounded page',
     explanation: 'A backend list endpoint should return a predictable slice. Clamp page and page size before calculating the start index.',
     example: 'const start = (page - 1) * size\nconst pageItems = items.slice(start, start + size)',
     tip: 'Check the first page, a later page, and a page beyond the available items.',
   },
   {
-    repId: 'interview-frontend', title: 'Frontend interview: explain a data view',
-    explanation: 'Interview phase 1: clarify which records qualify and how ties are ordered. Phase 2: plan the transformation. Phase 3: code and check. Phase 4: explain the choices and edge cases. Phase 5: review what you would improve.',
+    repId: 'interview-frontend',
+    title: 'Frontend interview: explain a data view',
+    explanation:
+      'Interview phase 1: clarify which records qualify and how ties are ordered. Phase 2: plan the transformation. Phase 3: code and check. Phase 4: explain the choices and edge cases. Phase 5: review what you would improve.',
     example: 'type Task = { title: string; done: boolean; priority: number }\n// Return titles of unfinished tasks in priority order.',
     tip: 'Work from the prompt before asking an AI tool for an answer. If you use one afterward, verify its behavior yourself.',
   },
   {
-    repId: 'interview-backend', title: 'Backend interview: explain an API rule',
-    explanation: 'Interview phase 1: clarify the input contract. Phase 2: plan validation and normalization. Phase 3: implement and check. Phase 4: explain invalid input and boundary cases. Phase 5: review the result.',
+    repId: 'interview-backend',
+    title: 'Backend interview: explain an API rule',
+    explanation:
+      'Interview phase 1: clarify the input contract. Phase 2: plan validation and normalization. Phase 3: implement and check. Phase 4: explain invalid input and boundary cases. Phase 5: review the result.',
     example: 'type Request = { email?: unknown; role?: unknown }\n// Accept only a valid email and an allowed role.',
     tip: 'Say what the API accepts, rejects, and returns. Do not claim the checks prove more than they cover.',
   },
@@ -47,15 +61,27 @@ export const coreLessons = [
 
 export const aiEraReps: Rep[] = [
   {
-    id: 'verify-generated-code', title: 'Verify a suggested function', category: 'AI-era coding', format: 'debug',
-    prompt: 'A suggested function should return the first non-blank label, trimmed, or null if none exists. The draft returns the first label even when it is blank. Repair it after tracing the examples.',
+    id: 'verify-generated-code',
+    title: 'Verify a suggested function',
+    category: 'AI-era coding',
+    format: 'debug',
+    prompt:
+      'A suggested function should return the first non-blank label, trimmed, or null if none exists. The draft returns the first label even when it is blank. Repair it after tracing the examples.',
     example: { input: "firstUsefulLabel(['  ', ' Ada '])", output: "'Ada'" },
     note: 'A label containing only whitespace is blank. Keep the original order.',
-    vocabulary: [{ term: 'Trace', meaning: 'follow an input through the code one step at a time' }, { term: 'Edge case', meaning: 'an unusual input that can expose a mistake' }],
+    vocabulary: [
+      { term: 'Trace', meaning: 'follow an input through the code one step at a time' },
+      { term: 'Edge case', meaning: 'an unusual input that can expose a mistake' },
+    ],
     planPrompt: 'What does the draft return for the example? Which cases must your correction check?',
-    starter: 'function firstUsefulLabel(labels: string[]): string | null {\n  // Suggested draft: check its behavior before trusting it.\n  return labels[0] ?? null\n}\n',
+    starter:
+      'function firstUsefulLabel(labels: string[]): string | null {\n  // Suggested draft: check its behavior before trusting it.\n  return labels[0] ?? null\n}\n',
     functionName: 'firstUsefulLabel',
-    hints: ['Visit labels in their original order.', 'Trim each label before deciding whether it is blank.', 'Return the first nonempty trimmed label; return null after the loop.'],
+    hints: [
+      'Visit labels in their original order.',
+      'Trim each label before deciding whether it is blank.',
+      'Return the first nonempty trimmed label; return null after the loop.',
+    ],
     checks: [
       { name: 'Skips a blank first label', input: [['  ', ' Ada ']], expected: 'Ada' },
       { name: 'Trims a useful first label', input: [[' Bo ', 'Ada']], expected: 'Bo' },
@@ -65,35 +91,97 @@ export const aiEraReps: Rep[] = [
     ],
   },
   {
-    id: 'frontend-visible-items', title: 'Filter visible items', category: 'Frontend core', format: 'transform',
-    prompt: 'Return the labels of active items whose label contains the search text. Match without case sensitivity and ignore whitespace around the search text. Keep the original order.',
+    id: 'frontend-visible-items',
+    title: 'Filter visible items',
+    category: 'Frontend core',
+    format: 'transform',
+    prompt:
+      'Return the labels of active items whose label contains the search text. Match without case sensitivity and ignore whitespace around the search text. Keep the original order.',
     example: { input: "visibleLabels([{label:'Ada',active:true},{label:'Bo',active:false}], ' a ')", output: "['Ada']" },
     note: 'An empty search shows all active labels.',
-    vocabulary: [{ term: 'Derived data', meaning: 'a value calculated from current inputs' }, { term: 'Case insensitive', meaning: 'uppercase and lowercase letters match' }],
+    vocabulary: [
+      { term: 'Derived data', meaning: 'a value calculated from current inputs' },
+      { term: 'Case insensitive', meaning: 'uppercase and lowercase letters match' },
+    ],
     planPrompt: 'Which items qualify? How will you normalize the query while preserving displayed labels?',
-    starter: 'type Item = { label: string; active: boolean }\n\nfunction visibleLabels(items: Item[], search: string): string[] {\n  // Return the matching labels in input order.\n  return []\n}\n',
+    starter:
+      'type Item = { label: string; active: boolean }\n\nfunction visibleLabels(items: Item[], search: string): string[] {\n  // Return the matching labels in input order.\n  return []\n}\n',
     functionName: 'visibleLabels',
-    hints: ['Trim and lowercase the search text once.', 'Ignore inactive items and compare lowercase labels with the normalized query.', 'Return original labels, not lowercase copies.'],
+    hints: [
+      'Trim and lowercase the search text once.',
+      'Ignore inactive items and compare lowercase labels with the normalized query.',
+      'Return original labels, not lowercase copies.',
+    ],
     checks: [
-      { name: 'Filters the example', input: [[{ label: 'Ada', active: true }, { label: 'Bo', active: false }], ' a '], expected: ['Ada'] },
-      { name: 'Shows active items for empty search', input: [[{ label: 'Ada', active: true }, { label: 'Bo', active: false }], ''], expected: ['Ada'] },
-      { name: 'Matches without case sensitivity', input: [[{ label: 'React', active: true }, { label: 'API', active: true }], 'RE'], expected: ['React'] },
-      { name: 'Keeps input order and original labels', input: [[{ label: 'alpha', active: true }, { label: 'Alpine', active: true }], 'al'], expected: ['alpha', 'Alpine'] },
+      {
+        name: 'Filters the example',
+        input: [
+          [
+            { label: 'Ada', active: true },
+            { label: 'Bo', active: false },
+          ],
+          ' a ',
+        ],
+        expected: ['Ada'],
+      },
+      {
+        name: 'Shows active items for empty search',
+        input: [
+          [
+            { label: 'Ada', active: true },
+            { label: 'Bo', active: false },
+          ],
+          '',
+        ],
+        expected: ['Ada'],
+      },
+      {
+        name: 'Matches without case sensitivity',
+        input: [
+          [
+            { label: 'React', active: true },
+            { label: 'API', active: true },
+          ],
+          'RE',
+        ],
+        expected: ['React'],
+      },
+      {
+        name: 'Keeps input order and original labels',
+        input: [
+          [
+            { label: 'alpha', active: true },
+            { label: 'Alpine', active: true },
+          ],
+          'al',
+        ],
+        expected: ['alpha', 'Alpine'],
+      },
       { name: 'Handles an empty list', input: [[], 'a'], expected: [] },
       { name: 'Treats whitespace search as empty', input: [[{ label: 'Ada', active: true }], ' \t '], expected: ['Ada'] },
       { name: 'Handles no matches', input: [[{ label: 'Ada', active: true }], 'z'], expected: [] },
     ],
   },
   {
-    id: 'frontend-view-state', title: 'Choose a view state', category: 'Frontend core',
+    id: 'frontend-view-state',
+    title: 'Choose a view state',
+    category: 'Frontend core',
     prompt: 'Choose the state a list UI should show. Loading takes priority, then error, then empty when count is zero, otherwise ready.',
-    example: { input: "viewState(true, null, 0)", output: "'loading'" },
+    example: { input: 'viewState(true, null, 0)', output: "'loading'" },
     note: 'Error is a string or null; an empty string means no error. Count is a nonnegative integer.',
-    vocabulary: [{ term: 'Loading state', meaning: 'what a UI shows while waiting for data' }, { term: 'Empty state', meaning: 'what a UI shows after loading when there are no items' }],
+    vocabulary: [
+      { term: 'Loading state', meaning: 'what a UI shows while waiting for data' },
+      { term: 'Empty state', meaning: 'what a UI shows after loading when there are no items' },
+    ],
     planPrompt: 'Why must loading be checked before an empty count? What should happen when error and count are both present?',
-    starter: 'function viewState(loading: boolean, error: string | null, count: number): "loading" | "error" | "empty" | "ready" {\n  // Check states in priority order.\n  return "ready"\n}\n',
+    starter:
+      'function viewState(loading: boolean, error: string | null, count: number): "loading" | "error" | "empty" | "ready" {\n  // Check states in priority order.\n  return "ready"\n}\n',
     functionName: 'viewState',
-    hints: ['Return loading first if loading is true.', 'Then check whether error is a nonempty string.', 'After that, zero means empty; any positive count means ready.'],
+    hints: [
+      'Return loading first if loading is true.',
+      'Then check whether error is a nonempty string.',
+      'After that, zero means empty; any positive count means ready.',
+    ],
     checks: [
       { name: 'Prioritizes loading', input: [true, 'Failed', 0], expected: 'loading' },
       { name: 'Shows error after loading', input: [false, 'Failed', 3], expected: 'error' },
@@ -103,15 +191,26 @@ export const aiEraReps: Rep[] = [
     ],
   },
   {
-    id: 'backend-validate-user', title: 'Validate a user request', category: 'Backend core',
-    prompt: 'Accept an unknown request only when it is an object with a nonblank string name and an integer age from 0 through 120. Return a trimmed name and the age, or null for invalid input.',
+    id: 'backend-validate-user',
+    title: 'Validate a user request',
+    category: 'Backend core',
+    prompt:
+      'Accept an unknown request only when it is an object with a nonblank string name and an integer age from 0 through 120. Return a trimmed name and the age, or null for invalid input.',
     example: { input: "validateUser({name:' Ada ',age:28})", output: "{name:'Ada',age:28}" },
     note: 'Arrays and null are not valid request objects. Do not coerce strings into numbers.',
-    vocabulary: [{ term: 'Validation', meaning: 'checking input against rules before using it' }, { term: 'Runtime', meaning: 'the time when code is actually executing' }],
+    vocabulary: [
+      { term: 'Validation', meaning: 'checking input against rules before using it' },
+      { term: 'Runtime', meaning: 'the time when code is actually executing' },
+    ],
     planPrompt: 'Which checks prevent unsafe property access? Which age values should be rejected?',
-    starter: 'function validateUser(input: unknown): { name: string; age: number } | null {\n  // Check the input at runtime before reading its fields.\n  return null\n}\n',
+    starter:
+      'function validateUser(input: unknown): { name: string; age: number } | null {\n  // Check the input at runtime before reading its fields.\n  return null\n}\n',
     functionName: 'validateUser',
-    hints: ['Reject null, arrays, and non-objects before reading properties.', 'Check name with typeof and trim; check age with Number.isInteger.', 'Return a new object with the trimmed name only after every rule passes.'],
+    hints: [
+      'Reject null, arrays, and non-objects before reading properties.',
+      'Check name with typeof and trim; check age with Number.isInteger.',
+      'Return a new object with the trimmed name only after every rule passes.',
+    ],
     checks: [
       { name: 'Normalizes a valid request', input: [{ name: ' Ada ', age: 28 }], expected: { name: 'Ada', age: 28 } },
       { name: 'Allows age zero', input: [{ name: 'Bo', age: 0 }], expected: { name: 'Bo', age: 0 } },
@@ -129,15 +228,27 @@ export const aiEraReps: Rep[] = [
     ],
   },
   {
-    id: 'backend-page-results', title: 'Page a list of results', category: 'Backend core',
-    prompt: 'Return a page of IDs. Clamp page to at least 1 and size to the range 1 through 3, then return the matching slice. Both inputs are integers.',
+    id: 'backend-page-results',
+    title: 'Page a list of results',
+    category: 'Backend core',
+    prompt:
+      'Return a page of IDs. Clamp page to at least 1 and size to the range 1 through 3, then return the matching slice. Both inputs are integers.',
     example: { input: "pageIds(['a','b','c','d'], 2, 2)", output: "['c','d']" },
     note: 'A page after the end returns an empty array. Do not change the original IDs.',
-    vocabulary: [{ term: 'Pagination', meaning: 'splitting a list into smaller numbered pages' }, { term: 'Clamp', meaning: 'keep a value inside a fixed range' }],
+    vocabulary: [
+      { term: 'Pagination', meaning: 'splitting a list into smaller numbered pages' },
+      { term: 'Clamp', meaning: 'keep a value inside a fixed range' },
+    ],
     planPrompt: 'How do you normalize page and size? What start index does page 2 use?',
-    starter: 'function pageIds(ids: string[], page: number, size: number): string[] {\n  // Clamp the inputs, then return a slice.\n  return []\n}\n',
-    functionName: 'pageIds', preserveInput: true,
-    hints: ['Use Math.max(1, page) for the page.', 'Keep size between 1 and 3 with Math.min and Math.max.', 'Start at (page - 1) * size and slice up to start + size.'],
+    starter:
+      'function pageIds(ids: string[], page: number, size: number): string[] {\n  // Clamp the inputs, then return a slice.\n  return []\n}\n',
+    functionName: 'pageIds',
+    preserveInput: true,
+    hints: [
+      'Use Math.max(1, page) for the page.',
+      'Keep size between 1 and 3 with Math.min and Math.max.',
+      'Start at (page - 1) * size and slice up to start + size.',
+    ],
     checks: [
       { name: 'Returns a later page', input: [['a', 'b', 'c', 'd'], 2, 2], expected: ['c', 'd'] },
       { name: 'Clamps page below one', input: [['a', 'b'], 0, 1], expected: ['a'] },
@@ -148,34 +259,90 @@ export const aiEraReps: Rep[] = [
     ],
   },
   {
-    id: 'interview-frontend', title: 'Frontend interview: prioritize tasks', category: 'Frontend interview', format: 'transform',
-    prompt: 'Return titles of unfinished tasks, sorted by priority from highest number to lowest. Keep original order when priorities tie. Do not mutate the input.',
+    id: 'interview-frontend',
+    title: 'Frontend interview: prioritize tasks',
+    category: 'Frontend interview',
+    format: 'transform',
+    prompt:
+      'Return titles of unfinished tasks, sorted by priority from highest number to lowest. Keep original order when priorities tie. Do not mutate the input.',
     example: { input: "taskTitles([{title:'A',done:false,priority:1},{title:'B',done:false,priority:3}])", output: "['B','A']" },
     note: 'Before coding, write one question you would ask an interviewer about ties, then answer it from the prompt. Explain the sorting cost and how you avoid changing the input.',
-    vocabulary: [{ term: 'Stable order', meaning: 'keeping the original order when sort keys tie' }, { term: 'Mutation', meaning: 'changing an existing value' }],
-    planPrompt: 'What would you clarify before coding? Which tasks qualify? How will you sort without mutating the input and keep tied tasks in their original order?',
-    starter: 'type Task = { title: string; done: boolean; priority: number }\n\nfunction taskTitles(tasks: Task[]): string[] {\n  // Filter, order, and return titles.\n  return []\n}\n',
-    functionName: 'taskTitles', preserveInput: true,
-    hints: ['Filter out done tasks first.', 'Sort a new array by descending priority; keep original positions on ties.', 'Map the sorted tasks to titles.'],
+    vocabulary: [
+      { term: 'Stable order', meaning: 'keeping the original order when sort keys tie' },
+      { term: 'Mutation', meaning: 'changing an existing value' },
+    ],
+    planPrompt:
+      'What would you clarify before coding? Which tasks qualify? How will you sort without mutating the input and keep tied tasks in their original order?',
+    starter:
+      'type Task = { title: string; done: boolean; priority: number }\n\nfunction taskTitles(tasks: Task[]): string[] {\n  // Filter, order, and return titles.\n  return []\n}\n',
+    functionName: 'taskTitles',
+    preserveInput: true,
+    hints: [
+      'Filter out done tasks first.',
+      'Sort a new array by descending priority; keep original positions on ties.',
+      'Map the sorted tasks to titles.',
+    ],
     checks: [
-      { name: 'Orders by priority', input: [[{ title: 'A', done: false, priority: 1 }, { title: 'B', done: false, priority: 3 }]], expected: ['B', 'A'] },
-      { name: 'Skips completed tasks', input: [[{ title: 'Done', done: true, priority: 9 }, { title: 'Open', done: false, priority: 1 }]], expected: ['Open'] },
-      { name: 'Preserves ties', input: [[{ title: 'A', done: false, priority: 2 }, { title: 'B', done: false, priority: 2 }]], expected: ['A', 'B'] },
+      {
+        name: 'Orders by priority',
+        input: [
+          [
+            { title: 'A', done: false, priority: 1 },
+            { title: 'B', done: false, priority: 3 },
+          ],
+        ],
+        expected: ['B', 'A'],
+      },
+      {
+        name: 'Skips completed tasks',
+        input: [
+          [
+            { title: 'Done', done: true, priority: 9 },
+            { title: 'Open', done: false, priority: 1 },
+          ],
+        ],
+        expected: ['Open'],
+      },
+      {
+        name: 'Preserves ties',
+        input: [
+          [
+            { title: 'A', done: false, priority: 2 },
+            { title: 'B', done: false, priority: 2 },
+          ],
+        ],
+        expected: ['A', 'B'],
+      },
       { name: 'Handles an empty list', input: [[]], expected: [] },
     ],
   },
   {
-    id: 'interview-backend', title: 'Backend interview: validate access', category: 'Backend interview',
-    prompt: 'Accept an unknown request only when it is an object with an email string and a role equal to reader or editor. Trim the whole email first, then require exactly one @ and nonblank text on each side. Return the trimmed lowercase email and role, or null.',
+    id: 'interview-backend',
+    title: 'Backend interview: validate access',
+    category: 'Backend interview',
+    prompt:
+      'Accept an unknown request only when it is an object with an email string and a role equal to reader or editor. Trim the whole email first, then require exactly one @ and nonblank text on each side. Return the trimmed lowercase email and role, or null.',
     example: { input: "validateAccess({email:' Ada@Example.com ',role:'reader'})", output: "{email:'ada@example.com',role:'reader'}" },
     note: 'This is a deliberately small contract, not complete email validation. Spaces inside the email are allowed (for example "A B@C" is accepted). Do not coerce other types.',
-    vocabulary: [{ term: 'Contract', meaning: 'the agreed input and output rules' }, { term: 'Normalize', meaning: 'convert valid input to one consistent form' }],
+    vocabulary: [
+      { term: 'Contract', meaning: 'the agreed input and output rules' },
+      { term: 'Normalize', meaning: 'convert valid input to one consistent form' },
+    ],
     planPrompt: 'State the accepted shape and boundary cases before coding. What does this contract leave unchecked?',
-    starter: 'function validateAccess(input: unknown): { email: string; role: "reader" | "editor" } | null {\n  // Validate the contract, then normalize.\n  return null\n}\n',
+    starter:
+      'function validateAccess(input: unknown): { email: string; role: "reader" | "editor" } | null {\n  // Validate the contract, then normalize.\n  return null\n}\n',
     functionName: 'validateAccess',
-    hints: ['Reject null, arrays, and non-objects before reading fields.', 'Split the trimmed email on @; require exactly two parts that are not blank.', 'Accept only reader or editor, then return a lowercase email and the role.'],
+    hints: [
+      'Reject null, arrays, and non-objects before reading fields.',
+      'Split the trimmed email on @; require exactly two parts that are not blank.',
+      'Accept only reader or editor, then return a lowercase email and the role.',
+    ],
     checks: [
-      { name: 'Normalizes a valid request', input: [{ email: ' Ada@Example.com ', role: 'reader' }], expected: { email: 'ada@example.com', role: 'reader' } },
+      {
+        name: 'Normalizes a valid request',
+        input: [{ email: ' Ada@Example.com ', role: 'reader' }],
+        expected: { email: 'ada@example.com', role: 'reader' },
+      },
       { name: 'Accepts editor', input: [{ email: 'bo@site.test', role: 'editor' }], expected: { email: 'bo@site.test', role: 'editor' } },
       { name: 'Rejects an unknown role', input: [{ email: 'a@b', role: 'admin' }], expected: null },
       { name: 'Rejects a missing side', input: [{ email: '@site.test', role: 'reader' }], expected: null },
@@ -187,7 +354,11 @@ export const aiEraReps: Rep[] = [
       { name: 'Rejects a non-string email', input: [{ email: 7, role: 'reader' }], expected: null },
       { name: 'Rejects a missing right side', input: [{ email: 'a@', role: 'reader' }], expected: null },
       { name: 'Rejects a whitespace-only side', input: [{ email: ' @b', role: 'reader' }], expected: null },
-      { name: 'Allows internal spaces under this small contract', input: [{ email: 'A B@C', role: 'reader' }], expected: { email: 'a b@c', role: 'reader' } },
+      {
+        name: 'Allows internal spaces under this small contract',
+        input: [{ email: 'A B@C', role: 'reader' }],
+        expected: { email: 'a b@c', role: 'reader' },
+      },
     ],
   },
 ]

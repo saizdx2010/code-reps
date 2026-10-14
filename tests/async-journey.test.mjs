@@ -9,7 +9,8 @@ import { completion, utcDay } from './helpers/records.mjs'
 
 const journey = journeys.find(item => item.id === 'request-ownership')
 const at = day => Date.parse(utcDay(2026, 10, day))
-const record = (repId, day, hintCount = 0) => completion(repId, utcDay(2026, 10, day), hintCount, {confidence: 'confident', difficulty: 'none'})
+const record = (repId, day, hintCount = 0) =>
+  completion(repId, utcDay(2026, 10, day), hintCount, { confidence: 'confident', difficulty: 'none' })
 
 test('async journey rejects hinted independence and early or hinted recall', () => {
   const guided = record(journey.guided, 1)
@@ -32,7 +33,13 @@ test('async journey rejects hinted independence and early or hinted recall', () 
 test('request lesson links every journey stage and refresh application without changing checked questions', () => {
   const skill = skills.find(item => item.id === journey.id)
   for (const id of [journey.guided, journey.independent, journey.recall, 'refresh-report-state']) assert.ok(skill.repIds.includes(id))
-  assert.deepEqual(skill.questions.map(q => [q.id, q.answer]), [['prediction-1', 1], ['prediction-2', 1]])
+  assert.deepEqual(
+    skill.questions.map(q => [q.id, q.answer]),
+    [
+      ['prediction-1', 1],
+      ['prediction-2', 1],
+    ],
+  )
 })
 
 const misconceptions = {

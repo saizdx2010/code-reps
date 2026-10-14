@@ -10,6 +10,7 @@ test('compares authored arrays and objects by value', () => {
 })
 
 test('handles unusual user output without looping', () => {
-  const cyclic = {}; cyclic.self = cyclic
+  const cyclic = {}
+  cyclic.self = cyclic
   assert.equal(sameValue(cyclic, { self: {} }), false)
 })

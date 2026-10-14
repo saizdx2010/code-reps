@@ -21,7 +21,7 @@ for (const [id, code] of Object.entries(solutions)) {
     await page.goto(`/#/practice/${id}`)
     await replaceCode(page, code, id)
     await page.keyboard.press('ControlOrMeta+Enter')
-    await expectChecksFinished(page.getByText('All checks passed', {exact: true}))
+    await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   })
 }
 test('pending async work times out, preserves draft, and can be replaced', async ({ page }) => {
@@ -30,15 +30,25 @@ test('pending async work times out, preserves draft, and can be replaced', async
   await page.goto(`/#/practice/${id}`)
   await replaceCode(page, stuck, id)
   await page.keyboard.press('ControlOrMeta+Enter')
-  await expect(page.getByText(/The checks took too long and were stopped/)).toBeVisible({timeout: 15_000})
-  await expect.poll(() => page.evaluate(id => Object.entries(localStorage).filter(([key]) => key.includes(id)).map(([, value]) => JSON.parse(value).code), id)).toContain(stuck)
+  await expect(page.getByText(/The checks took too long and were stopped/)).toBeVisible({ timeout: 15_000 })
+  await expect
+    .poll(() =>
+      page.evaluate(
+        id =>
+          Object.entries(localStorage)
+            .filter(([key]) => key.includes(id))
+            .map(([, value]) => JSON.parse(value).code),
+        id,
+      ),
+    )
+    .toContain(stuck)
   await replaceCode(page, solutions[id], id)
   await page.keyboard.press('ControlOrMeta+Enter')
-  await expectChecksFinished(page.getByText('All checks passed', {exact: true}))
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await replaceCode(page, stuck, id)
   await page.keyboard.press('ControlOrMeta+Enter')
   await replaceCode(page, solutions[id], id)
-  await expect(page.getByText('All checks passed', {exact: true})).toHaveCount(0)
+  await expect(page.getByText('All checks passed', { exact: true })).toHaveCount(0)
   await page.keyboard.press('ControlOrMeta+Enter')
-  await expectChecksFinished(page.getByText('All checks passed', {exact: true}))
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
 })

@@ -18,7 +18,10 @@ test('one complete React rep compiles TSX and passes all six checks', () => {
   const { report } = run(reactSolution)
   assert.equal(report.error, undefined)
   assert.equal(report.results.length, 6)
-  assert.ok(report.results.every(result => result.passed), JSON.stringify(report))
+  assert.ok(
+    report.results.every(result => result.passed),
+    JSON.stringify(report),
+  )
 })
 test('React preview renders the actual component', () => {
   assert.equal(run(reactSolution, 'preview').text, 'north: 0Reset')
@@ -27,11 +30,22 @@ test('React starter does not satisfy the contract', () => {
   assert.ok(run(rep.starter).report.results.some(result => !result.passed))
 })
 for (const [name, mutate] of [
-  ['missing cleanup', code => code.replace('() => source.subscribe(channel, value => setTotal(previous => previous + value))', '() => { source.subscribe(channel, value => setTotal(previous => previous + value)) }')],
+  [
+    'missing cleanup',
+    code =>
+      code.replace(
+        '() => source.subscribe(channel, value => setTotal(previous => previous + value))',
+        '() => { source.subscribe(channel, value => setTotal(previous => previous + value)) }',
+      ),
+  ],
   ['missing dependency', code => code.replace('[channel, source]', '[]')],
   ['stale state', code => code.replace('previous => previous + value', 'total + value')],
   ['broken reset', code => code.replace('setTotal(0)', 'setTotal(1)')],
-]) test(`checks reject ${name}`, () => {
-  const { report } = run(mutate(reactSolution))
-  assert.ok(report.results.some(result => !result.passed), JSON.stringify(report))
-})
+])
+  test(`checks reject ${name}`, () => {
+    const { report } = run(mutate(reactSolution))
+    assert.ok(
+      report.results.some(result => !result.passed),
+      JSON.stringify(report),
+    )
+  })

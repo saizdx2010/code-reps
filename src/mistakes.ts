@@ -11,7 +11,7 @@ export const mistakeTags = [
   { id: 'other', label: 'Something else' },
 ] as const
 
-type MistakeTagId = typeof mistakeTags[number]['id']
+type MistakeTagId = (typeof mistakeTags)[number]['id']
 const known = new Set<string>(mistakeTags.map(tag => tag.id))
 const isMistakeTag = (value: unknown): value is MistakeTagId => typeof value === 'string' && known.has(value)
 
@@ -26,7 +26,15 @@ export function normalizeMistakes(value: unknown): MistakeTagId[] | undefined {
 type MistakeSource = { id: string; repId: string; completedAt: string; mistakes?: unknown }
 type MistakeOccurrence = { attemptId: string; repId: string; completedAt: string }
 export type MistakeTrend = 'new' | 'more' | 'fewer' | 'same' | 'none'
-type MistakeGroup = { id: MistakeTagId; label: string; total: number; recent: number; earlier: number; trend: MistakeTrend; occurrences: MistakeOccurrence[] }
+type MistakeGroup = {
+  id: MistakeTagId
+  label: string
+  total: number
+  recent: number
+  earlier: number
+  trend: MistakeTrend
+  occurrences: MistakeOccurrence[]
+}
 
 export const trendWindowDays = 14
 
@@ -42,16 +50,28 @@ export function summarizeMistakes(history: MistakeSource[], now: number, limit =
     const time = Date.parse(record.completedAt)
     const tags = normalizeMistakes(record.mistakes)
     if (!tags || !Number.isFinite(time)) continue
-    for (const id of tags) groups.set(id, [...(groups.get(id) ?? []), { attemptId: record.id, repId: record.repId, completedAt: record.completedAt }])
+    for (const id of tags)
+      groups.set(id, [...(groups.get(id) ?? []), { attemptId: record.id, repId: record.repId, completedAt: record.completedAt }])
   }
-  return mistakeTags.flatMap(({ id, label }) => {
-    const all = [...(groups.get(id) ?? [])].sort((a, b) => byCompletedAt(b, a))
-    if (!all.length) return []
-    const at = (item: MistakeOccurrence) => Date.parse(item.completedAt)
-    const recent = all.filter(item => at(item) > recentStart && at(item) <= now).length
-    const earlier = all.filter(item => at(item) > earlierStart && at(item) <= recentStart).length
-    const older = all.filter(item => at(item) <= earlierStart).length
-    const trend: MistakeTrend = recent === 0 && earlier === 0 ? 'none' : earlier === 0 && older === 0 ? 'new' : recent > earlier ? 'more' : recent < earlier ? 'fewer' : 'same'
-    return [{ id, label, total: all.length, recent, earlier, trend, occurrences: all.slice(0, limit) }]
-  }).sort((a, b) => b.total - a.total || Date.parse(b.occurrences[0].completedAt) - Date.parse(a.occurrences[0].completedAt))
+  return mistakeTags
+    .flatMap(({ id, label }) => {
+      const all = [...(groups.get(id) ?? [])].sort((a, b) => byCompletedAt(b, a))
+      if (!all.length) return []
+      const at = (item: MistakeOccurrence) => Date.parse(item.completedAt)
+      const recent = all.filter(item => at(item) > recentStart && at(item) <= now).length
+      const earlier = all.filter(item => at(item) > earlierStart && at(item) <= recentStart).length
+      const older = all.filter(item => at(item) <= earlierStart).length
+      const trend: MistakeTrend =
+        recent === 0 && earlier === 0
+          ? 'none'
+          : earlier === 0 && older === 0
+            ? 'new'
+            : recent > earlier
+              ? 'more'
+              : recent < earlier
+                ? 'fewer'
+                : 'same'
+      return [{ id, label, total: all.length, recent, earlier, trend, occurrences: all.slice(0, limit) }]
+    })
+    .sort((a, b) => b.total - a.total || Date.parse(b.occurrences[0].completedAt) - Date.parse(a.occurrences[0].completedAt))
 }

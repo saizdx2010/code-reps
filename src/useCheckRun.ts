@@ -53,23 +53,46 @@ export function useCheckRun() {
     if (rep.format === 'frontend') {
       let cancelled = false
       let cancelFrame = () => {}
-      cancelRunRef.current = () => { cancelled = true; cancelFrame() }
-      void import('./frontend-run').then(({ startFrontendRun }) => {
-        if (cancelled) return
-        cancelFrame = startFrontendRun(code, rep,
-          nextResults => { setRunning(false); setResults(nextResults) },
-          message => { setRunning(false); setRunError(message) })
-      }).catch(() => {
-        if (!cancelled) { setRunning(false); setRunError('Browser checks could not load. Your code is still here; try again.') }
-      })
+      cancelRunRef.current = () => {
+        cancelled = true
+        cancelFrame()
+      }
+      void import('./frontend-run')
+        .then(({ startFrontendRun }) => {
+          if (cancelled) return
+          cancelFrame = startFrontendRun(
+            code,
+            rep,
+            nextResults => {
+              setRunning(false)
+              setResults(nextResults)
+            },
+            message => {
+              setRunning(false)
+              setRunError(message)
+            },
+          )
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setRunning(false)
+            setRunError('Browser checks could not load. Your code is still here; try again.')
+          }
+        })
       return
     }
     cancelRunRef.current = startCheckRun(code, repId, {
       createWorker: () => new Worker(new URL('./runner.worker.ts', import.meta.url), { type: 'module' }),
       schedule: (callback, milliseconds) => window.setTimeout(callback, milliseconds),
       clearTimer: id => window.clearTimeout(id),
-      onResults: nextResults => { setRunning(false); setResults(nextResults) },
-      onError: message => { setRunning(false); setRunError(message) },
+      onResults: nextResults => {
+        setRunning(false)
+        setResults(nextResults)
+      },
+      onError: message => {
+        setRunning(false)
+        setRunError(message)
+      },
     })
   }
 

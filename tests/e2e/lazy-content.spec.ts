@@ -10,7 +10,7 @@ test('a failed rep-content load keeps the draft and Retry recovers the brief and
   await saved(page)
 
   let blocked = true
-  await page.route(contentModule, route => blocked ? route.abort() : route.continue())
+  await page.route(contentModule, route => (blocked ? route.abort() : route.continue()))
   await page.reload()
 
   const alert = page.getByRole('alert').filter({ hasText: 'brief could not load' })
@@ -31,7 +31,7 @@ test('a failed rep-content load keeps the draft and Retry recovers the brief and
   await expectChecksFinished(page.getByText('All checks passed'))
 })
 
-test('opening another rep shows its own content, never the previous rep\'s', async ({ page }) => {
+test("opening another rep shows its own content, never the previous rep's", async ({ page }) => {
   await page.goto(route)
   await expect(page.locator('#brief-section').getByText('appears most often')).toBeVisible()
   await page.goto('/#/practice/balanced-brackets')
@@ -45,7 +45,7 @@ test('a load that keeps failing offers Reload app and still keeps the draft', as
   await saved(page)
 
   let blocked = true
-  await page.route(contentModule, route => blocked ? route.abort() : route.continue())
+  await page.route(contentModule, route => (blocked ? route.abort() : route.continue()))
   await page.reload()
   const alert = page.getByRole('alert').filter({ hasText: 'brief could not load' })
   await expect(alert).toBeVisible()
@@ -69,7 +69,7 @@ test('a rep with no saved draft shows its starter', async ({ page }) => {
 
 test('a failed load with no saved draft never saves a placeholder, and Retry brings the starter', async ({ page }) => {
   let blocked = true
-  await page.route(contentModule, route => blocked ? route.abort() : route.continue())
+  await page.route(contentModule, route => (blocked ? route.abort() : route.continue()))
   await page.goto(route)
   const alert = page.getByRole('alert').filter({ hasText: 'brief could not load' })
   await expect(alert).toBeVisible()

@@ -13,7 +13,7 @@ for (const width of [1280, 390]) {
     await expect(page.locator('#path-title')).toHaveText('Pattern Recognition')
     await page.goto('/#/knowledge')
     const browser = page.locator('.knowledge-browser')
-    if (await browser.getAttribute('open') === null) await browser.locator(':scope > summary').click()
+    if ((await browser.getAttribute('open')) === null) await browser.locator(':scope > summary').click()
     await page.getByRole('searchbox', { name: 'Search knowledge' }).fill('Recognize the pattern')
     await page.getByRole('button', { name: 'Recognize the pattern', exact: true }).click()
     const discussion = page.locator('.knowledge-article details').filter({ hasText: 'Compare your reasoning' })

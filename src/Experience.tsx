@@ -30,12 +30,15 @@ export function ScreenMemory({ screenKey, children }: { screenKey: string; child
       const attempt = detail.closest('[data-attempt-id]')?.getAttribute('data-attempt-id') ?? ''
       return `${attempt}:${detail.closest('section[id]')?.id ?? ''}:${detail.querySelector(':scope > summary')?.textContent ?? ''}`
     }
-    const scrollElements = () => Array.from(element.querySelectorAll<HTMLElement>(
-      'main, .catalog-list, .path-stages, .history-list, .task-column, .code-column',
-    ))
+    const scrollElements = () =>
+      Array.from(element.querySelectorAll<HTMLElement>('main, .catalog-list, .path-stages, .history-list, .task-column, .code-column'))
     let saved = screens.get(memoryKey)
     if (!saved) {
-      try { saved = JSON.parse(sessionStorage.getItem(`code-reps:screen:${memoryKey}`) || 'null') } catch { /* Storage is optional. */ }
+      try {
+        saved = JSON.parse(sessionStorage.getItem(`code-reps:screen:${memoryKey}`) || 'null')
+      } catch {
+        /* Storage is optional. */
+      }
     }
     if (saved) {
       element.querySelectorAll('details').forEach(detail => {
@@ -66,16 +69,21 @@ export function ScreenMemory({ screenKey, children }: { screenKey: string; child
       screens.set(memoryKey, state)
       try {
         sessionStorage.setItem(`code-reps:screen:${memoryKey}`, JSON.stringify(state))
-      } catch { /* Continue without session persistence. */ }
+      } catch {
+        /* Continue without session persistence. */
+      }
     }
     // A lazy page replaces its loading heading after arrival; if that drops focus to the body, hand it to the new heading.
     // Watching ends once no loading placeholder remains, so a slow load keeps the handoff without a fixed short window.
     // The first run's cleanup saves state, so a repeat run would otherwise see a restore and drop the handoff.
     if (!repeat) shownHandoff = navigated && !saved
-    const settle = shownHandoff && typeof MutationObserver !== 'undefined' ? new MutationObserver(() => {
-      if (document.activeElement === document.body) element.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true })
-      if (!element.querySelector('[aria-busy="true"]')) settle?.disconnect()
-    }) : undefined
+    const settle =
+      shownHandoff && typeof MutationObserver !== 'undefined'
+        ? new MutationObserver(() => {
+            if (document.activeElement === document.body) element.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true })
+            if (!element.querySelector('[aria-busy="true"]')) settle?.disconnect()
+          })
+        : undefined
     settle?.observe(element, { childList: true, subtree: true })
     const settleTimer = settle ? window.setTimeout(() => settle.disconnect(), 30000) : undefined
     window.addEventListener('pagehide', capture)
@@ -86,7 +94,11 @@ export function ScreenMemory({ screenKey, children }: { screenKey: string; child
       window.removeEventListener('pagehide', capture)
     }
   }, [memoryKey])
-  return <div ref={root} className="screen-content screen-motion">{children}</div>
+  return (
+    <div ref={root} className="screen-content screen-motion">
+      {children}
+    </div>
+  )
 }
 
 type DrawerProps = {
@@ -112,7 +124,10 @@ export function SearchDrawer({ title, children, onClose, className = '', closeRe
   useEffect(() => {
     const node = dialog.current!
     node.showModal()
-    return () => { window.clearTimeout(timer.current); node.close() }
+    return () => {
+      window.clearTimeout(timer.current)
+      node.close()
+    }
   }, [])
   function onKeyDown(event: KeyboardEvent<HTMLDialogElement>) {
     if (event.key === 'Escape' || ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k')) {
@@ -127,16 +142,28 @@ export function SearchDrawer({ title, children, onClose, className = '', closeRe
     const box = event.currentTarget.getBoundingClientRect()
     if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) requestClose()
   }
-  return <dialog
-    ref={dialog} className={`utility-dialog ${className}`} aria-label={title} onKeyDown={onKeyDown}
-    onCancel={event => { event.preventDefault(); requestClose() }} onClick={onClick}
-  >
-    <div className="utility-heading">
-      <h2>{title}</h2>
-      <button type="button" onClick={requestClose} aria-label={`Close ${title}`}><Icon name="close" />Close <kbd>Esc</kbd></button>
-    </div>
-    {children}
-  </dialog>
+  return (
+    <dialog
+      ref={dialog}
+      className={`utility-dialog ${className}`}
+      aria-label={title}
+      onKeyDown={onKeyDown}
+      onCancel={event => {
+        event.preventDefault()
+        requestClose()
+      }}
+      onClick={onClick}
+    >
+      <div className="utility-heading">
+        <h2>{title}</h2>
+        <button type="button" onClick={requestClose} aria-label={`Close ${title}`}>
+          <Icon name="close" />
+          Close <kbd>Esc</kbd>
+        </button>
+      </div>
+      {children}
+    </dialog>
+  )
 }
 
 export function GlossaryDrawer({ onClose }: { onClose: () => void }) {
@@ -144,21 +171,40 @@ export function GlossaryDrawer({ onClose }: { onClose: () => void }) {
   const glossary = useGlossary()
   const terms = glossary.status === 'ready' ? glossary.terms : []
   const visible = terms.filter(item => `${item.term} ${item.meaning}`.toLowerCase().includes(query.toLowerCase()))
-  return <SearchDrawer title="Quick glossary" className="glossary-drawer" onClose={onClose}>
-    <label className="field-label" htmlFor="glossary-query">Find a term</label>
-    <Input
-      id="glossary-query" type="search" autoFocus value={query} onChange={event => setQuery(event.target.value)}
-      placeholder="Try index, map, or frequency"
-    />
-    <p className="utility-note">Definitions stay available while you practice.</p>
-    {glossary.status === 'loading' && <p role="status">Loading the glossary…</p>}
-    {glossary.status === 'error' && <div role="alert">
-      <p>The glossary could not load. Your work is safe.</p>
-      <button type="button" className="text-button" onClick={glossary.retry}>Retry</button>
-    </div>}
-    <dl className="glossary-list">{visible.map(item => <div key={item.term}><dt>{item.term}</dt><dd>{item.meaning}</dd></div>)}</dl>
-    {glossary.status === 'ready' && !visible.length && <p>No matching terms. Try a shorter search.</p>}
-  </SearchDrawer>
+  return (
+    <SearchDrawer title="Quick glossary" className="glossary-drawer" onClose={onClose}>
+      <label className="field-label" htmlFor="glossary-query">
+        Find a term
+      </label>
+      <Input
+        id="glossary-query"
+        type="search"
+        autoFocus
+        value={query}
+        onChange={event => setQuery(event.target.value)}
+        placeholder="Try index, map, or frequency"
+      />
+      <p className="utility-note">Definitions stay available while you practice.</p>
+      {glossary.status === 'loading' && <p role="status">Loading the glossary…</p>}
+      {glossary.status === 'error' && (
+        <div role="alert">
+          <p>The glossary could not load. Your work is safe.</p>
+          <button type="button" className="text-button" onClick={glossary.retry}>
+            Retry
+          </button>
+        </div>
+      )}
+      <dl className="glossary-list">
+        {visible.map(item => (
+          <div key={item.term}>
+            <dt>{item.term}</dt>
+            <dd>{item.meaning}</dd>
+          </div>
+        ))}
+      </dl>
+      {glossary.status === 'ready' && !visible.length && <p>No matching terms. Try a shorter search.</p>}
+    </SearchDrawer>
+  )
 }
 
 type Command = { label: string; shortcut?: string; run: () => void }
@@ -167,8 +213,9 @@ export function CommandPalette({ reps, commands, onOpenRep, onClose }: PalettePr
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
   const closeRequest = useRef<(() => void) | null>(null)
-  const matches: Command[] = [...commands, ...reps.map(rep => ({ label: `Practice: ${rep.title}`, run: () => onOpenRep(rep.id) }))]
-    .filter(item => item.label.toLowerCase().includes(query.toLowerCase()))
+  const matches: Command[] = [...commands, ...reps.map(rep => ({ label: `Practice: ${rep.title}`, run: () => onOpenRep(rep.id) }))].filter(
+    item => item.label.toLowerCase().includes(query.toLowerCase()),
+  )
   const execute = (command: Command) => {
     closeRequest.current?.()
     requestAnimationFrame(command.run)
@@ -183,75 +230,144 @@ export function CommandPalette({ reps, commands, onOpenRep, onClose }: PalettePr
       execute(matches[active])
     }
   }
-  useEffect(() => { document.getElementById(`command-${active}`)?.scrollIntoView({ block: 'nearest' }) }, [active])
-  return <SearchDrawer title="Commands & exercises" onClose={onClose} closeRequest={closeRequest}>
-    <label htmlFor="command-query" className="field-label">Search or choose an action</label>
-    <Input
-      id="command-query" autoFocus value={query} onChange={event => { setQuery(event.target.value); setActive(0) }}
-      role="combobox" aria-expanded="true" aria-controls="command-results" aria-autocomplete="list"
-      aria-activedescendant={matches.length ? `command-${active}` : undefined} placeholder="Find a page, rep, or workspace action…"
-      onKeyDown={onKeyDown}
-    />
-    <p className="utility-note">
-      <kbd>↑</kbd> <kbd>↓</kbd> choose · <kbd>Enter</kbd> open
-      {' '}· <kbd>Ctrl / ⌘ K</kbd> commands · <kbd>Ctrl / ⌘ Enter</kbd> run checks
-    </p>
-    <div id="command-results" role="listbox" aria-label="Matching commands" className="command-results">{matches.map((command, index) => (
-      <div key={command.label} id={`command-${index}`} role="option" aria-selected={index === active} onMouseEnter={() => setActive(index)}>
-        <button type="button" tabIndex={-1} onClick={() => execute(command)}>
-          {command.label}{command.shortcut && <kbd>{command.shortcut}</kbd>}
-        </button>
+  useEffect(() => {
+    document.getElementById(`command-${active}`)?.scrollIntoView({ block: 'nearest' })
+  }, [active])
+  return (
+    <SearchDrawer title="Commands & exercises" onClose={onClose} closeRequest={closeRequest}>
+      <label htmlFor="command-query" className="field-label">
+        Search or choose an action
+      </label>
+      <Input
+        id="command-query"
+        autoFocus
+        value={query}
+        onChange={event => {
+          setQuery(event.target.value)
+          setActive(0)
+        }}
+        role="combobox"
+        aria-expanded="true"
+        aria-controls="command-results"
+        aria-autocomplete="list"
+        aria-activedescendant={matches.length ? `command-${active}` : undefined}
+        placeholder="Find a page, rep, or workspace action…"
+        onKeyDown={onKeyDown}
+      />
+      <p className="utility-note">
+        <kbd>↑</kbd> <kbd>↓</kbd> choose · <kbd>Enter</kbd> open · <kbd>Ctrl / ⌘ K</kbd> commands · <kbd>Ctrl / ⌘ Enter</kbd> run checks
+      </p>
+      <div id="command-results" role="listbox" aria-label="Matching commands" className="command-results">
+        {matches.map((command, index) => (
+          <div
+            key={command.label}
+            id={`command-${index}`}
+            role="option"
+            aria-selected={index === active}
+            onMouseEnter={() => setActive(index)}
+          >
+            <button type="button" tabIndex={-1} onClick={() => execute(command)}>
+              {command.label}
+              {command.shortcut && <kbd>{command.shortcut}</kbd>}
+            </button>
+          </div>
+        ))}
       </div>
-    ))}</div>
-    {!matches.length && <p>No matching commands or exercises.</p>}
-  </SearchDrawer>
+      {!matches.length && <p>No matching commands or exercises.</p>}
+    </SearchDrawer>
+  )
 }
 
 function formatValue(value: string) {
-  try { return JSON.stringify(JSON.parse(value), null, 2) } catch { return value }
+  try {
+    return JSON.stringify(JSON.parse(value), null, 2)
+  } catch {
+    return value
+  }
 }
 
 function ValueDifference({ value, other }: { value: string; other: string }) {
   const lines = formatValue(value).split('\n')
   const comparison = formatValue(other).split('\n')
-  return <pre>{lines.map((line, index) => (
-    <span key={index} className={line === comparison[index] ? '' : 'diff-line'}>{line}{index < lines.length - 1 ? '\n' : ''}</span>
-  ))}</pre>
+  return (
+    <pre>
+      {lines.map((line, index) => (
+        <span key={index} className={line === comparison[index] ? '' : 'diff-line'}>
+          {line}
+          {index < lines.length - 1 ? '\n' : ''}
+        </span>
+      ))}
+    </pre>
+  )
 }
 
 export function CheckFeedback({ results }: { results: TestResult[] }) {
   const failed = results.filter(result => !result.passed)
   const passed = results.filter(result => result.passed)
   const [activeFailed, setActiveFailed] = useState<string | null>(() => failed[0]?.name ?? null)
-  const row = (result: TestResult) => <li key={result.name}>
-    <span className={result.passed ? 'pass-icon' : 'fail-icon'} aria-label={result.passed ? 'Passed' : 'Failed'}>
-      <Icon name={result.passed ? 'check' : 'close'} />
-    </span>
-    <div>{result.passed ? <strong>{result.name}</strong> : <details open={activeFailed === result.name} onToggle={event => {
-      const open = event.currentTarget.open
-      setActiveFailed(current => open ? result.name : current === result.name ? null : current)
-    }}><FailedCheck result={result} /></details>}</div>
-    {result.passed && <span className="check-outcome">Passed</span>}
-  </li>
-  return <>
-    {!!failed.length && <ul className="result-list">{failed.map(row)}</ul>}
-    {!!passed.length && <ul className="result-list passed-checks" aria-label="Passed checks">{passed.map(row)}</ul>}
-  </>
+  const row = (result: TestResult) => (
+    <li key={result.name}>
+      <span className={result.passed ? 'pass-icon' : 'fail-icon'} aria-label={result.passed ? 'Passed' : 'Failed'}>
+        <Icon name={result.passed ? 'check' : 'close'} />
+      </span>
+      <div>
+        {result.passed ? (
+          <strong>{result.name}</strong>
+        ) : (
+          <details
+            open={activeFailed === result.name}
+            onToggle={event => {
+              const open = event.currentTarget.open
+              setActiveFailed(current => (open ? result.name : current === result.name ? null : current))
+            }}
+          >
+            <FailedCheck result={result} />
+          </details>
+        )}
+      </div>
+      {result.passed && <span className="check-outcome">Passed</span>}
+    </li>
+  )
+  return (
+    <>
+      {!!failed.length && <ul className="result-list">{failed.map(row)}</ul>}
+      {!!passed.length && (
+        <ul className="result-list passed-checks" aria-label="Passed checks">
+          {passed.map(row)}
+        </ul>
+      )}
+    </>
+  )
 }
 
 /** The input, expected and actual values, and message for one failed check. */
 function FailedCheck({ result }: { result: TestResult }) {
   const actual = result.actual ?? 'No returned value'
-  return <>
-    <summary>{result.name}</summary>
-    {result.input && <div><span className="field-label">Input</span><pre>{result.input}</pre></div>}
-    {result.expected !== undefined && <div className="value-comparison">
-      <div><span className="field-label">Expected</span><ValueDifference value={result.expected} other={actual} /></div>
-      <div><span className="field-label">Actual</span><ValueDifference value={actual} other={result.expected} /></div>
-    </div>}
-    {result.message && !(result.expected !== undefined && result.message.startsWith('Expected ')) && <p>{result.message}</p>}
-    <p className="utility-note">Trace this input through your code, then try again.</p>
-  </>
+  return (
+    <>
+      <summary>{result.name}</summary>
+      {result.input && (
+        <div>
+          <span className="field-label">Input</span>
+          <pre>{result.input}</pre>
+        </div>
+      )}
+      {result.expected !== undefined && (
+        <div className="value-comparison">
+          <div>
+            <span className="field-label">Expected</span>
+            <ValueDifference value={result.expected} other={actual} />
+          </div>
+          <div>
+            <span className="field-label">Actual</span>
+            <ValueDifference value={actual} other={result.expected} />
+          </div>
+        </div>
+      )}
+      {result.message && !(result.expected !== undefined && result.message.startsWith('Expected ')) && <p>{result.message}</p>}
+      <p className="utility-note">Trace this input through your code, then try again.</p>
+    </>
+  )
 }
 
 type SplitProps = { value: number; onChange: (value: number) => void; onCommit: (value: number) => void }
@@ -274,7 +390,7 @@ export function WorkspaceSplit({ value, onChange, onCommit }: SplitProps) {
     let width = value
     const move = (next: globalThis.PointerEvent) => {
       const box = parent.getBoundingClientRect()
-      width = Math.max(25, Math.min(60, Math.round((next.clientX - box.left) / box.width * 100)))
+      width = Math.max(25, Math.min(60, Math.round(((next.clientX - box.left) / box.width) * 100)))
       onChange(width)
     }
     const end = () => {
@@ -292,9 +408,21 @@ export function WorkspaceSplit({ value, onChange, onCommit }: SplitProps) {
     window.addEventListener('pointerup', end)
     window.addEventListener('pointercancel', end)
   }
-  return <div
-    className="workspace-split" role="separator" aria-label="Resize brief and editor" aria-orientation="vertical"
-    aria-valuemin={25} aria-valuemax={60} aria-valuenow={value} tabIndex={0}
-    onDoubleClick={() => commit(40)} onKeyDown={onKeyDown} onPointerDown={onPointerDown}
-  ><span /></div>
+  return (
+    <div
+      className="workspace-split"
+      role="separator"
+      aria-label="Resize brief and editor"
+      aria-orientation="vertical"
+      aria-valuemin={25}
+      aria-valuemax={60}
+      aria-valuenow={value}
+      tabIndex={0}
+      onDoubleClick={() => commit(40)}
+      onKeyDown={onKeyDown}
+      onPointerDown={onPointerDown}
+    >
+      <span />
+    </div>
+  )
 }

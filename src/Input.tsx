@@ -19,16 +19,26 @@ export function Input({ className, type = 'text', ...props }: ComponentProps<'in
 function FileInput({ className, onChange, ...props }: ComponentProps<'input'>) {
   const field = useRef<HTMLInputElement>(null)
   const [name, setName] = useState('No file selected')
-  return <span className="ui-file-control">
-    <input
-      {...props} ref={field} type="file" hidden aria-hidden="true" tabIndex={-1}
-      onChange={event => { setName(event.target.files?.[0]?.name ?? 'No file selected'); onChange?.(event) }}
-    />
-    <button type="button" className={classes('reset-button', className)} disabled={props.disabled} onClick={() => field.current?.click()}>
-      Choose file
-    </button>
-    <span className="ui-file-name">{name}</span>
-  </span>
+  return (
+    <span className="ui-file-control">
+      <input
+        {...props}
+        ref={field}
+        type="file"
+        hidden
+        aria-hidden="true"
+        tabIndex={-1}
+        onChange={event => {
+          setName(event.target.files?.[0]?.name ?? 'No file selected')
+          onChange?.(event)
+        }}
+      />
+      <button type="button" className={classes('reset-button', className)} disabled={props.disabled} onClick={() => field.current?.click()}>
+        Choose file
+      </button>
+      <span className="ui-file-name">{name}</span>
+    </span>
+  )
 }
 
 /** The visible label's text without the control inside it, for naming the control's own buttons. */
@@ -53,21 +63,33 @@ function SearchInput({ className, ...props }: ComponentProps<'input'>) {
     node.dispatchEvent(new Event('input', { bubbles: true }))
     node.focus()
   }
-  return <span className="ui-search-control">
-    <input
-      {...props} ref={field} type="search" aria-label={props['aria-label'] ?? (label || undefined)}
-      className={classes('ui-input', className)}
-    />
-    {String(props.value ?? '').length > 0 && <button
-      type="button" className="ui-search-clear" aria-label={`Clear ${label || 'search'}`} disabled={props.disabled} onClick={clear}
-    ><Icon name="close" /></button>}
-  </span>
+  return (
+    <span className="ui-search-control">
+      <input
+        {...props}
+        ref={field}
+        type="search"
+        aria-label={props['aria-label'] ?? (label || undefined)}
+        className={classes('ui-input', className)}
+      />
+      {String(props.value ?? '').length > 0 && (
+        <button
+          type="button"
+          className="ui-search-clear"
+          aria-label={`Clear ${label || 'search'}`}
+          disabled={props.disabled}
+          onClick={clear}
+        >
+          <Icon name="close" />
+        </button>
+      )}
+    </span>
+  )
 }
 
 export function Textarea({ className, ...props }: ComponentProps<'textarea'>) {
   return <textarea {...props} className={classes('ui-textarea', className)} />
 }
-
 
 type NumberInputProps = Omit<ComponentProps<'input'>, 'value' | 'defaultValue' | 'type' | 'onChange' | 'min' | 'max'> & {
   value: number
@@ -93,29 +115,38 @@ export function NumberInput({ value, min, max, onValueChange, onBlur, ...props }
     setEdit({ source: next, text: String(next) })
     onValueChange(next)
   }
-  return <span className="ui-number-control">
-    <Input
-      {...props} ref={field} aria-label={props['aria-label'] ?? label}
-      type="number" inputMode="numeric" step={1} min={min} max={max} value={draft}
-      aria-invalid={draft.trim() !== '' && !valid || undefined}
-      onChange={event => {
-        const next = event.target.value
-        setEdit({ source: value, text: next })
-        const number = Number(next)
-        if (next.trim() && Number.isInteger(number) && number >= min && number <= max) onValueChange(number)
-      }}
-      onBlur={event => {
-        setEdit({ source: value, text: String(value) })
-        onBlur?.(event)
-      }}
-    />
-    <span className="ui-number-buttons">
-      <button type="button" disabled={props.disabled || value <= min} aria-label={`Decrease ${label}`} onClick={() => step(-1)}>
-        <Icon name="minus" />
-      </button>
-      <button type="button" disabled={props.disabled || value >= max} aria-label={`Increase ${label}`} onClick={() => step(1)}>
-        <Icon name="plus" />
-      </button>
+  return (
+    <span className="ui-number-control">
+      <Input
+        {...props}
+        ref={field}
+        aria-label={props['aria-label'] ?? label}
+        type="number"
+        inputMode="numeric"
+        step={1}
+        min={min}
+        max={max}
+        value={draft}
+        aria-invalid={(draft.trim() !== '' && !valid) || undefined}
+        onChange={event => {
+          const next = event.target.value
+          setEdit({ source: value, text: next })
+          const number = Number(next)
+          if (next.trim() && Number.isInteger(number) && number >= min && number <= max) onValueChange(number)
+        }}
+        onBlur={event => {
+          setEdit({ source: value, text: String(value) })
+          onBlur?.(event)
+        }}
+      />
+      <span className="ui-number-buttons">
+        <button type="button" disabled={props.disabled || value <= min} aria-label={`Decrease ${label}`} onClick={() => step(-1)}>
+          <Icon name="minus" />
+        </button>
+        <button type="button" disabled={props.disabled || value >= max} aria-label={`Increase ${label}`} onClick={() => step(1)}>
+          <Icon name="plus" />
+        </button>
+      </span>
     </span>
-  </span>
+  )
 }

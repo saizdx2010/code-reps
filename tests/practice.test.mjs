@@ -2,14 +2,29 @@ import { paths } from '../src/path.ts'
 import { journeys } from '../src/learning.ts'
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { getPracticePlan, attemptStatus, nextRepInPath, practiceWritingPrompts, practiceSentenceStarters, appendSentenceStarter } from '../src/practice.ts'
+import {
+  getPracticePlan,
+  attemptStatus,
+  nextRepInPath,
+  practiceWritingPrompts,
+  practiceSentenceStarters,
+  appendSentenceStarter,
+} from '../src/practice.ts'
 import { englishTipsForIndonesianSpeakers } from '../src/vocabulary-id.ts'
 import { reps } from '../src/rep.ts'
 
 const now = Date.parse('2026-09-30T12:00:00Z')
 const old = '2026-09-20T12:00:00Z'
 const draft = (id, extra = {}) => ({ plan: '', code: reps.find(rep => rep.id === id).starter, explanation: '', hintCount: 0, ...extra })
-const record = (repId, extra = {}) => ({ ...draft(repId), id: `${repId}-old`, repId, completedAt: old, confidence: 'confident', difficulty: 'none', ...extra })
+const record = (repId, extra = {}) => ({
+  ...draft(repId),
+  id: `${repId}-old`,
+  repId,
+  completedAt: old,
+  confidence: 'confident',
+  difficulty: 'none',
+  ...extra,
+})
 
 test('new learners start with foundations and returning learners with guided practice', () => {
   assert.equal(getPracticePlan({}, [], 'new', '', now).next.repId, 'declare-variables')
@@ -17,7 +32,10 @@ test('new learners start with foundations and returning learners with guided pra
 })
 
 test('unfinished work takes precedence over new content, with the selected draft first', () => {
-  const drafts = { 'create-objects': draft('create-objects', { plan: 'Use an object' }), 'count-words': draft('count-words', { hintCount: 1 }) }
+  const drafts = {
+    'create-objects': draft('create-objects', { plan: 'Use an object' }),
+    'count-words': draft('count-words', { hintCount: 1 }),
+  }
   const plan = getPracticePlan(drafts, [], 'new', 'count-words', now)
   assert.equal(plan.next.repId, 'count-words')
   assert.equal(plan.next.mode, 'resume')
@@ -34,8 +52,19 @@ test('code equal to the starter is not progress, while an edit or a still-loadin
 })
 
 test('all due recalls remain visible, and a saved recall is resumed', () => {
-  const history = [record('sum-positive-numbers'), record('count-even-numbers', { completedAt: '2026-09-21T12:00:00Z' }), record('has-duplicate'), record('most-frequent-number', { completedAt: '2026-09-21T12:00:00Z' })]
-  const plan = getPracticePlan({ 'count-above-threshold': draft('count-above-threshold', { plan: 'Compare the limit' }) }, history, 'returning', '', now)
+  const history = [
+    record('sum-positive-numbers'),
+    record('count-even-numbers', { completedAt: '2026-09-21T12:00:00Z' }),
+    record('has-duplicate'),
+    record('most-frequent-number', { completedAt: '2026-09-21T12:00:00Z' }),
+  ]
+  const plan = getPracticePlan(
+    { 'count-above-threshold': draft('count-above-threshold', { plan: 'Compare the limit' }) },
+    history,
+    'returning',
+    '',
+    now,
+  )
   assert.equal(plan.due.length, 2)
   assert.equal(plan.next.repId, 'count-above-threshold')
   assert.equal(plan.next.mode, 'resume')
@@ -51,7 +80,10 @@ test('a single difficult review is shown even with confident self-report', () =>
 })
 
 test('latest evidence wins even if history is not sorted', () => {
-  const history = [record('backend-page-results', { hintCount: 2 }), record('backend-page-results', { id: 'new', completedAt: '2026-09-29T12:00:00Z' })]
+  const history = [
+    record('backend-page-results', { hintCount: 2 }),
+    record('backend-page-results', { id: 'new', completedAt: '2026-09-29T12:00:00Z' }),
+  ]
   assert.equal(getPracticePlan({}, history, 'returning', '', now).due.length, 0)
 })
 
@@ -82,7 +114,11 @@ test('a hinted independent completion recommends a fresh retry', () => {
 })
 
 test('recent difficult attempts wait three days and unknown or invalid records are ignored', () => {
-  const history = [record('backend-page-results', { confidence: 'need-practice', completedAt: '2026-09-29T12:00:00Z' }), { ...record('backend-page-results'), repId: 'removed-rep' }, record('interview-backend', { completedAt: 'invalid' })]
+  const history = [
+    record('backend-page-results', { confidence: 'need-practice', completedAt: '2026-09-29T12:00:00Z' }),
+    { ...record('backend-page-results'), repId: 'removed-rep' },
+    record('interview-backend', { completedAt: 'invalid' }),
+  ]
   assert.equal(getPracticePlan({}, history, 'new', '', now).due.length, 0)
 })
 
@@ -107,19 +143,24 @@ test('a selected backend goal changes new practice without hiding saved work', (
   assert.equal(withOtherDraft.unfinished[0].mode, 'resume')
 })
 
-
 test('selected practical path cannot recommend recall before its independent evidence and delay', () => {
   const journey = journeys.find(journey => journey.id === 'request-ownership')
-  const preceding = paths.find(path => path.id === 'frontend').stages.flatMap(stage => stage.repIds).filter(id => !['preview-slot-results', 'refresh-report-state'].includes(id))
-  const drafts = Object.fromEntries(preceding.map(id => [id, draft(id, {completedAt: old})]))
-  const history = [record(journey.guided), record(journey.independent, {completedAt: '2026-09-29T12:00:00Z'})]
+  const preceding = paths
+    .find(path => path.id === 'frontend')
+    .stages.flatMap(stage => stage.repIds)
+    .filter(id => !['preview-slot-results', 'refresh-report-state'].includes(id))
+  const drafts = Object.fromEntries(preceding.map(id => [id, draft(id, { completedAt: old })]))
+  const history = [record(journey.guided), record(journey.independent, { completedAt: '2026-09-29T12:00:00Z' })]
   const plan = getPracticePlan(drafts, history, 'returning', '', now, 'frontend')
   assert.equal(plan.next.repId, 'refresh-report-state')
   assert.notEqual(plan.next.repId, journey.recall)
 })
 
 test('goal-path drafts outrank other drafts, while due recall still leads', () => {
-  const drafts = { 'sum-positive-numbers': draft('sum-positive-numbers', { plan: 'Other path' }), 'backend-page-results': draft('backend-page-results', { plan: 'Goal' }) }
+  const drafts = {
+    'sum-positive-numbers': draft('sum-positive-numbers', { plan: 'Other path' }),
+    'backend-page-results': draft('backend-page-results', { plan: 'Goal' }),
+  }
   assert.equal(getPracticePlan(drafts, [], 'returning', 'sum-positive-numbers', now, 'backend').next.repId, 'backend-page-results')
   const history = [record('sum-positive-numbers'), record('count-even-numbers')]
   assert.equal(getPracticePlan(drafts, history, 'returning', '', now, 'backend').next.repId, 'count-above-threshold')
@@ -153,15 +194,23 @@ test('daily recommendation advances past a saved goal draft without hiding it', 
 test('nextRepInPath follows path order and skips completed reps', () => {
   const none = () => false
   assert.equal(nextRepInPath('typescript', 'basic-types', none), 'create-objects')
-  assert.equal(nextRepInPath('typescript', 'basic-types', id => id === 'create-objects'), 'make-arrays')
+  assert.equal(
+    nextRepInPath('typescript', 'basic-types', id => id === 'create-objects'),
+    'make-arrays',
+  )
   assert.equal(nextRepInPath('typescript', 'write-functions', none), 'pass-or-retry')
   assert.equal(nextRepInPath('typescript', 'event-loop-order', none), undefined)
   assert.equal(nextRepInPath('typescript', 'not-in-this-path', none), undefined)
 })
 
-
 test('writing guidance scales from existing metadata without changing authored prompts', () => {
-  for (const [id, scale, rows] of [['declare-variables', 'sentence', 2], ['sum-positive-numbers', 'focused', 3], ['most-frequent-number', 'reasoned', 5], ['project-team-directory', 'reasoned', 5], ['dom-disclosure', 'reasoned', 5]]) {
+  for (const [id, scale, rows] of [
+    ['declare-variables', 'sentence', 2],
+    ['sum-positive-numbers', 'focused', 3],
+    ['most-frequent-number', 'reasoned', 5],
+    ['project-team-directory', 'reasoned', 5],
+    ['dom-disclosure', 'reasoned', 5],
+  ]) {
     const rep = reps.find(item => item.id === id)
     const before = structuredClone(rep)
     const prompts = practiceWritingPrompts(rep)
@@ -176,15 +225,33 @@ test('writing guidance scales from existing metadata without changing authored p
 })
 
 test('writing starters stay task-neutral and are available at every writing scale', () => {
-  assert.deepEqual(practiceSentenceStarters.plan, ['My approach is ', 'First I will ', 'then ', 'One edge case is ', 'I chose this because '])
-  assert.deepEqual(practiceSentenceStarters.explanation, ['This works because ', 'For example, if the input is ', 'the result is ', 'I chose X instead of Y because ', 'The time cost is '])
+  assert.deepEqual(practiceSentenceStarters.plan, [
+    'My approach is ',
+    'First I will ',
+    'then ',
+    'One edge case is ',
+    'I chose this because ',
+  ])
+  assert.deepEqual(practiceSentenceStarters.explanation, [
+    'This works because ',
+    'For example, if the input is ',
+    'the result is ',
+    'I chose X instead of Y because ',
+    'The time cost is ',
+  ])
   for (const id of ['declare-variables', 'sum-positive-numbers', 'most-frequent-number']) {
     assert.equal(practiceWritingPrompts({ id, planPrompt: '' }).starters, practiceSentenceStarters)
   }
 })
 
 test('starter insertion preserves existing writing and sensibly separates words', () => {
-  for (const [input, expected] of [['', ''], ['Existing text', 'Existing text '], ['Existing text ', 'Existing text '], ['Existing text\n', 'Existing text\n'], ['Existing text\n\n', 'Existing text\n\n']]) {
+  for (const [input, expected] of [
+    ['', ''],
+    ['Existing text', 'Existing text '],
+    ['Existing text ', 'Existing text '],
+    ['Existing text\n', 'Existing text\n'],
+    ['Existing text\n\n', 'Existing text\n\n'],
+  ]) {
     assert.equal(appendSentenceStarter(input, 'My approach is '), expected + 'My approach is ')
   }
 })

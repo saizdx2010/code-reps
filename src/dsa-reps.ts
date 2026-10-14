@@ -8,4 +8,11 @@ import { dsaPuzzleReps } from './dsa-puzzle-reps.ts'
 import { dsaHarderReps } from './dsa-harder-reps.ts'
 import type { Rep } from './rep.ts'
 
-export const dsaReps: Rep[] = [...dsaGridReps, ...dsaApplicationReps, ...dsaBasicsReps, ...dsaPracticeReps, ...dsaPuzzleReps, ...dsaHarderReps]
+export const dsaReps: Rep[] = [
+  ...dsaGridReps,
+  ...dsaApplicationReps,
+  ...dsaBasicsReps,
+  ...dsaPracticeReps,
+  ...dsaPuzzleReps,
+  ...dsaHarderReps,
+]

@@ -25,17 +25,20 @@ function loadSource(name: RepSourceName): Promise<Source> {
   let promise = pending.get(name)
   if (!promise) {
     // A failed import is forgotten so Retry can request the chunk again.
-    promise = importSource(name).then(module => {
-      const picked = sources[name].pick(module)
-      loaded.set(name, picked)
-      failedUrls.delete(name)
-      return picked
-    }, error => {
-      pending.delete(name)
-      const url = moduleUrl(error)
-      if (url && !failedUrls.has(name)) failedUrls.set(name, { url, retries: 0 })
-      throw error
-    })
+    promise = importSource(name).then(
+      module => {
+        const picked = sources[name].pick(module)
+        loaded.set(name, picked)
+        failedUrls.delete(name)
+        return picked
+      },
+      error => {
+        pending.delete(name)
+        const url = moduleUrl(error)
+        if (url && !failedUrls.has(name)) failedUrls.set(name, { url, retries: 0 })
+        throw error
+      },
+    )
     pending.set(name, promise)
   }
   return promise

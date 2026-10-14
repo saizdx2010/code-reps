@@ -1,86 +1,259 @@
 import type { Rep } from './rep-types.ts'
 
 const sortRows = [
-  { name: 'Pear', qty: 4 }, { name: 'apple', qty: 9 }, { name: 'Fig', qty: 4 }, { name: 'Apple', qty: 2 },
+  { name: 'Pear', qty: 4 },
+  { name: 'apple', qty: 9 },
+  { name: 'Fig', qty: 4 },
+  { name: 'Apple', qty: 2 },
 ]
 
 export const appReps: Rep[] = [
   {
-    id: 'frontend-sort-table', title: 'Sort table rows', category: 'Frontend core', format: 'transform',
-    context: 'A table lets people click a column header to sort. The table component needs the rows in display order, and the original list must stay untouched so other views can still use it.',
-    prompt: 'Implement sortRows(rows, column, direction). Return a new array of the same row objects ordered by column, which is "name" or "qty". Names compare without case sensitivity using lowercase text and < and > (not locale rules); qty compares as numbers. direction "desc" reverses the order; any other direction value sorts ascending. Rows whose sort values are equal keep their original relative order in both directions. If column is not "name" or "qty", return a copy in the original order. Do not change the input array or its row objects.',
-    brief: { summary: 'Implement sortRows(rows, column, direction).', rules: [
-      'Return a new array of the same row objects ordered by column, which is "name" or "qty".',
-      'Names compare without case sensitivity using lowercase text and < and > (not locale rules); qty compares as numbers.',
-      'direction "desc" reverses the order; any other direction value sorts ascending.',
-    ], edgeCases: [
-      'Rows whose sort values are equal keep their original relative order in both directions.',
-      'If column is not "name" or "qty", return a copy in the original order.',
-      'Do not change the input array or its row objects.',
-    ] },
-    example: { input: 'sortRows([{name:"Pear",qty:4},{name:"Fig",qty:4}], "qty", "desc")', output: '[{name:"Pear",qty:4},{name:"Fig",qty:4}]' },
+    id: 'frontend-sort-table',
+    title: 'Sort table rows',
+    category: 'Frontend core',
+    format: 'transform',
+    context:
+      'A table lets people click a column header to sort. The table component needs the rows in display order, and the original list must stay untouched so other views can still use it.',
+    prompt:
+      'Implement sortRows(rows, column, direction). Return a new array of the same row objects ordered by column, which is "name" or "qty". Names compare without case sensitivity using lowercase text and < and > (not locale rules); qty compares as numbers. direction "desc" reverses the order; any other direction value sorts ascending. Rows whose sort values are equal keep their original relative order in both directions. If column is not "name" or "qty", return a copy in the original order. Do not change the input array or its row objects.',
+    brief: {
+      summary: 'Implement sortRows(rows, column, direction).',
+      rules: [
+        'Return a new array of the same row objects ordered by column, which is "name" or "qty".',
+        'Names compare without case sensitivity using lowercase text and < and > (not locale rules); qty compares as numbers.',
+        'direction "desc" reverses the order; any other direction value sorts ascending.',
+      ],
+      edgeCases: [
+        'Rows whose sort values are equal keep their original relative order in both directions.',
+        'If column is not "name" or "qty", return a copy in the original order.',
+        'Do not change the input array or its row objects.',
+      ],
+    },
+    example: {
+      input: 'sortRows([{name:"Pear",qty:4},{name:"Fig",qty:4}], "qty", "desc")',
+      output: '[{name:"Pear",qty:4},{name:"Fig",qty:4}]',
+    },
     note: 'Ties stay in original order even when the direction is descending, so do not simply reverse an ascending result. Compare lowercase names with < and >, not locale rules. Authored tables have at most 200 rows with basic Latin names.',
-    vocabulary: [{ term: 'Stable sort', meaning: 'a sort that keeps equal items in their original order' }, { term: 'Mutation', meaning: 'changing an existing array or object instead of making a new one' }],
+    vocabulary: [
+      { term: 'Stable sort', meaning: 'a sort that keeps equal items in their original order' },
+      { term: 'Mutation', meaning: 'changing an existing array or object instead of making a new one' },
+    ],
     planPrompt: 'How will you compare two rows for each column? What should happen to two rows that tie when the direction is descending?',
-    starter: 'type Row = { name: string; qty: number }\n\nfunction sortRows(rows: Row[], column: string, direction: string): Row[] {\n  // Return a new, ordered array.\n  return rows\n}\n',
-    functionName: 'sortRows', preserveInput: true,
-    hints: ['Work on a copy so the caller keeps its original order.', 'Decide a sort value per row first: lowercase name or the qty number.', 'Check tied rows separately from unequal rows: descending order must not reverse ties.'],
+    starter:
+      'type Row = { name: string; qty: number }\n\nfunction sortRows(rows: Row[], column: string, direction: string): Row[] {\n  // Return a new, ordered array.\n  return rows\n}\n',
+    functionName: 'sortRows',
+    preserveInput: true,
+    hints: [
+      'Work on a copy so the caller keeps its original order.',
+      'Decide a sort value per row first: lowercase name or the qty number.',
+      'Check tied rows separately from unequal rows: descending order must not reverse ties.',
+    ],
     checks: [
-      { name: 'Sorts names ascending without case sensitivity', input: [sortRows, 'name', 'asc'], expected: [{ name: 'apple', qty: 9 }, { name: 'Apple', qty: 2 }, { name: 'Fig', qty: 4 }, { name: 'Pear', qty: 4 }] },
-      { name: 'Sorts names descending and keeps tied names in original order', input: [sortRows, 'name', 'desc'], expected: [{ name: 'Pear', qty: 4 }, { name: 'Fig', qty: 4 }, { name: 'apple', qty: 9 }, { name: 'Apple', qty: 2 }] },
-      { name: 'Sorts quantities ascending with stable ties', input: [sortRows, 'qty', 'asc'], expected: [{ name: 'Apple', qty: 2 }, { name: 'Pear', qty: 4 }, { name: 'Fig', qty: 4 }, { name: 'apple', qty: 9 }] },
-      { name: 'Sorts quantities descending with stable ties', input: [sortRows, 'qty', 'desc'], expected: [{ name: 'apple', qty: 9 }, { name: 'Pear', qty: 4 }, { name: 'Fig', qty: 4 }, { name: 'Apple', qty: 2 }] },
-      { name: 'Compares quantities as numbers, not text', input: [[{ name: 'a', qty: 10 }, { name: 'b', qty: 9 }], 'qty', 'asc'], expected: [{ name: 'b', qty: 9 }, { name: 'a', qty: 10 }] },
-      { name: 'Treats an unknown direction as ascending', input: [[{ name: 'b', qty: 1 }, { name: 'a', qty: 2 }], 'name', 'up'], expected: [{ name: 'a', qty: 2 }, { name: 'b', qty: 1 }] },
-      { name: 'Returns original order for an unknown column', input: [[{ name: 'b', qty: 1 }, { name: 'a', qty: 2 }], 'price', 'asc'], expected: [{ name: 'b', qty: 1 }, { name: 'a', qty: 2 }] },
+      {
+        name: 'Sorts names ascending without case sensitivity',
+        input: [sortRows, 'name', 'asc'],
+        expected: [
+          { name: 'apple', qty: 9 },
+          { name: 'Apple', qty: 2 },
+          { name: 'Fig', qty: 4 },
+          { name: 'Pear', qty: 4 },
+        ],
+      },
+      {
+        name: 'Sorts names descending and keeps tied names in original order',
+        input: [sortRows, 'name', 'desc'],
+        expected: [
+          { name: 'Pear', qty: 4 },
+          { name: 'Fig', qty: 4 },
+          { name: 'apple', qty: 9 },
+          { name: 'Apple', qty: 2 },
+        ],
+      },
+      {
+        name: 'Sorts quantities ascending with stable ties',
+        input: [sortRows, 'qty', 'asc'],
+        expected: [
+          { name: 'Apple', qty: 2 },
+          { name: 'Pear', qty: 4 },
+          { name: 'Fig', qty: 4 },
+          { name: 'apple', qty: 9 },
+        ],
+      },
+      {
+        name: 'Sorts quantities descending with stable ties',
+        input: [sortRows, 'qty', 'desc'],
+        expected: [
+          { name: 'apple', qty: 9 },
+          { name: 'Pear', qty: 4 },
+          { name: 'Fig', qty: 4 },
+          { name: 'Apple', qty: 2 },
+        ],
+      },
+      {
+        name: 'Compares quantities as numbers, not text',
+        input: [
+          [
+            { name: 'a', qty: 10 },
+            { name: 'b', qty: 9 },
+          ],
+          'qty',
+          'asc',
+        ],
+        expected: [
+          { name: 'b', qty: 9 },
+          { name: 'a', qty: 10 },
+        ],
+      },
+      {
+        name: 'Treats an unknown direction as ascending',
+        input: [
+          [
+            { name: 'b', qty: 1 },
+            { name: 'a', qty: 2 },
+          ],
+          'name',
+          'up',
+        ],
+        expected: [
+          { name: 'a', qty: 2 },
+          { name: 'b', qty: 1 },
+        ],
+      },
+      {
+        name: 'Returns original order for an unknown column',
+        input: [
+          [
+            { name: 'b', qty: 1 },
+            { name: 'a', qty: 2 },
+          ],
+          'price',
+          'asc',
+        ],
+        expected: [
+          { name: 'b', qty: 1 },
+          { name: 'a', qty: 2 },
+        ],
+      },
       { name: 'Handles an empty table', input: [[], 'name', 'asc'], expected: [] },
       { name: 'Handles a single row', input: [[{ name: 'Solo', qty: 1 }], 'qty', 'desc'], expected: [{ name: 'Solo', qty: 1 }] },
     ],
   },
   {
-    id: 'frontend-form-errors', title: 'Show form errors', category: 'Frontend core', format: 'transform',
-    context: 'A sign-up form shows one message under each field. The form keeps every value as text, exactly as typed, and asks this function what to display.',
-    prompt: 'Implement formErrors(values) for fields name, email, and age, all strings. Return an object with a key only for each field that has an error; return {} when everything is fine. Do not change the values object.',
+    id: 'frontend-form-errors',
+    title: 'Show form errors',
+    category: 'Frontend core',
+    format: 'transform',
+    context:
+      'A sign-up form shows one message under each field. The form keeps every value as text, exactly as typed, and asks this function what to display.',
+    prompt:
+      'Implement formErrors(values) for fields name, email, and age, all strings. Return an object with a key only for each field that has an error; return {} when everything is fine. Do not change the values object.',
     acceptanceCriteria: [
       'Each field shows at most one message, chosen in this order.',
       'name: blank after trimming gives "Name is required"; more than 20 characters after trimming gives "Name must be 20 characters or fewer".',
       'email: blank after trimming gives "Email is required"; otherwise it must contain exactly one @ with nonblank text on both sides after trimming, or give "Enter a valid email address".',
       'age: blank after trimming gives "Age is required"; otherwise it must be digits only after trimming, or give "Age must be a whole number"; otherwise it must be from 18 through 120, or give "Age must be between 18 and 120".',
     ],
-    example: { input: 'formErrors({name:" ", email:"ada@site", age:"17"})', output: '{name:"Name is required", age:"Age must be between 18 and 120"}' },
+    example: {
+      input: 'formErrors({name:" ", email:"ada@site", age:"17"})',
+      output: '{name:"Name is required", age:"Age must be between 18 and 120"}',
+    },
     note: 'Required beats format, and format beats range, so a field never reports two problems. Fields are checked independently. "007" is digits only and counts as 7. Authored values are at most 200 characters.',
-    vocabulary: [{ term: 'Precedence', meaning: 'the order that decides which rule wins when several apply' }, { term: 'Derived data', meaning: 'a value calculated from the current inputs instead of stored separately' }],
+    vocabulary: [
+      { term: 'Precedence', meaning: 'the order that decides which rule wins when several apply' },
+      { term: 'Derived data', meaning: 'a value calculated from the current inputs instead of stored separately' },
+    ],
     planPrompt: 'For one field, list its rules from first to last. What does age "1e3" or "-5" do, and which rule decides it?',
-    starter: 'type Values = { name: string; email: string; age: string }\ntype Errors = { name?: string; email?: string; age?: string }\n\nfunction formErrors(values: Values): Errors {\n  // Return only the fields that have an error.\n  return {}\n}\n',
-    functionName: 'formErrors', preserveInput: true,
-    hints: ['Handle each field on its own and build the result object as you go.', 'Within a field, test the rules in the stated order and stop at the first failure.', 'Trim first; for age, test the digit pattern before converting to a number, then compare the number with both limits.'],
+    starter:
+      'type Values = { name: string; email: string; age: string }\ntype Errors = { name?: string; email?: string; age?: string }\n\nfunction formErrors(values: Values): Errors {\n  // Return only the fields that have an error.\n  return {}\n}\n',
+    functionName: 'formErrors',
+    preserveInput: true,
+    hints: [
+      'Handle each field on its own and build the result object as you go.',
+      'Within a field, test the rules in the stated order and stop at the first failure.',
+      'Trim first; for age, test the digit pattern before converting to a number, then compare the number with both limits.',
+    ],
     checks: [
       { name: 'Returns an empty object for valid values', input: [{ name: ' Ada ', email: 'ada@site.test', age: '30' }], expected: {} },
-      { name: 'Reports the example errors', input: [{ name: ' ', email: 'ada@site', age: '17' }], expected: { name: 'Name is required', age: 'Age must be between 18 and 120' } },
-      { name: 'Reports required errors for blank fields', input: [{ name: '', email: ' \t', age: '  ' }], expected: { name: 'Name is required', email: 'Email is required', age: 'Age is required' } },
+      {
+        name: 'Reports the example errors',
+        input: [{ name: ' ', email: 'ada@site', age: '17' }],
+        expected: { name: 'Name is required', age: 'Age must be between 18 and 120' },
+      },
+      {
+        name: 'Reports required errors for blank fields',
+        input: [{ name: '', email: ' \t', age: '  ' }],
+        expected: { name: 'Name is required', email: 'Email is required', age: 'Age is required' },
+      },
       { name: 'Accepts a 20-character name', input: [{ name: 'abcdefghijklmnopqrst', email: 'a@b', age: '18' }], expected: {} },
-      { name: 'Rejects a 21-character name after trimming', input: [{ name: ' abcdefghijklmnopqrstu ', email: 'a@b', age: '18' }], expected: { name: 'Name must be 20 characters or fewer' } },
-      { name: 'Rejects an email with no @', input: [{ name: 'Ada', email: 'ada.site', age: '20' }], expected: { email: 'Enter a valid email address' } },
-      { name: 'Rejects an email with two @', input: [{ name: 'Ada', email: 'a@b@c', age: '20' }], expected: { email: 'Enter a valid email address' } },
-      { name: 'Rejects an email with a blank side', input: [{ name: 'Ada', email: ' @b', age: '20' }], expected: { email: 'Enter a valid email address' } },
-      { name: 'Prefers the format message over the range message', input: [{ name: 'Ada', email: 'a@b', age: '12.5' }], expected: { age: 'Age must be a whole number' } },
-      { name: 'Rejects a negative or exponent age as not whole', input: [{ name: 'Ada', email: 'a@b', age: '-5' }], expected: { age: 'Age must be a whole number' } },
+      {
+        name: 'Rejects a 21-character name after trimming',
+        input: [{ name: ' abcdefghijklmnopqrstu ', email: 'a@b', age: '18' }],
+        expected: { name: 'Name must be 20 characters or fewer' },
+      },
+      {
+        name: 'Rejects an email with no @',
+        input: [{ name: 'Ada', email: 'ada.site', age: '20' }],
+        expected: { email: 'Enter a valid email address' },
+      },
+      {
+        name: 'Rejects an email with two @',
+        input: [{ name: 'Ada', email: 'a@b@c', age: '20' }],
+        expected: { email: 'Enter a valid email address' },
+      },
+      {
+        name: 'Rejects an email with a blank side',
+        input: [{ name: 'Ada', email: ' @b', age: '20' }],
+        expected: { email: 'Enter a valid email address' },
+      },
+      {
+        name: 'Prefers the format message over the range message',
+        input: [{ name: 'Ada', email: 'a@b', age: '12.5' }],
+        expected: { age: 'Age must be a whole number' },
+      },
+      {
+        name: 'Rejects a negative or exponent age as not whole',
+        input: [{ name: 'Ada', email: 'a@b', age: '-5' }],
+        expected: { age: 'Age must be a whole number' },
+      },
       { name: 'Accepts the age limits', input: [{ name: 'Ada', email: 'a@b', age: ' 120 ' }], expected: {} },
-      { name: 'Rejects an age just above the limit', input: [{ name: 'Ada', email: 'a@b', age: '121' }], expected: { age: 'Age must be between 18 and 120' } },
-      { name: 'Reads leading zeros as the number', input: [{ name: 'Ada', email: 'a@b', age: '007' }], expected: { age: 'Age must be between 18 and 120' } },
+      {
+        name: 'Rejects an age just above the limit',
+        input: [{ name: 'Ada', email: 'a@b', age: '121' }],
+        expected: { age: 'Age must be between 18 and 120' },
+      },
+      {
+        name: 'Reads leading zeros as the number',
+        input: [{ name: 'Ada', email: 'a@b', age: '007' }],
+        expected: { age: 'Age must be between 18 and 120' },
+      },
     ],
   },
   {
-    id: 'frontend-pagination-controls', title: 'Choose page buttons', category: 'Frontend core', format: 'transform',
-    context: 'A results list has many pages, so the pager cannot show a button for each one. It shows the first page, the last page, the current page and its neighbors, and "..." where pages are hidden.',
-    prompt: 'Implement pageButtons(current, total). Return the items to show in order: page numbers and the string "...". If total is less than 1, return []. Otherwise clamp current into 1 through total. Show page 1, the last page, the clamped current page, and the pages directly before and after it (when they exist). Between two shown pages, if exactly one page is hidden, show that page number; if more than one is hidden, show "..." once. Never show a page twice.',
+    id: 'frontend-pagination-controls',
+    title: 'Choose page buttons',
+    category: 'Frontend core',
+    format: 'transform',
+    context:
+      'A results list has many pages, so the pager cannot show a button for each one. It shows the first page, the last page, the current page and its neighbors, and "..." where pages are hidden.',
+    prompt:
+      'Implement pageButtons(current, total). Return the items to show in order: page numbers and the string "...". If total is less than 1, return []. Otherwise clamp current into 1 through total. Show page 1, the last page, the clamped current page, and the pages directly before and after it (when they exist). Between two shown pages, if exactly one page is hidden, show that page number; if more than one is hidden, show "..." once. Never show a page twice.',
     example: { input: 'pageButtons(5, 10)', output: '[1, "...", 4, 5, 6, "...", 10]' },
     note: 'The ellipsis is the three-character string "..." (three periods). A single hidden page is shown rather than replaced by "...", so the pager never hides just one page. Both inputs are integers. Authored totals are at most 1000.',
-    vocabulary: [{ term: 'Pagination', meaning: 'splitting a long list into numbered pages' }, { term: 'Ellipsis', meaning: 'the "..." mark showing that some pages are hidden' }],
-    planPrompt: 'Which page numbers are always shown? How will you decide what goes between two shown pages that are not next to each other?',
-    starter: 'function pageButtons(current: number, total: number): (number | string)[] {\n  // Return page numbers and "..." in display order.\n  return []\n}\n',
+    vocabulary: [
+      { term: 'Pagination', meaning: 'splitting a long list into numbered pages' },
+      { term: 'Ellipsis', meaning: 'the "..." mark showing that some pages are hidden' },
+    ],
+    planPrompt:
+      'Which page numbers are always shown? How will you decide what goes between two shown pages that are not next to each other?',
+    starter:
+      'function pageButtons(current: number, total: number): (number | string)[] {\n  // Return page numbers and "..." in display order.\n  return []\n}\n',
     functionName: 'pageButtons',
-    hints: ['First decide the set of page numbers that are always shown, then put them in order without repeats.', 'Walk the ordered numbers and count how many page numbers are hidden between each one and the one before it.', 'No hidden pages adds nothing; one hidden page adds its number; more than one adds "...".'],
+    hints: [
+      'First decide the set of page numbers that are always shown, then put them in order without repeats.',
+      'Walk the ordered numbers and count how many page numbers are hidden between each one and the one before it.',
+      'No hidden pages adds nothing; one hidden page adds its number; more than one adds "...".',
+    ],
     checks: [
       { name: 'Shows both gaps in the middle', input: [5, 10], expected: [1, '...', 4, 5, 6, '...', 10] },
       { name: 'Shows a single hidden page instead of an ellipsis', input: [4, 10], expected: [1, 2, 3, 4, 5, '...', 10] },
@@ -95,16 +268,23 @@ export const appReps: Rep[] = [
     ],
   },
   {
-    id: 'backend-query-filters', title: 'Parse query filters', category: 'Backend core', format: 'backend',
-    context: 'A list endpoint receives its URL query as a parsed object. Values arrive as text, may be missing, and may be repeated, so the handler must turn them into trusted filters before searching.',
-    prompt: 'Implement parseFilters(query). Return {ok: false, error: "INVALID_QUERY"} unless query is a non-null object that is not an array. For each field, a missing, undefined, or blank (after trim) value uses its default. Any other value for a field, including null, a number, or an array from a repeated parameter, returns that field\'s error code: INVALID_STATUS for status, INVALID_LIMIT for limit, or INVALID_TAG for tag. Do not change the query.',
-    brief: { summary: 'Implement parseFilters(query).', rules: [
-      'Return {ok: false, error: "INVALID_QUERY"} unless query is a non-null object that is not an array.',
-      'For each field, a missing, undefined, or blank (after trim) value uses its default.',
-      "Any other value for a field, including null, a number, or an array from a repeated parameter, returns that field's error code: INVALID_STATUS for status, INVALID_LIMIT for limit, or INVALID_TAG for tag.",
-    ], edgeCases: [
-      'Do not change the query.',
-    ] },
+    id: 'backend-query-filters',
+    title: 'Parse query filters',
+    category: 'Backend core',
+    format: 'backend',
+    context:
+      'A list endpoint receives its URL query as a parsed object. Values arrive as text, may be missing, and may be repeated, so the handler must turn them into trusted filters before searching.',
+    prompt:
+      'Implement parseFilters(query). Return {ok: false, error: "INVALID_QUERY"} unless query is a non-null object that is not an array. For each field, a missing, undefined, or blank (after trim) value uses its default. Any other value for a field, including null, a number, or an array from a repeated parameter, returns that field\'s error code: INVALID_STATUS for status, INVALID_LIMIT for limit, or INVALID_TAG for tag. Do not change the query.',
+    brief: {
+      summary: 'Implement parseFilters(query).',
+      rules: [
+        'Return {ok: false, error: "INVALID_QUERY"} unless query is a non-null object that is not an array.',
+        'For each field, a missing, undefined, or blank (after trim) value uses its default.',
+        "Any other value for a field, including null, a number, or an array from a repeated parameter, returns that field's error code: INVALID_STATUS for status, INVALID_LIMIT for limit, or INVALID_TAG for tag.",
+      ],
+      edgeCases: ['Do not change the query.'],
+    },
     acceptanceCriteria: [
       'Missing, undefined, or trimmed-blank fields use defaults. Null and other non-string values return INVALID_STATUS, INVALID_LIMIT, or INVALID_TAG for their respective field.',
       'Error precedence is query shape, then status, then limit, then tag. Ignore extra keys and do not change the query.',
@@ -116,19 +296,57 @@ export const appReps: Rep[] = [
     ],
     example: { input: 'parseFilters({status:" OPEN ", limit:"25"})', output: '{ok:true, filters:{status:"open", limit:25, tag:null}}' },
     note: 'Error precedence is query shape, then status, then limit, then tag. Do not guess a nearby value for an invalid one. Extra keys are ignored. "007" is digits only and means 7; "0", "51", "1.5", and "-2" are invalid. Authored queries have at most 20 keys and values of at most 200 characters. These are parsed objects, not a live HTTP test.',
-    vocabulary: [{ term: 'Query string', meaning: 'the ?key=value part of a URL, which carries text values' }, { term: 'Default', meaning: 'a specified value used when input is absent, rather than invalid' }],
-    planPrompt: 'List each field with its default and its rule. Pick a request with two invalid fields and predict exactly which error you return.',
-    starter: 'type Filters = { status: "open" | "closed" | "all"; limit: number; tag: string | null }\n\nfunction parseFilters(query: unknown): { ok: true; filters: Filters } | { ok: false; error: string } {\n  // Validate each field, applying defaults.\n  return { ok: false, error: "INVALID_QUERY" }\n}\n',
-    functionName: 'parseFilters', preserveInput: true,
-    hints: ['Reject non-objects and arrays before reading any field.', 'Write one small step per field that returns a default for missing or blank text and rejects other non-strings.', 'Convert limit to a number only after testing that it is digits, then check both bounds. Return fields in the stated error order.'],
+    vocabulary: [
+      { term: 'Query string', meaning: 'the ?key=value part of a URL, which carries text values' },
+      { term: 'Default', meaning: 'a specified value used when input is absent, rather than invalid' },
+    ],
+    planPrompt:
+      'List each field with its default and its rule. Pick a request with two invalid fields and predict exactly which error you return.',
+    starter:
+      'type Filters = { status: "open" | "closed" | "all"; limit: number; tag: string | null }\n\nfunction parseFilters(query: unknown): { ok: true; filters: Filters } | { ok: false; error: string } {\n  // Validate each field, applying defaults.\n  return { ok: false, error: "INVALID_QUERY" }\n}\n',
+    functionName: 'parseFilters',
+    preserveInput: true,
+    hints: [
+      'Reject non-objects and arrays before reading any field.',
+      'Write one small step per field that returns a default for missing or blank text and rejects other non-strings.',
+      'Convert limit to a number only after testing that it is digits, then check both bounds. Return fields in the stated error order.',
+    ],
     checks: [
-      { name: 'Normalizes the example', input: [{ status: ' OPEN ', limit: '25' }], expected: { ok: true, filters: { status: 'open', limit: 25, tag: null } } },
-      { name: 'Applies every default for an empty query', input: [{}], expected: { ok: true, filters: { status: 'all', limit: 10, tag: null } } },
-      { name: 'Treats blank text as missing', input: [{ status: '  ', limit: '', tag: ' \t ' }], expected: { ok: true, filters: { status: 'all', limit: 10, tag: null } } },
-      { name: 'Normalizes the tag and ignores extra keys', input: [{ tag: ' Urgent ', page: '2' }], expected: { ok: true, filters: { status: 'all', limit: 10, tag: 'urgent' } } },
-      { name: 'Accepts the limit bounds', input: [{ limit: '50', status: 'closed' }], expected: { ok: true, filters: { status: 'closed', limit: 50, tag: null } } },
-      { name: 'Reads leading zeros as the number', input: [{ limit: '007' }], expected: { ok: true, filters: { status: 'all', limit: 7, tag: null } } },
-      { name: 'Accepts a 20-character tag', input: [{ tag: 'abcdefghijklmnopqrst' }], expected: { ok: true, filters: { status: 'all', limit: 10, tag: 'abcdefghijklmnopqrst' } } },
+      {
+        name: 'Normalizes the example',
+        input: [{ status: ' OPEN ', limit: '25' }],
+        expected: { ok: true, filters: { status: 'open', limit: 25, tag: null } },
+      },
+      {
+        name: 'Applies every default for an empty query',
+        input: [{}],
+        expected: { ok: true, filters: { status: 'all', limit: 10, tag: null } },
+      },
+      {
+        name: 'Treats blank text as missing',
+        input: [{ status: '  ', limit: '', tag: ' \t ' }],
+        expected: { ok: true, filters: { status: 'all', limit: 10, tag: null } },
+      },
+      {
+        name: 'Normalizes the tag and ignores extra keys',
+        input: [{ tag: ' Urgent ', page: '2' }],
+        expected: { ok: true, filters: { status: 'all', limit: 10, tag: 'urgent' } },
+      },
+      {
+        name: 'Accepts the limit bounds',
+        input: [{ limit: '50', status: 'closed' }],
+        expected: { ok: true, filters: { status: 'closed', limit: 50, tag: null } },
+      },
+      {
+        name: 'Reads leading zeros as the number',
+        input: [{ limit: '007' }],
+        expected: { ok: true, filters: { status: 'all', limit: 7, tag: null } },
+      },
+      {
+        name: 'Accepts a 20-character tag',
+        input: [{ tag: 'abcdefghijklmnopqrst' }],
+        expected: { ok: true, filters: { status: 'all', limit: 10, tag: 'abcdefghijklmnopqrst' } },
+      },
       { name: 'Rejects a null status', input: [{ status: null }], expected: { ok: false, error: 'INVALID_STATUS' } },
       { name: 'Rejects a numeric status', input: [{ status: 12 }], expected: { ok: false, error: 'INVALID_STATUS' } },
       { name: 'Rejects a array status', input: [{ status: ['x'] }], expected: { ok: false, error: 'INVALID_STATUS' } },
@@ -145,160 +363,431 @@ export const appReps: Rep[] = [
       { name: 'Rejects fractional and negative limits', input: [{ limit: '1.5' }], expected: { ok: false, error: 'INVALID_LIMIT' } },
       { name: 'Rejects a numeric value instead of text', input: [{ limit: 10 }], expected: { ok: false, error: 'INVALID_LIMIT' } },
       { name: 'Rejects a 21-character tag', input: [{ tag: 'abcdefghijklmnopqrstu' }], expected: { ok: false, error: 'INVALID_TAG' } },
-      { name: 'Reports status before limit and tag', input: [{ status: 'x', limit: '0', tag: 'abcdefghijklmnopqrstu' }], expected: { ok: false, error: 'INVALID_STATUS' } },
-      { name: 'Reports limit before tag', input: [{ limit: '0', tag: 'abcdefghijklmnopqrstu' }], expected: { ok: false, error: 'INVALID_LIMIT' } },
+      {
+        name: 'Reports status before limit and tag',
+        input: [{ status: 'x', limit: '0', tag: 'abcdefghijklmnopqrstu' }],
+        expected: { ok: false, error: 'INVALID_STATUS' },
+      },
+      {
+        name: 'Reports limit before tag',
+        input: [{ limit: '0', tag: 'abcdefghijklmnopqrstu' }],
+        expected: { ok: false, error: 'INVALID_LIMIT' },
+      },
       { name: 'Rejects null', input: [null], expected: { ok: false, error: 'INVALID_QUERY' } },
       { name: 'Rejects an array', input: [['open']], expected: { ok: false, error: 'INVALID_QUERY' } },
       { name: 'Rejects a primitive', input: ['status=open'], expected: { ok: false, error: 'INVALID_QUERY' } },
     ],
   },
   {
-    id: 'backend-rate-limit', title: 'Decide a rate limit', category: 'Backend core', format: 'backend',
-    context: 'An API allows each caller a fixed number of requests per time window. The server keeps the times of the caller\'s earlier accepted requests; this function decides about one new request. The current time is passed in, so the function never reads a clock.',
-    prompt: 'Implement rateLimit(times, now, limit, windowMs). Time is split into fixed windows that start at 0, windowMs, 2 * windowMs, and so on; the window containing now starts at Math.floor(now / windowMs) * windowMs and lasts windowMs milliseconds. Count the earlier times that are inside the same window as now and are not later than now. If that count is less than limit, return {allowed: true, remaining: limit - count - 1, retryAfterMs: 0}. Otherwise return {allowed: false, remaining: 0, retryAfterMs: the time left until the next window starts}. Do not change the times array.',
-    brief: { summary: 'Implement rateLimit(times, now, limit, windowMs).', rules: [
-      'Time is split into fixed windows that start at 0, windowMs, 2 * windowMs, and so on; the window containing now starts at Math.floor(now / windowMs) * windowMs and lasts windowMs milliseconds.',
-      'Count the earlier times that are inside the same window as now and are not later than now.',
-      'If that count is less than limit, return {allowed: true, remaining: limit - count - 1, retryAfterMs: 0}.',
-      'Otherwise return {allowed: false, remaining: 0, retryAfterMs: the time left until the next window starts}.',
-    ], edgeCases: [
-      'Do not change the times array.',
-    ] },
+    id: 'backend-rate-limit',
+    title: 'Decide a rate limit',
+    category: 'Backend core',
+    format: 'backend',
+    context:
+      "An API allows each caller a fixed number of requests per time window. The server keeps the times of the caller's earlier accepted requests; this function decides about one new request. The current time is passed in, so the function never reads a clock.",
+    prompt:
+      'Implement rateLimit(times, now, limit, windowMs). Time is split into fixed windows that start at 0, windowMs, 2 * windowMs, and so on; the window containing now starts at Math.floor(now / windowMs) * windowMs and lasts windowMs milliseconds. Count the earlier times that are inside the same window as now and are not later than now. If that count is less than limit, return {allowed: true, remaining: limit - count - 1, retryAfterMs: 0}. Otherwise return {allowed: false, remaining: 0, retryAfterMs: the time left until the next window starts}. Do not change the times array.',
+    brief: {
+      summary: 'Implement rateLimit(times, now, limit, windowMs).',
+      rules: [
+        'Time is split into fixed windows that start at 0, windowMs, 2 * windowMs, and so on; the window containing now starts at Math.floor(now / windowMs) * windowMs and lasts windowMs milliseconds.',
+        'Count the earlier times that are inside the same window as now and are not later than now.',
+        'If that count is less than limit, return {allowed: true, remaining: limit - count - 1, retryAfterMs: 0}.',
+        'Otherwise return {allowed: false, remaining: 0, retryAfterMs: the time left until the next window starts}.',
+      ],
+      edgeCases: ['Do not change the times array.'],
+    },
     example: { input: 'rateLimit([1000, 1500], 1800, 4, 1000)', output: '{allowed:true, remaining:1, retryAfterMs:0}' },
     note: 'A time exactly at a window start belongs to that new window, so a request at 2000 with windowMs 1000 starts fresh. Times from earlier windows do not count. Times later than now are ignored. Times may be in any order. limit and windowMs are positive integers; now and times are nonnegative integers. Authored lists have at most 200 times.',
-    vocabulary: [{ term: 'Fixed window', meaning: 'counting requests in time slots with fixed start times' }, { term: 'Injected time', meaning: 'passing the current time in as an argument so the code is easy to test' }],
-    planPrompt: 'Where does the current window start and end? Which recorded times count toward the limit, and what is exactly on the boundary?',
-    starter: 'type Decision = { allowed: boolean; remaining: number; retryAfterMs: number }\n\nfunction rateLimit(times: number[], now: number, limit: number, windowMs: number): Decision {\n  // Decide whether this request is allowed.\n  return { allowed: false, remaining: 0, retryAfterMs: 0 }\n}\n',
-    functionName: 'rateLimit', preserveInput: true,
-    hints: ['Start by working out where the current window begins and where the next one begins.', 'Count only the times that fall between the window start and now.', 'Compare that count with limit; when blocked, the wait is the next window start minus now.'],
+    vocabulary: [
+      { term: 'Fixed window', meaning: 'counting requests in time slots with fixed start times' },
+      { term: 'Injected time', meaning: 'passing the current time in as an argument so the code is easy to test' },
+    ],
+    planPrompt:
+      'Where does the current window start and end? Which recorded times count toward the limit, and what is exactly on the boundary?',
+    starter:
+      'type Decision = { allowed: boolean; remaining: number; retryAfterMs: number }\n\nfunction rateLimit(times: number[], now: number, limit: number, windowMs: number): Decision {\n  // Decide whether this request is allowed.\n  return { allowed: false, remaining: 0, retryAfterMs: 0 }\n}\n',
+    functionName: 'rateLimit',
+    preserveInput: true,
+    hints: [
+      'Start by working out where the current window begins and where the next one begins.',
+      'Count only the times that fall between the window start and now.',
+      'Compare that count with limit; when blocked, the wait is the next window start minus now.',
+    ],
     checks: [
-      { name: 'Allows a request and reports what remains', input: [[1000, 1500], 1800, 4, 1000], expected: { allowed: true, remaining: 1, retryAfterMs: 0 } },
-      { name: 'Allows the first request with no history', input: [[], 0, 2, 1000], expected: { allowed: true, remaining: 1, retryAfterMs: 0 } },
-      { name: 'Allows the last request under the limit', input: [[1000, 1200], 1400, 3, 1000], expected: { allowed: true, remaining: 0, retryAfterMs: 0 } },
-      { name: 'Blocks when the window is full', input: [[1000, 1200, 1300], 1400, 3, 1000], expected: { allowed: false, remaining: 0, retryAfterMs: 600 } },
-      { name: 'Starts fresh exactly at the next window', input: [[1000, 1200, 1300], 2000, 3, 1000], expected: { allowed: true, remaining: 2, retryAfterMs: 0 } },
-      { name: 'Blocks one millisecond before the next window', input: [[1000, 1200, 1300], 1999, 3, 1000], expected: { allowed: false, remaining: 0, retryAfterMs: 1 } },
-      { name: 'Counts a time exactly at the window start', input: [[1000], 1500, 1, 1000], expected: { allowed: false, remaining: 0, retryAfterMs: 500 } },
-      { name: 'Ignores times from earlier windows', input: [[100, 900, 999], 1000, 1, 1000], expected: { allowed: true, remaining: 0, retryAfterMs: 0 } },
-      { name: 'Ignores times later than now', input: [[1900, 1800], 1100, 1, 1000], expected: { allowed: true, remaining: 0, retryAfterMs: 0 } },
-      { name: 'Accepts unordered times', input: [[1900, 1100, 1500], 1950, 3, 1000], expected: { allowed: false, remaining: 0, retryAfterMs: 50 } },
+      {
+        name: 'Allows a request and reports what remains',
+        input: [[1000, 1500], 1800, 4, 1000],
+        expected: { allowed: true, remaining: 1, retryAfterMs: 0 },
+      },
+      {
+        name: 'Allows the first request with no history',
+        input: [[], 0, 2, 1000],
+        expected: { allowed: true, remaining: 1, retryAfterMs: 0 },
+      },
+      {
+        name: 'Allows the last request under the limit',
+        input: [[1000, 1200], 1400, 3, 1000],
+        expected: { allowed: true, remaining: 0, retryAfterMs: 0 },
+      },
+      {
+        name: 'Blocks when the window is full',
+        input: [[1000, 1200, 1300], 1400, 3, 1000],
+        expected: { allowed: false, remaining: 0, retryAfterMs: 600 },
+      },
+      {
+        name: 'Starts fresh exactly at the next window',
+        input: [[1000, 1200, 1300], 2000, 3, 1000],
+        expected: { allowed: true, remaining: 2, retryAfterMs: 0 },
+      },
+      {
+        name: 'Blocks one millisecond before the next window',
+        input: [[1000, 1200, 1300], 1999, 3, 1000],
+        expected: { allowed: false, remaining: 0, retryAfterMs: 1 },
+      },
+      {
+        name: 'Counts a time exactly at the window start',
+        input: [[1000], 1500, 1, 1000],
+        expected: { allowed: false, remaining: 0, retryAfterMs: 500 },
+      },
+      {
+        name: 'Ignores times from earlier windows',
+        input: [[100, 900, 999], 1000, 1, 1000],
+        expected: { allowed: true, remaining: 0, retryAfterMs: 0 },
+      },
+      {
+        name: 'Ignores times later than now',
+        input: [[1900, 1800], 1100, 1, 1000],
+        expected: { allowed: true, remaining: 0, retryAfterMs: 0 },
+      },
+      {
+        name: 'Accepts unordered times',
+        input: [[1900, 1100, 1500], 1950, 3, 1000],
+        expected: { allowed: false, remaining: 0, retryAfterMs: 50 },
+      },
       { name: 'Uses the supplied window size', input: [[10, 20], 25, 2, 30], expected: { allowed: false, remaining: 0, retryAfterMs: 5 } },
     ],
   },
   {
-    id: 'backend-error-response', title: 'Map errors to responses', category: 'Backend core', format: 'backend',
-    context: 'Application code throws errors with a short code. The API must turn each one into an HTTP status and a message that is safe to show clients, without leaking messages, stack traces, or database details.',
-    prompt: 'Implement errorResponse(error). If error is a non-null object whose code property belongs directly to that object (not its prototype) and is one of the known strings below, return {status, body: {error: code, message}}. NOT_FOUND gives 404 "We could not find that item."; INVALID_INPUT gives 400 "The request was not valid."; UNAUTHENTICATED gives 401 "Please sign in first."; FORBIDDEN gives 403 "You do not have access to this."; CONFLICT gives 409 "That change conflicts with the current data." For anything else return {status: 500, body: {error: "INTERNAL", message: "Something went wrong. Please try again later."}}. Do not change the error.',
-    brief: { summary: 'Implement errorResponse(error).', rules: [
-      'If error is a non-null object whose code property belongs directly to that object (not its prototype) and is one of the known strings below, return {status, body: {error: code, message}}.',
-      'NOT_FOUND gives 404 "We could not find that item."; INVALID_INPUT gives 400 "The request was not valid."; UNAUTHENTICATED gives 401 "Please sign in first."; FORBIDDEN gives 403 "You do not have access to this."; CONFLICT gives 409 "That change conflicts with the current data."',
-      'For anything else return {status: 500, body: {error: "INTERNAL", message: "Something went wrong. Please try again later."}}.',
-    ], edgeCases: [
-      'Do not change the error.',
-    ] },
-    example: { input: 'errorResponse({code:"NOT_FOUND", message:"row 7 missing in orders"})', output: '{status:404, body:{error:"NOT_FOUND", message:"We could not find that item."}}' },
+    id: 'backend-error-response',
+    title: 'Map errors to responses',
+    category: 'Backend core',
+    format: 'backend',
+    context:
+      'Application code throws errors with a short code. The API must turn each one into an HTTP status and a message that is safe to show clients, without leaking messages, stack traces, or database details.',
+    prompt:
+      'Implement errorResponse(error). If error is a non-null object whose code property belongs directly to that object (not its prototype) and is one of the known strings below, return {status, body: {error: code, message}}. NOT_FOUND gives 404 "We could not find that item."; INVALID_INPUT gives 400 "The request was not valid."; UNAUTHENTICATED gives 401 "Please sign in first."; FORBIDDEN gives 403 "You do not have access to this."; CONFLICT gives 409 "That change conflicts with the current data." For anything else return {status: 500, body: {error: "INTERNAL", message: "Something went wrong. Please try again later."}}. Do not change the error.',
+    brief: {
+      summary: 'Implement errorResponse(error).',
+      rules: [
+        'If error is a non-null object whose code property belongs directly to that object (not its prototype) and is one of the known strings below, return {status, body: {error: code, message}}.',
+        'NOT_FOUND gives 404 "We could not find that item."; INVALID_INPUT gives 400 "The request was not valid."; UNAUTHENTICATED gives 401 "Please sign in first."; FORBIDDEN gives 403 "You do not have access to this."; CONFLICT gives 409 "That change conflicts with the current data."',
+        'For anything else return {status: 500, body: {error: "INTERNAL", message: "Something went wrong. Please try again later."}}.',
+      ],
+      edgeCases: ['Do not change the error.'],
+    },
+    example: {
+      input: 'errorResponse({code:"NOT_FOUND", message:"row 7 missing in orders"})',
+      output: '{status:404, body:{error:"NOT_FOUND", message:"We could not find that item."}}',
+    },
     note: 'Codes match exactly, including case. The body has only error and message: never copy the thrown error\'s own message, stack, or other fields. Unknown codes, a code that is not a string, a missing code, null, strings, and plain Error objects all produce the 500 response. A code like "toString" or "constructor" is not known.',
-    vocabulary: [{ term: 'Status code', meaning: 'the number in an HTTP response that says how the request went' }, { term: 'Information leak', meaning: 'exposing internal details such as stack traces to people who should not see them' }],
-    planPrompt: 'What are the five known codes and their responses? What should a caller see for an error you did not plan for, and why not show its message?',
-    starter: 'type ErrorBody = { status: number; body: { error: string; message: string } }\n\nfunction errorResponse(error: unknown): ErrorBody {\n  // Map known codes; hide everything else.\n  return { status: 500, body: { error: "INTERNAL", message: "" } }\n}\n',
-    functionName: 'errorResponse', preserveInput: true,
-    hints: ['Check that the value is an object before reading a code from it.', 'Look the code up in a table you write yourself, but make sure built-in names like "toString" are not treated as known.', 'Build the response from your table only, so thrown text can never reach the body.'],
+    vocabulary: [
+      { term: 'Status code', meaning: 'the number in an HTTP response that says how the request went' },
+      { term: 'Information leak', meaning: 'exposing internal details such as stack traces to people who should not see them' },
+    ],
+    planPrompt:
+      'What are the five known codes and their responses? What should a caller see for an error you did not plan for, and why not show its message?',
+    starter:
+      'type ErrorBody = { status: number; body: { error: string; message: string } }\n\nfunction errorResponse(error: unknown): ErrorBody {\n  // Map known codes; hide everything else.\n  return { status: 500, body: { error: "INTERNAL", message: "" } }\n}\n',
+    functionName: 'errorResponse',
+    preserveInput: true,
+    hints: [
+      'Check that the value is an object before reading a code from it.',
+      'Look the code up in a table you write yourself, but make sure built-in names like "toString" are not treated as known.',
+      'Build the response from your table only, so thrown text can never reach the body.',
+    ],
     checks: [
-      { name: 'Maps the example without leaking its message', input: [{ code: 'NOT_FOUND', message: 'row 7 missing in orders' }], expected: { status: 404, body: { error: 'NOT_FOUND', message: 'We could not find that item.' } } },
-      { name: 'Maps invalid input', input: [{ code: 'INVALID_INPUT' }], expected: { status: 400, body: { error: 'INVALID_INPUT', message: 'The request was not valid.' } } },
-      { name: 'Maps unauthenticated', input: [{ code: 'UNAUTHENTICATED' }], expected: { status: 401, body: { error: 'UNAUTHENTICATED', message: 'Please sign in first.' } } },
-      { name: 'Maps forbidden', input: [{ code: 'FORBIDDEN' }], expected: { status: 403, body: { error: 'FORBIDDEN', message: 'You do not have access to this.' } } },
-      { name: 'Maps conflict and drops extra fields', input: [{ code: 'CONFLICT', stack: 'at db.query', sql: 'UPDATE orders' }], expected: { status: 409, body: { error: 'CONFLICT', message: 'That change conflicts with the current data.' } } },
-      { name: 'Hides an unknown code', input: [{ code: 'DB_TIMEOUT', message: 'connection to 10.0.0.5 failed' }], expected: { status: 500, body: { error: 'INTERNAL', message: 'Something went wrong. Please try again later.' } } },
-      { name: 'Matches codes with exact case', input: [{ code: 'not_found' }], expected: { status: 500, body: { error: 'INTERNAL', message: 'Something went wrong. Please try again later.' } } },
-      { name: 'Does not treat inherited names as known codes', input: [{ code: 'toString' }], expected: { status: 500, body: { error: 'INTERNAL', message: 'Something went wrong. Please try again later.' } } },
-      { name: 'Ignores a code that is not a string', input: [{ code: 404 }], expected: { status: 500, body: { error: 'INTERNAL', message: 'Something went wrong. Please try again later.' } } },
-      { name: 'Handles an object with no code', input: [{ message: 'boom' }], expected: { status: 500, body: { error: 'INTERNAL', message: 'Something went wrong. Please try again later.' } } },
-      { name: 'Handles null', input: [null], expected: { status: 500, body: { error: 'INTERNAL', message: 'Something went wrong. Please try again later.' } } },
-      { name: 'Handles a thrown string', input: ['NOT_FOUND'], expected: { status: 500, body: { error: 'INTERNAL', message: 'Something went wrong. Please try again later.' } } },
+      {
+        name: 'Maps the example without leaking its message',
+        input: [{ code: 'NOT_FOUND', message: 'row 7 missing in orders' }],
+        expected: { status: 404, body: { error: 'NOT_FOUND', message: 'We could not find that item.' } },
+      },
+      {
+        name: 'Maps invalid input',
+        input: [{ code: 'INVALID_INPUT' }],
+        expected: { status: 400, body: { error: 'INVALID_INPUT', message: 'The request was not valid.' } },
+      },
+      {
+        name: 'Maps unauthenticated',
+        input: [{ code: 'UNAUTHENTICATED' }],
+        expected: { status: 401, body: { error: 'UNAUTHENTICATED', message: 'Please sign in first.' } },
+      },
+      {
+        name: 'Maps forbidden',
+        input: [{ code: 'FORBIDDEN' }],
+        expected: { status: 403, body: { error: 'FORBIDDEN', message: 'You do not have access to this.' } },
+      },
+      {
+        name: 'Maps conflict and drops extra fields',
+        input: [{ code: 'CONFLICT', stack: 'at db.query', sql: 'UPDATE orders' }],
+        expected: { status: 409, body: { error: 'CONFLICT', message: 'That change conflicts with the current data.' } },
+      },
+      {
+        name: 'Hides an unknown code',
+        input: [{ code: 'DB_TIMEOUT', message: 'connection to 10.0.0.5 failed' }],
+        expected: { status: 500, body: { error: 'INTERNAL', message: 'Something went wrong. Please try again later.' } },
+      },
+      {
+        name: 'Matches codes with exact case',
+        input: [{ code: 'not_found' }],
+        expected: { status: 500, body: { error: 'INTERNAL', message: 'Something went wrong. Please try again later.' } },
+      },
+      {
+        name: 'Does not treat inherited names as known codes',
+        input: [{ code: 'toString' }],
+        expected: { status: 500, body: { error: 'INTERNAL', message: 'Something went wrong. Please try again later.' } },
+      },
+      {
+        name: 'Ignores a code that is not a string',
+        input: [{ code: 404 }],
+        expected: { status: 500, body: { error: 'INTERNAL', message: 'Something went wrong. Please try again later.' } },
+      },
+      {
+        name: 'Handles an object with no code',
+        input: [{ message: 'boom' }],
+        expected: { status: 500, body: { error: 'INTERNAL', message: 'Something went wrong. Please try again later.' } },
+      },
+      {
+        name: 'Handles null',
+        input: [null],
+        expected: { status: 500, body: { error: 'INTERNAL', message: 'Something went wrong. Please try again later.' } },
+      },
+      {
+        name: 'Handles a thrown string',
+        input: ['NOT_FOUND'],
+        expected: { status: 500, body: { error: 'INTERNAL', message: 'Something went wrong. Please try again later.' } },
+      },
     ],
   },
   {
-    id: 'group-items-by-heading', title: 'Group list items under headings', category: 'Frontend core', format: 'transform',
-    context: 'A help page lists articles, and each article names the section heading it belongs to. The page shows one heading per section, with the article titles under it, so the list is built from the flat input.',
-    prompt: 'Implement groupByHeading(items). Each item has a heading and a title, both strings. Trim each heading and compare the trimmed headings case-sensitively. Skip an item whose heading is blank after trimming. Return one group per distinct heading, in the order each heading first appears among the kept items. Each group has heading, set to the trimmed text, and titles, the titles of its items in their original order, exactly as given. Return [] when there are no items. Do not change the items array or its objects.',
-    example: { input: 'groupByHeading([{heading:"Setup", title:"Install"}, {heading:"Usage", title:"Run"}, {heading:"Setup", title:"Configure"}])', output: '[{heading:"Setup", titles:["Install", "Configure"]}, {heading:"Usage", titles:["Run"]}]' },
+    id: 'group-items-by-heading',
+    title: 'Group list items under headings',
+    category: 'Frontend core',
+    format: 'transform',
+    context:
+      'A help page lists articles, and each article names the section heading it belongs to. The page shows one heading per section, with the article titles under it, so the list is built from the flat input.',
+    prompt:
+      'Implement groupByHeading(items). Each item has a heading and a title, both strings. Trim each heading and compare the trimmed headings case-sensitively. Skip an item whose heading is blank after trimming. Return one group per distinct heading, in the order each heading first appears among the kept items. Each group has heading, set to the trimmed text, and titles, the titles of its items in their original order, exactly as given. Return [] when there are no items. Do not change the items array or its objects.',
+    example: {
+      input: 'groupByHeading([{heading:"Setup", title:"Install"}, {heading:"Usage", title:"Run"}, {heading:"Setup", title:"Configure"}])',
+      output: '[{heading:"Setup", titles:["Install", "Configure"]}, {heading:"Usage", titles:["Run"]}]',
+    },
     note: 'Headings are trimmed, then compared with their letter case kept, so "tips" and "Tips" are different groups. Titles are not trimmed. Authored lists have at most 200 items with basic Latin text.',
-    vocabulary: [{ term: 'Group', meaning: 'items that share a key, such as a heading' }, { term: 'First-seen order', meaning: 'the order in which a value first appears in the input' }],
-    planPrompt: 'What text decides that two items share a group? In what order should the groups appear, and which items are skipped before they can create a group?',
-    starter: 'type Item = { heading: string; title: string }\ntype Group = { heading: string; titles: string[] }\n\nfunction groupByHeading(items: Item[]): Group[] {\n  // Collect titles under each heading, in first-seen order.\n  return []\n}\n',
-    functionName: 'groupByHeading', preserveInput: true,
+    vocabulary: [
+      { term: 'Group', meaning: 'items that share a key, such as a heading' },
+      { term: 'First-seen order', meaning: 'the order in which a value first appears in the input' },
+    ],
+    planPrompt:
+      'What text decides that two items share a group? In what order should the groups appear, and which items are skipped before they can create a group?',
+    starter:
+      'type Item = { heading: string; title: string }\ntype Group = { heading: string; titles: string[] }\n\nfunction groupByHeading(items: Item[]): Group[] {\n  // Collect titles under each heading, in first-seen order.\n  return []\n}\n',
+    functionName: 'groupByHeading',
+    preserveInput: true,
     hints: [
       'Decide what text marks a group, and clean it before you compare it with other headings.',
       'Keep one list of titles for each heading you meet, and remember the headings in the order they first appear.',
       'Skip a blank heading before creating any group, then build the result from your groups in their order.',
     ],
     checks: [
-      { name: 'Keeps groups in first-appearance order', input: [[{ heading: 'Billing', title: 'Invoices' }, { heading: 'Account', title: 'Password' }, { heading: 'Billing', title: 'Refunds' }, { heading: 'Account', title: 'Email' }]], expected: [{ heading: 'Billing', titles: ['Invoices', 'Refunds'] }, { heading: 'Account', titles: ['Password', 'Email'] }] },
-      { name: 'Keeps titles in their original order', input: [[{ heading: 'B', title: 'z' }, { heading: 'A', title: 'y' }, { heading: 'B', title: 'x' }]], expected: [{ heading: 'B', titles: ['z', 'x'] }, { heading: 'A', titles: ['y'] }] },
-      { name: 'Trims headings before grouping', input: [[{ heading: '  Tips ', title: 'One' }, { heading: 'Tips', title: 'Two' }]], expected: [{ heading: 'Tips', titles: ['One', 'Two'] }] },
-      { name: 'Matches headings case-sensitively', input: [[{ heading: 'tips', title: 'a' }, { heading: 'Tips', title: 'b' }]], expected: [{ heading: 'tips', titles: ['a'] }, { heading: 'Tips', titles: ['b'] }] },
-      { name: 'Skips items with a blank heading', input: [[{ heading: ' ', title: 'x' }, { heading: '', title: 'y' }, { heading: 'Go', title: 'z' }]], expected: [{ heading: 'Go', titles: ['z'] }] },
-      { name: 'Keeps titles exactly as given', input: [[{ heading: 'Go', title: ' Spaced  Title ' }]], expected: [{ heading: 'Go', titles: [' Spaced  Title '] }] },
+      {
+        name: 'Keeps groups in first-appearance order',
+        input: [
+          [
+            { heading: 'Billing', title: 'Invoices' },
+            { heading: 'Account', title: 'Password' },
+            { heading: 'Billing', title: 'Refunds' },
+            { heading: 'Account', title: 'Email' },
+          ],
+        ],
+        expected: [
+          { heading: 'Billing', titles: ['Invoices', 'Refunds'] },
+          { heading: 'Account', titles: ['Password', 'Email'] },
+        ],
+      },
+      {
+        name: 'Keeps titles in their original order',
+        input: [
+          [
+            { heading: 'B', title: 'z' },
+            { heading: 'A', title: 'y' },
+            { heading: 'B', title: 'x' },
+          ],
+        ],
+        expected: [
+          { heading: 'B', titles: ['z', 'x'] },
+          { heading: 'A', titles: ['y'] },
+        ],
+      },
+      {
+        name: 'Trims headings before grouping',
+        input: [
+          [
+            { heading: '  Tips ', title: 'One' },
+            { heading: 'Tips', title: 'Two' },
+          ],
+        ],
+        expected: [{ heading: 'Tips', titles: ['One', 'Two'] }],
+      },
+      {
+        name: 'Matches headings case-sensitively',
+        input: [
+          [
+            { heading: 'tips', title: 'a' },
+            { heading: 'Tips', title: 'b' },
+          ],
+        ],
+        expected: [
+          { heading: 'tips', titles: ['a'] },
+          { heading: 'Tips', titles: ['b'] },
+        ],
+      },
+      {
+        name: 'Skips items with a blank heading',
+        input: [
+          [
+            { heading: ' ', title: 'x' },
+            { heading: '', title: 'y' },
+            { heading: 'Go', title: 'z' },
+          ],
+        ],
+        expected: [{ heading: 'Go', titles: ['z'] }],
+      },
+      {
+        name: 'Keeps titles exactly as given',
+        input: [[{ heading: 'Go', title: ' Spaced  Title ' }]],
+        expected: [{ heading: 'Go', titles: [' Spaced  Title '] }],
+      },
       { name: 'Returns no groups for an empty list', input: [[]], expected: [] },
-      { name: 'Keeps a heading with one item', input: [[{ heading: 'Solo', title: 'Only' }]], expected: [{ heading: 'Solo', titles: ['Only'] }] },
+      {
+        name: 'Keeps a heading with one item',
+        input: [[{ heading: 'Solo', title: 'Only' }]],
+        expected: [{ heading: 'Solo', titles: ['Only'] }],
+      },
     ],
   },
   {
-    id: 'filter-chip-summary', title: 'Summarize active filter chips', category: 'Frontend core', format: 'transform',
-    context: 'A search page shows each active filter as a chip. A narrow screen has room for only a few chips, so the page shows the first ones and a count of the rest. The list of selected filters itself is not changed.',
-    prompt: 'Implement chipSummary(selected, maxChips). selected is a list of filter names as text. Trim each name and drop names that are blank after trimming. Names that match case-insensitively are one filter; keep the first spelling after trimming. Return {chips, hiddenCount}: chips holds the first maxChips distinct filters in their order, and hiddenCount is the number of distinct filters that did not fit. With no filters, return {chips: [], hiddenCount: 0}. maxChips is a whole number from 1 through 10. Do not change the selected array.',
+    id: 'filter-chip-summary',
+    title: 'Summarize active filter chips',
+    category: 'Frontend core',
+    format: 'transform',
+    context:
+      'A search page shows each active filter as a chip. A narrow screen has room for only a few chips, so the page shows the first ones and a count of the rest. The list of selected filters itself is not changed.',
+    prompt:
+      'Implement chipSummary(selected, maxChips). selected is a list of filter names as text. Trim each name and drop names that are blank after trimming. Names that match case-insensitively are one filter; keep the first spelling after trimming. Return {chips, hiddenCount}: chips holds the first maxChips distinct filters in their order, and hiddenCount is the number of distinct filters that did not fit. With no filters, return {chips: [], hiddenCount: 0}. maxChips is a whole number from 1 through 10. Do not change the selected array.',
     example: { input: "chipSummary([' Red', 'red', 'Large', '  ', 'Cotton'], 2)", output: "{chips: ['Red', 'Large'], hiddenCount: 1}" },
     note: 'Count distinct filters, not raw entries. Blank names never count as filters. Names differing only by letter case are one filter. Authored lists have at most 50 names.',
-    vocabulary: [{ term: 'Chip', meaning: 'a small labeled control that shows one active filter' }, { term: 'Case-insensitive', meaning: 'treats upper and lower case letters as the same' }],
-    planPrompt: 'Which names count as blank? What makes two names the same filter, and which spelling is kept? How will you separate the visible chips from the hidden count?',
-    starter: 'type Summary = { chips: string[]; hiddenCount: number }\n\nfunction chipSummary(selected: string[], maxChips: number): Summary {\n  // Clean the names, remove duplicates, then split visible chips from hidden ones.\n  return { chips: [], hiddenCount: 0 }\n}\n',
-    functionName: 'chipSummary', preserveInput: true,
+    vocabulary: [
+      { term: 'Chip', meaning: 'a small labeled control that shows one active filter' },
+      { term: 'Case-insensitive', meaning: 'treats upper and lower case letters as the same' },
+    ],
+    planPrompt:
+      'Which names count as blank? What makes two names the same filter, and which spelling is kept? How will you separate the visible chips from the hidden count?',
+    starter:
+      'type Summary = { chips: string[]; hiddenCount: number }\n\nfunction chipSummary(selected: string[], maxChips: number): Summary {\n  // Clean the names, remove duplicates, then split visible chips from hidden ones.\n  return { chips: [], hiddenCount: 0 }\n}\n',
+    functionName: 'chipSummary',
+    preserveInput: true,
     hints: [
       'Clean each name and drop the blank ones before you count anything.',
       'Remember which names you have already kept, ignoring letter case, so a repeated filter is skipped.',
       'Take the first maxChips distinct names for the chips, then count the distinct names that are left over.',
     ],
     checks: [
-      { name: 'Shows every filter when they all fit', input: [['Brand', 'Price', 'Rating'], 5], expected: { chips: ['Brand', 'Price', 'Rating'], hiddenCount: 0 } },
+      {
+        name: 'Shows every filter when they all fit',
+        input: [['Brand', 'Price', 'Rating'], 5],
+        expected: { chips: ['Brand', 'Price', 'Rating'], hiddenCount: 0 },
+      },
       { name: 'Returns nothing for no filters', input: [[], 3], expected: { chips: [], hiddenCount: 0 } },
       { name: 'Ignores blank names', input: [['  ', '', 'Sale'], 3], expected: { chips: ['Sale'], hiddenCount: 0 } },
-      { name: 'Merges names that differ only by case', input: [['Sale', 'SALE', 'sale'], 3], expected: { chips: ['Sale'], hiddenCount: 0 } },
+      {
+        name: 'Merges names that differ only by case',
+        input: [['Sale', 'SALE', 'sale'], 3],
+        expected: { chips: ['Sale'], hiddenCount: 0 },
+      },
       { name: 'Keeps the first spelling after trimming', input: [['  new ', 'New'], 1], expected: { chips: ['new'], hiddenCount: 0 } },
-      { name: 'Counts hidden distinct filters, not raw entries', input: [['A', 'a', 'B', 'C', 'c'], 2], expected: { chips: ['A', 'B'], hiddenCount: 1 } },
-      { name: 'Shows everything when the limit matches the count', input: [['x', 'y'], 2], expected: { chips: ['x', 'y'], hiddenCount: 0 } },
+      {
+        name: 'Counts hidden distinct filters, not raw entries',
+        input: [['A', 'a', 'B', 'C', 'c'], 2],
+        expected: { chips: ['A', 'B'], hiddenCount: 1 },
+      },
+      {
+        name: 'Shows everything when the limit matches the count',
+        input: [['x', 'y'], 2],
+        expected: { chips: ['x', 'y'], hiddenCount: 0 },
+      },
       { name: 'Hides every filter after a limit of one', input: [['a', 'b', 'c', 'd'], 1], expected: { chips: ['a'], hiddenCount: 3 } },
-      { name: 'Handles the largest chip limit', input: [['f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10', 'f11', 'f12'], 10], expected: { chips: ['f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10'], hiddenCount: 2 } },
+      {
+        name: 'Handles the largest chip limit',
+        input: [['f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10', 'f11', 'f12'], 10],
+        expected: { chips: ['f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10'], hiddenCount: 2 },
+      },
     ],
   },
   {
-    id: 'parse-sort-param', title: 'Parse a sort parameter', category: 'Backend core', format: 'backend',
-    context: 'A list endpoint accepts an optional sort parameter such as title, -createdAt, or priority. Clients may send it once or repeat it. Only listed fields can be used for sorting, so client text never reaches a query as a field name.',
-    prompt: "Implement parseSort(value). Return {ok: true, sort: {field, direction}} or {ok: false, error: 'INVALID_SORT'}. With or without a leading dash, the field must exactly match title, createdAt, or priority. A leading dash only sets direction to desc.",
+    id: 'parse-sort-param',
+    title: 'Parse a sort parameter',
+    category: 'Backend core',
+    format: 'backend',
+    context:
+      'A list endpoint accepts an optional sort parameter such as title, -createdAt, or priority. Clients may send it once or repeat it. Only listed fields can be used for sorting, so client text never reaches a query as a field name.',
+    prompt:
+      "Implement parseSort(value). Return {ok: true, sort: {field, direction}} or {ok: false, error: 'INVALID_SORT'}. With or without a leading dash, the field must exactly match title, createdAt, or priority. A leading dash only sets direction to desc.",
     acceptanceCriteria: [
       "A value of undefined, or text that is blank after trimming, returns the default {field: 'title', direction: 'asc'}.",
-      "Any other value that is not a string, including null, a number, or an array from a repeated parameter, is invalid.",
-      "Trim the text.",
+      'Any other value that is not a string, including null, a number, or an array from a repeated parameter, is invalid.',
+      'Trim the text.',
       "A leading '-' means direction 'desc'; otherwise the direction is 'asc'.",
-      "Whether or not there is a leading dash, the field name must exactly match one of title, createdAt, or priority, with the same letter case and no extra spaces after trimming the whole value.",
-      "A dash with nothing after it, a second dash, or any other field is invalid.",
+      'Whether or not there is a leading dash, the field name must exactly match one of title, createdAt, or priority, with the same letter case and no extra spaces after trimming the whole value.',
+      'A dash with nothing after it, a second dash, or any other field is invalid.',
     ],
     example: { input: "parseSort('-createdAt')", output: "{ok: true, sort: {field: 'createdAt', direction: 'desc'}}" },
     note: 'Only title, createdAt, and priority are allowed. The dash controls direction and is not part of the field name. Spaces inside the text are not removed. The checks use parsed values, not a live HTTP query.',
-    vocabulary: [{ term: 'Allow list', meaning: 'the exact set of values the code accepts' }, { term: 'Sort direction', meaning: 'whether values go from smallest to largest or from largest to smallest' }],
-    planPrompt: 'Which values use the default, and which are rejected? Predict the result for "--title" before you run the checks, and say which rule decides it.',
-    starter: "type Sort = { field: 'title' | 'createdAt' | 'priority'; direction: 'asc' | 'desc' }\n\nfunction parseSort(value: unknown): { ok: true; sort: Sort } | { ok: false; error: string } {\n  // Check the type first, then read the direction and field.\n  return { ok: false, error: 'INVALID_SORT' }\n}\n",
-    functionName: 'parseSort', preserveInput: true,
+    vocabulary: [
+      { term: 'Allow list', meaning: 'the exact set of values the code accepts' },
+      { term: 'Sort direction', meaning: 'whether values go from smallest to largest or from largest to smallest' },
+    ],
+    planPrompt:
+      'Which values use the default, and which are rejected? Predict the result for "--title" before you run the checks, and say which rule decides it.',
+    starter:
+      "type Sort = { field: 'title' | 'createdAt' | 'priority'; direction: 'asc' | 'desc' }\n\nfunction parseSort(value: unknown): { ok: true; sort: Sort } | { ok: false; error: string } {\n  // Check the type first, then read the direction and field.\n  return { ok: false, error: 'INVALID_SORT' }\n}\n",
+    functionName: 'parseSort',
+    preserveInput: true,
     hints: [
       'Check the type of the value before you read any text from it.',
       'Trim the text, then check whether it starts with a dash. Whatever remains after the dash is the field name to test.',
       'Accept only the three exact field names. Every other case returns the one error code.',
     ],
     checks: [
-      { name: 'Reads a plain field as ascending', input: [' priority '], expected: { ok: true, sort: { field: 'priority', direction: 'asc' } } },
-      { name: 'Reads a leading dash as descending', input: ['-title'], expected: { ok: true, sort: { field: 'title', direction: 'desc' } } },
-      { name: 'Trims spaces around a descending field', input: ['  -createdAt  '], expected: { ok: true, sort: { field: 'createdAt', direction: 'desc' } } },
-      { name: 'Uses the default for a missing value', input: [undefined], expected: { ok: true, sort: { field: 'title', direction: 'asc' } } },
+      {
+        name: 'Reads a plain field as ascending',
+        input: [' priority '],
+        expected: { ok: true, sort: { field: 'priority', direction: 'asc' } },
+      },
+      {
+        name: 'Reads a leading dash as descending',
+        input: ['-title'],
+        expected: { ok: true, sort: { field: 'title', direction: 'desc' } },
+      },
+      {
+        name: 'Trims spaces around a descending field',
+        input: ['  -createdAt  '],
+        expected: { ok: true, sort: { field: 'createdAt', direction: 'desc' } },
+      },
+      {
+        name: 'Uses the default for a missing value',
+        input: [undefined],
+        expected: { ok: true, sort: { field: 'title', direction: 'asc' } },
+      },
       { name: 'Uses the default for blank text', input: ['   '], expected: { ok: true, sort: { field: 'title', direction: 'asc' } } },
       { name: 'Rejects a repeated parameter', input: [['title', '-title']], expected: { ok: false, error: 'INVALID_SORT' } },
       { name: 'Rejects null', input: [null], expected: { ok: false, error: 'INVALID_SORT' } },
@@ -311,9 +800,14 @@ export const appReps: Rep[] = [
     ],
   },
   {
-    id: 'page-response-envelope', title: 'Build a paginated response', category: 'Backend core', format: 'backend',
-    context: 'A list endpoint returns one page of results with links, so the client can request neighbouring pages without building URLs itself. The envelope reports totals and links only; the item data is added separately.',
-    prompt: "Implement pageEnvelope(totalItems, page, pageSize, path). totalItems is a whole number from 0 through 10000, page is a whole number from 1, pageSize is a whole number from 1 through 100, and path is text that starts with '/'. totalPages is the number of pages needed for totalItems, and it is at least 1, so an empty collection has one page. If page is greater than totalPages, return {ok: false, error: 'PAGE_NOT_FOUND'}. Otherwise return {ok: true, body} where body has totalItems, totalPages, page, pageSize, and links. links.self is path + '?page=' + page + '&pageSize=' + pageSize. links.prev uses the same form for page - 1, or is null on the first page. links.next uses the same form for page + 1, or is null on the last page.",
+    id: 'page-response-envelope',
+    title: 'Build a paginated response',
+    category: 'Backend core',
+    format: 'backend',
+    context:
+      'A list endpoint returns one page of results with links, so the client can request neighbouring pages without building URLs itself. The envelope reports totals and links only; the item data is added separately.',
+    prompt:
+      "Implement pageEnvelope(totalItems, page, pageSize, path). totalItems is a whole number from 0 through 10000, page is a whole number from 1, pageSize is a whole number from 1 through 100, and path is text that starts with '/'. totalPages is the number of pages needed for totalItems, and it is at least 1, so an empty collection has one page. If page is greater than totalPages, return {ok: false, error: 'PAGE_NOT_FOUND'}. Otherwise return {ok: true, body} where body has totalItems, totalPages, page, pageSize, and links. links.self is path + '?page=' + page + '&pageSize=' + pageSize. links.prev uses the same form for page - 1, or is null on the first page. links.next uses the same form for page + 1, or is null on the last page.",
     brief: {
       summary: 'Implement pageEnvelope(totalItems, page, pageSize, path).',
       rules: [
@@ -325,39 +819,133 @@ export const appReps: Rep[] = [
         'links.prev uses the same form for page - 1, or is null on the first page. links.next uses the same form for page + 1, or is null on the last page.',
       ],
     },
-    example: { input: "pageEnvelope(45, 2, 20, '/orders')", output: "{ok: true, body: {totalItems: 45, totalPages: 3, page: 2, pageSize: 20, links: {self: '/orders?page=2&pageSize=20', prev: '/orders?page=1&pageSize=20', next: '/orders?page=3&pageSize=20'}}}" },
+    example: {
+      input: "pageEnvelope(45, 2, 20, '/orders')",
+      output:
+        "{ok: true, body: {totalItems: 45, totalPages: 3, page: 2, pageSize: 20, links: {self: '/orders?page=2&pageSize=20', prev: '/orders?page=1&pageSize=20', next: '/orders?page=3&pageSize=20'}}}",
+    },
     note: 'Round a partial last page up. A page past the end is rejected before any link is built. The body contains metadata and links only, never the items. Checks cover middle, first, last, empty, partial, past-the-end, and largest-size cases.',
-    vocabulary: [{ term: 'Envelope', meaning: 'a response wrapper that holds metadata around the data' }, { term: 'Link', meaning: 'a URL the client can follow to reach a related page' }],
-    planPrompt: 'With 21 items and 10 per page, how many pages are there? Which links are null on the first and last pages, and what should a page past the end return?',
-    starter: "type Envelope = { ok: true; body: { totalItems: number; totalPages: number; page: number; pageSize: number; links: { self: string; prev: string | null; next: string | null } } } | { ok: false; error: string }\n\nfunction pageEnvelope(totalItems: number, page: number, pageSize: number, path: string): Envelope {\n  // Count the pages, reject a page past the end, then build the links.\n  return { ok: false, error: 'PAGE_NOT_FOUND' }\n}\n",
-    functionName: 'pageEnvelope', preserveInput: true,
+    vocabulary: [
+      { term: 'Envelope', meaning: 'a response wrapper that holds metadata around the data' },
+      { term: 'Link', meaning: 'a URL the client can follow to reach a related page' },
+    ],
+    planPrompt:
+      'With 21 items and 10 per page, how many pages are there? Which links are null on the first and last pages, and what should a page past the end return?',
+    starter:
+      "type Envelope = { ok: true; body: { totalItems: number; totalPages: number; page: number; pageSize: number; links: { self: string; prev: string | null; next: string | null } } } | { ok: false; error: string }\n\nfunction pageEnvelope(totalItems: number, page: number, pageSize: number, path: string): Envelope {\n  // Count the pages, reject a page past the end, then build the links.\n  return { ok: false, error: 'PAGE_NOT_FOUND' }\n}\n",
+    functionName: 'pageEnvelope',
+    preserveInput: true,
     hints: [
       'Work out the total number of pages first. An empty collection still has one page.',
       'Reject a page past the end before you build any links, so an invalid page never gets a link.',
       'Build self, prev, and next the same way, changing only the page number. Prev and next become null at the ends.',
     ],
     checks: [
-      { name: 'Builds both links for a middle page', input: [100, 5, 10, '/items'], expected: { ok: true, body: { totalItems: 100, totalPages: 10, page: 5, pageSize: 10, links: { self: '/items?page=5&pageSize=10', prev: '/items?page=4&pageSize=10', next: '/items?page=6&pageSize=10' } } } },
-      { name: 'Has no previous link on the first page', input: [30, 1, 10, '/a'], expected: { ok: true, body: { totalItems: 30, totalPages: 3, page: 1, pageSize: 10, links: { self: '/a?page=1&pageSize=10', prev: null, next: '/a?page=2&pageSize=10' } } } },
-      { name: 'Has no next link on the last page', input: [30, 3, 10, '/a'], expected: { ok: true, body: { totalItems: 30, totalPages: 3, page: 3, pageSize: 10, links: { self: '/a?page=3&pageSize=10', prev: '/a?page=2&pageSize=10', next: null } } } },
-      { name: 'Rounds a partial last page up', input: [21, 3, 10, '/p'], expected: { ok: true, body: { totalItems: 21, totalPages: 3, page: 3, pageSize: 10, links: { self: '/p?page=3&pageSize=10', prev: '/p?page=2&pageSize=10', next: null } } } },
-      { name: 'Shows one empty page for no items', input: [0, 1, 20, '/t'], expected: { ok: true, body: { totalItems: 0, totalPages: 1, page: 1, pageSize: 20, links: { self: '/t?page=1&pageSize=20', prev: null, next: null } } } },
+      {
+        name: 'Builds both links for a middle page',
+        input: [100, 5, 10, '/items'],
+        expected: {
+          ok: true,
+          body: {
+            totalItems: 100,
+            totalPages: 10,
+            page: 5,
+            pageSize: 10,
+            links: { self: '/items?page=5&pageSize=10', prev: '/items?page=4&pageSize=10', next: '/items?page=6&pageSize=10' },
+          },
+        },
+      },
+      {
+        name: 'Has no previous link on the first page',
+        input: [30, 1, 10, '/a'],
+        expected: {
+          ok: true,
+          body: {
+            totalItems: 30,
+            totalPages: 3,
+            page: 1,
+            pageSize: 10,
+            links: { self: '/a?page=1&pageSize=10', prev: null, next: '/a?page=2&pageSize=10' },
+          },
+        },
+      },
+      {
+        name: 'Has no next link on the last page',
+        input: [30, 3, 10, '/a'],
+        expected: {
+          ok: true,
+          body: {
+            totalItems: 30,
+            totalPages: 3,
+            page: 3,
+            pageSize: 10,
+            links: { self: '/a?page=3&pageSize=10', prev: '/a?page=2&pageSize=10', next: null },
+          },
+        },
+      },
+      {
+        name: 'Rounds a partial last page up',
+        input: [21, 3, 10, '/p'],
+        expected: {
+          ok: true,
+          body: {
+            totalItems: 21,
+            totalPages: 3,
+            page: 3,
+            pageSize: 10,
+            links: { self: '/p?page=3&pageSize=10', prev: '/p?page=2&pageSize=10', next: null },
+          },
+        },
+      },
+      {
+        name: 'Shows one empty page for no items',
+        input: [0, 1, 20, '/t'],
+        expected: {
+          ok: true,
+          body: { totalItems: 0, totalPages: 1, page: 1, pageSize: 20, links: { self: '/t?page=1&pageSize=20', prev: null, next: null } },
+        },
+      },
       { name: 'Rejects a page past the end', input: [30, 4, 10, '/a'], expected: { ok: false, error: 'PAGE_NOT_FOUND' } },
       { name: 'Rejects page two of an empty collection', input: [0, 2, 20, '/t'], expected: { ok: false, error: 'PAGE_NOT_FOUND' } },
-      { name: 'Accepts the largest page size', input: [250, 1, 100, '/x'], expected: { ok: true, body: { totalItems: 250, totalPages: 3, page: 1, pageSize: 100, links: { self: '/x?page=1&pageSize=100', prev: null, next: '/x?page=2&pageSize=100' } } } },
+      {
+        name: 'Accepts the largest page size',
+        input: [250, 1, 100, '/x'],
+        expected: {
+          ok: true,
+          body: {
+            totalItems: 250,
+            totalPages: 3,
+            page: 1,
+            pageSize: 100,
+            links: { self: '/x?page=1&pageSize=100', prev: null, next: '/x?page=2&pageSize=100' },
+          },
+        },
+      },
     ],
   },
   {
-    id: 'frontend-screen-message', title: 'Show the message for one screen state', category: 'Frontend core',
+    id: 'frontend-screen-message',
+    title: 'Show the message for one screen state',
+    category: 'Frontend core',
     context: 'A profile card is in exactly one state at a time. Your function decides which words the person sees for that one state.',
-    prompt: 'Implement screenMessage(status, name). When status is "loading", return "Loading " followed by name and "...". When status is "error", return "Could not load " followed by name. When status is "ready", return name unchanged.',
+    prompt:
+      'Implement screenMessage(status, name). When status is "loading", return "Loading " followed by name and "...". When status is "error", return "Could not load " followed by name. When status is "ready", return name unchanged.',
     example: { input: 'screenMessage("loading", "profile")', output: '"Loading profile..."' },
     note: 'Status is always one of the three values shown. Name is 0 to 30 basic Latin characters or spaces and is never changed, so an empty name stays empty. Do not mutate anything. Checks cover each state and an empty name. Review your own condition order yourself.',
-    vocabulary: [{ term: 'State', meaning: 'the one situation a screen is in right now, such as loading or ready' }, { term: 'Condition', meaning: 'an if test that picks which result to return' }],
+    vocabulary: [
+      { term: 'State', meaning: 'the one situation a screen is in right now, such as loading or ready' },
+      { term: 'Condition', meaning: 'an if test that picks which result to return' },
+    ],
     planPrompt: 'Which words belong to each of the three states? What does ready return when the name is empty?',
-    starter: 'function screenMessage(status: "loading" | "error" | "ready", name: string): string {\n  // Return the words for this one state.\n  return ""\n}\n',
-    functionName: 'screenMessage', preserveInput: true,
-    hints: ['Each status has exactly one message. Start by writing the message for loading.', 'Use if statements, one per status, and return as soon as one matches.', 'Loading adds words around the name, error adds different words before it, and ready returns the name itself.'],
+    starter:
+      'function screenMessage(status: "loading" | "error" | "ready", name: string): string {\n  // Return the words for this one state.\n  return ""\n}\n',
+    functionName: 'screenMessage',
+    preserveInput: true,
+    hints: [
+      'Each status has exactly one message. Start by writing the message for loading.',
+      'Use if statements, one per status, and return as soon as one matches.',
+      'Loading adds words around the name, error adds different words before it, and ready returns the name itself.',
+    ],
     checks: [
       { name: 'Shows the loading message', input: ['loading', 'profile'], expected: 'Loading profile...' },
       { name: 'Shows the error message', input: ['error', 'profile'], expected: 'Could not load profile' },
@@ -366,16 +954,27 @@ export const appReps: Rep[] = [
     ],
   },
   {
-    id: 'frontend-list-summary', title: 'Summarize a list for the screen', category: 'Frontend core',
+    id: 'frontend-list-summary',
+    title: 'Summarize a list for the screen',
+    category: 'Frontend core',
     context: 'A list panel shows a short line above its items. The line depends only on how many items there are.',
-    prompt: 'Implement itemsSummary(names). When names is empty, return "No items yet". When it has exactly one name, return "1 item". Otherwise return the count, a space, and "items".',
+    prompt:
+      'Implement itemsSummary(names). When names is empty, return "No items yet". When it has exactly one name, return "1 item". Otherwise return the count, a space, and "items".',
     example: { input: 'itemsSummary(["Ada", "Bo"])', output: '"2 items"' },
     note: 'Names is an array of 0 to 20 strings. Only the count matters, so an empty string still counts as an item. Do not mutate the array. Checks cover zero, one, and several items. Review your own condition order yourself.',
-    vocabulary: [{ term: 'Empty state', meaning: 'what a screen shows when there is nothing to list yet' }, { term: 'Plural', meaning: 'the word form used for more than one, such as items' }],
+    vocabulary: [
+      { term: 'Empty state', meaning: 'what a screen shows when there is nothing to list yet' },
+      { term: 'Plural', meaning: 'the word form used for more than one, such as items' },
+    ],
     planPrompt: 'Which three counts need different words? What does the count 1 return, and why is it special?',
     starter: 'function itemsSummary(names: string[]): string {\n  // Return the words for this many items.\n  return ""\n}\n',
-    functionName: 'itemsSummary', preserveInput: true,
-    hints: ['Start by reading how many names there are with names.length.', 'Give zero and one their own conditions, and return as soon as one matches.', 'Every other count uses the count and the plural word. Join them with a space.'],
+    functionName: 'itemsSummary',
+    preserveInput: true,
+    hints: [
+      'Start by reading how many names there are with names.length.',
+      'Give zero and one their own conditions, and return as soon as one matches.',
+      'Every other count uses the count and the plural word. Join them with a space.',
+    ],
     checks: [
       { name: 'Shows the empty message', input: [[]], expected: 'No items yet' },
       { name: 'Uses the singular for one item', input: [['Ada']], expected: '1 item' },
@@ -385,16 +984,29 @@ export const appReps: Rep[] = [
     ],
   },
   {
-    id: 'backend-check-quantity', title: 'Check one order quantity', category: 'Backend core',
-    context: 'An order endpoint receives a quantity from outside your code. Before it uses the number, one small check decides whether the value is acceptable.',
-    prompt: 'Implement checkQuantity(value). The value has type unknown. Return the value when it is a number and a whole number from 1 through 10, including both ends. For anything else return null.',
+    id: 'backend-check-quantity',
+    title: 'Check one order quantity',
+    category: 'Backend core',
+    context:
+      'An order endpoint receives a quantity from outside your code. Before it uses the number, one small check decides whether the value is acceptable.',
+    prompt:
+      'Implement checkQuantity(value). The value has type unknown. Return the value when it is a number and a whole number from 1 through 10, including both ends. For anything else return null.',
     example: { input: 'checkQuantity(3)', output: '3' },
     note: 'Inputs are numbers, strings, booleans, null, or undefined; they are never NaN or infinite. A string such as "3" is not a number, so it is rejected. Do not convert the value. Checks cover both ends of the range, values just outside it, a fraction, and values of the wrong type. Review your own condition order yourself.',
-    vocabulary: [{ term: 'Unknown', meaning: 'a value nobody has checked yet, so you test its type before using it' }, { term: 'Boundary', meaning: 'a value where the result changes, such as 1 or 10' }],
+    vocabulary: [
+      { term: 'Unknown', meaning: 'a value nobody has checked yet, so you test its type before using it' },
+      { term: 'Boundary', meaning: 'a value where the result changes, such as 1 or 10' },
+    ],
     planPrompt: 'Which values must be accepted, and which three kinds of values must return null? What do 1 and 10 return?',
-    starter: 'function checkQuantity(value: unknown): number | null {\n  // Return the value only when every rule holds.\n  return null\n}\n',
-    functionName: 'checkQuantity', preserveInput: true,
-    hints: ['Test the type first: a number is a value whose typeof is "number".', 'A whole number passes Number.isInteger. Then compare it with both ends of the range.', 'Combine the tests with && so every rule must hold, and return null in every other case.'],
+    starter:
+      'function checkQuantity(value: unknown): number | null {\n  // Return the value only when every rule holds.\n  return null\n}\n',
+    functionName: 'checkQuantity',
+    preserveInput: true,
+    hints: [
+      'Test the type first: a number is a value whose typeof is "number".',
+      'A whole number passes Number.isInteger. Then compare it with both ends of the range.',
+      'Combine the tests with && so every rule must hold, and return null in every other case.',
+    ],
     checks: [
       { name: 'Accepts a typical quantity', input: [3], expected: 3 },
       { name: 'Accepts the smallest quantity', input: [1], expected: 1 },
@@ -413,16 +1025,19 @@ export const appReps: Rep[] = [
     format: 'transform',
     prompt:
       'Write selectionState(rows, busy). Each row has selected and locked booleans. Return { count, enabled, message }. count is the number of selected rows. When busy is true, return enabled false and message "Working", regardless of selection. Otherwise no selection gives false and "Select rows"; any selected locked row gives false and "Selection locked"; remaining selections give true and "Ready". Unselected locked rows do not block the action. rows has at most 1000 entries. Preserve rows.',
-    brief: { summary: 'Write selectionState(rows, busy).', rules: [
-      'Each row has selected and locked booleans.',
-      'Return { count, enabled, message }.',
-      'count is the number of selected rows.',
-      'When busy is true, return enabled false and message "Working", regardless of selection.',
-      'Otherwise no selection gives false and "Select rows"; any selected locked row gives false and "Selection locked"; remaining selections give true and "Ready".',
-      'Unselected locked rows do not block the action.',
-      'rows has at most 1000 entries.',
-      'Preserve rows.',
-    ] },
+    brief: {
+      summary: 'Write selectionState(rows, busy).',
+      rules: [
+        'Each row has selected and locked booleans.',
+        'Return { count, enabled, message }.',
+        'count is the number of selected rows.',
+        'When busy is true, return enabled false and message "Working", regardless of selection.',
+        'Otherwise no selection gives false and "Select rows"; any selected locked row gives false and "Selection locked"; remaining selections give true and "Ready".',
+        'Unselected locked rows do not block the action.',
+        'rows has at most 1000 entries.',
+        'Preserve rows.',
+      ],
+    },
     example: {
       input: 'selectionState([{"selected": true, "locked": false}], false)',
       output: '{"count": 1, "enabled": true, "message": "Ready"}',
@@ -432,8 +1047,7 @@ export const appReps: Rep[] = [
       { term: 'Derived state', meaning: 'a value calculated from current inputs' },
       { term: 'Precedence', meaning: 'which rule wins when rules conflict' },
     ],
-    planPrompt:
-      'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    planPrompt: 'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
     starter:
       "function selectionState(rows: { selected: boolean; locked: boolean }[], busy: boolean): { count: number; enabled: boolean; message: string } {\n  throw new Error('Not implemented')\n}\n",
     functionName: 'selectionState',
@@ -481,15 +1095,18 @@ export const appReps: Rep[] = [
     format: 'transform',
     prompt:
       'Write chapterLinks(total, current, radius). Return { chapters, before, after }. total is an integer from 0 to 1000. current is an integer from -1000 to 2000 and radius from 0 to 1000. With total 0 return chapters [] and both flags false. Otherwise treat current below 1 as 1 and above total as total. chapters contains every chapter number at most radius away from that position, within 1 through total, in ascending order. before and after say whether any chapters are omitted before or after the returned list.',
-    brief: { summary: 'Write chapterLinks(total, current, radius).', rules: [
-      'Return { chapters, before, after }.',
-      'total is an integer from 0 to 1000.',
-      'current is an integer from -1000 to 2000 and radius from 0 to 1000.',
-      'With total 0 return chapters [] and both flags false.',
-      'Otherwise treat current below 1 as 1 and above total as total.',
-      'chapters contains every chapter number at most radius away from that position, within 1 through total, in ascending order.',
-      'before and after say whether any chapters are omitted before or after the returned list.',
-    ] },
+    brief: {
+      summary: 'Write chapterLinks(total, current, radius).',
+      rules: [
+        'Return { chapters, before, after }.',
+        'total is an integer from 0 to 1000.',
+        'current is an integer from -1000 to 2000 and radius from 0 to 1000.',
+        'With total 0 return chapters [] and both flags false.',
+        'Otherwise treat current below 1 as 1 and above total as total.',
+        'chapters contains every chapter number at most radius away from that position, within 1 through total, in ascending order.',
+        'before and after say whether any chapters are omitted before or after the returned list.',
+      ],
+    },
     example: {
       input: 'chapterLinks(9, 5, 1)',
       output: '{"chapters": [4, 5, 6], "before": true, "after": true}',
@@ -499,8 +1116,7 @@ export const appReps: Rep[] = [
       { term: 'Window', meaning: 'the nearby part of a larger ordered list' },
       { term: 'Clamp', meaning: 'keep a number within inclusive bounds' },
     ],
-    planPrompt:
-      'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    planPrompt: 'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
     starter:
       "function chapterLinks(total: number, current: number, radius: number): { chapters: number[]; before: boolean; after: boolean } {\n  throw new Error('Not implemented')\n}\n",
     functionName: 'chapterLinks',
@@ -526,15 +1142,18 @@ export const appReps: Rep[] = [
     format: 'backend',
     prompt:
       'Write resourceResponse(exists, revision, requestedRevision, method). method is "GET" or "HEAD". revision is a nonempty ASCII string of at most 80 characters; requestedRevision is null or an ASCII string of at most 80 characters. Return { status, revision, body }. Missing resources always return { status: 404, revision: null, body: null }. For an existing resource, an exact requestedRevision match returns status 304 with the current revision and body null. Otherwise return status 200 with the current revision; body is "Resource data" for GET and null for HEAD. Compare revisions exactly without trimming or changing case.',
-    brief: { summary: 'Write resourceResponse(exists, revision, requestedRevision, method).', rules: [
-      'method is "GET" or "HEAD".',
-      'revision is a nonempty ASCII string of at most 80 characters; requestedRevision is null or an ASCII string of at most 80 characters.',
-      'Return { status, revision, body }.',
-      'Missing resources always return { status: 404, revision: null, body: null }.',
-      'For an existing resource, an exact requestedRevision match returns status 304 with the current revision and body null.',
-      'Otherwise return status 200 with the current revision; body is "Resource data" for GET and null for HEAD.',
-      'Compare revisions exactly without trimming or changing case.',
-    ] },
+    brief: {
+      summary: 'Write resourceResponse(exists, revision, requestedRevision, method).',
+      rules: [
+        'method is "GET" or "HEAD".',
+        'revision is a nonempty ASCII string of at most 80 characters; requestedRevision is null or an ASCII string of at most 80 characters.',
+        'Return { status, revision, body }.',
+        'Missing resources always return { status: 404, revision: null, body: null }.',
+        'For an existing resource, an exact requestedRevision match returns status 304 with the current revision and body null.',
+        'Otherwise return status 200 with the current revision; body is "Resource data" for GET and null for HEAD.',
+        'Compare revisions exactly without trimming or changing case.',
+      ],
+    },
     example: {
       input: 'resourceResponse(true, "r1", null, "GET")',
       output: '{"status": 200, "revision": "r1", "body": "Resource data"}',
@@ -544,8 +1163,7 @@ export const appReps: Rep[] = [
       { term: 'Conditional response', meaning: 'a response that depends on a client condition' },
       { term: 'Revision', meaning: 'an identifier for one version of a resource' },
     ],
-    planPrompt:
-      'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    planPrompt: 'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
     starter:
       'function resourceResponse(exists: boolean, revision: string, requestedRevision: string | null, method: "GET" | "HEAD"): { status: number; revision: string | null; body: string | null } {\n  throw new Error(\'Not implemented\')\n}\n',
     functionName: 'resourceResponse',
@@ -588,15 +1206,18 @@ export const appReps: Rep[] = [
     format: 'backend',
     prompt:
       'Write retryResponse(attempt, maximum, delaySeconds, permanent). Return { status, retryAfter, body }. attempt and maximum are integers from 1 to 100; delaySeconds is an integer from 0 to 3600. A permanent failure takes priority and returns status 400, retryAfter null, body "Rejected". Otherwise attempt at or above maximum returns 503, null, "Exhausted". Other attempts return 429, delaySeconds as a base-10 string, and "Retry later". Zero delay is valid and must be the string "0". This is a response policy, not a timer or network request.',
-    brief: { summary: 'Write retryResponse(attempt, maximum, delaySeconds, permanent).', rules: [
-      'Return { status, retryAfter, body }.',
-      'attempt and maximum are integers from 1 to 100; delaySeconds is an integer from 0 to 3600.',
-      'A permanent failure takes priority and returns status 400, retryAfter null, body "Rejected".',
-      'Otherwise attempt at or above maximum returns 503, null, "Exhausted".',
-      'Other attempts return 429, delaySeconds as a base-10 string, and "Retry later".',
-      'Zero delay is valid and must be the string "0".',
-      'This is a response policy, not a timer or network request.',
-    ] },
+    brief: {
+      summary: 'Write retryResponse(attempt, maximum, delaySeconds, permanent).',
+      rules: [
+        'Return { status, retryAfter, body }.',
+        'attempt and maximum are integers from 1 to 100; delaySeconds is an integer from 0 to 3600.',
+        'A permanent failure takes priority and returns status 400, retryAfter null, body "Rejected".',
+        'Otherwise attempt at or above maximum returns 503, null, "Exhausted".',
+        'Other attempts return 429, delaySeconds as a base-10 string, and "Retry later".',
+        'Zero delay is valid and must be the string "0".',
+        'This is a response policy, not a timer or network request.',
+      ],
+    },
     example: {
       input: 'retryResponse(1, 3, 12, false)',
       output: '{"status": 429, "retryAfter": "12", "body": "Retry later"}',
@@ -606,8 +1227,7 @@ export const appReps: Rep[] = [
       { term: 'Retry', meaning: 'another attempt after a failure' },
       { term: 'Response policy', meaning: 'rules for the fields a server would return' },
     ],
-    planPrompt:
-      'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    planPrompt: 'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
     starter:
       "function retryResponse(attempt: number, maximum: number, delaySeconds: number, permanent: boolean): { status: number; retryAfter: string | null; body: string } {\n  throw new Error('Not implemented')\n}\n",
     functionName: 'retryResponse',

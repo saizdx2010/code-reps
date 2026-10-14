@@ -18,40 +18,72 @@ export function validateContentDepth(repIds: Set<string>, skillIds: Set<string>,
   for (const [id, review] of Object.entries(reviews)) {
     const trace = review.traceSteps
     if (!trace) continue
-    if (!Array.isArray(trace.code) || !trace.code.length || trace.code.some(line => typeof line !== 'string') || !trace.code.some(line => typeof line === 'string' && line.trim())) errors.push(`${id}: trace code must be non-empty`)
+    if (
+      !Array.isArray(trace.code) ||
+      !trace.code.length ||
+      trace.code.some(line => typeof line !== 'string') ||
+      !trace.code.some(line => typeof line === 'string' && line.trim())
+    )
+      errors.push(`${id}: trace code must be non-empty`)
     if (!Array.isArray(trace.steps) || trace.steps.length < 2) errors.push(`${id}: trace needs at least two steps`)
     for (const [index, step] of (trace.steps ?? []).entries()) {
-      if (!Number.isInteger(step.line) || step.line < 0 || step.line >= (trace.code?.length ?? 0)) errors.push(`${id}: trace step ${index} line is out of bounds`)
+      if (!Number.isInteger(step.line) || step.line < 0 || step.line >= (trace.code?.length ?? 0))
+        errors.push(`${id}: trace step ${index} line is out of bounds`)
       if (typeof step.note !== 'string' || !step.note.trim()) errors.push(`${id}: trace step ${index} needs a note`)
       const structure = step.structure
       if (structure?.kind === 'tree') {
         const ids = new Set<string>()
-        const walk = (node: TraceTreeNode) => { if (ids.has(node.id)) errors.push(`${id}: trace step ${index} tree has a duplicate node id`); ids.add(node.id); node.children?.forEach(walk) }
+        const walk = (node: TraceTreeNode) => {
+          if (ids.has(node.id)) errors.push(`${id}: trace step ${index} tree has a duplicate node id`)
+          ids.add(node.id)
+          node.children?.forEach(walk)
+        }
         walk(structure.root)
-        for (const ref of [structure.current, ...(structure.visited ?? [])]) if (ref !== undefined && !ids.has(ref)) errors.push(`${id}: trace step ${index} tree references an unknown node`)
+        for (const ref of [structure.current, ...(structure.visited ?? [])])
+          if (ref !== undefined && !ids.has(ref)) errors.push(`${id}: trace step ${index} tree references an unknown node`)
       }
       if (structure?.kind === 'calls') {
         if (!structure.frames.length) errors.push(`${id}: trace step ${index} call stack needs a frame`)
-        if (structure.frames.slice(0, -1).some(frame => frame.returns !== undefined)) errors.push(`${id}: trace step ${index} only the top frame may return`)
-        if (structure.event === 'return' && structure.frames.at(-1)?.returns === undefined) errors.push(`${id}: trace step ${index} returning frame needs a return value`)
+        if (structure.frames.slice(0, -1).some(frame => frame.returns !== undefined))
+          errors.push(`${id}: trace step ${index} only the top frame may return`)
+        if (structure.event === 'return' && structure.frames.at(-1)?.returns === undefined)
+          errors.push(`${id}: trace step ${index} returning frame needs a return value`)
       }
-      if (structure?.kind === 'state' && structure.events && structure.eventIndex !== undefined && !(Number.isInteger(structure.eventIndex) && structure.eventIndex >= 0 && structure.eventIndex < structure.events.length)) errors.push(`${id}: trace step ${index} event index is out of bounds`)
+      if (
+        structure?.kind === 'state' &&
+        structure.events &&
+        structure.eventIndex !== undefined &&
+        !(Number.isInteger(structure.eventIndex) && structure.eventIndex >= 0 && structure.eventIndex < structure.events.length)
+      )
+        errors.push(`${id}: trace step ${index} event index is out of bounds`)
       if (structure?.kind === 'table') {
         const width = structure.cells[0]?.length ?? 0
-        if (!width || structure.cells.some(row => row.length !== width)) errors.push(`${id}: trace step ${index} table needs equal, non-empty rows`)
-        if (structure.colLabels && structure.colLabels.length !== width) errors.push(`${id}: trace step ${index} table column labels must match the columns`)
-        if (structure.rowLabels && structure.rowLabels.length !== structure.cells.length) errors.push(`${id}: trace step ${index} table row labels must match the rows`)
-        const inside = (cell: [number, number]) => Number.isInteger(cell[0]) && Number.isInteger(cell[1]) && cell[0] >= 0 && cell[0] < structure.cells.length && cell[1] >= 0 && cell[1] < width
+        if (!width || structure.cells.some(row => row.length !== width))
+          errors.push(`${id}: trace step ${index} table needs equal, non-empty rows`)
+        if (structure.colLabels && structure.colLabels.length !== width)
+          errors.push(`${id}: trace step ${index} table column labels must match the columns`)
+        if (structure.rowLabels && structure.rowLabels.length !== structure.cells.length)
+          errors.push(`${id}: trace step ${index} table row labels must match the rows`)
+        const inside = (cell: [number, number]) =>
+          Number.isInteger(cell[0]) &&
+          Number.isInteger(cell[1]) &&
+          cell[0] >= 0 &&
+          cell[0] < structure.cells.length &&
+          cell[1] >= 0 &&
+          cell[1] < width
         const refs = [...(structure.current ? [structure.current] : []), ...(structure.reads ?? [])]
         if (refs.some(cell => !inside(cell))) errors.push(`${id}: trace step ${index} table cell is out of bounds`)
         else {
-          if (structure.current && structure.reads?.some(cell => cell[0] === structure.current![0] && cell[1] === structure.current![1])) errors.push(`${id}: trace step ${index} table cell cannot read itself`)
-          if (structure.reads?.some(cell => structure.cells[cell[0]][cell[1]] === null)) errors.push(`${id}: trace step ${index} table reads an unfilled cell`)
+          if (structure.current && structure.reads?.some(cell => cell[0] === structure.current![0] && cell[1] === structure.current![1]))
+            errors.push(`${id}: trace step ${index} table cell cannot read itself`)
+          if (structure.reads?.some(cell => structure.cells[cell[0]][cell[1]] === null))
+            errors.push(`${id}: trace step ${index} table reads an unfilled cell`)
         }
       }
       if (step.structure?.kind === 'array') {
         for (const pointer of Object.values(step.structure.pointers ?? {})) {
-          if (!Number.isInteger(pointer) || pointer < 0 || pointer >= step.structure.values.length) errors.push(`${id}: trace step ${index} pointer is out of bounds`)
+          if (!Number.isInteger(pointer) || pointer < 0 || pointer >= step.structure.values.length)
+            errors.push(`${id}: trace step ${index} pointer is out of bounds`)
         }
       }
     }

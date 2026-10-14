@@ -8,7 +8,8 @@ export const dsaPracticeReps: Rep[] = [
     id: 'sort-score-records',
     title: 'Order records by score and name',
     category: 'Algorithm applications',
-    prompt: 'Return a new array of records ordered by ascending score, then ascending name, compared case-sensitively using ASCII character codes (for example, A comes before a), with no trimming. Records with equal score and name keep their original order. Do not change the array or any record.',
+    prompt:
+      'Return a new array of records ordered by ascending score, then ascending name, compared case-sensitively using ASCII character codes (for example, A comes before a), with no trimming. Records with equal score and name keep their original order. Do not change the array or any record.',
     example: {
       input: 'orderRecords([{id:"x",score:3,name:"Bo"},{id:"y",score:1,name:"Ada"}])',
       output: '[{id:"y",score:1,name:"Ada"},{id:"x",score:3,name:"Bo"}]',
@@ -19,7 +20,10 @@ export const dsaPracticeReps: Rep[] = [
       { term: 'Ordering key', meaning: 'a field used to decide relative order' },
     ],
     planPrompt: dsaPlanPrompts['sort-score-records'],
-    starter: starter('type ScoreRecord = { id: string; score: number; name: string }\n\nfunction orderRecords(records: ScoreRecord[]): ScoreRecord[]', '[]'),
+    starter: starter(
+      'type ScoreRecord = { id: string; score: number; name: string }\n\nfunction orderRecords(records: ScoreRecord[]): ScoreRecord[]',
+      '[]',
+    ),
     functionName: 'orderRecords',
     preserveInput: true,
     hints: [
@@ -31,23 +35,53 @@ export const dsaPracticeReps: Rep[] = [
       {
         name: 'Maximum length and score limits',
         input: [Array.from({ length: 100 }, (_, i) => ({ id: String(i), score: i < 50 ? 1000 : -1000, name: 'abcdefghijklmnopqrst' }))],
-        expected: Array.from({ length: 100 }, (_, i) => ({ id: String(i < 50 ? i + 50 : i - 50), score: i < 50 ? -1000 : 1000, name: 'abcdefghijklmnopqrst' })),
+        expected: Array.from({ length: 100 }, (_, i) => ({
+          id: String(i < 50 ? i + 50 : i - 50),
+          score: i < 50 ? -1000 : 1000,
+          name: 'abcdefghijklmnopqrst',
+        })),
       },
       {
         name: 'Score before name',
-        input: [[{ id: 'a', score: 10, name: 'A' }, { id: 'b', score: 2, name: 'Z' }]],
-        expected: [{ id: 'b', score: 2, name: 'Z' }, { id: 'a', score: 10, name: 'A' }],
+        input: [
+          [
+            { id: 'a', score: 10, name: 'A' },
+            { id: 'b', score: 2, name: 'Z' },
+          ],
+        ],
+        expected: [
+          { id: 'b', score: 2, name: 'Z' },
+          { id: 'a', score: 10, name: 'A' },
+        ],
       },
       { name: 'Empty', input: [[]], expected: [] },
       {
         name: 'Stable ties',
-        input: [[{ id: 'z', score: 0, name: '' }, { id: 'a', score: 0, name: '' }]],
-        expected: [{ id: 'z', score: 0, name: '' }, { id: 'a', score: 0, name: '' }],
+        input: [
+          [
+            { id: 'z', score: 0, name: '' },
+            { id: 'a', score: 0, name: '' },
+          ],
+        ],
+        expected: [
+          { id: 'z', score: 0, name: '' },
+          { id: 'a', score: 0, name: '' },
+        ],
       },
       {
         name: 'ASCII and whitespace',
-        input: [[{ id: 'a', score: -1, name: 'a' }, { id: 'b', score: -1, name: 'Z' }, { id: 'c', score: -1, name: ' A' }]],
-        expected: [{ id: 'c', score: -1, name: ' A' }, { id: 'b', score: -1, name: 'Z' }, { id: 'a', score: -1, name: 'a' }],
+        input: [
+          [
+            { id: 'a', score: -1, name: 'a' },
+            { id: 'b', score: -1, name: 'Z' },
+            { id: 'c', score: -1, name: ' A' },
+          ],
+        ],
+        expected: [
+          { id: 'c', score: -1, name: ' A' },
+          { id: 'b', score: -1, name: 'Z' },
+          { id: 'a', score: -1, name: 'a' },
+        ],
       },
     ],
   },
@@ -55,7 +89,8 @@ export const dsaPracticeReps: Rep[] = [
     id: 'kth-smallest-copy',
     title: 'Find a ranked value',
     category: 'Algorithm applications',
-    prompt: 'Return the kth smallest value, counting duplicate positions separately. k is one-based. Return null when k exceeds the number of values. Do not change the input.',
+    prompt:
+      'Return the kth smallest value, counting duplicate positions separately. k is one-based. Return null when k exceeds the number of values. Do not change the input.',
     example: { input: 'kthSmallest([8, 3, 3, 1], 3)', output: '3' },
     note: 'At most 100 integers from -1000 to 1000. k is an integer from 1 to 101. Empty input returns null.',
     vocabulary: [{ term: 'Rank', meaning: 'a one-based position in ordered values' }],
@@ -83,7 +118,8 @@ export const dsaPracticeReps: Rep[] = [
     id: 'count-unique-windows',
     title: 'Count windows with no repeats',
     category: 'Algorithm applications',
-    prompt: 'Count the windows of exactly k consecutive labels in which no label appears twice. Labels match only when they are identical strings (case-sensitive, no trimming, and the empty string is a label). Overlapping windows are counted separately. Return 0 when labels has fewer than k items. Do not change labels.',
+    prompt:
+      'Count the windows of exactly k consecutive labels in which no label appears twice. Labels match only when they are identical strings (case-sensitive, no trimming, and the empty string is a label). Overlapping windows are counted separately. Return 0 when labels has fewer than k items. Do not change labels.',
     example: { input: 'countUniqueWindows(["a", "b", "a", "c"], 3)', output: '1' },
     note: 'labels has at most 100 strings of 0 to 10 ASCII characters; k is an integer from 1 to 101. Empty input returns 0. Checks verify the count, not a particular approach or complexity.',
     vocabulary: [
@@ -117,7 +153,8 @@ export const dsaPracticeReps: Rep[] = [
     id: 'shortest-run-reaching-target',
     title: 'Find the shortest run reaching a total',
     category: 'Algorithm applications',
-    prompt: 'Return the length of the shortest run of consecutive numbers whose sum is at least target. Return 0 when no run reaches target, including when numbers is empty. Every number is positive. Do not change numbers.',
+    prompt:
+      'Return the length of the shortest run of consecutive numbers whose sum is at least target. Return 0 when no run reaches target, including when numbers is empty. Every number is positive. Do not change numbers.',
     example: { input: 'shortestRun([2, 3, 1, 2, 4, 3], 7)', output: '2' },
     note: 'numbers has at most 100 integers from 1 to 1000; target is an integer from 1 to 100000. A run has at least one item. Several runs may tie; only the length is returned. Checks verify the length, not a particular approach or complexity.',
     vocabulary: [
@@ -151,7 +188,8 @@ export const dsaPracticeReps: Rep[] = [
     id: 'first-insertion-point',
     title: 'Find an insertion point',
     category: 'Algorithm applications',
-    prompt: 'Return the lowest index where target could be inserted so numbers stays in non-decreasing order. That is the index of the first value that is greater than or equal to target, or numbers.length when every value is smaller. Duplicates are allowed, and the answer is the first index among equal values. Do not change numbers.',
+    prompt:
+      'Return the lowest index where target could be inserted so numbers stays in non-decreasing order. That is the index of the first value that is greater than or equal to target, or numbers.length when every value is smaller. Duplicates are allowed, and the answer is the first index among equal values. Do not change numbers.',
     example: { input: 'insertionPoint([1, 3, 3, 7], 3)', output: '1' },
     note: 'numbers is already in non-decreasing order, with at most 100 integers from -1000 to 1000; target is an integer in the same range. Empty input returns 0. Checks verify the index, not logarithmic time or a particular search approach.',
     vocabulary: [
@@ -185,7 +223,8 @@ export const dsaPracticeReps: Rep[] = [
     id: 'smallest-daily-capacity',
     title: 'Find the smallest workable limit',
     category: 'Algorithm applications',
-    prompt: 'Packages must be shipped in the given order. Each day a truck carries a run of consecutive packages whose total weight is at most the truck capacity; a package cannot be split. Return the smallest capacity that ships every package within days days. Return 0 when there are no packages. Do not change weights.',
+    prompt:
+      'Packages must be shipped in the given order. Each day a truck carries a run of consecutive packages whose total weight is at most the truck capacity; a package cannot be split. Return the smallest capacity that ships every package within days days. Return 0 when there are no packages. Do not change weights.',
     example: { input: 'smallestCapacity([1, 2, 3, 4, 5], 2)', output: '9' },
     note: 'At most 100 packages, each an integer weight from 1 to 1000. days is an integer from 1 to 100 and may exceed the number of packages. Order must not be changed. Checks verify the capacity, not a particular search approach.',
     vocabulary: [
@@ -219,7 +258,8 @@ export const dsaPracticeReps: Rep[] = [
     id: 'flatten-nested-numbers',
     title: 'Flatten nested number lists',
     category: 'Algorithm applications',
-    prompt: 'Return all number values in left-to-right order in one new array, removing array nesting. Empty nested arrays contribute no values. Do not change the input.',
+    prompt:
+      'Return all number values in left-to-right order in one new array, removing array nesting. Empty nested arrays contribute no values. Do not change the input.',
     example: { input: 'flattenNumbers([4, [2, [], [5]]])', output: '[4, 2, 5]' },
     note: 'At most 100 integers from -1000 to 1000. Nested arrays are finite, with no cycles or shared arrays, at most 10 levels deep, with at most 100 total array entries.',
     vocabulary: [{ term: 'Nested', meaning: 'contained inside another structure' }],
@@ -246,12 +286,16 @@ export const dsaPracticeReps: Rep[] = [
     id: 'count-object-leaves',
     title: 'Count values in nested objects',
     category: 'Algorithm applications',
-    prompt: 'Return the number of primitive leaf values in a nested object. A leaf is a number, string, boolean, or null. An empty object contributes zero. Count occurrences, regardless of their value. Do not change input.',
+    prompt:
+      'Return the number of primitive leaf values in a nested object. A leaf is a number, string, boolean, or null. An empty object contributes zero. Count occurrences, regardless of their value. Do not change input.',
     example: { input: 'countLeaves({user:{name:"Ada",active:false},empty:{}})', output: '2' },
     note: 'Input is a plain object whose values are leaves or further plain objects; arrays are not supplied. At most 100 properties total and 10 object levels. No cycles or shared objects. Keys and strings contain at most 20 ASCII characters; numbers are integers -1000 to 1000.',
     vocabulary: [{ term: 'Primitive leaf', meaning: 'a value that is not another object container' }],
     planPrompt: dsaPlanPrompts['count-object-leaves'],
-    starter: starter('type NestedObject = { [key: string]: number | string | boolean | null | NestedObject }\n\nfunction countLeaves(input: NestedObject): number', '0'),
+    starter: starter(
+      'type NestedObject = { [key: string]: number | string | boolean | null | NestedObject }\n\nfunction countLeaves(input: NestedObject): number',
+      '0',
+    ),
     functionName: 'countLeaves',
     preserveInput: true,
     hints: [
@@ -273,12 +317,16 @@ export const dsaPracticeReps: Rep[] = [
     id: 'tree-depth-sum',
     title: 'Total one level of a tree',
     category: 'Algorithm applications',
-    prompt: 'Return the sum of values at exactly depth in a tree. The root is at depth zero. Return zero for a null root or a depth with no nodes. Do not change any node or child array.',
+    prompt:
+      'Return the sum of values at exactly depth in a tree. The root is at depth zero. Return zero for a null root or a depth with no nodes. Do not change any node or child array.',
     example: { input: 'sumAtDepth({value:9,children:[{value:4,children:[]}]},1)', output: '4' },
     note: 'Trees have at most 100 nodes and 10 levels, integer values from -1000 to 1000, no cycles or shared nodes. depth is an integer from 0 to 10.',
     vocabulary: [{ term: 'Level', meaning: 'all nodes at the same distance from the root' }],
     planPrompt: dsaPlanPrompts['tree-depth-sum'],
-    starter: starter('type TreeNode = { value: number; children: TreeNode[] }\n\nfunction sumAtDepth(root: TreeNode | null, depth: number): number', '0'),
+    starter: starter(
+      'type TreeNode = { value: number; children: TreeNode[] }\n\nfunction sumAtDepth(root: TreeNode | null, depth: number): number',
+      '0',
+    ),
     functionName: 'sumAtDepth',
     preserveInput: true,
     hints: [
@@ -287,14 +335,40 @@ export const dsaPracticeReps: Rep[] = [
       'A depth with no nodes gives a total of 0. Check that case as well as the deepest level.',
     ],
     checks: [
-      { name: 'Maximum nodes', input: [{ value: 1000, children: Array.from({ length: 99 }, () => ({ value: -1000, children: [] })) }, 1], expected: -99000 },
-      { name: 'Sibling total', input: [{ value: 9, children: [{ value: 2, children: [] }, { value: -3, children: [] }] }, 1], expected: -1 },
+      {
+        name: 'Maximum nodes',
+        input: [{ value: 1000, children: Array.from({ length: 99 }, () => ({ value: -1000, children: [] })) }, 1],
+        expected: -99000,
+      },
+      {
+        name: 'Sibling total',
+        input: [
+          {
+            value: 9,
+            children: [
+              { value: 2, children: [] },
+              { value: -3, children: [] },
+            ],
+          },
+          1,
+        ],
+        expected: -1,
+      },
       { name: 'No tree', input: [null, 0], expected: 0 },
       { name: 'Root level', input: [{ value: -5, children: [{ value: 8, children: [] }] }, 0], expected: -5 },
       { name: 'Beyond leaves', input: [{ value: 3, children: [] }, 2], expected: 0 },
       {
         name: 'Only requested level',
-        input: [{ value: 1, children: [{ value: 2, children: [{ value: 7, children: [] }] }, { value: 4, children: [] }] }, 2],
+        input: [
+          {
+            value: 1,
+            children: [
+              { value: 2, children: [{ value: 7, children: [] }] },
+              { value: 4, children: [] },
+            ],
+          },
+          2,
+        ],
         expected: 7,
       },
       { name: 'Zero value', input: [{ value: 0, children: [] }, 0], expected: 0 },
@@ -304,12 +378,16 @@ export const dsaPracticeReps: Rep[] = [
     id: 'tree-value-path',
     title: 'Find a route to a tree value',
     category: 'Algorithm applications',
-    prompt: 'Return an array of node values on the root-to-target route, including both endpoints. Return null if target is absent or root is null. Values are unique, so at most one route qualifies. Do not change any node or child array.',
+    prompt:
+      'Return an array of node values on the root-to-target route, including both endpoints. Return null if target is absent or root is null. Values are unique, so at most one route qualifies. Do not change any node or child array.',
     example: { input: 'pathToValue({value:6,children:[{value:2,children:[]}]},2)', output: '[6, 2]' },
     note: 'Trees have at most 100 nodes and 10 levels, integer values from -1000 to 1000, no cycles or shared nodes. Values are unique; target is an integer -1000 to 1000.',
     vocabulary: [{ term: 'Route', meaning: 'the sequence of connected nodes leading to a destination' }],
     planPrompt: dsaPlanPrompts['tree-value-path'],
-    starter: starter('type TreeNode = { value: number; children: TreeNode[] }\n\nfunction pathToValue(root: TreeNode | null, target: number): number[] | null', 'null'),
+    starter: starter(
+      'type TreeNode = { value: number; children: TreeNode[] }\n\nfunction pathToValue(root: TreeNode | null, target: number): number[] | null',
+      'null',
+    ),
     functionName: 'pathToValue',
     preserveInput: true,
     hints: [
@@ -325,7 +403,16 @@ export const dsaPracticeReps: Rep[] = [
       },
       {
         name: 'Nested route',
-        input: [{ value: 1, children: [{ value: 2, children: [] }, { value: 3, children: [{ value: 4, children: [] }] }] }, 4],
+        input: [
+          {
+            value: 1,
+            children: [
+              { value: 2, children: [] },
+              { value: 3, children: [{ value: 4, children: [] }] },
+            ],
+          },
+          4,
+        ],
         expected: [1, 3, 4],
       },
       { name: 'Null', input: [null, 0], expected: null },
@@ -333,7 +420,16 @@ export const dsaPracticeReps: Rep[] = [
       { name: 'Missing', input: [{ value: 1, children: [{ value: 2, children: [] }] }, 9], expected: null },
       {
         name: 'Later sibling after dead end',
-        input: [{ value: -1, children: [{ value: 2, children: [{ value: 3, children: [] }] }, { value: 4, children: [] }] }, 4],
+        input: [
+          {
+            value: -1,
+            children: [
+              { value: 2, children: [{ value: 3, children: [] }] },
+              { value: 4, children: [] },
+            ],
+          },
+          4,
+        ],
         expected: [-1, 4],
       },
     ],
@@ -342,7 +438,8 @@ export const dsaPracticeReps: Rep[] = [
     id: 'graph-shortest-hops',
     title: 'Measure the shortest route',
     category: 'Algorithm applications',
-    prompt: 'Return the smallest number of directed edges needed to reach target from start. Return null if either endpoint is outside graph or no route exists. A valid node reaches itself in zero hops. Do not change graph or any of its nested arrays.',
+    prompt:
+      'Return the smallest number of directed edges needed to reach target from start. Return null if either endpoint is outside graph or no route exists. A valid node reaches itself in zero hops. Do not change graph or any of its nested arrays.',
     example: { input: 'shortestHops([[1],[2],[]],0,2)', output: '2' },
     note: 'graph is an adjacency list of 0 to 100 nodes identified by array index; each list has at most 100 valid neighbor indices. Duplicate edges, cycles, and self-links are allowed. start and target are integers from -1 to 100.',
     vocabulary: [{ term: 'Hop', meaning: 'one edge followed from a node to a neighbor' }],
@@ -356,7 +453,7 @@ export const dsaPracticeReps: Rep[] = [
       'Check an invalid start equal to target and a valid start equal to target.',
     ],
     checks: [
-      { name: 'Maximum nodes', input: [Array.from({ length: 100 }, (_, i) => i < 99 ? [i + 1] : []), 0, 99], expected: 99 },
+      { name: 'Maximum nodes', input: [Array.from({ length: 100 }, (_, i) => (i < 99 ? [i + 1] : [])), 0, 99], expected: 99 },
       { name: 'Maximum repeated neighbors', input: [[Array(100).fill(1), []], 0, 1], expected: 1 },
       { name: 'Choose shortest', input: [[[1, 3], [2], [3], []], 0, 3], expected: 1 },
       { name: 'Empty invalid equality', input: [[], 0, 0], expected: null },
@@ -371,7 +468,8 @@ export const dsaPracticeReps: Rep[] = [
     id: 'graph-connected-groups',
     title: 'Count separate connected groups',
     category: 'Algorithm applications',
-    prompt: 'Return the number of connected groups in an undirected graph. Nodes belong to one group when connections link them directly or through other nodes. Count isolated nodes as separate groups; an empty graph has zero groups. Do not change graph or any of its nested arrays.',
+    prompt:
+      'Return the number of connected groups in an undirected graph. Nodes belong to one group when connections link them directly or through other nodes. Count isolated nodes as separate groups; an empty graph has zero groups. Do not change graph or any of its nested arrays.',
     example: { input: 'connectedGroups([[1],[0],[]])', output: '2' },
     note: 'graph is an adjacency list of 0 to 100 nodes identified by array index; each list has at most 100 valid neighbor indices. Duplicate edges, cycles, and self-links are allowed. Every edge is reciprocal: if j appears in graph[i], i appears in graph[j].',
     vocabulary: [{ term: 'Connected group', meaning: 'nodes linked through any number of undirected edges' }],
@@ -390,7 +488,17 @@ export const dsaPracticeReps: Rep[] = [
       { name: 'Two pairs', input: [[[1], [0], [3], [2]]], expected: 2 },
       { name: 'Empty', input: [[]], expected: 0 },
       { name: 'Isolated nodes', input: [[[], [], []]], expected: 3 },
-      { name: 'Cycle', input: [[[1, 2], [0, 2], [0, 1]]], expected: 1 },
+      {
+        name: 'Cycle',
+        input: [
+          [
+            [1, 2],
+            [0, 2],
+            [0, 1],
+          ],
+        ],
+        expected: 1,
+      },
       { name: 'Self and duplicate edges', input: [[[0, 1, 1], [0, 0], [2]]], expected: 2 },
     ],
   },
@@ -398,7 +506,8 @@ export const dsaPracticeReps: Rep[] = [
     id: 'simplify-file-path',
     title: 'Simplify an absolute file path',
     category: 'Algorithm applications',
-    prompt: 'Return the canonical absolute path. Slash separates segments. Ignore empty segments and exact . segments. An exact .. removes the most recent remaining segment, if any; going above root stays at root. All other segments are kept exactly as written. Return / when none remain.',
+    prompt:
+      'Return the canonical absolute path. Slash separates segments. Ignore empty segments and exact . segments. An exact .. removes the most recent remaining segment, if any; going above root stays at root. All other segments are kept exactly as written. Return / when none remain.',
     example: { input: 'simplifyPath("/home/./notes/../work/")', output: '"/home/work"' },
     note: 'Input starts with / and has 1 to 200 ASCII characters. Segment names are case-sensitive and are not trimmed; ... is kept as a name. Repeated and trailing slashes are allowed. This is text processing, without reading files or following filesystem links.',
     vocabulary: [
@@ -406,7 +515,7 @@ export const dsaPracticeReps: Rep[] = [
       { term: 'Parent segment', meaning: 'the exact .. segment that removes one preceding name' },
     ],
     planPrompt: dsaPlanPrompts['simplify-file-path'],
-    starter: starter('function simplifyPath(path: string): string', '\'/\''),
+    starter: starter('function simplifyPath(path: string): string', "'/'"),
     functionName: 'simplifyPath',
     preserveInput: true,
     hints: [
@@ -428,7 +537,8 @@ export const dsaPracticeReps: Rep[] = [
     id: 'sorted-offset-squares',
     title: 'Order squared offsets',
     category: 'Algorithm applications',
-    prompt: 'Return a new array containing the square of every supplied offset, in ascending order. offsets is already sorted in ascending order and may contain negative values, zero, and duplicates. Keep every occurrence. Do not change offsets.',
+    prompt:
+      'Return a new array containing the square of every supplied offset, in ascending order. offsets is already sorted in ascending order and may contain negative values, zero, and duplicates. Keep every occurrence. Do not change offsets.',
     example: { input: 'squareOffsets([-4, -1, 0, 3])', output: '[0, 1, 9, 16]' },
     note: 'At most 100 integer offsets from -1000 to 1000. Empty input returns []. Unsorted inputs are outside the contract. Behavior checks do not establish an approach or linear time; review those separately.',
     vocabulary: [
@@ -452,14 +562,19 @@ export const dsaPracticeReps: Rep[] = [
       { name: 'All nonnegative', input: [[0, 2, 4]], expected: [0, 4, 16] },
       { name: 'Repeated magnitudes', input: [[-2, -2, 0, 0, 2]], expected: [0, 0, 4, 4, 4] },
       { name: 'Equal endpoints', input: [[-3, 3]], expected: [9, 9] },
-      { name: 'Maximum length and magnitude', input: [[...Array(50).fill(-1000), ...Array(50).fill(1000)]], expected: Array(100).fill(1000000) },
+      {
+        name: 'Maximum length and magnitude',
+        input: [[...Array(50).fill(-1000), ...Array(50).fill(1000)]],
+        expected: Array(100).fill(1000000),
+      },
     ],
   },
   {
     id: 'reading-run-summary',
     title: 'Summarize repeated readings',
     category: 'Algorithm applications',
-    prompt: 'Return a new array of {value, count} records describing each distinct reading and how many times it occurs. readings is sorted in ascending order; records must follow that same order. Include every distinct value exactly once. Do not change readings. Empty input returns [].',
+    prompt:
+      'Return a new array of {value, count} records describing each distinct reading and how many times it occurs. readings is sorted in ascending order; records must follow that same order. Include every distinct value exactly once. Do not change readings. Empty input returns [].',
     example: { input: 'summarizeReadings([-2, -2, 0, 4, 4, 4])', output: '[{value:-2,count:2},{value:0,count:1},{value:4,count:3}]' },
     note: 'At most 100 integer readings from -1000 to 1000. Duplicates are allowed and contribute to count. Unsorted input is outside the contract. Checks establish output and unchanged input, not a particular approach or complexity.',
     vocabulary: [
@@ -467,7 +582,10 @@ export const dsaPracticeReps: Rep[] = [
       { term: 'Count', meaning: 'the number of occurrences represented by a record' },
     ],
     planPrompt: dsaPlanPrompts['reading-run-summary'],
-    starter: starter('type ReadingRun = { value: number; count: number }\n\nfunction summarizeReadings(readings: number[]): ReadingRun[]', '[]'),
+    starter: starter(
+      'type ReadingRun = { value: number; count: number }\n\nfunction summarizeReadings(readings: number[]): ReadingRun[]',
+      '[]',
+    ),
     functionName: 'summarizeReadings',
     preserveInput: true,
     hints: [
@@ -476,16 +594,42 @@ export const dsaPracticeReps: Rep[] = [
       'Consider a position reading input and a position identifying the current output record; decide when to extend that record or start another.',
     ],
     checks: [
-      { name: 'Mixed runs', input: [[-2, -2, 0, 4, 4, 4]], expected: [{ value: -2, count: 2 }, { value: 0, count: 1 }, { value: 4, count: 3 }] },
+      {
+        name: 'Mixed runs',
+        input: [[-2, -2, 0, 4, 4, 4]],
+        expected: [
+          { value: -2, count: 2 },
+          { value: 0, count: 1 },
+          { value: 4, count: 3 },
+        ],
+      },
       { name: 'Empty', input: [[]], expected: [] },
       { name: 'Single zero', input: [[0]], expected: [{ value: 0, count: 1 }] },
       { name: 'All equal', input: [[7, 7, 7]], expected: [{ value: 7, count: 3 }] },
-      { name: 'All distinct', input: [[-3, 0, 8]], expected: [{ value: -3, count: 1 }, { value: 0, count: 1 }, { value: 8, count: 1 }] },
-      { name: 'Final run', input: [[-1, 2, 2]], expected: [{ value: -1, count: 1 }, { value: 2, count: 2 }] },
+      {
+        name: 'All distinct',
+        input: [[-3, 0, 8]],
+        expected: [
+          { value: -3, count: 1 },
+          { value: 0, count: 1 },
+          { value: 8, count: 1 },
+        ],
+      },
+      {
+        name: 'Final run',
+        input: [[-1, 2, 2]],
+        expected: [
+          { value: -1, count: 1 },
+          { value: 2, count: 2 },
+        ],
+      },
       {
         name: 'Maximum length and bounds',
         input: [[...Array(50).fill(-1000), ...Array(50).fill(1000)]],
-        expected: [{ value: -1000, count: 50 }, { value: 1000, count: 50 }],
+        expected: [
+          { value: -1000, count: 50 },
+          { value: 1000, count: 50 },
+        ],
       },
     ],
   },

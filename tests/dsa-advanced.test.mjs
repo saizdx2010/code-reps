@@ -8,15 +8,21 @@ import { dsaSolutions } from './fixtures/dsa-solutions.mjs'
 test('advanced checks reject endpoint, ordering, base-case, greedy, and stack mistakes', () => {
   const mistakes = {
     'algo-prefix-sums': 'function rangeSums(a,q) { return q.map(([l,r])=>a.slice(l,r).reduce((s,v)=>s+v,0)) }',
-    'algo-merge-intervals': 'function mergeIntervals(a) { const out=[]; for(const [s,e] of [...a].sort((a,b)=>a[0]-b[0])) { const last=out.at(-1); if(last && s<last[1]) last[1]=e; else out.push([s,e]) } return out }',
+    'algo-merge-intervals':
+      'function mergeIntervals(a) { const out=[]; for(const [s,e] of [...a].sort((a,b)=>a[0]-b[0])) { const last=out.at(-1); if(last && s<last[1]) last[1]=e; else out.push([s,e]) } return out }',
     'algo-linked-list-reverse': 'function reverseList(head) { return head }',
-    'algo-min-heap': 'function heapPops(ops) { const stack=[],out=[]; for(const op of ops) if(op.type==="push") stack.push(op.value); else out.push(stack.pop() ?? null); return out }',
+    'algo-min-heap':
+      'function heapPops(ops) { const stack=[],out=[]; for(const op of ops) if(op.type==="push") stack.push(op.value); else out.push(stack.pop() ?? null); return out }',
     'algo-subsets': 'function subsets(a) { let out=[[]]; for(const v of a) out=out.concat(out.map(s=>[...s,v])); return out }',
     'algo-climb-stairs': 'function climbStairs(n) { if(n===0) return 0; let a=1,b=1; for(let i=2;i<=n;i++) [a,b]=[b,a+b]; return b }',
-    'algo-coin-change': 'function coinChange(coins,amount) { let n=0; for(const coin of [...coins].sort((a,b)=>b-a)) while(amount>=coin) { amount-=coin; n++ } return amount ? -1 : n }',
+    'algo-coin-change':
+      'function coinChange(coins,amount) { let n=0; for(const coin of [...coins].sort((a,b)=>b-a)) while(amount>=coin) { amount-=coin; n++ } return amount ? -1 : n }',
   }
   for (const [id, code] of Object.entries(mistakes)) {
-    assert.ok(runRep(code, id).some(check => !check.passed), id)
+    assert.ok(
+      runRep(code, id).some(check => !check.passed),
+      id,
+    )
   }
 })
 
@@ -72,6 +78,7 @@ test('the taught heap repair satisfies interleaved, duplicate, and child-branch 
 })
 
 test('nested linked-list mutations are reported separately', () => {
-  const code = 'function reverseList(head) { const values=[]; for(let p=head;p;p=p.next) { values.push(p.value); p.value++ } let out=null; for(const value of values) out={value,next:out}; return out }'
+  const code =
+    'function reverseList(head) { const values=[]; for(let p=head;p;p=p.next) { values.push(p.value); p.value++ } let out=null; for(const value of values) out={value,next:out}; return out }'
   assert.ok(runRep(code, 'algo-linked-list-reverse').some(check => check.message?.includes('changed its input')))
 })

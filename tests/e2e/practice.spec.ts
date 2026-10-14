@@ -8,7 +8,10 @@ test('real Monaco editing, keyboard checks, and obsolete feedback', async ({ pag
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await replaceCode(page, 'function mostFrequent(numbers: number[]): number | null { return null }')
   await expect(page.getByText('All checks passed', { exact: true })).toHaveCount(0)
-  await page.locator('.workspace-toolbar').getByRole('button', { name: /Run checks/ }).click()
+  await page
+    .locator('.workspace-toolbar')
+    .getByRole('button', { name: /Run checks/ })
+    .click()
   await expectChecksFinished(page.getByText('1 of 6 checks passed', { exact: true }))
 })
 
@@ -22,7 +25,10 @@ test('reload preserves code and planning drafts', async ({ page }) => {
   await page.getByRole('button', { name: 'Plan', exact: true }).click()
   await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue('Count values, then resolve ties with the smaller value.')
   await expect(editor(page)).toBeVisible()
-  await page.locator('.workspace-toolbar').getByRole('button', { name: /Run checks/ }).click()
+  await page
+    .locator('.workspace-toolbar')
+    .getByRole('button', { name: /Run checks/ })
+    .click()
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
 })
 
@@ -52,7 +58,10 @@ test('profile switching keeps drafts separate', async ({ page }) => {
   await page.getByRole('button', { name: 'Plan', exact: true }).click()
   await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue('Original profile plan')
   await expect(editor(page)).toBeVisible()
-  await page.locator('.workspace-toolbar').getByRole('button', { name: /Run checks/ }).click()
+  await page
+    .locator('.workspace-toolbar')
+    .getByRole('button', { name: /Run checks/ })
+    .click()
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
 })
 
@@ -65,7 +74,10 @@ test('narrow workspace preserves planning and supports keyboard exit', async ({ 
   await replaceCode(page, solution)
   await page.keyboard.press('Tab')
   await expect(editor(page)).not.toBeFocused()
-  await page.locator('.workspace-toolbar').getByRole('button', { name: /Run checks/ }).click()
+  await page
+    .locator('.workspace-toolbar')
+    .getByRole('button', { name: /Run checks/ })
+    .click()
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await saved(page)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
@@ -90,7 +102,10 @@ test('first-run recommendation leads and the starting point stays editable', asy
   await starting.getByRole('button', { name: /Returning to coding/ }).click()
   await page.goto('/#/home')
   await expect(page.locator('#continue-heading')).toHaveText('Sum positive numbers')
-  await page.locator('.continue-panel').getByRole('button', { name: /Start rep/ }).click()
+  await page
+    .locator('.continue-panel')
+    .getByRole('button', { name: /Start rep/ })
+    .click()
   await expect(page).toHaveURL(/#\/practice\/sum-positive-numbers$/)
   await page.goBack()
   await expect(page.locator('#continue-heading')).toHaveText('Sum positive numbers')
@@ -101,12 +116,17 @@ test('A reasoned rep needs plan, passing checks and explanation; difficulty is o
   await page.getByRole('button', { name: 'Plan', exact: true }).click()
   await page.getByLabel('Your plan', { exact: true }).fill('Count occurrences and choose the smaller number when counts tie.')
   await replaceCode(page, solution)
-  await page.locator('.workspace-toolbar').getByRole('button', { name: /Run checks/ }).click()
+  await page
+    .locator('.workspace-toolbar')
+    .getByRole('button', { name: /Run checks/ })
+    .click()
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   // Once checks pass, the only route to the explanation is the checks drawer, not a second footer link.
   await expect(page.locator('.workspace-toolbar').getByRole('button', { name: 'Explain solution', exact: true })).toHaveCount(0)
   await page.getByRole('button', { name: 'Explain', exact: true }).click()
-  await page.getByLabel('Your explanation', { exact: true }).fill('I count each value, compare counts, and use the smaller value to break ties. Empty input returns null.')
+  await page
+    .getByLabel('Your explanation', { exact: true })
+    .fill('I count each value, compare counts, and use the smaller value to break ties. Empty input returns null.')
   await page.getByRole('button', { name: 'Review', exact: true }).click()
   const complete = page.getByRole('button', { name: 'Complete rep', exact: true })
   // Difficulty is optional: with plan, checks and explanation present nothing is missing.
@@ -160,7 +180,9 @@ test('practice steps preserve work, explain missing requirements, and record com
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await page.getByRole('button', { name: 'Explain your solution', exact: false }).click()
   await expect(page.locator('#explain-section')).toBeFocused()
-  await page.getByLabel('Your explanation', { exact: true }).fill('I count each value, compare counts, and use the smaller value to break ties. Empty input returns null.')
+  await page
+    .getByLabel('Your explanation', { exact: true })
+    .fill('I count each value, compare counts, and use the smaller value to break ties. Empty input returns null.')
   await steps.getByRole('button', { name: 'Review', exact: true }).click()
   await chooseSegment(page, 'What was hardest?', 'Handling edge cases')
   await chooseSegment(page, 'How confident do you feel?', 'Getting there')
@@ -180,12 +202,32 @@ test('practice steps preserve work, explain missing requirements, and record com
   await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue(/Count occurrences/)
   await page.locator('.site-menu > summary').click()
   await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name: 'Progress', exact: true }).click()
-  await expect(page.locator('[aria-label="Practice summary"] > div').filter({ has: page.locator('dt', { hasText: 'Completed reps' }) }).locator('dd')).toHaveText('1')
-  await expect(page.locator('[aria-label="Practice summary"] > div').filter({ has: page.locator('dt', { hasText: 'Current streak' }) }).locator('dd')).toHaveText('1 day')
+  await expect(
+    page
+      .locator('[aria-label="Practice summary"] > div')
+      .filter({ has: page.locator('dt', { hasText: 'Completed reps' }) })
+      .locator('dd'),
+  ).toHaveText('1')
+  await expect(
+    page
+      .locator('[aria-label="Practice summary"] > div')
+      .filter({ has: page.locator('dt', { hasText: 'Current streak' }) })
+      .locator('dd'),
+  ).toHaveText('1 day')
   await expect(page.locator('.badge-progress').first()).toHaveText('1 of 1 rep')
   // An unhinted solve before its guided journey is not evidence of independence.
-  await expect(page.locator('[aria-label="Practice summary"] > div').filter({ has: page.locator('dt', { hasText: 'Independent skills' }) }).locator('dd')).toHaveText('0')
-  await expect(page.locator('[aria-label="Practice summary"] > div').filter({ has: page.locator('dt', { hasText: 'Retained skills' }) }).locator('dd')).toHaveText('0')
+  await expect(
+    page
+      .locator('[aria-label="Practice summary"] > div')
+      .filter({ has: page.locator('dt', { hasText: 'Independent skills' }) })
+      .locator('dd'),
+  ).toHaveText('0')
+  await expect(
+    page
+      .locator('[aria-label="Practice summary"] > div')
+      .filter({ has: page.locator('dt', { hasText: 'Retained skills' }) })
+      .locator('dd'),
+  ).toHaveText('0')
 })
 
 test('lesson section navigation preserves predictions and opens self-review', async ({ page }) => {
@@ -200,7 +242,9 @@ test('lesson section navigation preserves predictions and opens self-review', as
   await sections.getByRole('button', { name: 'Review', exact: true }).click()
   await expect(page.locator('.lesson-review-details')).toHaveAttribute('open', '')
   await expect(sections.getByRole('button', { name: 'Review', exact: true })).toBeFocused()
-  await page.getByLabel('Evidence and what to improve', { exact: true }).fill('I traced the return value; I still need an independent coding attempt.')
+  await page
+    .getByLabel('Evidence and what to improve', { exact: true })
+    .fill('I traced the return value; I still need an independent coding attempt.')
   await sections.getByRole('button', { name: 'Read', exact: true }).click()
   await sections.getByRole('button', { name: 'Predict', exact: true }).click()
   await expect(prediction.getByRole('radio', { name: '6', exact: true })).toBeChecked()
@@ -215,7 +259,10 @@ test('narrow path discovery selects a path without horizontal scrolling', async 
   await page.goto('/#/paths')
   await expect(page.locator('.path-picker')).not.toHaveAttribute('open', '')
   await page.locator('.path-picker > summary').click()
-  await page.locator('.path-choices').getByRole('button', { name: /^Backend/ }).click()
+  await page
+    .locator('.path-choices')
+    .getByRole('button', { name: /^Backend/ })
+    .click()
   await expect(page.locator('#path-title')).toHaveText('Backend')
   await expect(page.locator('#path-title')).toBeFocused()
   await expect(page.locator('.path-picker')).not.toHaveAttribute('open', '')
@@ -272,7 +319,15 @@ test('checks open as a bounded drawer inside the coding desk above the run toolb
   await expect(page.locator('#check-details')).toBeHidden()
   await toggle.press('Enter')
   await expect(page.getByRole('list', { name: 'Passed checks' })).toBeVisible()
-  await expect.poll(() => page.evaluate(() => Object.entries(localStorage).filter(([key]) => key.includes('most-frequent-number')).map(([, value]) => JSON.parse(value).code))).toContain(solution)
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        Object.entries(localStorage)
+          .filter(([key]) => key.includes('most-frequent-number'))
+          .map(([, value]) => JSON.parse(value).code),
+      ),
+    )
+    .toContain(solution)
 })
 
 test('compact header shows the editor, first step, and an in-desk drawer without scrolling', async ({ page }) => {
@@ -310,7 +365,10 @@ test('desktop desk stays fixed while task and checks scroll', async ({ page }) =
     await expect.poll(() => task.evaluate(node => node.scrollTop)).toBeGreaterThan(0)
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
     await replaceCode(page, solution)
-    await page.locator('.workspace-toolbar').getByRole('button', { name: /Run checks/ }).click()
+    await page
+      .locator('.workspace-toolbar')
+      .getByRole('button', { name: /Run checks/ })
+      .click()
     await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
     const run = page.locator('.workspace-toolbar').getByRole('button', { name: /Run checks/ })
     const bounds = await run.boundingBox()

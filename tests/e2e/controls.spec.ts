@@ -5,7 +5,10 @@ test('custom select supports keyboard exploration, cancellation, typeahead, and 
   await page.goto('/#/plan')
   const goal = page.getByRole('combobox', { name: 'Goal', exact: true })
   const original = await goal.getAttribute('data-value')
-  await page.locator('label').filter({ has: goal }).click({ position: { x: 8, y: 8 } })
+  await page
+    .locator('label')
+    .filter({ has: goal })
+    .click({ position: { x: 8, y: 8 } })
   await expect(goal).toBeFocused()
   await expect(goal).toHaveAttribute('aria-expanded', 'true')
   await page.keyboard.press('Escape')

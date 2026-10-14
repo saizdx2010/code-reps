@@ -17,7 +17,11 @@ test('trail keeps every path rep in order and interleaves each lesson once befor
     const trail = buildTrail(path.id, fresh)
     const nodes = trail.stages.flatMap(stage => stage.nodes)
     const repIds = nodes.filter(node => node.kind === 'rep').map(node => node.repId)
-    assert.deepEqual(repIds, path.stages.flatMap(stage => stage.repIds), path.id)
+    assert.deepEqual(
+      repIds,
+      path.stages.flatMap(stage => stage.repIds),
+      path.id,
+    )
     const lessons = nodes.filter(node => node.kind === 'lesson').map(node => node.skillId)
     assert.equal(new Set(lessons).size, lessons.length, `${path.id} repeats a lesson`)
     assert.equal(trail.total, new Set(repIds).size)

@@ -23,7 +23,11 @@ export function useNavigation(repIds: string[], onRestore: (route: Route) => voi
     }
     window.addEventListener('popstate', receive)
     window.addEventListener('hashchange', receive)
-    return () => { history.scrollRestoration = previousRestoration; window.removeEventListener('popstate', receive); window.removeEventListener('hashchange', receive) }
+    return () => {
+      history.scrollRestoration = previousRestoration
+      window.removeEventListener('popstate', receive)
+      window.removeEventListener('hashchange', receive)
+    }
   }, [repIds])
   function navigate(view: View, repId?: string) {
     const next = { view, repId }

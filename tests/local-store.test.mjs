@@ -7,24 +7,49 @@ const draftKey = 'code-reps:attempt:sum-positive-numbers:v1'
 const journalKey = 'code-reps:pending-writes:v1'
 function storage(entries = {}) {
   const map = new Map(Object.entries(entries))
-  return { get length() { return map.size }, key: index => [...map.keys()][index] ?? null, getItem: key => map.get(key) ?? null, setItem: (key, value) => map.set(key, value), removeItem: key => map.delete(key) }
+  return {
+    get length() {
+      return map.size
+    },
+    key: index => [...map.keys()][index] ?? null,
+    getItem: key => map.get(key) ?? null,
+    setItem: (key, value) => map.set(key, value),
+    removeItem: key => map.delete(key),
+  }
 }
 const response = (value, status = 200) => new Response(JSON.stringify(value), { status, headers: { 'Content-Type': 'application/json' } })
 function server(initial = {}) {
-  const entries = { ...initial }, calls = []
+  const entries = { ...initial },
+    calls = []
   let available = true
   const request = async (url, options) => {
     calls.push({ url, options })
     if (!available) throw new TypeError('offline')
     if (url === '/api/state') return response({ entries: { ...entries } })
     const body = JSON.parse(options.body)
-    if (url === '/api/migrate') { if (!Object.keys(entries).length) Object.assign(entries, body.entries); return response({ entries }) }
+    if (url === '/api/migrate') {
+      if (!Object.keys(entries).length) Object.assign(entries, body.entries)
+      return response({ entries })
+    }
     assert.equal(url, '/api/entries')
     assert.equal(options.method, 'PATCH')
-    for (const [key, value] of Object.entries(body.entries)) { if (value === null) delete entries[key]; else entries[key] = value }
+    for (const [key, value] of Object.entries(body.entries)) {
+      if (value === null) delete entries[key]
+      else entries[key] = value
+    }
     return response({ saved: true })
   }
-  return { entries, calls, request, offline: () => { available = false }, online: () => { available = true } }
+  return {
+    entries,
+    calls,
+    request,
+    offline: () => {
+      available = false
+    },
+    online: () => {
+      available = true
+    },
+  }
 }
 
 test('first run migrates legacy browser data without migrating internal metadata', async () => {
@@ -75,10 +100,19 @@ test('an older acknowledgement cannot discard a newer pending value', async () =
   const remote = server({ [draftKey]: 'old' })
   let release
   let firstPatch = true
-  const store = createLocalStore({ storage: cached, onError() {}, request: async (url, options) => {
-    if (url === '/api/entries' && firstPatch) { firstPatch = false; await new Promise(resolve => { release = resolve }) }
-    return remote.request(url, options)
-  } })
+  const store = createLocalStore({
+    storage: cached,
+    onError() {},
+    request: async (url, options) => {
+      if (url === '/api/entries' && firstPatch) {
+        firstPatch = false
+        await new Promise(resolve => {
+          release = resolve
+        })
+      }
+      return remote.request(url, options)
+    },
+  })
   await store.initializeStorage()
   store.localStore.setItem(draftKey, 'first edit')
   await new Promise(resolve => setImmediate(resolve))
@@ -107,7 +141,10 @@ test('invalid server responses and corrupt pending data preserve the cached draf
 test('cache quota failure rolls back a multi-entry update', async () => {
   const cached = storage({ [draftKey]: 'old' })
   const original = cached.setItem
-  cached.setItem = (key, value) => { if (value === 'too large') throw new Error('Quota exceeded'); original(key, value) }
+  cached.setItem = (key, value) => {
+    if (value === 'too large') throw new Error('Quota exceeded')
+    original(key, value)
+  }
   const store = createLocalStore({ storage: cached, request: async () => response({}), onError() {} })
   assert.throws(() => store.localStore.setEntries({ [draftKey]: 'replacement', 'code-reps:new': 'too large' }), /Quota/)
   assert.equal(cached.getItem(draftKey), 'old')
@@ -116,7 +153,11 @@ test('cache quota failure rolls back a multi-entry update', async () => {
 
 test('browser-only development still saves without a server journal', async () => {
   const cached = storage()
-  const store = createLocalStore({ storage: cached, request: async () => new Response('<html></html>', { headers: { 'Content-Type': 'text/html' } }), onError() {} })
+  const store = createLocalStore({
+    storage: cached,
+    request: async () => new Response('<html></html>', { headers: { 'Content-Type': 'text/html' } }),
+    onError() {},
+  })
   await store.initializeStorage()
   store.localStore.setItem(draftKey, 'browser draft')
   await store.flushStorage()
@@ -126,7 +167,14 @@ test('browser-only development still saves without a server journal', async () =
 
 test('browser and server share one saved-key allow-list; browser-only keys never sync', () => {
   const shared = ['code-reps:history:v1', 'code-reps:profile:default:draft:sum-evens', `code-reps:${'a'.repeat(149)}`]
-  const rejected = ['Code-Reps:history', 'code-reps:', 'code-reps:has space', 'code-reps:under_score', 'other:key', `code-reps:${'a'.repeat(150)}`]
+  const rejected = [
+    'Code-Reps:history',
+    'code-reps:',
+    'code-reps:has space',
+    'code-reps:under_score',
+    'other:key',
+    `code-reps:${'a'.repeat(150)}`,
+  ]
   for (const key of shared) assert.ok(storageKeyAllowed(key) && keyAllowed(key), key)
   for (const key of rejected) assert.ok(!storageKeyAllowed(key) && !keyAllowed(key), key)
   for (const key of ['code-reps:pending-writes:v1', 'code-reps:server-mode:v1']) {

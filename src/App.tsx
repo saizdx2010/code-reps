@@ -42,34 +42,56 @@ import { ChecksDrawer, WorkspaceToolbar } from './ChecksDrawer'
 import { practiceSteps, sectionStep, stepSection } from './practice-steps'
 
 const repIds = reps.map(rep => rep.id)
-const FirstRepWalkthrough = lazy(() => import('./FirstRepWalkthrough')
-  .then(module => ({ default: module.FirstRepWalkthrough }))
-  .catch(() => ({
-    default: ({ onDismiss }: { onDismiss: () => void }) => <aside aria-label="First rep walkthrough">
-      <p>Guide unavailable. Reload to try again, or continue practice.</p>
-      <button type="button" className="text-button" onClick={onDismiss}>Skip walkthrough</button>
-    </aside>,
-  })))
-const FrontendPreview = lazy(() => import('./FrontendPreview').catch(() => ({
-  default: () => <section className="panel frontend-preview" role="alert">
-    <p>The preview could not load. Reload to try again; your draft will be kept.</p>
-    <button className="primary-button" type="button" onClick={() => window.location.reload()}>Reload app</button>
-  </section>,
-})))
+const FirstRepWalkthrough = lazy(() =>
+  import('./FirstRepWalkthrough')
+    .then(module => ({ default: module.FirstRepWalkthrough }))
+    .catch(() => ({
+      default: ({ onDismiss }: { onDismiss: () => void }) => (
+        <aside aria-label="First rep walkthrough">
+          <p>Guide unavailable. Reload to try again, or continue practice.</p>
+          <button type="button" className="text-button" onClick={onDismiss}>
+            Skip walkthrough
+          </button>
+        </aside>
+      ),
+    })),
+)
+const FrontendPreview = lazy(() =>
+  import('./FrontendPreview').catch(() => ({
+    default: () => (
+      <section className="panel frontend-preview" role="alert">
+        <p>The preview could not load. Reload to try again; your draft will be kept.</p>
+        <button className="primary-button" type="button" onClick={() => window.location.reload()}>
+          Reload app
+        </button>
+      </section>
+    ),
+  })),
+)
 
 // UI-only renders reuse the same learner summary. Consumers read only draft status, so typing that keeps the status changes nothing here.
-function usePracticeOverview(repId: string, attempt: Attempt, history: AttemptRecord[], learnerStart: LearnerStart | null, now: number,
-  goalPathId: string) {
+function usePracticeOverview(
+  repId: string,
+  attempt: Attempt,
+  history: AttemptRecord[],
+  learnerStart: LearnerStart | null,
+  now: number,
+  goalPathId: string,
+) {
   // Other reps' saved drafts change only on rep switch or completion (history); re-reading every one on each keystroke
   // dominated typing cost.
-  const savedDrafts = useMemo(() => Object.fromEntries(reps.filter(item => item.id !== repId).map(item => [item.id, readAttempt(item)])),
+  const savedDrafts = useMemo(
+    () => Object.fromEntries(reps.filter(item => item.id !== repId).map(item => [item.id, readAttempt(item)])),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- history signals a completion write to another rep's draft.
-    [repId, history])
+    [repId, history],
+  )
   const currentStatus = attemptStatus(repId, attempt)
   // eslint-disable-next-line react-hooks/exhaustive-deps -- the current attempt is refreshed whenever its status changes.
   const drafts = useMemo(() => ({ ...savedDrafts, [repId]: attempt }), [savedDrafts, repId, currentStatus])
-  const practicePlan = useMemo(() => getPracticePlan(drafts, history, learnerStart, repId, now, goalPathId),
-    [drafts, history, learnerStart, repId, now, goalPathId])
+  const practicePlan = useMemo(
+    () => getPracticePlan(drafts, history, learnerStart, repId, now, goalPathId),
+    [drafts, history, learnerStart, repId, now, goalPathId],
+  )
   return { drafts, practicePlan }
 }
 
@@ -77,13 +99,26 @@ const repById = new Map(reps.map(item => [item.id, item]))
 // Pages the command palette can open, in its order. Pages not named here are labelled by their route.
 const commandPages: View[] = ['home', 'paths', 'catalog', 'learn', ...hubTabs, 'mistakes', 'progress', 'skillmap', 'history']
 const commandPageLabels: Partial<Record<View, string>> = {
-  home: 'Home: your trail', paths: 'all tracks', catalog: 'practice library', learn: 'quick lessons',
-  plan: 'this week', skillmap: 'skill map',
+  home: 'Home: your trail',
+  paths: 'all tracks',
+  catalog: 'practice library',
+  learn: 'quick lessons',
+  plan: 'this week',
+  skillmap: 'skill map',
 }
 const splitWidthKey = 'code-reps:split-width'
 const editorOptions = {
-  tabFocusMode: true, minimap: { enabled: false }, fontFamily: 'Maple Mono, monospace', fontLigatures: true, fontSize: 14, lineHeight: 24,
-  padding: { top: 18 }, scrollBeyondLastLine: false, scrollbar: { alwaysConsumeMouseWheel: false }, automaticLayout: true, tabSize: 2,
+  tabFocusMode: true,
+  minimap: { enabled: false },
+  fontFamily: 'Maple Mono, monospace',
+  fontLigatures: true,
+  fontSize: 14,
+  lineHeight: 24,
+  padding: { top: 18 },
+  scrollBeyondLastLine: false,
+  scrollbar: { alwaysConsumeMouseWheel: false },
+  automaticLayout: true,
+  tabSize: 2,
   wordWrap: 'on',
 } as const
 type IndonesianHelp = Pick<typeof import('./vocabulary-id'), 'indonesianGlossary' | 'englishTipsForIndonesianSpeakers'>
@@ -92,11 +127,14 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   const fluency = useFluency()
   const sessions = usePracticeSessions()
   const [knowledgeSkill, setKnowledgeSkill] = useSessionPreference<string>('knowledge-skill', 'values')
-  function openKnowledge(id: string) { setKnowledgeSkill(id); setView('knowledge') }
+  function openKnowledge(id: string) {
+    setKnowledgeSkill(id)
+    setView('knowledge')
+  }
 
   function setView(next: View, id?: string) {
     if (next !== 'workspace') setEditorFocusRequest(0)
-    navigate(next, next === 'workspace' ? id ?? repId : undefined)
+    navigate(next, next === 'workspace' ? (id ?? repId) : undefined)
   }
   const [glossaryOpen, setGlossaryOpen] = useState(false)
   const [commandsOpen, setCommandsOpen] = useState(false)
@@ -107,10 +145,18 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   const tabsRef = useRef<HTMLDivElement | null>(null)
   const [editorFocusRequest, setEditorFocusRequest] = useState(0)
   const [splitWidth, setSplitWidth] = useState(() => {
-    try { return Math.max(25, Math.min(60, Number(localStore.getItem(splitWidthKey)) || 40)) } catch { return 40 }
+    try {
+      return Math.max(25, Math.min(60, Number(localStore.getItem(splitWidthKey)) || 40))
+    } catch {
+      return 40
+    }
   })
   function saveSplit(value: number) {
-    try { localStore.setItem(splitWidthKey, String(value)) } catch { /* Layout preference is optional. */ }
+    try {
+      localStore.setItem(splitWidthKey, String(value))
+    } catch {
+      /* Layout preference is optional. */
+    }
   }
   const sectionRequest = useRef(0)
   function revealSection(id: string) {
@@ -134,8 +180,10 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     })
   }
   const [pathId, setPathId] = useSessionPreference<(typeof paths)[number]['id']>('path', 'typescript')
-  const [pathPicker, setPathPicker] = useSessionPreference<'open' | 'closed'>('path-picker',
-    matchMedia('(min-width: 901px)').matches ? 'open' : 'closed')
+  const [pathPicker, setPathPicker] = useSessionPreference<'open' | 'closed'>(
+    'path-picker',
+    matchMedia('(min-width: 901px)').matches ? 'open' : 'closed',
+  )
   const [learnerStart, setLearnerStart] = useState(readLearnerStart)
   const [mobileTab, setMobileTab] = useSessionPreference<'task' | 'workspace'>('workspace-tab', 'task')
   const [walkthrough, setWalkthrough] = useSessionPreference<'new' | 'active' | 'dismissed'>('first-rep-walkthrough', 'new')
@@ -145,8 +193,15 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     if (indonesianHelp !== 'on' || indonesianHelpContent) return
     let active = true
     // Loaded on demand so the glossary stays out of the initial bundle; a failed load just hides the glosses.
-    import('./vocabulary-id').then(module => { if (active) setIndonesianHelpContent(module) }, () => {})
-    return () => { active = false }
+    import('./vocabulary-id').then(
+      module => {
+        if (active) setIndonesianHelpContent(module)
+      },
+      () => {},
+    )
+    return () => {
+      active = false
+    }
   }, [indonesianHelp, indonesianHelpContent])
   const indonesianHelpShown = indonesianHelp === 'on' ? indonesianHelpContent : null
   const [activeStep, setActiveStep] = useSessionPreference<string>('practice-step', mobileTab === 'task' ? 'understand' : 'solve')
@@ -181,13 +236,17 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     setActiveStep('understand')
   }
 
-  const { route, navigate } = useNavigation(repIds, next => { if (next.view === 'workspace' && next.repId) selectRep(next.repId) })
+  const { route, navigate } = useNavigation(repIds, next => {
+    if (next.view === 'workspace' && next.repId) selectRep(next.repId)
+  })
   const view = route.view
 
   useEffect(() => {
     if (view === 'workspace') revealElement(document.querySelector('.task-column section:not([hidden])'), 'none')
   }, [activeStep, view, repId])
-  useEffect(() => { revealElement(document.querySelector('.task-hints')) }, [attempt.hintCount])
+  useEffect(() => {
+    revealElement(document.querySelector('.task-hints'))
+  }, [attempt.hintCount])
   useEffect(() => {
     revealElement(document.querySelector('.result-summary, .result-running, .error-message, .empty-results'))
   }, [results, running, runError, runNotice])
@@ -240,8 +299,11 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
 
   function chooseStart(value: LearnerStart) {
     setLearnerStart(value)
-    try { localStore.setItem(learnerStartKey, value) }
-    catch { setSaveState('Could not save on this device') }
+    try {
+      localStore.setItem(learnerStartKey, value)
+    } catch {
+      setSaveState('Could not save on this device')
+    }
   }
 
   function exportData() {
@@ -249,8 +311,11 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   }
 
   async function importData(file: File) {
-    try { await restoreBackup(file, { learnerStart, history, learning: fluency.state, sessions }) }
-    catch (error) { setTransferMessage(error instanceof Error ? error.message : 'The backup could not be imported.') }
+    try {
+      await restoreBackup(file, { learnerStart, history, learning: fluency.state, sessions })
+    } catch (error) {
+      setTransferMessage(error instanceof Error ? error.message : 'The backup could not be imported.')
+    }
   }
 
   function runChecks() {
@@ -267,16 +332,18 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   const { setAttempt } = attempts
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- adopts the starter once its content has loaded.
-    if (full && full.id === repId) setAttempt(current => current.code === undefined ? { ...current, code: full.starter } : current)
+    if (full && full.id === repId) setAttempt(current => (current.code === undefined ? { ...current, code: full.starter } : current))
   }, [full, repId, setAttempt])
-  const allPassed = !!full && results?.length === full.checks.length && results.every((result) => result.passed)
+  const allPassed = !!full && results?.length === full.checks.length && results.every(result => result.passed)
   const contentNotice = <RepContentNotice content={repContent} />
   const writing = practiceWritingPrompts({ id: rep.id, format: rep.format, planPrompt: full?.planPrompt ?? '' })
   // Small reps keep plan and explanation optional; reasoned reps still require both. Difficulty is always optional.
   const writingRequired = writing.scale === 'reasoned'
   const stepDone: Record<string, boolean> & { plan: boolean; solve: boolean; explain: boolean; review: boolean } = {
-    plan: !!attempt.plan.trim(), solve: !!allPassed || !!attempt.completedAt,
-    explain: !!attempt.explanation.trim(), review: !!attempt.difficulty,
+    plan: !!attempt.plan.trim(),
+    solve: !!allPassed || !!attempt.completedAt,
+    explain: !!attempt.explanation.trim(),
+    review: !!attempt.difficulty,
   }
   const planMissing = writingRequired && !stepDone.plan
   const explainMissing = writingRequired && !stepDone.explain
@@ -303,27 +370,41 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   const completedPathIds = useMemo(() => new Set(history.map(record => record.repId)), [history])
   const recallReady = (id: string) => !journeyStates.some(state => state.journey.recall === id && !state.recallDue && !state.retained)
   // Due reviews and hint-free retries outrank path order; recall reps wait until they are due.
-  const pathNextRep = recommendation?.mode === 'review' || recommendation?.mode === 'retry'
-    ? undefined
-    : reps.find(item => item.id === nextRepInPath(fluency.state.goal.pathId, repId, id => completedPathIds.has(id) || !recallReady(id)))
+  const pathNextRep =
+    recommendation?.mode === 'review' || recommendation?.mode === 'retry'
+      ? undefined
+      : reps.find(item => item.id === nextRepInPath(fluency.state.goal.pathId, repId, id => completedPathIds.has(id) || !recallReady(id)))
   const completionNext = pathNextRep ? { repId: pathNextRep.id, mode: 'start' } : recommendation
-  const completionLabel = pathNextRep ? `Next rep: ${pathNextRep.title}`
-    : recommendedRep && recommendation ? `${actionLabel(recommendation.mode)}: ${recommendedRep.title}` : 'Return to your trail'
+  const completionLabel = pathNextRep
+    ? `Next rep: ${pathNextRep.title}`
+    : recommendedRep && recommendation
+      ? `${actionLabel(recommendation.mode)}: ${recommendedRep.title}`
+      : 'Return to your trail'
   const journalTabs = <JournalTabs view={view} onNavigate={setView} />
   const notes = repNotes(full?.note ?? '')
-  const focusEditor = () => { setFocusMode(true); revealSection('solution-section'); setEditorFocusRequest(current => current + 1) }
-  const toggleFocusMode = () => { setFocusMode(!focusMode); setMobileTab('workspace'); setActiveStep('solve') }
+  const focusEditor = () => {
+    setFocusMode(true)
+    revealSection('solution-section')
+    setEditorFocusRequest(current => current + 1)
+  }
+  const toggleFocusMode = () => {
+    setFocusMode(!focusMode)
+    setMobileTab('workspace')
+    setActiveStep('solve')
+  }
   const commands = [
     ...commandPages.map(page => ({ label: `Go to ${commandPageLabels[page] ?? page}`, run: () => setView(page) })),
     { label: 'Open glossary', run: () => setGlossaryOpen(true) },
-    ...(view === 'workspace' ? [
-      { label: 'Run checks', shortcut: 'Ctrl / ⌘ Enter', run: runChecks },
-      { label: 'Focus editor', run: focusEditor },
-      { label: focusMode ? 'Leave focus mode' : 'Enter focus mode', run: toggleFocusMode },
-      { label: 'Read brief and hints', run: () => revealSection('brief-section') },
-      { label: 'View check results', run: () => revealSection('checks-section') },
-      { label: 'Explain solution', run: () => revealSection('explain-section') },
-    ] : []),
+    ...(view === 'workspace'
+      ? [
+          { label: 'Run checks', shortcut: 'Ctrl / ⌘ Enter', run: runChecks },
+          { label: 'Focus editor', run: focusEditor },
+          { label: focusMode ? 'Leave focus mode' : 'Enter focus mode', run: toggleFocusMode },
+          { label: 'Read brief and hints', run: () => revealSection('brief-section') },
+          { label: 'View check results', run: () => revealSection('checks-section') },
+          { label: 'Explain solution', run: () => revealSection('explain-section') },
+        ]
+      : []),
   ]
 
   function completeRep() {
@@ -349,125 +430,317 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   }
 
   const walkthroughActive = walkthrough === 'active' && repId === 'declare-variables'
-  const walkthroughGuide = <Suspense fallback={null}>
-    <FirstRepWalkthrough step={activeStep} completed={!!attempt.completedAt} onNext={revealSection} onDismiss={dismissWalkthrough} />
-  </Suspense>
-  const stepStatus = (stepId: string) => stepId === 'understand' ? 'Read' : stepDone[stepId] ? 'Done'
-    : stepId === 'solve' || (writingRequired && stepId !== 'review') ? 'Needed' : 'Optional'
+  const walkthroughGuide = (
+    <Suspense fallback={null}>
+      <FirstRepWalkthrough step={activeStep} completed={!!attempt.completedAt} onNext={revealSection} onDismiss={dismissWalkthrough} />
+    </Suspense>
+  )
+  const stepStatus = (stepId: string) =>
+    stepId === 'understand'
+      ? 'Read'
+      : stepDone[stepId]
+        ? 'Done'
+        : stepId === 'solve' || (writingRequired && stepId !== 'review')
+          ? 'Needed'
+          : 'Optional'
   const layoutColumns = focusMode ? 'auto minmax(0, 1fr)' : `minmax(0, ${splitWidth}fr) 12px minmax(0, ${100 - splitWidth}fr)`
   const activeRound = fluency.state.rounds.find(round => !round.endedAt && round.repId === repId)
   const editorPath = `code-reps://${getActiveProfile()}/${rep.id}/solution.${full?.reactPreview ? 'tsx' : 'ts'}`
-  const editorLabel = `TypeScript solution for ${rep.title}. Press Control or Command Enter to run checks. `
-    + 'Tab moves focus out of the editor.'
+  const editorLabel =
+    `TypeScript solution for ${rep.title}. Press Control or Command Enter to run checks. ` + 'Tab moves focus out of the editor.'
 
   const runChecksShortcut = (event: ReactKeyboardEvent) => {
-    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); runChecks() }
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault()
+      runChecks()
+    }
   }
-  const workspace = <main ref={workspaceRef} className={`practice-main ${focusMode ? 'focus-mode' : ''}`} data-step={activeStep}
-    id="main-content" onKeyDown={runChecksShortcut}>
-    <WorkspaceHeader rep={rep} status={currentStatus} saveState={saveState} focusMode={focusMode} onLibrary={() => setView('catalog')}
-      onGlossary={() => setGlossaryOpen(true)} onFocusMode={() => { setFocusMode(!focusMode); revealSection('solution-section') }}
-      onReset={() => resetDialogRef.current?.showModal()} openLesson={openKnowledge} />
-    {activeRound && <InterviewStatus round={activeRound} onControls={() => { setView('interview') }} />}
-    <div className="workspace-layout" style={{ gridTemplateColumns: layoutColumns }}>
-      <div className="task-pane">
-        <div ref={tabsRef} className="practice-steps" role="navigation" aria-label="Practice steps">
-          <StepIndicator active={activeStep} />
-          {practiceSteps.map(step => <button key={step.id} type="button" aria-label={step.label}
-            aria-current={activeStep === step.id ? 'step' : undefined} aria-describedby={`step-status-${step.id}`}
-            aria-controls={step.section} onClick={() => revealSection(step.section)}>
-            <span>{step.label}</span><small id={`step-status-${step.id}`}>{stepStatus(step.id)}</small>
-          </button>)}
+  const workspace = (
+    <main
+      ref={workspaceRef}
+      className={`practice-main ${focusMode ? 'focus-mode' : ''}`}
+      data-step={activeStep}
+      id="main-content"
+      onKeyDown={runChecksShortcut}
+    >
+      <WorkspaceHeader
+        rep={rep}
+        status={currentStatus}
+        saveState={saveState}
+        focusMode={focusMode}
+        onLibrary={() => setView('catalog')}
+        onGlossary={() => setGlossaryOpen(true)}
+        onFocusMode={() => {
+          setFocusMode(!focusMode)
+          revealSection('solution-section')
+        }}
+        onReset={() => resetDialogRef.current?.showModal()}
+        openLesson={openKnowledge}
+      />
+      {activeRound && (
+        <InterviewStatus
+          round={activeRound}
+          onControls={() => {
+            setView('interview')
+          }}
+        />
+      )}
+      <div className="workspace-layout" style={{ gridTemplateColumns: layoutColumns }}>
+        <div className="task-pane">
+          <div ref={tabsRef} className="practice-steps" role="navigation" aria-label="Practice steps">
+            <StepIndicator active={activeStep} />
+            {practiceSteps.map(step => (
+              <button
+                key={step.id}
+                type="button"
+                aria-label={step.label}
+                aria-current={activeStep === step.id ? 'step' : undefined}
+                aria-describedby={`step-status-${step.id}`}
+                aria-controls={step.section}
+                onClick={() => revealSection(step.section)}
+              >
+                <span>{step.label}</span>
+                <small id={`step-status-${step.id}`}>{stepStatus(step.id)}</small>
+              </button>
+            ))}
+          </div>
+          <div
+            id="task-workspace"
+            key={`task-${rep.id}`}
+            className={`task-column ${activeStep !== 'solve' ? 'mobile-active' : ''}`}
+            role="region"
+            aria-label="Task and plan"
+            tabIndex={0}
+          >
+            {walkthroughActive && activeStep !== 'solve' && walkthroughGuide}
+            <BriefSection
+              hidden={activeStep !== 'understand' && activeStep !== 'solve'}
+              repId={repId}
+              full={full}
+              lesson={currentLesson}
+              notes={notes}
+              contentNotice={contentNotice}
+              history={history}
+              openRep={openRep}
+              openLesson={openKnowledge}
+              indonesianHelp={indonesianHelp === 'on'}
+              onIndonesianHelp={on => setIndonesianHelp(on ? 'on' : 'off')}
+              glossary={indonesianHelpShown?.indonesianGlossary}
+              hintCount={attempt.hintCount}
+              onRevealHint={() => {
+                update('hintCount', attempt.hintCount + 1)
+                setMobileTab('task')
+              }}
+              onReveal={revealSection}
+            />
+            <PlanSection
+              hidden={activeStep !== 'plan'}
+              full={full}
+              contentNotice={contentNotice}
+              writing={writing}
+              plan={attempt.plan}
+              onPlan={plan => update('plan', plan)}
+              onReveal={revealSection}
+            />
+            <ExplainSection
+              hidden={activeStep !== 'explain'}
+              repId={repId}
+              writing={writing}
+              explanation={attempt.explanation}
+              onExplanation={explanation => update('explanation', explanation)}
+              englishTips={indonesianHelpShown?.englishTipsForIndonesianSpeakers}
+              allPassed={allPassed}
+              review={review}
+              onReveal={revealSection}
+            />
+            <ReviewSection
+              hidden={activeStep !== 'review'}
+              rep={rep}
+              attempt={attempt}
+              update={update}
+              stepDone={stepDone}
+              writingRequired={writingRequired}
+              missingStep={missingStep}
+              finishMissing={finishMissing}
+              canComplete={canComplete}
+              onComplete={completeRep}
+              onShowMissing={showMissingStep}
+              badgeSlot={setBadgeSlot}
+              completionLabel={completionLabel}
+              onCompletionNext={() => (completionNext ? openPracticeAction(completionNext) : setView('home'))}
+              onDone={() => setView('home')}
+              onFreshAttempt={startNewAttempt}
+            />
+          </div>
         </div>
-        <div id="task-workspace" key={`task-${rep.id}`} className={`task-column ${activeStep !== 'solve' ? 'mobile-active' : ''}`}
-          role="region" aria-label="Task and plan" tabIndex={0}>
-          {walkthroughActive && activeStep !== 'solve' && walkthroughGuide}
-          <BriefSection hidden={activeStep !== 'understand' && activeStep !== 'solve'} repId={repId} full={full} lesson={currentLesson}
-            notes={notes} contentNotice={contentNotice} history={history} openRep={openRep} openLesson={openKnowledge}
-            indonesianHelp={indonesianHelp === 'on'} onIndonesianHelp={on => setIndonesianHelp(on ? 'on' : 'off')}
-            glossary={indonesianHelpShown?.indonesianGlossary} hintCount={attempt.hintCount}
-            onRevealHint={() => { update('hintCount', attempt.hintCount + 1); setMobileTab('task') }} onReveal={revealSection} />
-          <PlanSection hidden={activeStep !== 'plan'} full={full} contentNotice={contentNotice} writing={writing} plan={attempt.plan}
-            onPlan={plan => update('plan', plan)} onReveal={revealSection} />
-          <ExplainSection hidden={activeStep !== 'explain'} repId={repId} writing={writing} explanation={attempt.explanation}
-            onExplanation={explanation => update('explanation', explanation)}
-            englishTips={indonesianHelpShown?.englishTipsForIndonesianSpeakers} allPassed={allPassed} review={review}
-            onReveal={revealSection} />
-          <ReviewSection hidden={activeStep !== 'review'} rep={rep} attempt={attempt} update={update} stepDone={stepDone}
-            writingRequired={writingRequired} missingStep={missingStep} finishMissing={finishMissing} canComplete={canComplete}
-            onComplete={completeRep} onShowMissing={showMissingStep} badgeSlot={setBadgeSlot} completionLabel={completionLabel}
-            onCompletionNext={() => completionNext ? openPracticeAction(completionNext) : setView('home')} onDone={() => setView('home')}
-            onFreshAttempt={startNewAttempt} />
-        </div>
-      </div>
-      <WorkspaceSplit value={splitWidth} onChange={setSplitWidth} onCommit={saveSplit} />
-      <div id="code-workspace" key={`code-${rep.id}`} className={`code-column ${activeStep === 'solve' ? 'mobile-active' : ''}`}
-        role="region" aria-label="Code and preview" tabIndex={0}>
-        <section id="solution-section" tabIndex={-1} className="panel code-panel">
-          {walkthroughActive && activeStep === 'solve' && walkthroughGuide}
-          <div className="editor-wrap">{attempt.code === undefined
-            ? <p className="rep-content-notice" role="status">
-              {repContent.status === 'error'
-                ? 'The starter code could not load. Retry above; your other work is safe.'
-                : 'Loading the starter code…'}
-            </p>
-            : <ProjectEditor showHeader key={rep.id} focusRequest={editorFocusRequest} height="100%" path={editorPath} language="typescript"
-              value={attempt.code} onChange={(value) => update('code', value ?? '')} onRunChecks={runChecks}
-              options={{ ariaLabel: editorLabel, ...editorOptions }} />}</div>
-        </section>
+        <WorkspaceSplit value={splitWidth} onChange={setSplitWidth} onCommit={saveSplit} />
+        <div
+          id="code-workspace"
+          key={`code-${rep.id}`}
+          className={`code-column ${activeStep === 'solve' ? 'mobile-active' : ''}`}
+          role="region"
+          aria-label="Code and preview"
+          tabIndex={0}
+        >
+          <section id="solution-section" tabIndex={-1} className="panel code-panel">
+            {walkthroughActive && activeStep === 'solve' && walkthroughGuide}
+            <div className="editor-wrap">
+              {attempt.code === undefined ? (
+                <p className="rep-content-notice" role="status">
+                  {repContent.status === 'error'
+                    ? 'The starter code could not load. Retry above; your other work is safe.'
+                    : 'Loading the starter code…'}
+                </p>
+              ) : (
+                <ProjectEditor
+                  showHeader
+                  key={rep.id}
+                  focusRequest={editorFocusRequest}
+                  height="100%"
+                  path={editorPath}
+                  language="typescript"
+                  value={attempt.code}
+                  onChange={value => update('code', value ?? '')}
+                  onRunChecks={runChecks}
+                  options={{ ariaLabel: editorLabel, ...editorOptions }}
+                />
+              )}
+            </div>
+          </section>
 
-        {rep.format === 'frontend' && (full
-          ? <Suspense fallback={<PreviewLoading />}>
-            <FrontendPreview key={rep.id} rep={full} code={attempt.code ?? full.starter} />
-          </Suspense>
-          : repContent.status === 'loading' && <PreviewLoading />)}
-        <ChecksDrawer run={checks} allPassed={allPassed} checkCount={full?.checks.length} open={checksOpen}
-          onToggle={() => setChecksOpen(!checksOpen)} completed={!!attempt.completedAt} repId={repId} openLesson={openKnowledge}
-          onExplain={() => revealSection('explain-section')} />
-        <WorkspaceToolbar ref={toolbarRef} run={checks} canRun={!!full} onRun={runChecks} onStop={checks.cancel}
-          onResults={() => revealSection('checks-section')} />
+          {rep.format === 'frontend' &&
+            (full ? (
+              <Suspense fallback={<PreviewLoading />}>
+                <FrontendPreview key={rep.id} rep={full} code={attempt.code ?? full.starter} />
+              </Suspense>
+            ) : (
+              repContent.status === 'loading' && <PreviewLoading />
+            ))}
+          <ChecksDrawer
+            run={checks}
+            allPassed={allPassed}
+            checkCount={full?.checks.length}
+            open={checksOpen}
+            onToggle={() => setChecksOpen(!checksOpen)}
+            completed={!!attempt.completedAt}
+            repId={repId}
+            openLesson={openKnowledge}
+            onExplain={() => revealSection('explain-section')}
+          />
+          <WorkspaceToolbar
+            ref={toolbarRef}
+            run={checks}
+            canRun={!!full}
+            onRun={runChecks}
+            onStop={checks.cancel}
+            onResults={() => revealSection('checks-section')}
+          />
+        </div>
       </div>
+    </main>
+  )
+
+  return (
+    <div className="app-shell">
+      <AppNavigation
+        view={view}
+        profileName={profileName}
+        saveState={saveState}
+        onNavigate={setView}
+        onManageProfiles={onManageProfiles}
+        onCommands={() => setCommandsOpen(true)}
+        notice={view !== 'workspace' ? <BadgeNotice history={history} now={now} onView={() => setView('progress')} /> : undefined}
+      />
+      {view === 'workspace' && (
+        <BadgeNotice portalTarget={attempt.completedAt ? badgeSlot : null} history={history} now={now} onView={() => setView('progress')} />
+      )}
+      {saveState !== 'Saving…' && !saveState.startsWith('Saved') && (
+        <div className="storage-recovery" role="status">
+          <p>{saveState}</p>
+          <button
+            type="button"
+            onClick={() => {
+              void attempts.retrySaving()
+            }}
+          >
+            Retry saving
+          </button>
+          <button className="reset-button" type="button" onClick={exportData}>
+            Download backup
+          </button>
+        </div>
+      )}
+      <ScreenMemory key={`${view}:${view === 'workspace' ? repId : ''}`} screenKey={`${view}:${view === 'workspace' ? repId : ''}`}>
+        <AppRoutes
+          view={view}
+          journalTabs={journalTabs}
+          profileName={profileName}
+          onManageProfiles={onManageProfiles}
+          fluency={fluency}
+          history={history}
+          now={now}
+          learnerStart={learnerStart}
+          onLearnerStart={chooseStart}
+          drafts={drafts}
+          practicePlan={practicePlan}
+          completedPathIds={completedPathIds}
+          repStatus={repStatus}
+          pathId={pathId}
+          setPathId={setPathId}
+          pathPicker={pathPicker}
+          setPathPicker={setPathPicker}
+          knowledgeSkill={knowledgeSkill}
+          setKnowledgeSkill={setKnowledgeSkill}
+          walkthroughSeen={walkthrough !== 'new'}
+          launchWalkthrough={() => {
+            setWalkthrough('active')
+            openRep('declare-variables')
+          }}
+          setView={setView}
+          openRep={openRep}
+          openReview={openReview}
+          openLesson={openKnowledge}
+          openPracticeAction={openPracticeAction}
+          onExport={exportData}
+          onImport={file => {
+            void importData(file)
+          }}
+          transferMessage={transferMessage}
+        >
+          {workspace}
+        </AppRoutes>
+      </ScreenMemory>
+      {glossaryOpen && <GlossaryDrawer onClose={() => setGlossaryOpen(false)} />}
+      {commandsOpen && <CommandPalette reps={reps} commands={commands} onOpenRep={openRep} onClose={() => setCommandsOpen(false)} />}
+      <dialog
+        className="reset-dialog"
+        ref={resetDialogRef}
+        aria-labelledby="reset-dialog-title"
+        aria-describedby="reset-dialog-description"
+      >
+        <span className="reset-dialog-label">Start again</span>
+        <h2 id="reset-dialog-title">Reset this rep?</h2>
+        <p id="reset-dialog-description">
+          Your plan, code, explanation, revealed hints, and check results will be cleared. The starter code will be restored.
+        </p>
+        <p className="reset-dialog-note">Completed attempts in History will stay saved.</p>
+        <div className="reset-dialog-actions">
+          <button className="reset-dialog-cancel" type="button" autoFocus onClick={() => resetDialogRef.current?.close()}>
+            Cancel
+          </button>
+          <button className="reset-dialog-confirm" type="button" onClick={resetRep}>
+            Reset rep
+          </button>
+        </div>
+      </dialog>
+      {view !== 'workspace' && (
+        <footer>
+          <span>Code Reps</span>
+          <span>Free practice. Saved locally.</span>
+        </footer>
+      )}
     </div>
-  </main>
-
-  return <div className="app-shell">
-    <AppNavigation view={view} profileName={profileName} saveState={saveState} onNavigate={setView} onManageProfiles={onManageProfiles}
-      onCommands={() => setCommandsOpen(true)}
-      notice={view !== 'workspace' ? <BadgeNotice history={history} now={now} onView={() => setView('progress')} /> : undefined} />
-    {view === 'workspace' && <BadgeNotice portalTarget={attempt.completedAt ? badgeSlot : null} history={history} now={now}
-      onView={() => setView('progress')} />}
-    {saveState !== 'Saving…' && !saveState.startsWith('Saved') && <div className="storage-recovery" role="status">
-      <p>{saveState}</p>
-      <button type="button" onClick={() => { void attempts.retrySaving() }}>Retry saving</button>
-      <button className="reset-button" type="button" onClick={exportData}>Download backup</button>
-    </div>}
-    <ScreenMemory key={`${view}:${view === 'workspace' ? repId : ''}`} screenKey={`${view}:${view === 'workspace' ? repId : ''}`}>
-      <AppRoutes view={view} journalTabs={journalTabs} profileName={profileName} onManageProfiles={onManageProfiles} fluency={fluency}
-        history={history} now={now} learnerStart={learnerStart} onLearnerStart={chooseStart} drafts={drafts} practicePlan={practicePlan}
-        completedPathIds={completedPathIds} repStatus={repStatus} pathId={pathId} setPathId={setPathId} pathPicker={pathPicker}
-        setPathPicker={setPathPicker} knowledgeSkill={knowledgeSkill} setKnowledgeSkill={setKnowledgeSkill}
-        walkthroughSeen={walkthrough !== 'new'} launchWalkthrough={() => { setWalkthrough('active'); openRep('declare-variables') }}
-        setView={setView} openRep={openRep} openReview={openReview} openLesson={openKnowledge} openPracticeAction={openPracticeAction}
-        onExport={exportData} onImport={(file) => { void importData(file) }} transferMessage={transferMessage}>
-        {workspace}
-      </AppRoutes>
-    </ScreenMemory>
-    {glossaryOpen && <GlossaryDrawer onClose={() => setGlossaryOpen(false)} />}
-    {commandsOpen && <CommandPalette reps={reps} commands={commands} onOpenRep={openRep} onClose={() => setCommandsOpen(false)} />}
-    <dialog className="reset-dialog" ref={resetDialogRef} aria-labelledby="reset-dialog-title" aria-describedby="reset-dialog-description">
-      <span className="reset-dialog-label">Start again</span>
-      <h2 id="reset-dialog-title">Reset this rep?</h2>
-      <p id="reset-dialog-description">
-        Your plan, code, explanation, revealed hints, and check results will be cleared. The starter code will be restored.
-      </p>
-      <p className="reset-dialog-note">Completed attempts in History will stay saved.</p>
-      <div className="reset-dialog-actions">
-        <button className="reset-dialog-cancel" type="button" autoFocus onClick={() => resetDialogRef.current?.close()}>Cancel</button>
-        <button className="reset-dialog-confirm" type="button" onClick={resetRep}>Reset rep</button>
-      </div>
-    </dialog>
-    {view !== 'workspace' && <footer><span>Code Reps</span><span>Free practice. Saved locally.</span></footer>}
-  </div>
+  )
 }
 
 export default App

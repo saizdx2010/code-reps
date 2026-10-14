@@ -1,15 +1,25 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
-  BackupTooLargeError, backupFileText, backupTextLimit, backupTooLargeMessage, mergeHistory, parseBackup,
+  BackupTooLargeError,
+  backupFileText,
+  backupTextLimit,
+  backupTooLargeMessage,
+  mergeHistory,
+  parseBackup,
 } from '../src/portability.ts'
 import { parseProfileBackup } from '../src/profile-backup.ts'
 
 const known = new Set(['sum-positive-numbers'])
 const attempt = { plan: 'Visit values', code: 'return 1', explanation: 'One pass', hintCount: 0 }
-const backup = { format: 'code-reps-backup', version: 1, exportedAt: '2026-09-25T00:00:00.000Z', learnerStart: 'new',
+const backup = {
+  format: 'code-reps-backup',
+  version: 1,
+  exportedAt: '2026-09-25T00:00:00.000Z',
+  learnerStart: 'new',
   history: [{ ...attempt, id: 'one', repId: 'sum-positive-numbers', completedAt: '2026-09-25T00:00:00.000Z' }],
-  drafts: { 'sum-positive-numbers': attempt } }
+  drafts: { 'sum-positive-numbers': attempt },
+}
 
 test('accepts a valid local backup and merges without duplicates', () => {
   assert.equal(parseBackup(JSON.stringify(backup), known).history.length, 1)
@@ -21,7 +31,9 @@ test('rejects malformed and unknown content before importing', () => {
   assert.throws(() => parseBackup(JSON.stringify({ ...backup, version: 2 }), known))
   assert.throws(() => parseBackup(JSON.stringify({ ...backup, drafts: { unknown: attempt } }), known))
   assert.throws(() => parseBackup(JSON.stringify({ ...backup, history: [{ ...backup.history[0], completedAt: 'never' }] }), known))
-  assert.throws(() => parseBackup(JSON.stringify({ ...backup, drafts: { 'sum-positive-numbers': { ...attempt, confidence: 'wrong' } } }), known))
+  assert.throws(() =>
+    parseBackup(JSON.stringify({ ...backup, drafts: { 'sum-positive-numbers': { ...attempt, confidence: 'wrong' } } }), known),
+  )
 })
 
 // A backup of `records` full completed attempts plus one carrying `extra` characters, built from valid field sizes.
@@ -29,8 +41,15 @@ test('rejects malformed and unknown content before importing', () => {
 function largeBackup(records, extra = 0) {
   const full = 'x'.repeat(98_000)
   const part = index => 'x'.repeat(Math.max(0, Math.min(99_000, extra - index * 99_000)))
-  const record = (index, plan, code, explanation) => ({ plan, code, explanation, hintCount: 0,
-    id: `attempt-${String(index).padStart(5, '0')}`, repId: 'sum-positive-numbers', completedAt: '2026-09-25T00:00:00.000Z' })
+  const record = (index, plan, code, explanation) => ({
+    plan,
+    code,
+    explanation,
+    hintCount: 0,
+    id: `attempt-${String(index).padStart(5, '0')}`,
+    repId: 'sum-positive-numbers',
+    completedAt: '2026-09-25T00:00:00.000Z',
+  })
   const history = Array.from({ length: records }, (_, index) => record(index, full, full, full))
   return { ...backup, history: [...history, record(records, part(0), part(1), part(2))] }
 }
@@ -56,7 +75,10 @@ test('an export just under the shared limit serializes and restores', () => {
 
 test('an export over the shared limit is refused with a message instead of an unrestorable file', () => {
   const large = backupOfLength(backupTextLimit + 1)
-  assert.throws(() => backupFileText(large), error => error instanceof BackupTooLargeError && error.message === backupTooLargeMessage)
+  assert.throws(
+    () => backupFileText(large),
+    error => error instanceof BackupTooLargeError && error.message === backupTooLargeMessage,
+  )
   assert.match(backupTooLargeMessage, /20 MB/)
   assert.match(backupTooLargeMessage, /not downloaded/)
 })

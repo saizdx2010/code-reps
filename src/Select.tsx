@@ -30,7 +30,9 @@ export function Select({ className, children, id, ...props }: ComponentProps<'se
     }
   }, [children, props.value])
   const selected = options.findIndex(option => option.value === String(props.value ?? uncontrolledValue))
-  function close() { setOpen(false) }
+  function close() {
+    setOpen(false)
+  }
   function show(index = Math.max(0, selected)) {
     if (props.disabled) return
     setActive(index)
@@ -49,7 +51,10 @@ export function Select({ className, children, id, ...props }: ComponentProps<'se
   }
   useLayoutEffect(() => {
     const node = popup.current!
-    if (!open) { if (node.hidePopover && node.matches(':popover-open')) node.hidePopover(); return }
+    if (!open) {
+      if (node.hidePopover && node.matches(':popover-open')) node.hidePopover()
+      return
+    }
     const rect = trigger.current!.getBoundingClientRect()
     const below = window.innerHeight - rect.bottom - 12
     const above = rect.top - 12
@@ -96,7 +101,9 @@ export function Select({ className, children, id, ...props }: ComponentProps<'se
   }, [open])
   function move(direction: number) {
     let next = active
-    do { next += direction } while (options[next]?.disabled)
+    do {
+      next += direction
+    } while (options[next]?.disabled)
     if (options[next]) setActive(next)
   }
   function onKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
@@ -132,38 +139,87 @@ export function Select({ className, children, id, ...props }: ComponentProps<'se
       }
     }
   }
-  return <span className="ui-select-control">
-    <button
-      ref={trigger} id={controlId} type="button" role="combobox" data-value={options[selected]?.value ?? ''}
-      aria-label={props['aria-label'] ?? label} aria-labelledby={props['aria-labelledby']} aria-describedby={props['aria-describedby']}
-      aria-required={props.required} aria-invalid={props['aria-invalid']} aria-expanded={open} aria-haspopup="listbox"
-      aria-controls={`${controlId}-list`} aria-activedescendant={open ? `${controlId}-option-${active}` : undefined}
-      disabled={props.disabled} className={`ui-select${className ? ` ${className}` : ''}`}
-      onClick={() => open ? close() : show()} onBlur={() => { if (open) choose(active, false) }} onKeyDown={onKeyDown}
-    ><span>{options[selected]?.label ?? options[0]?.label ?? ''}</span><Icon name="chevron" /></button>
-    <select
-      {...props} ref={field} id={`${controlId}-native`} hidden aria-hidden="true" aria-label={undefined} aria-labelledby={undefined}
-      tabIndex={-1} className="ui-select-native"
-    >
-      {children}
-    </select>
-    <div
-      ref={popup} id={`${controlId}-list`} role="listbox" aria-label={`${props['aria-label'] ?? label} options`} popover="manual"
-      hidden={!open} className="ui-select-popup"
-      style={{
-        left: position.left, top: position.top, width: position.width, maxHeight: position.maxHeight,
-        transform: position.above ? 'translateY(-100%)' : undefined,
-      }}
-    >
-      {options.map((option, index) => <div
-        key={`${option.value}:${index}`} id={`${controlId}-option-${index}`} role="option" aria-selected={index === active}
-        aria-disabled={option.disabled || undefined} data-index={index} data-value={option.value}
-        className={index === active ? 'ui-option active' : 'ui-option'} onPointerMove={() => { if (!option.disabled) setActive(index) }}
-        onPointerDown={event => event.preventDefault()} onClick={event => { event.preventDefault(); choose(index) }}
+  return (
+    <span className="ui-select-control">
+      <button
+        ref={trigger}
+        id={controlId}
+        type="button"
+        role="combobox"
+        data-value={options[selected]?.value ?? ''}
+        aria-label={props['aria-label'] ?? label}
+        aria-labelledby={props['aria-labelledby']}
+        aria-describedby={props['aria-describedby']}
+        aria-required={props.required}
+        aria-invalid={props['aria-invalid']}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        aria-controls={`${controlId}-list`}
+        aria-activedescendant={open ? `${controlId}-option-${active}` : undefined}
+        disabled={props.disabled}
+        className={`ui-select${className ? ` ${className}` : ''}`}
+        onClick={() => (open ? close() : show())}
+        onBlur={() => {
+          if (open) choose(active, false)
+        }}
+        onKeyDown={onKeyDown}
       >
-        <span>{option.label}</span>
-        {index === selected && <Icon name="check" />}
-      </div>)}
-    </div>
-  </span>
+        <span>{options[selected]?.label ?? options[0]?.label ?? ''}</span>
+        <Icon name="chevron" />
+      </button>
+      <select
+        {...props}
+        ref={field}
+        id={`${controlId}-native`}
+        hidden
+        aria-hidden="true"
+        aria-label={undefined}
+        aria-labelledby={undefined}
+        tabIndex={-1}
+        className="ui-select-native"
+      >
+        {children}
+      </select>
+      <div
+        ref={popup}
+        id={`${controlId}-list`}
+        role="listbox"
+        aria-label={`${props['aria-label'] ?? label} options`}
+        popover="manual"
+        hidden={!open}
+        className="ui-select-popup"
+        style={{
+          left: position.left,
+          top: position.top,
+          width: position.width,
+          maxHeight: position.maxHeight,
+          transform: position.above ? 'translateY(-100%)' : undefined,
+        }}
+      >
+        {options.map((option, index) => (
+          <div
+            key={`${option.value}:${index}`}
+            id={`${controlId}-option-${index}`}
+            role="option"
+            aria-selected={index === active}
+            aria-disabled={option.disabled || undefined}
+            data-index={index}
+            data-value={option.value}
+            className={index === active ? 'ui-option active' : 'ui-option'}
+            onPointerMove={() => {
+              if (!option.disabled) setActive(index)
+            }}
+            onPointerDown={event => event.preventDefault()}
+            onClick={event => {
+              event.preventDefault()
+              choose(index)
+            }}
+          >
+            <span>{option.label}</span>
+            {index === selected && <Icon name="check" />}
+          </div>
+        ))}
+      </div>
+    </span>
+  )
 }

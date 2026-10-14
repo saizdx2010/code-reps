@@ -8,11 +8,20 @@ test('moving practice indicator follows the selected step across layouts without
   await page.getByRole('button', { name: 'Explain', exact: true }).click()
   for (const width of [1280, 390]) {
     await page.setViewportSize({ width, height: 900 })
-    await expect.poll(() => page.locator('.practice-steps').evaluate(element => {
-      const selected = element.querySelector('button[aria-current=step]')!.getBoundingClientRect()
-      const indicator = element.querySelector('.step-indicator')!.getBoundingClientRect()
-      return Math.abs(selected.left - indicator.left) < 1 && Math.abs(selected.top - indicator.top) < 1 && Math.abs(selected.width - indicator.width) < 1 && Math.abs(selected.height - indicator.height) < 1
-    })).toBe(true)
+    await expect
+      .poll(() =>
+        page.locator('.practice-steps').evaluate(element => {
+          const selected = element.querySelector('button[aria-current=step]')!.getBoundingClientRect()
+          const indicator = element.querySelector('.step-indicator')!.getBoundingClientRect()
+          return (
+            Math.abs(selected.left - indicator.left) < 1 &&
+            Math.abs(selected.top - indicator.top) < 1 &&
+            Math.abs(selected.width - indicator.width) < 1 &&
+            Math.abs(selected.height - indicator.height) < 1
+          )
+        }),
+      )
+      .toBe(true)
   }
   await page.getByRole('button', { name: 'Plan', exact: true }).click()
   await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue('Keep the counts separate from the tie-breaking decision.')
@@ -46,11 +55,15 @@ test('a cold learning route replaces the loading view with a usable lesson and l
   await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused()
   await page.getByRole('button', { name: 'Predict', exact: true }).click()
   await expect(page.locator('.lesson-navigation button[aria-current]')).toHaveText('Predict')
-  await expect.poll(() => page.locator('.lesson-navigation').evaluate(element => {
-    const selected = element.querySelector('button[aria-current]')!.getBoundingClientRect()
-    const indicator = element.querySelector('.step-indicator')!.getBoundingClientRect()
-    return Math.abs(selected.left - indicator.left) < 1 && Math.abs(selected.width - indicator.width) < 1
-  })).toBe(true)
+  await expect
+    .poll(() =>
+      page.locator('.lesson-navigation').evaluate(element => {
+        const selected = element.querySelector('button[aria-current]')!.getBoundingClientRect()
+        const indicator = element.querySelector('.step-indicator')!.getBoundingClientRect()
+        return Math.abs(selected.left - indicator.left) < 1 && Math.abs(selected.width - indicator.width) < 1
+      }),
+    )
+    .toBe(true)
 })
 
 test('dark mode follows the system, persists across refresh, and covers narrow pages', async ({ page }) => {
@@ -89,7 +102,9 @@ test('colour schemes work with both modes and restore before external assets loa
     const logoPath = palette === 'sage' ? '/favicon.svg' : `/favicon-${palette}.svg`
     await expect(page.locator('.brand-mark')).toHaveAttribute('src', logoPath)
     await expect(page.locator('link[rel=icon]')).toHaveAttribute('href', logoPath)
-    await expect.poll(() => page.locator('.brand-mark').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true)
+    await expect
+      .poll(() => page.locator('.brand-mark').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0))
+      .toBe(true)
     await expect(page.locator('html')).toHaveCSS('background-color', light)
     await dialog.getByRole('button', { name: 'Dark mode', exact: true }).click()
     await expect(page.locator('html')).toHaveCSS('background-color', dark)
@@ -98,7 +113,7 @@ test('colour schemes work with both modes and restore before external assets loa
   await page.setViewportSize({ width: 320, height: 568 })
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320)
   await dialog.getByRole('button', { name: 'Dark mode', exact: true }).click()
-  await page.route('**/*', route => ['stylesheet', 'script'].includes(route.request().resourceType()) ? route.abort() : route.continue())
+  await page.route('**/*', route => (['stylesheet', 'script'].includes(route.request().resourceType()) ? route.abort() : route.continue()))
   await page.reload()
   await expect(page.locator('.startup-loading')).toHaveCSS('background-color', 'rgb(42, 30, 41)')
   await expect(page.locator('.startup-brand .logo-plum')).toBeVisible()
@@ -108,7 +123,10 @@ test('colour schemes work with both modes and restore before external assets loa
 
 test('switching schemes recolours the live coding desk without replacing learner code', async ({ page }) => {
   await page.goto(route)
-  await replaceCode(page, '// Keep this draft through colour changes\nfunction mostFrequent(numbers: number[]): number | null { return null }')
+  await replaceCode(
+    page,
+    '// Keep this draft through colour changes\nfunction mostFrequent(numbers: number[]): number | null { return null }',
+  )
   const originalEditor = await page.locator('.monaco-editor').first().elementHandle()
   await page.getByRole('button', { name: 'Appearance', exact: true }).click()
   for (const [name, background, action] of [
@@ -127,7 +145,7 @@ test('switching schemes recolours the live coding desk without replacing learner
 
 test('dark startup renders before external assets and respects an explicit light choice', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark' })
-  await page.route('**/*', route => ['stylesheet', 'script'].includes(route.request().resourceType()) ? route.abort() : route.continue())
+  await page.route('**/*', route => (['stylesheet', 'script'].includes(route.request().resourceType()) ? route.abort() : route.continue()))
   await page.goto('/#/home')
   await expect(page.locator('.startup-loading')).toHaveCSS('background-color', 'rgb(25, 37, 31)')
   await page.evaluate(() => sessionStorage.setItem('code-reps:ui:device:theme', 'light'))
@@ -142,7 +160,9 @@ test('rapid practice tab selection settles on the last pane without losing a pla
   await page.getByLabel('Your plan', { exact: true }).fill('Count each value and resolve ties in encounter order.')
   await tabs.evaluate(element => {
     for (const name of ['Understand', 'Explain', 'Review', 'Plan']) {
-      Array.from(element.querySelectorAll('button')).find(button => button.getAttribute('aria-label') === name)?.click()
+      Array.from(element.querySelectorAll('button'))
+        .find(button => button.getAttribute('aria-label') === name)
+        ?.click()
     }
   })
   await expect(tabs.getByRole('button', { name: 'Plan', exact: true })).toHaveAttribute('aria-current', 'step')
@@ -205,10 +225,15 @@ test('a progress disclosure visibly collapses and reverses without losing its ac
   const collapsed = await summary.evaluate(element => element.getBoundingClientRect().height)
   await summary.click()
   await expect(disclosure).not.toHaveAttribute('open', '')
-  await expect.poll(async () => {
-    const height = await disclosure.evaluate(element => element.getBoundingClientRect().height)
-    return height < expanded - 4 && height > collapsed + 4
-  }, { intervals: [16] }).toBe(true)
+  await expect
+    .poll(
+      async () => {
+        const height = await disclosure.evaluate(element => element.getBoundingClientRect().height)
+        return height < expanded - 4 && height > collapsed + 4
+      },
+      { intervals: [16] },
+    )
+    .toBe(true)
   await summary.click()
   await expect(disclosure).toHaveAttribute('open', '')
   await expect(disclosure.getByRole('button', { name: 'Open rep', exact: true })).toBeVisible()
@@ -219,7 +244,7 @@ test('a progress disclosure visibly collapses and reverses without losing its ac
 })
 
 test('startup workbook is styled before external styles and JavaScript arrive', async ({ page }) => {
-  await page.route('**/*', route => ['stylesheet', 'script'].includes(route.request().resourceType()) ? route.abort() : route.continue())
+  await page.route('**/*', route => (['stylesheet', 'script'].includes(route.request().resourceType()) ? route.abort() : route.continue()))
   await page.goto('/#/home')
   const startup = page.locator('.startup-loading')
   await expect(startup).toBeVisible()
@@ -232,8 +257,13 @@ test('startup workbook is styled before external styles and JavaScript arrive', 
 
 test('startup progress loading uses the light workbook before storage is ready', async ({ page }) => {
   let release!: () => void
-  const pending = new Promise<void>(resolve => { release = resolve })
-  await page.route('**/api/state', async request => { await pending; await request.continue() })
+  const pending = new Promise<void>(resolve => {
+    release = resolve
+  })
+  await page.route('**/api/state', async request => {
+    await pending
+    await request.continue()
+  })
   try {
     await page.goto('/#/home')
     await expect(page.locator('.startup-loading')).toBeVisible()
@@ -241,7 +271,9 @@ test('startup progress loading uses the light workbook before storage is ready',
     expect(await page.locator('.startup-loading').evaluate(element => getComputedStyle(element).backgroundColor)).toBe('rgb(240, 244, 237)')
     await page.setViewportSize({ width: 320, height: 800 })
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320)
-  } finally { release() }
+  } finally {
+    release()
+  }
   await expect(page.locator('.startup-loading')).not.toBeVisible()
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
 })
@@ -258,10 +290,15 @@ test('each pending learning page keeps its own heading and working surface', asy
   for (const [route, title, surface, pendingSurface, loadedSurface] of pages) {
     const page = await context.newPage()
     let release!: () => void
-    const pending = new Promise<void>(resolve => { release = resolve })
+    const pending = new Promise<void>(resolve => {
+      release = resolve
+    })
     let pendingTop = 0
     let desktopPendingTop = 0
-    await page.route('**/src/LearningHub.tsx*', async request => { await pending; await request.continue() })
+    await page.route('**/src/LearningHub.tsx*', async request => {
+      await pending
+      await request.continue()
+    })
     try {
       await page.goto(`/#/${route}`)
       const loading = page.locator(`.loading-${route}`)
@@ -269,22 +306,38 @@ test('each pending learning page keeps its own heading and working surface', asy
       await expect(loading.getByRole('heading', { level: 1 })).toHaveText(title)
       await expect(loading.locator(surface)).toBeVisible()
       await expect.poll(() => loading.evaluate(element => element.getAnimations().length)).toBe(0)
-      desktopPendingTop = await loading.locator(pendingSurface).first().evaluate(element => element.getBoundingClientRect().top)
+      desktopPendingTop = await loading
+        .locator(pendingSurface)
+        .first()
+        .evaluate(element => element.getBoundingClientRect().top)
       if (route === 'notebook') expect(await loading.locator('.skeleton-writing').count()).toBe(0)
       await page.setViewportSize({ width: 320, height: 800 })
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320)
       await expect.poll(() => loading.evaluate(element => element.getAnimations().length)).toBe(0)
-      pendingTop = await loading.locator(pendingSurface).first().evaluate(element => element.getBoundingClientRect().top)
-    } finally { release() }
+      pendingTop = await loading
+        .locator(pendingSurface)
+        .first()
+        .evaluate(element => element.getBoundingClientRect().top)
+    } finally {
+      release()
+    }
     await expect(page.locator('.page-loading')).not.toBeVisible()
     // A cold load does not move focus to the heading; in-app navigation does.
     await expect(page.getByRole('heading', { name: title, exact: true })).not.toBeFocused()
     await expect(page.locator('.learning-hub').locator(loadedSurface).first()).toBeVisible()
     await expect.poll(() => page.locator('.learning-hub').evaluate(element => element.getAnimations().length)).toBe(0)
-    const loadedTop = await page.locator('.learning-hub').locator(loadedSurface).first().evaluate(element => element.getBoundingClientRect().top)
+    const loadedTop = await page
+      .locator('.learning-hub')
+      .locator(loadedSurface)
+      .first()
+      .evaluate(element => element.getBoundingClientRect().top)
     expect(Math.abs(loadedTop - pendingTop), `${route} working surface should not jump when loading ends`).toBeLessThan(2)
     await page.setViewportSize({ width: 1280, height: 900 })
-    const desktopLoadedTop = await page.locator('.learning-hub').locator(loadedSurface).first().evaluate(element => element.getBoundingClientRect().top)
+    const desktopLoadedTop = await page
+      .locator('.learning-hub')
+      .locator(loadedSurface)
+      .first()
+      .evaluate(element => element.getBoundingClientRect().top)
     expect(Math.abs(desktopLoadedTop - desktopPendingTop), `${route} desktop surface should not jump when loading ends`).toBeLessThan(2)
     await page.close()
   }
@@ -296,15 +349,24 @@ test('notebook loading reserves an existing writing draft and preserves it after
   await page.getByLabel('Title', { exact: true }).fill('Keep loading shapes stable')
   await page.getByLabel('What you learned', { exact: true }).fill('A skeleton should reserve the real working surface.')
   let release!: () => void
-  const pending = new Promise<void>(resolve => { release = resolve })
-  await page.route('**/src/LearningHub.tsx*', async request => { await pending; await request.continue() })
+  const pending = new Promise<void>(resolve => {
+    release = resolve
+  })
+  await page.route('**/src/LearningHub.tsx*', async request => {
+    await pending
+    await request.continue()
+  })
   try {
     await page.reload()
     await expect(page.locator('.loading-notebook .skeleton-writing')).toBeVisible()
     expect(await page.locator('.loading-notebook').getByRole('textbox').count()).toBe(0)
-  } finally { release() }
+  } finally {
+    release()
+  }
   await expect(page.getByLabel('Title', { exact: true })).toHaveValue('Keep loading shapes stable')
-  await expect(page.getByRole('textbox', { name: 'What you learned', exact: true })).toHaveValue('A skeleton should reserve the real working surface.')
+  await expect(page.getByRole('textbox', { name: 'What you learned', exact: true })).toHaveValue(
+    'A skeleton should reserve the real working surface.',
+  )
 })
 
 test('journal switch indicator settles behind the selected view', async ({ page }) => {
@@ -316,10 +378,12 @@ test('journal switch indicator settles behind the selected view', async ({ page 
   await expect(page).toHaveURL(/#\/mistakes$/)
   await expect(mistakes).toHaveAttribute('aria-pressed', 'true')
   const fill = group.locator('.step-indicator')
-  await expect.poll(async () => {
-    const [selected, indicator] = await Promise.all([mistakes.boundingBox(), fill.boundingBox()])
-    return Math.abs(selected!.x - indicator!.x) < 1 && Math.abs(selected!.width - indicator!.width) < 1
-  }).toBe(true)
+  await expect
+    .poll(async () => {
+      const [selected, indicator] = await Promise.all([mistakes.boundingBox(), fill.boundingBox()])
+      return Math.abs(selected!.x - indicator!.x) < 1 && Math.abs(selected!.width - indicator!.width) < 1
+    })
+    .toBe(true)
   await expect(mistakes).toHaveCSS('transform', 'none')
   await page.goto('/#/paths')
   await expect(page).toHaveURL(/#\/paths$/)
@@ -345,7 +409,21 @@ test('utility drawers retain their exit and restore keyboard focus', async ({ pa
 
 test('every page shares one frame, type scale, and control height', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
-  for (const route of ['home', 'paths', 'plan', 'practice', 'knowledge', 'projects', 'interview', 'progress', 'history', 'sessions', 'notebook', 'assessment', 'learn']) {
+  for (const route of [
+    'home',
+    'paths',
+    'plan',
+    'practice',
+    'knowledge',
+    'projects',
+    'interview',
+    'progress',
+    'history',
+    'sessions',
+    'notebook',
+    'assessment',
+    'learn',
+  ]) {
     await page.goto(`/#/${route}`)
     // Wait past the startup shell and any lazy page placeholder for the loaded page header.
     await expect(page.locator('main .page-header h1')).toBeVisible()
@@ -353,11 +431,20 @@ test('every page shares one frame, type scale, and control height', async ({ pag
     const frame = await page.evaluate(() => {
       const h1 = document.querySelector('main h1')!
       const tab = document.querySelector('.section-nav button')!
-      const controls = [...document.querySelectorAll<HTMLElement>('main .ui-input:not(textarea), main .ui-select, main .primary-button, main .reset-button')]
+      const controls = [
+        ...document.querySelectorAll<HTMLElement>(
+          'main .ui-input:not(textarea), main .ui-select, main .primary-button, main .reset-button',
+        ),
+      ]
         // Rows and tab bars reuse button styles with their own geometry; only standalone controls share the height.
         .filter(element => element.getBoundingClientRect().height > 0 && !element.closest('nav, .knowledge-topic-list, .lesson-navigation'))
         .map(element => Math.round(element.getBoundingClientRect().height))
-      return { h1Left: Math.round(h1.getBoundingClientRect().left), tabLeft: Math.round(tab.getBoundingClientRect().left), size: getComputedStyle(h1).fontSize, controls }
+      return {
+        h1Left: Math.round(h1.getBoundingClientRect().left),
+        tabLeft: Math.round(tab.getBoundingClientRect().left),
+        size: getComputedStyle(h1).fontSize,
+        controls,
+      }
     })
     expect(frame.h1Left, `${route} heading aligns with section tabs`).toBe(frame.tabLeft)
     expect(frame.size, `${route} page title size`).toBe('32px')

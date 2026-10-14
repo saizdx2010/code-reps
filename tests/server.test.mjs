@@ -15,22 +15,34 @@ test('local server migrates once, persists data, and backs up on restart', async
   try {
     running = await startServer({ port: 0, dataDir, assetsDir })
     const origin = running.url
-    const request = (path, method = 'GET', body) => fetch(`${origin}${path}`, {
-      method, headers: { 'Content-Type': 'application/json', Origin: origin },
-      body: body && JSON.stringify(body),
-    })
+    const request = (path, method = 'GET', body) =>
+      fetch(`${origin}${path}`, {
+        method,
+        headers: { 'Content-Type': 'application/json', Origin: origin },
+        body: body && JSON.stringify(body),
+      })
     const legacy = { 'code-reps:history:v1': '[{"id":"first"}]' }
     assert.equal((await request('/api/migrate', 'POST', { entries: legacy })).status, 200)
     assert.equal((await (await request('/api/migrate', 'POST', { entries: { 'code-reps:history:v1': '[]' } })).json()).migrated, false)
     assert.deepEqual((await (await request('/api/state')).json()).entries, legacy)
     assert.equal((await fetch(`${origin}/api/state`, { headers: { Origin: 'http://other-site.test' } })).status, 403)
     const badHostStatus = await new Promise((resolve, reject) => {
-      const req = httpRequest(`${origin}/api/state`, { headers: { Host: 'other-site.test' } }, (res) => { res.resume(); resolve(res.statusCode) })
+      const req = httpRequest(`${origin}/api/state`, { headers: { Host: 'other-site.test' } }, res => {
+        res.resume()
+        resolve(res.statusCode)
+      })
       req.on('error', reject)
       req.end()
     })
     assert.equal(badHostStatus, 403)
-    assert.equal((await request('/api/entries', 'PATCH', { entries: { 'code-reps:selected-rep': 'sum-positive-numbers', 'code-reps:draft:one': 'draft' } })).status, 200)
+    assert.equal(
+      (
+        await request('/api/entries', 'PATCH', {
+          entries: { 'code-reps:selected-rep': 'sum-positive-numbers', 'code-reps:draft:one': 'draft' },
+        })
+      ).status,
+      200,
+    )
     assert.equal((await request('/api/entries', 'PATCH', { entries: { 'code-reps:draft:one': null } })).status, 200)
     assert.equal((await request('/api/entries', 'PATCH', { entries: { 'Code-Reps:Bad': 'value' } })).status, 400)
     // The single-entry endpoints were retired; the client saves only through PATCH /api/entries.
@@ -64,7 +76,9 @@ test('CLI closes through its parent IPC channel without exposing a shutdown endp
   try {
     let output = ''
     let errors = ''
-    child.stderr.on('data', chunk => { errors += chunk })
+    child.stderr.on('data', chunk => {
+      errors += chunk
+    })
     const exited = once(child, 'exit')
     const ready = new Promise((resolve, reject) => {
       child.stdout.on('data', chunk => {

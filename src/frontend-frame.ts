@@ -9,11 +9,28 @@ export const previewScenarios: Record<string, DirectoryScenario> = {
   empty: { loading: false, error: null, people: [] },
 }
 
-export function buildFrontendFrame(code: string, rep: Rep, token: string, mode: 'preview' | 'checks', requested = previewScenarios.ready, reactRuntime = ''): string {
+export function buildFrontendFrame(
+  code: string,
+  rep: Rep,
+  token: string,
+  mode: 'preview' | 'checks',
+  requested = previewScenarios.ready,
+  reactRuntime = '',
+): string {
   const scenario = rep.domPreview?.props ?? requested
   if (typeof code !== 'string' || code.length > 100_000) throw new Error('The solution is too large to preview.')
   const outputText = compileSolution(code, rep.functionName, rep.reactPreview)
-  const payload = JSON.stringify({ code: outputText, functionName: rep.functionName, checks: rep.checks, preserveInput: rep.preserveInput, generic: Boolean(rep.domPreview), react: Boolean(rep.reactPreview), token, mode, scenario }).replace(/</g, '\\u003c')
+  const payload = JSON.stringify({
+    code: outputText,
+    functionName: rep.functionName,
+    checks: rep.checks,
+    preserveInput: rep.preserveInput,
+    generic: Boolean(rep.domPreview),
+    react: Boolean(rep.reactPreview),
+    token,
+    mode,
+    scenario,
+  }).replace(/</g, '\\u003c')
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'"><meta name="viewport" content="width=device-width, initial-scale=1"><style>
   * { box-sizing: border-box } body { margin: 0; padding: 24px; background: #171d1c; color: #edf0eb; font: 15px/1.6 system-ui, sans-serif } label { display: block; margin-bottom: 6px } input, button { font: inherit; border: 1px solid #718873; border-radius: 5px; padding: 9px 12px; color: inherit; background: #252d2b } input { width: 100%; max-width: 360px } button { cursor: pointer } :focus-visible { outline: 2px solid #bce57b; outline-offset: 3px } ul, ol { padding-left: 24px } li { padding: 5px 0 } [role="alert"] { color: #ef978b } [hidden] { display: none !important } [aria-invalid="true"] { border-color: #ef978b } [role="tablist"] { display: flex; gap: 6px; margin-bottom: 10px } [role="tab"][aria-selected="true"] { background: #3b4a38; border-color: #bce57b } [aria-expanded] { margin-bottom: 8px } .field { margin-bottom: 14px } .preview-feedback { border-top: 1px solid #37413e; margin-top: 20px; padding-top: 12px; font-size: 12px; color: #bce57b }
   </style></head><body><main id="exercise-root"></main><script>${reactRuntime.replace(/<\/script/gi, '<\\/script')}

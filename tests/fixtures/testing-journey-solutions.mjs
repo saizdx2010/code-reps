@@ -69,6 +69,7 @@ function exposes(variant: string): boolean {
 
 export const testingJourneySolutions = {
   'expose-page-bugs': exposePageSolution(),
-  'repair-range-label': 'function rangeLabel(total: number, page: number, size: number): string { if (total === 0) return "No results"; const start = (page - 1) * size + 1; if (page < 1 || size < 1 || start > total) return "Page out of range"; const end = Math.min(page * size, total); return `Showing ${start}-${end} of ${total}` }',
+  'repair-range-label':
+    'function rangeLabel(total: number, page: number, size: number): string { if (total === 0) return "No results"; const start = (page - 1) * size + 1; if (page < 1 || size < 1 || start > total) return "Page out of range"; const end = Math.min(page * size, total); return `Showing ${start}-${end} of ${total}` }',
   'expose-overlap-bugs': exposeOverlapSolution(),
 }

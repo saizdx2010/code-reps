@@ -16,5 +16,8 @@ test('parcel loading checks agree with a cart-identity FIFO simulation', async (
     }
   }`
   const results = runRep(code, 'parcel-loading-turns')
-  assert.ok(results.every(result => result.passed), JSON.stringify(results))
+  assert.ok(
+    results.every(result => result.passed),
+    JSON.stringify(results),
+  )
 })

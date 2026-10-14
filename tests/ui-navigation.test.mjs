@@ -5,7 +5,23 @@ import { runRep } from '../src/runner.ts'
 import { hubTabs, isHubTab, learningPageTitles } from '../src/learning-pages.ts'
 
 test('exercise bookmarks, library, and every product page round-trip', () => {
-  for (const view of ['sessions', 'home', 'catalog', 'paths', 'learn', 'progress', 'skillmap', 'history', 'knowledge', 'projects', 'interview', 'notebook', 'assessment', 'mistakes', 'plan']) {
+  for (const view of [
+    'sessions',
+    'home',
+    'catalog',
+    'paths',
+    'learn',
+    'progress',
+    'skillmap',
+    'history',
+    'knowledge',
+    'projects',
+    'interview',
+    'notebook',
+    'assessment',
+    'mistakes',
+    'plan',
+  ]) {
     assert.deepEqual(readRoute(routeHash({ view }), ['one']), { view })
   }
   assert.deepEqual(readRoute(routeHash({ view: 'workspace', repId: 'one' }), ['one']), { view: 'workspace', repId: 'one' })
@@ -24,9 +40,18 @@ test('every tool has one navigation home while legacy lessons and exercises stay
     assert.equal(sectionView(view), 'history')
   }
   assert.equal(sectionView('learn'), 'knowledge')
-  assert.deepEqual(navigationSections.trail.map(page => page.label), ['Your trail', 'All tracks'])
-  assert.deepEqual(navigationSections.library.map(page => page.label), ['Exercises', 'Lessons', 'Projects'])
-  assert.deepEqual(navigationSections.progress.map(page => page.label), ['Skills', 'Journal'])
+  assert.deepEqual(
+    navigationSections.trail.map(page => page.label),
+    ['Your trail', 'All tracks'],
+  )
+  assert.deepEqual(
+    navigationSections.library.map(page => page.label),
+    ['Exercises', 'Lessons', 'Projects'],
+  )
+  assert.deepEqual(
+    navigationSections.progress.map(page => page.label),
+    ['Skills', 'Journal'],
+  )
   // Old routes resolve and highlight the page that now holds them.
   const homes = { mistakes: 'history', skillmap: 'progress', plan: 'progress', assessment: 'progress', interview: 'projects' }
   for (const [view, home] of Object.entries(homes)) assert.equal(sectionView(view), home)

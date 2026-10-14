@@ -27,8 +27,17 @@ test('a backup with invalid legacy session records is rejected and keeps existin
   await page.evaluate(([k, v]) => localStorage.setItem(k, v), [key, legacy])
   await page.reload()
   await page.getByText('Back up or restore practice', { exact: true }).click()
-  const invalid = { format: 'code-reps-backup', version: 1, learnerStart: null, history: [], drafts: {}, sessions: { version: 1, revision: '', records: [{ bad: true }] } }
-  await page.getByLabel('Choose Code Reps backup').setInputFiles({ name: 'invalid.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(invalid)) })
+  const invalid = {
+    format: 'code-reps-backup',
+    version: 1,
+    learnerStart: null,
+    history: [],
+    drafts: {},
+    sessions: { version: 1, revision: '', records: [{ bad: true }] },
+  }
+  await page
+    .getByLabel('Choose Code Reps backup')
+    .setInputFiles({ name: 'invalid.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(invalid)) })
   await expect(page.locator('.transfer-message')).toContainText('invalid session')
   expect(await page.evaluate(k => localStorage.getItem(k), key)).toBe(legacy)
 })

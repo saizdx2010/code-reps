@@ -5,7 +5,11 @@ test('post-solve trace supports scoped keyboard navigation and narrow review', a
   await page.goto('/#/practice/algo-sorted-pair')
   await page.getByRole('button', { name: 'Explain', exact: true }).click()
   await expect(page.getByRole('region', { name: 'Step trace' })).toHaveCount(0)
-  await replaceCode(page, 'function hasSortedPair(numbers: number[], target: number): boolean { let left = 0, right = numbers.length - 1; while (left < right) { const sum = numbers[left] + numbers[right]; if (sum === target) return true; if (sum < target) left++; else right-- } return false }', 'algo-sorted-pair')
+  await replaceCode(
+    page,
+    'function hasSortedPair(numbers: number[], target: number): boolean { let left = 0, right = numbers.length - 1; while (left < right) { const sum = numbers[left] + numbers[right]; if (sum === target) return true; if (sum < target) left++; else right-- } return false }',
+    'algo-sorted-pair',
+  )
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await page.getByRole('button', { name: 'Explain', exact: true }).click()
@@ -34,7 +38,11 @@ test('post-solve trace supports scoped keyboard navigation and narrow review', a
 
 test('tree trace renders the current node and steps by keyboard at a narrow width', async ({ page }) => {
   await page.goto('/#/practice/algo-tree-depth')
-  await replaceCode(page, 'function treeDepth(root: TreeNode | null): number { if (root === null) return 0; let deepest = 0; for (const child of root.children) deepest = Math.max(deepest, treeDepth(child)); return 1 + deepest }', 'algo-tree-depth')
+  await replaceCode(
+    page,
+    'function treeDepth(root: TreeNode | null): number { if (root === null) return 0; let deepest = 0; for (const child of root.children) deepest = Math.max(deepest, treeDepth(child)); return 1 + deepest }',
+    'algo-tree-depth',
+  )
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await page.getByRole('button', { name: 'Explain', exact: true }).click()
@@ -56,7 +64,11 @@ test('tree trace renders the current node and steps by keyboard at a narrow widt
 
 test('recursion trace shows a call stack that grows and shrinks', async ({ page }) => {
   await page.goto('/#/practice/algo-recursive-sum')
-  await replaceCode(page, 'type NestedNumber = number | NestedNumber[]; function recursiveSum(items: NestedNumber[]): number { let total = 0; for (const item of items) { if (Array.isArray(item)) total += recursiveSum(item); else total += item } return total }', 'algo-recursive-sum')
+  await replaceCode(
+    page,
+    'type NestedNumber = number | NestedNumber[]; function recursiveSum(items: NestedNumber[]): number { let total = 0; for (const item of items) { if (Array.isArray(item)) total += recursiveSum(item); else total += item } return total }',
+    'algo-recursive-sum',
+  )
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await page.getByRole('button', { name: 'Explain', exact: true }).click()
@@ -74,7 +86,11 @@ test('recursion trace shows a call stack that grows and shrinks', async ({ page 
 
 test('table trace shows filled, current, and read cells and steps by keyboard at 320px', async ({ page }) => {
   await page.goto('/#/practice/algo-climb-stairs')
-  await replaceCode(page, 'function climbStairs(n: number): number { const ways = [1, 1]; for (let i = 2; i <= n; i++) ways[i] = ways[i - 1] + ways[i - 2]; return ways[n] }', 'algo-climb-stairs')
+  await replaceCode(
+    page,
+    'function climbStairs(n: number): number { const ways = [1, 1]; for (let i = 2; i <= n; i++) ways[i] = ways[i - 1] + ways[i - 2]; return ways[n] }',
+    'algo-climb-stairs',
+  )
   await page.getByRole('button', { name: 'Run checks', exact: true }).click()
   await expect(page.getByText('All checks passed', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Explain', exact: true }).click()

@@ -1,97 +1,405 @@
 /* The Code Reps motion language: responsive controls, continuous steps, stable drafts. */
-.step-indicator { position: absolute; top: 0; left: 0; z-index: 0; pointer-events: none; border-radius: var(--radius-control); background: var(--action); transition: transform 160ms cubic-bezier(.2, .8, .2, 1); }
-.screen-motion > main { animation: page-arrive 380ms var(--motion-ease); }
-@keyframes page-arrive { from { opacity: .3; translate: 0 12px; } to { opacity: 1; translate: 0 0; } }
-
-:is(.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button) { position: relative; isolation: isolate; overflow: hidden; border-radius: var(--radius-control); transition: transform 260ms var(--motion-spring), box-shadow 260ms var(--motion-ease), background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease); }
-:is(.primary-button, .finish-button)::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(110deg, transparent 20%, #ffffff22 46%, #ffffff08 55%, transparent 75%); transform: translateX(-130%); opacity: 0; }
-@media (hover: hover) and (pointer: fine) {
-  :is(.primary-button, .finish-button):hover:not(:disabled):not([aria-disabled=true]) { transform: translateY(-2px); box-shadow: 0 2px 0 #293e3322, 0 8px 18px #293e331f; }
-  :is(.reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button):hover:not(:disabled):not([aria-disabled=true]) { transform: translateY(-1px); border-color: var(--accent); box-shadow: 0 3px 10px #293e3314; }
-  :is(.primary-button, .finish-button):hover:not(:disabled)::after { animation: button-shine 650ms ease-out both; }
-  :is(.primary-button, .reset-button, .hint-button):hover:not(:disabled) > .icon-arrow:not(.icon-down) { transform: translateX(2px); }
+.step-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: var(--radius-control);
+  background: var(--action);
+  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-:is(.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button):active:not(:disabled) { transform: translateY(0) scale(.97); box-shadow: none; transition-duration: 90ms; }
-:is(.primary-button, .finish-button, .reset-button, .hint-button):focus-visible { box-shadow: 0 3px 0 #293e3320, 0 6px 14px #293e3316; }
-.button-ripple { position: absolute; pointer-events: none; width: 18px; height: 18px; border-radius: 50%; background: currentColor; opacity: 0; transform: translate(-50%, -50%); }
-@keyframes button-shine { 0% { transform: translateX(-130%); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateX(130%); opacity: 0; } }
-.ui-icon { width: 18px; height: 18px; flex: none; transition: transform 260ms var(--motion-spring); }
-.hint-button:hover:not(:disabled) > .ui-icon { transform: rotate(-12deg) scale(1.12); }
-.lesson-navigation button, .knowledge-topic-list button { transform: none !important; box-shadow: none !important; }
-.lesson-navigation button { background: transparent !important; overflow: visible; }
+.screen-motion > main {
+  animation: page-arrive 380ms var(--motion-ease);
+}
+@keyframes page-arrive {
+  from {
+    opacity: 0.3;
+    translate: 0 12px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
 
-.ui-input, .ui-textarea, .ui-select, .ui-choice, .ui-option, .ui-calendar-day, .top-nav button, .knowledge-topic-list button { transition: background-color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease); }
-.icon-chevron { transition: rotate var(--motion-fast) var(--motion-ease); }
-.ui-select-popup:popover-open, .site-menu[open] .top-nav, .workspace-options[open] > div { animation: menu-arrive 240ms var(--motion-ease); }
+:is(.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button) {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: var(--radius-control);
+  transition:
+    transform 260ms var(--motion-spring),
+    box-shadow 260ms var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease);
+}
+:is(.primary-button, .finish-button)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 20%, #ffffff22 46%, #ffffff08 55%, transparent 75%);
+  transform: translateX(-130%);
+  opacity: 0;
+}
+@media (hover: hover) and (pointer: fine) {
+  :is(.primary-button, .finish-button):hover:not(:disabled):not([aria-disabled='true']) {
+    transform: translateY(-2px);
+    box-shadow:
+      0 2px 0 #293e3322,
+      0 8px 18px #293e331f;
+  }
+  :is(.reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button):hover:not(:disabled):not([aria-disabled='true']) {
+    transform: translateY(-1px);
+    border-color: var(--accent);
+    box-shadow: 0 3px 10px #293e3314;
+  }
+  :is(.primary-button, .finish-button):hover:not(:disabled)::after {
+    animation: button-shine 650ms ease-out both;
+  }
+  :is(.primary-button, .reset-button, .hint-button):hover:not(:disabled) > .icon-arrow:not(.icon-down) {
+    transform: translateX(2px);
+  }
+}
+:is(.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button):active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+  box-shadow: none;
+  transition-duration: 90ms;
+}
+:is(.primary-button, .finish-button, .reset-button, .hint-button):focus-visible {
+  box-shadow:
+    0 3px 0 #293e3320,
+    0 6px 14px #293e3316;
+}
+.button-ripple {
+  position: absolute;
+  pointer-events: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+}
+@keyframes button-shine {
+  0% {
+    transform: translateX(-130%);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(130%);
+    opacity: 0;
+  }
+}
+.ui-icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  transition: transform 260ms var(--motion-spring);
+}
+.hint-button:hover:not(:disabled) > .ui-icon {
+  transform: rotate(-12deg) scale(1.12);
+}
+.lesson-navigation button,
+.knowledge-topic-list button {
+  transform: none !important;
+  box-shadow: none !important;
+}
+.lesson-navigation button {
+  background: transparent !important;
+  overflow: visible;
+}
+
+.ui-input,
+.ui-textarea,
+.ui-select,
+.ui-choice,
+.ui-option,
+.ui-calendar-day,
+.top-nav button,
+.knowledge-topic-list button {
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+.icon-chevron {
+  transition: rotate var(--motion-fast) var(--motion-ease);
+}
+.ui-select-popup:popover-open,
+.site-menu[open] .top-nav,
+.workspace-options[open] > div {
+  animation: menu-arrive 240ms var(--motion-ease);
+}
 /* Individual translate preserves a select popup's existing above-anchor transform. */
-@keyframes menu-arrive { from { opacity: 0; translate: 0 -6px; } to { opacity: 1; translate: 0 0; } }
-.utility-dialog[open], .reset-dialog[open], .profile-dialog[open], .ui-calendar[open] { animation: dialog-arrive 380ms var(--motion-spring); }
-.utility-dialog, .reset-dialog, .profile-dialog, .ui-calendar { opacity: 0; translate: 0 10px; scale: .97; transition: opacity 180ms ease, translate 180ms ease, scale 180ms ease, display 180ms allow-discrete, overlay 180ms allow-discrete; }
-.utility-dialog[open], .reset-dialog[open], .profile-dialog[open], .ui-calendar[open] { opacity: 1; translate: 0 0; scale: 1; }
-@keyframes dialog-arrive { from { opacity: 0; translate: 0 16px; scale: .96; } to { opacity: 1; translate: 0 0; scale: 1; } }
-.utility-dialog[open]::backdrop, .reset-dialog[open]::backdrop, .profile-dialog[open]::backdrop, .ui-calendar[open]::backdrop { animation: backdrop-arrive 240ms ease-out; }
-@keyframes backdrop-arrive { from { opacity: 0; } to { opacity: 1; } }
-.result-summary.passed > span { animation: success-arrive 420ms var(--motion-spring); }
-@keyframes success-arrive { from { scale: .65; opacity: 0; } to { scale: 1; opacity: 1; } }
+@keyframes menu-arrive {
+  from {
+    opacity: 0;
+    translate: 0 -6px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+.utility-dialog[open],
+.reset-dialog[open],
+.profile-dialog[open],
+.ui-calendar[open] {
+  animation: dialog-arrive 380ms var(--motion-spring);
+}
+.utility-dialog,
+.reset-dialog,
+.profile-dialog,
+.ui-calendar {
+  opacity: 0;
+  translate: 0 10px;
+  scale: 0.97;
+  transition:
+    opacity 180ms ease,
+    translate 180ms ease,
+    scale 180ms ease,
+    display 180ms allow-discrete,
+    overlay 180ms allow-discrete;
+}
+.utility-dialog[open],
+.reset-dialog[open],
+.profile-dialog[open],
+.ui-calendar[open] {
+  opacity: 1;
+  translate: 0 0;
+  scale: 1;
+}
+@keyframes dialog-arrive {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+    scale: 0.96;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+.utility-dialog[open]::backdrop,
+.reset-dialog[open]::backdrop,
+.profile-dialog[open]::backdrop,
+.ui-calendar[open]::backdrop {
+  animation: backdrop-arrive 240ms ease-out;
+}
+@keyframes backdrop-arrive {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.result-summary.passed > span {
+  animation: success-arrive 420ms var(--motion-spring);
+}
+@keyframes success-arrive {
+  from {
+    scale: 0.65;
+    opacity: 0;
+  }
+  to {
+    scale: 1;
+    opacity: 1;
+  }
+}
 
 /* Rows and small controls respond in place; cards use a softer depth than actions. */
-.section-nav button, .text-button, summary,
-.day-picker label, .ui-number-buttons button, .ui-search-clear, .ui-calendar-icon,
-.checks-toggle, .project-file-tabs button, .commands-trigger, .breadcrumb-link,
-.local-data-actions button, .storage-recovery button, .reset-dialog-actions button,
-.workspace-toolbar-links button, .workspace-knowledge button, .mistake-help button,
-.utility-heading button, .command-results button {
-  transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease), text-decoration-color var(--motion-fast) var(--motion-ease);
+.section-nav button,
+.text-button,
+summary,
+.day-picker label,
+.ui-number-buttons button,
+.ui-search-clear,
+.ui-calendar-icon,
+.checks-toggle,
+.project-file-tabs button,
+.commands-trigger,
+.breadcrumb-link,
+.local-data-actions button,
+.storage-recovery button,
+.reset-dialog-actions button,
+.workspace-toolbar-links button,
+.workspace-knowledge button,
+.mistake-help button,
+.utility-heading button,
+.command-results button {
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-fast) var(--motion-ease),
+    text-decoration-color var(--motion-fast) var(--motion-ease);
 }
-.starting-options button, .path-choices button {
-  transition: transform 260ms var(--motion-spring), border-color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease), box-shadow 260ms var(--motion-ease);
+.starting-options button,
+.path-choices button {
+  transition:
+    transform 260ms var(--motion-spring),
+    border-color var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease),
+    box-shadow 260ms var(--motion-ease);
 }
-.continue-panel, .hub-cards > .hub-panel { transition: border-color var(--motion-fast) var(--motion-ease), box-shadow 260ms var(--motion-ease); }
-.text-button { text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px; }
-summary { border-radius: var(--radius-control); }
+.continue-panel,
+.hub-cards > .hub-panel {
+  transition:
+    border-color var(--motion-fast) var(--motion-ease),
+    box-shadow 260ms var(--motion-ease);
+}
+.text-button {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 4px;
+}
+summary {
+  border-radius: var(--radius-control);
+}
 @media (hover: hover) and (pointer: fine) {
-  .starting-options button:hover:not(:disabled), .path-choices button:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 5px 16px #293e3310; }
-  .path-choices button:hover:not(:disabled) { background: var(--surface); }
-  .continue-panel:hover, .hub-cards > .hub-panel:hover { border-color: var(--accent); }
-  .section-nav button:hover, .commands-trigger:hover, .breadcrumb-link:hover { color: var(--accent); }
-  .ui-choice:hover:not(:disabled), .storage-recovery button:hover:not(:disabled), .reset-dialog-actions button:hover:not(:disabled) { border-color: var(--accent); }
-  .reset-dialog-actions .reset-dialog-confirm:hover:not(:disabled) { border-color: var(--error); }
-  .project-file-tabs button:hover:not(:disabled), .command-results button:hover { background: var(--accent-soft); color: var(--accent); }
-  .workspace-toolbar-links button:hover:not(:disabled), .workspace-knowledge button:hover, .mistake-help button:hover, .utility-heading button:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 4px; }
-  summary:hover, .day-picker label:hover, .checks-toggle:hover { background-color: color-mix(in srgb, var(--accent-soft) 65%, transparent); }
-  .text-button:hover:not(:disabled) { text-decoration-color: currentColor; }
+  .starting-options button:hover:not(:disabled),
+  .path-choices button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+    box-shadow: 0 5px 16px #293e3310;
+  }
+  .path-choices button:hover:not(:disabled) {
+    background: var(--surface);
+  }
+  .continue-panel:hover,
+  .hub-cards > .hub-panel:hover {
+    border-color: var(--accent);
+  }
+  .section-nav button:hover,
+  .commands-trigger:hover,
+  .breadcrumb-link:hover {
+    color: var(--accent);
+  }
+  .ui-choice:hover:not(:disabled),
+  .storage-recovery button:hover:not(:disabled),
+  .reset-dialog-actions button:hover:not(:disabled) {
+    border-color: var(--accent);
+  }
+  .reset-dialog-actions .reset-dialog-confirm:hover:not(:disabled) {
+    border-color: var(--error);
+  }
+  .project-file-tabs button:hover:not(:disabled),
+  .command-results button:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .workspace-toolbar-links button:hover:not(:disabled),
+  .workspace-knowledge button:hover,
+  .mistake-help button:hover,
+  .utility-heading button:hover {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  summary:hover,
+  .day-picker label:hover,
+  .checks-toggle:hover {
+    background-color: color-mix(in srgb, var(--accent-soft) 65%, transparent);
+  }
+  .text-button:hover:not(:disabled) {
+    text-decoration-color: currentColor;
+  }
 }
 
 /* Native disclosures animate in both directions without delaying their open state. */
 @supports (interpolate-size: allow-keywords) {
-  details { interpolate-size: allow-keywords; }
-  details::details-content { height: 0; opacity: 0; overflow: clip; transition: height 420ms cubic-bezier(.4, 0, .2, 1), opacity 420ms ease, content-visibility 420ms allow-discrete; }
-  details[open]::details-content { height: auto; opacity: 1; }
+  details {
+    interpolate-size: allow-keywords;
+  }
+  details::details-content {
+    height: 0;
+    opacity: 0;
+    overflow: clip;
+    transition:
+      height 420ms cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 420ms ease,
+      content-visibility 420ms allow-discrete;
+  }
+  details[open]::details-content {
+    height: auto;
+    opacity: 1;
+  }
   /* Menus must expose their first item to Tab immediately after opening. */
-  .site-menu::details-content, .workspace-options::details-content { height: auto; opacity: 1; overflow: visible; transition: none; }
+  .site-menu::details-content,
+  .workspace-options::details-content {
+    height: auto;
+    opacity: 1;
+    overflow: visible;
+    transition: none;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
   :is(.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button):hover,
   :is(.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button):active,
-  .ui-icon { transform: none !important; }
-  .starting-options button:hover, .path-choices button:hover { transform: none !important; }
-  .button-ripple, .primary-button::after, .finish-button::after { display: none; }
+  .ui-icon {
+    transform: none !important;
+  }
+  .starting-options button:hover,
+  .path-choices button:hover {
+    transform: none !important;
+  }
+  .button-ripple,
+  .primary-button::after,
+  .finish-button::after {
+    display: none;
+  }
 }
 
 /* Profile access is a compact utility: quick feedback, with restrained depth. */
-.profile-trigger { transition: transform 130ms ease-out, background-color 130ms ease-out, border-color 130ms ease-out, box-shadow 130ms ease-out; }
-@media (hover: hover) and (pointer: fine) {
-  .profile-trigger:hover:not(:disabled) { transform: translateY(-1px); background: var(--accent-soft); border-color: var(--accent); box-shadow: 0 3px 8px #293e3310; }
+.profile-trigger {
+  transition:
+    transform 130ms ease-out,
+    background-color 130ms ease-out,
+    border-color 130ms ease-out,
+    box-shadow 130ms ease-out;
 }
-.profile-trigger:active:not(:disabled) { transform: translateY(0); box-shadow: none; transition-duration: 70ms; }
-@media (prefers-reduced-motion: reduce) { .profile-trigger:hover, .profile-trigger:active { transform: none; } }
+@media (hover: hover) and (pointer: fine) {
+  .profile-trigger:hover:not(:disabled) {
+    transform: translateY(-1px);
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    box-shadow: 0 3px 8px #293e3310;
+  }
+}
+.profile-trigger:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+  transition-duration: 70ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .profile-trigger:hover,
+  .profile-trigger:active {
+    transform: none;
+  }
+}
 
 /* Tab feedback stays inside its hit area; selection retains its own indicator. */
 :is(.top-nav, .practice-steps, .lesson-navigation, .project-file-tabs, .segmented-control) button {
   position: relative;
   isolation: isolate;
-  transition: color 140ms ease-out, background-color 140ms ease-out, border-color 140ms ease-out;
+  transition:
+    color 140ms ease-out,
+    background-color 140ms ease-out,
+    border-color 140ms ease-out;
 }
 :is(.top-nav, .practice-steps, .lesson-navigation, .project-file-tabs, .segmented-control) button::before {
   content: '';
@@ -101,8 +409,10 @@ summary { border-radius: var(--radius-control); }
   border-radius: inherit;
   background: var(--accent-soft);
   opacity: 0;
-  transform: scale(.94);
-  transition: opacity 140ms ease-out, transform 180ms var(--motion-spring);
+  transform: scale(0.94);
+  transition:
+    opacity 140ms ease-out,
+    transform 180ms var(--motion-spring);
   pointer-events: none;
 }
 .section-nav button::after {
@@ -115,147 +425,423 @@ summary { border-radius: var(--radius-control); }
   background: var(--accent);
   transform: scaleX(0);
   transform-origin: center;
-  opacity: .55;
-  transition: transform 180ms var(--motion-spring), opacity 140ms ease-out;
+  opacity: 0.55;
+  transition:
+    transform 180ms var(--motion-spring),
+    opacity 140ms ease-out;
 }
-.section-nav button[aria-current]::after { transform: scaleX(1); opacity: 1; }
+.section-nav button[aria-current]::after {
+  transform: scaleX(1);
+  opacity: 1;
+}
 @media (hover: hover) and (pointer: fine) {
-  :is(.top-nav, .practice-steps, .lesson-navigation, .project-file-tabs, .segmented-control) button:hover:not([aria-current]):not([aria-pressed=true]):not(:disabled) {
+  :is(.top-nav, .practice-steps, .lesson-navigation, .project-file-tabs, .segmented-control)
+    button:hover:not([aria-current]):not([aria-pressed='true']):not(:disabled) {
     background: transparent;
     color: var(--accent);
   }
-  :is(.top-nav, .practice-steps, .lesson-navigation, .project-file-tabs, .segmented-control) button:hover:not([aria-current]):not([aria-pressed=true]):not(:disabled)::before {
+  :is(.top-nav, .practice-steps, .lesson-navigation, .project-file-tabs, .segmented-control)
+    button:hover:not([aria-current]):not([aria-pressed='true']):not(:disabled)::before {
     opacity: 1;
     transform: scale(1);
   }
-  .section-nav button:hover:not([aria-current])::after { transform: scaleX(1); }
+  .section-nav button:hover:not([aria-current])::after {
+    transform: scaleX(1);
+  }
 }
-:is(.top-nav, .practice-steps, .lesson-navigation, .project-file-tabs, .segmented-control) button:focus-visible:not([aria-current]):not([aria-pressed=true])::before { opacity: 1; transform: scale(1); }
-:is(.top-nav, .practice-steps, .lesson-navigation, .project-file-tabs, .segmented-control) button:active:not([aria-current]):not([aria-pressed=true])::before { transform: scale(.97); transition-duration: 70ms; }
+:is(.top-nav, .practice-steps, .lesson-navigation, .project-file-tabs, .segmented-control)
+  button:focus-visible:not([aria-current]):not([aria-pressed='true'])::before {
+  opacity: 1;
+  transform: scale(1);
+}
+:is(.top-nav, .practice-steps, .lesson-navigation, .project-file-tabs, .segmented-control)
+  button:active:not([aria-current]):not([aria-pressed='true'])::before {
+  transform: scale(0.97);
+  transition-duration: 70ms;
+}
 @media (prefers-reduced-motion: reduce) {
-  :is(.top-nav, .practice-steps, .lesson-navigation, .project-file-tabs, .segmented-control) button::before { transform: none; }
+  :is(.top-nav, .practice-steps, .lesson-navigation, .project-file-tabs, .segmented-control) button::before {
+    transform: none;
+  }
 }
 
-.segmented-control button { transition: background-color var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease); }
+.segmented-control button {
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
 
 /* A view switch responds in place, including while its selected item is hovered. */
-.segmented-control button:hover:not(:disabled):not([aria-disabled=true]), .segmented-control button:active:not(:disabled):not([aria-disabled=true]), .segmented-control button:focus-visible { transform: none; box-shadow: none; }
-.segmented-control button[aria-pressed=true]:hover:not(:disabled), .segmented-control button[aria-pressed=true]:active:not(:disabled) { background: transparent; color: var(--action-text); }
+.segmented-control button:hover:not(:disabled):not([aria-disabled='true']),
+.segmented-control button:active:not(:disabled):not([aria-disabled='true']),
+.segmented-control button:focus-visible {
+  transform: none;
+  box-shadow: none;
+}
+.segmented-control button[aria-pressed='true']:hover:not(:disabled),
+.segmented-control button[aria-pressed='true']:active:not(:disabled) {
+  background: transparent;
+  color: var(--action-text);
+}
 
 /* Redesign components: each element has its own small, clean interaction. Movement stays inside the element's box. */
 
 /* Text links: the underline fades in while rising toward the text. */
-.text-button { text-underline-offset: 7px; transition: color var(--motion-fast) var(--motion-ease), text-decoration-color var(--motion-fast) var(--motion-ease), text-underline-offset 220ms var(--motion-spring); }
-@media (hover: hover) and (pointer: fine) {
-  .text-button:hover:not(:disabled) { text-underline-offset: 4px; }
+.text-button {
+  text-underline-offset: 7px;
+  transition:
+    color var(--motion-fast) var(--motion-ease),
+    text-decoration-color var(--motion-fast) var(--motion-ease),
+    text-underline-offset 220ms var(--motion-spring);
 }
-.text-button:focus-visible { text-decoration-color: currentColor; text-underline-offset: 4px; }
+@media (hover: hover) and (pointer: fine) {
+  .text-button:hover:not(:disabled) {
+    text-underline-offset: 4px;
+  }
+}
+.text-button:focus-visible {
+  text-decoration-color: currentColor;
+  text-underline-offset: 4px;
+}
 
 /* Segmented switches: the selected fill slides between options. */
-.segmented-control .step-indicator { transition: transform 260ms var(--motion-spring), width 260ms var(--motion-spring); }
+.segmented-control .step-indicator {
+  transition:
+    transform 260ms var(--motion-spring),
+    width 260ms var(--motion-spring);
+}
 
 /* Trail nodes: the marker grows and takes an accent ring; the row washes in place. */
-.trail-marker { transition: transform 220ms var(--motion-spring), border-color var(--motion-fast) var(--motion-ease), box-shadow 220ms var(--motion-ease), background-color var(--motion-fast) var(--motion-ease); }
-.trail-node > button { transition: background-color var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) var(--motion-ease); }
-.trail-node-title { transition: color var(--motion-fast) var(--motion-ease); }
-@media (hover: hover) and (pointer: fine) {
-  .trail-node:has(> button:hover) .trail-marker { transform: scale(1.14); border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-soft) 80%, transparent); }
-  .trail-node > button:hover .trail-node-title { color: var(--accent); }
-  .trail .path-stage-heading:hover .trail-stage-index { border-color: var(--accent); }
+.trail-marker {
+  transition:
+    transform 220ms var(--motion-spring),
+    border-color var(--motion-fast) var(--motion-ease),
+    box-shadow 220ms var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease);
 }
-.trail-node:has(> button:focus-visible) .trail-marker { transform: scale(1.14); border-color: var(--accent); }
-/* Skill map nodes use the same marker interaction, driven by the node's own action. */
-.skill-node:has(.text-button:focus-visible) .trail-marker { transform: scale(1.14); border-color: var(--accent); }
+.trail-node > button {
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-fast) var(--motion-ease);
+}
+.trail-node-title {
+  transition: color var(--motion-fast) var(--motion-ease);
+}
 @media (hover: hover) and (pointer: fine) {
-  .skill-node:has(.text-button:hover) .trail-marker { transform: scale(1.14); border-color: var(--accent); }
+  .trail-node:has(> button:hover) .trail-marker {
+    transform: scale(1.14);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-soft) 80%, transparent);
+  }
+  .trail-node > button:hover .trail-node-title {
+    color: var(--accent);
+  }
+  .trail .path-stage-heading:hover .trail-stage-index {
+    border-color: var(--accent);
+  }
+}
+.trail-node:has(> button:focus-visible) .trail-marker {
+  transform: scale(1.14);
+  border-color: var(--accent);
+}
+/* Skill map nodes use the same marker interaction, driven by the node's own action. */
+.skill-node:has(.text-button:focus-visible) .trail-marker {
+  transform: scale(1.14);
+  border-color: var(--accent);
+}
+@media (hover: hover) and (pointer: fine) {
+  .skill-node:has(.text-button:hover) .trail-marker {
+    transform: scale(1.14);
+    border-color: var(--accent);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .skill-node:has(.text-button:hover, .text-button:focus-visible) .trail-marker { transform: none; }
+  .skill-node:has(.text-button:hover, .text-button:focus-visible) .trail-marker {
+    transform: none;
+  }
 }
-.trail-node > button:active { background: var(--accent-soft); }
-.trail-stage-index { transition: border-color var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) var(--motion-ease); }
+.trail-node > button:active {
+  background: var(--accent-soft);
+}
+.trail-stage-index {
+  transition:
+    border-color var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease);
+}
 /* The next node announces itself once when the trail arrives, then stays still. */
-.trail-node.is-next .trail-marker { animation: next-ring 1100ms var(--motion-ease) 420ms 2 both; }
-@keyframes next-ring { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--feature-border) 70%, transparent); } 70%, 100% { box-shadow: 0 0 0 10px transparent; } }
+.trail-node.is-next .trail-marker {
+  animation: next-ring 1100ms var(--motion-ease) 420ms 2 both;
+}
+@keyframes next-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--feature-border) 70%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
 
 /* Opened groups cascade their rows in: trail stages, exercise topics, and check results. */
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li { animation: row-arrive 280ms var(--motion-ease) both; }
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(2) { animation-delay: 30ms; }
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(3) { animation-delay: 60ms; }
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(4) { animation-delay: 90ms; }
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(5) { animation-delay: 120ms; }
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(6) { animation-delay: 150ms; }
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(n + 7) { animation-delay: 180ms; }
-@keyframes row-arrive { from { opacity: 0; translate: -6px 0; } to { opacity: 1; translate: 0 0; } }
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li {
+  animation: row-arrive 280ms var(--motion-ease) both;
+}
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(2) {
+  animation-delay: 30ms;
+}
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(3) {
+  animation-delay: 60ms;
+}
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(4) {
+  animation-delay: 90ms;
+}
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(5) {
+  animation-delay: 120ms;
+}
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(6) {
+  animation-delay: 150ms;
+}
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(n + 7) {
+  animation-delay: 180ms;
+}
+@keyframes row-arrive {
+  from {
+    opacity: 0;
+    translate: -6px 0;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
 
 /* List rows keep their place on hover (the arrow slides in) and give a gentle press. */
-.list-row > button { transition: background-color var(--motion-fast) var(--motion-ease), transform 120ms var(--motion-ease); }
-.list-row > button:active { transform: scale(.995); background: var(--accent-soft); }
-.list-group > summary .list-group-count { transition: color var(--motion-fast) var(--motion-ease); }
-.list-group > summary:hover .list-group-count { color: var(--accent); }
+.list-row > button {
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    transform 120ms var(--motion-ease);
+}
+.list-row > button:active {
+  transform: scale(0.995);
+  background: var(--accent-soft);
+}
+.list-group > summary .list-group-count {
+  transition: color var(--motion-fast) var(--motion-ease);
+}
+.list-group > summary:hover .list-group-count {
+  color: var(--accent);
+}
 
 /* Track and starting cards lift on hover and settle on press. */
-.starting-options button:active:not(:disabled), .path-choices button:active:not(:disabled) { transform: translateY(0) scale(.99); transition-duration: 90ms; }
+.starting-options button:active:not(:disabled),
+.path-choices button:active:not(:disabled) {
+  transform: translateY(0) scale(0.99);
+  transition-duration: 90ms;
+}
 
 /* Progress fills grow from the left when a page arrives. */
-.path-progress span { transform-origin: left center; animation: fill-grow 720ms var(--motion-ease) 160ms both; }
+.path-progress span {
+  transform-origin: left center;
+  animation: fill-grow 720ms var(--motion-ease) 160ms both;
+}
 /* A newly shown badge settles its artwork in once; the stroke check draws itself. */
-.badge-card .badge-art { animation: mark-pop 320ms var(--motion-spring) both; }
-.badge-check { stroke-dasharray: 24; animation: badge-draw 420ms var(--motion-ease) 200ms both; }
-@keyframes badge-draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+.badge-card .badge-art {
+  animation: mark-pop 320ms var(--motion-spring) both;
+}
+.badge-check {
+  stroke-dasharray: 24;
+  animation: badge-draw 420ms var(--motion-ease) 200ms both;
+}
+@keyframes badge-draw {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
 /* The milestone notice rises into place once; it does not repeat or pulse. */
-.badge-notice { animation: notice-rise 240ms var(--motion-ease) both; }
-@keyframes notice-rise { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
-@keyframes fill-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.badge-notice {
+  animation: notice-rise 240ms var(--motion-ease) both;
+}
+@keyframes notice-rise {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes fill-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
 
 /* Choices pop their mark in; the info note tilts its icon on hover and takes the accent when open. */
-.ui-choice:checked::before { animation: mark-pop 260ms var(--motion-spring); }
-@keyframes mark-pop { from { scale: .3; opacity: 0; } to { scale: 1; opacity: 1; } }
-.info-note .ui-icon { transition: rotate 220ms var(--motion-spring), color var(--motion-fast) var(--motion-ease); }
-.info-note summary:hover .ui-icon { rotate: -12deg; }
-.info-note[open] summary { color: var(--accent); }
+.ui-choice:checked::before {
+  animation: mark-pop 260ms var(--motion-spring);
+}
+@keyframes mark-pop {
+  from {
+    scale: 0.3;
+    opacity: 0;
+  }
+  to {
+    scale: 1;
+    opacity: 1;
+  }
+}
+.info-note .ui-icon {
+  transition:
+    rotate 220ms var(--motion-spring),
+    color var(--motion-fast) var(--motion-ease);
+}
+.info-note summary:hover .ui-icon {
+  rotate: -12deg;
+}
+.info-note[open] summary {
+  color: var(--accent);
+}
 
 /* Header details: the logo tilts, the appearance symbol half-turns. */
-.brand-mark { transition: rotate 320ms var(--motion-spring); }
-.theme-symbol { transition: rotate 420ms var(--motion-spring); }
+.brand-mark {
+  transition: rotate 320ms var(--motion-spring);
+}
+.theme-symbol {
+  transition: rotate 420ms var(--motion-spring);
+}
 @media (hover: hover) and (pointer: fine) {
-  .brand:hover .brand-mark { rotate: -8deg; }
-  .theme-trigger:hover .theme-symbol { rotate: 180deg; }
+  .brand:hover .brand-mark {
+    rotate: -8deg;
+  }
+  .theme-trigger:hover .theme-symbol {
+    rotate: 180deg;
+  }
 }
 
 /* Status chips settle in when a status changes. */
-.status-chip { animation: chip-settle 240ms var(--motion-spring); }
-@keyframes chip-settle { from { scale: .88; opacity: 0; } to { scale: 1; opacity: 1; } }
+.status-chip {
+  animation: chip-settle 240ms var(--motion-spring);
+}
+@keyframes chip-settle {
+  from {
+    scale: 0.88;
+    opacity: 0;
+  }
+  to {
+    scale: 1;
+    opacity: 1;
+  }
+}
 
 /* Progress statistics and track cards arrive in a short cascade. */
-.progress-summary > div, .path-picker[open] .path-choices > button { animation: rise-arrive 320ms var(--motion-ease) both; }
-.progress-summary > div:nth-child(2), .path-picker[open] .path-choices > button:nth-child(2) { animation-delay: 35ms; }
-.progress-summary > div:nth-child(3), .path-picker[open] .path-choices > button:nth-child(3) { animation-delay: 70ms; }
-.progress-summary > div:nth-child(n + 4) { animation-delay: 105ms; }
-@keyframes rise-arrive { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
+.progress-summary > div,
+.path-picker[open] .path-choices > button {
+  animation: rise-arrive 320ms var(--motion-ease) both;
+}
+.progress-summary > div:nth-child(2),
+.path-picker[open] .path-choices > button:nth-child(2) {
+  animation-delay: 35ms;
+}
+.progress-summary > div:nth-child(3),
+.path-picker[open] .path-choices > button:nth-child(3) {
+  animation-delay: 70ms;
+}
+.progress-summary > div:nth-child(n + 4) {
+  animation-delay: 105ms;
+}
+@keyframes rise-arrive {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
 
 /* Small icon gestures: close and clear turn a quarter, play nudges forward, steppers press. */
-.icon-close, .icon-play { transition: rotate 220ms var(--motion-spring), translate 220ms var(--motion-spring); }
-@media (hover: hover) and (pointer: fine) {
-  button:hover:not(:disabled) > .icon-close, .ui-search-clear:hover .ui-icon { rotate: 90deg; }
-  .primary-button:hover:not(:disabled) > .icon-play { translate: 2px 0; }
+.icon-close,
+.icon-play {
+  transition:
+    rotate 220ms var(--motion-spring),
+    translate 220ms var(--motion-spring);
 }
-.ui-number-buttons button { transition: scale 120ms var(--motion-ease), background-color var(--motion-fast) var(--motion-ease); }
-.ui-number-buttons button:active:not(:disabled) { scale: .88; }
+@media (hover: hover) and (pointer: fine) {
+  button:hover:not(:disabled) > .icon-close,
+  .ui-search-clear:hover .ui-icon {
+    rotate: 90deg;
+  }
+  .primary-button:hover:not(:disabled) > .icon-play {
+    translate: 2px 0;
+  }
+}
+.ui-number-buttons button {
+  transition:
+    scale 120ms var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease);
+}
+.ui-number-buttons button:active:not(:disabled) {
+  scale: 0.88;
+}
 
 /* The workspace divider grip lengthens while it is hovered or focused. */
-.workspace-split span { transition: height 220ms var(--motion-spring), background-color var(--motion-fast) var(--motion-ease); }
-.workspace-split:hover span, .workspace-split:focus-visible span { height: 64px; }
+.workspace-split span {
+  transition:
+    height 220ms var(--motion-spring),
+    background-color var(--motion-fast) var(--motion-ease);
+}
+.workspace-split:hover span,
+.workspace-split:focus-visible span {
+  height: 64px;
+}
 
 /* Light/dark and colour-scheme changes crossfade instead of snapping. */
-::view-transition-old(root), ::view-transition-new(root) { animation-duration: 260ms; animation-timing-function: var(--motion-ease); }
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 260ms;
+  animation-timing-function: var(--motion-ease);
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .trail-node:has(> button:hover) .trail-marker, .trail-node:has(> button:focus-visible) .trail-marker, .list-row > button:active, .starting-options button:active, .path-choices button:active { transform: none !important; }
-  .brand:hover .brand-mark, .theme-trigger:hover .theme-symbol, .info-note summary:hover .ui-icon, button:hover > .icon-close, .ui-search-clear:hover .ui-icon { rotate: none !important; }
-  .primary-button:hover > .icon-play { translate: none !important; }
-  .ui-number-buttons button:active { scale: none !important; }
-  .text-button { transition: none; text-underline-offset: 4px; }
-  ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
-  .badge-card .badge-art, .badge-check, .badge-notice { animation: none !important; }
+  .trail-node:has(> button:hover) .trail-marker,
+  .trail-node:has(> button:focus-visible) .trail-marker,
+  .list-row > button:active,
+  .starting-options button:active,
+  .path-choices button:active {
+    transform: none !important;
+  }
+  .brand:hover .brand-mark,
+  .theme-trigger:hover .theme-symbol,
+  .info-note summary:hover .ui-icon,
+  button:hover > .icon-close,
+  .ui-search-clear:hover .ui-icon {
+    rotate: none !important;
+  }
+  .primary-button:hover > .icon-play {
+    translate: none !important;
+  }
+  .ui-number-buttons button:active {
+    scale: none !important;
+  }
+  .text-button {
+    transition: none;
+    text-underline-offset: 4px;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+  .badge-card .badge-art,
+  .badge-check,
+  .badge-notice {
+    animation: none !important;
+  }
 }

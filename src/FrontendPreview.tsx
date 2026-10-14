@@ -27,7 +27,12 @@ export default function FrontendPreview({ code, rep }: Props) {
     requestAnimationFrame(() => expandRef.current?.focus())
   }
   const previewRequest = useRef(0)
-  useEffect(() => () => { previewRequest.current++ }, [])
+  useEffect(
+    () => () => {
+      previewRequest.current++
+    },
+    [],
+  )
   const frameRef = useRef<HTMLIFrameElement | null>(null)
   useEffect(() => {
     const receive = (event: MessageEvent) => {
@@ -54,74 +59,120 @@ export default function FrontendPreview({ code, rep }: Props) {
     setPreview(null)
     setError('')
   }
-  const content = <>
-    {!expanded && <div className="panel-heading"><h2 id="preview-heading">Interactive preview</h2></div>}
-    <p>
-      {rep.domPreview ? rep.domPreview.description : 'Try the request states, type a search, and test Retry.'}
-      {' '}The preview runs the code from your last preview update.
-    </p>
-    <div className="preview-controls">
-      {!rep.domPreview && <>
-        <label htmlFor="preview-state">Request state</label>
-        <Select id="preview-state" value={scenario} onChange={event => {
-          const value = event.target.value
-          setScenario(value)
-          if (preview) refresh(value)
-        }}>
-          <option value="ready">Ready</option>
-          <option value="loading">Loading</option>
-          <option value="error">Error</option>
-          <option value="empty">Empty</option>
+  const content = (
+    <>
+      {!expanded && (
+        <div className="panel-heading">
+          <h2 id="preview-heading">Interactive preview</h2>
+        </div>
+      )}
+      <p>
+        {rep.domPreview ? rep.domPreview.description : 'Try the request states, type a search, and test Retry.'} The preview runs the code
+        from your last preview update.
+      </p>
+      <div className="preview-controls">
+        {!rep.domPreview && (
+          <>
+            <label htmlFor="preview-state">Request state</label>
+            <Select
+              id="preview-state"
+              value={scenario}
+              onChange={event => {
+                const value = event.target.value
+                setScenario(value)
+                if (preview) refresh(value)
+              }}
+            >
+              <option value="ready">Ready</option>
+              <option value="loading">Loading</option>
+              <option value="error">Error</option>
+              <option value="empty">Empty</option>
+            </Select>
+          </>
+        )}
+        <label htmlFor="preview-width">Viewport</label>
+        <Select id="preview-width" value={width} onChange={event => setWidth(event.target.value)}>
+          <option value="fluid">Fit panel</option>
+          <option value="375">Phone · 375px</option>
+          <option value="768">Tablet · 768px</option>
+          <option value="1280">Desktop · 1280px</option>
         </Select>
-      </>}
-      <label htmlFor="preview-width">Viewport</label>
-      <Select id="preview-width" value={width} onChange={event => setWidth(event.target.value)}>
-        <option value="fluid">Fit panel</option>
-        <option value="375">Phone · 375px</option>
-        <option value="768">Tablet · 768px</option>
-        <option value="1280">Desktop · 1280px</option>
-      </Select>
-      <button className="primary-button" type="button" onClick={() => refresh()}>Update preview</button>
-      <button ref={expandRef} className="stop-checks-button" type="button" onClick={() => expanded ? collapse() : setExpanded(true)}>
-        {expanded ? 'Exit expanded preview' : 'Expand preview'}
-      </button>
-      {preview && <button className="stop-checks-button" type="button" onClick={closePreview}>Close preview</button>}
-    </div>
-    {preview && preview.code !== code && <p role="status" className="preview-stale">
-      Your code changed. Update the preview to see this version.
-    </p>}
-    {error && <p role="alert" className="error-message">{error}</p>}
-    {preview
-      ? <div className="preview-viewport"><iframe
-        style={{ width: width === 'fluid' ? '100%' : `${width}px` }} key={preview.token} ref={frameRef}
-        title={rep.domPreview?.title ?? 'Your directory implementation'} sandbox="allow-scripts" srcDoc={preview.html}
-      /></div>
-      : <div className="preview-empty">Write your solution, then choose Update preview.</div>}
-    <details className="reflection-guide">
-      <summary>Manual UI review</summary>
-      {rep.domPreview
-        ? <ul>{rep.domPreview.review.map(item => <li key={item}>{item}</li>)}</ul>
-        : <ul>
-          <li>Reach the search and Retry controls using Tab; check the visible focus indicator.</li>
-          <li>Try an unmatched search, then clear it and confirm the full list returns.</li>
-          <li>Try all four request states and check readability on a narrow screen.</li>
-          <li>Use the visible label to identify the search field.</li>
-        </ul>}
-    </details>
-  </>
-  return <dialog
-    ref={dialogRef} role={expanded ? 'dialog' : 'region'} aria-modal={expanded || undefined}
-    className={expanded ? 'utility-dialog preview-dialog frontend-preview' : 'panel frontend-preview preview-inline'}
-    aria-label={expanded ? 'Expanded preview' : 'Interactive preview'}
-    onCancel={event => {
-      event.preventDefault()
-      if (expanded) collapse()
-    }}
-  >
-    {expanded && <div className="utility-heading">
-      <h2>Expanded preview</h2>
-      <button type="button" onClick={collapse}>Close <kbd>Esc</kbd></button>
-    </div>}
-    {content}
-  </dialog>
+        <button className="primary-button" type="button" onClick={() => refresh()}>
+          Update preview
+        </button>
+        <button ref={expandRef} className="stop-checks-button" type="button" onClick={() => (expanded ? collapse() : setExpanded(true))}>
+          {expanded ? 'Exit expanded preview' : 'Expand preview'}
+        </button>
+        {preview && (
+          <button className="stop-checks-button" type="button" onClick={closePreview}>
+            Close preview
+          </button>
+        )}
+      </div>
+      {preview && preview.code !== code && (
+        <p role="status" className="preview-stale">
+          Your code changed. Update the preview to see this version.
+        </p>
+      )}
+      {error && (
+        <p role="alert" className="error-message">
+          {error}
+        </p>
+      )}
+      {preview ? (
+        <div className="preview-viewport">
+          <iframe
+            style={{ width: width === 'fluid' ? '100%' : `${width}px` }}
+            key={preview.token}
+            ref={frameRef}
+            title={rep.domPreview?.title ?? 'Your directory implementation'}
+            sandbox="allow-scripts"
+            srcDoc={preview.html}
+          />
+        </div>
+      ) : (
+        <div className="preview-empty">Write your solution, then choose Update preview.</div>
+      )}
+      <details className="reflection-guide">
+        <summary>Manual UI review</summary>
+        {rep.domPreview ? (
+          <ul>
+            {rep.domPreview.review.map(item => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        ) : (
+          <ul>
+            <li>Reach the search and Retry controls using Tab; check the visible focus indicator.</li>
+            <li>Try an unmatched search, then clear it and confirm the full list returns.</li>
+            <li>Try all four request states and check readability on a narrow screen.</li>
+            <li>Use the visible label to identify the search field.</li>
+          </ul>
+        )}
+      </details>
+    </>
+  )
+  return (
+    <dialog
+      ref={dialogRef}
+      role={expanded ? 'dialog' : 'region'}
+      aria-modal={expanded || undefined}
+      className={expanded ? 'utility-dialog preview-dialog frontend-preview' : 'panel frontend-preview preview-inline'}
+      aria-label={expanded ? 'Expanded preview' : 'Interactive preview'}
+      onCancel={event => {
+        event.preventDefault()
+        if (expanded) collapse()
+      }}
+    >
+      {expanded && (
+        <div className="utility-heading">
+          <h2>Expanded preview</h2>
+          <button type="button" onClick={collapse}>
+            Close <kbd>Esc</kbd>
+          </button>
+        </div>
+      )}
+      {content}
+    </dialog>
+  )
 }

@@ -30,9 +30,13 @@ export const projectReview = [
 
 export const browserProjects: BrowserProject[] = [
   {
-    id: 'browser-task-list', level: 1, title: 'Build a task list',
-    brief: 'Create a plain TypeScript browser app with an accessible form, typed task state, and derived filters. Set it up and run it outside Code Reps.',
-    readiness: 'Recommended: typed values and functions, arrays, unions and narrowing, basic HTML, and DOM events. You may open this level at any time.',
+    id: 'browser-task-list',
+    level: 1,
+    title: 'Build a task list',
+    brief:
+      'Create a plain TypeScript browser app with an accessible form, typed task state, and derived filters. Set it up and run it outside Code Reps.',
+    readiness:
+      'Recommended: typed values and functions, arrays, unions and narrowing, basic HTML, and DOM events. You may open this level at any time.',
     preparation: ['write-functions', 'create-objects', 'task-state-label', 'frontend-visible-items', 'frontend-directory'],
     requirements: [
       'A task has a stable unique string ID, a title, and a boolean done flag. IDs remain unchanged when toggling completion. Duplicate titles are allowed and remain separate tasks.',
@@ -53,13 +57,24 @@ export const browserProjects: BrowserProject[] = [
       'Write DOM/browser tests for form submission, rejected-input draft preservation, toggling, clearing search, counts, and literal markup text. Run them through your test script.',
       'Diagnose this supplied defect scenario: toggling by title changes both tasks with identical titles. Reproduce it in a separate intentionally faulty version, add a failing regression test, then fix it using stable identity. Record the failure before the repair.',
     ],
-    transfer: 'After a break, add deletion by task identity. Define behavior when the focused task disappears, preserve active filters, and prove deleting one duplicate title does not delete its sibling. Write acceptance criteria before implementation.',
+    transfer:
+      'After a break, add deletion by task identity. Define behavior when the focused task disappears, preserve active filters, and prove deleting one duplicate title does not delete its sibling. Write acceptance criteria before implementation.',
   },
   {
-    id: 'browser-reading-journal', level: 2, title: 'Build a persistent reading journal',
-    brief: 'Build an editable journal whose browser-local data survives reloads and whose invalid saved data cannot silently replace current work.',
-    readiness: 'Recommended: level 1 skills, local modules, unknown-value validation, JSON, and browser storage. Completion of level 1 is not required.',
-    preparation: ['backend-validate-user', 'validate-stock-adjustment', 'parse-delivery-window', 'saved-record-status', 'project-team-directory'],
+    id: 'browser-reading-journal',
+    level: 2,
+    title: 'Build a persistent reading journal',
+    brief:
+      'Build an editable journal whose browser-local data survives reloads and whose invalid saved data cannot silently replace current work.',
+    readiness:
+      'Recommended: level 1 skills, local modules, unknown-value validation, JSON, and browser storage. Completion of level 1 is not required.',
+    preparation: [
+      'backend-validate-user',
+      'validate-stock-adjustment',
+      'parse-delivery-window',
+      'saved-record-status',
+      'project-team-directory',
+    ],
     requirements: [
       'A book has a unique nonempty string ID, a title, an author, and status "planned", "reading", or "finished". Trim title and author; title length is 1–80 and author length is 1–60 JavaScript code units. Duplicate title/author combinations are allowed. IDs stay stable through editing.',
       'Provide labeled create and edit forms. Creation appends a planned book up to 500 records; at the limit reject creation, retain the form draft, and explain the limit. Editing preserves its position and ID. Canceling an edit preserves the original book. Invalid edits leave the draft visible and the stored record unchanged.',
@@ -79,13 +94,23 @@ export const browserProjects: BrowserProject[] = [
       'Use an injected storage adapter to test read and write exceptions, unchanged corrupt data, canceled reset, and retrying the latest state. Do not alter your real browser data to simulate failures.',
       'Write browser tests for edit/cancel, valid reload, corrupt-data recovery, and unsaved feedback. Reproduce a bug that displays Saved in a finally block after a write throws; add a failing regression test and repair it.',
     ],
-    transfer: 'After a break, add JSON file import with a preview and explicit confirmation. Invalid or canceled imports must preserve existing records and drafts. Define append versus replace and duplicate-ID rules before implementing and testing them.',
+    transfer:
+      'After a break, add JSON file import with a preview and explicit confirmation. Invalid or canceled imports must preserve existing records and drafts. Define append versus replace and duplicate-ID rules before implementing and testing them.',
   },
   {
-    id: 'browser-local-catalog', level: 3, title: 'Build an asynchronous local catalog',
+    id: 'browser-local-catalog',
+    level: 3,
+    title: 'Build an asynchronous local catalog',
     brief: 'Integrate typed state, real promises, a DOM interface, persistence, tests, and debugging in a learner-owned local application.',
     readiness: 'Recommended: earlier browser skills, modules, runtime validation, promises, and request ownership. All levels remain open.',
-    preparation: ['catalog-request-summary', 'promise-outcomes', 'latest-request', 'search-request-state', 'preview-slot-results', 'project-team-directory'],
+    preparation: [
+      'catalog-request-summary',
+      'promise-outcomes',
+      'latest-request',
+      'search-request-state',
+      'preview-slot-results',
+      'project-team-directory',
+    ],
     requirements: [
       'Create local JSON fixtures containing at most 200 items per category. Support categories Books and Tools. Each item has a unique string ID, a trimmed title of 1–80 code units, and a category exactly equal to the selected category. Books IDs use books: and Tools IDs use tools:, followed by 1–40 ASCII letters, digits, or hyphens. IDs are case-sensitive and stay unchanged; these prefixes prevent cross-category favorite collisions. Validate the entire returned payload before accepting it; reject duplicates or malformed records without partial results.',
       'Implement a service that returns Promise<unknown> and loads bundled local fixtures. Supply a deterministic test adapter whose promises can be resolved or rejected in a chosen order; do not use remote APIs or timing-based sleeps in tests.',
@@ -106,15 +131,21 @@ export const browserProjects: BrowserProject[] = [
       'Write browser tests for category changes, query filtering, retry, favorite persistence, keyboard controls, safe text, and empty states. Run tests and a production build outside Code Reps.',
       'Create an intentionally faulty request handler that applies every resolved response. Demonstrate the A/B race with a failing regression test, repair it, and explain why cancellation alone would not establish ownership.',
     ],
-    transfer: 'After at least three days, add refresh within the current category while retaining its accepted results. Define how refreshing, failure, category changes, and favorites interact. Update acceptance criteria, implement without hints, and rerun type, unit, browser, and build checks. This external transfer remains self-reviewed, not an automatic Retained state.',
+    transfer:
+      'After at least three days, add refresh within the current category while retaining its accepted results. Define how refreshing, failure, category changes, and favorites interact. Update acceptance criteria, implement without hints, and rerun type, unit, browser, and build checks. This external transfer remains self-reviewed, not an automatic Retained state.',
   },
 ]
 
 export function projectReflection(project: BrowserProject): string {
   return [
-    `Level ${project.level}: ${project.title}`, 'External project self-review — learner-reported evidence',
-    'Date:', 'Project location:', 'Assistance used:',
-    ...project.requirements.map((requirement, index) => `Requirement ${index + 1}: ${requirement}\nStatus (Met / Not met / Not checked):\nEvidence:`),
+    `Level ${project.level}: ${project.title}`,
+    'External project self-review — learner-reported evidence',
+    'Date:',
+    'Project location:',
+    'Assistance used:',
+    ...project.requirements.map(
+      (requirement, index) => `Requirement ${index + 1}: ${requirement}\nStatus (Met / Not met / Not checked):\nEvidence:`,
+    ),
     ...projectReview.map(point => `${point}\nEvidence:`),
     ...project.verification.map(point => `${point}\nResult:`),
     `Later transfer: ${project.transfer}\nDate and evidence:`,

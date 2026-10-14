@@ -2,7 +2,9 @@ import type { Rep } from './rep-types.ts'
 
 export const journeyReps: Rep[] = [
   {
-    id: 'count-long-words', title: 'Count long words', category: 'Arrays & strings',
+    id: 'count-long-words',
+    title: 'Count long words',
+    category: 'Arrays & strings',
     prompt: 'Given an array of words and a minimum length, count how many words are at least that long.',
     example: { input: "countLongWords(['cat', 'tiger', 'bear'], 4)", output: '2' },
     note: 'A word with exactly the minimum length counts. The minimum is a nonnegative integer, including zero. Words contain basic Latin characters; length is JavaScript string length, including any spaces. An empty array returns zero.',
@@ -10,7 +12,11 @@ export const journeyReps: Rep[] = [
     planPrompt: 'What should the count start at? How will you compare each word length with the minimum?',
     starter: 'function countLongWords(words: string[], minimum: number): number {\n  // Write your solution here\n  return 0\n}\n',
     functionName: 'countLongWords',
-    hints: ['Visit each word and look at word.length.', 'Increase a count when word.length >= minimum.', 'Return the count after the loop.'],
+    hints: [
+      'Visit each word and look at word.length.',
+      'Increase a count when word.length >= minimum.',
+      'Return the count after the loop.',
+    ],
     checks: [
       { name: 'Counts the example', input: [['cat', 'tiger', 'bear'], 4], expected: 2 },
       { name: 'Handles no matches', input: [['a', 'bb'], 3], expected: 0 },
@@ -21,7 +27,9 @@ export const journeyReps: Rep[] = [
     ],
   },
   {
-    id: 'first-repeated-number', title: 'Find the first repeated number', category: 'Arrays & sets',
+    id: 'first-repeated-number',
+    title: 'Find the first repeated number',
+    category: 'Arrays & sets',
     prompt: 'Scan an array from left to right and return the first number you see for a second time.',
     example: { input: 'firstRepeated([4, 2, 4, 2])', output: '4' },
     note: 'Return null if nothing repeats. The first repeated number is determined by when its second occurrence appears.',
@@ -29,7 +37,11 @@ export const journeyReps: Rep[] = [
     planPrompt: 'What values must you remember? At what point can you return?',
     starter: 'function firstRepeated(numbers: number[]): number | null {\n  // Write your solution here\n  return null\n}\n',
     functionName: 'firstRepeated',
-    hints: ['Keep a collection of numbers already seen.', 'Before adding each number, check whether it is already there.', 'Return null after the loop if none repeats.'],
+    hints: [
+      'Keep a collection of numbers already seen.',
+      'Before adding each number, check whether it is already there.',
+      'Return null after the loop if none repeats.',
+    ],
     checks: [
       { name: 'Finds the example', input: [[4, 2, 4, 2]], expected: 4 },
       { name: 'Chooses first second occurrence', input: [[1, 2, 2, 1]], expected: 2 },
@@ -40,15 +52,24 @@ export const journeyReps: Rep[] = [
     ],
   },
   {
-    id: 'remove-adjacent-pairs', title: 'Remove adjacent pairs', category: 'Stacks & strings',
+    id: 'remove-adjacent-pairs',
+    title: 'Remove adjacent pairs',
+    category: 'Stacks & strings',
     prompt: 'Remove adjacent equal characters repeatedly until no such pair remains, then return the remaining text.',
     example: { input: "removePairs('abbaca')", output: "'ca'" },
     note: 'Removing one pair can create a new pair. Keep the order of characters that remain. Comparison is case-sensitive. Inputs contain basic Latin characters; emoji are outside this exercise.',
-    vocabulary: [{ term: 'Adjacent', meaning: 'next to each other' }, { term: 'Stack', meaning: 'a collection where the last item added is the first one removed' }],
+    vocabulary: [
+      { term: 'Adjacent', meaning: 'next to each other' },
+      { term: 'Stack', meaning: 'a collection where the last item added is the first one removed' },
+    ],
     planPrompt: 'What must you compare each character with? What happens when two match?',
     starter: 'function removePairs(text: string): string {\n  // Write your solution here\n  return text\n}\n',
     functionName: 'removePairs',
-    hints: ['Keep characters that have not yet been removed in an array.', 'Compare the next character with the last saved one. Remove that last one if they match.', 'Join the remaining characters at the end.'],
+    hints: [
+      'Keep characters that have not yet been removed in an array.',
+      'Compare the next character with the last saved one. Remove that last one if they match.',
+      'Join the remaining characters at the end.',
+    ],
     checks: [
       { name: 'Reduces the example', input: ['abbaca'], expected: 'ca' },
       { name: 'Handles an empty string', input: [''], expected: '' },

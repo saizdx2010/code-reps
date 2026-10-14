@@ -2,403 +2,1033 @@ import type { RepDepth } from './rep-depth.ts'
 import type { ReflectionGuide } from './reflection-guides.ts'
 
 export const practicalRepDepth: Record<string, RepDepth> = {
-  "closure-counters": {
-    traceSteps: {"code": ["function makeCounter(start: number): () => number {", "  let count = start", "  return () => {", "    count++", "    return count", "  }", "}", "function counterTrace(starts: number[], calls: number[]): number[] {", "  const counters = starts.map(makeCounter)", "  const out: number[] = []", "  for (const i of calls) out.push(counters[i]())", "  return out", "}"], "input": "starts = [0, 10], calls = [0, 0, 1, 0]", "steps": [
-      {"line": 8, "vars": {}, "structure": {"kind": "state", "entries": [["counter 0", "not made"], ["counter 1", "not made"]], "events": ["call 0", "call 0", "call 1", "call 0"]}, "note": "Make one counter for each start: one begins at 0 and one begins at 10. Each keeps its own count."},
-      {"line": 10, "vars": {}, "structure": {"kind": "state", "entries": [["counter 0", 0], ["counter 1", 10]], "events": ["call 0", "call 0", "call 1", "call 0"], "eventIndex": 0}, "note": "The first call is for counter 0. Its count goes from 0 to 1, and 1 is returned."},
-      {"line": 10, "vars": {}, "structure": {"kind": "state", "entries": [["counter 0", 1], ["counter 1", 10]], "events": ["call 0", "call 0", "call 1", "call 0"], "eventIndex": 1}, "note": "Call 0 again. Counter 0 goes from 1 to 2, and 2 is returned."},
-      {"line": 10, "vars": {}, "structure": {"kind": "state", "entries": [["counter 0", 2], ["counter 1", 10]], "events": ["call 0", "call 0", "call 1", "call 0"], "eventIndex": 2}, "note": "Call 1 uses counter 1, which goes from 10 to 11. Counter 0 stays at 2."},
-      {"line": 10, "vars": {}, "structure": {"kind": "state", "entries": [["counter 0", 2], ["counter 1", 11]], "events": ["call 0", "call 0", "call 1", "call 0"], "eventIndex": 3}, "note": "Call 0 again. Counter 0 goes from 2 to 3, and 3 is returned."},
-      {"line": 11, "vars": {"result": "[1, 2, 11, 3]"}, "structure": {"kind": "state", "entries": [["counter 0", 3], ["counter 1", 11]], "events": ["call 0", "call 0", "call 1", "call 0"]}, "note": "All calls are done. The outputs in order are 1, 2, 11, and 3."}
-    ]},
-    "reasoning": "Each call to the factory creates its own count. The returned function keeps that count between calls. The trace calls counters in the supplied order.",
-    "trace": "Starts [0,10] create two environments. Calls [0,0,1,0] produce [1,2,11,3]; counter 1 does not affect counter 0.",
-    "alternative": "A class can also encapsulate a count; a closure needs no public object field. A global variable would share state unintentionally. Creating k counters and processing n calls takes O(k+n) time and O(k) working state.",
-    "counterexample": "A global count produces 12 for the final call instead of 3. Recreating a counter on every call loses its previous value.",
-    "transfer": "Let each counter support reset. Decide which callbacks must share the same binding."
+  'closure-counters': {
+    traceSteps: {
+      code: [
+        'function makeCounter(start: number): () => number {',
+        '  let count = start',
+        '  return () => {',
+        '    count++',
+        '    return count',
+        '  }',
+        '}',
+        'function counterTrace(starts: number[], calls: number[]): number[] {',
+        '  const counters = starts.map(makeCounter)',
+        '  const out: number[] = []',
+        '  for (const i of calls) out.push(counters[i]())',
+        '  return out',
+        '}',
+      ],
+      input: 'starts = [0, 10], calls = [0, 0, 1, 0]',
+      steps: [
+        {
+          line: 8,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['counter 0', 'not made'],
+              ['counter 1', 'not made'],
+            ],
+            events: ['call 0', 'call 0', 'call 1', 'call 0'],
+          },
+          note: 'Make one counter for each start: one begins at 0 and one begins at 10. Each keeps its own count.',
+        },
+        {
+          line: 10,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['counter 0', 0],
+              ['counter 1', 10],
+            ],
+            events: ['call 0', 'call 0', 'call 1', 'call 0'],
+            eventIndex: 0,
+          },
+          note: 'The first call is for counter 0. Its count goes from 0 to 1, and 1 is returned.',
+        },
+        {
+          line: 10,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['counter 0', 1],
+              ['counter 1', 10],
+            ],
+            events: ['call 0', 'call 0', 'call 1', 'call 0'],
+            eventIndex: 1,
+          },
+          note: 'Call 0 again. Counter 0 goes from 1 to 2, and 2 is returned.',
+        },
+        {
+          line: 10,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['counter 0', 2],
+              ['counter 1', 10],
+            ],
+            events: ['call 0', 'call 0', 'call 1', 'call 0'],
+            eventIndex: 2,
+          },
+          note: 'Call 1 uses counter 1, which goes from 10 to 11. Counter 0 stays at 2.',
+        },
+        {
+          line: 10,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['counter 0', 2],
+              ['counter 1', 11],
+            ],
+            events: ['call 0', 'call 0', 'call 1', 'call 0'],
+            eventIndex: 3,
+          },
+          note: 'Call 0 again. Counter 0 goes from 2 to 3, and 3 is returned.',
+        },
+        {
+          line: 11,
+          vars: { result: '[1, 2, 11, 3]' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['counter 0', 3],
+              ['counter 1', 11],
+            ],
+            events: ['call 0', 'call 0', 'call 1', 'call 0'],
+          },
+          note: 'All calls are done. The outputs in order are 1, 2, 11, and 3.',
+        },
+      ],
+    },
+    reasoning:
+      'Each call to the factory creates its own count. The returned function keeps that count between calls. The trace calls counters in the supplied order.',
+    trace: 'Starts [0,10] create two environments. Calls [0,0,1,0] produce [1,2,11,3]; counter 1 does not affect counter 0.',
+    alternative:
+      'A class can also encapsulate a count; a closure needs no public object field. A global variable would share state unintentionally. Creating k counters and processing n calls takes O(k+n) time and O(k) working state.',
+    counterexample:
+      'A global count produces 12 for the final call instead of 3. Recreating a counter on every call loses its previous value.',
+    transfer: 'Let each counter support reset. Decide which callbacks must share the same binding.',
   },
-  "reference-groups": {
-    "reasoning": "Identity is preserved when each selection reuses an object created once for its pool position.",
-    "trace": "Pool [7,7] creates A and B. Indices [0,1,0] select A,B,A; the Set contains two references.",
-    "alternative": "A Set of indices happens to give the same count here but does not practice object identity. A Set of IDs changes the contract. O(k+n) time and O(k+n) storage bounds include construction and selection.",
-    "counterexample": "Deduplicating IDs returns 1 for [7,7] selected at [0,1]. Constructing an object per selection returns 3 for one repeated index.",
-    "transfer": "Group records by business ID instead. Explain why equality rules now differ."
+  'reference-groups': {
+    reasoning: 'Identity is preserved when each selection reuses an object created once for its pool position.',
+    trace: 'Pool [7,7] creates A and B. Indices [0,1,0] select A,B,A; the Set contains two references.',
+    alternative:
+      'A Set of indices happens to give the same count here but does not practice object identity. A Set of IDs changes the contract. O(k+n) time and O(k+n) storage bounds include construction and selection.',
+    counterexample:
+      'Deduplicating IDs returns 1 for [7,7] selected at [0,1]. Constructing an object per selection returns 3 for one repeated index.',
+    transfer: 'Group records by business ID instead. Explain why equality rules now differ.',
   },
-  "event-loop-order": {
-    traceSteps: {"code": ["type Entry = { kind: 'sync' | 'micro' | 'timer'; label: string }", "function turnOrder(entries: Entry[]): string[] {", "  const sync: string[] = [], micro: string[] = [], timer: string[] = []", "  for (const entry of entries) {", "    if (entry.kind === 'sync') sync.push(entry.label)", "    else if (entry.kind === 'micro') micro.push(entry.label)", "    else timer.push(entry.label)", "  }", "  return [...sync, ...micro, ...timer]", "}"], "input": "entries = [{kind: 'sync', label: 'A'}, {kind: 'timer', label: 'T'}, {kind: 'micro', label: 'P'}, {kind: 'sync', label: 'B'}]", "steps": [
-      {"line": 2, "vars": {}, "structure": {"kind": "state", "entries": [["sync queue", "empty"], ["micro queue", "empty"], ["timer queue", "empty"]], "events": ["sync A", "timer T", "micro P", "sync B"]}, "note": "Three empty queues: one each for sync, microtask, and timer labels. Nothing has been read yet."},
-      {"line": 3, "vars": {}, "structure": {"kind": "state", "entries": [["sync queue", "empty"], ["micro queue", "empty"], ["timer queue", "empty"]], "events": ["sync A", "timer T", "micro P", "sync B"], "eventIndex": 0}, "note": "Read A. It is a sync label, so it will go in the sync queue."},
-      {"line": 3, "vars": {}, "structure": {"kind": "state", "entries": [["sync queue", "A"], ["micro queue", "empty"], ["timer queue", "empty"]], "events": ["sync A", "timer T", "micro P", "sync B"], "eventIndex": 1}, "note": "Read T, a timer label. It goes in the timer queue, which runs last."},
-      {"line": 3, "vars": {}, "structure": {"kind": "state", "entries": [["sync queue", "A"], ["micro queue", "empty"], ["timer queue", "T"]], "events": ["sync A", "timer T", "micro P", "sync B"], "eventIndex": 2}, "note": "Read P, a microtask label. It goes in the microtask queue, which runs before timers."},
-      {"line": 3, "vars": {}, "structure": {"kind": "state", "entries": [["sync queue", "A"], ["micro queue", "P"], ["timer queue", "T"]], "events": ["sync A", "timer T", "micro P", "sync B"], "eventIndex": 3}, "note": "Read B, another sync label. It joins the sync queue after A."},
-      {"line": 8, "vars": {"result": "[\"A\", \"B\", \"P\", \"T\"]"}, "structure": {"kind": "state", "entries": [["sync queue", "A, B"], ["micro queue", "P"], ["timer queue", "T"]], "events": ["sync A", "timer T", "micro P", "sync B"]}, "note": "All entries are read. Return the sync labels, then microtasks, then timers: A, B, P, T."}
-    ]},
-    "reasoning": "The current script finishes first. Queued microtasks run next, followed by timer tasks.",
-    "trace": "Encounter A,T,P,B: A and B execute now, P at the checkpoint, T in a later task, producing A,B,P,T.",
-    "alternative": "Three filter passes are clear and O(n); three queues also take O(n) and avoid repeated scans. A priority sort may cost more and must preserve within-kind order.",
-    "counterexample": "Returning encounter order puts T before B. Sorting labels alphabetically loses queue order.",
-    "transfer": "Allow a microtask to enqueue another microtask. Which queue is drained before the first timer?"
+  'event-loop-order': {
+    traceSteps: {
+      code: [
+        "type Entry = { kind: 'sync' | 'micro' | 'timer'; label: string }",
+        'function turnOrder(entries: Entry[]): string[] {',
+        '  const sync: string[] = [], micro: string[] = [], timer: string[] = []',
+        '  for (const entry of entries) {',
+        "    if (entry.kind === 'sync') sync.push(entry.label)",
+        "    else if (entry.kind === 'micro') micro.push(entry.label)",
+        '    else timer.push(entry.label)',
+        '  }',
+        '  return [...sync, ...micro, ...timer]',
+        '}',
+      ],
+      input: "entries = [{kind: 'sync', label: 'A'}, {kind: 'timer', label: 'T'}, {kind: 'micro', label: 'P'}, {kind: 'sync', label: 'B'}]",
+      steps: [
+        {
+          line: 2,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['sync queue', 'empty'],
+              ['micro queue', 'empty'],
+              ['timer queue', 'empty'],
+            ],
+            events: ['sync A', 'timer T', 'micro P', 'sync B'],
+          },
+          note: 'Three empty queues: one each for sync, microtask, and timer labels. Nothing has been read yet.',
+        },
+        {
+          line: 3,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['sync queue', 'empty'],
+              ['micro queue', 'empty'],
+              ['timer queue', 'empty'],
+            ],
+            events: ['sync A', 'timer T', 'micro P', 'sync B'],
+            eventIndex: 0,
+          },
+          note: 'Read A. It is a sync label, so it will go in the sync queue.',
+        },
+        {
+          line: 3,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['sync queue', 'A'],
+              ['micro queue', 'empty'],
+              ['timer queue', 'empty'],
+            ],
+            events: ['sync A', 'timer T', 'micro P', 'sync B'],
+            eventIndex: 1,
+          },
+          note: 'Read T, a timer label. It goes in the timer queue, which runs last.',
+        },
+        {
+          line: 3,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['sync queue', 'A'],
+              ['micro queue', 'empty'],
+              ['timer queue', 'T'],
+            ],
+            events: ['sync A', 'timer T', 'micro P', 'sync B'],
+            eventIndex: 2,
+          },
+          note: 'Read P, a microtask label. It goes in the microtask queue, which runs before timers.',
+        },
+        {
+          line: 3,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['sync queue', 'A'],
+              ['micro queue', 'P'],
+              ['timer queue', 'T'],
+            ],
+            events: ['sync A', 'timer T', 'micro P', 'sync B'],
+            eventIndex: 3,
+          },
+          note: 'Read B, another sync label. It joins the sync queue after A.',
+        },
+        {
+          line: 8,
+          vars: { result: '["A", "B", "P", "T"]' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['sync queue', 'A, B'],
+              ['micro queue', 'P'],
+              ['timer queue', 'T'],
+            ],
+            events: ['sync A', 'timer T', 'micro P', 'sync B'],
+          },
+          note: 'All entries are read. Return the sync labels, then microtasks, then timers: A, B, P, T.',
+        },
+      ],
+    },
+    reasoning: 'The current script finishes first. Queued microtasks run next, followed by timer tasks.',
+    trace: 'Encounter A,T,P,B: A and B execute now, P at the checkpoint, T in a later task, producing A,B,P,T.',
+    alternative:
+      'Three filter passes are clear and O(n); three queues also take O(n) and avoid repeated scans. A priority sort may cost more and must preserve within-kind order.',
+    counterexample: 'Returning encounter order puts T before B. Sorting labels alphabetically loses queue order.',
+    transfer: 'Allow a microtask to enqueue another microtask. Which queue is drained before the first timer?',
   },
-  "promise-outcomes": {
-    traceSteps: {"code": ["type Outcome = { status: 'fulfilled'; value: number } | { status: 'rejected'; reason: string }", "function settledSummary(outcomes: Outcome[]): { values: number[]; errors: string[] } {", "  const values: number[] = [], errors: string[] = []", "  for (const outcome of outcomes) {", "    if (outcome.status === 'fulfilled') values.push(outcome.value)", "    else errors.push(outcome.reason)", "  }", "  return { values, errors }", "}"], "input": "outcomes = [{status: 'fulfilled', value: 0}, {status: 'rejected', reason: 'Offline'}, {status: 'fulfilled', value: 4}]", "steps": [
-      {"line": 2, "vars": {}, "structure": {"kind": "state", "entries": [["values", "[]"], ["errors", "[]"]], "events": ["fulfilled 0", "rejected Offline", "fulfilled 4"]}, "note": "Start with two empty lists: values for successful outcomes and errors for rejection reasons."},
-      {"line": 3, "vars": {}, "structure": {"kind": "state", "entries": [["values", "[]"], ["errors", "[]"]], "events": ["fulfilled 0", "rejected Offline", "fulfilled 4"], "eventIndex": 0}, "note": "Read the first outcome, which is fulfilled with 0."},
-      {"line": 4, "vars": {}, "structure": {"kind": "state", "entries": [["values", "[]"], ["errors", "[]"]], "events": ["fulfilled 0", "rejected Offline", "fulfilled 4"], "eventIndex": 0}, "note": "Its status is fulfilled, so 0 goes into values. Zero is still a real value."},
-      {"line": 3, "vars": {}, "structure": {"kind": "state", "entries": [["values", "[0]"], ["errors", "[]"]], "events": ["fulfilled 0", "rejected Offline", "fulfilled 4"], "eventIndex": 1}, "note": "Read the second outcome, which was rejected."},
-      {"line": 5, "vars": {}, "structure": {"kind": "state", "entries": [["values", "[0]"], ["errors", "[]"]], "events": ["fulfilled 0", "rejected Offline", "fulfilled 4"], "eventIndex": 1}, "note": "Its status is rejected, so the reason Offline goes into errors."},
-      {"line": 3, "vars": {}, "structure": {"kind": "state", "entries": [["values", "[0]"], ["errors", "[Offline]"]], "events": ["fulfilled 0", "rejected Offline", "fulfilled 4"], "eventIndex": 2}, "note": "Read the third outcome, which is fulfilled with 4."},
-      {"line": 4, "vars": {}, "structure": {"kind": "state", "entries": [["values", "[0]"], ["errors", "[Offline]"]], "events": ["fulfilled 0", "rejected Offline", "fulfilled 4"], "eventIndex": 2}, "note": "Its status is fulfilled, so 4 goes into values after 0."},
-      {"line": 7, "vars": {"result": "{\"values\": [0, 4], \"errors\": [\"Offline\"]}"}, "structure": {"kind": "state", "entries": [["values", "[0, 4]"], ["errors", "[Offline]"]], "events": ["fulfilled 0", "rejected Offline", "fulfilled 4"]}, "note": "Return both lists in their original order. Failed requests add no invented value."}
-    ]},
-    "reasoning": "The discriminant determines which payload exists. Recording both branches retains partial success without inventing defaults.",
-    "trace": "Fulfilled 0 is appended to values; rejected Offline to errors; fulfilled 4 yields {values:[0,4], errors:[Offline]}.",
-    "alternative": "Two filter/map pipelines are readable; one loop collects both results without intermediate arrays. Both are O(n) time with O(n) output storage.",
-    "counterexample": "if (outcome.value) drops zero and does not narrow rejected records safely.",
-    "transfer": "Change the contract to fail the whole batch on any rejection. Compare that policy with Promise.all."
+  'promise-outcomes': {
+    traceSteps: {
+      code: [
+        "type Outcome = { status: 'fulfilled'; value: number } | { status: 'rejected'; reason: string }",
+        'function settledSummary(outcomes: Outcome[]): { values: number[]; errors: string[] } {',
+        '  const values: number[] = [], errors: string[] = []',
+        '  for (const outcome of outcomes) {',
+        "    if (outcome.status === 'fulfilled') values.push(outcome.value)",
+        '    else errors.push(outcome.reason)',
+        '  }',
+        '  return { values, errors }',
+        '}',
+      ],
+      input: "outcomes = [{status: 'fulfilled', value: 0}, {status: 'rejected', reason: 'Offline'}, {status: 'fulfilled', value: 4}]",
+      steps: [
+        {
+          line: 2,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['values', '[]'],
+              ['errors', '[]'],
+            ],
+            events: ['fulfilled 0', 'rejected Offline', 'fulfilled 4'],
+          },
+          note: 'Start with two empty lists: values for successful outcomes and errors for rejection reasons.',
+        },
+        {
+          line: 3,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['values', '[]'],
+              ['errors', '[]'],
+            ],
+            events: ['fulfilled 0', 'rejected Offline', 'fulfilled 4'],
+            eventIndex: 0,
+          },
+          note: 'Read the first outcome, which is fulfilled with 0.',
+        },
+        {
+          line: 4,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['values', '[]'],
+              ['errors', '[]'],
+            ],
+            events: ['fulfilled 0', 'rejected Offline', 'fulfilled 4'],
+            eventIndex: 0,
+          },
+          note: 'Its status is fulfilled, so 0 goes into values. Zero is still a real value.',
+        },
+        {
+          line: 3,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['values', '[0]'],
+              ['errors', '[]'],
+            ],
+            events: ['fulfilled 0', 'rejected Offline', 'fulfilled 4'],
+            eventIndex: 1,
+          },
+          note: 'Read the second outcome, which was rejected.',
+        },
+        {
+          line: 5,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['values', '[0]'],
+              ['errors', '[]'],
+            ],
+            events: ['fulfilled 0', 'rejected Offline', 'fulfilled 4'],
+            eventIndex: 1,
+          },
+          note: 'Its status is rejected, so the reason Offline goes into errors.',
+        },
+        {
+          line: 3,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['values', '[0]'],
+              ['errors', '[Offline]'],
+            ],
+            events: ['fulfilled 0', 'rejected Offline', 'fulfilled 4'],
+            eventIndex: 2,
+          },
+          note: 'Read the third outcome, which is fulfilled with 4.',
+        },
+        {
+          line: 4,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['values', '[0]'],
+              ['errors', '[Offline]'],
+            ],
+            events: ['fulfilled 0', 'rejected Offline', 'fulfilled 4'],
+            eventIndex: 2,
+          },
+          note: 'Its status is fulfilled, so 4 goes into values after 0.',
+        },
+        {
+          line: 7,
+          vars: { result: '{"values": [0, 4], "errors": ["Offline"]}' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['values', '[0, 4]'],
+              ['errors', '[Offline]'],
+            ],
+            events: ['fulfilled 0', 'rejected Offline', 'fulfilled 4'],
+          },
+          note: 'Return both lists in their original order. Failed requests add no invented value.',
+        },
+      ],
+    },
+    reasoning:
+      'The discriminant determines which payload exists. Recording both branches retains partial success without inventing defaults.',
+    trace: 'Fulfilled 0 is appended to values; rejected Offline to errors; fulfilled 4 yields {values:[0,4], errors:[Offline]}.',
+    alternative:
+      'Two filter/map pipelines are readable; one loop collects both results without intermediate arrays. Both are O(n) time with O(n) output storage.',
+    counterexample: 'if (outcome.value) drops zero and does not narrow rejected records safely.',
+    transfer: 'Change the contract to fail the whole batch on any rejection. Compare that policy with Promise.all.',
   },
-  "singleton-owner": {
-    "reasoning": "Each owner caches one reference. Reference-keyed bookkeeping assigns the same identity number to repeated access and distinct numbers across owners.",
-    "trace": "Accesses 0,0,1,0,1 see A,A,B,A,B, so identities are 1,1,2,1,2.",
-    "alternative": "A global singleton is shorter but violates separate owners; explicitly passing instances also makes sharing visible. Construction plus n accesses costs O(k+n) with O(k) owner and identity state.",
-    "counterexample": "Creating {} on every getter call produces 1,2,3 rather than 1,1,2. A single global object merges distinct owners.",
-    "transfer": "Allow an owner to reset after logout. Decide when the old resource must be disposed."
+  'singleton-owner': {
+    reasoning:
+      'Each owner caches one reference. Reference-keyed bookkeeping assigns the same identity number to repeated access and distinct numbers across owners.',
+    trace: 'Accesses 0,0,1,0,1 see A,A,B,A,B, so identities are 1,1,2,1,2.',
+    alternative:
+      'A global singleton is shorter but violates separate owners; explicitly passing instances also makes sharing visible. Construction plus n accesses costs O(k+n) with O(k) owner and identity state.',
+    counterexample: 'Creating {} on every getter call produces 1,2,3 rather than 1,1,2. A single global object merges distinct owners.',
+    transfer: 'Allow an owner to reset after logout. Decide when the old resource must be disposed.',
   },
-  "pubsub-trace": {
-    traceSteps: {"code": ["function deliveries(events: BusEvent[]): string[] {", "  const topics = new Map<string, string[]>(), out: string[] = []", "  for (const e of events) {", "    const list = topics.get(e.topic) ?? []", "    topics.set(e.topic, list)", "    if (e.kind === 'subscribe' && !list.includes(e.listener)) list.push(e.listener)", "    else if (e.kind === 'unsubscribe') { const i = list.indexOf(e.listener); if (i >= 0) list.splice(i, 1) }", "    else if (e.kind === 'publish') for (const l of list) out.push(`${l}:${e.value}`)", "  }", "  return out", "}"], "input": "events = [{kind: \"subscribe\", topic: \"x\", listener: \"A\"}, {kind: \"subscribe\", topic: \"x\", listener: \"B\"}, {kind: \"unsubscribe\", topic: \"x\", listener: \"A\"}, {kind: \"subscribe\", topic: \"x\", listener: \"A\"}, {kind: \"publish\", topic: \"x\", value: \"1\"}]", "steps": [{"line": 1, "vars": {}, "structure": {"kind": "state", "entries": [["listeners on x", "[]"], ["deliveries", "[]"]], "events": ["subscribe x A", "subscribe x B", "unsubscribe x A", "subscribe x A", "publish x \"1\""]}, "note": "No topics and no deliveries yet. Five events are still to come."}, {"line": 5, "vars": {"event": "subscribe A"}, "structure": {"kind": "state", "entries": [["listeners on x", "[A]"], ["deliveries", "[]"]], "events": ["subscribe x A", "subscribe x B", "unsubscribe x A", "subscribe x A", "publish x \"1\""], "eventIndex": 0}, "note": "A joins topic x."}, {"line": 5, "vars": {"event": "subscribe B"}, "structure": {"kind": "state", "entries": [["listeners on x", "[A, B]"], ["deliveries", "[]"]], "events": ["subscribe x A", "subscribe x B", "unsubscribe x A", "subscribe x A", "publish x \"1\""], "eventIndex": 1}, "note": "B joins after A, so the order is A then B."}, {"line": 6, "vars": {"event": "unsubscribe A"}, "structure": {"kind": "state", "entries": [["listeners on x", "[B]"], ["deliveries", "[]"]], "events": ["subscribe x A", "subscribe x B", "unsubscribe x A", "subscribe x A", "publish x \"1\""], "eventIndex": 2}, "note": "A is removed from x."}, {"line": 5, "vars": {"event": "subscribe A"}, "structure": {"kind": "state", "entries": [["listeners on x", "[B, A]"], ["deliveries", "[]"]], "events": ["subscribe x A", "subscribe x B", "unsubscribe x A", "subscribe x A", "publish x \"1\""], "eventIndex": 3}, "note": "Re-subscribing places A last, behind B."}, {"line": 7, "vars": {"event": "publish 1"}, "structure": {"kind": "state", "entries": [["listeners on x", "[B, A]"], ["deliveries", "[\"B:1\",\"A:1\"]"]], "events": ["subscribe x A", "subscribe x B", "unsubscribe x A", "subscribe x A", "publish x \"1\""], "eventIndex": 4}, "note": "Publishing walks the current listeners in order: B first, then A."}, {"line": 9, "vars": {"result": "[\"B:1\",\"A:1\"]"}, "structure": {"kind": "state", "entries": [["listeners on x", "[B, A]"], ["deliveries", "[\"B:1\",\"A:1\"]"]], "events": ["subscribe x A", "subscribe x B", "unsubscribe x A", "subscribe x A", "publish x \"1\""], "eventIndex": 4}, "note": "Return the deliveries in registration order."}]},
-    "reasoning": "A topic-specific ordered registration set represents exactly the current subscribers; publishing reads only that set.",
-    "trace": "A subscribes to x, receives x:1, then unsubscribes. Publishing x:2 adds no delivery. Remove and re-add A after B produces B:v,A:v.",
-    "alternative": "A direct observer list is enough for one subject; topic routing is useful for multiple event names. Processing cost includes every delivery, O(n+d) expected with maps/sets, and output storage is O(d).",
-    "counterexample": "One global listener set sends x events to y listeners. Allowing duplicate registration emits A:0 twice.",
-    "transfer": "Let a callback unsubscribe another callback during publication. Define snapshot versus live delivery before implementing it."
+  'pubsub-trace': {
+    traceSteps: {
+      code: [
+        'function deliveries(events: BusEvent[]): string[] {',
+        '  const topics = new Map<string, string[]>(), out: string[] = []',
+        '  for (const e of events) {',
+        '    const list = topics.get(e.topic) ?? []',
+        '    topics.set(e.topic, list)',
+        "    if (e.kind === 'subscribe' && !list.includes(e.listener)) list.push(e.listener)",
+        "    else if (e.kind === 'unsubscribe') { const i = list.indexOf(e.listener); if (i >= 0) list.splice(i, 1) }",
+        "    else if (e.kind === 'publish') for (const l of list) out.push(`${l}:${e.value}`)",
+        '  }',
+        '  return out',
+        '}',
+      ],
+      input:
+        'events = [{kind: "subscribe", topic: "x", listener: "A"}, {kind: "subscribe", topic: "x", listener: "B"}, {kind: "unsubscribe", topic: "x", listener: "A"}, {kind: "subscribe", topic: "x", listener: "A"}, {kind: "publish", topic: "x", value: "1"}]',
+      steps: [
+        {
+          line: 1,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['listeners on x', '[]'],
+              ['deliveries', '[]'],
+            ],
+            events: ['subscribe x A', 'subscribe x B', 'unsubscribe x A', 'subscribe x A', 'publish x "1"'],
+          },
+          note: 'No topics and no deliveries yet. Five events are still to come.',
+        },
+        {
+          line: 5,
+          vars: { event: 'subscribe A' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['listeners on x', '[A]'],
+              ['deliveries', '[]'],
+            ],
+            events: ['subscribe x A', 'subscribe x B', 'unsubscribe x A', 'subscribe x A', 'publish x "1"'],
+            eventIndex: 0,
+          },
+          note: 'A joins topic x.',
+        },
+        {
+          line: 5,
+          vars: { event: 'subscribe B' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['listeners on x', '[A, B]'],
+              ['deliveries', '[]'],
+            ],
+            events: ['subscribe x A', 'subscribe x B', 'unsubscribe x A', 'subscribe x A', 'publish x "1"'],
+            eventIndex: 1,
+          },
+          note: 'B joins after A, so the order is A then B.',
+        },
+        {
+          line: 6,
+          vars: { event: 'unsubscribe A' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['listeners on x', '[B]'],
+              ['deliveries', '[]'],
+            ],
+            events: ['subscribe x A', 'subscribe x B', 'unsubscribe x A', 'subscribe x A', 'publish x "1"'],
+            eventIndex: 2,
+          },
+          note: 'A is removed from x.',
+        },
+        {
+          line: 5,
+          vars: { event: 'subscribe A' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['listeners on x', '[B, A]'],
+              ['deliveries', '[]'],
+            ],
+            events: ['subscribe x A', 'subscribe x B', 'unsubscribe x A', 'subscribe x A', 'publish x "1"'],
+            eventIndex: 3,
+          },
+          note: 'Re-subscribing places A last, behind B.',
+        },
+        {
+          line: 7,
+          vars: { event: 'publish 1' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['listeners on x', '[B, A]'],
+              ['deliveries', '["B:1","A:1"]'],
+            ],
+            events: ['subscribe x A', 'subscribe x B', 'unsubscribe x A', 'subscribe x A', 'publish x "1"'],
+            eventIndex: 4,
+          },
+          note: 'Publishing walks the current listeners in order: B first, then A.',
+        },
+        {
+          line: 9,
+          vars: { result: '["B:1","A:1"]' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['listeners on x', '[B, A]'],
+              ['deliveries', '["B:1","A:1"]'],
+            ],
+            events: ['subscribe x A', 'subscribe x B', 'unsubscribe x A', 'subscribe x A', 'publish x "1"'],
+            eventIndex: 4,
+          },
+          note: 'Return the deliveries in registration order.',
+        },
+      ],
+    },
+    reasoning: 'A topic-specific ordered registration set represents exactly the current subscribers; publishing reads only that set.',
+    trace:
+      'A subscribes to x, receives x:1, then unsubscribes. Publishing x:2 adds no delivery. Remove and re-add A after B produces B:v,A:v.',
+    alternative:
+      'A direct observer list is enough for one subject; topic routing is useful for multiple event names. Processing cost includes every delivery, O(n+d) expected with maps/sets, and output storage is O(d).',
+    counterexample: 'One global listener set sends x events to y listeners. Allowing duplicate registration emits A:0 twice.',
+    transfer:
+      'Let a callback unsubscribe another callback during publication. Define snapshot versus live delivery before implementing it.',
   },
-  "injected-clock": {
-    "reasoning": "A single clock read per decision gives the comparison one defined timestamp. Injection makes equality and call count observable without real time.",
-    "trace": "Deadline 100 compares with 99,100,101, yielding false,true,true and exactly three total clock calls.",
-    "alternative": "Passing a timestamp directly is simpler for a pure calculation; a callback models code that obtains time at the decision boundary. Both use O(n) time for the trace and O(n) output storage.",
-    "counterexample": "Using > marks time 100 as unexpired. Calling now twice can consume two fake values and make one decision inconsistent.",
-    "transfer": "Inject a stock repository instead of a clock. What minimal methods does the caller actually need?"
+  'injected-clock': {
+    reasoning:
+      'A single clock read per decision gives the comparison one defined timestamp. Injection makes equality and call count observable without real time.',
+    trace: 'Deadline 100 compares with 99,100,101, yielding false,true,true and exactly three total clock calls.',
+    alternative:
+      'Passing a timestamp directly is simpler for a pure calculation; a callback models code that obtains time at the decision boundary. Both use O(n) time for the trace and O(n) output storage.',
+    counterexample:
+      'Using > marks time 100 as unexpired. Calling now twice can consume two fake values and make one decision inconsistent.',
+    transfer: 'Inject a stock repository instead of a clock. What minimal methods does the caller actually need?',
   },
-  "debounce-schedule": {
-    traceSteps: {"code": ["function debounceSchedule(events: {at: number; value: string}[], wait: number): {at: number; value: string}[] {", "  const out: {at: number; value: string}[] = []", "  let pending: {at: number; value: string} | null = null", "  for (const e of events) {", "    if (pending && e.at >= pending.at) out.push(pending)", "    pending = {at: e.at + wait, value: e.value}", "  }", "  if (pending) out.push(pending)", "  return out", "}"], "input": "events = [{at: 0, value: \"A\"}, {at: 60, value: \"B\"}, {at: 160, value: \"C\"}], wait = 100", "steps": [{"line": 2, "vars": {"wait": 100}, "structure": {"kind": "state", "entries": [["pending", "none"], ["emitted", "[]"]], "events": ["0: A", "60: B", "160: C"]}, "note": "Nothing is pending. This example has an event exactly at a deadline."}, {"line": 5, "vars": {"event": "0: A"}, "structure": {"kind": "state", "entries": [["pending", "A due at 100"], ["emitted", "[]"]], "events": ["0: A", "60: B", "160: C"], "eventIndex": 0}, "note": "A arrives at 0, so it is pending and due at 0 + 100."}, {"line": 5, "vars": {"event": "60: B"}, "structure": {"kind": "state", "entries": [["pending", "B due at 160"], ["emitted", "[]"]], "events": ["0: A", "60: B", "160: C"], "eventIndex": 1}, "note": "B arrives at 60, before A is due at 100, so B replaces A. A is never emitted."}, {"line": 4, "vars": {"event": "160: C"}, "structure": {"kind": "state", "entries": [["pending", "B due at 160"], ["emitted", "[{\"at\":160,\"value\":\"B\"}]"]], "events": ["0: A", "60: B", "160: C"], "eventIndex": 2}, "note": "C arrives at 160, exactly when B is due. The rule is >=, so B is emitted first."}, {"line": 5, "vars": {"event": "160: C"}, "structure": {"kind": "state", "entries": [["pending", "C due at 260"], ["emitted", "[{\"at\":160,\"value\":\"B\"}]"]], "events": ["0: A", "60: B", "160: C"], "eventIndex": 2}, "note": "Then C starts a new wait, due at 160 + 100."}, {"line": 7, "vars": {"event": "end"}, "structure": {"kind": "state", "entries": [["pending", "none"], ["emitted", "[{\"at\":160,\"value\":\"B\"},{\"at\":260,\"value\":\"C\"}]"]], "events": ["0: A", "60: B", "160: C"], "eventIndex": 2}, "note": "After the last event, the pending C is emitted at 260."}, {"line": 8, "vars": {"result": "[{\"at\":160,\"value\":\"B\"},{\"at\":260,\"value\":\"C\"}]"}, "structure": {"kind": "state", "entries": [["pending", "none"], ["emitted", "[{\"at\":160,\"value\":\"B\"},{\"at\":260,\"value\":\"C\"}]"]], "events": ["0: A", "60: B", "160: C"], "eventIndex": 2}, "note": "Return both emissions."}]},
-    "reasoning": "The pending record is always the latest event not yet emitted. Testing its deadline before replacement preserves the explicit equality policy.",
-    "trace": "At 60, A’s deadline 100 has not arrived, so replace it with B at 160. At 200, emit B and schedule C at 300.",
-    "alternative": "A real implementation uses a replaceable timer; this trace uses timestamps to test the policy deterministically. A scan costs O(n) time and O(1) working state apart from output.",
-    "counterexample": "Using > at the deadline drops A when B arrives exactly at 100; the contract requires A first.",
-    "transfer": "Add a cancel event or a maximum wait. Specify whether an event at that boundary is processed before or after a scheduled emission."
+  'debounce-schedule': {
+    traceSteps: {
+      code: [
+        'function debounceSchedule(events: {at: number; value: string}[], wait: number): {at: number; value: string}[] {',
+        '  const out: {at: number; value: string}[] = []',
+        '  let pending: {at: number; value: string} | null = null',
+        '  for (const e of events) {',
+        '    if (pending && e.at >= pending.at) out.push(pending)',
+        '    pending = {at: e.at + wait, value: e.value}',
+        '  }',
+        '  if (pending) out.push(pending)',
+        '  return out',
+        '}',
+      ],
+      input: 'events = [{at: 0, value: "A"}, {at: 60, value: "B"}, {at: 160, value: "C"}], wait = 100',
+      steps: [
+        {
+          line: 2,
+          vars: { wait: 100 },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['pending', 'none'],
+              ['emitted', '[]'],
+            ],
+            events: ['0: A', '60: B', '160: C'],
+          },
+          note: 'Nothing is pending. This example has an event exactly at a deadline.',
+        },
+        {
+          line: 5,
+          vars: { event: '0: A' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['pending', 'A due at 100'],
+              ['emitted', '[]'],
+            ],
+            events: ['0: A', '60: B', '160: C'],
+            eventIndex: 0,
+          },
+          note: 'A arrives at 0, so it is pending and due at 0 + 100.',
+        },
+        {
+          line: 5,
+          vars: { event: '60: B' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['pending', 'B due at 160'],
+              ['emitted', '[]'],
+            ],
+            events: ['0: A', '60: B', '160: C'],
+            eventIndex: 1,
+          },
+          note: 'B arrives at 60, before A is due at 100, so B replaces A. A is never emitted.',
+        },
+        {
+          line: 4,
+          vars: { event: '160: C' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['pending', 'B due at 160'],
+              ['emitted', '[{"at":160,"value":"B"}]'],
+            ],
+            events: ['0: A', '60: B', '160: C'],
+            eventIndex: 2,
+          },
+          note: 'C arrives at 160, exactly when B is due. The rule is >=, so B is emitted first.',
+        },
+        {
+          line: 5,
+          vars: { event: '160: C' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['pending', 'C due at 260'],
+              ['emitted', '[{"at":160,"value":"B"}]'],
+            ],
+            events: ['0: A', '60: B', '160: C'],
+            eventIndex: 2,
+          },
+          note: 'Then C starts a new wait, due at 160 + 100.',
+        },
+        {
+          line: 7,
+          vars: { event: 'end' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['pending', 'none'],
+              ['emitted', '[{"at":160,"value":"B"},{"at":260,"value":"C"}]'],
+            ],
+            events: ['0: A', '60: B', '160: C'],
+            eventIndex: 2,
+          },
+          note: 'After the last event, the pending C is emitted at 260.',
+        },
+        {
+          line: 8,
+          vars: { result: '[{"at":160,"value":"B"},{"at":260,"value":"C"}]' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['pending', 'none'],
+              ['emitted', '[{"at":160,"value":"B"},{"at":260,"value":"C"}]'],
+            ],
+            events: ['0: A', '60: B', '160: C'],
+            eventIndex: 2,
+          },
+          note: 'Return both emissions.',
+        },
+      ],
+    },
+    reasoning:
+      'The pending record is always the latest event not yet emitted. Testing its deadline before replacement preserves the explicit equality policy.',
+    trace: 'At 60, A’s deadline 100 has not arrived, so replace it with B at 160. At 200, emit B and schedule C at 300.',
+    alternative:
+      'A real implementation uses a replaceable timer; this trace uses timestamps to test the policy deterministically. A scan costs O(n) time and O(1) working state apart from output.',
+    counterexample: 'Using > at the deadline drops A when B arrives exactly at 100; the contract requires A first.',
+    transfer:
+      'Add a cancel event or a maximum wait. Specify whether an event at that boundary is processed before or after a scheduled emission.',
   },
-  "leading-throttle": {
-    "reasoning": "The last accepted timestamp anchors the suppression window, so each emitted pair is separated by at least window.",
-    "trace": "With [5,14,15] and window 10, 5 is accepted, 14 suppressed, and 15 accepted; 14 does not move the anchor.",
-    "alternative": "Fixed interval buckets produce different boundaries; a trailing throttle also keeps pending state. This leading-only scan is O(n) time and O(1) extra working space.",
-    "counterexample": "Updating the anchor for 14 suppresses 15 incorrectly. A falsy check for the last timestamp mishandles zero.",
-    "transfer": "Add a trailing emission containing the latest suppressed value. Define what happens when it shares a timestamp with a new event."
+  'leading-throttle': {
+    reasoning: 'The last accepted timestamp anchors the suppression window, so each emitted pair is separated by at least window.',
+    trace: 'With [5,14,15] and window 10, 5 is accepted, 14 suppressed, and 15 accepted; 14 does not move the anchor.',
+    alternative:
+      'Fixed interval buckets produce different boundaries; a trailing throttle also keeps pending state. This leading-only scan is O(n) time and O(1) extra working space.',
+    counterexample: 'Updating the anchor for 14 suppresses 15 incorrectly. A falsy check for the last timestamp mishandles zero.',
+    transfer:
+      'Add a trailing emission containing the latest suppressed value. Define what happens when it shares a timestamp with a new event.',
   },
-  "latest-request": {
-    traceSteps: {"code": ["type RequestEvent = { kind: 'start' | 'cancel'; id: string } | { kind: 'resolve'; id: string; value: string }", "function visibleResponse(events: RequestEvent[]): string | null {", "  let owner: string | null = null, value: string | null = null", "  for (const event of events) {", "    if (event.kind === 'start') { owner = event.id; value = null }", "    else if (event.id === owner && event.kind === 'cancel') { owner = null; value = null }", "    else if (event.id === owner && event.kind === 'resolve') value = event.value", "  }", "  return value", "}"], "input": "events = [{kind: 'start', id: 'A'}, {kind: 'start', id: 'B'}, {kind: 'resolve', id: 'B', value: 'new'}, {kind: 'resolve', id: 'A', value: 'old'}, {kind: 'cancel', id: 'A'}]", "steps": [
-      {"line": 2, "vars": {}, "structure": {"kind": "state", "entries": [["owner", "none"], ["visible", "none"]], "events": ["start A", "start B", "resolve B new", "resolve A old", "cancel A"]}, "note": "Nobody owns the screen and no answer is visible yet."},
-      {"line": 3, "vars": {}, "structure": {"kind": "state", "entries": [["owner", "none"], ["visible", "none"]], "events": ["start A", "start B", "resolve B new", "resolve A old", "cancel A"], "eventIndex": 0}, "note": "Start A. A becomes the owner."},
-      {"line": 3, "vars": {}, "structure": {"kind": "state", "entries": [["owner", "A"], ["visible", "none"]], "events": ["start A", "start B", "resolve B new", "resolve A old", "cancel A"], "eventIndex": 1}, "note": "Start B. B replaces A as owner, so A's later answers will be ignored."},
-      {"line": 3, "vars": {}, "structure": {"kind": "state", "entries": [["owner", "B"], ["visible", "none"]], "events": ["start A", "start B", "resolve B new", "resolve A old", "cancel A"], "eventIndex": 2}, "note": "B resolves with new. B owns the request, so new becomes visible."},
-      {"line": 3, "vars": {}, "structure": {"kind": "state", "entries": [["owner", "B"], ["visible", "new"]], "events": ["start A", "start B", "resolve B new", "resolve A old", "cancel A"], "eventIndex": 3}, "note": "A resolves late with old. A no longer owns the request, so the screen keeps new."},
-      {"line": 3, "vars": {}, "structure": {"kind": "state", "entries": [["owner", "B"], ["visible", "new"]], "events": ["start A", "start B", "resolve B new", "resolve A old", "cancel A"], "eventIndex": 4}, "note": "Cancel A. A is not the owner, so nothing changes."},
-      {"line": 8, "vars": {"result": "new"}, "structure": {"kind": "state", "entries": [["owner", "B"], ["visible", "new"]], "events": ["start A", "start B", "resolve B new", "resolve A old", "cancel A"]}, "note": "Return the visible answer, new."}
-    ]},
-    "reasoning": "Ownership, rather than arrival time, controls which result can update state. Clearing on start is an explicit policy of this exercise.",
-    "trace": "A starts, B replaces A, B resolves to new, and A’s later old payload is ignored. Canceling A afterward cannot clear B.",
-    "alternative": "Abort saves supported work; an identity guard still protects visible state. Some products keep stale content while loading, but this exercise deliberately clears it. The scan uses O(n) time and O(1) state.",
-    "counterexample": "Applying every resolve displays old after new. Clearing on any cancel erases a newer request’s result.",
-    "transfer": "Keep stale data while reloading and display an error only for the current request. Specify the precedence rules."
+  'latest-request': {
+    traceSteps: {
+      code: [
+        "type RequestEvent = { kind: 'start' | 'cancel'; id: string } | { kind: 'resolve'; id: string; value: string }",
+        'function visibleResponse(events: RequestEvent[]): string | null {',
+        '  let owner: string | null = null, value: string | null = null',
+        '  for (const event of events) {',
+        "    if (event.kind === 'start') { owner = event.id; value = null }",
+        "    else if (event.id === owner && event.kind === 'cancel') { owner = null; value = null }",
+        "    else if (event.id === owner && event.kind === 'resolve') value = event.value",
+        '  }',
+        '  return value',
+        '}',
+      ],
+      input:
+        "events = [{kind: 'start', id: 'A'}, {kind: 'start', id: 'B'}, {kind: 'resolve', id: 'B', value: 'new'}, {kind: 'resolve', id: 'A', value: 'old'}, {kind: 'cancel', id: 'A'}]",
+      steps: [
+        {
+          line: 2,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['owner', 'none'],
+              ['visible', 'none'],
+            ],
+            events: ['start A', 'start B', 'resolve B new', 'resolve A old', 'cancel A'],
+          },
+          note: 'Nobody owns the screen and no answer is visible yet.',
+        },
+        {
+          line: 3,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['owner', 'none'],
+              ['visible', 'none'],
+            ],
+            events: ['start A', 'start B', 'resolve B new', 'resolve A old', 'cancel A'],
+            eventIndex: 0,
+          },
+          note: 'Start A. A becomes the owner.',
+        },
+        {
+          line: 3,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['owner', 'A'],
+              ['visible', 'none'],
+            ],
+            events: ['start A', 'start B', 'resolve B new', 'resolve A old', 'cancel A'],
+            eventIndex: 1,
+          },
+          note: "Start B. B replaces A as owner, so A's later answers will be ignored.",
+        },
+        {
+          line: 3,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['owner', 'B'],
+              ['visible', 'none'],
+            ],
+            events: ['start A', 'start B', 'resolve B new', 'resolve A old', 'cancel A'],
+            eventIndex: 2,
+          },
+          note: 'B resolves with new. B owns the request, so new becomes visible.',
+        },
+        {
+          line: 3,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['owner', 'B'],
+              ['visible', 'new'],
+            ],
+            events: ['start A', 'start B', 'resolve B new', 'resolve A old', 'cancel A'],
+            eventIndex: 3,
+          },
+          note: 'A resolves late with old. A no longer owns the request, so the screen keeps new.',
+        },
+        {
+          line: 3,
+          vars: {},
+          structure: {
+            kind: 'state',
+            entries: [
+              ['owner', 'B'],
+              ['visible', 'new'],
+            ],
+            events: ['start A', 'start B', 'resolve B new', 'resolve A old', 'cancel A'],
+            eventIndex: 4,
+          },
+          note: 'Cancel A. A is not the owner, so nothing changes.',
+        },
+        {
+          line: 8,
+          vars: { result: 'new' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['owner', 'B'],
+              ['visible', 'new'],
+            ],
+            events: ['start A', 'start B', 'resolve B new', 'resolve A old', 'cancel A'],
+          },
+          note: 'Return the visible answer, new.',
+        },
+      ],
+    },
+    reasoning:
+      'Ownership, rather than arrival time, controls which result can update state. Clearing on start is an explicit policy of this exercise.',
+    trace: 'A starts, B replaces A, B resolves to new, and A’s later old payload is ignored. Canceling A afterward cannot clear B.',
+    alternative:
+      'Abort saves supported work; an identity guard still protects visible state. Some products keep stale content while loading, but this exercise deliberately clears it. The scan uses O(n) time and O(1) state.',
+    counterexample: 'Applying every resolve displays old after new. Clearing on any cancel erases a newer request’s result.',
+    transfer: 'Keep stale data while reloading and display an error only for the current request. Specify the precedence rules.',
   },
-  "websocket-gate": {
-    "reasoning": "A send is accepted only while the connection is open. The state guard prevents disconnected sends from entering the output.",
-    "trace": "early arrives disconnected and is dropped; open permits ok; close makes late ineligible.",
-    "alternative": "Queuing sends is possible but needs bounds and replay semantics. This dropping model has O(n) processing time and O(1) state plus sent-message output.",
-    "counterexample": "Accepting sends after construction assumes connection completion. Recording send output still does not prove server receipt.",
-    "transfer": "Queue at most five messages while connecting. Decide what to drop and whether replaying a command needs an idempotency key."
+  'websocket-gate': {
+    reasoning:
+      'A send is accepted only while the connection is open. The state guard prevents disconnected sends from entering the output.',
+    trace: 'early arrives disconnected and is dropped; open permits ok; close makes late ineligible.',
+    alternative:
+      'Queuing sends is possible but needs bounds and replay semantics. This dropping model has O(n) processing time and O(1) state plus sent-message output.',
+    counterexample:
+      'Accepting sends after construction assumes connection completion. Recording send output still does not prove server receipt.',
+    transfer: 'Queue at most five messages while connecting. Decide what to drop and whether replaying a command needs an idempotency key.',
   },
-  "choose-live-transport": {
-    "reasoning": "The precedence matches the strongest required capability; the serverPush flag must not override twoWay.",
-    "trace": "true,true selects websocket; false,true selects sse; false,false selects polling.",
-    "alternative": "Real selection also considers proxies, authentication, traffic and operational support. An HTTP action plus SSE can be enough when same-connection bidirectionality is not required. This decision takes O(1) time and space.",
-    "counterexample": "Checking serverPush first returns sse for true,true and fails the same-connection requirement.",
-    "transfer": "Add an infrastructure constraint that forbids persistent connections. How does that change the feasible choices?"
+  'choose-live-transport': {
+    reasoning: 'The precedence matches the strongest required capability; the serverPush flag must not override twoWay.',
+    trace: 'true,true selects websocket; false,true selects sse; false,false selects polling.',
+    alternative:
+      'Real selection also considers proxies, authentication, traffic and operational support. An HTTP action plus SSE can be enough when same-connection bidirectionality is not required. This decision takes O(1) time and space.',
+    counterexample: 'Checking serverPush first returns sse for true,true and fails the same-connection requirement.',
+    transfer: 'Add an infrastructure constraint that forbids persistent connections. How does that change the feasible choices?',
   },
-  "shared-resource": {
-    "reasoning": "The set equals current ownership, so duplicate operations cannot corrupt a numeric count. Only transitions across zero change the resource lifetime.",
-    "trace": "A opens, B joins, A leaves with B still active, and B’s departure closes. A second release does nothing.",
-    "alternative": "A plain refCount is smaller but needs exactly-once release handles. A set of IDs supports this exercise’s idempotent named leases. O(n) expected time and O(k) state for k active consumers.",
-    "counterexample": "Closing on every release breaks B’s active connection when A leaves. Decrementing unknown releases makes the count negative.",
-    "transfer": "Change the account while consumers are active. Decide whether their leases migrate or must reacquire a newly scoped resource."
+  'shared-resource': {
+    reasoning:
+      'The set equals current ownership, so duplicate operations cannot corrupt a numeric count. Only transitions across zero change the resource lifetime.',
+    trace: 'A opens, B joins, A leaves with B still active, and B’s departure closes. A second release does nothing.',
+    alternative:
+      'A plain refCount is smaller but needs exactly-once release handles. A set of IDs supports this exercise’s idempotent named leases. O(n) expected time and O(k) state for k active consumers.',
+    counterexample:
+      'Closing on every release breaks B’s active connection when A leaves. Decrementing unknown releases makes the count negative.',
+    transfer:
+      'Change the account while consumers are active. Decide whether their leases migrate or must reacquire a newly scoped resource.',
   },
-  "cache-freshness": {
-    "reasoning": "An entry must satisfy both identity and freshness; neither alone establishes a hit.",
-    "trace": "Key a with value 0 and expiry 10 returns 0 at time 9 but null at time 10.",
-    "alternative": "A Map improves repeated key lookup compared with this O(n) scan, at the cost of stored indexing. Stale-while-revalidate is another policy and must label stale results separately. This function uses O(1) working memory.",
-    "counterexample": "Using <= serves expired data at 10. A truthy value test drops a valid cached zero.",
-    "transfer": "Cache a query by account and filter. Define an unambiguous composite key and invalidation after a write."
+  'cache-freshness': {
+    reasoning: 'An entry must satisfy both identity and freshness; neither alone establishes a hit.',
+    trace: 'Key a with value 0 and expiry 10 returns 0 at time 9 but null at time 10.',
+    alternative:
+      'A Map improves repeated key lookup compared with this O(n) scan, at the cost of stored indexing. Stale-while-revalidate is another policy and must label stale results separately. This function uses O(1) working memory.',
+    counterexample: 'Using <= serves expired data at 10. A truthy value test drops a valid cached zero.',
+    transfer: 'Cache a query by account and filter. Define an unambiguous composite key and invalidation after a write.',
   },
-  "retry-backoff": {
-    "reasoning": "Each delay is the exponential sequence clamped at cap, so growth cannot produce a scheduled delay above the permitted limit.",
-    "trace": "100 doubles to 200 then 400; the next 800 is clamped to 500 and later delays remain 500.",
-    "alternative": "A fixed delay is simpler but can retry too aggressively during sustained failure. Iteratively clamping avoids unnecessary large powers. The sequence costs O(n) time and O(n) output space.",
-    "counterexample": "Starting at base*2 skips the initial 100. Applying the cap only at the end leaves intermediate delays above it.",
-    "transfer": "Add bounded jitter with an injected random source, and stop after a maximum number of eligible attempts."
+  'retry-backoff': {
+    reasoning:
+      'Each delay is the exponential sequence clamped at cap, so growth cannot produce a scheduled delay above the permitted limit.',
+    trace: '100 doubles to 200 then 400; the next 800 is clamped to 500 and later delays remain 500.',
+    alternative:
+      'A fixed delay is simpler but can retry too aggressively during sustained failure. Iteratively clamping avoids unnecessary large powers. The sequence costs O(n) time and O(n) output space.',
+    counterexample: 'Starting at base*2 skips the initial 100. Applying the cap only at the end leaves intermediate delays above it.',
+    transfer: 'Add bounded jitter with an injected random source, and stop after a maximum number of eligible attempts.',
   },
-  "idempotent-ledger": {
-    "reasoning": "The first recorded payload fixes each key’s operation. Subsequent matching deliveries have no additional effect and mismatches cannot replace it.",
-    "trace": "K:5 contributes 5, its retry contributes 0, K:9 records a conflict, and L:5 contributes 5 for total 10.",
-    "alternative": "A Set only records that a key occurred and cannot detect changed payloads. A durable server needs atomic storage and an explicit scope. This model costs O(n) expected time and O(k) key state plus conflicts.",
-    "counterexample": "Checking map.get(key) for truthiness loses the zero operation. Replacing K’s stored amount on conflict lets later retries change meaning.",
-    "transfer": "Include account and endpoint in the key scope, and handle concurrent requests with one durable transaction."
+  'idempotent-ledger': {
+    reasoning:
+      'The first recorded payload fixes each key’s operation. Subsequent matching deliveries have no additional effect and mismatches cannot replace it.',
+    trace: 'K:5 contributes 5, its retry contributes 0, K:9 records a conflict, and L:5 contributes 5 for total 10.',
+    alternative:
+      'A Set only records that a key occurred and cannot detect changed payloads. A durable server needs atomic storage and an explicit scope. This model costs O(n) expected time and O(k) key state plus conflicts.',
+    counterexample:
+      'Checking map.get(key) for truthiness loses the zero operation. Replacing K’s stored amount on conflict lets later retries change meaning.',
+    transfer: 'Include account and endpoint in the key scope, and handle concurrent requests with one durable transaction.',
   },
-  "optimistic-balance": {
-    "reasoning": "Each operation contributes at most once: either tentatively in pending or permanently in confirmed. Failure removes only its own tentative contribution.",
-    "trace": "Initial 10 plus A:2 and B:3 displays 15. B success makes confirmed 13 while A remains pending. A failure leaves confirmed and displayed at 13.",
-    "alternative": "A single rollback snapshot is simpler for one isolated operation but wrong for concurrent independent changes. A map makes ownership explicit. O(n+k) expected processing with O(k) operation state; output is constant size.",
-    "counterexample": "Restoring A’s initial snapshot after B succeeds resets 13 to 10 and erases B. Not remembering settled IDs lets a reused ID apply twice.",
-    "transfer": "Handle replacing a title rather than adding a number. Define conflict ordering and reconciliation against a server version."
+  'optimistic-balance': {
+    reasoning:
+      'Each operation contributes at most once: either tentatively in pending or permanently in confirmed. Failure removes only its own tentative contribution.',
+    trace:
+      'Initial 10 plus A:2 and B:3 displays 15. B success makes confirmed 13 while A remains pending. A failure leaves confirmed and displayed at 13.',
+    alternative:
+      'A single rollback snapshot is simpler for one isolated operation but wrong for concurrent independent changes. A map makes ownership explicit. O(n+k) expected processing with O(k) operation state; output is constant size.',
+    counterexample:
+      'Restoring A’s initial snapshot after B succeeds resets 13 to 10 and erases B. Not remembering settled IDs lets a reused ID apply twice.',
+    transfer: 'Handle replacing a title rather than adding a number. Define conflict ordering and reconciliation against a server version.',
   },
-  "subscription-cleanup": {
-    "reasoning": "Cleanup belongs to an owner, so disposing one owner cannot remove another’s registration to the same topic.",
-    "trace": "A:x, B:x, A:y produce counts 1,2,3. Disposing A removes its two registrations and leaves B:x at count 1.",
-    "alternative": "Nested sets avoid ambiguous concatenated keys; filtering a registration list is simpler but repeatedly scans it. Map/set bookkeeping uses O(n) expected time and O(k) active registration state plus output.",
-    "counterexample": "Clearing all listeners on A disposal removes B incorrectly. Joining owner and topic with a colon merges (a:b,c) with (a,b:c).",
-    "transfer": "Give each registration an unsubscribe handle so one owner can release one topic without disposing all of them."
+  'subscription-cleanup': {
+    reasoning: 'Cleanup belongs to an owner, so disposing one owner cannot remove another’s registration to the same topic.',
+    trace: 'A:x, B:x, A:y produce counts 1,2,3. Disposing A removes its two registrations and leaves B:x at count 1.',
+    alternative:
+      'Nested sets avoid ambiguous concatenated keys; filtering a registration list is simpler but repeatedly scans it. Map/set bookkeeping uses O(n) expected time and O(k) active registration state plus output.',
+    counterexample:
+      'Clearing all listeners on A disposal removes B incorrectly. Joining owner and topic with a colon merges (a:b,c) with (a,b:c).',
+    transfer: 'Give each registration an unsubscribe handle so one owner can release one topic without disposing all of them.',
   },
-  "room-leases": {
-    "reasoning": "Each room owns an independent membership set; only a genuine positive-to-zero transition reports it as emptied.",
-    "trace": "A and B occupy x, A occupies y. A leaves x but B remains; A leaves y and emits y; B leaves x and emits x.",
-    "alternative": "A single total user count cannot identify which room becomes empty. Nested sets give expected O(n) processing and O(k) live membership state plus output.",
-    "counterexample": "Emitting on every leave from an empty room falsely reports absent room z. A global set removes A from both rooms at once.",
-    "transfer": "Add a disconnect event that removes one user from every room. State the output ordering when multiple rooms become empty."
-  }
+  'room-leases': {
+    reasoning: 'Each room owns an independent membership set; only a genuine positive-to-zero transition reports it as emptied.',
+    trace: 'A and B occupy x, A occupies y. A leaves x but B remains; A leaves y and emits y; B leaves x and emits x.',
+    alternative:
+      'A single total user count cannot identify which room becomes empty. Nested sets give expected O(n) processing and O(k) live membership state plus output.',
+    counterexample:
+      'Emitting on every leave from an empty room falsely reports absent room z. A global set removes A from both rooms at once.',
+    transfer: 'Add a disconnect event that removes one user from every room. State the output ordering when multiple rooms become empty.',
+  },
 }
 
 export const practicalGuides: Record<string, ReflectionGuide> = {
-  "closure-counters": {
-    "plan": [
-      "Restate the contract and its boundary rules.",
-      "Choose state with a meaning you can trace."
+  'closure-counters': {
+    plan: ['Restate the contract and its boundary rules.', 'Choose state with a meaning you can trace.'],
+    explanation: [
+      'Each call to the factory creates its own count. The returned function keeps that count between calls. The trace calls counters in the supplied order.',
+      'A class can also encapsulate a count; a closure needs no public object field. A global variable would share state unintentionally. Creating k counters and processing n calls takes O(k+n) time and O(k) working state.',
+      'Explain the limits of these deterministic checks.',
     ],
-    "explanation": [
-      "Each call to the factory creates its own count. The returned function keeps that count between calls. The trace calls counters in the supplied order.",
-      "A class can also encapsulate a count; a closure needs no public object field. A global variable would share state unintentionally. Creating k counters and processing n calls takes O(k+n) time and O(k) working state.",
-      "Explain the limits of these deterministic checks."
-    ],
-    "example": "Starts [0,10] create two environments. Calls [0,0,1,0] produce [1,2,11,3]; counter 1 does not affect counter 0."
+    example: 'Starts [0,10] create two environments. Calls [0,0,1,0] produce [1,2,11,3]; counter 1 does not affect counter 0.',
   },
-  "reference-groups": {
-    "plan": [
-      "Restate the contract and its boundary rules.",
-      "Choose state with a meaning you can trace."
+  'reference-groups': {
+    plan: ['Restate the contract and its boundary rules.', 'Choose state with a meaning you can trace.'],
+    explanation: [
+      'Identity is preserved when each selection reuses an object created once for its pool position.',
+      'A Set of indices happens to give the same count here but does not practice object identity. A Set of IDs changes the contract. O(k+n) time and O(k+n) storage bounds include construction and selection.',
+      'Explain the limits of these deterministic checks.',
     ],
-    "explanation": [
-      "Identity is preserved when each selection reuses an object created once for its pool position.",
-      "A Set of indices happens to give the same count here but does not practice object identity. A Set of IDs changes the contract. O(k+n) time and O(k+n) storage bounds include construction and selection.",
-      "Explain the limits of these deterministic checks."
-    ],
-    "example": "Pool [7,7] creates A and B. Indices [0,1,0] select A,B,A; the Set contains two references."
+    example: 'Pool [7,7] creates A and B. Indices [0,1,0] select A,B,A; the Set contains two references.',
   },
-  "event-loop-order": {
-    "plan": [
-      "Restate the contract and its boundary rules.",
-      "Choose state with a meaning you can trace."
+  'event-loop-order': {
+    plan: ['Restate the contract and its boundary rules.', 'Choose state with a meaning you can trace.'],
+    explanation: [
+      'The current script finishes first. Queued microtasks run next, followed by timer tasks.',
+      'Three filter passes are clear and O(n); three queues also take O(n) and avoid repeated scans. A priority sort may cost more and must preserve within-kind order.',
+      'Explain the limits of these deterministic checks.',
     ],
-    "explanation": [
-      "The current script finishes first. Queued microtasks run next, followed by timer tasks.",
-      "Three filter passes are clear and O(n); three queues also take O(n) and avoid repeated scans. A priority sort may cost more and must preserve within-kind order.",
-      "Explain the limits of these deterministic checks."
-    ],
-    "example": "Encounter A,T,P,B: A and B execute now, P at the checkpoint, T in a later task, producing A,B,P,T."
+    example: 'Encounter A,T,P,B: A and B execute now, P at the checkpoint, T in a later task, producing A,B,P,T.',
   },
-  "promise-outcomes": {
-    "plan": [
-      "Restate the contract and its boundary rules.",
-      "Choose state with a meaning you can trace."
+  'promise-outcomes': {
+    plan: ['Restate the contract and its boundary rules.', 'Choose state with a meaning you can trace.'],
+    explanation: [
+      'The discriminant determines which payload exists. Recording both branches retains partial success without inventing defaults.',
+      'Two filter/map pipelines are readable; one loop collects both results without intermediate arrays. Both are O(n) time with O(n) output storage.',
+      'Explain the limits of these deterministic checks.',
     ],
-    "explanation": [
-      "The discriminant determines which payload exists. Recording both branches retains partial success without inventing defaults.",
-      "Two filter/map pipelines are readable; one loop collects both results without intermediate arrays. Both are O(n) time with O(n) output storage.",
-      "Explain the limits of these deterministic checks."
-    ],
-    "example": "Fulfilled 0 is appended to values; rejected Offline to errors; fulfilled 4 yields {values:[0,4], errors:[Offline]}."
+    example: 'Fulfilled 0 is appended to values; rejected Offline to errors; fulfilled 4 yields {values:[0,4], errors:[Offline]}.',
   },
-  "singleton-owner": {
-    "plan": [
-      "Restate the contract and its boundary rules.",
-      "Choose state with a meaning you can trace."
+  'singleton-owner': {
+    plan: ['Restate the contract and its boundary rules.', 'Choose state with a meaning you can trace.'],
+    explanation: [
+      'Each owner caches one reference. Reference-keyed bookkeeping assigns the same identity number to repeated access and distinct numbers across owners.',
+      'A global singleton is shorter but violates separate owners; explicitly passing instances also makes sharing visible. Construction plus n accesses costs O(k+n) with O(k) owner and identity state.',
+      'Explain the limits of these deterministic checks.',
     ],
-    "explanation": [
-      "Each owner caches one reference. Reference-keyed bookkeeping assigns the same identity number to repeated access and distinct numbers across owners.",
-      "A global singleton is shorter but violates separate owners; explicitly passing instances also makes sharing visible. Construction plus n accesses costs O(k+n) with O(k) owner and identity state.",
-      "Explain the limits of these deterministic checks."
-    ],
-    "example": "Accesses 0,0,1,0,1 see A,A,B,A,B, so identities are 1,1,2,1,2."
+    example: 'Accesses 0,0,1,0,1 see A,A,B,A,B, so identities are 1,1,2,1,2.',
   },
-  "pubsub-trace": {
-    "plan": [
-      "Restate the contract and its boundary rules.",
-      "Choose state with a meaning you can trace."
+  'pubsub-trace': {
+    plan: ['Restate the contract and its boundary rules.', 'Choose state with a meaning you can trace.'],
+    explanation: [
+      'A topic-specific ordered registration set represents exactly the current subscribers; publishing reads only that set.',
+      'A direct observer list is enough for one subject; topic routing is useful for multiple event names. Processing cost includes every delivery, O(n+d) expected with maps/sets, and output storage is O(d).',
+      'Explain the limits of these deterministic checks.',
     ],
-    "explanation": [
-      "A topic-specific ordered registration set represents exactly the current subscribers; publishing reads only that set.",
-      "A direct observer list is enough for one subject; topic routing is useful for multiple event names. Processing cost includes every delivery, O(n+d) expected with maps/sets, and output storage is O(d).",
-      "Explain the limits of these deterministic checks."
-    ],
-    "example": "A subscribes to x, receives x:1, then unsubscribes. Publishing x:2 adds no delivery. Remove and re-add A after B produces B:v,A:v."
+    example:
+      'A subscribes to x, receives x:1, then unsubscribes. Publishing x:2 adds no delivery. Remove and re-add A after B produces B:v,A:v.',
   },
-  "injected-clock": {
-    "plan": [
-      "Restate the contract and its boundary rules.",
-      "Choose state with a meaning you can trace."
+  'injected-clock': {
+    plan: ['Restate the contract and its boundary rules.', 'Choose state with a meaning you can trace.'],
+    explanation: [
+      'A single clock read per decision gives the comparison one defined timestamp. Injection makes equality and call count observable without real time.',
+      'Passing a timestamp directly is simpler for a pure calculation; a callback models code that obtains time at the decision boundary. Both use O(n) time for the trace and O(n) output storage.',
+      'Explain the limits of these deterministic checks.',
     ],
-    "explanation": [
-      "A single clock read per decision gives the comparison one defined timestamp. Injection makes equality and call count observable without real time.",
-      "Passing a timestamp directly is simpler for a pure calculation; a callback models code that obtains time at the decision boundary. Both use O(n) time for the trace and O(n) output storage.",
-      "Explain the limits of these deterministic checks."
-    ],
-    "example": "Deadline 100 compares with 99,100,101, yielding false,true,true and exactly three total clock calls."
+    example: 'Deadline 100 compares with 99,100,101, yielding false,true,true and exactly three total clock calls.',
   },
-  "debounce-schedule": {
-    "plan": [
-      "Restate the contract and its boundary rules.",
-      "Choose state with a meaning you can trace."
+  'debounce-schedule': {
+    plan: ['Restate the contract and its boundary rules.', 'Choose state with a meaning you can trace.'],
+    explanation: [
+      'The pending record is always the latest event not yet emitted. Testing its deadline before replacement preserves the explicit equality policy.',
+      'A real implementation uses a replaceable timer; this trace uses timestamps to test the policy deterministically. A scan costs O(n) time and O(1) working state apart from output.',
+      'Explain the limits of these deterministic checks.',
     ],
-    "explanation": [
-      "The pending record is always the latest event not yet emitted. Testing its deadline before replacement preserves the explicit equality policy.",
-      "A real implementation uses a replaceable timer; this trace uses timestamps to test the policy deterministically. A scan costs O(n) time and O(1) working state apart from output.",
-      "Explain the limits of these deterministic checks."
-    ],
-    "example": "At 60, A’s deadline 100 has not arrived, so replace it with B at 160. At 200, emit B and schedule C at 300."
+    example: 'At 60, A’s deadline 100 has not arrived, so replace it with B at 160. At 200, emit B and schedule C at 300.',
   },
-  "leading-throttle": {
-    "plan": [
-      "Restate the contract and its boundary rules.",
-      "Choose state with a meaning you can trace."
+  'leading-throttle': {
+    plan: ['Restate the contract and its boundary rules.', 'Choose state with a meaning you can trace.'],
+    explanation: [
+      'The last accepted timestamp anchors the suppression window, so each emitted pair is separated by at least window.',
+      'Fixed interval buckets produce different boundaries; a trailing throttle also keeps pending state. This leading-only scan is O(n) time and O(1) extra working space.',
+      'Explain the limits of these deterministic checks.',
     ],
-    "explanation": [
-      "The last accepted timestamp anchors the suppression window, so each emitted pair is separated by at least window.",
-      "Fixed interval buckets produce different boundaries; a trailing throttle also keeps pending state. This leading-only scan is O(n) time and O(1) extra working space.",
-      "Explain the limits of these deterministic checks."
-    ],
-    "example": "With [5,14,15] and window 10, 5 is accepted, 14 suppressed, and 15 accepted; 14 does not move the anchor."
+    example: 'With [5,14,15] and window 10, 5 is accepted, 14 suppressed, and 15 accepted; 14 does not move the anchor.',
   },
-  "latest-request": {
-    "plan": [
-      "Restate the contract and its boundary rules.",
-      "Choose state with a meaning you can trace."
+  'latest-request': {
+    plan: ['Restate the contract and its boundary rules.', 'Choose state with a meaning you can trace.'],
+    explanation: [
+      'Ownership, rather than arrival time, controls which result can update state. Clearing on start is an explicit policy of this exercise.',
+      'Abort saves supported work; an identity guard still protects visible state. Some products keep stale content while loading, but this exercise deliberately clears it. The scan uses O(n) time and O(1) state.',
+      'Explain the limits of these deterministic checks.',
     ],
-    "explanation": [
-      "Ownership, rather than arrival time, controls which result can update state. Clearing on start is an explicit policy of this exercise.",
-      "Abort saves supported work; an identity guard still protects visible state. Some products keep stale content while loading, but this exercise deliberately clears it. The scan uses O(n) time and O(1) state.",
-      "Explain the limits of these deterministic checks."
-    ],
-    "example": "A starts, B replaces A, B resolves to new, and A’s later old payload is ignored. Canceling A afterward cannot clear B."
+    example: 'A starts, B replaces A, B resolves to new, and A’s later old payload is ignored. Canceling A afterward cannot clear B.',
   },
-  "websocket-gate": {
-    "plan": [
-      "Restate the contract and its boundary rules.",
-      "Choose state with a meaning you can trace."
+  'websocket-gate': {
+    plan: ['Restate the contract and its boundary rules.', 'Choose state with a meaning you can trace.'],
+    explanation: [
+      'A send is accepted only while the connection is open. The state guard prevents disconnected sends from entering the output.',
+      'Queuing sends is possible but needs bounds and replay semantics. This dropping model has O(n) processing time and O(1) state plus sent-message output.',
+      'Explain the limits of these deterministic checks.',
     ],
-    "explanation": [
-      "A send is accepted only while the connection is open. The state guard prevents disconnected sends from entering the output.",
-      "Queuing sends is possible but needs bounds and replay semantics. This dropping model has O(n) processing time and O(1) state plus sent-message output.",
-      "Explain the limits of these deterministic checks."
-    ],
-    "example": "early arrives disconnected and is dropped; open permits ok; close makes late ineligible."
+    example: 'early arrives disconnected and is dropped; open permits ok; close makes late ineligible.',
   },
-  "choose-live-transport": {
-    "plan": [
-      "Restate the contract and its boundary rules.",
-      "Choose state with a meaning you can trace."
+  'choose-live-transport': {
+    plan: ['Restate the contract and its boundary rules.', 'Choose state with a meaning you can trace.'],
+    explanation: [
+      'The precedence matches the strongest required capability; the serverPush flag must not override twoWay.',
+      'Real selection also considers proxies, authentication, traffic and operational support. An HTTP action plus SSE can be enough when same-connection bidirectionality is not required. This decision takes O(1) time and space.',
+      'Explain the limits of these deterministic checks.',
     ],
-    "explanation": [
-      "The precedence matches the strongest required capability; the serverPush flag must not override twoWay.",
-      "Real selection also considers proxies, authentication, traffic and operational support. An HTTP action plus SSE can be enough when same-connection bidirectionality is not required. This decision takes O(1) time and space.",
-      "Explain the limits of these deterministic checks."
-    ],
-    "example": "true,true selects websocket; false,true selects sse; false,false selects polling."
+    example: 'true,true selects websocket; false,true selects sse; false,false selects polling.',
   },
-  "shared-resource": {
-    "plan": [
-      "Restate the contract and its boundary rules.",
-      "Choose state with a meaning you can trace."
+  'shared-resource': {
+    plan: ['Restate the contract and its boundary rules.', 'Choose state with a meaning you can trace.'],
+    explanation: [
+      'The set equals current ownership, so duplicate operations cannot corrupt a numeric count. Only transitions across zero change the resource lifetime.',
+      'A plain refCount is smaller but needs exactly-once release handles. A set of IDs supports this exercise’s idempotent named leases. O(n) expected time and O(k) state for k active consumers.',
+      'Explain the limits of these deterministic checks.',
     ],
-    "explanation": [
-      "The set equals current ownership, so duplicate operations cannot corrupt a numeric count. Only transitions across zero change the resource lifetime.",
-      "A plain refCount is smaller but needs exactly-once release handles. A set of IDs supports this exercise’s idempotent named leases. O(n) expected time and O(k) state for k active consumers.",
-      "Explain the limits of these deterministic checks."
-    ],
-    "example": "A opens, B joins, A leaves with B still active, and B’s departure closes. A second release does nothing."
+    example: 'A opens, B joins, A leaves with B still active, and B’s departure closes. A second release does nothing.',
   },
-  "cache-freshness": {
-    "plan": [
-      "Restate the contract and its boundary rules.",
-      "Choose state with a meaning you can trace."
+  'cache-freshness': {
+    plan: ['Restate the contract and its boundary rules.', 'Choose state with a meaning you can trace.'],
+    explanation: [
+      'An entry must satisfy both identity and freshness; neither alone establishes a hit.',
+      'A Map improves repeated key lookup compared with this O(n) scan, at the cost of stored indexing. Stale-while-revalidate is another policy and must label stale results separately. This function uses O(1) working memory.',
+      'Explain the limits of these deterministic checks.',
     ],
-    "explanation": [
-      "An entry must satisfy both identity and freshness; neither alone establishes a hit.",
-      "A Map improves repeated key lookup compared with this O(n) scan, at the cost of stored indexing. Stale-while-revalidate is another policy and must label stale results separately. This function uses O(1) working memory.",
-      "Explain the limits of these deterministic checks."
-    ],
-    "example": "Key a with value 0 and expiry 10 returns 0 at time 9 but null at time 10."
+    example: 'Key a with value 0 and expiry 10 returns 0 at time 9 but null at time 10.',
   },
-  "retry-backoff": {
-    "plan": [
-      "Restate the contract and its boundary rules.",
-      "Choose state with a meaning you can trace."
+  'retry-backoff': {
+    plan: ['Restate the contract and its boundary rules.', 'Choose state with a meaning you can trace.'],
+    explanation: [
+      'Each delay is the exponential sequence clamped at cap, so growth cannot produce a scheduled delay above the permitted limit.',
+      'A fixed delay is simpler but can retry too aggressively during sustained failure. Iteratively clamping avoids unnecessary large powers. The sequence costs O(n) time and O(n) output space.',
+      'Explain the limits of these deterministic checks.',
     ],
-    "explanation": [
-      "Each delay is the exponential sequence clamped at cap, so growth cannot produce a scheduled delay above the permitted limit.",
-      "A fixed delay is simpler but can retry too aggressively during sustained failure. Iteratively clamping avoids unnecessary large powers. The sequence costs O(n) time and O(n) output space.",
-      "Explain the limits of these deterministic checks."
-    ],
-    "example": "100 doubles to 200 then 400; the next 800 is clamped to 500 and later delays remain 500."
+    example: '100 doubles to 200 then 400; the next 800 is clamped to 500 and later delays remain 500.',
   },
-  "idempotent-ledger": {
-    "plan": [
-      "Restate the contract and its boundary rules.",
-      "Choose state with a meaning you can trace."
+  'idempotent-ledger': {
+    plan: ['Restate the contract and its boundary rules.', 'Choose state with a meaning you can trace.'],
+    explanation: [
+      'The first recorded payload fixes each key’s operation. Subsequent matching deliveries have no additional effect and mismatches cannot replace it.',
+      'A Set only records that a key occurred and cannot detect changed payloads. A durable server needs atomic storage and an explicit scope. This model costs O(n) expected time and O(k) key state plus conflicts.',
+      'Explain the limits of these deterministic checks.',
     ],
-    "explanation": [
-      "The first recorded payload fixes each key’s operation. Subsequent matching deliveries have no additional effect and mismatches cannot replace it.",
-      "A Set only records that a key occurred and cannot detect changed payloads. A durable server needs atomic storage and an explicit scope. This model costs O(n) expected time and O(k) key state plus conflicts.",
-      "Explain the limits of these deterministic checks."
-    ],
-    "example": "K:5 contributes 5, its retry contributes 0, K:9 records a conflict, and L:5 contributes 5 for total 10."
+    example: 'K:5 contributes 5, its retry contributes 0, K:9 records a conflict, and L:5 contributes 5 for total 10.',
   },
-  "optimistic-balance": {
-    "plan": [
-      "Restate the contract and its boundary rules.",
-      "Choose state with a meaning you can trace."
+  'optimistic-balance': {
+    plan: ['Restate the contract and its boundary rules.', 'Choose state with a meaning you can trace.'],
+    explanation: [
+      'Each operation contributes at most once: either tentatively in pending or permanently in confirmed. Failure removes only its own tentative contribution.',
+      'A single rollback snapshot is simpler for one isolated operation but wrong for concurrent independent changes. A map makes ownership explicit. O(n+k) expected processing with O(k) operation state; output is constant size.',
+      'Explain the limits of these deterministic checks.',
     ],
-    "explanation": [
-      "Each operation contributes at most once: either tentatively in pending or permanently in confirmed. Failure removes only its own tentative contribution.",
-      "A single rollback snapshot is simpler for one isolated operation but wrong for concurrent independent changes. A map makes ownership explicit. O(n+k) expected processing with O(k) operation state; output is constant size.",
-      "Explain the limits of these deterministic checks."
-    ],
-    "example": "Initial 10 plus A:2 and B:3 displays 15. B success makes confirmed 13 while A remains pending. A failure leaves confirmed and displayed at 13."
+    example:
+      'Initial 10 plus A:2 and B:3 displays 15. B success makes confirmed 13 while A remains pending. A failure leaves confirmed and displayed at 13.',
   },
-  "subscription-cleanup": {
-    "plan": [
-      "State the ownership boundary.",
-      "Trace duplicate and absent operations."
+  'subscription-cleanup': {
+    plan: ['State the ownership boundary.', 'Trace duplicate and absent operations.'],
+    explanation: [
+      'Cleanup belongs to an owner, so disposing one owner cannot remove another’s registration to the same topic.',
+      'Nested sets avoid ambiguous concatenated keys; filtering a registration list is simpler but repeatedly scans it. Map/set bookkeeping uses O(n) expected time and O(k) active registration state plus output.',
     ],
-    "explanation": [
-      "Cleanup belongs to an owner, so disposing one owner cannot remove another’s registration to the same topic.",
-      "Nested sets avoid ambiguous concatenated keys; filtering a registration list is simpler but repeatedly scans it. Map/set bookkeeping uses O(n) expected time and O(k) active registration state plus output."
-    ],
-    "example": "A:x, B:x, A:y produce counts 1,2,3. Disposing A removes its two registrations and leaves B:x at count 1."
+    example: 'A:x, B:x, A:y produce counts 1,2,3. Disposing A removes its two registrations and leaves B:x at count 1.',
   },
-  "room-leases": {
-    "plan": [
-      "State the ownership boundary.",
-      "Trace duplicate and absent operations."
+  'room-leases': {
+    plan: ['State the ownership boundary.', 'Trace duplicate and absent operations.'],
+    explanation: [
+      'Each room owns an independent membership set; only a genuine positive-to-zero transition reports it as emptied.',
+      'A single total user count cannot identify which room becomes empty. Nested sets give expected O(n) processing and O(k) live membership state plus output.',
     ],
-    "explanation": [
-      "Each room owns an independent membership set; only a genuine positive-to-zero transition reports it as emptied.",
-      "A single total user count cannot identify which room becomes empty. Nested sets give expected O(n) processing and O(k) live membership state plus output."
-    ],
-    "example": "A and B occupy x, A occupies y. A leaves x but B remains; A leaves y and emits y; B leaves x and emits x."
-  }
+    example: 'A and B occupy x, A occupies y. A leaves x but B remains; A leaves y and emits y; B leaves x and emits x.',
+  },
 }

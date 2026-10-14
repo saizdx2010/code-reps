@@ -33,8 +33,14 @@ export function downloadBackup({ attempt, repId, learnerStart, history, learning
     }
     if (attempt.code !== undefined) drafts[repId] = { ...attempt, code: attempt.code }
     const backup: Backup = {
-      format: 'code-reps-backup', version: 1, exportedAt: new Date().toISOString(),
-      learnerStart, history, drafts, learning, sessions: sessions.backup(),
+      format: 'code-reps-backup',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      learnerStart,
+      history,
+      drafts,
+      learning,
+      sessions: sessions.backup(),
     }
     // Refuses, rather than writes, a file that import would reject.
     const url = URL.createObjectURL(new Blob([backupFileText(backup)], { type: 'application/json' }))
@@ -56,7 +62,7 @@ export function downloadBackup({ attempt, repId, learnerStart, history, learning
 export async function restoreBackup(file: File, { learnerStart, history, learning, sessions }: ImportTargets) {
   await sessions.flush()
   sessions.verifyRevision()
-  const backup = parseBackup(await file.text(), new Set(reps.map((item) => item.id)))
+  const backup = parseBackup(await file.text(), new Set(reps.map(item => item.id)))
   const merged = mergeHistory(history, backup.history).sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt))
   const updates: [string, string][] = [[historyKey, JSON.stringify(merged)]]
   for (const [id, draft] of Object.entries(backup.drafts)) {
@@ -67,11 +73,20 @@ export async function restoreBackup(file: File, { learnerStart, history, learnin
   if (backup.learning) {
     const current = learning
     const incoming = backup.learning
-    updates.push(['code-reps:fluency:v1', JSON.stringify(parseFluency({ ...incoming, ...current,
-      answers: { ...incoming.answers, ...current.answers }, reviews: { ...incoming.reviews, ...current.reviews },
-      notes: mergeHistory(current.notes, incoming.notes), rounds: mergeHistory(current.rounds, incoming.rounds),
-      bookmarks: [...new Set([...current.bookmarks, ...incoming.bookmarks])],
-    }))])
+    updates.push([
+      'code-reps:fluency:v1',
+      JSON.stringify(
+        parseFluency({
+          ...incoming,
+          ...current,
+          answers: { ...incoming.answers, ...current.answers },
+          reviews: { ...incoming.reviews, ...current.reviews },
+          notes: mergeHistory(current.notes, incoming.notes),
+          rounds: mergeHistory(current.rounds, incoming.rounds),
+          bookmarks: [...new Set([...current.bookmarks, ...incoming.bookmarks])],
+        }),
+      ),
+    ])
   }
   sessions.verifyRevision()
   if (backup.sessions || sessions.state.records.length) {

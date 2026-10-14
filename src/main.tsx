@@ -10,7 +10,11 @@ import { initializeStorage } from './local-store.ts'
 
 async function start() {
   await initializeStorage()
-  createRoot(document.getElementById('root')!).render(<StrictMode><ProfileApp /></StrictMode>)
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <ProfileApp />
+    </StrictMode>,
+  )
 }
 
 void start()

@@ -24,10 +24,18 @@ for (const id of puzzlePractice) {
     code[1] += '; snapshots.push([...lines])'
     code[2] += '; snapshots.push(trays.map(tray => JSON.stringify(tray)))'
     code[6] += '; totals.push(result)'
-    const execute = new Function(`${compileSolution(code.join('\n'), rep.functionName)}\nconst snapshots = [], totals = []; const result = ${rep.functionName}(arguments[0]); return { snapshots, totals, result }`)
+    const execute = new Function(
+      `${compileSolution(code.join('\n'), rep.functionName)}\nconst snapshots = [], totals = []; const result = ${rep.functionName}(arguments[0]); return { snapshots, totals, result }`,
+    )
     const actual = execute(input)
-    assert.deepEqual(trace.steps.slice(1, 3).map(step => step.structure.values), actual.snapshots)
-    assert.deepEqual(trace.steps.slice(3, 5).map(step => step.vars.result), actual.totals)
+    assert.deepEqual(
+      trace.steps.slice(1, 3).map(step => step.structure.values),
+      actual.snapshots,
+    )
+    assert.deepEqual(
+      trace.steps.slice(3, 5).map(step => step.vars.result),
+      actual.totals,
+    )
     assert.equal(trace.steps.at(-1).vars.result, actual.result)
     assert.ok(runRep(trace.code.join('\n'), id).every(check => check.passed))
   })
@@ -35,12 +43,22 @@ for (const id of puzzlePractice) {
 
 test('greenhouse checks reject lossy and wrong-rule solutions', () => {
   const wrong = [
-    ['puzzle-parse-part-one', 'function strongestTotal(input) { return input.split("\\n").reduce((sum,line) => sum + Math.max(0,...(line.match(/-?\\d+/g)||[]).map(Number)),0) }'],
+    [
+      'puzzle-parse-part-one',
+      'function strongestTotal(input) { return input.split("\\n").reduce((sum,line) => sum + Math.max(0,...(line.match(/-?\\d+/g)||[]).map(Number)),0) }',
+    ],
     ['puzzle-adapt-part-two', dsaSolutions['puzzle-adapt-part-two'].replace('>= peak - 2', '> peak - 2')],
     ['puzzle-adapt-part-two', dsaSolutions['puzzle-adapt-part-two'].replace('tray.reduce((count', '[...new Set(tray)].reduce((count')],
-    ['puzzle-adapt-part-two', 'function nearPeakCount(input) { const values=(input.match(/-?\\d+/g)||[]).map(Number); return values.filter(value=>value>=Math.max(...values)-2).length }'],
+    [
+      'puzzle-adapt-part-two',
+      'function nearPeakCount(input) { const values=(input.match(/-?\\d+/g)||[]).map(Number); return values.filter(value=>value>=Math.max(...values)-2).length }',
+    ],
   ]
-  for (const [id, source] of wrong) assert.ok(runRep(source, id).some(check => !check.passed), source)
+  for (const [id, source] of wrong)
+    assert.ok(
+      runRep(source, id).some(check => !check.passed),
+      source,
+    )
 })
 
 test('related puzzle parts never masquerade as independent or retained evidence', () => {

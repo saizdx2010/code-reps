@@ -11,13 +11,23 @@ export function useGlossary(): GlossaryState & { retry: () => void } {
   const [settled, setSettled] = useState<Settled | null>(null)
   useEffect(() => {
     let current = true
-    loadAllReps().then(reps => {
-      const terms = [...new Map(reps.flatMap(rep => rep.vocabulary.map(entry => [entry.term.toLowerCase(), entry] as const))).values()].sort((a, b) => a.term.localeCompare(b.term))
-      if (current) setSettled({ attempt, terms })
-    }, () => { if (current) setSettled({ attempt }) })
-    return () => { current = false }
+    loadAllReps().then(
+      reps => {
+        const terms = [
+          ...new Map(reps.flatMap(rep => rep.vocabulary.map(entry => [entry.term.toLowerCase(), entry] as const))).values(),
+        ].sort((a, b) => a.term.localeCompare(b.term))
+        if (current) setSettled({ attempt, terms })
+      },
+      () => {
+        if (current) setSettled({ attempt })
+      },
+    )
+    return () => {
+      current = false
+    }
   }, [attempt])
   const retry = useCallback(() => setAttempt(value => value + 1), [])
-  const state: GlossaryState = settled?.attempt !== attempt ? { status: 'loading' } : settled.terms ? { status: 'ready', terms: settled.terms } : { status: 'error' }
+  const state: GlossaryState =
+    settled?.attempt !== attempt ? { status: 'loading' } : settled.terms ? { status: 'ready', terms: settled.terms } : { status: 'error' }
   return { ...state, retry }
 }

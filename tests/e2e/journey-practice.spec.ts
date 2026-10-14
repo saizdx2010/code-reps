@@ -5,7 +5,9 @@ for (const width of [1440, 390]) {
   test(`optional journey practice opens without hints at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/#/progress')
-    const journey = page.locator('.progress-journey').filter({ has: page.getByRole('heading', { name: 'Work through arrays', exact: true }) })
+    const journey = page
+      .locator('.progress-journey')
+      .filter({ has: page.getByRole('heading', { name: 'Work through arrays', exact: true }) })
     await journey.locator('summary').focus()
     await page.keyboard.press('Enter')
     await expect(journey.getByText('4. Later recall', { exact: true })).toBeVisible()
