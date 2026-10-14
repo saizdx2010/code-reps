@@ -22,7 +22,7 @@ To try the production-like local app with SQLite, run `yarn build` then `yarn se
 
 | Command | What it catches | When to run |
 | --- | --- | --- |
-| `yarn lint` | Oxlint findings across the project, using the rules in `.oxlintrc.json` | Every source change |
+| `yarn lint` | Oxlint findings across the project, using the rules in `.oxlintrc.json`, then an oxfmt format check (`.oxfmtrc.json`; `yarn format` fixes it) | Every source change |
 | `yarn test` | Node tests: the catalog index is current, each rep has a level, paths keep their reps, references pass their checks, storage and backup contracts hold, and more | Every source change |
 | `yarn build` | TypeScript errors (`tsc -b`), Vite build failures, and JavaScript bundle budgets (`scripts/check-bundle.mjs`) | Every source change |
 | `yarn content:index` | Not a gate: it regenerates `src/catalog-index.ts` after you change a rep or lesson | After any rep or lesson change |

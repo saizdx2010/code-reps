@@ -27,7 +27,8 @@ Use **Node.js 24 or later** and **Yarn Classic 1.22.22**, as declared in `packag
 | `yarn build` | Typecheck with `tsc -b`, build with Vite, and enforce the JavaScript bundle-size budgets (`scripts/check-bundle.mjs`) |
 | `yarn serve` | Serve the existing build through the local SQLite service |
 | `yarn preview` | Preview the Vite build; this is not the SQLite service |
-| `yarn lint` | Run Oxlint |
+| `yarn lint` | Run Oxlint and check formatting with oxfmt (`.oxfmtrc.json`) |
+| `yarn format` | Apply the oxfmt formatting that `yarn lint` checks |
 | `yarn test` | Run `tests/*.test.mjs` with Node's test runner and TypeScript stripping |
 | `yarn playwright install chromium` | Install the browser required by the end-to-end suite |
 | `yarn test:e2e` | Run real-browser practice flows in Chromium |

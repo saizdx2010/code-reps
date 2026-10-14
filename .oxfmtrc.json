@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 140,
+  "semi": false,
+  "singleQuote": true,
+  "arrowParens": "avoid",
+  "trailingComma": "all",
+  "ignorePatterns": [
+    "src/catalog-index.ts",
+    "src/rep-chunks.ts",
+    "**/*.md",
+    "**/*.json",
+    "index.html",
+    "docs/**",
+    "public/**"
+  ]
+}
