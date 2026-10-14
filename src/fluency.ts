@@ -167,6 +167,7 @@ export const recallVariants: Record<string, string[]> = {
   'binary-search': ['smallest-daily-capacity', 'first-insertion-point', 'algo-binary-search', 'first-affordable-edition'],
   recursion: ['count-object-leaves', 'flatten-nested-numbers', 'algo-recursive-sum', 'nested-parcel-load'],
   trees: ['tree-value-path', 'tree-depth-sum', 'algo-tree-depth', 'terminal-folder-paths'],
+  'binary-search-trees': ['bst-check-order', 'bst-latest-at-or-before', 'bst-search-path'],
   graphs: ['graph-connected-groups', 'graph-shortest-hops', 'algo-graph-reachable', 'broadcast-unreached-stations'],
   'state-modeling': ['catalog-request-summary', 'saved-record-status', 'task-state-label'],
   validation: ['validate-import-batch', 'parse-delivery-window', 'validate-stock-adjustment'],

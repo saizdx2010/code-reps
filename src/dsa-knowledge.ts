@@ -352,6 +352,77 @@ export const dsaSkills: Skill[] = [
 // Appended together to keep parallel lesson additions independent.
 dsaSkills.push(
   {
+    id: 'linked-lists',
+    title: 'Linked lists: walking, building, and copying nodes',
+    summary: 'Follow next links with a cursor and build a fresh list front to back without changing the caller’s nodes.',
+    prerequisites: ['collection-operations', 'values'],
+    objectives: [
+      'Read a list of {value, next} nodes and walk it with a cursor.',
+      'Build a new list in order using a tail reference and a placeholder node.',
+      'Distinguish copying nodes from reusing or relinking the caller’s nodes.',
+    ],
+    sections: [
+      {
+        title: 'A list is a chain of references',
+        body: 'Each node holds a value and next, a reference to the following node. The head is the first node, and next is null on the last node. An empty list is just null. Unlike an array, a list has no positions to index: reaching the fifth node means following four links from the head. Values may repeat, and 0 is an ordinary value.',
+      },
+      {
+        title: 'Walk with a cursor',
+        body: 'Keep the head where it is and move a separate cursor instead: for (let current = head; current !== null; current = current.next). The loop visits each node once and stops after the last one. Test current !== null rather than current.value: a node holding 0 is still a node.',
+      },
+      {
+        title: 'Build in order with a tail',
+        body: 'Putting each new node in front of the result built so far reverses the order, which is exactly what reversal needs. To keep the original order, attach each new node after the last one instead, and keep a tail reference so you do not walk the copy again each time. A placeholder node before the real head means the first append is not a special case; return placeholder.next at the end, which is null when nothing was added.',
+      },
+      {
+        title: 'Copy rather than change',
+        body: 'These reps return fresh nodes. Assigning to current.next on an input node changes the caller’s list, and returning an input node makes the two lists share every node after it, so a later change to one appears in the other. Checks compare values and detect visible input changes, but they cannot see whether output nodes are fresh; review that yourself.',
+      },
+      {
+        title: 'Insert and remove',
+        body: 'Inserting into a sorted list means finding the first node whose value is greater and placing the new value before it, or at the end if there is none. Removing means skipping matching nodes while copying the rest. Both walk the list once, O(n) time, and a copy needs O(n) storage. In a list you are allowed to change, relinking one node is O(1) once you have found the position, but finding it is still O(n).',
+      },
+    ],
+    example:
+      '// Copy 1 -> 4 -> 6, inserting 5 in order.\nconst placeholder = { value: 0, next: null }\nlet tail = placeholder\n// current 1: append 1          copy: 1\n// current 4: append 4          copy: 1 -> 4\n// current 6: 5 < 6, append 5  copy: 1 -> 4 -> 5\n//            then append 6     copy: 1 -> 4 -> 5 -> 6\n// return placeholder.next; the input still reads 1 -> 4 -> 6.',
+    walkthrough: [
+      'The placeholder starts the copy, and tail points at it, so every value is appended the same way.',
+      'At 1 and 4, the new value 5 is not smaller, so each value is copied into a new node attached at tail.',
+      'At 6, 5 is smaller, so 5 is appended first and then 6. A flag makes sure 5 is not appended again.',
+      'If no value had been greater, 5 would be appended after the loop. For an empty list the loop never runs, so the result is a single node.',
+      'The result starts at placeholder.next. No input node was relinked or returned.',
+    ],
+    mistakes: [
+      'Moving head itself while walking, and losing the start of the list.',
+      'Stopping at a node whose value is 0 by testing current.value instead of current !== null.',
+      'Returning input nodes, so the result shares nodes with the caller’s list.',
+      'Forgetting the empty list or a value that belongs after every node.',
+      'Prepending while copying and getting the values in reverse.',
+    ],
+    questions: [
+      {
+        id: 'linked-lists-zero-value-v1',
+        prompt: 'What is count after this loop?',
+        code: 'const head = { value: 0, next: { value: 5, next: null } }\nlet count = 0\nfor (let current = head; current && current.value; current = current.next) count++',
+        options: ['0', '1', '2'],
+        answer: 0,
+        explanation:
+          'The first node holds 0, which is falsy, so the condition fails before any node is counted. Testing current !== null visits both nodes and counts 2.',
+      },
+      {
+        id: 'linked-lists-shared-tail-v1',
+        prompt: 'What is head.next.value at the end?',
+        code: 'const head = { value: 1, next: { value: 2, next: null } }\nconst copy = { value: head.value, next: head.next }\ncopy.next.value = 9',
+        options: ['2', '9', 'undefined'],
+        answer: 1,
+        explanation:
+          'Only the first node was copied. copy.next and head.next are the same object, so changing it through copy also changes the original list. A full copy creates a new node for every value.',
+      },
+    ],
+    repIds: ['algo-linked-list-reverse', 'list-insert-sorted', 'list-remove-value'],
+    related: ['collection-operations', 'recursion-basics', 'complexity'],
+  },
+  {
     id: 'trees',
     title: 'Trees: routes, levels, and child results',
     summary: 'Read a branching structure and combine smaller results without changing its nodes.',
@@ -419,6 +490,77 @@ dsaSkills.push(
     ],
     repIds: ['algo-tree-depth', 'tree-depth-sum', 'tree-value-depth', 'tree-leaf-count', 'tree-value-path'],
     related: ['graphs', 'stacks', 'queues', 'complexity'],
+  },
+  {
+    id: 'binary-search-trees',
+    title: 'Binary search trees: ordering that guides a search',
+    summary: 'Use the left-smaller, right-larger rule to search one path and to reason about whole subtrees.',
+    prerequisites: ['trees', 'array-techniques'],
+    objectives: [
+      'Read {value, left, right} nodes and state the binary search tree ordering rule.',
+      'Search by following one path and explain why each comparison discards a subtree.',
+      'Explain why the rule constrains entire subtrees, not only a node’s children, and how tree shape sets the cost.',
+    ],
+    sections: [
+      {
+        title: 'Two children and an ordering rule',
+        body: 'A binary tree node has a value and at most two children, left and right, with null for a missing child. In a binary search tree, every value in a node’s left subtree is smaller than the node, and every value in its right subtree is larger. In these reps values are unique, so there are no ties. The rule applies to whole subtrees: a value deep in the left subtree of the root must still be smaller than the root.',
+      },
+      {
+        title: 'Search follows one path',
+        body: 'To find a target, compare it with the current node. Equal means found. Smaller means the target can only be in the left subtree, so move left; larger means move right. Each step ignores an entire subtree. Reaching a missing child means the target is absent: if it were in the tree, it would have to be exactly there. This is the tree form of binary search on a sorted array.',
+      },
+      {
+        title: 'Shape decides the cost',
+        body: 'A search visits at most one node per level, so it takes O(h) time for a tree of height h. A balanced tree with n nodes has height about log₂ n, but values inserted in sorted order produce a chain where h equals n. The ordering rule alone does not promise balance; self-balancing trees add rules to keep h small.',
+      },
+      {
+        title: 'In-order reads values in sorted order',
+        body: 'Visiting the left subtree, then the node, then the right subtree is an in-order traversal. In a binary search tree it produces the values in increasing order. That visits all n nodes, so it costs O(n): use it when you need every value, and a single search path when you need one answer.',
+      },
+    ],
+    example:
+      '// Searching for 5:\n//          8          5 < 8: go left\n//        /   \\\n//       3     10      5 > 3: go right\n//      / \\      \\\n//     1   6      14   5 < 6: go left\n//        / \\    /\n//       4   7  13     5 > 4: right child missing\n// Path [8, 3, 6, 4]; 5 is absent.\n// In-order: 1, 3, 4, 6, 7, 8, 10, 13, 14',
+    walkthrough: [
+      '5 is smaller than 8, so everything on the right of 8, including 10, 14, and 13, is ruled out.',
+      '5 is larger than 3, so node 1 is ruled out and the search moves to 6.',
+      '5 is smaller than 6, so the search moves to 4, and 7 is never compared.',
+      '5 is larger than 4, but 4 has no right child. The search ends there: 5 is not in the tree.',
+      'Four of nine nodes were compared. A chain of nine nodes could need all nine.',
+    ],
+    mistakes: [
+      'Checking each node only against its direct children instead of every ancestor.',
+      'Searching both subtrees, which loses the benefit of the ordering.',
+      'Assuming a binary search tree is balanced and every search is O(log n).',
+      'Treating a node with value 0 as a missing node.',
+      'Moving past an equal value instead of stopping.',
+    ],
+    questions: [
+      {
+        id: 'bst-search-visits-v1',
+        prompt: 'Searching this binary search tree for 7, which values are compared, in order?',
+        code: '//        8\n//      /   \\\n//     3     10\n//    / \\\n//   1   6\n//      / \\\n//     4   7',
+        options: ['8, 3, 6, 7', '8, 3, 1, 6, 4, 7', '8, 10, 3, 6, 7'],
+        answer: 0,
+        explanation:
+          'Each comparison picks one side: 7 < 8 goes left, 7 > 3 goes right, 7 > 6 goes right to 7. Visiting 1 and 4 is a full traversal, and 10 is never needed because 7 is smaller than 8.',
+      },
+      {
+        id: 'bst-whole-subtree-v1',
+        prompt: 'Is this a binary search tree?',
+        code: '//      5\n//     / \\\n//    3   8\n//     \\\n//      6',
+        options: [
+          'Yes: every parent and child pair is in order',
+          'No: 6 is in the left subtree of 5 but larger than 5',
+          'No: 8 should be the left child of 5',
+        ],
+        answer: 1,
+        explanation:
+          '6 > 3 is correct for its parent, but 6 is also in the left subtree of 5, where every value must be smaller than 5. The rule covers whole subtrees, not only direct children.',
+      },
+    ],
+    repIds: ['bst-search-path', 'bst-latest-at-or-before', 'bst-check-order'],
+    related: ['trees', 'array-techniques', 'complexity'],
   },
   {
     id: 'graphs',

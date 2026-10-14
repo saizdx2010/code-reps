@@ -14,6 +14,7 @@ import { connectedFeatureReps } from './connected-feature-reps.ts'
 import { coreReps } from './core-reps.ts'
 import { domReps } from './dom-reps.ts'
 import { dsaAdvancedReps } from './dsa-advanced-reps.ts'
+import { dsaLinkedReps } from './dsa-linked-reps.ts'
 import { dsaGridReps } from './dsa-grid-reps.ts'
 import { dsaApplicationReps } from './dsa-application-reps.ts'
 import { dsaBasicsReps } from './dsa-basics-reps.ts'
@@ -46,6 +47,7 @@ export const repSources: { name: string; reps: Rep[]; lessons?: readonly RepLess
   { name: 'dsa-puzzle-reps', reps: dsaPuzzleReps },
   { name: 'dsa-harder-reps', reps: dsaHarderReps },
   { name: 'dsa-advanced-reps', reps: dsaAdvancedReps },
+  { name: 'dsa-linked-reps', reps: dsaLinkedReps },
   { name: 'ai-era-reps', reps: aiEraReps, lessons: coreLessons },
   { name: 'core-reps', reps: coreReps },
   { name: 'journey-reps', reps: journeyReps },

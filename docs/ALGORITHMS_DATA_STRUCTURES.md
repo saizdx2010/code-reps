@@ -10,8 +10,8 @@ The combined path teaches structures and the techniques that use them together. 
 4. **Apply maps and sets:** membership, counting, tie rules, and lookup recall.
 5. **Use stacks and queues:** read the operations lesson, practice LIFO and FIFO, then apply stacks to nesting and cancellation. Queue introductions use a small array-backed implementation and explain the cost of `shift`.
 6. **Learn algorithm techniques:** read the techniques lesson, then practice sorted two-pointer pair sums, fixed-size window sums, and binary search.
-7. **Sort, recurse, and explore structures:** sorting and merging, recursion, trees and graphs, and grids. Each has a journey; sorting, recursion, trees, and graphs also have lessons.
-8. **Ranges, linked structures, and choices:** prefix sums, merged intervals, linked-list reversal, a min-heap, subsets, and introductory dynamic programming, followed by harder patterns and an interview round.
+7. **Sort, recurse, and explore structures:** sorting and merging, recursion, trees and graphs, binary search trees, and grids. Each has a journey; sorting, recursion, trees, binary search trees, and graphs also have lessons.
+8. **Ranges, linked structures, and choices:** prefix sums, merged intervals, linked-list reversal, insertion, and removal, a min-heap, subsets, and introductory dynamic programming, followed by harder patterns and an interview round. Linked lists have a lesson.
 
 `src/path.ts` owns the exact stage order and rep lists.
 
@@ -21,10 +21,9 @@ Operations reps deliberately make the API explicit. Their checks verify outputs 
 
 ## Next expansion
 
-Linked lists, heaps, backtracking, and dynamic programming now have playable reps (`src/dsa-advanced-reps.ts`), but each is a single application without a journey. Keep one combined path while extending them in this order:
+Linked lists, heaps, backtracking, and dynamic programming have playable reps (`src/dsa-advanced-reps.ts`), but each is an application without a journey. Linked-list insertion and removal (`list-insert-sorted`, `list-remove-value`) follow reversal, after the `linked-lists` lesson. Binary search trees have a lesson and a journey in `src/dsa-linked-reps.ts`: guided `bst-search-path`, independent `bst-latest-at-or-before`, and recall `bst-check-order`, which needs whole-subtree limits rather than the search itself. Keep one combined path while extending them in this order:
 
-- Linked-list insertion and removal after the existing reversal rep.
-- Binary search trees.
+- Binary search tree insertion that copies the changed path, after the search journey. This is the "implement the structure" step.
 - Independent and delayed-recall applications for the existing linked-list, heap, backtracking, and dynamic-programming reps, added only when practice shows a specific gap.
 
 For each new structure, introduce its representation and operations before a guided application. Follow with a problem without approach clues and a distinct delayed-recall application. Implementing the structure from scratch should follow using it. Future stages are not shown as playable placeholders.
