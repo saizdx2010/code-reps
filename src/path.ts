@@ -68,6 +68,13 @@ export const firstPath = {
       repIds: ['repair-visible-count', 'read-unique-names', 'transform-active-labels', 'verify-generated-code'],
     },
     {
+      title: 'Read an error message',
+      description:
+        'Use an error and its stack trace to find where code failed, which caller chose the bad value, and what a missing result means.',
+      recap: 'You can now read a stack trace from the top frame down and repair the code that caused the error.',
+      repIds: ['stack-trace-missing-field', 'stack-trace-wrong-caller', 'stack-trace-null-lookup'],
+    },
+    {
       title: 'TypeScript boundaries',
       description: 'Validate unknown data and preserve types in reusable APIs.',
       recap: 'You can now practice typed boundaries, reviewing compiler guarantees separately from behavior.',

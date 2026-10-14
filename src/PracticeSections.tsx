@@ -180,6 +180,14 @@ export function BriefSection({
               <InlineCode text={full.context} />
             </p>
           )}
+          {full.errorReport && (
+            <figure className="error-report">
+              <figcaption>Error report</figcaption>
+              <pre tabIndex={0}>
+                <code>{full.errorReport}</code>
+              </pre>
+            </figure>
+          )}
           {full.brief ? (
             <div className="brief-structure">
               <p>

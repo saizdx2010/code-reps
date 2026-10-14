@@ -560,6 +560,10 @@ export const skills: Skill[] = [
         body: 'Record the current value after each step rather than guessing from names. A correct-looking name can hide a reversed condition. For pipelines, trace normalization, filtering, lookup, and output independently. Predict before running the code.',
       },
       {
+        title: 'Read a stack trace from the top',
+        body: 'An error message names what went wrong; the stack trace lists the calls that were running, newest first. The top frame is where the error was thrown, and each frame below it is the caller that led there. The bad value may have been chosen by a caller lower down, and a function that already returned, such as a lookup that gave back null, does not appear at all.',
+      },
+      {
         title: 'Refactoring preserves the contract',
         body: 'A refactor improves structure without changing required behavior. First run existing checks, then change a small part and rerun. Review naming and duplication separately: passing tests does not prove readability or complete behavioral equivalence.',
       },
@@ -602,6 +606,9 @@ export const skills: Skill[] = [
       'read-unique-names',
       'refactor-stock-summary',
       'debug-page-offset',
+      'stack-trace-missing-field',
+      'stack-trace-wrong-caller',
+      'stack-trace-null-lookup',
     ],
     related: ['testing', 'complexity'],
   },

@@ -30,6 +30,7 @@ import { appSolutions } from './fixtures/app-solutions.mjs'
 import { domSolutions } from './fixtures/dom-solutions.mjs'
 import { testingJourneySolutions } from './fixtures/testing-journey-solutions.mjs'
 import { maintenanceSolutions } from './fixtures/maintenance-journey-solutions.mjs'
+import { stackTraceSolutions } from './fixtures/stack-trace-solutions.mjs'
 import { assertMutantsFail } from './helpers/checks.mjs'
 
 // These independent implementations check authored expected results, not learner prose.
@@ -49,6 +50,7 @@ const solutions = {
   ...fluencySolutions,
   ...testingJourneySolutions,
   ...maintenanceSolutions,
+  ...stackTraceSolutions,
   ...coreSolutions,
 }
 

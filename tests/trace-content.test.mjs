@@ -77,6 +77,7 @@ test('traces cover collection operations, stacks, sets, recursion, trees, tables
     'shortest-run-reaching-target',
     'simplify-file-path',
     'smallest-daily-capacity',
+    'stack-trace-missing-field',
     'sum-positive-numbers',
     'terminal-folder-paths',
     'top-k-frequent-tags',

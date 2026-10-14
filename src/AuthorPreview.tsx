@@ -119,6 +119,11 @@ function RepPreview({ rep, problems }: { rep: Rep; problems: string[] }) {
             <InlineCode text={rep.context} />
           </p>
         )}
+        {rep.errorReport && (
+          <pre>
+            <code>{rep.errorReport}</code>
+          </pre>
+        )}
         <p>
           <InlineCode text={rep.prompt} />
         </p>

@@ -22,6 +22,7 @@ export const repSourceLoaders: Record<RepSourceName, RepSourceLoader> = {
   'journey-reps': source(() => import('./journey-reps.ts'), module => ({ reps: module.journeyReps })),
   'transfer-reps': source(() => import('./transfer-reps.ts'), module => ({ reps: module.transferReps })),
   'rich-reps': source(() => import('./rich-reps.ts'), module => ({ reps: module.richReps })),
+  'stack-trace-reps': source(() => import('./stack-trace-reps.ts'), module => ({ reps: module.stackTraceReps })),
   'fluency-reps': source(() => import('./fluency-reps.ts'), module => ({ reps: module.fluencyReps })),
   'capstone-reps': source(() => import('./capstone-reps.ts'), module => ({ reps: module.capstoneReps })),
   'validation-reps': source(() => import('./validation-reps.ts'), module => ({ reps: module.validationReps })),

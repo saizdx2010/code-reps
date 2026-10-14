@@ -33,13 +33,20 @@ function typeErrors(name, text) {
 const singleFile = reps.filter(rep => !decodeFiles(rep.starter) && !rep.reactPreview)
 const missingReturn = new Set([2355, 2366])
 
+// Starter errors that are part of the exercise: the editor flags the same null the error report shows.
+const intendedStarterErrors = new Set(["stack-trace-null-lookup: Object is possibly 'null'."])
+
 test('single-file starters have no type errors except the body still to be written', () => {
   const problems = singleFile.flatMap(rep =>
     typeErrors(`/${rep.id}/solution.ts`, rep.starter)
       .filter(error => !missingReturn.has(error.code))
       .map(error => `${rep.id}: ${error.message}`),
   )
-  assert.deepEqual(problems, [])
+  assert.deepEqual(
+    problems.filter(problem => !intendedStarterErrors.has(problem)),
+    [],
+  )
+  for (const intended of intendedStarterErrors) assert.ok(problems.includes(intended), `${intended} is no longer reported`)
 })
 
 test('traced reference code type-checks with its starter declarations', () => {

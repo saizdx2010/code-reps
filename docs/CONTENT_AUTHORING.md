@@ -15,6 +15,8 @@ This is an internal authoring guide. Source rights are reserved for now; public 
    If it is guided, independent, or recall practice, add it to `journeys` in `src/learning.ts`. A recall rep must use a distinct problem; a hinted or early solve cannot count as retained.
 6. Run `yarn lint`, `yarn test`, and `yarn build`. Try the rep in the local app and read the prompt as someone new to the terminology.
 
+A debugging rep may add `errorReport`: the error message and stack trace the starter throws for an input named in its `context`, shown as preformatted text in the brief. Keep it truthful: `tests/stack-traces.test.mjs` reruns each starter on the reported input and compares the message, named frames, and cited lines.
+
 Function checks run authored TypeScript in a browser worker. The frontend implementation format instead runs DOM interaction checks in a sandboxed frame. See [Richer exercises](./RICH_EXERCISES.md) for the frame contract and verification limits. Do not import exercise packs from untrusted sources or treat this worker as a secure sandbox. Content review should include accessibility, clarity for English learners, and whether the checks match the prompt.
 
 Every rep should have an authored self-review guide in the matching `src/review-*.ts` module and a reference solution covered by `tests/content.test.mjs`, `tests/ai-era.test.mjs`, or `tests/rich-reps.test.mjs`. Cover each stated boundary, precedence rule, and normalization rule. When the contract prohibits changing inputs, set `preserveInput: true`; the runner compares supplied values after each check and reports mutation separately from incorrect output. This detects changes visible after the function returns, not temporary mutations that are undone.

@@ -1953,6 +1953,29 @@ footer {
   font-size: 14px;
 }
 /* Editor type errors beside the check results: advisory, labelled, and never a check. */
+/* An authored error message and stack trace in the brief. It scrolls sideways rather than wrapping frames. */
+.error-report {
+  margin: 12px 0;
+}
+.error-report figcaption {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.error-report pre {
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  overflow-x: auto;
+  border-left: 4px solid var(--error-border);
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.error-report pre:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 .type-check {
   margin-top: 14px;
   padding-top: 12px;

@@ -21,6 +21,7 @@ import { practicalRepDepth, practicalGuides } from './review-practical.ts'
 import { reactDepth, reactGuides } from './review-react.ts'
 import { richDepth, richGuides } from './review-rich.ts'
 import { sqliteDepth, sqliteGuides } from './review-sqlite.ts'
+import { stackTraceDepth, stackTraceGuides } from './review-stack-traces.ts'
 import { testingJourneyDepth, testingJourneyGuides } from './review-testing-journey.ts'
 import { typescriptDepth, typescriptGuides } from './review-typescript-depth.ts'
 import { validationDepth, validationGuides } from './review-validation.ts'
@@ -39,6 +40,7 @@ export const reviews: Review[] = [
   { depth: dsaDepth, guides: dsaGuides },
   { depth: dsaAdvancedDepth, guides: dsaAdvancedGuides },
   { depth: dsaLinkedDepth, guides: dsaLinkedGuides },
+  { depth: stackTraceDepth, guides: stackTraceGuides },
   { depth: validationDepth, guides: validationGuides },
   { depth: appDepth, guides: appGuides },
   { depth: domDepth, guides: domGuides },
