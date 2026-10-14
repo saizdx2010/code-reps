@@ -471,12 +471,13 @@ export const foundationsGuides: Record<string, ReflectionGuide> = {
       'Explain what happens with an empty name.',
     ],
     example:
-      'The greeting stays the same, so I use const. I store the combined greeting and name in message using let. The checks verify the output, while I review the declarations myself.',
+      'The greeting stays the same, so I write const greeting = "Hello, " with the trailing space. I store the combined text in let message = greeting + name and return message. The checks verify the output, while I review the declarations myself.',
   },
   'basic-types': {
     plan: ['Identify the string, number, and boolean inputs.', 'Match the punctuation and spacing in the example.'],
     explanation: ['Explain how each value becomes part of the sentence.', 'Show that false and zero are preserved.'],
-    example: 'I combine all three inputs into one template string. False and zero are values to display, not reasons to skip a field.',
+    example:
+      'I return `${name} is ${age}. Active: ${active}`, one template string with all three inputs. False and zero are values to display, not reasons to skip a field.',
   },
   'create-objects': {
     plan: ['Create a person with both supplied properties.', 'Read the properties to build the sentence.'],
@@ -485,7 +486,7 @@ export const foundationsGuides: Record<string, ReflectionGuide> = {
       'Explain the difference between a property and a local variable.',
     ],
     example:
-      'I create a Person object from name and age, then read person.name and person.age. The sentence checks do not prove that I used an object or checked its type.',
+      'I create const person: Person = { name, age }, then return `${person.name} is ${person.age} years old`. The sentence checks do not prove that I used an object or checked its type.',
   },
   'make-arrays': {
     plan: ['Handle an empty array before reading its first item.', 'Use the first index.'],

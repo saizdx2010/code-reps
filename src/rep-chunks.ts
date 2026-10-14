@@ -16,6 +16,7 @@ export const repSourceLoaders: Record<RepSourceName, RepSourceLoader> = {
   'dsa-puzzle-reps': source(() => import('./dsa-puzzle-reps.ts'), module => ({ reps: module.dsaPuzzleReps })),
   'dsa-harder-reps': source(() => import('./dsa-harder-reps.ts'), module => ({ reps: module.dsaHarderReps })),
   'dsa-advanced-reps': source(() => import('./dsa-advanced-reps.ts'), module => ({ reps: module.dsaAdvancedReps })),
+  'dsa-linked-reps': source(() => import('./dsa-linked-reps.ts'), module => ({ reps: module.dsaLinkedReps })),
   'ai-era-reps': source(() => import('./ai-era-reps.ts'), module => ({ reps: module.aiEraReps, lessons: module.coreLessons })),
   'core-reps': source(() => import('./core-reps.ts'), module => ({ reps: module.coreReps })),
   'journey-reps': source(() => import('./journey-reps.ts'), module => ({ reps: module.journeyReps })),

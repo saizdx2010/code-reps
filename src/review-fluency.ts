@@ -35,6 +35,25 @@ export const fluencyGuides: Record<string, ReflectionGuide> = {
     explanation: ['Explain how the contract is preserved.', 'State time and storage costs for your chosen implementation.'],
     example: 'I initialize both counters and increment the matching field for each item. O(n) time and O(1) extra space.',
   },
+  'count-record-highs': {
+    plan: ['What does the value you keep mean after each reading?', 'Predict an all-negative input and a tie with the record.'],
+    explanation: [
+      'Explain why the comparison is with the best earlier reading, not the previous one.',
+      'State time and storage costs for your chosen implementation.',
+    ],
+    example:
+      'I keep the highest reading so far, starting from no reading rather than 0. A reading counts only when it is strictly greater, and then it becomes the record. One scan is O(n) time with O(1) extra space.',
+  },
+  'first-pair-to-target': {
+    plan: ['What must you already know when you reach position j?', 'Predict a single value and two equal values that reach the target.'],
+    explanation: [
+      'Explain how your order of lookup and storage prevents a value pairing with itself.',
+      'Explain how your scan guarantees the smallest j, then the smallest i.',
+      'State time and storage costs for your chosen implementation.',
+    ],
+    example:
+      'I scan j from left to right with a Map from value to its earliest position. Before storing values[j], I look up target - values[j]; a hit is the answer with the smallest j, and the stored position is the smallest i. That is O(n) expected time and O(n) storage, compared with O(n²) for checking every pair.',
+  },
   'remaining-actions': {
     plan: ['Trace saved actions and an undo when none remain.', 'Name an empty or boundary input before coding.'],
     explanation: ['Explain how the contract is preserved.', 'State time and storage costs for your chosen implementation.'],
@@ -110,6 +129,142 @@ export const fluencyDepth: Record<string, RepDepth> = {
     alternative: 'Two fixed counters suit a closed set of statuses; a Map is more flexible when categories are dynamic.',
     counterexample: 'Adding keys only when observed omits closed for [open], breaking the promised shape.',
     transfer: 'Add a third allowed status and list the type, initialization, and tests that must change.',
+  },
+  'count-record-highs': {
+    reasoning:
+      'After each reading, the record is the largest value seen so far, and the count is how many times that record was strictly raised. A reading beats every earlier reading exactly when it beats their maximum.',
+    trace:
+      'For [1, 5, 2, 3, 4], 1 and 5 set records. 2, 3, and 4 are each below 5, so the answer is 2 even though 3 and 4 rise from their neighbours.',
+    traceSteps: {
+      code: [
+        'function countRecords(readings: number[]): number {',
+        '  let record = -Infinity',
+        '  let count = 0',
+        '  for (const reading of readings) {',
+        '    if (reading > record) {',
+        '      record = reading',
+        '      count++',
+        '    }',
+        '  }',
+        '  return count',
+        '}',
+      ],
+      input: 'readings = [1, 5, 2, 3, 4]',
+      steps: [
+        {
+          line: 2,
+          vars: { record: '-Infinity', count: 0 },
+          structure: { kind: 'array', values: [1, 5, 2, 3, 4] },
+          note: 'Start below every possible reading, so the first one always sets a record, even a negative one.',
+        },
+        {
+          line: 6,
+          vars: { reading: 1, record: 1, count: 1 },
+          structure: { kind: 'array', values: [1, 5, 2, 3, 4], pointers: { reading: 0 } },
+          note: '1 beats -Infinity: the first record.',
+        },
+        {
+          line: 6,
+          vars: { reading: 5, record: 5, count: 2 },
+          structure: { kind: 'array', values: [1, 5, 2, 3, 4], pointers: { reading: 1 }, dimmed: [0] },
+          note: '5 beats the record 1, so 5 becomes the record.',
+        },
+        {
+          line: 4,
+          vars: { reading: 2, record: 5, count: 2 },
+          structure: { kind: 'array', values: [1, 5, 2, 3, 4], pointers: { reading: 2 }, dimmed: [0, 1] },
+          note: '2 is below 5. Nothing changes.',
+        },
+        {
+          line: 4,
+          vars: { reading: 3, record: 5, count: 2 },
+          structure: { kind: 'array', values: [1, 5, 2, 3, 4], pointers: { reading: 3 }, dimmed: [0, 1, 2] },
+          note: '3 rises from 2, but it does not beat 5. Comparing with the previous reading would count it wrongly.',
+        },
+        {
+          line: 4,
+          vars: { reading: 4, record: 5, count: 2 },
+          structure: { kind: 'array', values: [1, 5, 2, 3, 4], pointers: { reading: 4 }, dimmed: [0, 1, 2, 3] },
+          note: '4 is also below the record 5.',
+        },
+        {
+          line: 9,
+          vars: { result: 2 },
+          structure: { kind: 'array', values: [1, 5, 2, 3, 4], dimmed: [0, 1, 2, 3, 4] },
+          note: 'Two readings set records: 1 and 5.',
+        },
+      ],
+    },
+    alternative:
+      'Comparing each reading with every earlier reading also works but costs O(n²) time. Keeping only the maximum is enough, because beating the maximum means beating everything before it.',
+    counterexample:
+      'Starting the record at 0 returns 0 for [-5, -7]; the first reading must always count. Using >= counts the ties in [2, 2, 2] as three records.',
+    transfer:
+      'Return the positions of the record highs instead of their count, or count record lows as well. Decide what a tie means for each. This changed contract is self-reviewed.',
+  },
+  'first-pair-to-target': {
+    reasoning:
+      'When the scan reaches j, the Map holds every earlier value with its earliest position. If target - values[j] is present, no smaller j had a pair, because the scan would already have returned, and the stored position is the smallest i for this j.',
+    trace:
+      'For [3, 3, 1, 3] and target 4: 3 needs 1 (absent), store 3→0; the second 3 needs 1, keep 3→0; 1 needs 3, found at 0, so return [0, 2].',
+    traceSteps: {
+      code: [
+        'function firstPair(values: number[], target: number): [number, number] | null {',
+        '  const earliest = new Map<number, number>()',
+        '  for (let j = 0; j < values.length; j++) {',
+        '    const i = earliest.get(target - values[j])',
+        '    if (i !== undefined) return [i, j]',
+        '    if (!earliest.has(values[j])) earliest.set(values[j], j)',
+        '  }',
+        '  return null',
+        '}',
+      ],
+      input: 'values = [3, 3, 1, 3], target = 4',
+      steps: [
+        {
+          line: 1,
+          vars: { target: 4 },
+          structure: { kind: 'map', entries: [] },
+          note: 'The Map will hold each value already visited with the first position where it appeared.',
+        },
+        {
+          line: 3,
+          vars: { j: 0, needed: 1, i: null },
+          structure: { kind: 'map', entries: [] },
+          note: 'values[0] is 3, so its partner must be 4 - 3 = 1. Nothing is stored yet, so there is no pair.',
+        },
+        {
+          line: 5,
+          vars: { j: 0 },
+          structure: { kind: 'map', entries: [['3', 0]] },
+          note: 'Store 3 only after the lookup. Storing first would let 2 pair with itself when target is 4.',
+        },
+        {
+          line: 5,
+          vars: { j: 1, needed: 1, i: null },
+          structure: { kind: 'map', entries: [['3', 0]] },
+          note: 'The second 3 also needs 1, which is still absent. 3 is already stored, so position 0 is kept as the earliest.',
+        },
+        {
+          line: 3,
+          vars: { j: 2, needed: 3, i: 0 },
+          structure: { kind: 'map', entries: [['3', 0]] },
+          note: 'values[2] is 1 and needs 3. The Map gives position 0, not 1, because it kept the earliest 3.',
+        },
+        {
+          line: 4,
+          vars: { result: '[0,2]' },
+          structure: { kind: 'map', entries: [['3', 0]] },
+          note: 'Return [0, 2]. No smaller j had a pair, or the scan would have returned already. The last 3 is never visited.',
+        },
+      ],
+    },
+    alternative:
+      'Checking every pair with two nested loops, j outer and i inner, is easy to verify and uses O(1) extra space but O(n²) time. Sorting loses the original positions, and a two-pointer scan does not choose the smallest j.',
+    counterexample:
+      'Storing values[j] before the lookup pairs 3 with itself in [3] when target is 6. Overwriting the stored position returns [1, 2] instead of [0, 2] for [3, 3, 1, 3].',
+    transfer:
+      'Return every pair with the smallest j, or count all pairs instead. Decide what each needs to store. This changed contract is self-reviewed.',
   },
   'remaining-actions': {
     reasoning: 'The stack contains the surviving actions after processing the visited instructions.',
@@ -194,6 +349,56 @@ export const fluencyDepth: Record<string, RepDepth> = {
     transfer: 'Add a completed count without storing another independently mutable list.',
   },
   'debug-page-offset': {
+    traceSteps: {
+      code: [
+        'function pageWindow(ids: string[], page: number, size: number): string[] {',
+        '  // Bug: start = page * size; slice(start, size) treats size as an end',
+        '  const start = (page - 1) * size',
+        '  const end = start + size',
+        '  const window = ids.slice(start, end)',
+        '  return window',
+        '}',
+      ],
+      input: 'ids = ["a", "b", "c", "d", "e"], page = 2, size = 2',
+      steps: [
+        {
+          line: 0,
+          vars: { page: 2, size: 2 },
+          structure: { kind: 'array', values: ['a', 'b', 'c', 'd', 'e'] },
+          note: 'Page 2 of size 2 should hold the third and fourth IDs: c and d.',
+        },
+        {
+          line: 1,
+          vars: { buggyStart: 4, buggyEnd: 2 },
+          structure: { kind: 'array', values: ['a', 'b', 'c', 'd', 'e'], pointers: { 'buggy start': 4 } },
+          note: 'The original code starts at 2 * 2 = 4 and ends at size 2. An end before the start gives an empty slice.',
+        },
+        {
+          line: 2,
+          vars: { start: 2 },
+          structure: { kind: 'array', values: ['a', 'b', 'c', 'd', 'e'], pointers: { start: 2 } },
+          note: 'Subtract one to convert the one-based page to a zero-based offset: (2 - 1) * 2 = 2.',
+        },
+        {
+          line: 3,
+          vars: { start: 2, end: 4 },
+          structure: { kind: 'array', values: ['a', 'b', 'c', 'd', 'e'], pointers: { start: 2, end: 4 } },
+          note: 'The end is a position, not a length: start + size = 4. slice excludes it, so e stays out.',
+        },
+        {
+          line: 4,
+          vars: { start: 2, end: 4, window: '["c","d"]' },
+          structure: { kind: 'array', values: ['a', 'b', 'c', 'd', 'e'], pointers: { start: 2, end: 4 }, dimmed: [0, 1, 4] },
+          note: 'slice copies positions 2 and 3 without changing ids. Page 1 would end at 2, so there is no gap or overlap.',
+        },
+        {
+          line: 5,
+          vars: { result: '["c","d"]' },
+          structure: { kind: 'array', values: ['a', 'b', 'c', 'd', 'e'], dimmed: [0, 1, 4] },
+          note: 'Return the copy. On page 3, start 4 and end 6 would return ["e"]: slice stops at the array’s end.',
+        },
+      ],
+    },
     reasoning: 'Translate one-based page numbers into zero-based positions before slicing.',
     trace: 'For [a,b,c,d,e], page 1 size 2 starts at 0 and returns [a,b]; page 2 starts at 2 and returns [c,d].',
     alternative:

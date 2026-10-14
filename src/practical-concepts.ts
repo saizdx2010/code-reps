@@ -172,6 +172,18 @@ export const practicalReps: Rep[] = [
         ],
         expected: { values: [], errors: ['', 'Timeout'] },
       },
+      {
+        name: 'Keeps order within each list when kinds alternate',
+        input: [
+          [
+            { status: 'rejected', reason: 'A' },
+            { status: 'fulfilled', value: -3 },
+            { status: 'rejected', reason: 'B' },
+            { status: 'fulfilled', value: 0.5 },
+          ],
+        ],
+        expected: { values: [-3, 0.5], errors: ['A', 'B'] },
+      },
     ],
   },
   {
@@ -307,6 +319,14 @@ export const practicalReps: Rep[] = [
       },
       { name: 'Empty clocks', input: [[], []], expected: { expired: [], calls: 0 } },
       { name: 'Zero deadline', input: [[0], [0]], expected: { expired: [true], calls: 1 } },
+      {
+        name: 'Each deadline reads the next clock value',
+        input: [
+          [5, 1, 9],
+          [4, 4, 9],
+        ],
+        expected: { expired: [false, true, true], calls: 3 },
+      },
     ],
   },
   {

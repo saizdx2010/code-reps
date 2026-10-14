@@ -181,6 +181,13 @@ export const paths = [
         ],
       },
       {
+        title: 'Binary search trees',
+        description:
+          'Use the left-smaller, right-larger rule to search one path, find the nearest earlier value, and check the rule itself.',
+        recap: 'You can now search a binary search tree along one path and check that a tree follows its ordering rule.',
+        repIds: ['bst-search-path', 'bst-latest-at-or-before', 'bst-check-order'],
+      },
+      {
         title: 'Grids',
         description: 'Inspect cell boundaries, count connected floor regions, and find a shortest route through walls.',
         recap: 'You can now explore rectangular grids while respecting boundaries and movement rules.',
@@ -194,9 +201,17 @@ export const paths = [
       },
       {
         title: 'Ranges and linked structures',
-        description: 'Answer range questions with prefix sums, merge intervals, reverse a linked list, and keep a heap in order.',
+        description:
+          'Answer range questions with prefix sums, merge intervals, reverse, insert into, and remove from linked lists, and keep a heap in order.',
         recap: 'You can now answer range queries and work with intervals, linked lists, and heaps.',
-        repIds: ['algo-prefix-sums', 'algo-merge-intervals', 'algo-linked-list-reverse', 'algo-min-heap'],
+        repIds: [
+          'algo-prefix-sums',
+          'algo-merge-intervals',
+          'algo-linked-list-reverse',
+          'list-insert-sorted',
+          'list-remove-value',
+          'algo-min-heap',
+        ],
       },
       {
         title: 'Backtracking and dynamic programming',

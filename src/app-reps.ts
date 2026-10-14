@@ -1047,7 +1047,7 @@ export const appReps: Rep[] = [
       { term: 'Derived state', meaning: 'a value calculated from current inputs' },
       { term: 'Precedence', meaning: 'which rule wins when rules conflict' },
     ],
-    planPrompt: 'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    planPrompt: 'List the four messages in priority order. Which rows show that an unselected locked row does not block the action?',
     starter:
       "function selectionState(rows: { selected: boolean; locked: boolean }[], busy: boolean): { count: number; enabled: boolean; message: string } {\n  throw new Error('Not implemented')\n}\n",
     functionName: 'selectionState',
@@ -1116,7 +1116,8 @@ export const appReps: Rep[] = [
       { term: 'Window', meaning: 'the nearby part of a larger ordered list' },
       { term: 'Clamp', meaning: 'keep a number within inclusive bounds' },
     ],
-    planPrompt: 'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    planPrompt:
+      'Predict chapters, before, and after for total 0, for a current far beyond total, and for a radius of 0. When is each flag true?',
     starter:
       "function chapterLinks(total: number, current: number, radius: number): { chapters: number[]; before: boolean; after: boolean } {\n  throw new Error('Not implemented')\n}\n",
     functionName: 'chapterLinks',
@@ -1163,7 +1164,8 @@ export const appReps: Rep[] = [
       { term: 'Conditional response', meaning: 'a response that depends on a client condition' },
       { term: 'Revision', meaning: 'an identifier for one version of a resource' },
     ],
-    planPrompt: 'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    planPrompt:
+      'Which input decides the status first? Predict GET and HEAD responses for a matching revision and for one that differs only in case.',
     starter:
       'function resourceResponse(exists: boolean, revision: string, requestedRevision: string | null, method: "GET" | "HEAD"): { status: number; revision: string | null; body: string | null } {\n  throw new Error(\'Not implemented\')\n}\n',
     functionName: 'resourceResponse',
@@ -1227,7 +1229,8 @@ export const appReps: Rep[] = [
       { term: 'Retry', meaning: 'another attempt after a failure' },
       { term: 'Response policy', meaning: 'rules for the fields a server would return' },
     ],
-    planPrompt: 'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    planPrompt:
+      'Write the three outcomes in priority order. Predict the response for a permanent failure on the final attempt and for a delay of zero.',
     starter:
       "function retryResponse(attempt: number, maximum: number, delaySeconds: number, permanent: boolean): { status: number; retryAfter: string | null; body: string } {\n  throw new Error('Not implemented')\n}\n",
     functionName: 'retryResponse',

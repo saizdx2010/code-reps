@@ -442,7 +442,7 @@ export const connectedFeatureReps: Rep[] = [
       },
     ],
     planPrompt:
-      'Name the expected outcomes and one boundary before coding. Which existing files need to change, and which earlier behavior must still pass?',
+      'Write the state after initial("a") and after editing it to "". How will you show that the original state object did not change?',
     starter: encodeFiles({ entry: 'main.ts', files: { 'state.ts': stateStarter, 'main.ts': stateCheckpointEntry } }),
     functionName: 'inspect',
     preserveInput: true,
@@ -480,7 +480,7 @@ export const connectedFeatureReps: Rep[] = [
       },
     ],
     planPrompt:
-      'Name the expected outcomes and one boundary before coding. Which existing files need to change, and which earlier behavior must still pass?',
+      'Describe what the page shows for text with leading spaces and for empty text. Which element announces the status? Which existing files need to change?',
     starter: encodeFiles({
       entry: 'main.ts',
       files: { 'state.ts': completedState, 'view.ts': renderStarter, 'main.ts': renderCheckpointEntry },
@@ -532,7 +532,7 @@ export const connectedFeatureReps: Rep[] = [
       },
     ],
     planPrompt:
-      'Name the expected outcomes and one boundary before coding. Which existing files need to change, and which earlier behavior must still pass?',
+      'Trace typing to 80 characters, then 81: what do the input, output, and status show after each? Which element must stay the same? Which existing files need to change?',
     starter: encodeFiles({
       entry: 'main.ts',
       files: { 'state.ts': completedState, 'view.ts': completedView, 'main.ts': renderCheckpointEntry },
@@ -598,7 +598,7 @@ export const connectedFeatureReps: Rep[] = [
       },
     ],
     planPrompt:
-      'Name the expected outcomes and one boundary before coding. Which existing files need to change, and which earlier behavior must still pass?',
+      'Trace an edit, a Save, and a failed Save: what do stored, output, and status show after each? What does Save do while the input is too long? Which existing files need to change?',
     starter: encodeFiles({
       entry: 'main.ts',
       files: { 'state.ts': completedState, 'view.ts': completedView, 'main.ts': inputCheckpointEntry, 'storage.ts': storageStarter },
@@ -668,7 +668,7 @@ export const connectedFeatureReps: Rep[] = [
       },
     ],
     planPrompt:
-      'Name the expected outcomes and one boundary before coding. Which existing files need to change, and which earlier behavior must still pass?',
+      'What does the page show when the stored record is invalid? Trace an edit and a successful Save: when may the invalid record be replaced? Which existing files need to change?',
     starter: encodeFiles({
       entry: 'main.ts',
       files: {
@@ -758,7 +758,7 @@ export const connectedFeatureReps: Rep[] = [
       },
     ],
     planPrompt:
-      'Name the expected outcomes and one boundary before coding. Which existing files need to change, and which earlier behavior must still pass?',
+      'Name the observation the version-accepting mutant gets wrong and the step where the throwing reader fails. What does the correct component show at each?',
     starter: encodeFiles({
       entry: 'main.ts',
       files: {
@@ -865,7 +865,8 @@ export const connectedFeatureReps: Rep[] = [
         meaning: 'the agreement between parts when a whole feature is used',
       },
     ],
-    planPrompt: 'Name the expected outcomes and one boundary before coding. Choose your own approach and explain your decisions afterward.',
+    planPrompt:
+      'List the earlier checkpoint behaviors your feature must keep, in the order you will verify them. Which observation would expose a plausible mistake?',
     starter: encodeFiles({ entry: 'main.ts', files: { 'main.ts': independentEntry } }),
     functionName: 'mountNote',
     preserveInput: true,
