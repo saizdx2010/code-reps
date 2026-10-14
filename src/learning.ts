@@ -187,11 +187,20 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'linked-lists',
+    title: 'Walk and rebuild linked lists',
+    guided: 'algo-linked-list-reverse',
+    independent: 'list-insert-sorted',
+    recall: 'list-remove-value',
+    delayDays: 3,
+  },
+  {
     id: 'binary-search-trees',
     title: 'Search ordered trees',
     guided: 'bst-search-path',
     independent: 'bst-latest-at-or-before',
     recall: 'bst-check-order',
+    practice: ['bst-insert-copy'],
     delayDays: 3,
   },
   {

@@ -216,6 +216,7 @@ export const indonesianGlossary: Record<string, string> = {
   'Blank text': 'teks yang kosong setelah di-trim',
   'Repeated occurrence': 'nilai yang muncul lagi setelah pernah terlihat',
   Tail: 'node terakhir dalam sebuah list',
+  'Path copying': 'menyalin hanya node pada satu jalur agar pohon asli tetap tidak berubah',
   'LEFT JOIN': 'join yang mempertahankan semua baris tabel kiri dan mengisi sisi kanan yang tidak ada dengan null',
   Aggregate: 'fungsi SQL, seperti COUNT atau SUM, yang menggabungkan banyak baris menjadi satu nilai',
   'GROUP BY': 'klausa SQL yang membuat satu baris hasil untuk setiap kelompok baris dengan nilai yang sama',

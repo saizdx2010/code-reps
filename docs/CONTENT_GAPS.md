@@ -23,7 +23,7 @@ These topics have a lesson and linked reps but no guided → independent → del
 
 ## Track stages without a journey
 
-- **Problem solving, later stages:** prefix sums, merged intervals, a min-heap, subsets, and introductory dynamic programming are single reps. Linked lists have a lesson and three reps (reversal, sorted insertion, and removal) but no journey. Binary search tree insertion is not yet authored. See [Algorithms & Data Structures](./ALGORITHMS_DATA_STRUCTURES.md#next-expansion).
+- **Problem solving, later stages:** prefix sums, merged intervals, a min-heap, subsets, and introductory dynamic programming are single reps. Linked lists have a lesson and a guided → independent → recall journey (reversal, sorted insertion, removal), and binary search tree insertion is optional practice in the search-tree journey. See [Algorithms & Data Structures](./ALGORITHMS_DATA_STRUCTURES.md#next-expansion).
 - **Harder patterns and the two-part puzzle:** these Problem solving reps, which Pattern Recognition also uses, are applications without recall evidence.
 
 ## Assessment gaps

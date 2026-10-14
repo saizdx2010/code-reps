@@ -21,10 +21,9 @@ Operations reps deliberately make the API explicit. Their checks verify outputs 
 
 ## Next expansion
 
-Linked lists, heaps, backtracking, and dynamic programming have playable reps (`src/dsa-advanced-reps.ts`), but each is an application without a journey. Linked-list insertion and removal (`list-insert-sorted`, `list-remove-value`) follow reversal, after the `linked-lists` lesson. Binary search trees have a lesson and a journey in `src/dsa-linked-reps.ts`: guided `bst-search-path`, independent `bst-latest-at-or-before`, and recall `bst-check-order`, which needs whole-subtree limits rather than the search itself. Keep one combined path while extending them in this order:
+Heaps, backtracking, and dynamic programming have playable reps (`src/dsa-advanced-reps.ts`), but each is an application without a journey. Linked lists now have a journey after the `linked-lists` lesson: guided `algo-linked-list-reverse`, independent `list-insert-sorted`, and recall `list-remove-value`, in trail order. Binary search trees have a lesson and a journey in `src/dsa-linked-reps.ts`: guided `bst-search-path`, independent `bst-latest-at-or-before`, and recall `bst-check-order`, which needs whole-subtree limits rather than the search itself. `bst-insert-copy`, insertion that copies only the search path, is optional practice before that recall. Keep one combined path while extending them in this order:
 
-- Binary search tree insertion that copies the changed path, after the search journey. This is the "implement the structure" step.
-- Independent and delayed-recall applications for the existing linked-list, heap, backtracking, and dynamic-programming reps, added only when practice shows a specific gap.
+- Independent and delayed-recall applications for the existing heap, backtracking, and dynamic-programming reps, added only when practice shows a specific gap.
 
 For each new structure, introduce its representation and operations before a guided application. Follow with a problem without approach clues and a distinct delayed-recall application. Implementing the structure from scratch should follow using it. Future stages are not shown as playable placeholders.
 

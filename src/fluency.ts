@@ -168,6 +168,7 @@ export const recallVariants: Record<string, string[]> = {
   recursion: ['count-object-leaves', 'flatten-nested-numbers', 'algo-recursive-sum', 'nested-parcel-load'],
   trees: ['tree-value-path', 'tree-depth-sum', 'algo-tree-depth', 'terminal-folder-paths'],
   'binary-search-trees': ['bst-check-order', 'bst-latest-at-or-before', 'bst-search-path'],
+  'linked-lists': ['list-remove-value', 'list-insert-sorted', 'algo-linked-list-reverse'],
   'stack-traces': ['stack-trace-null-lookup', 'stack-trace-wrong-caller', 'stack-trace-missing-field'],
   graphs: ['graph-connected-groups', 'graph-shortest-hops', 'algo-graph-reachable', 'broadcast-unreached-stations'],
   'state-modeling': ['catalog-request-summary', 'saved-record-status', 'task-state-label'],

@@ -297,6 +297,18 @@ export const dsaLinkedDepth: Record<string, RepDepth> = {
     transfer:
       'Find the earliest booking at or after a time instead. Decide which subtree to discard at each node and how equality is handled. This changed contract is self-reviewed.',
   },
+  'bst-insert-copy': {
+    reasoning:
+      'The ordering rule fixes where a new value can go: the search for it ends at exactly one missing child, and a leaf there keeps every left value smaller and every right value larger. Only the nodes on that path gain a different child, so copying those nodes and reusing every subtree the search skips gives a correct tree while the input keeps all of its links.',
+    trace:
+      'Inserting 5 into the search tree: 5 < 8 copies 8 and goes left, 5 > 3 copies 3 and goes right, 5 < 6 copies 6 and goes left, and 5 > 4 copies 4 and finds no right child, so a new leaf 5 goes there. Four nodes are new; 1, 7, and the whole right side under 10 are reused. Inserting 6 copies 8 and 3, then finds 6 and returns that subtree unchanged.',
+    alternative:
+      'Copying the whole tree and then inserting in place is simpler to reason about but allocates every node, O(n) instead of O(h) for a tree of height h. Inserting directly into the input is O(1) extra space but changes nodes the caller still uses, which this contract forbids.',
+    counterexample:
+      'Setting parent.left = newLeaf on the input passes value checks but changes a caller-owned node, which the input check catches. Inserting a second 6 to the right of the existing 6 creates a duplicate the contract does not allow.',
+    transfer:
+      'Delete a leaf value without changing the input. Which nodes are copied now, and what happens when the value is missing? This changed contract is self-reviewed.',
+  },
   'bst-check-order': {
     reasoning:
       'Every ancestor limits the values below it: moving left from a node sets an upper limit, and moving right sets a lower one. Passing that open range down, and narrowing it at each step, checks each node against all its ancestors at once rather than only its parent.',
@@ -390,6 +402,18 @@ export const dsaLinkedDepth: Record<string, RepDepth> = {
 }
 
 export const dsaLinkedGuides: Record<string, ReflectionGuide> = {
+  'bst-insert-copy': {
+    plan: [
+      'Name the nodes a search for the new value visits and where it stops.',
+      'Decide which nodes are copied, which subtrees are reused, and what an existing value returns.',
+    ],
+    explanation: [
+      'Explain why only the search path changes and why reusing the other subtrees is safe here.',
+      'Trace an insert to a far left leaf and an insert of a value already present.',
+    ],
+    example:
+      'The new value can only go where a search for it stops, so I copy each node on that path and reuse the child the search skips. When the search reaches null I return a new leaf; when it finds the value I return the subtree unchanged. The input keeps every node and link.',
+  },
   'list-insert-sorted': {
     plan: [
       'Where does the new value go when it is smaller than every value, larger than every value, or equal to one?',

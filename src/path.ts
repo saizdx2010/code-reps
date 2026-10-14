@@ -190,9 +190,9 @@ export const paths = [
       {
         title: 'Binary search trees',
         description:
-          'Use the left-smaller, right-larger rule to search one path, find the nearest earlier value, and check the rule itself.',
+          'Use the left-smaller, right-larger rule to search one path, find the nearest earlier value, insert without changing the tree, and check the rule itself.',
         recap: 'You can now search a binary search tree along one path and check that a tree follows its ordering rule.',
-        repIds: ['bst-search-path', 'bst-latest-at-or-before', 'bst-check-order'],
+        repIds: ['bst-search-path', 'bst-latest-at-or-before', 'bst-insert-copy', 'bst-check-order'],
       },
       {
         title: 'Grids',

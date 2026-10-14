@@ -25,6 +25,8 @@ export const dsaSolutions = {
     'function ticketTimes(tickets) { let available=0; return tickets.map(ticket => { const start=Math.max(available,ticket.arrival); available=start+ticket.minutes; return {id:ticket.id,start,finish:available} }) }',
   'parcel-loading-turns':
     'function loadingTurn(parcels,targetIndex) { const k=parcels[targetIndex]; return parcels.reduce((turns,count,index)=>turns+Math.min(count,index<=targetIndex?k:k-1),0) }',
+  'bst-insert-copy':
+    'function insertCopy(root, value) { const values = []; const walk = n => { if (!n) return; walk(n.left); values.push(n.value); walk(n.right) }; walk(root); const build = n => n && { value: n.value, left: build(n.left), right: build(n.right) }; const copy = build(root); if (values.includes(value)) return copy; const leaf = { value, left: null, right: null }; if (!copy) return leaf; let p = copy; for (;;) { const side = value < p.value ? "left" : "right"; if (!p[side]) { p[side] = leaf; return copy } p = p[side] } }',
   'algo-prefix-sums': 'function rangeSums(numbers, queries) { return queries.map(([l,r]) => numbers.slice(l,r+1).reduce((a,b)=>a+b,0)) }',
   'algo-merge-intervals':
     'function mergeIntervals(intervals) { const pending=intervals.map(x=>[...x]); let changed=true; while(changed) { changed=false; outer: for(let i=0;i<pending.length;i++) for(let j=i+1;j<pending.length;j++) if(pending[i][0]<=pending[j][1] && pending[j][0]<=pending[i][1]) { pending[i]=[Math.min(pending[i][0],pending[j][0]),Math.max(pending[i][1],pending[j][1])]; pending.splice(j,1); changed=true; break outer } } return pending.sort((a,b)=>a[0]-b[0]) }',

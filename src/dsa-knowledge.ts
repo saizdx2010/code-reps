@@ -559,7 +559,7 @@ dsaSkills.push(
           '6 > 3 is correct for its parent, but 6 is also in the left subtree of 5, where every value must be smaller than 5. The rule covers whole subtrees, not only direct children.',
       },
     ],
-    repIds: ['bst-search-path', 'bst-latest-at-or-before', 'bst-check-order'],
+    repIds: ['bst-search-path', 'bst-latest-at-or-before', 'bst-insert-copy', 'bst-check-order'],
     related: ['trees', 'array-techniques', 'complexity'],
   },
   {

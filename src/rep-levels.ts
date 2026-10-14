@@ -206,6 +206,7 @@ export const repLevels: Record<string, RepLevel> = {
   'bst-search-path': 3,
   'bst-latest-at-or-before': 3,
   'bst-check-order': 3,
+  'bst-insert-copy': 3,
   'tree-value-depth': 3,
   'tree-leaf-count': 3,
   'graph-incoming-counts': 3,

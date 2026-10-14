@@ -250,4 +250,70 @@ export const dsaLinkedReps: Rep[] = [
       { name: 'Negative values', input: [node(-5, node(-10), node(0))], expected: true },
     ],
   },
+  {
+    id: 'bst-insert-copy',
+    title: 'Insert into a binary search tree without changing it',
+    category: 'Algorithm applications',
+    prompt:
+      'Return a binary search tree that holds every value of root plus value. Place value as a new leaf exactly where a search for it would reach a missing child. If value is already in the tree, return a tree with the same values and shape, without a duplicate. A null root returns a single node. Do not change any input node: create new nodes for the nodes on the search path; subtrees off the path may be shared with the input.',
+    brief: {
+      summary: 'Implement insertCopy(root, value) and return the tree with value inserted as a new leaf, leaving the input unchanged.',
+      rules: [
+        'Walk from the root as a search would: a smaller value goes left and a larger value goes right.',
+        'Where the search reaches a missing child, attach a new leaf {value, left: null, right: null}.',
+        'If value is already in the tree, return a tree with the same values and shape.',
+        'Create new nodes along the search path; subtrees off the path may be reused unchanged.',
+      ],
+      edgeCases: [
+        'A null root returns a single node.',
+        'A value smaller or larger than every value in the tree',
+        'Do not change any input node.',
+      ],
+    },
+    example: {
+      input: 'insertCopy({value: 8, left: {value: 3, left: null, right: null}, right: null}, 5)',
+      output: '{value: 8, left: {value: 3, left: null, right: {value: 5, left: null, right: null}}, right: null}',
+    },
+    note: `${treeShape} Values are unique integers from -1000 to 1000 and follow the ordering rule; value is an integer in the same range. Checks compare the returned tree and input preservation; which nodes you reuse is self-reviewed.`,
+    vocabulary: [
+      { term: 'Leaf', meaning: 'a node with no children' },
+      { term: 'Path copying', meaning: 'making new copies of only the nodes on one path, so the original tree stays unchanged' },
+    ],
+    planPrompt:
+      'Which nodes does the search for value visit? Which of them must be copied, which subtrees can be reused, and what happens when value is already present?',
+    starter:
+      'type TreeNode = { value: number; left: TreeNode | null; right: TreeNode | null }\nfunction insertCopy(root: TreeNode | null, value: number): TreeNode | null {\n  // Write your solution here.\n  return root\n}\n',
+    functionName: 'insertCopy',
+    preserveInput: true,
+    hints: [
+      'The new value can only end up where a search for it stops, so only the nodes on that search path are affected.',
+      'For each node on the path, make a new node with the same value, reuse the child the search does not enter, and replace the child it does enter.',
+      'Describe the result for a null root first; every other case builds one new node and asks the same question of one child.',
+    ],
+    checks: [
+      {
+        name: 'Inserts a leaf four levels down',
+        input: [searchTree(), 5],
+        expected: node(8, node(3, node(1), node(6, node(4, null, node(5)), node(7))), node(10, null, node(14, node(13)))),
+      },
+      {
+        name: 'A new smallest value goes to the far left',
+        input: [searchTree(), 0],
+        expected: node(8, node(3, node(1, node(0)), node(6, node(4), node(7))), node(10, null, node(14, node(13)))),
+      },
+      {
+        name: 'A new largest value goes to the far right',
+        input: [searchTree(), 20],
+        expected: node(8, node(3, node(1), node(6, node(4), node(7))), node(10, null, node(14, node(13), node(20)))),
+      },
+      {
+        name: 'Turns left after turning right',
+        input: [searchTree(), 12],
+        expected: node(8, node(3, node(1), node(6, node(4), node(7))), node(10, null, node(14, node(13, node(12))))),
+      },
+      { name: 'An existing value adds no duplicate', input: [searchTree(), 6], expected: searchTree() },
+      { name: 'An empty tree becomes one node', input: [null, 4], expected: node(4) },
+      { name: 'Negative values follow the same rule', input: [node(0, node(-5)), -3], expected: node(0, node(-5, null, node(-3))) },
+    ],
+  },
 ]

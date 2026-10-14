@@ -106,10 +106,12 @@ test('optional practice is playable, unique, and separate from evidence and reca
 test('practice exposes chronological hint-free records without gating stage or recall', () => {
   for (const journey of journeys.filter(journey => journey.practice?.length)) {
     const base = [record(journey.guided, 20), record(journey.independent, 21)]
+    // A journey with one practice rep repeats it, which must order and filter the same way.
+    const second = journey.practice[1] ?? journey.practice[0]
     const extra = [
       record(journey.practice[0], 23),
-      record(journey.practice[1], 22, 1),
-      record(journey.practice[1], 22),
+      record(second, 22, 1),
+      record(second, 22),
       { ...record(journey.practice[0], 23), completedAt: 'invalid' },
     ]
     const before = getJourney(journey, base, at(25))

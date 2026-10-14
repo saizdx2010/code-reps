@@ -39,6 +39,14 @@ test('linked-list and binary search tree checks reject characteristic mistakes',
       // Uses a strict comparison.
       'function latestAtOrBefore(root, time) { let best = null; for (let n = root; n; ) { if (n.value < time) { best = n.value; n = n.right } else n = n.left } return best }',
     ],
+    'bst-insert-copy': [
+      // Attaches the leaf to the caller’s node.
+      'function insertCopy(root, value) { const leaf = { value, left: null, right: null }; if (!root) return leaf; let p = root; for (;;) { if (p.value === value) return root; const side = value < p.value ? "left" : "right"; if (!p[side]) { p[side] = leaf; return root } p = p[side] } }',
+      // Adds a duplicate to the right of an equal value.
+      'function insertCopy(root, value) { if (!root) return { value, left: null, right: null }; return value < root.value ? { ...root, left: insertCopy(root.left, value) } : { ...root, right: insertCopy(root.right, value) } }',
+      // Returns the new leaf instead of the whole tree.
+      'function insertCopy(root, value) { const leaf = { value, left: null, right: null }; return leaf }',
+    ],
     'bst-check-order': [
       // Compares each node only with its direct children.
       'function isOrdered(root) { if (!root) return true; if (root.left && root.left.value >= root.value) return false; if (root.right && root.right.value <= root.value) return false; return isOrdered(root.left) && isOrdered(root.right) }',
@@ -76,4 +84,13 @@ test('the binary search tree journey has distinct guided, independent, and recal
   const journey = journeys.find(journey => journey.id === 'binary-search-trees')
   assert.deepEqual([journey.guided, journey.independent, journey.recall], ['bst-search-path', 'bst-latest-at-or-before', 'bst-check-order'])
   assert.equal(recallVariants['binary-search-trees'][0], journey.recall)
+})
+
+test('linked lists form a journey in trail order, and BST insertion is optional practice before recall', () => {
+  const lists = journeys.find(journey => journey.id === 'linked-lists')
+  assert.deepEqual([lists.guided, lists.independent, lists.recall], ['algo-linked-list-reverse', 'list-insert-sorted', 'list-remove-value'])
+  assert.equal(recallVariants['linked-lists'][0], lists.recall)
+  const trees = journeys.find(journey => journey.id === 'binary-search-trees')
+  assert.deepEqual(trees.practice, ['bst-insert-copy'])
+  assert.ok(!recallVariants['binary-search-trees'].includes('bst-insert-copy'))
 })
