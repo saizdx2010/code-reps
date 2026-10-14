@@ -1,4 +1,3 @@
-import { asyncReps } from './async-reps.ts'
 import type { Rep } from './rep-types.ts'
 
 // Deterministic exercises teach policy; they do not establish live integration behavior.
@@ -605,5 +604,4 @@ export const practicalReps: Rep[] = [
       },
     ],
   },
-  ...asyncReps,
 ]

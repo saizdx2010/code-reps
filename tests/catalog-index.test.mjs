@@ -53,7 +53,7 @@ test('loading a rep returns the same authored content the full catalog holds', a
 
 // The startup bundle must not pull rep or lesson content back in through a static import.
 test('startup modules never statically import heavy content', () => {
-  const heavy = /^(rep|rep-sources|knowledge|knowledge-validation|foundations|practical-concepts|dsa-knowledge|rep-depth|lesson-depth|reflection-guides|runner|review-[a-z-]+|[a-z-]+-reps)$/
+  const heavy = /^(rep|rep-sources|knowledge|knowledge-validation|foundations|practical-concepts|[a-z-]+-knowledge|rep-depth|lesson-depth|reflection-guides|runner|review-[a-z-]+|[a-z-]+-reps)$/
   const resolve = (from, specifier) => ['.ts', '.tsx'].map(ext => join(dirname(from), specifier + ext)).concat(join(dirname(from), specifier)).find(file => existsSync(file) && /\.tsx?$/.test(file))
   const root = new URL('../src/main.tsx', import.meta.url).pathname
   const seen = new Set()

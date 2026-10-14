@@ -63,7 +63,7 @@ export function renderRepSkeleton({ id, moduleFile }) {
   counterexample: 'TODO: a tempting mistake and the input that exposes it',
   transfer: 'TODO: an unfamiliar variation and the decision it requires (self-reviewed)',
 },`,
-    section('3. Self-review guide', 'Paste into src/reflection-guides.ts, or the matching review-*.ts guide export. content:check fails without it.'),
+    section('3. Self-review guide', 'Paste into the matching src/review-*.ts guide export (new review modules are listed in src/review-registry.ts). content:check fails without it.'),
     `'${id}': {
   plan: ['TODO: planning question the learner answers before coding'],
   explanation: ['TODO: explanation question about the decision'],

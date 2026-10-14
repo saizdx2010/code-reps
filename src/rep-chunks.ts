@@ -7,6 +7,7 @@ export const repSourceLoaders: Record<RepSourceName, RepSourceLoader> = {
   'async-runtime-reps': source(() => import('./async-runtime-reps.ts'), module => ({ reps: module.asyncRuntimeReps })),
   'sqlite-reps': source(() => import('./sqlite-reps.ts'), module => ({ reps: module.sqliteReps })),
   'practical-concepts': source(() => import('./practical-concepts.ts'), module => ({ reps: module.practicalReps })),
+  'async-reps': source(() => import('./async-reps.ts'), module => ({ reps: module.asyncReps })),
   'foundations': source(() => import('./foundations.ts'), module => ({ reps: module.foundationReps, lessons: module.foundations })),
   'dsa-grid-reps': source(() => import('./dsa-grid-reps.ts'), module => ({ reps: module.dsaGridReps })),
   'dsa-application-reps': source(() => import('./dsa-application-reps.ts'), module => ({ reps: module.dsaApplicationReps })),

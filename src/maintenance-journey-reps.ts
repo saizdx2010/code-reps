@@ -166,7 +166,6 @@ const finesBody = (chargeable: string) => lines(
   '}'
 )
 const faultyFinesSource = finesBody('daysLate(loan.due, loan.returned) - GRACE_DAYS')
-export const fixedFinesSource = finesBody('Math.max(0, daysLate(loan.due, loan.returned) - GRACE_DAYS)')
 
 const loanGuard = lines(
   "import type { Loan } from './fines'",
@@ -223,12 +222,6 @@ const pricingBody = (loop: string) => lines(
 )
 const flatLoop = '  for (let hour = start; hour < end; hour++) total += isPeak(hour) ? PEAK_RATE : OFF_PEAK_RATE'
 const flatPricingSource = pricingBody(flatLoop)
-export const tieredPricingSource = pricingBody(lines(
-  '  for (let hour = start; hour < end; hour++) {',
-  '    const rate = isPeak(hour) ? PEAK_RATE : OFF_PEAK_RATE',
-  '    total += hour - start >= 3 ? rate / 2 : rate',
-  '  }'
-).trimEnd())
 const bookingGuard = lines(
   "import type { Booking } from './pricing'",
   '',

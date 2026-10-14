@@ -1,12 +1,16 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { practicalReps } from '../src/practical-concepts.ts'
+import { practicalReps as practicalOnlyReps } from '../src/practical-concepts.ts'
+import { asyncReps } from '../src/async-reps.ts'
 import { practicalSkills } from '../src/practical-knowledge.ts'
 import { skills } from '../src/knowledge.ts'
 import { paths } from '../src/path.ts'
 import { runRep } from '../src/runner.ts'
 import { emptyFluency, parseFluency, recurringReviews } from '../src/fluency.ts'
 import { getJourney, journeys } from '../src/learning.ts'
+
+// Async reps register as their own source but belong to the practical-concepts family.
+const practicalReps = [...practicalOnlyReps, ...asyncReps]
 
 // Check the learner-facing path and saved evidence contracts, not only record presence.
 test('tracks include every practical rep and retain the beginner default', () => {

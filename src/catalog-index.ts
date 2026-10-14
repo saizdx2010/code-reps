@@ -2,7 +2,7 @@
 // This is the small catalog the app renders from at startup. Heavy rep and lesson content loads on demand.
 import type { Rep } from './rep-types.ts'
 
-export type RepSourceName = 'async-runtime-reps' | 'sqlite-reps' | 'practical-concepts' | 'foundations' | 'dsa-grid-reps' | 'dsa-application-reps' | 'dsa-basics-reps' | 'dsa-practice-reps' | 'dsa-puzzle-reps' | 'dsa-harder-reps' | 'dsa-advanced-reps' | 'ai-era-reps' | 'core-reps' | 'journey-reps' | 'transfer-reps' | 'rich-reps' | 'fluency-reps' | 'capstone-reps' | 'validation-reps' | 'app-reps' | 'ts-depth-reps' | 'browser-state-reps' | 'react-reps' | 'dom-reps' | 'connected-feature-reps' | 'testing-journey-reps' | 'maintenance-journey-reps'
+export type RepSourceName = 'async-runtime-reps' | 'sqlite-reps' | 'practical-concepts' | 'async-reps' | 'foundations' | 'dsa-grid-reps' | 'dsa-application-reps' | 'dsa-basics-reps' | 'dsa-practice-reps' | 'dsa-puzzle-reps' | 'dsa-harder-reps' | 'dsa-advanced-reps' | 'ai-era-reps' | 'core-reps' | 'journey-reps' | 'transfer-reps' | 'rich-reps' | 'fluency-reps' | 'capstone-reps' | 'validation-reps' | 'app-reps' | 'ts-depth-reps' | 'browser-state-reps' | 'react-reps' | 'dom-reps' | 'connected-feature-reps' | 'testing-journey-reps' | 'maintenance-journey-reps'
 export type RepSummary = { id: string; title: string; category: string; format?: Rep['format']; starterHash: string; hintTotal: number; briefWords: number; checkTotal: number; source: RepSourceName }
 export type QuestionSummary = { id: string; optionCount: number; answer: number; completion?: true; answerText?: string }
 export type SkillSummary = { id: string; title: string; summary: string; prerequisites: string[]; related: string[]; repIds: string[]; firstMistake: string; questions: QuestionSummary[] }
@@ -31,9 +31,9 @@ export const repIndex: RepSummary[] = [
   {"id":"optimistic-balance","title":"Reconcile independent optimistic changes","category":"Practical concepts","starterHash":"c918800b224410e5","hintTotal":3,"briefWords":56,"checkTotal":5,"source":"practical-concepts"},
   {"id":"subscription-cleanup","title":"Keep subscription cleanup local","category":"Practical concepts","starterHash":"08772a778124b66a","hintTotal":3,"briefWords":54,"checkTotal":4,"source":"practical-concepts"},
   {"id":"room-leases","title":"Recall ownership in room membership","category":"Practical concepts","starterHash":"c58765499ec7ef69","hintTotal":3,"briefWords":54,"checkTotal":4,"source":"practical-concepts"},
-  {"id":"search-request-state","title":"Keep search results consistent","category":"Practical concepts","starterHash":"052aa860c5cc3426","hintTotal":3,"briefWords":97,"checkTotal":12,"source":"practical-concepts"},
-  {"id":"preview-slot-results","title":"Recall ownership across preview slots","category":"Practical concepts","starterHash":"9fa3dd5d67ea4e5e","hintTotal":3,"briefWords":88,"checkTotal":9,"source":"practical-concepts"},
-  {"id":"refresh-report-state","title":"Refresh a report without losing its data","category":"Practical concepts","starterHash":"dfb6ce62d916c6e2","hintTotal":3,"briefWords":80,"checkTotal":11,"source":"practical-concepts"},
+  {"id":"search-request-state","title":"Keep search results consistent","category":"Practical concepts","starterHash":"052aa860c5cc3426","hintTotal":3,"briefWords":97,"checkTotal":12,"source":"async-reps"},
+  {"id":"preview-slot-results","title":"Recall ownership across preview slots","category":"Practical concepts","starterHash":"9fa3dd5d67ea4e5e","hintTotal":3,"briefWords":88,"checkTotal":9,"source":"async-reps"},
+  {"id":"refresh-report-state","title":"Refresh a report without losing its data","category":"Practical concepts","starterHash":"dfb6ce62d916c6e2","hintTotal":3,"briefWords":80,"checkTotal":11,"source":"async-reps"},
   {"id":"declare-variables","title":"Declare a value","category":"TypeScript basics","starterHash":"0c0f7785e80b801e","hintTotal":3,"briefWords":24,"checkTotal":3,"source":"foundations"},
   {"id":"basic-types","title":"Use basic types","category":"TypeScript basics","starterHash":"c75e4437a5041d01","hintTotal":3,"briefWords":35,"checkTotal":3,"source":"foundations"},
   {"id":"create-objects","title":"Create an object","category":"TypeScript basics","starterHash":"f21451d47ea21c70","hintTotal":3,"briefWords":34,"checkTotal":3,"source":"foundations"},

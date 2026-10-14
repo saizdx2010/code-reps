@@ -25,6 +25,7 @@ import { foundationReps, foundations } from './foundations.ts'
 import { journeyReps } from './journey-reps.ts'
 import { maintenanceJourneyReps } from './maintenance-journey-reps.ts'
 import { practicalReps } from './practical-concepts.ts'
+import { asyncReps } from './async-reps.ts'
 import { richReps } from './rich-reps.ts'
 import { testingJourneyReps } from './testing-journey-reps.ts'
 import { transferReps } from './transfer-reps.ts'
@@ -36,6 +37,7 @@ export const repSources: { name: string; reps: Rep[]; lessons?: readonly RepLess
   { name: 'async-runtime-reps', reps: asyncRuntimeReps },
   { name: 'sqlite-reps', reps: sqliteReps },
   { name: 'practical-concepts', reps: practicalReps },
+  { name: 'async-reps', reps: asyncReps },
   { name: 'foundations', reps: foundationReps, lessons: foundations },
   { name: 'dsa-grid-reps', reps: dsaGridReps },
   { name: 'dsa-application-reps', reps: dsaApplicationReps },
