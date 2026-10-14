@@ -1,5 +1,5 @@
 import { reactSolution } from './fixtures/react-solution.mjs'
-import { sqliteSolution } from './fixtures/sqlite-solution.mjs'
+import { spendReportSolution, sqliteSolution } from './fixtures/sqlite-solution.mjs'
 import initSqlJs from 'sql.js'
 import { typescriptDepthSolutions } from './fixtures/typescript-depth-solutions.mjs'
 import { recallThinSolutions } from './fixtures/recall-thin-solutions.mjs'
@@ -37,6 +37,7 @@ import { assertMutantsFail } from './helpers/checks.mjs'
 const SQL = await initSqlJs()
 const solutions = {
   'sqlite-stock-transfer': sqliteSolution,
+  'sqlite-spend-report': spendReportSolution,
   ...typescriptDepthSolutions,
   ...recallThinSolutions,
   ...journeyPracticeSolutions,

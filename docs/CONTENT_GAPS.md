@@ -19,7 +19,7 @@ These topics have a lesson and linked reps but no guided → independent → del
 
 - **Language and analysis:** values, types, and functions; time, space, and tradeoffs. Behavior checks alone cannot assess complexity analysis.
 - **Runtime and application patterns:** closures, reference equality, the event loop, singletons, pub/sub, dependency injection, debouncing, throttling, WebSockets, polling and server-sent events, caching, retries, idempotency, and optimistic updates. Most are taught through a single authored policy trace; see [Practical concepts](./PRACTICAL_CONCEPTS.md) for what those traces establish.
-- **React and databases:** one React task (`react-channel-counter`) runs real rendering and effect cleanup, and one SQLite task (`sqlite-stock-transfer`) runs real queries and rollback. Neither has independent or recall applications. Expand them only when a concrete need appears (see the [roadmap](../ROADMAP.md#later-when-there-is-a-concrete-need)).
+- **React and databases:** one React task (`react-channel-counter`) runs real rendering and effect cleanup, and two SQLite tasks run real SQL: a grouped report (`sqlite-spend-report`) and a transfer with rollback (`sqlite-stock-transfer`). None has an independent or recall application. Expand them only when a concrete need appears (see the [roadmap](../ROADMAP.md#later-when-there-is-a-concrete-need)).
 
 ## Track stages without a journey
 

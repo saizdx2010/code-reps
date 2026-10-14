@@ -41,3 +41,28 @@ test('browser-only SQLite queries, rollback, fresh runs, review, and saved compl
   await expect(page.getByText('Rep completed', { exact: true })).toBeVisible()
   expect(external).toEqual([])
 })
+
+test('the spend report runs a grouped query against real SQLite in the browser', async ({ page }) => {
+  await page.goto('/#/practice/sqlite-spend-report')
+  await replaceCode(
+    page,
+    "function spendReport(db: { query(sql: string, parameters?: (number | string | null)[]): (number | string | null)[][] }, minimumCents: number) { return db.query(\"SELECT c.name, COUNT(o.id), COALESCE(SUM(o.cents), 0) AS total FROM customers c LEFT JOIN orders o ON o.customer_id = c.id AND o.status = 'paid' GROUP BY c.id HAVING total >= ? ORDER BY total DESC, c.name\", [minimumCents]) }",
+    'sqlite-spend-report',
+  )
+  await page
+    .locator('.workspace-toolbar')
+    .getByRole('button', { name: /Run checks/ })
+    .click()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
+  await replaceCode(
+    page,
+    "function spendReport(db: { query(sql: string, parameters?: (number | string | null)[]): (number | string | null)[][] }, minimumCents: number) { return db.query(\"SELECT c.name, COUNT(*), SUM(o.cents) AS total FROM customers c LEFT JOIN orders o ON o.customer_id = c.id WHERE o.status = 'paid' GROUP BY c.id HAVING total >= ? ORDER BY total DESC, c.name\", [minimumCents]) }",
+    'sqlite-spend-report',
+  )
+  await page
+    .locator('.workspace-toolbar')
+    .getByRole('button', { name: /Run checks/ })
+    .click()
+  await expectChecksFinished(page.locator('.result-summary.failed'))
+  await expect(page.locator('.result-summary')).not.toContainText('All checks passed')
+})

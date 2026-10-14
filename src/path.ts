@@ -456,10 +456,10 @@ export const paths = [
         repIds: ['backend-query-filters', 'backend-error-response', 'parse-sort-param', 'page-response-envelope'],
       },
       {
-        title: 'Change local data atomically',
-        description: 'Run real SQLite queries and undo a failed stock transfer.',
-        recap: 'You can now inspect stored rows after commits and rollbacks.',
-        repIds: ['sqlite-stock-transfer'],
+        title: 'Query and change local data',
+        description: 'Run real SQLite: report paid spending with a join and grouping, then undo a failed stock transfer.',
+        recap: 'You can now write a grouped SQL report and inspect stored rows after commits and rollbacks.',
+        repIds: ['sqlite-spend-report', 'sqlite-stock-transfer'],
       },
       {
         title: 'Stay reliable',

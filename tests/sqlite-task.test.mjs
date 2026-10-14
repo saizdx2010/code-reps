@@ -76,3 +76,46 @@ test('learner query binds parameters, returns empty rows, and releases failed st
     transfers: [[1, 4]],
   })
 })
+
+const reportSql = `function spendReport(db, minimumCents) {
+  return db.query(
+    "SELECT c.name, COUNT(o.id), COALESCE(SUM(o.cents), 0) AS total FROM customers c LEFT JOIN orders o ON o.customer_id = c.id AND o.status = 'paid' GROUP BY c.id HAVING total >= ? ORDER BY total DESC, c.name",
+    [minimumCents],
+  )
+}`
+const report = code => runRep(code, 'sqlite-spend-report', () => new SQL.Database())
+const failedNames = code =>
+  report(code)
+    .filter(row => !row.passed)
+    .map(row => row.name)
+
+test('a single grouped SQL query passes every spend report check on fresh databases', () => {
+  for (let i = 0; i < 2; i++) assert.deepEqual(failedNames(reportSql), [])
+})
+
+test('spend report checks reject the characteristic SQL mistakes', () => {
+  const mistakes = {
+    // The paid condition in WHERE drops customers whose orders are missing or cancelled.
+    where: reportSql.replace(" AND o.status = 'paid' GROUP BY", " WHERE o.status = 'paid' GROUP BY"),
+    // COUNT(*) counts the null row of a customer with no orders.
+    countStar: reportSql.replace('COUNT(o.id)', 'COUNT(*)'),
+    // SUM without COALESCE returns null for no paid orders.
+    nullSum: reportSql.replace('COALESCE(SUM(o.cents), 0)', 'SUM(o.cents)'),
+    // Ties are left in id order.
+    noNameOrder: reportSql.replace('ORDER BY total DESC, c.name', 'ORDER BY total DESC, c.id DESC'),
+    // A strict minimum.
+    strict: reportSql.replace('HAVING total >= ?', 'HAVING total > ?'),
+    // Cleaning up cancelled orders changes stored data.
+    deletes: reportSql.replace(
+      'function spendReport(db, minimumCents) {',
+      'function spendReport(db, minimumCents) {\n  db.run("DELETE FROM orders WHERE status = \'cancelled\'")',
+    ),
+  }
+  for (const [name, code] of Object.entries(mistakes)) assert.ok(failedNames(code).length > 0, `${name} escaped the checks`)
+  assert.ok(failedNames(mistakes.deletes).includes('Every customer when the minimum is zero'))
+})
+
+test('an unfinished report transaction is rejected rather than counted as unchanged', () => {
+  const open = reportSql.replace('function spendReport(db, minimumCents) {', "function spendReport(db, minimumCents) {\n  db.run('BEGIN')")
+  assert.ok(report(open).every(row => !row.passed))
+})

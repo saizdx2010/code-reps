@@ -44,7 +44,7 @@ Check results also show the editor's TypeScript errors for your files, labelled 
 
 - **TypeScript foundations:** playable reps and searchable knowledge lessons, with starting points for beginners and returning developers.
 - **Guided tracks:** Foundations (TypeScript basics, reading and repairing code, how JavaScript runs) plus four tracks that build on it: Problem solving, Pattern Recognition, Frontend, and Backend. Interview rounds sit at the end of Problem solving, Frontend, and Backend and are untimed.
-- **SQLite practice:** one stock-transfer rep runs real SQL and commit/rollback checks in a fresh in-memory database per check. It works in browser development without the local service and never opens the learner progress database.
+- **SQLite practice:** two reps run real SQL in a fresh in-memory database per check: a grouped spending report (a LEFT JOIN, aggregates, a bound parameter, and an unchanged-data check) and a stock transfer with commit and rollback. It works in browser development without the local service and never opens the learner progress database.
 - **React practice:** one rep renders a real React component in the sandboxed frame and checks that its subscriptions are released, including after unmount.
 - **Real-world tasks:** checkout debugging, batch-pipeline predictions, an interactive browser directory, a ticket request handler, and behavior-preserving stock-report refactoring.
 - **Skill journeys:** from arrays, words, and lookups through validation, request ownership, sorting, trees, graphs, grids, debugging, reading stack traces, maintenance, and DOM interactions. Each pairs guided work with an independent problem and fresh recall after three days.

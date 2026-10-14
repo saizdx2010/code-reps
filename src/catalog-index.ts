@@ -12,6 +12,7 @@ export const repIndex: RepSummary[] = [
   {"id":"settle-local-panels","title":"Collect parallel panel outcomes","category":"Practical concepts","starterHash":"4f48600f1610219c","hintTotal":3,"briefWords":74,"checkTotal":6,"source":"async-runtime-reps"},
   {"id":"cancel-local-export","title":"Recall cancellation in a local export","category":"Practical concepts","starterHash":"2a95d49d587b1bb5","hintTotal":3,"briefWords":103,"checkTotal":8,"source":"async-runtime-reps"},
   {"id":"sqlite-stock-transfer","title":"Transfer stock with SQLite","category":"Backend","format":"backend","starterHash":"efb0fa659780f7c3","hintTotal":3,"briefWords":208,"checkTotal":7,"source":"sqlite-reps"},
+  {"id":"sqlite-spend-report","title":"Report paid spending with a SQL query","category":"Backend","format":"backend","starterHash":"6e4c52348b89a30f","hintTotal":3,"briefWords":178,"checkTotal":7,"source":"sqlite-reps"},
   {"id":"closure-counters","title":"Build independent counters","category":"Practical concepts","starterHash":"7383ff9f895a11e8","hintTotal":3,"briefWords":37,"checkTotal":4,"source":"practical-concepts"},
   {"id":"reference-groups","title":"Count distinct referenced objects","category":"Practical concepts","starterHash":"24c515e4251ab8bd","hintTotal":3,"briefWords":34,"checkTotal":4,"source":"practical-concepts"},
   {"id":"event-loop-order","title":"Predict one event-loop turn","category":"Practical concepts","starterHash":"746fa894a9421d5c","hintTotal":3,"briefWords":39,"checkTotal":4,"source":"practical-concepts"},
