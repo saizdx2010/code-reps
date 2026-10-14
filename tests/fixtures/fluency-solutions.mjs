@@ -12,6 +12,10 @@ export const fluencySolutions = {
     'function duplicateLabel(labels:string[]) { const seen=new Set<string>(); for(const raw of labels) { const label=raw.trim(); if(!label) continue; if(seen.has(label)) return label; seen.add(label) } return null }',
   'count-statuses':
     'function countStatuses(statuses: ("open"|"closed")[]) { const counts={open:0,closed:0}; for(const status of statuses) counts[status]++; return counts }',
+  'count-record-highs':
+    'function countRecords(readings:number[]) { let count=0; let best=-Infinity; for(const r of readings) if(r>best) { best=r; count++ } return count }',
+  'first-pair-to-target':
+    'function firstPair(values:number[], target:number) { for(let j=1;j<values.length;j++) for(let i=0;i<j;i++) if(values[i]+values[j]===target) return [i,j]; return null }',
   'remaining-actions':
     'function remainingActions(actions:string[]) { const stack:string[]=[]; for(const action of actions) { if(action==="UNDO") stack.pop(); else stack.push(action) } return stack }',
   'cancel-adjacent-ids':

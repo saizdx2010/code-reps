@@ -641,6 +641,121 @@ export const practicalRepDepth: Record<string, RepDepth> = {
       'Add a cancel event or a maximum wait. Specify whether an event at that boundary is processed before or after a scheduled emission.',
   },
   'leading-throttle': {
+    traceSteps: {
+      code: [
+        'function throttleTimes(times: number[], window: number): number[] {',
+        '  const accepted: number[] = []',
+        '  let last: number | null = null',
+        '  for (const time of times) {',
+        '    if (last === null || time - last >= window) {',
+        '      accepted.push(time)',
+        '      last = time',
+        '    }',
+        '  }',
+        '  return accepted',
+        '}',
+      ],
+      input: 'times = [0, 60, 100, 150, 200], window = 100',
+      steps: [
+        {
+          line: 2,
+          vars: { window: 100 },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['last accepted', 'none'],
+              ['accepted', '[]'],
+            ],
+            events: ['0', '60', '100', '150', '200'],
+          },
+          note: 'Nothing has been accepted yet, so there is no window to wait out. null, not 0, means “none”.',
+        },
+        {
+          line: 6,
+          vars: { time: 0, last: null },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['last accepted', 0],
+              ['accepted', '[0]'],
+            ],
+            events: ['0', '60', '100', '150', '200'],
+            eventIndex: 0,
+          },
+          note: 'The first event is always accepted, even at time 0. A falsy check on last would get this wrong later.',
+        },
+        {
+          line: 4,
+          vars: { time: 60, last: 0 },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['last accepted', 0],
+              ['accepted', '[0]'],
+            ],
+            events: ['0', '60', '100', '150', '200'],
+            eventIndex: 1,
+          },
+          note: '60 - 0 is 60, less than 100, so 60 is rejected. last stays 0.',
+        },
+        {
+          line: 6,
+          vars: { time: 100, last: 0 },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['last accepted', 100],
+              ['accepted', '[0,100]'],
+            ],
+            events: ['0', '60', '100', '150', '200'],
+            eventIndex: 2,
+          },
+          note: '100 - 0 is exactly 100. The rule is >=, so the boundary is accepted and becomes the new anchor.',
+        },
+        {
+          line: 4,
+          vars: { time: 150, last: 100 },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['last accepted', 100],
+              ['accepted', '[0,100]'],
+            ],
+            events: ['0', '60', '100', '150', '200'],
+            eventIndex: 3,
+          },
+          note: '150 - 100 is 50, so 150 is rejected. A rejected time does not move the anchor.',
+        },
+        {
+          line: 6,
+          vars: { time: 200, last: 100 },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['last accepted', 200],
+              ['accepted', '[0,100,200]'],
+            ],
+            events: ['0', '60', '100', '150', '200'],
+            eventIndex: 4,
+          },
+          note: '200 - 100 is 100, so 200 is accepted. Had 150 moved the anchor, 200 would have been rejected.',
+        },
+        {
+          line: 9,
+          vars: { result: '[0,100,200]' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['last accepted', 200],
+              ['accepted', '[0,100,200]'],
+            ],
+            events: ['0', '60', '100', '150', '200'],
+            eventIndex: 4,
+          },
+          note: 'Return the accepted times. There is no trailing emission for the rejected 150.',
+        },
+      ],
+    },
     reasoning: 'The last accepted timestamp anchors the suppression window, so each emitted pair is separated by at least window.',
     trace: 'With [5,14,15] and window 10, 5 is accepted, 14 suppressed, and 15 accepted; 14 does not move the anchor.',
     alternative:

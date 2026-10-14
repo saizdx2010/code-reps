@@ -92,6 +92,8 @@ export const repLevels: Record<string, RepLevel> = {
   'sum-matching-prices': 1,
   'count-open-tickets': 1,
   'count-statuses': 1,
+  'count-record-highs': 1,
+  'first-pair-to-target': 2,
 
   // Intermediate: typical journeys, frontend and backend reps, techniques, validation, and async policies.
   'function-returns-function': 2,

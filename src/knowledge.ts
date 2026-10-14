@@ -205,7 +205,14 @@ export const skills: Skill[] = [
         completion: true,
       },
     ],
-    repIds: ['sum-positive-numbers', 'count-even-numbers', 'count-above-threshold', 'sum-matching-prices', 'count-open-tickets'],
+    repIds: [
+      'sum-positive-numbers',
+      'count-even-numbers',
+      'count-above-threshold',
+      'sum-matching-prices',
+      'count-open-tickets',
+      'count-record-highs',
+    ],
     related: ['text', 'lookup', 'complexity'],
   },
   {
@@ -324,7 +331,14 @@ export const skills: Skill[] = [
         completion: true,
       },
     ],
-    repIds: ['has-duplicate', 'most-frequent-number', 'first-repeated-number', 'first-duplicate-label', 'count-statuses'],
+    repIds: [
+      'has-duplicate',
+      'most-frequent-number',
+      'first-repeated-number',
+      'first-duplicate-label',
+      'count-statuses',
+      'first-pair-to-target',
+    ],
     related: ['text', 'complexity'],
   },
   {

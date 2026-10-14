@@ -130,6 +130,112 @@ export const asyncRepDepth: Record<string, RepDepth> = {
       'Add pagination while a query changes. Decide whether ownership belongs to one page, one query, or both; define whether previous pages remain visible. This extension is self-reviewed.',
   },
   'preview-slot-results': {
+    traceSteps: {
+      code: [
+        "type PreviewEvent = {kind: 'select'; slot: string; token: string} | {kind: 'loaded'; slot: string; token: string; url: string} | {kind: 'remove'; slot: string}",
+        "type PreviewSlot = {slot: string; status: 'loading' | 'ready'; url: string | null}",
+        'function previewSlots(events: PreviewEvent[]): PreviewSlot[] {',
+        "  const slots = new Map<string, {status: PreviewSlot['status']; url: string | null; pending: string | null}>()",
+        '  for (const event of events) {',
+        "    if (event.kind === 'select') slots.set(event.slot, {status: 'loading', url: null, pending: event.token})",
+        "    else if (event.kind === 'remove') slots.delete(event.slot)",
+        "    else if (slots.get(event.slot)?.pending === event.token) slots.set(event.slot, {status: 'ready', url: event.url, pending: null})",
+        '  }',
+        '  return [...slots].map(([slot, {status, url}]) => ({slot, status, url}))',
+        '}',
+      ],
+      input:
+        'events = [{kind: "select", slot: "cover", token: "A"}, {kind: "select", slot: "detail", token: "B"}, {kind: "remove", slot: "cover"}, {kind: "loaded", slot: "cover", token: "A", url: "late.png"}, {kind: "select", slot: "cover", token: "C"}, {kind: "loaded", slot: "cover", token: "C", url: "c.png"}]',
+      steps: [
+        {
+          line: 3,
+          vars: { slots: 0 },
+          structure: {
+            kind: 'state',
+            entries: [['slots (in order)', 'none']],
+            events: ['select cover A', 'select detail B', 'remove cover', 'loaded cover A', 'select cover C', 'loaded cover C'],
+          },
+          note: 'Each slot keeps its own pending token. A Map remembers the order slots were inserted.',
+        },
+        {
+          line: 5,
+          vars: { slot: 'cover', token: 'A' },
+          structure: {
+            kind: 'state',
+            entries: [['slots (in order)', 'cover: loading (A)']],
+            events: ['select cover A', 'select detail B', 'remove cover', 'loaded cover A', 'select cover C', 'loaded cover C'],
+            eventIndex: 0,
+          },
+          note: 'cover starts loading and waits for token A.',
+        },
+        {
+          line: 5,
+          vars: { slot: 'detail', token: 'B' },
+          structure: {
+            kind: 'state',
+            entries: [['slots (in order)', 'cover: loading (A), detail: loading (B)']],
+            events: ['select cover A', 'select detail B', 'remove cover', 'loaded cover A', 'select cover C', 'loaded cover C'],
+            eventIndex: 1,
+          },
+          note: 'detail gets its own token. One global “current request” would wrongly make A stale here.',
+        },
+        {
+          line: 6,
+          vars: { slot: 'cover' },
+          structure: {
+            kind: 'state',
+            entries: [['slots (in order)', 'detail: loading (B)']],
+            events: ['select cover A', 'select detail B', 'remove cover', 'loaded cover A', 'select cover C', 'loaded cover C'],
+            eventIndex: 2,
+          },
+          note: 'Removing cover deletes its entry, including the pending token A.',
+        },
+        {
+          line: 7,
+          vars: { slot: 'cover', token: 'A', pending: null },
+          structure: {
+            kind: 'state',
+            entries: [['slots (in order)', 'detail: loading (B)']],
+            events: ['select cover A', 'select detail B', 'remove cover', 'loaded cover A', 'select cover C', 'loaded cover C'],
+            eventIndex: 3,
+          },
+          note: 'The late A load finds no cover slot, so it has no effect. It must not recreate cover.',
+        },
+        {
+          line: 5,
+          vars: { slot: 'cover', token: 'C' },
+          structure: {
+            kind: 'state',
+            entries: [['slots (in order)', 'detail: loading (B), cover: loading (C)']],
+            events: ['select cover A', 'select detail B', 'remove cover', 'loaded cover A', 'select cover C', 'loaded cover C'],
+            eventIndex: 4,
+          },
+          note: 'cover was removed, so selecting it again inserts it at the end, after detail.',
+        },
+        {
+          line: 7,
+          vars: { slot: 'cover', token: 'C', pending: 'C' },
+          structure: {
+            kind: 'state',
+            entries: [['slots (in order)', 'detail: loading (B), cover: ready c.png']],
+            events: ['select cover A', 'select detail B', 'remove cover', 'loaded cover A', 'select cover C', 'loaded cover C'],
+            eventIndex: 5,
+          },
+          note: 'C matches the pending token, so cover becomes ready. set on an existing key keeps its position, and the load ends.',
+        },
+        {
+          line: 9,
+          vars: { result: '[{"slot":"detail","status":"loading","url":null},{"slot":"cover","status":"ready","url":"c.png"}]' },
+          structure: {
+            kind: 'state',
+            entries: [['slots (in order)', 'detail: loading (B), cover: ready c.png']],
+            events: ['select cover A', 'select detail B', 'remove cover', 'loaded cover A', 'select cover C', 'loaded cover C'],
+            eventIndex: 5,
+          },
+          note: 'Return only the public fields, in Map order. detail is still waiting for B.',
+        },
+      ],
+    },
     reasoning:
       'Ownership and completion are scoped to each slot. Insertion order is a separate requirement: replacing a slot changes its contents, while deleting and reinserting changes its position.',
     trace:

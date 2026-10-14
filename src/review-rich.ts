@@ -24,6 +24,116 @@ export const richDepth: Record<string, RepDepth> = {
       'Review keyboard navigation and retry behavior, then describe how you would prevent an obsolete request from replacing newer results.',
   },
   'read-batch-labels': {
+    traceSteps: {
+      code: [
+        'function collectLabels(input: string[]): string[] {',
+        '  const seen = new Set<string>()',
+        '  const output: string[] = []',
+        '  for (const raw of input) {',
+        '    const label = raw.trim()',
+        '    if (label !== "" && !seen.has(label)) {',
+        '      seen.add(label)',
+        '      output.push(label)',
+        '    }',
+        '  }',
+        '  return output',
+        '}',
+        'const cases = { repeat: [" Ada ", "Bo", "Ada"], empty: [], blank: [" ", "", "Bo"], case: ["Ada", "ada", "Ada"] }',
+        'const predictLabels = (caseName: keyof typeof cases) => collectLabels(cases[caseName])',
+      ],
+      input: 'caseName = "repeat"',
+      steps: [
+        {
+          line: 2,
+          vars: { caseName: 'repeat' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['label', null],
+              ['seen', '{}'],
+              ['output', '[]'],
+            ],
+            events: ['" Ada "', '"Bo"', '"Ada"'],
+          },
+          note: 'This replays collectLabels on the repeat case. Your answer should be the prediction you made before running anything.',
+        },
+        {
+          line: 4,
+          vars: { raw: ' Ada ', label: 'Ada' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['label', 'Ada'],
+              ['seen', '{}'],
+              ['output', '[]'],
+            ],
+            events: ['" Ada "', '"Bo"', '"Ada"'],
+            eventIndex: 0,
+          },
+          note: 'trim runs before any comparison, so the spaced value becomes Ada.',
+        },
+        {
+          line: 7,
+          vars: { raw: ' Ada ', label: 'Ada' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['label', 'Ada'],
+              ['seen', '{Ada}'],
+              ['output', '["Ada"]'],
+            ],
+            events: ['" Ada "', '"Bo"', '"Ada"'],
+            eventIndex: 0,
+          },
+          note: 'Ada is not blank and has not been seen, so it is recorded and added to the output.',
+        },
+        {
+          line: 7,
+          vars: { raw: 'Bo', label: 'Bo' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['label', 'Bo'],
+              ['seen', '{Ada, Bo}'],
+              ['output', '["Ada","Bo"]'],
+            ],
+            events: ['" Ada "', '"Bo"', '"Ada"'],
+            eventIndex: 1,
+          },
+          note: 'Bo has no spaces to trim and is new, so it follows Ada in first-seen order.',
+        },
+        {
+          line: 5,
+          vars: { raw: 'Ada', label: 'Ada' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['label', 'Ada'],
+              ['seen', '{Ada, Bo}'],
+              ['output', '["Ada","Bo"]'],
+            ],
+            events: ['" Ada "', '"Bo"', '"Ada"'],
+            eventIndex: 2,
+          },
+          note: 'The trimmed Ada is already in seen, so the condition is false and nothing changes. Lowercase ada would not match.',
+        },
+        {
+          line: 10,
+          vars: { result: '["Ada","Bo"]' },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['label', 'Ada'],
+              ['seen', '{Ada, Bo}'],
+              ['output', '["Ada","Bo"]'],
+            ],
+            events: ['" Ada "', '"Bo"', '"Ada"'],
+            eventIndex: 2,
+          },
+          note: 'Return the output. The blank case follows the same path, but trim turns " " and "" into empty labels, which are skipped.',
+        },
+      ],
+    },
     reasoning: 'Predicting intermediate state separates understanding from merely executing supplied code.',
     trace:
       'For [ Ada with spaces,Bo,Ada], trim to Ada, save it, save Bo, then skip the repeated Ada. Case variants Ada and ada remain distinct.',

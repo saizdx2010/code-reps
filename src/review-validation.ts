@@ -72,6 +72,64 @@ export const validationDepth: Record<string, RepDepth> = {
       'Add a scheduled mode requiring a date and decide where date errors fit in the precedence. Write conflicting examples first; the original checks do not assess this variation.',
   },
   'validate-import-batch': {
+    traceSteps: {
+      code: [
+        'type ImportResult = {ok: true; rows: {id: string; amount: number}[]} | {ok: false; index: number; error: string}',
+        'function importBatch(input: unknown): ImportResult {',
+        "  if (!Array.isArray(input) || input.length < 1 || input.length > 50) return {ok: false, index: -1, error: 'INVALID_BATCH'}",
+        '  const seen = new Set<string>(), rows: {id: string; amount: number}[] = []',
+        '  for (const [index, row] of input.entries()) {',
+        "    if (typeof row !== 'object' || row === null || Array.isArray(row)) return {ok: false, index, error: 'INVALID_ROW'}",
+        '    const {id, amount} = row as {id?: unknown; amount?: unknown}',
+        "    if (typeof id !== 'string' || typeof amount !== 'number' || !Number.isInteger(amount)) return {ok: false, index, error: 'INVALID_ROW'}",
+        '    const key = id.trim().toLowerCase()',
+        "    if (!/^[a-z0-9]{1,10}$/.test(key) || amount < 0 || amount > 9999) return {ok: false, index, error: 'INVALID_ROW'}",
+        "    if (seen.has(key)) return {ok: false, index, error: 'DUPLICATE_ID'}",
+        '    seen.add(key); rows.push({id: key, amount})',
+        '  }',
+        '  return {ok: true, rows}',
+        '}',
+      ],
+      input: 'input = [{id: " A1 ", amount: 0}, {id: "B2", amount: 5}, {id: "a1", amount: -1}, {id: "a1", amount: 2}]',
+      steps: [
+        {
+          line: 2,
+          vars: { length: 4 },
+          structure: { kind: 'array', values: ['" A1 ": 0', '"B2": 5', '"a1": -1', '"a1": 2'] },
+          note: 'The batch is an array of 4 rows, inside 1–50, so rule 1 passes. Rows are examined in order next.',
+        },
+        {
+          line: 8,
+          vars: { index: 0, key: 'a1', amount: 0 },
+          structure: { kind: 'array', values: ['" A1 ": 0', '"B2": 5', '"a1": -1', '"a1": 2'], pointers: { index: 0 } },
+          note: 'Row 0 has the right shape. Its id normalizes to a1. Amount 0 is a valid integer, not a missing value.',
+        },
+        {
+          line: 11,
+          vars: { index: 0, seen: '{a1}', rows: 1 },
+          structure: { kind: 'array', values: ['" A1 ": 0', '"B2": 5', '"a1": -1', '"a1": 2'], pointers: { index: 0 } },
+          note: 'a1 passes rules 2–4 and is new, so it is accepted. Only the normalized id and amount are kept.',
+        },
+        {
+          line: 11,
+          vars: { index: 1, seen: '{a1, b2}', rows: 2 },
+          structure: { kind: 'array', values: ['" A1 ": 0', '"B2": 5', '"a1": -1', '"a1": 2'], pointers: { index: 1 }, dimmed: [0] },
+          note: 'B2 lowercases to b2 before the character check, so it is accepted too.',
+        },
+        {
+          line: 8,
+          vars: { index: 2, key: 'a1', amount: -1 },
+          structure: { kind: 'array', values: ['" A1 ": 0', '"B2": 5', '"a1": -1', '"a1": 2'], pointers: { index: 2 }, dimmed: [0, 1] },
+          note: 'Row 2 repeats a1, but rule 5 waits until the row passes rules 2–4.',
+        },
+        {
+          line: 9,
+          vars: { result: '{"ok":false,"index":2,"error":"INVALID_ROW"}' },
+          structure: { kind: 'array', values: ['" A1 ": 0', '"B2": 5', '"a1": -1', '"a1": 2'], pointers: { index: 2 }, dimmed: [0, 1, 3] },
+          note: 'Amount -1 fails rule 4, so INVALID_ROW wins over the duplicate. The accepted rows are discarded and row 3 is never examined.',
+        },
+      ],
+    },
     reasoning:
       'Before each row, accepted output contains only valid rows with distinct normalized IDs. Validating before duplicate detection and stopping immediately preserves the earliest-error rule.',
     trace:

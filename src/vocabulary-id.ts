@@ -215,6 +215,7 @@ export const indonesianGlossary: Record<string, string> = {
   Prefix: 'teks di bagian awal string',
   'Blank text': 'teks yang kosong setelah di-trim',
   'Repeated occurrence': 'nilai yang muncul lagi setelah pernah terlihat',
+  'Record high': 'rekor tertinggi; nilai yang lebih besar dari semua nilai sebelumnya',
   'Initial value': 'nilai awal sebuah hitungan',
   'Saved action': 'aksi tersimpan sampai dibatalkan',
   'Adjacent pair': 'dua nilai sama yang bersebelahan',
