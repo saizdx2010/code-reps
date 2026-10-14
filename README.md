@@ -34,6 +34,8 @@ Practice writing scales with the task: one useful sentence for a small Foundatio
 
 Plan and Explain offer optional English sentence starters above the writing field. Selecting one appends it to your draft and returns focus to the field; your writing saves normally. **Show Indonesian help**, beside Quick vocabulary in the brief, is off by default. It adds short Indonesian glosses where available and an English tips disclosure in Explain. English stays primary. This profile-scoped preference survives refresh in the current browser session and never enters learner backups.
 
+After every check passes, a rep with an authored step trace also compares your code line by line with the trace's reference code, ignoring spacing and comments; a different approach can still be correct. After you complete a rep you have finished before, or a journey's independent or recall rep, **Read back your earlier explanation** shows that earlier plan and explanation beside today's (`src/compare-work.ts`). Both appear only after your own work is done.
+
 > Passing checks establishes behavior. Plans and explanations use a self-review rubric; independent fluency and retention need evidence from unhinted work and later recall.
 
 ## What you can practice

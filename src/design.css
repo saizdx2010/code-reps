@@ -1494,6 +1494,69 @@ footer {
   margin-top: 18px;
   font-size: 18px;
 }
+/* Post-check comparison with the authored reference: a mark and a label carry each line's side, not colour alone. */
+.code-compare ol {
+  list-style: none;
+  margin: 8px 0;
+  padding: 8px;
+  overflow-x: auto;
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+}
+.code-compare li {
+  display: flex;
+  gap: 10px;
+  padding: 2px 6px;
+  white-space: pre;
+  border-left: 3px solid transparent;
+}
+.code-compare-mark {
+  width: 1ch;
+  flex: none;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+.code-compare-yours {
+  background: var(--accent-soft);
+  color: var(--feature-text);
+  border-color: var(--accent);
+}
+.code-compare-reference {
+  background: var(--bg);
+  border-color: var(--border-strong);
+  border-left-style: dashed;
+}
+.code-compare-legend {
+  font-size: 13px;
+  color: var(--muted);
+}
+.earlier-work {
+  margin-top: 16px;
+}
+.earlier-work summary {
+  font-weight: 700;
+  cursor: pointer;
+}
+.earlier-work h4 {
+  margin: 12px 0 6px;
+  font-size: var(--type-card);
+}
+.earlier-work-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.earlier-work-columns > div {
+  padding: 10px 12px;
+  border: 1px solid var(--success-border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  overflow-wrap: anywhere;
+}
+.earlier-work-columns p {
+  margin: 6px 0 0;
+  white-space: pre-wrap;
+}
 .completion-panel {
   margin-top: 24px;
   padding: 20px;
@@ -3564,7 +3627,8 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
-.trace-viewer .sr-only {
+.trace-viewer .sr-only,
+.code-compare .sr-only {
   position: absolute;
   width: 1px;
   height: 1px;

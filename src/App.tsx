@@ -553,6 +553,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
               allPassed={allPassed}
               review={review}
               onReveal={revealSection}
+              code={attempt.code}
             />
             <ReviewSection
               hidden={activeStep !== 'review'}
@@ -571,6 +572,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
               onCompletionNext={() => (completionNext ? openPracticeAction(completionNext) : setView('home'))}
               onDone={() => setView('home')}
               onFreshAttempt={startNewAttempt}
+              history={history}
             />
           </div>
         </div>
