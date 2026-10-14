@@ -204,6 +204,9 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   const [mobileTab, setMobileTab] = useSessionPreference<'task' | 'workspace'>('workspace-tab', 'task')
   const [walkthrough, setWalkthrough] = useSessionPreference<'new' | 'active' | 'dismissed'>('first-rep-walkthrough', 'new')
   const [indonesianHelp, setIndonesianHelp] = useSessionPreference<'off' | 'on'>('indonesian-help', 'off')
+  // A running warm-up takes over the completion button until its last rep. Opening any rep another way ends it.
+  const [warmup, setWarmup] = useSessionPreference<string>('warmup', '')
+  const warmupNavigation = useRef(false)
   const [indonesianHelpContent, setIndonesianHelpContent] = useState<IndonesianHelp | null>(null)
   useEffect(() => {
     if (indonesianHelp !== 'on' || indonesianHelpContent) return
@@ -286,6 +289,8 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   }, [view, repId])
 
   function openRep(nextId: string) {
+    if (!warmupNavigation.current && warmup) setWarmup('')
+    warmupNavigation.current = false
     setChecksOpen(false)
     selectRep(nextId)
     setActiveStep('understand')
@@ -393,8 +398,6 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
       ? undefined
       : reps.find(item => item.id === nextRepInPath(fluency.state.goal.pathId, repId, id => completedPathIds.has(id) || !recallReady(id)))
   const completionNext = pathNextRep ? { repId: pathNextRep.id, mode: 'start' } : recommendation
-  // A running warm-up takes over the next action until its last rep, then hands back to the trail.
-  const [warmup, setWarmup] = useSessionPreference<string>('warmup', '')
   const warmupAt = warmupPosition(parseWarmup(warmup), repId)
   const completionLabel = warmupAt
     ? warmupAt.next
@@ -405,8 +408,12 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
       : recommendedRep && recommendation
         ? `${actionLabel(recommendation.mode)}: ${recommendedRep.title}`
         : 'Return to your trail'
+  function openWarmupRep(id: string) {
+    warmupNavigation.current = true
+    openReview(id)
+  }
   function continueAfterCompletion() {
-    if (warmupAt?.next) return openReview(warmupAt.next)
+    if (warmupAt?.next) return openWarmupRep(warmupAt.next)
     if (warmupAt) {
       setWarmup('')
       return setView('home')
@@ -421,7 +428,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   function startWarmup() {
     if (!warmupChoices.length) return
     setWarmup(formatWarmup(warmupChoices))
-    openReview(warmupChoices[0])
+    openWarmupRep(warmupChoices[0])
   }
   const journalTabs = <JournalTabs view={view} onNavigate={setView} />
   const notes = repNotes(full?.note ?? '')

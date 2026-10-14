@@ -85,22 +85,36 @@ Start with one connected plain TypeScript browser feature using the existing DOM
 
 **Goal:** Build confidence through different applications of the same skill before adding more topics.
 
-- [ ] Record where you get stuck during ordinary practice: wording, missing prerequisite, approach, syntax, boundaries, or integration. Use those notes to select the next content batch.
+- [x] Record where you get stuck during ordinary practice: wording, missing prerequisite, approach, syntax, boundaries, or integration. The “What was hardest?” answer gained a missing prerequisite and combining the pieces, and Journal → Stuck points groups the answers by kind and topic with a suggested focus. Choosing the next content batch from those notes is still an editorial step.
 - [x] Add a DOM interactions journey with guided, independent, and delayed-recall stages. The `dom-interactions` journey in `src/learning.ts` stages `dom-disclosure`, `dom-live-search`, and `dom-accordion`.
 - [x] Add knowledge lessons for sorting, recursion, trees, and graphs (`sorting-basics`, `recursion-basics`, `trees`, `graphs` in `src/dsa-knowledge.ts`, with discussions in `src/review-dsa-lessons.ts`).
 - [x] Review the sorting, recursion, tree, and graph journeys for difficulty transitions and unfamiliar transfer. Findings and fixes (a fresh sorting recall, tree and graph bridge practice reps, trimmed lesson clues) are in the archived [journey review](./docs/archive/DSA_JOURNEY_REVIEW.md); this is editorial review, not learner evidence.
 - [ ] Add independent or recall tasks to queues, two pointers, windows, or binary search only when learner observations show a specific gap. Each of those four already has guided, independent, and delayed-recall journey stages.
 - [x] Deepen TypeScript through narrowing unknown input, discriminated unions, exhaustive handling, generics, and reusable typed APIs. Separate compile-time guarantees from behavioral checks.
-- [ ] Strengthen debugging and frontend practice with fresh contexts instead of cosmetic variants of the same problem.
+- [ ] Strengthen debugging and frontend practice with fresh contexts instead of cosmetic variants of the same problem. Debugging now has a stack-trace journey (failing line, guilty caller, returned null); frontend practice is unchanged.
 - [x] Add structured step-by-step traces (`traceSteps`) to the reviews of `read-batch-labels`, `preview-slot-results`, `validate-import-batch`, `debug-page-offset`, and `leading-throttle`, the visual-trace candidates named in the archived [content audit](./docs/archive/CONTENT_AUDIT.md).
 - [x] Keep final hints as non-code guidance. `declare-variables`, `basic-types`, and `create-objects` now show their code in the post-attempt comparison instead. The eight array, text, lookup, and stack journey practice reps, whose final hints were complete solutions, also have specific progressive hints, task-specific plan prompts, and named checks.
 - [x] Strengthen weak recall variants: `first-duplicate-label` and `sum-matching-prices` repeat their guided comparison and accumulation patterns. `count-record-highs` (comparison with a running record) and `first-pair-to-target` (complement lookup) are appended to the arrays and lookup rotations, so saved review positions keep their meaning. The weaker variants stay in place, because removing them would change how saved history replays.
 - [x] Add linked-list insertion and removal after reversal, with a linked-lists lesson, and a binary search tree lesson and journey (search path → latest value at or before a time → ordering check). See [Algorithms & Data Structures](./docs/ALGORITHMS_DATA_STRUCTURES.md#next-expansion).
+- [x] Make the three linked-list reps a journey, and add binary search tree insertion by path copying as optional practice before the search-tree recall.
 - [ ] Keep batches small and complete: a lesson where needed, guided practice, an independent application, delayed recall, reference solutions, boundaries, hints, and authored review.
 
 **Done when:** Each chosen batch addresses a difficulty observed in your own use and includes a fresh application that cannot be solved merely by recalling the previous answer. Later attempts support only the evidence the task actually establishes.
 
 See [content authoring](./docs/CONTENT_AUTHORING.md) for requirements and the [content gap map](./docs/CONTENT_GAPS.md) for editorial context. Check documentation snapshots against current source before selecting work.
+
+## 6. See, check, and look back on your work
+
+**Goal:** Make reasoning visible and give quick, honest feedback without adding a new main area.
+
+- [x] Draw graphs, linked lists, sliding windows and search ranges, and memoized recursion trees in step traces, with an optional second trace under “Compare approaches”.
+- [x] Let learners predict each trace step before revealing it. Guesses are never saved or counted as evidence.
+- [x] Compare finished code line by line with a rep's traced reference, and read back earlier plans and explanations after completion.
+- [x] Report the editor's TypeScript errors beside the checks, separately from them, and keep starters and traced references free of type errors.
+- [x] Offer pattern cards (choose a tool for an unlabeled contract), a three-rep warm-up on Trail, a practice calendar on Progress, and a weekly look back that saves to the Notebook.
+- [x] Add a second SQLite rep (a grouped, read-only report) and a development-only content preview at `#/author`.
+
+These tools show practice and recognition; none of them establishes independence, retention, or an overall score.
 
 ## Later, when there is a concrete need
 

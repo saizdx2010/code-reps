@@ -24,4 +24,13 @@ test('Home offers a warm-up of earlier Beginner reps that starts the first one f
   expect(await page.evaluate(() => sessionStorage.getItem('code-reps:ui:default:warmup'))).toBe(
     'make-arrays,sum-positive-numbers,count-words',
   )
+  // Opening a rep any other way ends the warm-up, so its completion button never names a warm-up step.
+  await page.goto('/#/practice')
+  await page.getByRole('searchbox').first().fill('Count words')
+  await page
+    .getByRole('button', { name: /^Count words/ })
+    .first()
+    .click()
+  await expect(page).toHaveURL(/#\/practice\/count-words$/)
+  expect(await page.evaluate(() => sessionStorage.getItem('code-reps:ui:default:warmup'))).toBe('')
 })
