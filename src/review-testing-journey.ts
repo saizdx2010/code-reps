@@ -1,4 +1,5 @@
 import type { RepDepth } from './rep-depth.ts'
+import type { ReflectionGuide } from './reflection-guides.ts'
 
 export const testingJourneyDepth: Record<string, RepDepth> = {
   'expose-page-bugs': {
@@ -46,7 +47,7 @@ export const testingJourneyDepth: Record<string, RepDepth> = {
   },
 }
 
-export const testingJourneyGuides: Record<string, { plan: string[]; explanation: string[]; example: string }> = {
+export const testingJourneyGuides: Record<string, ReflectionGuide> = {
   'expose-page-bugs': {
     plan: ['Write one case for each sentence of the contract before you code exposes.', 'Decide how each run gets a fresh copy of its items.', 'Decide what exposes compares after the call: the result, the copy, or both.'],
     explanation: ['Say which case exposes each faulty variant and why the correct version passes it.', 'Explain how a version can return the right page and still be wrong.', 'Name one faulty version your table would still accept. The checks cannot prove completeness.'],

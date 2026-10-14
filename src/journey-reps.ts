@@ -1,4 +1,4 @@
-import type { Rep } from './rep'
+import type { Rep } from './rep-types.ts'
 
 export const journeyReps: Rep[] = [
   {

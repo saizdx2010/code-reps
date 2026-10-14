@@ -1,4 +1,5 @@
 import type { RepDepth } from './rep-depth.ts'
+import type { ReflectionGuide } from './reflection-guides.ts'
 
 export const asyncRuntimeDepth: Record<string, RepDepth> = {
   'await-local-records': {
@@ -24,7 +25,7 @@ export const asyncRuntimeDepth: Record<string, RepDepth> = {
   },
 }
 
-export const asyncRuntimeGuides = {
+export const asyncRuntimeGuides: Record<string, ReflectionGuide> = {
   'await-local-records': { plan: ['State the next-start dependency.', 'Include failure and empty-input cleanup.'], explanation: ['Trace a rejection in the middle.', 'Compare sequential awaiting with starting every promise first.'], example: 'I await one fetch at a time and stop at the first rejection. finally releases once on success, failure, and empty input. The lifecycle checks establish local runtime order, not network timing.' },
   'settle-local-panels': { plan: ['Keep one outcome per position.', 'State when ownership ends.'], explanation: ['Trace a failed panel beside successful ones.', 'Explain why a returned array alone would not prove concurrency.'], example: 'All promises start before collection is awaited. Each failure becomes its own outcome. I release after every promise settles, preserving exact text and input order.' },
   'cancel-local-export': { plan: ['Separate cancellation from failure.', 'Include pre-abort and in-flight abort.'], explanation: ['Trace the signal through one pending fetch.', 'Distinguish cooperative cleanup from stopping a worker.'], example: 'I avoid work when already cancelled, pass the signal to pending work, and classify AbortError separately. finally releases after settlement. Stopping the app runner terminates its worker and cannot promise learner finally execution.' },

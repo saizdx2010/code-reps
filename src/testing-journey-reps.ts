@@ -1,11 +1,10 @@
+import { lines } from './rep-helpers.ts'
 import type { Rep } from './rep-types.ts'
 
 // Find-the-bug journey: expose supplied faulty variants with your own cases, repair a faulty function, then expose
 // the mutants of a different function from requirements alone. The worker passes JSON-like inputs, so a variant is
 // chosen by name and the learner's `exposes(variant)` runs their own cases against it. Checks establish that those
 // cases distinguish the supplied variants. They do not establish that a case table is complete.
-const lines = (...parts: string[]) => parts.join('\n') + '\n'
-
 const exposePageStarter = lines(
   'type Case = { items: number[]; page: number; size: number; expected: number[] }',
   'type PageItems = (items: number[], page: number, size: number) => number[]',

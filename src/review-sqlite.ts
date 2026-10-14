@@ -1,4 +1,5 @@
 import type { RepDepth } from './rep-depth.ts'
+import type { ReflectionGuide } from './reflection-guides.ts'
 
 export const sqliteDepth: Record<string, RepDepth> = {
   'sqlite-stock-transfer': {
@@ -9,7 +10,7 @@ export const sqliteDepth: Record<string, RepDepth> = {
     transfer: 'Allow several transfers with caller-supplied audit IDs and retry a repeated request without applying stock twice. Decide whether an existing ID with a different amount is an error. This changed contract is self-reviewed and not covered by the original checks.',
   },
 }
-export const sqliteGuides = {
+export const sqliteGuides: Record<string, ReflectionGuide> = {
   'sqlite-stock-transfer': {
     plan: ['List the three writes and which constraints can fail.', 'Predict stock and audit rows after the last write fails.', 'Decide where commit and rollback belong.'],
     explanation: ['Trace the duplicate audit ID failure through both updates and rollback.', 'Inspect that values are bound, all writes share a transaction, and schema stays unchanged.', 'Explain that these checks exercise SQLite locally, not disk durability, concurrency, or understanding.'],

@@ -1,6 +1,7 @@
 import type { RepDepth } from './rep-depth.ts'
+import type { ReflectionGuide } from './reflection-guides.ts'
 
-export const appGuides = {
+export const appGuides: Record<string, ReflectionGuide> = {
   'frontend-sort-table': {
     plan: ['Choose a comparable value for each column.', 'Sort a copy, not the caller\'s array.', 'Decide how ties behave in both directions.'],
     explanation: ['Trace two tied rows through an ascending and a descending sort.', 'Explain why reversing the ascending result changes tie order.', 'Account for the sorting cost and the copy.'],

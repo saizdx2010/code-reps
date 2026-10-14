@@ -1,4 +1,4 @@
-import type { Rep } from './rep'
+import type { Rep } from './rep-types.ts'
 
 const tickets = [
   { id: 't1', title: 'Login issue', status: 'open' },

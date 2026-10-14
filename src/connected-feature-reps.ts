@@ -1,4 +1,4 @@
-import type { Rep, Check } from './rep.ts'
+import type { Rep, Check } from './rep-types.ts'
 import { encodeFiles } from './project-files.ts'
 
 const stateStarter = 'export type Status = \'Ready\' | \'Unsaved\' | \'Too long\' | \'Saved\' | \'Save failed\' | \'Recovered\'\nexport type State = { text: string\n status: Status }\nexport function initial(text: string): State { return { text: \'\', status: \'Ready\' } }\nexport function edit(state: State, text: string): State { return state }\n'

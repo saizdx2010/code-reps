@@ -1,4 +1,4 @@
-import type { Rep } from './rep.ts'
+import type { Rep } from './rep-types.ts'
 
 export const validationReps: Rep[] = [
   {

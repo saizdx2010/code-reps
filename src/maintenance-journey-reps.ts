@@ -1,15 +1,15 @@
 import { encodeFiles } from './project-files.ts'
+import { lines } from './rep-helpers.ts'
 import type { Rep } from './rep-types.ts'
 
 // Maintenance journey: read an unfamiliar module, reproduce a reported bug, write a regression case and fix it, then
 // adapt the module to a changed requirement. It reuses the multi-file loader and the function worker. A learner's case
 // is checked by running it against a frozen copy of the faulty code and against their fix. The checks establish that a
 // case separates those two versions. They do not establish that a regression suite is complete.
-const lines = (...parts: string[]) => parts.join('\n') + '\n'
 
 // ---- Shipping module (guided domain) ----
 
-export const ratesSource = lines(
+const ratesSource = lines(
   "export type Zone = 'home' | 'region' | 'world'",
   '',
   '// Prices are whole currency units.',
@@ -44,10 +44,10 @@ const quoteBody = (billable: string) => lines(
   '  return standard',
   '}'
 )
-export const faultyQuoteSource = quoteBody('Math.floor(weightKg) + 1')
-export const fixedQuoteSource = quoteBody('Math.ceil(weightKg)')
+const faultyQuoteSource = quoteBody('Math.floor(weightKg) + 1')
+const fixedQuoteSource = quoteBody('Math.ceil(weightKg)')
 
-export const summarySource = lines(
+const summarySource = lines(
   "import { quote } from './quote'",
   "import type { Parcel } from './quote'",
   '',
@@ -165,7 +165,7 @@ const finesBody = (chargeable: string) => lines(
   '  return Math.min(chargeable * RATE[loan.kind], CAP[loan.kind])',
   '}'
 )
-export const faultyFinesSource = finesBody('daysLate(loan.due, loan.returned) - GRACE_DAYS')
+const faultyFinesSource = finesBody('daysLate(loan.due, loan.returned) - GRACE_DAYS')
 export const fixedFinesSource = finesBody('Math.max(0, daysLate(loan.due, loan.returned) - GRACE_DAYS)')
 
 const loanGuard = lines(
@@ -222,7 +222,7 @@ const pricingBody = (loop: string) => lines(
   '}'
 )
 const flatLoop = '  for (let hour = start; hour < end; hour++) total += isPeak(hour) ? PEAK_RATE : OFF_PEAK_RATE'
-export const flatPricingSource = pricingBody(flatLoop)
+const flatPricingSource = pricingBody(flatLoop)
 export const tieredPricingSource = pricingBody(lines(
   '  for (let hour = start; hour < end; hour++) {',
   '    const rate = isPeak(hour) ? PEAK_RATE : OFF_PEAK_RATE',

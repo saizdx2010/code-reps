@@ -1,4 +1,5 @@
 import type { RepDepth } from './rep-depth.ts'
+import type { ReflectionGuide } from './reflection-guides.ts'
 
 export const connectedFeatureDepth: Record<string, RepDepth> = {
   'connected-note-state': {
@@ -52,7 +53,7 @@ export const connectedFeatureDepth: Record<string, RepDepth> = {
   }
 }
 
-export const connectedFeatureGuides: Record<string, { plan: string[]; explanation: string[]; example: string }> = {
+export const connectedFeatureGuides: Record<string, ReflectionGuide> = {
   'connected-note-state': {
     plan: [
       'Name the state and boundary that this checkpoint owns.',

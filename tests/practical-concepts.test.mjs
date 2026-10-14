@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { practicalSkills, practicalReps } from '../src/practical-concepts.ts'
+import { practicalReps } from '../src/practical-concepts.ts'
+import { practicalSkills } from '../src/practical-knowledge.ts'
 import { skills } from '../src/knowledge.ts'
 import { paths } from '../src/path.ts'
 import { runRep } from '../src/runner.ts'

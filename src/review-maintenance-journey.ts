@@ -1,4 +1,5 @@
 import type { RepDepth } from './rep-depth.ts'
+import type { ReflectionGuide } from './reflection-guides.ts'
 
 export const maintenanceJourneyDepth: Record<string, RepDepth> = {
   'read-shipping-quote': {
@@ -45,7 +46,7 @@ export const maintenanceJourneyDepth: Record<string, RepDepth> = {
   },
 }
 
-export const maintenanceJourneyGuides: Record<string, { plan: string[]; explanation: string[]; example: string }> = {
+export const maintenanceJourneyGuides: Record<string, ReflectionGuide> = {
   'read-shipping-quote': {
     plan: ['Trace each case through rates.ts, quote.ts, and summary.ts in order.', 'Write the zone, billable weight, standard price, and last rule that fires.', 'Predict all six cases before you run the checks.'],
     explanation: ['Walk through one prediction line by line and name the file that decides each step.', 'Say which case surprised you and which line explains it.', 'The checks verify the predictions; your trace is self-reviewed.'],

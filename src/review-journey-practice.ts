@@ -1,4 +1,5 @@
 import type { RepDepth } from './rep-depth.ts'
+import type { ReflectionGuide } from './reflection-guides.ts'
 
 export const journeyPracticeDepth: Record<string, RepDepth> = {
   'sum-in-range': {
@@ -59,7 +60,7 @@ export const journeyPracticeDepth: Record<string, RepDepth> = {
   }
 }
 
-export const journeyPracticeGuides = {
+export const journeyPracticeGuides: Record<string, ReflectionGuide> = {
   'sum-in-range': {
     plan: [
       'Predict the example and a boundary case before implementing.',

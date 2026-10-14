@@ -1,6 +1,6 @@
 import { richReps } from './rich-reps.ts'
 import { encodeFiles } from './project-files.ts'
-import type { Rep } from './rep.ts'
+import type { Rep } from './rep-types.ts'
 const directory = richReps.find(r => r.id === 'frontend-directory')!
 const tickets = richReps.find(r => r.id === 'backend-ticket-handler')!
 export const capstoneReps: Rep[] = [
