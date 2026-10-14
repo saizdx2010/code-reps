@@ -1,0 +1,106 @@
+/* Development-only content preview (#/author). It reuses the page frame and tokens. */
+.author-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.author-list {
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.author-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+}
+.author-list a {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: var(--radius-control);
+  color: var(--text);
+  text-decoration: none;
+}
+.author-list a:hover,
+.author-list a[aria-current='page'] {
+  background: var(--accent-soft);
+  color: var(--feature-text);
+}
+.author-list small {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.author-list a[aria-current='page'] small {
+  color: var(--feature-muted);
+}
+.author-rep {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+.author-rep section {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  min-width: 0;
+}
+.author-rep h2 {
+  font-size: var(--type-feature);
+  margin: 0 0 4px;
+}
+.author-rep h3 {
+  font-size: var(--type-section);
+  margin: 0 0 8px;
+}
+.author-rep h4 {
+  font-size: var(--type-card);
+  margin: 16px 0 4px;
+}
+.author-rep pre {
+  overflow-x: auto;
+  padding: 12px;
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+}
+.author-problems ul {
+  margin: 8px 0 0;
+}
+.author-terms div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+  gap: 8px;
+}
+.author-terms dt {
+  font-weight: 700;
+}
+.author-checks {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.author-checks th,
+.author-checks td {
+  text-align: left;
+  vertical-align: top;
+  padding: 6px;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+@media (max-width: 900px) {
+  .author-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .author-list {
+    position: static;
+    max-height: 280px;
+  }
+}

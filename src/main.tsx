@@ -10,7 +10,24 @@ import { initializeStorage } from './local-store.ts'
 
 async function start() {
   await initializeStorage()
-  createRoot(document.getElementById('root')!).render(
+  const root = createRoot(document.getElementById('root')!)
+  // The content preview exists only in development; the production build drops this branch and its chunk.
+  if (import.meta.env.DEV) {
+    const authoring = location.hash.startsWith('#/author')
+    window.addEventListener('hashchange', () => {
+      if (location.hash.startsWith('#/author') !== authoring) location.reload()
+    })
+    if (authoring) {
+      const { AuthorPreview } = await import('./AuthorPreview.tsx')
+      root.render(
+        <StrictMode>
+          <AuthorPreview />
+        </StrictMode>,
+      )
+      return
+    }
+  }
+  root.render(
     <StrictMode>
       <ProfileApp />
     </StrictMode>,

@@ -95,6 +95,25 @@ columns aligned. Border styles and explicit labels distinguish current, read, fi
 and empty cells without relying on colour. Keep new traces to at most ten snapshots.
 Run the trace's code against the rep checks and compare its final displayed result
 with execution on the traced input in `tests/trace-content.test.mjs`.
+Arrays may also draw a `window: [from, to]` bracket (inclusive, in-bounds indices) with
+a short `windowLabel`, such as a sliding window or a binary search's remaining range.
+A `list` snapshot draws linked nodes in `rows` (each with an optional `label`); every
+node has a unique `id`, a `value`, and a `next` id or `null`, so rewired and fresh
+nodes draw as arrows. `pointers` name node ids or `null`. A `graph` snapshot places
+`nodes` on an authored grid with `at: [column, row]`, lists `edges` as id pairs
+(`directed` for one-way edges), and marks `current`, `queued`, and `visited` ids and
+`highlight` edges being followed; keep each node in the same place on every step. A
+tree may mark `cached` ids for calls answered from a memo. An entry may add one
+`alternativeTrace: { title, trace }`, shown under “Compare approaches”, such as a
+memoized recursion beside a bottom-up table; it follows the same rules and is also
+run against the checks. Learners can switch any trace to predict mode, which hides
+each later step's drawing and changed variables until they type a guess and reveal
+it. Guesses stay in the viewer and are never saved or counted as evidence.
+
+In development, `#/author/<rep-id>` (for example
+`http://localhost:5173/#/author/algo-binary-search`) previews a rep's brief, hints,
+checks, review, and traces without solving it, and lists the content-check problems
+for that rep. It reads no learner data and is left out of production builds.
 These authored snapshots appear only in the post-check comparison reveal after
 all checks pass. They describe the reference approach, not the learner's live
 execution, and must never be copied into independent or recall prompts.
