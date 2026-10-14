@@ -1,4 +1,43 @@
-import type { RepDepth } from './rep-depth.ts'
+import type { RepDepth, TraceStructure, TraceTreeNode } from './rep-depth.ts'
+
+// The input 1 → 2 → 3 stays intact on the first row; fresh nodes are prepended on the second.
+const reverseRows = (built: number[], pointers: Record<string, string | null> = {}): TraceStructure => ({
+  kind: 'list',
+  rows: [
+    {
+      label: 'input (unchanged)',
+      nodes: [
+        { id: 'a1', value: 1, next: 'a2' },
+        { id: 'a2', value: 2, next: 'a3' },
+        { id: 'a3', value: 3, next: null },
+      ],
+    },
+    {
+      label: built.length ? 'reversed (fresh nodes)' : 'reversed = null',
+      nodes: built.map((value, index) => ({ id: `r${value}`, value, next: index + 1 < built.length ? `r${built[index + 1]}` : null })),
+    },
+  ],
+  pointers,
+})
+
+// The call tree of the memoized climbStairs(4), grown one stage at a time. Notes show each call's result once known.
+const stairCalls = (stage: number): TraceTreeNode => {
+  const call = (id: string, n: number, note?: string, children?: TraceTreeNode[]): TraceTreeNode => ({
+    id,
+    value: n,
+    ...(note ? { note } : {}),
+    ...(children?.length ? { children } : {}),
+  })
+  const two = call('c2', 2, stage >= 3 ? '= 2, saved' : undefined, [
+    ...(stage >= 1 ? [call('c1a', 1, '= 1')] : []),
+    ...(stage >= 2 ? [call('c0', 0, '= 1')] : []),
+  ])
+  const three = call('c3', 3, stage >= 5 ? '= 3, saved' : undefined, [two, ...(stage >= 4 ? [call('c1b', 1, '= 1')] : [])])
+  return call('c4', 4, stage >= 7 ? '= 5' : undefined, [
+    ...(stage >= 1 ? [three] : []),
+    ...(stage >= 6 ? [call('c2b', 2, '= 2 from memo')] : []),
+  ])
+}
 
 export const dsaAdvancedDepth: Record<string, RepDepth> = {
   'algo-prefix-sums': {
@@ -252,91 +291,37 @@ export const dsaAdvancedDepth: Record<string, RepDepth> = {
         {
           line: 0,
           vars: {},
-          structure: {
-            kind: 'state',
-            entries: [
-              ['input list', '1 → 2 → 3 → null'],
-              ['reversed', 'null'],
-            ],
-            events: ['visit 1', 'visit 2', 'visit 3'],
-          },
+          structure: reverseRows([]),
           note: 'The input list is 1 → 2 → 3. We will build a new list; the input is never changed.',
         },
         {
           line: 1,
-          vars: {},
-          structure: {
-            kind: 'state',
-            entries: [
-              ['input list', '1 → 2 → 3 → null'],
-              ['reversed', 'null'],
-            ],
-            events: ['visit 1', 'visit 2', 'visit 3'],
-          },
+          vars: { reversed: 'null' },
+          structure: reverseRows([], { reversed: null }),
           note: 'The new list starts empty (null).',
         },
         {
           line: 3,
-          vars: {
-            node: 1,
-          },
-          structure: {
-            kind: 'state',
-            entries: [
-              ['input list', '1 → 2 → 3 → null'],
-              ['reversed', '1 → null'],
-            ],
-            events: ['visit 1', 'visit 2', 'visit 3'],
-            eventIndex: 0,
-          },
+          vars: { node: 1 },
+          structure: reverseRows([1], { node: 'a1', reversed: 'r1' }),
           note: 'Visit 1: make a fresh node whose next is the list built so far, so 1 lands at the front. New list: 1 → null.',
         },
         {
           line: 3,
-          vars: {
-            node: 2,
-          },
-          structure: {
-            kind: 'state',
-            entries: [
-              ['input list', '1 → 2 → 3 → null'],
-              ['reversed', '2 → 1 → null'],
-            ],
-            events: ['visit 1', 'visit 2', 'visit 3'],
-            eventIndex: 1,
-          },
+          vars: { node: 2 },
+          structure: reverseRows([2, 1], { node: 'a2', reversed: 'r2' }),
           note: 'Visit 2: make a fresh node whose next is the list built so far, so 2 lands at the front. New list: 2 → 1 → null.',
         },
         {
           line: 3,
-          vars: {
-            node: 3,
-          },
-          structure: {
-            kind: 'state',
-            entries: [
-              ['input list', '1 → 2 → 3 → null'],
-              ['reversed', '3 → 2 → 1 → null'],
-            ],
-            events: ['visit 1', 'visit 2', 'visit 3'],
-            eventIndex: 2,
-          },
+          vars: { node: 3 },
+          structure: reverseRows([3, 2, 1], { node: 'a3', reversed: 'r3' }),
           note: 'Visit 3: make a fresh node whose next is the list built so far, so 3 lands at the front. New list: 3 → 2 → 1 → null.',
         },
         {
           line: 5,
-          vars: {
-            result: '{"value":3,"next":{"value":2,"next":{"value":1,"next":null}}}',
-          },
-          structure: {
-            kind: 'state',
-            entries: [
-              ['input list', '1 → 2 → 3 → null'],
-              ['reversed', '3 → 2 → 1 → null'],
-            ],
-            events: ['visit 1', 'visit 2', 'visit 3'],
-            eventIndex: 2,
-          },
+          vars: { result: '{"value":3,"next":{"value":2,"next":{"value":1,"next":null}}}' },
+          structure: reverseRows([3, 2, 1], { node: null, reversed: 'r3' }),
           note: 'The input is used up. Return the new list, whose front is the last node visited.',
         },
       ],
@@ -1209,6 +1194,83 @@ export const dsaAdvancedDepth: Record<string, RepDepth> = {
           note: 'Return ways[4] = 5.',
         },
       ],
+    },
+    alternativeTrace: {
+      title: 'The same count, top down with a memo',
+      trace: {
+        code: [
+          'function climbStairs(n: number, memo = new Map<number, number>()): number {',
+          '  if (n <= 1) return 1',
+          '  if (memo.has(n)) return memo.get(n)!',
+          '  const ways = climbStairs(n - 1, memo) + climbStairs(n - 2, memo)',
+          '  memo.set(n, ways)',
+          '  return ways',
+          '}',
+        ],
+        input: 'n = 4',
+        steps: [
+          {
+            line: 0,
+            vars: { n: 4, memo: '{}' },
+            structure: { kind: 'tree', root: stairCalls(0), current: 'c4' },
+            note: 'Each circle is one call, labelled with its n. climbStairs(4) needs the answers for 3 and 2 first.',
+          },
+          {
+            line: 1,
+            vars: { n: 1, memo: '{}' },
+            structure: { kind: 'tree', root: stairCalls(1), current: 'c1a' },
+            note: 'The calls go down the left side, 4 → 3 → 2 → 1. A call for 1 is a base case and returns 1 without calling again.',
+          },
+          {
+            line: 1,
+            vars: { n: 0, memo: '{}' },
+            structure: { kind: 'tree', root: stairCalls(2), current: 'c0', visited: ['c1a'] },
+            note: 'Back in the call for 2, the second call asks for 0, which is also a base case: 1 way.',
+          },
+          {
+            line: 4,
+            vars: { n: 2, ways: 2, memo: '{2: 2}' },
+            structure: { kind: 'tree', root: stairCalls(3), current: 'c2', visited: ['c1a', 'c0'] },
+            note: 'The call for 2 adds 1 + 1 = 2 and saves it in the memo before returning.',
+          },
+          {
+            line: 1,
+            vars: { n: 1, memo: '{2: 2}' },
+            structure: { kind: 'tree', root: stairCalls(4), current: 'c1b', visited: ['c2', 'c1a', 'c0'] },
+            note: 'The call for 3 now asks for 1, a base case.',
+          },
+          {
+            line: 4,
+            vars: { n: 3, ways: 3, memo: '{2: 2, 3: 3}' },
+            structure: { kind: 'tree', root: stairCalls(5), current: 'c3', visited: ['c2', 'c1a', 'c0', 'c1b'] },
+            note: 'The call for 3 adds 2 + 1 = 3 and saves it.',
+          },
+          {
+            line: 2,
+            vars: { n: 2, memo: '{2: 2, 3: 3}' },
+            structure: {
+              kind: 'tree',
+              root: stairCalls(6),
+              current: 'c2b',
+              visited: ['c3', 'c2', 'c1a', 'c0', 'c1b'],
+              cached: ['c2b'],
+            },
+            note: 'The call for 4 now asks for 2 again. The memo already holds 2, so this call returns at once instead of growing a second subtree.',
+          },
+          {
+            line: 5,
+            vars: { n: 4, ways: 5, result: 5 },
+            structure: {
+              kind: 'tree',
+              root: stairCalls(7),
+              current: 'c4',
+              visited: ['c3', 'c2', 'c1a', 'c0', 'c1b'],
+              cached: ['c2b'],
+            },
+            note: 'The call for 4 adds 3 + 2 = 5. Without the memo, the repeated subtrees would make the call count grow exponentially; with it, each n is expanded once.',
+          },
+        ],
+      },
     },
     alternative:
       'A full table takes O(n) time and O(n) space. Two saved counts take O(n) time and O(1) space. Naive recursion repeats work exponentially.',

@@ -117,3 +117,30 @@ test('table trace shows filled, current, and read cells and steps by keyboard at
   expect(box!.x + box!.width).toBeLessThanOrEqual(320)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
+
+test('graph trace draws nodes and edges, and predict mode hides each step until revealed', async ({ page }) => {
+  await page.goto('/#/practice/algo-graph-reachable')
+  await replaceCode(
+    page,
+    'function graphReachable(graph: number[][], start: number, target: number): boolean { if (start < 0 || target < 0 || start >= graph.length || target >= graph.length) return false; const queue = [start], seen = new Set([start]); for (let head = 0; head < queue.length; head++) { const node = queue[head]; if (node === target) return true; for (const next of graph[node]) if (!seen.has(next)) { seen.add(next); queue.push(next) } } return false }',
+    'algo-graph-reachable',
+  )
+  await page.getByRole('button', { name: 'Run checks', exact: true }).click()
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
+  await page.getByRole('button', { name: 'Explain', exact: true }).click()
+  await page.getByText('Compare your plan and explanation', { exact: true }).click()
+  const viewer = page.getByRole('region', { name: 'Step trace' })
+  await expect(viewer.locator('.trace-graph .trace-edge')).toHaveCount(2)
+  await expect(viewer.locator('.trace-structure .sr-only')).toContainText('Directed graph with nodes 0, 1, 2')
+  await viewer.getByRole('button', { name: 'Predict each step', exact: true }).click()
+  await viewer.getByRole('button', { name: 'Next', exact: true }).click()
+  await expect(viewer.locator('.trace-graph')).toHaveCount(0)
+  await expect(viewer.locator('.trace-note')).toContainText('Predict seen, queue')
+  await viewer.getByRole('textbox', { name: 'Predict queue' }).fill('[ 0 ]')
+  await viewer.getByRole('button', { name: 'Reveal step', exact: true }).click()
+  await expect(viewer.locator('.trace-graph')).toHaveCount(1)
+  await expect(viewer.getByText('Your prediction matched.')).toBeVisible()
+  await expect(viewer.getByRole('status')).toContainText('matched 1 of 2')
+  await viewer.getByRole('button', { name: 'Stop predicting', exact: true }).click()
+  await expect(viewer.locator('.trace-note')).toContainText('Step 1 of 7')
+})

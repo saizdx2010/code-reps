@@ -99,3 +99,80 @@ test('table snapshots accept 1D and 2D tables and reject inconsistent cells', ()
   assert.match(validate(table({ current: [0, 1], reads: [[0, 1]] })).join(), /read itself/)
   assert.match(validate(table({ current: [0, 1], reads: [[0, 2]] })).join(), /unfilled cell/)
 })
+
+test('list, graph, window, and cached snapshots reject inconsistent references', () => {
+  const list = (nodes, pointers) => ({ kind: 'list', rows: [{ nodes }], pointers })
+  assert.deepEqual(validate(wrap(list([{ id: 'a', value: 1, next: null }], { head: 'a', tail: null }))), [])
+  assert.match(validate(wrap(list([{ id: 'a', value: 1, next: 'z' }]))).join(), /links to an unknown node/)
+  assert.match(validate(wrap(list([{ id: 'a', value: 1, next: null }], { head: 'z' }))).join(), /pointer names an unknown node/)
+  assert.match(
+    validate(
+      wrap(
+        list([
+          { id: 'a', value: 1, next: null },
+          { id: 'a', value: 2, next: null },
+        ]),
+      ),
+    ).join(),
+    /duplicate node id/,
+  )
+  const graph = extra => ({
+    kind: 'graph',
+    nodes: [
+      { id: 'a', at: [0, 0] },
+      { id: 'b', at: [1, 0] },
+    ],
+    edges: [['a', 'b']],
+    ...extra,
+  })
+  assert.deepEqual(validate(wrap(graph({ current: 'a', queued: ['b'], highlight: [['b', 'a']] }))), [])
+  assert.match(validate(wrap(graph({ directed: true, highlight: [['b', 'a']] }))).join(), /highlights a missing edge/)
+  assert.match(validate(wrap(graph({ visited: ['z'] }))).join(), /unknown node/)
+  assert.match(
+    validate(
+      wrap(
+        graph({
+          nodes: [
+            { id: 'a', at: [0, 0] },
+            { id: 'b', at: [0, 0] },
+          ],
+        }),
+      ),
+    ).join(),
+    /two nodes at one point/,
+  )
+  const array = window => ({ kind: 'array', values: [1, 2, 3], window })
+  assert.deepEqual(validate(wrap(array([0, 2]))), [])
+  for (const window of [
+    [2, 1],
+    [0, 3],
+    [-1, 0],
+  ])
+    assert.match(validate(wrap(array(window))).join(), /window is out of bounds/)
+  assert.match(validate(wrap({ kind: 'tree', root: node('a'), cached: ['z'] })).join(), /unknown node/)
+})
+
+test('alternative traces need a title and valid steps', () => {
+  const review = alternativeTrace =>
+    validateContentDepth(
+      new Set(['demo']),
+      new Set(),
+      {
+        demo: {
+          reasoning: 'Why',
+          trace: 'Prose',
+          alternative: 'Other',
+          counterexample: 'Mistake',
+          transfer: 'Variation',
+          alternativeTrace,
+        },
+      },
+      {},
+    )
+  assert.deepEqual(review({ title: 'Top down', trace }), [])
+  assert.match(review({ title: ' ', trace }).join(), /alternative trace needs a title/)
+  assert.match(
+    review({ title: 'Top down', trace: { ...trace, steps: trace.steps.slice(0, 1) } }).join(),
+    /alternative\): trace needs at least two/,
+  )
+})

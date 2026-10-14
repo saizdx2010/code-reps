@@ -465,6 +465,17 @@ export function ExplainSection({
                 )}
                 <h3>Compare approaches</h3>
                 <p>{depth.alternative}</p>
+                {depth.alternativeTrace && (
+                  <Suspense
+                    fallback={
+                      <p className="loading-status" role="status">
+                        Opening trace…
+                      </p>
+                    }
+                  >
+                    <TraceViewer key={`${repId}-alternative`} trace={depth.alternativeTrace.trace} title={depth.alternativeTrace.title} />
+                  </Suspense>
+                )}
                 <h3>A tempting mistake</h3>
                 <p>{depth.counterexample}</p>
                 <h3>Try a variation</h3>
