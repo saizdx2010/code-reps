@@ -1,4 +1,4 @@
-import { repIndex as repCatalog } from './catalog-index'
+import { repTitle } from './rep-index.ts'
 import { formatDate, plural } from './ui-copy.ts'
 import { InfoNote, PageHeader, StatusChip } from './Layout'
 import { profileBadges } from './badges'
@@ -40,54 +40,195 @@ type Props = {
   serverReady: boolean
 }
 
-export function ProgressPage({ profileName, history, now, onManageProfiles, onOpenPath, progress, recommendation, dueReviews, onOpenRep, onReviewRep, onExport, onImport, transferMessage, serverReady }: Props) {
+export function ProgressPage(props: Props) {
+  const { profileName, history, now, onManageProfiles, onOpenPath, progress, recommendation, dueReviews, onOpenRep, onReviewRep } = props
   const summary = profileProgress(history, new Date(now))
   const badges = profileBadges(history, new Date(now))
   const earned = badges.filter(badge => badge.earned)
-  const open = (badge: Badge) => badge.kind === 'path' && badge.pathId ? onOpenPath(badge.pathId as typeof paths[number]['id']) : onOpenRep(badge.repId)
-  const importRef = useRef<HTMLInputElement | null>(null)
+  const open = (badge: Badge) => badge.kind === 'path' && badge.pathId
+    ? onOpenPath(badge.pathId as typeof paths[number]['id'])
+    : onOpenRep(badge.repId)
+  const independentSkills = progress.filter(item => item.independent).length
+  const retainedSkills = progress.filter(item => item.retained).length
   return <main className="progress-main">
-    <PageHeader title={profileName} eyebrow="Your local learning profile" description="Your practice, milestones, and evidence of what stayed with you." actions={<><SkillsSwitch view="progress" />{onManageProfiles && <Button onClick={onManageProfiles}>Manage profiles</Button>}</>} />
-    {summary.completedReps === 0 && <p>Welcome to your progress. Finish your first rep to start filling this in.{recommendation && <> <Button variant="text" onClick={recommendation.open}>{recommendation.label}</Button></>}</p>}
+    <PageHeader
+      title={profileName} eyebrow="Your local learning profile"
+      description="Your practice, milestones, and evidence of what stayed with you."
+      actions={<><SkillsSwitch view="progress" />{onManageProfiles && <Button onClick={onManageProfiles}>Manage profiles</Button>}</>}
+    />
+    {summary.completedReps === 0 && <p>
+      Welcome to your progress. Finish your first rep to start filling this in.
+      {recommendation && <> <Button variant="text" onClick={recommendation.open}>{recommendation.label}</Button></>}
+    </p>}
     <dl className="progress-summary profile-summary" aria-label="Practice summary">
-      <div><dt>Completed reps<small>{summary.completedReps === 0 ? 'Finish a rep by passing its checks.' : ''}</small></dt><dd>{summary.completedReps}</dd></div>
-      <div><dt>Current streak<small>{summary.currentStreak === 0 ? 'Finish a rep to start your streak.' : ''}</small></dt><dd>{summary.currentStreak}<small> {plural(summary.currentStreak, 'day')}</small></dd></div>
-      <div><dt>Longest streak<small>{summary.longestStreak === 0 ? 'Finish a rep to start your streak.' : ''}</small></dt><dd>{summary.longestStreak}<small> {plural(summary.longestStreak, 'day')}</small></dd></div>
-      <div><dt>Practice days<small>{summary.practiceDays === 0 ? 'Finish a rep to record a practice day.' : ''}</small></dt><dd>{summary.practiceDays}</dd></div><div><dt>Reviews ready<small>{dueReviews.length === 0 ? 'Finish a rep; reviews become ready after a break.' : ''}</small></dt><dd>{dueReviews.length}</dd></div><div><dt>Independent skills<small>{progress.filter(item => item.independent).length === 0 ? 'Solve a related rep without hints after guided practice.' : ''}</small></dt><dd>{progress.filter(item => item.independent).length}</dd></div><div><dt>Retained skills<small>{progress.filter(item => item.retained).length === 0 ? 'Solve a fresh recall rep without hints after a break.' : ''}</small></dt><dd>{progress.filter(item => item.retained).length}</dd></div>
+      <SummaryItem label="Completed reps" value={summary.completedReps} empty="Finish a rep by passing its checks." />
+      <SummaryItem label="Current streak" value={summary.currentStreak} unit="day" empty="Finish a rep to start your streak." />
+      <SummaryItem label="Longest streak" value={summary.longestStreak} unit="day" empty="Finish a rep to start your streak." />
+      <SummaryItem label="Practice days" value={summary.practiceDays} empty="Finish a rep to record a practice day." />
+      <SummaryItem label="Reviews ready" value={dueReviews.length} empty="Finish a rep; reviews become ready after a break." />
+      <SummaryItem label="Independent skills" value={independentSkills} empty="Solve a related rep without hints after guided practice." />
+      <SummaryItem label="Retained skills" value={retainedSkills} empty="Solve a fresh recall rep without hints after a break." />
     </dl>
-    <InfoNote><p>Finish a rep to record a practice day. If you practiced yesterday, your streak stays active through today. Breaks are welcome; your milestones stay.</p><p>Badges count finished reps, including work with hints. To record an independent skill, solve a related rep without hints after guided practice. To record retention, solve a fresh recall rep without hints after a break. Checks show behavior; you review your writing. These records are not an overall coding score.</p></InfoNote>
+    <InfoNote>
+      <p>
+        Finish a rep to record a practice day. If you practiced yesterday, your streak stays active through today.
+        Breaks are welcome; your milestones stay.
+      </p>
+      <p>
+        Badges count finished reps, including work with hints.
+        To record an independent skill, solve a related rep without hints after guided practice.
+        To record retention, solve a fresh recall rep without hints after a break. Checks show behavior; you review your writing.
+        These records are not an overall coding score.
+      </p>
+    </InfoNote>
     <section className="profile-badges" aria-labelledby="profile-badges-title">
       <h2 id="profile-badges-title">Badges earned</h2>
       <p className="badge-count" role="status">{earned.length} earned. Each finished rep counts once.</p>
-      {earned.length > 0 ? <ul className="badge-grid" aria-label="Earned badges">{earned.map(badge => <li key={badge.id} className="badge-card" data-kind={badge.kind}>
-        <BadgeArt kind={badge.kind} />
-        <div className="badge-text"><strong>{badge.name}</strong><span className="badge-rule">{badge.rule}</span><StatusChip tone="success">Earned{badge.earnedAt ? ` ${formatDate(badge.earnedAt)}` : ''}</StatusChip><span className="badge-progress">{badge.completed} of {badge.total} {plural(badge.total, 'rep')}</span></div>
-        <button type="button" className="text-button" aria-label={`${badge.kind === 'path' ? 'Open track' : 'Open rep'} for ${badge.name}`} onClick={() => open(badge)}>{badge.kind === 'path' ? 'Open track' : 'Open rep'}</button>
-      </li>)}</ul> : <p className="badge-empty">No badges yet. Finish one rep to earn the first.</p>}
+      {earned.length > 0
+        ? <ul className="badge-grid" aria-label="Earned badges">
+          {earned.map(badge => <EarnedBadge key={badge.id} badge={badge} onOpen={open} />)}
+        </ul>
+        : <p className="badge-empty">No badges yet. Finish one rep to earn the first.</p>}
     </section>
-    {dueReviews.length > 0 && <details className="progress-reviews"><summary>Choose a review · {dueReviews.length} ready</summary><ul>{dueReviews.map(review => <li key={review.repId}><div><strong>{review.title}</strong><p>{review.reason}</p></div><button type="button" className="text-button" onClick={review.open}>{review.label}</button></li>)}</ul></details>}
+    {dueReviews.length > 0 && <details className="progress-reviews">
+      <summary>Choose a review · {dueReviews.length} ready</summary>
+      <ul>{dueReviews.map(review => <li key={review.repId}>
+        <div><strong>{review.title}</strong><p>{review.reason}</p></div>
+        <button type="button" className="text-button" onClick={review.open}>{review.label}</button>
+      </li>)}</ul>
+    </details>}
     <h2 className="progress-skills-title">Your skill journeys</h2>
-    {progress.map(({ journey, stage, guided, independent, practiced, retained, recallAt, recallDue }) => <details className="progress-journey" aria-labelledby={`progress-${journey.id}`} key={journey.id}>
-      <summary className="progress-heading"><div><h2 id={`progress-${journey.id}`}>{journey.title}</h2><p>{retained ? `Recall recorded ${formatDate(retained.completedAt)}` : recallDue ? 'Fresh recall is ready now' : recallAt ? `Recall ready ${formatDate(recallAt)}` : independent ? 'Independent practice recorded' : guided ? 'Next: solve a related problem without hints' : 'Next: start with guided practice'}</p></div><span className="journey-markers" aria-label={stageLabels[stage]}>{[['Guided', Boolean(guided)], ['Independent', Boolean(independent)], ['Recall', Boolean(retained)]].map(([label, complete]) => <span key={String(label)} role="img" aria-label={`${label}: ${complete ? 'recorded' : 'not recorded'}`} data-complete={complete}>{label}</span>)}</span></summary>
-      <ol className="evidence-list">
-        <li><strong>1. Guided practice</strong><span>{guided ? `Completed ${formatDate(guided.completedAt)}${guided.hintCount ? ` with ${guided.hintCount} ${plural(guided.hintCount, 'hint')}` : ' without hints'}` : 'Start with a guided rep.'}</span><button type="button" className="text-button" onClick={() => onOpenRep(journey.guided)}>Open rep</button></li>
-        <li><strong>2. Independent problem</strong><span>{independent ? `Solved without hints ${formatDate(independent.completedAt)}` : 'Solve a related problem without hints after guided practice.'}</span><button type="button" className="text-button" disabled={!guided} onClick={() => onReviewRep(journey.independent)}>{!guided ? 'After guided rep' : independent ? 'Open rep' : 'Try rep'}</button></li>
-        {journey.practice?.map((id, index) => {
-          const completed = practiced.find(record => record.repId === id)
-          return <li key={id}><strong>{index === 0 ? '3. Extra practice (optional)' : 'Extra practice (optional)'}: {repCatalog.find(rep => rep.id === id)?.title ?? id}</strong><span>{completed ? `Solved without hints ${formatDate(completed.completedAt)}` : 'Try without hints. This is optional and does not postpone recall.'}</span><button type="button" className="text-button" onClick={() => onReviewRep(id)}>{completed ? 'Open rep' : 'Try rep'}</button></li>
-        })}
-        <li><strong>{journey.practice?.length ? '4' : '3'}. Later recall</strong><span>{retained ? `Fresh problem solved without hints ${formatDate(retained.completedAt)}` : recallAt ? recallDue ? 'Ready now. Solve a fresh problem without hints.' : `Ready ${formatDate(recallAt)}. Try a fresh problem then to see what stayed with you.` : 'Available after an independent solve.'}</span><button type="button" className="text-button" disabled={!recallDue} onClick={() => onReviewRep(journey.recall)}>{recallDue ? 'Try recall' : retained ? 'Evidence recorded' : 'Available later'}</button></li>
-      </ol>
-    </details>)}
-    <p className="progress-quiet-links">Also: <Button variant="text" onClick={() => goToView('plan')}>Plan a practice week</Button> <Button variant="text" onClick={() => goToView('assessment')}>Take the self-assessment</Button></p>
-    <details className="local-data"><summary>Back up or restore practice</summary><section aria-labelledby="local-data-title"><div><h2 id="local-data-title">Your work stays yours</h2><p>{serverReady ? 'Progress is saved on this laptop.' : 'Progress is saved in this browser.'} Download a practice backup to carry it elsewhere. Use Profiles to export a full profile.</p><p>Import adds completed attempts and fills empty drafts. Existing drafts stay as they are.</p></div><div className="local-data-actions"><button type="button" onClick={onExport}>Download backup</button><button type="button" onClick={() => importRef.current?.click()}>Import backup</button><input ref={importRef} type="file" accept=".json,application/json" aria-label="Choose Code Reps backup" onChange={(event) => { const file = event.target.files?.[0]; if (file) onImport(file); event.target.value = '' }} /></div>{transferMessage && <p className="transfer-message" role="status">{transferMessage}</p>}</section></details>
+    {progress.map(item => <JourneyEvidence key={item.journey.id} progress={item} onOpenRep={onOpenRep} onReviewRep={onReviewRep} />)}
+    <p className="progress-quiet-links">
+      Also: <Button variant="text" onClick={() => goToView('plan')}>Plan a practice week</Button>
+      {' '}<Button variant="text" onClick={() => goToView('assessment')}>Take the self-assessment</Button>
+    </p>
+    <BackupSection
+      serverReady={props.serverReady} onExport={props.onExport} onImport={props.onImport} transferMessage={props.transferMessage}
+    />
   </main>
+}
+
+/** One summary figure, with a hint for reaching it while it is still zero. */
+function SummaryItem({ label, value, unit, empty }: { label: string; value: number; unit?: string; empty: string }) {
+  return <div>
+    <dt>{label}<small>{value === 0 ? empty : ''}</small></dt>
+    <dd>{value}{unit && <small> {plural(value, unit)}</small>}</dd>
+  </div>
+}
+
+function EarnedBadge({ badge, onOpen }: { badge: Badge; onOpen: (badge: Badge) => void }) {
+  const action = badge.kind === 'path' ? 'Open track' : 'Open rep'
+  return <li className="badge-card" data-kind={badge.kind}>
+    <BadgeArt kind={badge.kind} />
+    <div className="badge-text">
+      <strong>{badge.name}</strong>
+      <span className="badge-rule">{badge.rule}</span>
+      <StatusChip tone="success">Earned{badge.earnedAt ? ` ${formatDate(badge.earnedAt)}` : ''}</StatusChip>
+      <span className="badge-progress">{badge.completed} of {badge.total} {plural(badge.total, 'rep')}</span>
+    </div>
+    <button type="button" className="text-button" aria-label={`${action} for ${badge.name}`} onClick={() => onOpen(badge)}>{action}</button>
+  </li>
+}
+
+type JourneyProps = { progress: JourneyProgress; onOpenRep: (id: string) => void; onReviewRep: (id: string) => void }
+
+/** One skill journey: guided practice, an independent problem, optional extra practice, and later recall. */
+function JourneyEvidence({ progress, onOpenRep, onReviewRep }: JourneyProps) {
+  const { journey, stage, guided, independent, practiced, retained, recallAt, recallDue } = progress
+  const status = retained ? `Recall recorded ${formatDate(retained.completedAt)}`
+    : recallDue ? 'Fresh recall is ready now'
+    : recallAt ? `Recall ready ${formatDate(recallAt)}`
+    : independent ? 'Independent practice recorded'
+    : guided ? 'Next: solve a related problem without hints'
+    : 'Next: start with guided practice'
+  const markers = [['Guided', Boolean(guided)], ['Independent', Boolean(independent)], ['Recall', Boolean(retained)]] as const
+  const guidedHints = guided?.hintCount ? ` with ${guided.hintCount} ${plural(guided.hintCount, 'hint')}` : ' without hints'
+  const guidedNote = guided ? `Completed ${formatDate(guided.completedAt)}${guidedHints}` : 'Start with a guided rep.'
+  const recallNote = retained ? `Fresh problem solved without hints ${formatDate(retained.completedAt)}`
+    : recallDue && recallAt ? 'Ready now. Solve a fresh problem without hints.'
+    : recallAt ? `Ready ${formatDate(recallAt)}. Try a fresh problem then to see what stayed with you.`
+    : 'Available after an independent solve.'
+  return <details className="progress-journey" aria-labelledby={`progress-${journey.id}`}>
+    <summary className="progress-heading">
+      <div><h2 id={`progress-${journey.id}`}>{journey.title}</h2><p>{status}</p></div>
+      <span className="journey-markers" aria-label={stageLabels[stage]}>{markers.map(([label, complete]) => (
+        <span key={label} role="img" aria-label={`${label}: ${complete ? 'recorded' : 'not recorded'}`} data-complete={complete}>
+          {label}
+        </span>
+      ))}</span>
+    </summary>
+    <ol className="evidence-list">
+      <li>
+        <strong>1. Guided practice</strong>
+        <span>{guidedNote}</span>
+        <button type="button" className="text-button" onClick={() => onOpenRep(journey.guided)}>Open rep</button>
+      </li>
+      <li>
+        <strong>2. Independent problem</strong>
+        <span>{independent
+          ? `Solved without hints ${formatDate(independent.completedAt)}`
+          : 'Solve a related problem without hints after guided practice.'}</span>
+        <button type="button" className="text-button" disabled={!guided} onClick={() => onReviewRep(journey.independent)}>
+          {!guided ? 'After guided rep' : independent ? 'Open rep' : 'Try rep'}
+        </button>
+      </li>
+      {journey.practice?.map((id, index) => {
+        const completed = practiced.find(record => record.repId === id)
+        return <li key={id}>
+          <strong>{index === 0 ? '3. Extra practice (optional)' : 'Extra practice (optional)'}: {repTitle(id)}</strong>
+          <span>{completed
+            ? `Solved without hints ${formatDate(completed.completedAt)}`
+            : 'Try without hints. This is optional and does not postpone recall.'}</span>
+          <button type="button" className="text-button" onClick={() => onReviewRep(id)}>{completed ? 'Open rep' : 'Try rep'}</button>
+        </li>
+      })}
+      <li>
+        <strong>{journey.practice?.length ? '4' : '3'}. Later recall</strong>
+        <span>{recallNote}</span>
+        <button type="button" className="text-button" disabled={!recallDue} onClick={() => onReviewRep(journey.recall)}>
+          {recallDue ? 'Try recall' : retained ? 'Evidence recorded' : 'Available later'}
+        </button>
+      </li>
+    </ol>
+  </details>
+}
+
+type BackupProps = { serverReady: boolean; onExport: () => void; onImport: (file: File) => void; transferMessage: string }
+
+function BackupSection({ serverReady, onExport, onImport, transferMessage }: BackupProps) {
+  const importRef = useRef<HTMLInputElement | null>(null)
+  return <details className="local-data">
+    <summary>Back up or restore practice</summary>
+    <section aria-labelledby="local-data-title">
+      <div>
+        <h2 id="local-data-title">Your work stays yours</h2>
+        <p>
+          {serverReady ? 'Progress is saved on this laptop.' : 'Progress is saved in this browser.'}
+          {' '}Download a practice backup to carry it elsewhere. Use Profiles to export a full profile.
+        </p>
+        <p>Import adds completed attempts and fills empty drafts. Existing drafts stay as they are.</p>
+      </div>
+      <div className="local-data-actions">
+        <button type="button" onClick={onExport}>Download backup</button>
+        <button type="button" onClick={() => importRef.current?.click()}>Import backup</button>
+        <input ref={importRef} type="file" accept=".json,application/json" aria-label="Choose Code Reps backup" onChange={event => {
+          const file = event.target.files?.[0]
+          if (file) onImport(file)
+          event.target.value = ''
+        }} />
+      </div>
+      {transferMessage && <p className="transfer-message" role="status">{transferMessage}</p>}
+    </section>
+  </details>
 }
 
 function BadgeArt({ kind }: { kind: Badge['kind'] }) {
   // Decorative: the badge name, rule, and status chip carry the meaning.
   return <svg className="badge-art" data-earned="true" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-    {kind === 'path' ? <path d="M16 3l11 5v8c0 7-5 11-11 13C10 27 5 23 5 16V8z" /> : kind === 'stage' ? <path d="M16 3l11 6.5v13L16 29 5 22.5v-13z" /> : <circle cx="16" cy="16" r="12" />}
+    {kind === 'path' ? <path d="M16 3l11 5v8c0 7-5 11-11 13C10 27 5 23 5 16V8z" />
+      : kind === 'stage' ? <path d="M16 3l11 6.5v13L16 29 5 22.5v-13z" />
+      : <circle cx="16" cy="16" r="12" />}
     <path className="badge-check" d="M10.5 16.5l4 4 7-8" />
   </svg>
 }

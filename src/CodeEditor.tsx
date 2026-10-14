@@ -70,11 +70,28 @@ function applyEditorTheme(instance: typeof monaco) {
       },
   }
   theme.colors = Object.fromEntries(Object.entries(theme.colors ?? {}).map(([key, value]) => [key, replacements[value] ?? value]))
-  theme.rules = theme.rules.map(rule => ({ ...rule, foreground: rule.token === 'keyword' ? colour('--accent', '#bce57b').slice(1) : rule.token === 'comment' ? colour('--muted', '#b1c1b5').slice(1) : rule.foreground }))
+  theme.rules = theme.rules.map(rule => ({
+    ...rule,
+    foreground: rule.token === 'keyword' ? colour('--accent', '#bce57b').slice(1)
+      : rule.token === 'comment' ? colour('--muted', '#b1c1b5').slice(1)
+      : rule.foreground,
+  }))
   instance.editor.defineTheme('code-reps', theme)
 }
 
-export default function CodeEditor({ onRunChecks, focusRequest = 0, siblingFiles, ...props }: ComponentProps<typeof MonacoEditor> & { onRunChecks: () => void; focusRequest?: number; /** Other files of a multi-file project, keyed by model path, so relative imports resolve. */ siblingFiles?: Record<string, string> }) {
+type Props = ComponentProps<typeof MonacoEditor> & {
+  onRunChecks: () => void
+  focusRequest?: number
+  /** Other files of a multi-file project, keyed by model path, so relative imports resolve. */
+  siblingFiles?: Record<string, string>
+}
+
+const viewStateKey = (path: string | undefined) => `code-reps:editor:${path}`
+function saveViewState(editor: monaco.editor.IStandaloneCodeEditor, path: string | undefined) {
+  try { sessionStorage.setItem(viewStateKey(path), JSON.stringify(editor.saveViewState())) } catch { /* View state is optional. */ }
+}
+
+export default function CodeEditor({ onRunChecks, focusRequest = 0, siblingFiles, ...props }: Props) {
   useLayoutEffect(() => {
     const observer = new MutationObserver(() => { applyEditorTheme(monaco); monaco.editor.setTheme('code-reps') })
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-palette', 'data-theme'] })
@@ -92,7 +109,8 @@ export default function CodeEditor({ onRunChecks, focusRequest = 0, siblingFiles
     const synced = syncedContent.current
     return () => { models.forEach(model => model.dispose()); models.clear(); synced.clear() }
   }, [])
-  // Sibling files are separate models so the TypeScript worker sees './state' and './view' as real modules. The active file stays with the editor.
+  // Sibling files are separate models so the TypeScript worker sees './state' and './view' as real modules.
+  // The active file stays with the editor.
   useLayoutEffect(() => {
     // Runs every render, so skip unchanged files without reading the model text.
     const siblings = siblingFiles ?? {}
@@ -115,9 +133,7 @@ export default function CodeEditor({ onRunChecks, focusRequest = 0, siblingFiles
   useLayoutEffect(() => {
     const save = () => {
       const editor = editorRef.current
-      if (editor && pathRef.current) {
-        try { sessionStorage.setItem(`code-reps:editor:${pathRef.current}`, JSON.stringify(editor.saveViewState())) } catch { /* View state is optional. */ }
-      }
+      if (editor && pathRef.current) saveViewState(editor, pathRef.current)
     }
     window.addEventListener('pagehide', save)
     return () => { window.clearTimeout(viewSaveTimer.current); save(); window.removeEventListener('pagehide', save) }
@@ -132,16 +148,22 @@ export default function CodeEditor({ onRunChecks, focusRequest = 0, siblingFiles
   return <MonacoEditor {...props} onMount={(editor, instance) => {
     editorRef.current = editor
     if (focusRequestRef.current) requestAnimationFrame(() => editor.focus())
-    try { const saved = sessionStorage.getItem(`code-reps:editor:${props.path}`); if (saved) editor.restoreViewState(JSON.parse(saved)) } catch { /* Keep the default position. */ }
+    try {
+      const saved = sessionStorage.getItem(viewStateKey(props.path))
+      if (saved) editor.restoreViewState(JSON.parse(saved))
+    } catch { /* Keep the default position. */ }
     const scheduleViewSave = () => {
       window.clearTimeout(viewSaveTimer.current)
-      viewSaveTimer.current = window.setTimeout(() => {
-        try { sessionStorage.setItem(`code-reps:editor:${props.path}`, JSON.stringify(editor.saveViewState())) } catch { /* View state is optional. */ }
-      }, 120)
+      viewSaveTimer.current = window.setTimeout(() => saveViewState(editor, props.path), 120)
     }
     editor.onDidChangeCursorPosition(scheduleViewSave)
     editor.onDidScrollChange(scheduleViewSave)
-    editor.addAction({ id: 'code-reps.run-checks', label: 'Run checks', keybindings: [instance.KeyMod.CtrlCmd | instance.KeyCode.Enter], run: () => runRef.current() })
+    editor.addAction({
+      id: 'code-reps.run-checks',
+      label: 'Run checks',
+      keybindings: [instance.KeyMod.CtrlCmd | instance.KeyCode.Enter],
+      run: () => runRef.current(),
+    })
     props.onMount?.(editor, instance)
   }} theme="code-reps" beforeMount={(instance) => {
     applyEditorTheme(instance)

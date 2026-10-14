@@ -4,6 +4,7 @@ import { profileBadges, unacknowledgedBadges } from './badges'
 import type { Badge } from './badges'
 import type { PortableRecord } from './portability'
 import { useSessionPreference } from './useSessionPreference'
+import { plural } from './ui-copy.ts'
 
 type Props = { history: PortableRecord[]; now: number; onView: () => void; portalTarget?: HTMLElement | null }
 
@@ -63,7 +64,7 @@ export function BadgeNotice({ history, now, onView, portalTarget }: Props) {
 
   if (shown.length === 0) return null
   const notice = <div ref={noticeRef} className={`badge-notice${portalTarget ? ' in-panel' : ' in-bar'}`} role="status">
-    <p><strong>{shown.length === 1 ? 'Badge earned' : 'Badges earned'}:</strong> {shown.map(badge => badge.name).join(', ')}</p>
+    <p><strong>{plural(shown.length, 'Badge')} earned:</strong> {shown.map(badge => badge.name).join(', ')}</p>
     <button type="button" className="text-button" onClick={() => { setShown([]); onView() }}>View badges</button>
   </div>
   return portalTarget ? createPortal(notice, portalTarget) : notice

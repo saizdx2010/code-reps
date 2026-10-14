@@ -1,3 +1,4 @@
+import type { Judgment } from './fluency.ts'
 import type { View } from './ui-navigation.ts'
 
 /** Pages that open inside the learning hub, in the order the command palette lists them. */
@@ -15,3 +16,5 @@ export const learningPageTitles: Record<HubTab, { title: string; description: st
   interview: { title: 'Practice an interview.', description: 'A timed round with space to clarify, code, and reflect.' },
 }
 
+/** Self-assessment judgments as lessons and the assessment summary name them. */
+export const judgmentLabels: Record<Judgment, string> = { 'not-yet': 'Not yet', 'with-help': 'With help', independent: 'Independently' }

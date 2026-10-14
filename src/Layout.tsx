@@ -4,7 +4,8 @@ import type { ChipTone } from './ui-status'
 import './layout.css'
 
 /** Compact page title with one line of context and optional actions. Owns the page h1 used by skip links. */
-export function PageHeader({ title, description, actions, eyebrow }: { title: ReactNode; description?: ReactNode; actions?: ReactNode; eyebrow?: ReactNode }) {
+type PageHeaderProps = { title: ReactNode; description?: ReactNode; actions?: ReactNode; eyebrow?: ReactNode }
+export function PageHeader({ title, description, actions, eyebrow }: PageHeaderProps) {
   return <header className="page-header">
     <div>
       {eyebrow && <span className="page-eyebrow">{eyebrow}</span>}
@@ -37,17 +38,39 @@ export function EmptyState({ title, children, action }: { title: ReactNode; chil
 }
 
 /** A collapsible group of rows. Native details semantics; open state may be controlled by a session preference. */
-export function ListGroup({ title, count, open, onToggle, children }: { title: ReactNode; count?: number; open?: boolean; onToggle?: (open: boolean) => void; children: ReactNode }) {
+type ListGroupProps = { title: ReactNode; count?: number; open?: boolean; onToggle?: (open: boolean) => void; children: ReactNode }
+export function ListGroup({ title, count, open, onToggle, children }: ListGroupProps) {
   return <details className="list-group" open={open} onToggle={event => onToggle?.(event.currentTarget.open)}>
-    <summary><span className="list-group-title">{title}</span>{count !== undefined && <span className="list-group-count">{count}</span>}<Icon name="chevron" /></summary>
+    <summary>
+      <span className="list-group-title">{title}</span>
+      {count !== undefined && <span className="list-group-count">{count}</span>}
+      <Icon name="chevron" />
+    </summary>
     <ul className="list-rows">{children}</ul>
   </details>
 }
 
 /** One row style for exercises, lessons, journal entries, and skills. */
-export function ListRow({ title, meta, status, current, onOpen, onPreview, action }: { title: ReactNode; meta?: ReactNode; status?: ReactNode; current?: boolean; onOpen?: () => void; onPreview?: () => void; action?: ReactNode }) {
-  const body = <><span className="list-row-text"><strong>{title}</strong>{meta && <small>{meta}</small>}</span>{status && <span className="list-row-status">{status}</span>}</>
+type ListRowProps = {
+  title: ReactNode
+  meta?: ReactNode
+  status?: ReactNode
+  current?: boolean
+  onOpen?: () => void
+  onPreview?: () => void
+  action?: ReactNode
+}
+export function ListRow({ title, meta, status, current, onOpen, onPreview, action }: ListRowProps) {
+  const body = <>
+    <span className="list-row-text"><strong>{title}</strong>{meta && <small>{meta}</small>}</span>
+    {status && <span className="list-row-status">{status}</span>}
+  </>
   return <li className="list-row">
-    {onOpen ? <button type="button" aria-current={current ? 'step' : undefined} onClick={onOpen} onMouseEnter={onPreview} onFocus={onPreview}>{body}<Icon name="arrow" /></button> : <div>{body}{action}</div>}
+    {onOpen ? <button
+      type="button" aria-current={current ? 'step' : undefined} onClick={onOpen} onMouseEnter={onPreview} onFocus={onPreview}
+    >
+      {body}
+      <Icon name="arrow" />
+    </button> : <div>{body}{action}</div>}
   </li>
 }
