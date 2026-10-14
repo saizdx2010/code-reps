@@ -575,7 +575,8 @@ export const foundationReps: Rep[] = [
       { term: 'Capacity', meaning: 'the maximum number of items in one batch' },
       { term: 'Remainder', meaning: 'items left after full batches' },
     ],
-    planPrompt: 'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    planPrompt:
+      'How many batches do a total of 0, a total equal to capacity, and one item more than capacity produce? Write the labels for 7 items with capacity 3.',
     starter: "function batchLabels(total: number, capacity: number): string[] {\n  throw new Error('Not implemented')\n}\n",
     functionName: 'batchLabels',
     preserveInput: true,
@@ -619,7 +620,8 @@ export const foundationReps: Rep[] = [
       { term: 'Consecutive', meaning: 'next to each other with no gap' },
       { term: 'Threshold', meaning: 'a value that separates two categories' },
     ],
-    planPrompt: 'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    planPrompt:
+      'What happens to the current run at a reading equal to limit? Predict both counts for an empty list and for a list that ends during a run.',
     starter:
       "function inspectionSummary(readings: number[], limit: number): { alerts: number; longestRun: number } {\n  throw new Error('Not implemented')\n}\n",
     functionName: 'inspectionSummary',

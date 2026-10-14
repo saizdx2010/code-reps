@@ -248,7 +248,8 @@ export const testingJourneyReps: Rep[] = [
       { term: 'Faulty variant', meaning: 'an implementation containing a deliberate mistake' },
       { term: 'Case table', meaning: 'inputs paired with independently predicted results' },
     ],
-    planPrompt: 'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    planPrompt:
+      'Write your case table first: stock, wanted, and the expected result. Which cases sit on an equality boundary, and which would reveal a changed stock?',
     starter:
       "type Allocate = (stock: number[], wanted: number) => number\nconst implementations: Record<string, Allocate> = {\n  correct: (stock, wanted) => Math.min(stock[0], wanted),\n  'variant-a': (stock, wanted) => Math.max(stock[0], wanted),\n  'variant-b': (stock, wanted) => wanted === 0 ? stock[0] : Math.min(stock[0], wanted),\n  'variant-c': (stock, wanted) => Math.min(stock[0], wanted) - 1,\n  'variant-d': (stock, wanted) => { const count = Math.min(stock[0], wanted); stock[0] -= count; return count },\n}\n\nfunction exposes(variant: string): boolean {\n  return false\n}\n",
     functionName: 'exposes',
@@ -291,7 +292,8 @@ export const testingJourneyReps: Rep[] = [
       { term: 'Faulty variant', meaning: 'an implementation containing a deliberate mistake' },
       { term: 'Case table', meaning: 'inputs paired with independently predicted results' },
     ],
-    planPrompt: 'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    planPrompt:
+      'Write your case table first: active, suspended, age, and the expected answer. Which cases test the age boundary, and which show that suspension overrides everything?',
     starter:
       "type Access = (flags: boolean[], age: number) => boolean\nconst implementations: Record<string, Access> = {\n  correct: (flags, age) => flags[0] && !flags[1] && age >= 18,\n  'variant-a': (flags, age) => flags[0] && !flags[1] && age > 18,\n  'variant-b': (flags, age) => (flags[0] || age >= 18) && !flags[1],\n  'variant-c': (flags, age) => flags[0] && age >= 18,\n  'variant-d': (flags, age) => { const active = flags.shift(); const suspended = flags.shift(); return Boolean(active && !suspended && age >= 18) },\n}\n\nfunction exposes(variant: string): boolean {\n  return false\n}\n",
     functionName: 'exposes',
