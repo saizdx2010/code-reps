@@ -135,7 +135,7 @@ export const dsaApplicationReps: Rep[] = [
     ],
     planPrompt: dsaPlanPrompts['dispatch-priority-order'],
     starter: starter(
-      'type Request = { id: string; urgency: number; deadline: number }\n\nfunction dispatchOrder(requests: Request[]): string[]',
+      'type DispatchRequest = { id: string; urgency: number; deadline: number }\n\nfunction dispatchOrder(requests: DispatchRequest[]): string[]',
       '[]',
     ),
     functionName: 'dispatchOrder',

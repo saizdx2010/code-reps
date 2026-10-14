@@ -1,6 +1,8 @@
 import MonacoEditor, { loader } from '@monaco-editor/react'
 import * as monaco from './monaco'
 import { useLayoutEffect, useRef } from 'react'
+import { sortTypeIssues } from './type-issues'
+import type { TypeIssue } from './type-issues'
 import type { ComponentProps } from 'react'
 import editorWorker from '../node_modules/monaco-editor/esm/vs/editor/editor.worker.js?worker'
 import tsWorker from '../node_modules/monaco-editor/esm/vs/language/typescript/ts.worker.js?worker'
@@ -92,6 +94,8 @@ type Props = ComponentProps<typeof MonacoEditor> & {
   focusRequest?: number
   /** Other files of a multi-file project, keyed by model path, so relative imports resolve. */
   siblingFiles?: Record<string, string>
+  /** Receives the TypeScript errors for this rep's files whenever the editor's diagnostics change. */
+  onTypeIssues?: (issues: TypeIssue[]) => void
 }
 
 const viewStateKey = (path: string | undefined) => `code-reps:editor:${path}`
@@ -103,7 +107,11 @@ function saveViewState(editor: monaco.editor.IStandaloneCodeEditor, path: string
   }
 }
 
-export default function CodeEditor({ onRunChecks, focusRequest = 0, siblingFiles, ...props }: Props) {
+export default function CodeEditor({ onRunChecks, focusRequest = 0, siblingFiles, onTypeIssues, ...props }: Props) {
+  const typeIssuesRef = useRef(onTypeIssues)
+  useLayoutEffect(() => {
+    typeIssuesRef.current = onTypeIssues
+  }, [onTypeIssues])
   useLayoutEffect(() => {
     const observer = new MutationObserver(() => {
       applyEditorTheme(monaco)
@@ -188,6 +196,22 @@ export default function CodeEditor({ onRunChecks, focusRequest = 0, siblingFiles
         }
         editor.onDidChangeCursorPosition(scheduleViewSave)
         editor.onDidScrollChange(scheduleViewSave)
+        // Report errors for every model in this rep's folder, so a multi-file project includes its other files.
+        const folder = props.path?.replace(/[^/]*$/, '') ?? ''
+        const reportTypeIssues = () => {
+          const issues = monaco.editor
+            .getModelMarkers({ owner: 'typescript' })
+            .filter(marker => marker.severity === monaco.MarkerSeverity.Error && marker.resource.toString().startsWith(folder))
+            .map(marker => ({
+              file: marker.resource.path.split('/').at(-1) ?? '',
+              line: marker.startLineNumber,
+              message: marker.message,
+            }))
+          typeIssuesRef.current?.(sortTypeIssues(issues))
+        }
+        const markerListener = monaco.editor.onDidChangeMarkers(reportTypeIssues)
+        editor.onDidDispose(() => markerListener.dispose())
+        reportTypeIssues()
         editor.addAction({
           id: 'code-reps.run-checks',
           label: 'Run checks',

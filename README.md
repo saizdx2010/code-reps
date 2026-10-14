@@ -36,6 +36,8 @@ Plan and Explain offer optional English sentence starters above the writing fiel
 
 After every check passes, a rep with an authored step trace also compares your code line by line with the trace's reference code, ignoring spacing and comments; a different approach can still be correct. After you complete a rep you have finished before, or a journey's independent or recall rep, **Read back your earlier explanation** shows that earlier plan and explanation beside today's (`src/compare-work.ts`). Both appear only after your own work is done.
 
+Check results also show the editor's TypeScript errors for your files, labelled as separate from the checks: code can pass every check with a type error, and a clean type check does not prove the types a brief asks for.
+
 > Passing checks establishes behavior. Plans and explanations use a self-review rubric; independent fluency and retention need evidence from unhinted work and later recall.
 
 ## What you can practice

@@ -569,8 +569,8 @@ export const dsaDepth: Record<string, RepDepth> = {
       'Self-reviewed: allow missing deadlines and define their precedence. Explain the new comparator; original checks do not validate it.',
     traceSteps: {
       code: [
-        'type Request = { id: string; urgency: number; deadline: number }',
-        'function dispatchOrder(requests: Request[]): string[] {',
+        'type DispatchRequest = { id: string; urgency: number; deadline: number }',
+        'function dispatchOrder(requests: DispatchRequest[]): string[] {',
         '  const pending = requests.slice(), out: string[] = []',
         '  while (pending.length) {',
         '    let best = 0',

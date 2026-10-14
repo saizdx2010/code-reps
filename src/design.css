@@ -1952,6 +1952,32 @@ footer {
   margin-top: 18px;
   font-size: 14px;
 }
+/* Editor type errors beside the check results: advisory, labelled, and never a check. */
+.type-check {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+}
+.type-check p {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+.type-check ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  overflow-wrap: anywhere;
+}
+.type-check li {
+  margin: 4px 0;
+}
+.type-check .type-check-note {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
 .mistake-help {
   margin-top: 20px;
   border-top: 1px solid var(--border);

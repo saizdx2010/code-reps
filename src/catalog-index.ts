@@ -55,7 +55,7 @@ export const repIndex: RepSummary[] = [
   {"id":"grid-open-neighbours","title":"Inspect open neighbours","category":"Algorithm applications","starterHash":"955a7976c589126e","hintTotal":3,"briefWords":52,"checkTotal":14,"source":"dsa-grid-reps"},
   {"id":"quiet-sensor-span","title":"Find a quiet sensor span","category":"Algorithm applications","starterHash":"4436ebc91bba2166","hintTotal":3,"briefWords":27,"checkTotal":6,"source":"dsa-application-reps"},
   {"id":"shared-seat-occurrences","title":"Match reserved seat occurrences","category":"Algorithm applications","starterHash":"224e9bc98e45059d","hintTotal":3,"briefWords":32,"checkTotal":6,"source":"dsa-application-reps"},
-  {"id":"dispatch-priority-order","title":"Order dispatch requests","category":"Algorithm applications","starterHash":"7265d368e2093ba6","hintTotal":3,"briefWords":36,"checkTotal":5,"source":"dsa-application-reps"},
+  {"id":"dispatch-priority-order","title":"Order dispatch requests","category":"Algorithm applications","starterHash":"7127e7474220fc90","hintTotal":3,"briefWords":36,"checkTotal":5,"source":"dsa-application-reps"},
   {"id":"first-affordable-edition","title":"Find the first affordable edition","category":"Algorithm applications","starterHash":"82e37ffa35b96e14","hintTotal":3,"briefWords":32,"checkTotal":7,"source":"dsa-application-reps"},
   {"id":"nested-parcel-load","title":"Measure nested parcel load","category":"Algorithm applications","starterHash":"a25e49fbfb5fad89","hintTotal":3,"briefWords":53,"checkTotal":7,"source":"dsa-application-reps"},
   {"id":"terminal-folder-paths","title":"List terminal folder paths","category":"Algorithm applications","starterHash":"c6ffeec807fb4888","hintTotal":3,"briefWords":44,"checkTotal":6,"source":"dsa-application-reps"},

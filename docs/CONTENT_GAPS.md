@@ -28,7 +28,7 @@ These topics have a lesson and linked reps but no guided → independent → del
 
 ## Assessment gaps
 
-- **Type-system fluency:** the in-app compiler uses `transpileModule`, which does not run full semantic type checking. TypeScript reps label type requirements as self-reviewed. See the [browser journey](./TYPESCRIPT_BROWSER_JOURNEY.md).
+- **Type-system fluency:** the check runner uses `transpileModule`, which does not run full semantic type checking. The checks drawer now also reports the editor's own TypeScript errors (`src/type-issues.ts`), separately from the checks, but nothing verifies that a solution uses the types a brief asks for, so TypeScript reps still label type requirements as self-reviewed. `tests/type-check-content.test.mjs` keeps starters and traced references free of type errors under the editor's settings. See the [browser journey](./TYPESCRIPT_BROWSER_JOURNEY.md).
 - **Prose, approach, and accessibility:** plans, explanations, technique choice, and manual accessibility points remain self-reviewed. Checks establish behavior only.
 - **Learner evidence:** no journey has been observed with learners yet. Use the [learner validation protocol](./LEARNER_VALIDATION.md) before tuning recall intervals or expanding a journey.
 

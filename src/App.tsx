@@ -41,6 +41,7 @@ import type { UpdateAttempt } from './PracticeSections'
 import { ChecksDrawer, WorkspaceToolbar } from './ChecksDrawer'
 import { practiceSteps, sectionStep, stepSection } from './practice-steps'
 import { formatWarmup, parseWarmup, pickWarmup, warmupPosition } from './warmup'
+import type { TypeIssue } from './type-issues'
 
 const repIds = reps.map(rep => rep.id)
 const FirstRepWalkthrough = lazy(() =>
@@ -226,6 +227,8 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   }
   const { repId, rep, attempt, history, saveState, setSaveState, ...attempts } = useAttempt()
   const checks = useCheckRun()
+  // Editor diagnostics for the open rep; undefined until the editor reports, for example when it failed to load.
+  const [typeIssues, setTypeIssues] = useState<{ repId: string; issues: TypeIssue[] }>()
   const { results, runError, running, runNotice } = checks
   const [transferMessage, setTransferMessage] = useState('')
   const [now, setNow] = useState(Date.now)
@@ -644,6 +647,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
                   value={attempt.code}
                   onChange={value => update('code', value ?? '')}
                   onRunChecks={runChecks}
+                  onTypeIssues={issues => setTypeIssues({ repId: rep.id, issues })}
                   options={{ ariaLabel: editorLabel, ...editorOptions }}
                 />
               )}
@@ -668,6 +672,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
             repId={repId}
             openLesson={openKnowledge}
             onExplain={() => revealSection('explain-section')}
+            typeIssues={typeIssues?.repId === repId ? typeIssues.issues : undefined}
           />
           <WorkspaceToolbar
             ref={toolbarRef}
