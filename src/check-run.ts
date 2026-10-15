@@ -1,5 +1,5 @@
 import type { TestResult } from './runner.types'
-import { SQLITE_REP_ID } from './sqlite-task.ts'
+import { isSqliteRep } from './sqlite-task.ts'
 
 type CheckWorker = Pick<Worker, 'onmessage' | 'onmessageerror' | 'onerror' | 'postMessage' | 'terminate'>
 type RunOptions = {
@@ -78,7 +78,7 @@ export function startCheckRun(code: string, repId: string, options: RunOptions):
       if (disposed) return
       dispose()
       options.onError(
-        repId === SQLITE_REP_ID
+        isSqliteRep(repId)
           ? 'The SQLite engine could not load in time. Your code is still here; try running the checks again.'
           : 'The checker could not load in time. Your code is still here; try running the checks again.',
       )

@@ -15,6 +15,11 @@ import { coreReps } from './core-reps.ts'
 import { domReps } from './dom-reps.ts'
 import { dsaAdvancedReps } from './dsa-advanced-reps.ts'
 import { dsaLinkedReps } from './dsa-linked-reps.ts'
+import { dsaDpHeapReps } from './dsa-dp-heap-reps.ts'
+import { stringReps } from './string-reps.ts'
+import { debugReps } from './debug-reps.ts'
+import { aiReviewReps } from './ai-review-reps.ts'
+import { practicalJourneyReps } from './practical-journey-reps.ts'
 import { dsaGridReps } from './dsa-grid-reps.ts'
 import { dsaApplicationReps } from './dsa-application-reps.ts'
 import { dsaBasicsReps } from './dsa-basics-reps.ts'
@@ -48,6 +53,8 @@ export const repSources: { name: string; reps: Rep[]; lessons?: readonly RepLess
   { name: 'dsa-harder-reps', reps: dsaHarderReps },
   { name: 'dsa-advanced-reps', reps: dsaAdvancedReps },
   { name: 'dsa-linked-reps', reps: dsaLinkedReps },
+  { name: 'dsa-dp-heap-reps', reps: dsaDpHeapReps },
+  { name: 'string-reps', reps: stringReps },
   { name: 'ai-era-reps', reps: aiEraReps, lessons: coreLessons },
   { name: 'core-reps', reps: coreReps },
   { name: 'journey-reps', reps: journeyReps },
@@ -64,4 +71,7 @@ export const repSources: { name: string; reps: Rep[]; lessons?: readonly RepLess
   { name: 'connected-feature-reps', reps: connectedFeatureReps },
   { name: 'testing-journey-reps', reps: testingJourneyReps },
   { name: 'maintenance-journey-reps', reps: maintenanceJourneyReps },
+  { name: 'debug-reps', reps: debugReps },
+  { name: 'ai-review-reps', reps: aiReviewReps },
+  { name: 'practical-journey-reps', reps: practicalJourneyReps },
 ]

@@ -8,6 +8,7 @@ const focus = (target: string) => ({ do: 'focus', target })
 const mark = (target: string) => ({ do: 'mark', target })
 const submit = (target: string) => ({ do: 'submit', target })
 const key = (name: string) => ({ do: 'key', key: name })
+const shiftKey = (name: string) => ({ do: 'key', key: name, shift: true })
 const dom = (props: unknown, steps: unknown[], expected: unknown[]) => ({ input: [{ props, steps }], expected })
 
 const formProps = {
@@ -62,6 +63,24 @@ const visible = (shipping: boolean, returns: boolean, warranty: boolean) => [
   see('panel-returns', 'prop:hidden', !returns),
   see('panel-warranty', 'prop:hidden', !warranty),
 ]
+const reorderProps = {
+  label: 'Packing order',
+  items: [
+    { id: 'milk', label: 'Milk' },
+    { id: 'eggs', label: 'Eggs' },
+    { id: 'bread', label: 'Bread' },
+    { id: 'tea', label: 'Tea' },
+  ],
+}
+const dialogProps = {
+  openLabel: 'Delete draft',
+  title: 'Delete this draft?',
+  body: 'The draft will be removed from this device.',
+  confirmLabel: 'Delete',
+}
+const comboProps = { label: 'Fruit', options: ['Apple', 'Banana', 'Apricot', 'Grape', 'Pineapple'] }
+const comboClosed = [see('input', 'attr:aria-expanded', 'false'), see('listbox', 'prop:hidden', true)]
+
 const limits =
   'DOM checks run in a sandboxed frame. They establish the authored behavior and attribute contract, not screen-reader output, visual design, or real keyboard use in other browsers. Review those yourself.'
 
@@ -1178,6 +1197,454 @@ export const domReps: Rep[] = [
             see('header-a', 'prop:childElementCount', 0),
             see('panel-a', 'prop:childElementCount', 0),
           ],
+        ),
+      },
+    ],
+  },
+
+  {
+    id: 'dom-reorder-list',
+    title: 'Reorder a list with keyboard-friendly buttons',
+    category: 'Frontend accessibility',
+    format: 'frontend',
+    context:
+      'A packing list lets people drag items into order, but dragging needs a pointer. Move up and Move down buttons give keyboard and switch users the same power, as long as focus and announcements follow the item that moved.',
+    prompt:
+      'Implement `mountReorderList(root, props)` with props.label and props.items, a list of {id, label}. Render an ordered list labelled by props.label with one item per entry, in order. Each item shows its label in an element with data-testid="name" and has two real buttons: Move up (data-testid="up-ID") and Move down (data-testid="down-ID"), where ID is the item’s id. Name each button for its item with aria-label, for example "Move Milk up". Disable Move up on the first item and Move down on the last. Clicking a button moves its item one place and updates the disabled states. Focus stays on the button that was clicked; if that button has just become disabled, focus moves to the item’s other button. A status element (role="status", data-testid="status") starts empty and then says, for example, "Milk moved to position 2 of 4." Do not change props.',
+    brief: {
+      summary: 'Implement `mountReorderList(root, props)`: an ordered list whose items move with Move up and Move down buttons.',
+      rules: [
+        'Render an ordered list (data-testid="list") labelled by props.label, with one item per entry and its label in data-testid="name".',
+        'Each item has real buttons data-testid="up-ID" and "down-ID", named with aria-label such as "Move Milk up".',
+        'Disable Move up on the first item and Move down on the last. A click moves the item one place and updates the disabled states.',
+        'Focus stays on the clicked button; if it has just become disabled, focus moves to the item’s other button.',
+        'A status element (role="status", data-testid="status") starts empty, then says, for example, "Milk moved to position 2 of 4."',
+      ],
+      edgeCases: ['Do not change props or its items array.', 'Labels may contain markup characters: render them as text.'],
+    },
+    example: {
+      input: 'items Milk, Eggs, Bread, Tea; click Move Milk down',
+      output: 'Eggs, Milk, Bread, Tea and the status "Milk moved to position 2 of 4."',
+    },
+    note:
+      'Use the data-testid values above. Render labels with `textContent`. Checks click buttons and read focus; they cannot judge whether a screen reader announces the status politely. ' +
+      limits,
+    acceptanceCriteria: [
+      'Tab reaches every enabled button, and disabled buttons are skipped.',
+      'After moving an item, focus is still on a button of that item.',
+      'With a screen reader, each move is announced once without stealing focus.',
+    ],
+    domPreview: {
+      title: 'Your reorderable list',
+      description: 'Move items with the buttons, first with the mouse and then with Tab and Enter or Space.',
+      props: reorderProps,
+      review: [
+        'Move an item to the top with the keyboard and confirm focus lands on its Move down button.',
+        'Confirm each button’s accessible name says which item it moves.',
+        'With a screen reader, listen for the status after each move. Checks cannot judge this.',
+      ],
+    },
+    vocabulary: [
+      { term: 'Reorder', meaning: 'change the position of an item within a list' },
+      { term: 'Status message', meaning: 'text in a role="status" element that assistive technology announces without moving focus' },
+      { term: 'Accessible name', meaning: 'the text assistive technology reads to identify a control' },
+    ],
+    planPrompt:
+      'Where does the order live, and how do the list, the disabled states, and the status follow from it? Decide where focus goes when an item reaches the top.',
+    starter:
+      'type Item = { id: string; label: string }\ntype ReorderProps = { label: string; items: Item[] }\n\nfunction mountReorderList(root: HTMLElement, props: ReorderProps): void {\n  // Render an ordered list with Move up and Move down buttons for each item.\n  root.replaceChildren()\n}\n',
+    functionName: 'mountReorderList',
+    preserveInput: true,
+    hints: [
+      'Keep your own copy of the order and treat the screen as a view of it.',
+      'Move the existing list item elements instead of rebuilding them, so each button stays the same element. Moving an element can still drop focus in some browsers, so set focus again after every move.',
+      'After each move, recompute every button’s disabled state from the new positions, then decide where focus belongs and write the status text.',
+    ],
+    checks: [
+      {
+        name: 'Renders a labelled ordered list',
+        ...dom(
+          reorderProps,
+          [],
+          [
+            see('list', 'tag', 'ol'),
+            see('list', 'attr:aria-label', 'Packing order'),
+            see('name', 'texts', ['Milk', 'Eggs', 'Bread', 'Tea']),
+            see('status', 'attr:role', 'status'),
+            see('status', 'text', ''),
+          ],
+        ),
+      },
+      {
+        name: 'Buttons are real and named for their item',
+        ...dom(
+          reorderProps,
+          [],
+          [
+            see('up-eggs', 'tag', 'button'),
+            see('up-eggs', 'attr:type', 'button'),
+            see('up-eggs', 'attr:aria-label', 'Move Eggs up'),
+            see('down-eggs', 'attr:aria-label', 'Move Eggs down'),
+          ],
+        ),
+      },
+      {
+        name: 'Edge buttons start disabled',
+        ...dom(
+          reorderProps,
+          [],
+          [
+            see('up-milk', 'prop:disabled', true),
+            see('down-milk', 'prop:disabled', false),
+            see('up-tea', 'prop:disabled', false),
+            see('down-tea', 'prop:disabled', true),
+          ],
+        ),
+      },
+      {
+        name: 'Moving down changes the order and the status',
+        ...dom(
+          reorderProps,
+          [click('down-milk')],
+          [see('name', 'texts', ['Eggs', 'Milk', 'Bread', 'Tea']), see('status', 'text', 'Milk moved to position 2 of 4.')],
+        ),
+      },
+      {
+        name: 'Disabled states follow the new order',
+        ...dom(
+          reorderProps,
+          [click('down-milk')],
+          [see('up-milk', 'prop:disabled', false), see('up-eggs', 'prop:disabled', true), see('down-eggs', 'prop:disabled', false)],
+        ),
+      },
+      {
+        name: 'Focus stays on the clicked button',
+        ...dom(reorderProps, [focus('down-milk'), click('down-milk')], [see('down-milk', 'focused', true)]),
+      },
+      {
+        name: 'Reaching the top moves focus to the other button',
+        ...dom(
+          reorderProps,
+          [focus('up-eggs'), click('up-eggs')],
+          [
+            see('name', 'texts', ['Eggs', 'Milk', 'Bread', 'Tea']),
+            see('up-eggs', 'prop:disabled', true),
+            see('down-eggs', 'focused', true),
+          ],
+        ),
+      },
+      {
+        name: 'Several moves keep one item per entry',
+        ...dom(
+          reorderProps,
+          [click('up-tea'), click('up-tea'), click('up-tea')],
+          [
+            see('name', 'texts', ['Tea', 'Milk', 'Eggs', 'Bread']),
+            see('name', 'count', 4),
+            see('status', 'text', 'Tea moved to position 1 of 4.'),
+          ],
+        ),
+      },
+      {
+        name: 'Labels containing markup remain text',
+        ...dom(
+          { label: 'List', items: [{ id: 'a', label: '<b>A</b>' }] },
+          [],
+          [
+            see('name', 'text', '<b>A</b>'),
+            see('name', 'prop:childElementCount', 0),
+            see('up-a', 'prop:disabled', true),
+            see('down-a', 'prop:disabled', true),
+          ],
+        ),
+      },
+    ],
+  },
+  {
+    id: 'dom-modal-dialog',
+    title: 'Build a modal dialog that keeps focus inside',
+    category: 'Frontend accessibility',
+    format: 'frontend',
+    context:
+      'A “Delete draft” button asks for confirmation in a modal dialog. While it is open, keyboard users must not wander into the page behind it, and when it closes they should land back where they started.',
+    prompt:
+      'Implement `mountDialog(root, props)` with props.openLabel, props.title, props.body, and props.confirmLabel. Render an opener button (data-testid="open") with the text openLabel, a result element (data-testid="result") that starts empty, and a dialog (data-testid="dialog") that starts hidden. The dialog has role="dialog", aria-modal="true", and aria-labelledby="dialog-title"; inside it are a heading with id="dialog-title" and data-testid="title" holding the title text, a paragraph with the body, then a confirm button (data-testid="confirm", text confirmLabel) and a Cancel button (data-testid="cancel"). Opening shows the dialog and focuses the confirm button. While open, Tab on the last button moves focus to the first, and Shift+Tab on the first moves focus to the last. Escape or Cancel closes the dialog with the result "Cancelled."; confirm closes it with "Confirmed.". Closing hides the dialog and returns focus to the opener. Do not change props.',
+    brief: {
+      summary: 'Implement `mountDialog(root, props)`: an opener button and a modal dialog that keeps focus inside while open.',
+      rules: [
+        'Render an opener (data-testid="open", text openLabel), a result element (data-testid="result") that starts empty, and a hidden dialog (data-testid="dialog").',
+        'The dialog has role="dialog", aria-modal="true", and aria-labelledby="dialog-title"; it holds a heading (id="dialog-title", data-testid="title"), the body, a confirm button (data-testid="confirm", text confirmLabel), then Cancel (data-testid="cancel").',
+        'Opening shows the dialog and focuses the confirm button.',
+        'While open, Tab on the last button moves focus to the first, and Shift+Tab on the first moves focus to the last.',
+        'Escape or Cancel closes with the result "Cancelled."; confirm closes with "Confirmed.". Closing hides the dialog and returns focus to the opener.',
+      ],
+      edgeCases: ['The dialog can be opened again after closing.', 'Render every prop as text, and do not change props.'],
+    },
+    example: { input: 'click Delete draft, press Escape', output: 'dialog hidden, result "Cancelled.", focus back on Delete draft' },
+    note:
+      'Use the data-testid values and ids above. Checks dispatch key events and do not move focus themselves, so Tab and Shift+Tab at the edges must move focus in your code. ' +
+      limits,
+    acceptanceCriteria: [
+      'In a real browser, Tab and Shift+Tab cycle between the two buttons and never reach the page behind.',
+      'Focus returns to the opener after every way of closing.',
+      'A screen reader announces the dialog with its title when it opens.',
+    ],
+    domPreview: {
+      title: 'Your modal dialog',
+      description: 'Open the dialog, then try Tab, Shift+Tab, Escape, and both buttons.',
+      props: dialogProps,
+      review: [
+        'Cycle focus with Tab and Shift+Tab and confirm it never leaves the dialog.',
+        'Close the dialog each way and confirm focus returns to the opener.',
+        'With a screen reader, confirm the dialog is announced with its title. Checks cannot judge this.',
+      ],
+    },
+    vocabulary: [
+      { term: 'Modal dialog', meaning: 'a window that blocks the page behind it until it is closed' },
+      { term: 'Focus trap', meaning: 'keeping keyboard focus inside one region while it is open' },
+      { term: 'Focus return', meaning: 'moving focus back to the control that opened something once it closes' },
+    ],
+    planPrompt:
+      'Which element should have focus after each of these: opening, Tab on the last button, Escape, and Confirm? Where do you listen for keys so every button is covered?',
+    starter:
+      'type DialogProps = { openLabel: string; title: string; body: string; confirmLabel: string }\n\nfunction mountDialog(root: HTMLElement, props: DialogProps): void {\n  // Render the opener, the result, and a hidden dialog. Use the data-testid values from the brief.\n  root.replaceChildren()\n}\n',
+    functionName: 'mountDialog',
+    preserveInput: true,
+    hints: [
+      'One key listener on the dialog itself sees Tab, Shift+Tab, and Escape from every button inside it.',
+      'Only the edges need code: when focus is on the last button and Tab is pressed, cancel the default action and focus the first; Shift+Tab on the first does the reverse.',
+      'Write one close function that hides the dialog, writes the result, and focuses the opener, and call it from Escape, Cancel, and confirm.',
+    ],
+    checks: [
+      {
+        name: 'Starts closed with a real opener',
+        ...dom(
+          dialogProps,
+          [],
+          [
+            see('dialog', 'prop:hidden', true),
+            see('open', 'tag', 'button'),
+            see('open', 'text', 'Delete draft'),
+            see('result', 'text', ''),
+          ],
+        ),
+      },
+      {
+        name: 'The dialog is labelled and modal',
+        ...dom(
+          dialogProps,
+          [click('open')],
+          [
+            see('dialog', 'attr:role', 'dialog'),
+            see('dialog', 'attr:aria-modal', 'true'),
+            see('dialog', 'attr:aria-labelledby', 'dialog-title'),
+            see('dialog', 'prop:hidden', false),
+            see('title', 'text', 'Delete this draft?'),
+            see('title', 'attr:id', 'dialog-title'),
+            see('confirm', 'text', 'Delete'),
+            see('cancel', 'text', 'Cancel'),
+          ],
+        ),
+      },
+      { name: 'Opening focuses the confirm button', ...dom(dialogProps, [click('open')], [see('confirm', 'focused', true)]) },
+      {
+        name: 'Tab on the last button wraps to the first',
+        ...dom(dialogProps, [click('open'), focus('cancel'), key('Tab')], [see('confirm', 'focused', true)]),
+      },
+      {
+        name: 'Shift+Tab on the first button wraps to the last',
+        ...dom(dialogProps, [click('open'), shiftKey('Tab')], [see('cancel', 'focused', true)]),
+      },
+      {
+        name: 'Escape closes and returns focus',
+        ...dom(
+          dialogProps,
+          [click('open'), key('Escape')],
+          [see('dialog', 'prop:hidden', true), see('open', 'focused', true), see('result', 'text', 'Cancelled.')],
+        ),
+      },
+      {
+        name: 'Cancel closes and returns focus',
+        ...dom(
+          dialogProps,
+          [click('open'), click('cancel')],
+          [see('dialog', 'prop:hidden', true), see('open', 'focused', true), see('result', 'text', 'Cancelled.')],
+        ),
+      },
+      {
+        name: 'Confirm closes with its own result',
+        ...dom(
+          dialogProps,
+          [click('open'), click('confirm')],
+          [see('dialog', 'prop:hidden', true), see('open', 'focused', true), see('result', 'text', 'Confirmed.')],
+        ),
+      },
+      {
+        name: 'The dialog opens again after closing',
+        ...dom(
+          dialogProps,
+          [click('open'), key('Escape'), click('open')],
+          [see('dialog', 'prop:hidden', false), see('confirm', 'focused', true)],
+        ),
+      },
+      {
+        name: 'Text containing markup stays text',
+        ...dom(
+          { ...dialogProps, title: '<b>T</b>' },
+          [click('open')],
+          [see('title', 'text', '<b>T</b>'), see('title', 'prop:childElementCount', 0)],
+        ),
+      },
+    ],
+  },
+  {
+    id: 'dom-combobox',
+    title: 'Build a search box with arrow-key suggestions',
+    category: 'Frontend accessibility',
+    format: 'frontend',
+    context:
+      'A fruit picker suggests matches as you type. Mouse users click a suggestion; keyboard users need the arrow keys, Enter, and Escape, and screen-reader users need to hear which suggestion is active while focus stays in the text box.',
+    prompt:
+      'Implement `mountCombobox(root, props)` with props.label and props.options. Render an input (data-testid="input") labelled by props.label, with role="combobox", aria-autocomplete="list", aria-expanded, and aria-controls pointing at a list (data-testid="listbox", role="listbox", with an id). Typing shows the options that start with the typed text, ignoring case and surrounding spaces, each as an element with role="option", data-testid="option", and id="option-N", where N is its position in props.options. With no text or no match, hide the list and set aria-expanded to "false"; otherwise show it and set "true". ArrowDown makes the next shown option active, ArrowUp the previous, both wrapping around; from no active option, ArrowDown goes to the first and ArrowUp to the last. The active option has aria-selected="true", the others "false", and the input’s aria-activedescendant names it. Enter with an active option puts its text in the input and closes the list; Escape closes the list and keeps the typed text. Closing or typing again clears the active option and removes aria-activedescendant. Focus stays on the input throughout. Do not change props.',
+    brief: {
+      summary:
+        'Implement `mountCombobox(root, props)`: a labelled input with a list of matching suggestions you can pick with the keyboard.',
+      rules: [
+        'The input (data-testid="input") has role="combobox", aria-autocomplete="list", aria-expanded, and aria-controls pointing at the list (data-testid="listbox", role="listbox").',
+        'Typing shows the options that start with the typed text, ignoring case and surrounding spaces. Each is role="option", data-testid="option", id="option-N" for its position N in props.options.',
+        'With no text or no match, hide the list and set aria-expanded to "false"; otherwise show it and set "true".',
+        'ArrowDown and ArrowUp move the active option, wrapping around; from none, ArrowDown goes to the first and ArrowUp to the last. The active option has aria-selected="true" and is named by the input’s aria-activedescendant.',
+        'Enter with an active option puts its text in the input and closes the list. Escape closes the list and keeps the typed text.',
+      ],
+      edgeCases: [
+        'Closing or typing again clears the active option and removes aria-activedescendant.',
+        'Focus stays on the input throughout. Do not change props.',
+      ],
+    },
+    example: { input: "type 'ap', press ArrowDown twice, then Enter", output: "input value 'Apricot' and the list closed" },
+    note:
+      'Use the data-testid values and ids above, and render option text with `textContent`. Checks type by setting the value and dispatching input events, and dispatch key events to the focused input. ' +
+      limits,
+    acceptanceCriteria: [
+      'Arrow keys never move focus out of the input.',
+      'A screen reader announces the active suggestion as it changes.',
+      'Clicking a suggestion is a sensible addition, but it is not checked here.',
+    ],
+    domPreview: {
+      title: 'Your combobox',
+      description: 'Type part of a fruit name, then use the arrow keys, Enter, and Escape.',
+      props: comboProps,
+      review: [
+        'Type, then move through the suggestions with the arrow keys and confirm the active one is visible.',
+        'Confirm Enter fills the input and Escape keeps what you typed.',
+        'With a screen reader, listen for the active suggestion as it changes. Checks cannot judge this.',
+      ],
+    },
+    vocabulary: [
+      { term: 'Combobox', meaning: 'a text input combined with a list of suggestions to choose from' },
+      { term: 'aria-activedescendant', meaning: 'an attribute naming the option that is active while focus stays on the input' },
+      { term: 'Listbox', meaning: 'a list of options that one can be chosen from' },
+    ],
+    planPrompt:
+      'List the state the widget needs, such as the typed text, the matches, the active option, and whether the list is open. Which attributes change when each piece of state changes?',
+    starter:
+      'type ComboboxProps = { label: string; options: string[] }\n\nfunction mountCombobox(root: HTMLElement, props: ComboboxProps): void {\n  // Render a labelled combobox input and a listbox. Use the data-testid values from the brief.\n  root.replaceChildren()\n}\n',
+    functionName: 'mountCombobox',
+    preserveInput: true,
+    hints: [
+      'Keep the matches and the index of the active match as state, and write one function that applies that state to the list and every attribute.',
+      'The options are not focused: the input keeps focus and points at the active option with aria-activedescendant.',
+      'Typing recomputes the matches and clears the active index. The arrow keys change only the index, using the remainder after dividing by the number of matches to wrap around.',
+    ],
+    checks: [
+      {
+        name: 'Renders a labelled, closed combobox',
+        ...dom(
+          comboProps,
+          [],
+          [
+            see('input', 'tag', 'input'),
+            see('input', 'label', 'Fruit'),
+            see('input', 'attr:role', 'combobox'),
+            see('input', 'attr:aria-autocomplete', 'list'),
+            see('input', 'controls', 'listbox'),
+            see('listbox', 'attr:role', 'listbox'),
+            ...comboClosed,
+          ],
+        ),
+      },
+      {
+        name: 'Typing shows options that start with the text',
+        ...dom(
+          comboProps,
+          [type('input', 'ap')],
+          [see('option', 'texts', ['Apple', 'Apricot']), see('input', 'attr:aria-expanded', 'true'), see('listbox', 'prop:hidden', false)],
+        ),
+      },
+      {
+        name: 'Matching ignores case and surrounding spaces',
+        ...dom(comboProps, [type('input', '  BA ')], [see('option', 'texts', ['Banana']), see('option', 'attr:role', 'option')]),
+      },
+      { name: 'No match closes the list', ...dom(comboProps, [type('input', 'zz')], comboClosed) },
+      {
+        name: 'ArrowDown activates the first option without moving focus',
+        ...dom(
+          comboProps,
+          [type('input', 'ap'), focus('input'), key('ArrowDown')],
+          [
+            see('input', 'activeText', 'Apple'),
+            see('input', 'attr:aria-activedescendant', 'option-0'),
+            see('option', 'selectedTexts', ['Apple']),
+            see('input', 'focused', true),
+          ],
+        ),
+      },
+      {
+        name: 'ArrowDown wraps from the last option to the first',
+        ...dom(
+          comboProps,
+          [type('input', 'ap'), focus('input'), key('ArrowDown'), key('ArrowDown'), key('ArrowDown')],
+          [see('input', 'activeText', 'Apple'), see('option', 'selectedTexts', ['Apple'])],
+        ),
+      },
+      {
+        name: 'ArrowUp from no active option goes to the last',
+        ...dom(
+          comboProps,
+          [type('input', 'ap'), focus('input'), key('ArrowUp')],
+          [see('input', 'activeText', 'Apricot'), see('input', 'attr:aria-activedescendant', 'option-2')],
+        ),
+      },
+      {
+        name: 'Enter picks the active option and closes the list',
+        ...dom(
+          comboProps,
+          [type('input', 'ap'), focus('input'), key('ArrowDown'), key('ArrowDown'), key('Enter')],
+          [see('input', 'prop:value', 'Apricot'), see('input', 'attr:aria-activedescendant', null), ...comboClosed],
+        ),
+      },
+      {
+        name: 'Escape closes the list and keeps the typed text',
+        ...dom(
+          comboProps,
+          [type('input', 'ap'), focus('input'), key('ArrowDown'), key('Escape')],
+          [see('input', 'prop:value', 'ap'), see('input', 'attr:aria-activedescendant', null), ...comboClosed],
+        ),
+      },
+      {
+        name: 'Typing again clears the active option',
+        ...dom(
+          comboProps,
+          [type('input', 'ap'), focus('input'), key('ArrowDown'), type('input', 'apr')],
+          [see('option', 'texts', ['Apricot']), see('input', 'attr:aria-activedescendant', null), see('option', 'selectedTexts', [])],
+        ),
+      },
+      {
+        name: 'Options containing markup remain text',
+        ...dom(
+          { label: 'Tag', options: ['<b>bold</b>'] },
+          [type('input', '<b')],
+          [see('option', 'texts', ['<b>bold</b>']), see('option', 'prop:childElementCount', 0)],
         ),
       },
     ],

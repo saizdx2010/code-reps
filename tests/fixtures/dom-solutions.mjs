@@ -327,3 +327,180 @@ function mountAccordion(root: HTMLElement, props: {open: string | null; sections
   apply()
 }`,
 }
+
+Object.assign(domSolutions, {
+  'dom-reorder-list': `
+function mountReorderList(root: HTMLElement, props: { label: string; items: { id: string; label: string }[] }) {
+  root.replaceChildren()
+  const order = [...props.items]
+  const list = document.createElement('ol')
+  list.setAttribute('data-testid', 'list')
+  list.setAttribute('aria-label', props.label)
+  const status = document.createElement('p')
+  status.setAttribute('role', 'status')
+  status.setAttribute('data-testid', 'status')
+  const rows = new Map<string, { li: HTMLLIElement; up: HTMLButtonElement; down: HTMLButtonElement }>()
+  const apply = () => {
+    order.forEach((item, index) => {
+      const row = rows.get(item.id)!
+      list.append(row.li)
+      row.up.disabled = index === 0
+      row.down.disabled = index === order.length - 1
+    })
+  }
+  const move = (id: string, delta: number, clicked: 'up' | 'down') => {
+    const from = order.findIndex(item => item.id === id)
+    const to = from + delta
+    if (to < 0 || to >= order.length) return
+    const [item] = order.splice(from, 1)
+    order.splice(to, 0, item)
+    apply()
+    const row = rows.get(id)!
+    const target = row[clicked].disabled ? row[clicked === 'up' ? 'down' : 'up'] : row[clicked]
+    target.focus()
+    status.textContent = item.label + ' moved to position ' + (to + 1) + ' of ' + order.length + '.'
+  }
+  const button = (text: string, label: string, testid: string, onClick: () => void) => {
+    const element = document.createElement('button')
+    element.type = 'button'
+    element.textContent = text
+    element.setAttribute('aria-label', label)
+    element.setAttribute('data-testid', testid)
+    element.addEventListener('click', onClick)
+    return element
+  }
+  for (const item of props.items) {
+    const li = document.createElement('li')
+    const name = document.createElement('span')
+    name.setAttribute('data-testid', 'name')
+    name.textContent = item.label
+    const up = button('Move up', 'Move ' + item.label + ' up', 'up-' + item.id, () => move(item.id, -1, 'up'))
+    const down = button('Move down', 'Move ' + item.label + ' down', 'down-' + item.id, () => move(item.id, 1, 'down'))
+    li.append(name, ' ', up, ' ', down)
+    rows.set(item.id, { li, up, down })
+  }
+  apply()
+  root.append(list, status)
+}`,
+  'dom-modal-dialog': `
+function mountDialog(root: HTMLElement, props: { openLabel: string; title: string; body: string; confirmLabel: string }) {
+  root.replaceChildren()
+  const button = (text: string, testid: string) => {
+    const element = document.createElement('button')
+    element.type = 'button'
+    element.textContent = text
+    element.setAttribute('data-testid', testid)
+    return element
+  }
+  const open = button(props.openLabel, 'open')
+  const result = document.createElement('p')
+  result.setAttribute('data-testid', 'result')
+  const dialog = document.createElement('div')
+  dialog.setAttribute('role', 'dialog')
+  dialog.setAttribute('aria-modal', 'true')
+  dialog.setAttribute('aria-labelledby', 'dialog-title')
+  dialog.setAttribute('data-testid', 'dialog')
+  dialog.hidden = true
+  const title = document.createElement('h2')
+  title.id = 'dialog-title'
+  title.setAttribute('data-testid', 'title')
+  title.textContent = props.title
+  const body = document.createElement('p')
+  body.textContent = props.body
+  const confirm = button(props.confirmLabel, 'confirm')
+  const cancel = button('Cancel', 'cancel')
+  dialog.append(title, body, confirm, cancel)
+  const close = (message: string) => {
+    dialog.hidden = true
+    result.textContent = message
+    open.focus()
+  }
+  open.addEventListener('click', () => {
+    dialog.hidden = false
+    confirm.focus()
+  })
+  confirm.addEventListener('click', () => close('Confirmed.'))
+  cancel.addEventListener('click', () => close('Cancelled.'))
+  dialog.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      close('Cancelled.')
+    } else if (event.key === 'Tab' && !event.shiftKey && document.activeElement === cancel) {
+      event.preventDefault()
+      confirm.focus()
+    } else if (event.key === 'Tab' && event.shiftKey && document.activeElement === confirm) {
+      event.preventDefault()
+      cancel.focus()
+    }
+  })
+  root.append(open, result, dialog)
+}`,
+  'dom-combobox': `
+function mountCombobox(root: HTMLElement, props: { label: string; options: string[] }) {
+  root.replaceChildren()
+  const label = document.createElement('label')
+  label.htmlFor = 'combo-input'
+  label.textContent = props.label
+  const input = document.createElement('input')
+  input.id = 'combo-input'
+  input.type = 'text'
+  input.setAttribute('data-testid', 'input')
+  input.setAttribute('role', 'combobox')
+  input.setAttribute('aria-autocomplete', 'list')
+  input.setAttribute('aria-controls', 'combo-listbox')
+  const listbox = document.createElement('ul')
+  listbox.id = 'combo-listbox'
+  listbox.setAttribute('role', 'listbox')
+  listbox.setAttribute('data-testid', 'listbox')
+  let matches: number[] = []
+  let active = -1
+  let open = false
+  const render = () => {
+    listbox.replaceChildren(
+      ...matches.map((index, position) => {
+        const option = document.createElement('li')
+        option.id = 'option-' + index
+        option.setAttribute('role', 'option')
+        option.setAttribute('data-testid', 'option')
+        option.setAttribute('aria-selected', String(position === active))
+        option.textContent = props.options[index]
+        return option
+      }),
+    )
+    listbox.hidden = !open
+    input.setAttribute('aria-expanded', String(open))
+    if (open && active >= 0) input.setAttribute('aria-activedescendant', 'option-' + matches[active])
+    else input.removeAttribute('aria-activedescendant')
+  }
+  const close = () => {
+    open = false
+    active = -1
+    render()
+  }
+  input.addEventListener('input', () => {
+    const query = input.value.trim().toLowerCase()
+    matches = query ? props.options.flatMap((option, index) => (option.toLowerCase().startsWith(query) ? [index] : [])) : []
+    active = -1
+    open = matches.length > 0
+    render()
+  })
+  input.addEventListener('keydown', event => {
+    if (!open) return
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      const step = event.key === 'ArrowDown' ? 1 : -1
+      active = active < 0 ? (step > 0 ? 0 : matches.length - 1) : (active + step + matches.length) % matches.length
+      render()
+    } else if (event.key === 'Enter' && active >= 0) {
+      event.preventDefault()
+      input.value = props.options[matches[active]]
+      close()
+    } else if (event.key === 'Escape') {
+      event.preventDefault()
+      close()
+    }
+  })
+  render()
+  root.append(label, input, listbox)
+}`,
+})

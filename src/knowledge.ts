@@ -979,6 +979,8 @@ export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[
       'trees',
       'binary-search-trees',
       'graphs',
+      'heaps',
+      'dynamic-programming',
     ],
   },
   { id: 'frontend', title: 'Frontend', skillIds: ['frontend', 'react'] },

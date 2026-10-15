@@ -1,5 +1,5 @@
-import { reactSolution } from './fixtures/react-solution.mjs'
-import { sqliteSolution } from './fixtures/sqlite-solution.mjs'
+import { reactSolutions } from './fixtures/react-solution.mjs'
+import { sqliteSolution, sqliteCustomerTotalsSolution, sqliteRestockSolution } from './fixtures/sqlite-solution.mjs'
 import initSqlJs from 'sql.js'
 import { typescriptDepthSolutions } from './fixtures/typescript-depth-solutions.mjs'
 import { recallThinSolutions } from './fixtures/recall-thin-solutions.mjs'
@@ -11,6 +11,7 @@ import { foundationsSolutions } from './fixtures/foundations-solutions.mjs'
 import { coreSolutions } from './fixtures/core-solutions.mjs'
 import { asyncSolutions } from './fixtures/async-solutions.mjs'
 import { practicalSolutions } from './fixtures/practical-solutions.mjs'
+import { expansionSolutions } from './fixtures/expansion-solutions.mjs'
 import { validateContentDepth } from '../src/content-depth.ts'
 import { validateReps } from '../src/rep-validation.ts'
 import { repDepth } from '../src/rep-depth.ts'
@@ -36,6 +37,8 @@ import { assertMutantsFail } from './helpers/checks.mjs'
 const SQL = await initSqlJs()
 const solutions = {
   'sqlite-stock-transfer': sqliteSolution,
+  'sqlite-customer-totals': sqliteCustomerTotalsSolution,
+  'sqlite-restock-upsert': sqliteRestockSolution,
   ...typescriptDepthSolutions,
   ...recallThinSolutions,
   ...journeyPracticeSolutions,
@@ -50,6 +53,7 @@ const solutions = {
   ...testingJourneySolutions,
   ...maintenanceSolutions,
   ...coreSolutions,
+  ...expansionSolutions,
 }
 
 test('every rep has reference-solution coverage and a complete learning brief', () => {
@@ -60,7 +64,7 @@ test('every rep has reference-solution coverage and a complete learning brief', 
     ...Object.keys(domSolutions),
     ...Object.keys(connectedSolutionsById),
     ...aiEraReps.map(rep => rep.id),
-    ...Object.keys({ 'react-channel-counter': reactSolution }),
+    ...Object.keys(reactSolutions),
   ])
   assert.deepEqual([...covered].sort(), reps.map(rep => rep.id).sort())
   assert.deepEqual(validateReps(reps, reflectionGuides), [])

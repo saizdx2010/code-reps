@@ -1,5 +1,5 @@
 import { createAsyncFixture } from './async-fixture.ts'
-import { checkStockTransfer, SQLITE_REP_ID, type SqliteFactory } from './sqlite-task.ts'
+import { checkSqliteTask, isSqliteRep, type SqliteFactory } from './sqlite-task.ts'
 import { compileSolution } from './compile-solution.ts'
 import { reps } from './rep.ts'
 import { sameValue } from './compare.ts'
@@ -20,17 +20,17 @@ export function runRep(code: string, repId: string, createDatabase?: SqliteFacto
     const inputPreview = `${rep.functionName}(${input.map(value => JSON.stringify(value)).join(', ')})`.slice(0, 200)
     try {
       const argumentsCopy = structuredClone(input)
-      const actual =
-        rep.id === 'sqlite-stock-transfer'
-          ? checkStockTransfer(
-              solve as (...values: unknown[]) => unknown,
-              argumentsCopy,
-              createDatabase ??
-                (() => {
-                  throw new Error('SQLite must be loaded before running this rep.')
-                }),
-            )
-          : (solve as (...values: unknown[]) => unknown)(...argumentsCopy)
+      const actual = isSqliteRep(rep.id)
+        ? checkSqliteTask(
+            rep.id,
+            solve as (...values: unknown[]) => unknown,
+            argumentsCopy,
+            createDatabase ??
+              (() => {
+                throw new Error('SQLite must be loaded before running this rep.')
+              }),
+          )
+        : (solve as (...values: unknown[]) => unknown)(...argumentsCopy)
       const changedInput = rep.preserveInput && !sameValue(argumentsCopy, input)
       const passed = sameValue(actual, expected) && !changedInput
       const format = (value: unknown) => {
@@ -62,7 +62,7 @@ export function runRep(code: string, repId: string, createDatabase?: SqliteFacto
 export async function runAsyncRep(code: string, repId: string, createDatabase?: SqliteFactory): Promise<TestResult[]> {
   const rep = reps.find(item => item.id === repId)
   if (!rep) throw new Error('This rep could not be found.')
-  if (rep.id === SQLITE_REP_ID) return runRep(code, repId, createDatabase)
+  if (isSqliteRep(rep.id)) return runRep(code, repId, createDatabase)
   if (rep.format === 'frontend') throw new Error('This exercise uses browser interaction checks. Run it in the workspace.')
   if (typeof code !== 'string' || code.length > 100_000) throw new Error('The solution is too large to run.')
   const output = compileSolution(code, rep.functionName)

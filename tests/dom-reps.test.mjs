@@ -143,6 +143,74 @@ const mutants = [
       ),
   ],
   ['dom-accordion', 'html insertion', s => s.replace('panel.textContent = section.content', 'panel.innerHTML = section.content')],
+  ['dom-reorder-list', 'focus not restored', s => s.replace('    target.focus()\n', '')],
+  [
+    'dom-reorder-list',
+    'focus stays on a disabled button',
+    s => s.replace("row[clicked].disabled ? row[clicked === 'up' ? 'down' : 'up'] : row[clicked]", 'row[clicked]'),
+  ],
+  ['dom-reorder-list', 'first item can move up', s => s.replace('row.up.disabled = index === 0', 'row.up.disabled = false')],
+  [
+    'dom-reorder-list',
+    'no status message',
+    s => s.replace("status.textContent = item.label + ' moved to position '", "status.textContent = '' + ' moved to position '"),
+  ],
+  ['dom-reorder-list', 'generic button names', s => s.replace("'Move ' + item.label + ' up'", "'Move up'")],
+  ['dom-reorder-list', 'html labels', s => s.replace('name.textContent = item.label', 'name.innerHTML = item.label')],
+  [
+    'dom-modal-dialog',
+    'focus not returned',
+    s => s.replace('    result.textContent = message\n    open.focus()', '    result.textContent = message'),
+  ],
+  ['dom-modal-dialog', 'no initial focus', s => s.replace('    dialog.hidden = false\n    confirm.focus()', '    dialog.hidden = false')],
+  [
+    'dom-modal-dialog',
+    'Tab escapes the dialog',
+    s => s.replace("event.key === 'Tab' && !event.shiftKey", "event.key === 'Tab ' && !event.shiftKey"),
+  ],
+  [
+    'dom-modal-dialog',
+    'Shift+Tab escapes the dialog',
+    s => s.replace("event.key === 'Tab' && event.shiftKey", "event.key === 'Tab ' && event.shiftKey"),
+  ],
+  ['dom-modal-dialog', 'Escape ignored', s => s.replace("event.key === 'Escape'", "event.key === 'Esc'")],
+  ['dom-modal-dialog', 'not modal', s => s.replace("dialog.setAttribute('aria-modal', 'true')", '')],
+  ['dom-modal-dialog', 'one result for every close', s => s.replace("close('Confirmed.')", "close('Cancelled.')")],
+  [
+    'dom-combobox',
+    'contains instead of starts with',
+    s => s.replace('option.toLowerCase().startsWith(query)', 'option.toLowerCase().includes(query)'),
+  ],
+  ['dom-combobox', 'case-sensitive matching', s => s.replace('option.toLowerCase().startsWith(query)', 'option.startsWith(query)')],
+  [
+    'dom-combobox',
+    'no active descendant',
+    s =>
+      s.replace(
+        "input.setAttribute('aria-activedescendant', 'option-' + matches[active])",
+        "input.removeAttribute('aria-activedescendant')",
+      ),
+  ],
+  [
+    'dom-combobox',
+    'no wrap',
+    s => s.replace('(active + step + matches.length) % matches.length', 'Math.min(matches.length - 1, Math.max(0, active + step))'),
+  ],
+  [
+    'dom-combobox',
+    'Escape clears the text',
+    s =>
+      s.replace(
+        'event.preventDefault()\n      close()\n    }\n  })',
+        "event.preventDefault()\n      input.value = ''\n      close()\n    }\n  })",
+      ),
+  ],
+  ['dom-combobox', 'stays open when empty', s => s.replace('open = matches.length > 0', 'open = true')],
+  [
+    'dom-combobox',
+    'typing keeps the active option',
+    s => s.replace('    active = -1\n    open = matches.length > 0', '    open = matches.length > 0'),
+  ],
 ]
 test('DOM checks reject common contract mistakes', () => {
   for (const [id, label, mutate] of mutants) {

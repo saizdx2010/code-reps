@@ -53,6 +53,8 @@ const practicalTopics: Record<string, string> = {
   'retry-backoff': 'Caching and retries',
   'idempotent-ledger': 'Caching and retries',
   'optimistic-balance': 'Caching and retries',
+  'payment-resubmit': 'Caching and retries',
+  'quote-cache-retry': 'Caching and retries',
 }
 const problemStages = paths.find(path => path.id === 'algorithms-data-structures')!.stages
 const lookupReps = new Set([
@@ -98,11 +100,14 @@ export const catalogAreas: { title: string; topics: string[] }[] = [
       'Sort and merge',
       'Search sorted data and scan windows',
       'Ranges and linked structures',
+      'Rebuild linked lists',
+      'Heaps and priority queues',
       'Recursion',
       'Trees and graphs',
       'Binary search trees',
       'Grids',
       'Backtracking and dynamic programming',
+      'Fill tables of smaller answers',
       'Harder patterns',
       'Solve a two-part puzzle',
       'Problem solving',

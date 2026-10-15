@@ -7,11 +7,11 @@ The combined path teaches structures and the techniques that use them together. 
 1. **Prepare the language:** values, types, typed arrays, and functions.
 2. **Use collections:** declare and copy arrays; add, delete, and read Set members; set, overwrite, and query Map entries. Read the collection-operations lesson first.
 3. **Apply arrays and text:** guided scanning, independent work, and distinct delayed recall through the existing journeys.
-4. **Apply maps and sets:** membership, counting, tie rules, and lookup recall.
+4. **Apply maps and sets:** membership, counting, tie rules, and lookup recall. **Build and compare text** follows: run-length compression, anagram groups, a normalized palindrome, and word wrapping, with its own journey.
 5. **Use stacks and queues:** read the operations lesson, practice LIFO and FIFO, then apply stacks to nesting and cancellation. Queue introductions use a small array-backed implementation and explain the cost of `shift`.
 6. **Learn algorithm techniques:** read the techniques lesson, then practice sorted two-pointer pair sums, fixed-size window sums, and binary search.
 7. **Sort, recurse, and explore structures:** sorting and merging, recursion, trees and graphs, binary search trees, and grids. Each has a journey; sorting, recursion, trees, binary search trees, and graphs also have lessons.
-8. **Ranges, linked structures, and choices:** prefix sums, merged intervals, linked-list reversal, insertion, and removal, a min-heap, subsets, and introductory dynamic programming, followed by harder patterns and an interview round. Linked lists have a lesson.
+8. **Ranges, linked structures, and choices:** prefix sums, merged intervals, linked-list reversal, insertion, and removal, then rebuilding linked lists (merge, split, rotate), heaps and priority queues (merge streams, rooms needed, a live cutoff), subsets, and dynamic programming tables (garage routes, stall revenue, tag edits), followed by harder patterns and an interview round. Linked lists, heaps, and dynamic programming each have a lesson and a journey.
 
 `src/path.ts` owns the exact stage order and rep lists.
 
@@ -21,12 +21,14 @@ Operations reps deliberately make the API explicit. Their checks verify outputs 
 
 ## Next expansion
 
-Linked lists, heaps, backtracking, and dynamic programming have playable reps (`src/dsa-advanced-reps.ts`), but each is an application without a journey. Linked-list insertion and removal (`list-insert-sorted`, `list-remove-value`) follow reversal, after the `linked-lists` lesson. Binary search trees have a lesson and a journey in `src/dsa-linked-reps.ts`: guided `bst-search-path`, independent `bst-latest-at-or-before`, and recall `bst-check-order`, which needs whole-subtree limits rather than the search itself. Keep one combined path while extending them in this order:
+Linked lists, binary search trees, heaps, and dynamic programming now each have a guided → independent → delayed-recall journey:
 
-- Binary search tree insertion that copies the changed path, after the search journey. This is the "implement the structure" step.
-- Independent and delayed-recall applications for the existing linked-list, heap, backtracking, and dynamic-programming reps, added only when practice shows a specific gap.
+- **Linked lists** (`src/dsa-linked-reps.ts`): guided `list-merge-sorted`, independent `list-split-at-first`, recall `list-rotate-route`; `list-insert-sorted` and `list-remove-value` are extra practice.
+- **Binary search trees** (`src/dsa-linked-reps.ts`): guided `bst-search-path`, independent `bst-latest-at-or-before`, recall `bst-check-order`. Path-copying insertion (`bst-insert-value`) and a pruned range listing (`bst-range-values`) are extra practice, and `bst-nearest-slot` joins the recurring recall rotation.
+- **Heaps** (`src/dsa-dp-heap-reps.ts`, `heaps` lesson): guided `algo-min-heap`, independent `heap-merge-log-streams`, recall `heap-rooms-needed`; `heap-kth-largest-stream` is extra practice. Checks compare answers, so a sort-based solution also passes; the heap is a reviewed performance choice.
+- **Dynamic programming** (`src/dsa-dp-heap-reps.ts`, `dynamic-programming` lesson): guided `dp-garage-paths`, independent `dp-stall-revenue`, recall `dp-tag-edits`. Each has a table trace in its review.
 
-For each new structure, introduce its representation and operations before a guided application. Follow with a problem without approach clues and a distinct delayed-recall application. Implementing the structure from scratch should follow using it. Future stages are not shown as playable placeholders.
+Backtracking still has a single rep. Add independent and recall applications for it, or for the harder patterns, only when practice shows a specific gap. For each new structure, introduce its representation and operations before a guided application. Follow with a problem without approach clues and a distinct delayed-recall application. Implementing the structure from scratch should follow using it. Future stages are not shown as playable placeholders.
 
 ## Verification limits
 

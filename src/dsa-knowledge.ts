@@ -419,7 +419,14 @@ dsaSkills.push(
           'Only the first node was copied. copy.next and head.next are the same object, so changing it through copy also changes the original list. A full copy creates a new node for every value.',
       },
     ],
-    repIds: ['algo-linked-list-reverse', 'list-insert-sorted', 'list-remove-value'],
+    repIds: [
+      'algo-linked-list-reverse',
+      'list-insert-sorted',
+      'list-remove-value',
+      'list-merge-sorted',
+      'list-split-at-first',
+      'list-rotate-route',
+    ],
     related: ['collection-operations', 'recursion-basics', 'complexity'],
   },
   {
@@ -559,7 +566,7 @@ dsaSkills.push(
           '6 > 3 is correct for its parent, but 6 is also in the left subtree of 5, where every value must be smaller than 5. The rule covers whole subtrees, not only direct children.',
       },
     ],
-    repIds: ['bst-search-path', 'bst-latest-at-or-before', 'bst-check-order'],
+    repIds: ['bst-search-path', 'bst-insert-value', 'bst-latest-at-or-before', 'bst-range-values', 'bst-check-order', 'bst-nearest-slot'],
     related: ['trees', 'array-techniques', 'complexity'],
   },
   {
@@ -866,3 +873,145 @@ dsaSkills
         'Two-prefix dynamic programming reuses the best shared lengths: a match extends the diagonal; a mismatch compares dropping one endpoint. A substring window requires adjacency and misses gapped matches. Minimum letter counts ignore order: ab and ba share two letters but the longest ordered sequence has length one.',
     },
   )
+
+// Dynamic programming and heaps lessons, linked from their journeys.
+dsaSkills.push(
+  {
+    id: 'dynamic-programming',
+    title: 'Dynamic programming: reuse answers to smaller questions',
+    summary: 'Name the smaller question, write how answers combine, and fill a table in an order where every answer you read is ready.',
+    prerequisites: ['recursion-basics', 'complexity'],
+    objectives: [
+      'Define the state: the exact smaller question each table entry answers.',
+      'Write a recurrence that combines earlier answers, with base cases that need no earlier answer.',
+      'Choose a filling order where every entry you read is already final, and explain the time and storage it costs.',
+    ],
+    sections: [
+      {
+        title: 'Overlapping smaller questions',
+        body: 'Many counting and best-value problems break into smaller versions of themselves: the routes to a grid cell, the best revenue from the first few stalls, the edits between two prefixes. A plain recursive solution asks the same smaller question again and again, which can grow exponentially. Dynamic programming answers each smaller question once and stores it, so later questions can read it instead of recomputing it.',
+      },
+      {
+        title: 'State, recurrence, and base case',
+        body: 'Start by writing the state in words: “ways[r][c] is the number of routes that reach row r, column c.” Then write the recurrence: how one entry follows from earlier ones. Routes into a cell arrive from above or from the left, so ways[r][c] = ways[r - 1][c] + ways[r][c - 1]. Finally, the base cases are the entries that need no earlier answer, such as the start cell, an empty prefix, or a blocked cell. If you cannot say what an entry means in one sentence, the recurrence is usually wrong.',
+      },
+      {
+        title: 'Count, or choose the best',
+        body: 'When the question asks how many, the cases must not overlap, and you add them: a route that ends with a down move is never the same as one that ends with a right move. When the question asks for the best, you compare the cases and keep the minimum or maximum: skip this stall, or take it and skip its neighbour. Mixing the two, for example adding cases when only one can happen, is the most common recurrence mistake.',
+      },
+      {
+        title: 'Fill in a safe order',
+        body: 'A bottom-up table fills entries in an order where everything an entry reads is already final: left to right for a row of prefixes, row by row for a grid. A top-down version recurses from the full question and memoizes each answer in a Map; it fills only the entries it needs. Both cost the number of entries times the work per entry. When an entry reads only the previous row or the previous two values, you can keep just those and reduce storage.',
+      },
+    ],
+    example:
+      '// Most revenue from stalls [2, 7, 9, 3, 1], never two neighbours.\n// best[i] = most revenue using stalls 0..i\n// best[i] = max(best[i - 1], revenue[i] + best[i - 2])\n// i:        0  1  2   3   4\n// revenue:  2  7  9   3   1\n// best:     2  7  11  11  12\n// Answer: best[4] = 12 (stalls 0, 2, and 4).',
+    walkthrough: [
+      'The state: best[i] is the most revenue from stalls 0 to i with no two neighbours rented.',
+      'Stall i is either skipped, leaving best[i - 1], or rented, adding revenue[i] to best[i - 2]. Every valid choice is one of those.',
+      'Base cases: before any stall the best is 0, and with one stall it is that stall’s revenue.',
+      'Filling left to right means best[i - 1] and best[i - 2] are always ready. At i = 2, renting 9 gives 9 + 2 = 11, more than skipping (7).',
+      'Each entry reads two earlier entries, so the whole row costs O(n) time; keeping only the last two values needs O(1) storage.',
+    ],
+    mistakes: [
+      'Starting to code before writing what one table entry means.',
+      'Adding cases that overlap, or comparing cases when the question asks for a count.',
+      'Forgetting a base case, such as the empty prefix, or seeding it with the wrong value.',
+      'Filling in an order that reads an entry before it is final.',
+      'Treating a greedy rule, such as always taking the largest value, as if it were the recurrence.',
+    ],
+    questions: [
+      {
+        id: 'dp-route-count-v1',
+        prompt: 'Routes may move only right or down. How many routes reach the bottom-right cell? X is blocked.',
+        code: '// . . .\n// . X .\n// . . .',
+        options: ['2', '4', '6'],
+        answer: 0,
+        explanation:
+          'Each cell holds the routes from above plus the routes from the left, and X holds 0. The bottom-right cell adds 1 from above and 1 from the left: 2. Six is the count with no blocked cell.',
+      },
+      {
+        id: 'dp-fill-order-v1',
+        prompt: 'best[i] reads best[i - 1] and best[i - 2]. Which filling order is safe?',
+        code: 'best[i] = Math.max(best[i - 1], values[i] + best[i - 2])',
+        options: ['From the last index down to 0', 'From index 0 up to the last index', 'Any order, because each entry is computed once'],
+        answer: 1,
+        explanation:
+          'Every entry reads smaller indices, so those must be final first. Filling upward guarantees that. Filling downward reads entries that are still empty.',
+      },
+    ],
+    repIds: ['algo-climb-stairs', 'algo-coin-change', 'dp-garage-paths', 'dp-stall-revenue', 'dp-tag-edits', 'longest-shared-sequence'],
+    related: ['recursion-basics', 'complexity', 'array-techniques'],
+  },
+  {
+    id: 'heaps',
+    title: 'Heaps and priority queues: always the smallest next',
+    summary: 'Use a priority queue when you repeatedly need the smallest or largest item from a collection that keeps changing.',
+    prerequisites: ['trees', 'sorting-basics'],
+    objectives: [
+      'Recognize problems that repeatedly need the smallest or largest item while items are added and removed.',
+      'Describe how a binary heap keeps its smallest value at the top and what adding and removing cost.',
+      'Choose between sorting once, keeping a sorted array, and keeping a heap.',
+    ],
+    sections: [
+      {
+        title: 'A priority queue answers one question fast',
+        body: 'A priority queue holds items and always gives back the one with the highest priority next, usually the smallest value for a min-queue. You can add items and remove the top one at any time. Unlike a sorted array, it does not keep everything in order; it only guarantees that the top is correct. That is enough for merging streams, scheduling the next free room, or keeping the k best scores.',
+      },
+      {
+        title: 'A binary heap stores a tree in an array',
+        body: 'A min-heap is a complete binary tree stored level by level in an array: the children of index i are at 2i + 1 and 2i + 2, and its parent is at (i - 1) >> 1. The heap rule says every parent is less than or equal to its children, so the smallest value is always at index 0. Siblings are not ordered relative to each other.',
+      },
+      {
+        title: 'Add and remove in O(log n)',
+        body: 'To add, put the value at the end and swap it with its parent while it is smaller (sift up). To remove the top, move the last value to index 0 and swap it with its smaller child while it is larger (sift down). Each swap moves one level, and a heap of n values has about log₂ n levels, so both cost O(log n). Reading the top is O(1).',
+      },
+      {
+        title: 'When a heap is the right tool',
+        body: 'If you need every value in order once, sorting is simpler at O(n log n). If the collection is small, a sorted array with O(n) insertion is fine. A heap wins when items keep arriving and you only ever need the current smallest: k streams merged in O(n log k), or the k highest scores kept in O(log k) per score. JavaScript has no built-in priority queue, so these reps accept any approach that meets the contract; the heap is a performance choice you review yourself.',
+      },
+    ],
+    example:
+      '// Min-heap array after adding 5, 3, 8, 1:\n// add 5: [5]\n// add 3: [5, 3] -> 3 < 5, swap -> [3, 5]\n// add 8: [3, 5, 8]\n// add 1: [3, 5, 8, 1] -> 1 < 5, swap -> [3, 1, 8, 5] -> 1 < 3, swap -> [1, 3, 8, 5]\n// remove top: 1; move 5 to the top -> [5, 3, 8] -> 3 < 5, swap -> [3, 5, 8]',
+    walkthrough: [
+      'Each new value starts at the end of the array, the next free spot in the bottom level.',
+      'Adding 1 compares it with its parent at index 1 (5), swaps, then with the root (3), and swaps again. Two swaps for four values.',
+      'The array [1, 3, 8, 5] is not sorted, but every parent is no larger than its children, so the top is the minimum.',
+      'Removing the top moves the last value, 5, to index 0 and sifts it down past its smaller child, 3.',
+      'Every operation walks one path between the root and a leaf, so it costs O(log n).',
+    ],
+    mistakes: [
+      'Expecting the heap array to be fully sorted.',
+      'Sorting the whole collection again after every insert.',
+      'Sifting down toward the larger child, which breaks the heap rule.',
+      'Using a max-heap when the question needs the smallest, or the reverse, for example when keeping the k highest scores.',
+      'Comparing only by value when the contract also has a tie rule.',
+    ],
+    questions: [
+      {
+        id: 'heaps-top-v1',
+        prompt: 'Which array is a valid min-heap?',
+        code: '// Children of index i are at 2i + 1 and 2i + 2.',
+        options: ['[2, 4, 3, 9, 5]', '[2, 4, 3, 1, 5]', '[4, 2, 3, 9, 5]'],
+        answer: 0,
+        explanation:
+          'In [2, 4, 3, 9, 5] every parent is no larger than its children: 2 ≤ 4 and 3, and 4 ≤ 9 and 5. In the second array, 1 sits below 4. In the third, the root 4 is larger than its child 2.',
+      },
+      {
+        id: 'heaps-k-highest-v1',
+        prompt: 'To keep the 3 highest scores seen so far and read the third highest quickly, which queue fits?',
+        code: '',
+        options: [
+          'A min-heap holding at most 3 scores',
+          'A max-heap holding every score',
+          'A sorted array of every score, re-sorted after each arrival',
+        ],
+        answer: 0,
+        explanation:
+          'The third highest is the smallest of the top three, so a min-heap of size 3 exposes it at the top and evicts the smallest when a fourth arrives. A max-heap of everything exposes the highest, not the third.',
+      },
+    ],
+    repIds: ['algo-min-heap', 'heap-merge-log-streams', 'heap-rooms-needed', 'heap-kth-largest-stream', 'top-k-frequent-tags'],
+    related: ['queues', 'sorting-basics', 'trees'],
+  },
+)

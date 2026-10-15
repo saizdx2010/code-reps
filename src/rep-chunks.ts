@@ -17,6 +17,8 @@ export const repSourceLoaders: Record<RepSourceName, RepSourceLoader> = {
   'dsa-harder-reps': source(() => import('./dsa-harder-reps.ts'), module => ({ reps: module.dsaHarderReps })),
   'dsa-advanced-reps': source(() => import('./dsa-advanced-reps.ts'), module => ({ reps: module.dsaAdvancedReps })),
   'dsa-linked-reps': source(() => import('./dsa-linked-reps.ts'), module => ({ reps: module.dsaLinkedReps })),
+  'dsa-dp-heap-reps': source(() => import('./dsa-dp-heap-reps.ts'), module => ({ reps: module.dsaDpHeapReps })),
+  'string-reps': source(() => import('./string-reps.ts'), module => ({ reps: module.stringReps })),
   'ai-era-reps': source(() => import('./ai-era-reps.ts'), module => ({ reps: module.aiEraReps, lessons: module.coreLessons })),
   'core-reps': source(() => import('./core-reps.ts'), module => ({ reps: module.coreReps })),
   'journey-reps': source(() => import('./journey-reps.ts'), module => ({ reps: module.journeyReps })),
@@ -33,4 +35,7 @@ export const repSourceLoaders: Record<RepSourceName, RepSourceLoader> = {
   'connected-feature-reps': source(() => import('./connected-feature-reps.ts'), module => ({ reps: module.connectedFeatureReps })),
   'testing-journey-reps': source(() => import('./testing-journey-reps.ts'), module => ({ reps: module.testingJourneyReps })),
   'maintenance-journey-reps': source(() => import('./maintenance-journey-reps.ts'), module => ({ reps: module.maintenanceJourneyReps })),
+  'debug-reps': source(() => import('./debug-reps.ts'), module => ({ reps: module.debugReps })),
+  'ai-review-reps': source(() => import('./ai-review-reps.ts'), module => ({ reps: module.aiReviewReps })),
+  'practical-journey-reps': source(() => import('./practical-journey-reps.ts'), module => ({ reps: module.practicalJourneyReps })),
 }
