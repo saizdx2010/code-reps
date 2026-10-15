@@ -1,4 +1,16 @@
 /* Shared page structure: compact headers, secondary notes, status chips, grouped rows, and empty states. */
+/* Text for assistive technology only, such as a state the visible marker already shows. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
 .page-header {
   display: flex;
   align-items: flex-end;
@@ -168,6 +180,18 @@
   color: var(--muted);
   font-size: 13px;
   font-weight: 500;
+}
+.list-group-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.list-group > summary .list-group-meta + .ui-icon {
+  margin-left: 0;
 }
 .list-rows {
   display: grid;

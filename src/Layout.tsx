@@ -44,20 +44,29 @@ export function EmptyState({ title, children, action }: { title: ReactNode; chil
   return (
     <div className="empty-state">
       <strong>{title}</strong>
-      {children && <p>{children}</p>}
+      {children && (typeof children === 'string' ? <p>{children}</p> : <div className="empty-state-body">{children}</div>)}
       {action}
     </div>
   )
 }
 
 /** A collapsible group of rows. Native details semantics; open state may be controlled by a session preference. */
-type ListGroupProps = { title: ReactNode; count?: number; open?: boolean; onToggle?: (open: boolean) => void; children: ReactNode }
-export function ListGroup({ title, count, open, onToggle, children }: ListGroupProps) {
+type ListGroupProps = {
+  title: ReactNode
+  count?: number
+  /** Quiet summary-line detail at the far edge, such as progress through the group. */
+  meta?: ReactNode
+  open?: boolean
+  onToggle?: (open: boolean) => void
+  children: ReactNode
+}
+export function ListGroup({ title, count, meta, open, onToggle, children }: ListGroupProps) {
   return (
     <details className="list-group" open={open} onToggle={event => onToggle?.(event.currentTarget.open)}>
       <summary>
         <span className="list-group-title">{title}</span>
         {count !== undefined && <span className="list-group-count">{count}</span>}
+        {meta && <span className="list-group-meta">{meta}</span>}
         <Icon name="chevron" />
       </summary>
       <ul className="list-rows">{children}</ul>

@@ -1,14 +1,15 @@
-import { lazy, Suspense, useRef } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { confidenceLabels, difficultyLabels } from './attempt-labels.ts'
 import type { Confidence, Difficulty } from './attempt-labels.ts'
 import type { Attempt, AttemptRecord } from './attempt-store'
 import { Button } from './Button'
+import { repCurriculumRole } from './curriculum'
 import { preloadEditor } from './editor-loader'
 import { Icon } from './Icon'
 import { InlineCode } from './InlineCode'
 import { Input, Textarea } from './Input'
-import { InfoNote } from './Layout'
+import { InfoNote, StatusChip } from './Layout'
 import { lazyRoute } from './lazy-route'
 import { mistakeTags } from './mistakes'
 import { appendSentenceStarter } from './practice'
@@ -17,6 +18,7 @@ import type { RepSummary } from './catalog-index'
 import type { RepLesson } from './rep-content'
 import type { repNotes } from './rep-notes.ts'
 import type { Rep } from './rep-types'
+import { practiceSteps } from './practice-steps'
 import { StepIndicator } from './StepIndicator'
 import type { useRepContent } from './useRepContent'
 import type { useReviewContent } from './useReviewContent'
@@ -129,8 +131,10 @@ export function BriefSection({
   hintCount,
   onRevealHint,
   onReveal,
+  understanding,
 }: {
   hidden: boolean
+  understanding: boolean
   repId: string
   full?: Rep
   lesson?: RepLesson
@@ -146,6 +150,27 @@ export function BriefSection({
   onRevealHint: () => void
   onReveal: Reveal
 }) {
+  // On Independent and Recall reps the first hint changes what the attempt shows, so it asks once, inline.
+  const role = repCurriculumRole(repId)
+  const asksFirst = hintCount === 0 && (role === 'Independent' || role === 'Recall')
+  const [confirmingRep, setConfirmingRep] = useState<string | null>(null)
+  const confirming = confirmingRep === repId && asksFirst
+  const keepTrying = useRef<HTMLButtonElement>(null)
+  const hintButton = useRef<HTMLButtonElement>(null)
+  const answered = useRef(false)
+  // Focus moves to the safe choice when the question appears, and back to the hint control once it is answered.
+  useEffect(() => {
+    if (confirming) keepTrying.current?.focus()
+    else if (answered.current) {
+      answered.current = false
+      hintButton.current?.focus()
+    }
+  }, [confirming])
+  const answer = (reveal: boolean) => {
+    answered.current = true
+    setConfirmingRep(null)
+    if (reveal) onRevealHint()
+  }
   return (
     <section id="brief-section" hidden={hidden} tabIndex={-1} className="panel task-panel">
       {lesson && (
@@ -167,7 +192,7 @@ export function BriefSection({
         <h2>The brief</h2>
       </div>
       <Suspense fallback={null}>
-        <RepGuidance repId={repId} history={history} openRep={openRep} openLesson={openLesson} />
+        <RepGuidance repId={repId} history={history} openRep={openRep} openLesson={openLesson} understanding={understanding} />
       </Suspense>
       {full ? (
         <>
@@ -257,15 +282,43 @@ export function BriefSection({
               </p>
             </div>
           </details>
-          <div className="hint-control">
-            <button className="hint-button" type="button" disabled={hintCount >= full.hints.length} onClick={onRevealHint}>
-              <Icon name="hint" />
-              {hintCount >= full.hints.length ? 'All hints revealed' : `Reveal hint ${hintCount + 1}`}
-            </button>
-            <span>
-              {hintCount} of {full.hints.length} revealed
-            </span>
-          </div>
+          {confirming ? (
+            <div className="hint-confirm" role="group" aria-labelledby="hint-confirm-title">
+              <strong id="hint-confirm-title">
+                <Icon name="hint" />
+                Reveal hint 1?
+              </strong>
+              <p>
+                This is {role === 'Recall' ? 'a Recall' : 'an Independent'} rep. With a hint, this attempt counts as guided practice, not{' '}
+                {role === 'Recall' ? 'recall' : 'independent'} evidence.
+              </p>
+              <div>
+                <button className="hint-button" type="button" onClick={() => answer(true)}>
+                  Reveal hint
+                </button>
+                <button ref={keepTrying} className="text-button" type="button" onClick={() => answer(false)}>
+                  Keep trying
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="hint-control">
+              <button
+                ref={hintButton}
+                className="hint-button"
+                type="button"
+                disabled={hintCount >= full.hints.length}
+                onClick={() => (asksFirst ? setConfirmingRep(repId) : onRevealHint())}
+              >
+                <Icon name="hint" />
+                {hintCount >= full.hints.length ? 'All hints revealed' : `Reveal hint ${hintCount + 1}`}
+              </button>
+              <span>
+                {hintCount} of {full.hints.length} revealed
+              </span>
+              <span className="hint-note">Hints are recorded with this attempt.</span>
+            </div>
+          )}
           {hintCount > 0 && (
             <div className="task-hints" aria-live="polite">
               <div className="hint-heading">
@@ -410,9 +463,25 @@ export function ExplainSection({
             </ul>
           </InfoNote>
         )}
+        {allPassed && depth?.traceSteps && (
+          // The trace walks a reference solution, so it only appears once the learner's own checks pass.
+          <section className="see-it-run" aria-labelledby="see-it-run-title">
+            <h3 id="see-it-run-title">See it run</h3>
+            <p>Step through a reference solution, then compare each step with what your code does.</p>
+            <Suspense
+              fallback={
+                <p className="loading-status" role="status">
+                  Opening trace…
+                </p>
+              }
+            >
+              <TraceViewer key={repId} trace={depth.traceSteps} />
+            </Suspense>
+          </section>
+        )}
         {allPassed && (
           <details className="reflection-guide">
-            <summary>Compare your plan and explanation</summary>
+            <summary>Compare with a model answer</summary>
             <div className="reflection-guide-columns">
               <div>
                 <strong>Plan</strong>
@@ -452,17 +521,6 @@ export function ExplainSection({
                 <p>{depth.reasoning}</p>
                 <h3>Trace a boundary case</h3>
                 <p>{depth.trace}</p>
-                {depth.traceSteps && (
-                  <Suspense
-                    fallback={
-                      <p className="loading-status" role="status">
-                        Opening trace…
-                      </p>
-                    }
-                  >
-                    <TraceViewer key={repId} trace={depth.traceSteps} />
-                  </Suspense>
-                )}
                 <h3>Compare approaches</h3>
                 <p>{depth.alternative}</p>
                 <h3>A tempting mistake</h3>
@@ -502,6 +560,7 @@ export function ReviewSection({
   onCompletionNext,
   onDone,
   onFreshAttempt,
+  evidence,
 }: {
   hidden: boolean
   rep: RepSummary
@@ -519,24 +578,106 @@ export function ReviewSection({
   onCompletionNext: () => void
   onDone: () => void
   onFreshAttempt: () => void
+  /** What this attempt counts as, shown once it is complete. */
+  evidence: { chip: { tone: 'neutral' | 'success'; label: string }; text: string }
 }) {
   function toggleMistake(id: string, chosen: boolean) {
     const next = chosen ? (attempt.mistakes ?? []).filter(tag => tag !== id) : [...(attempt.mistakes ?? []), id]
     update('mistakes', next.length ? next : undefined)
   }
   const checklist = [
-    { label: 'Plan', done: stepDone.plan, needed: 'a plan', required: writingRequired },
-    { label: 'Checks', done: stepDone.solve, needed: 'passing checks', required: true },
-    { label: 'Explanation', done: stepDone.explain, needed: 'an explanation', required: writingRequired },
-    { label: 'Difficulty', done: stepDone.review, needed: 'a difficulty choice', required: false },
+    { label: 'Plan', done: stepDone.plan, required: writingRequired },
+    { label: 'Checks passed', done: stepDone.solve, required: true },
+    { label: 'Explanation', done: stepDone.explain, required: writingRequired },
   ]
+  const missingLabel = practiceSteps.find(step => step.id === missingStep)?.label
+  // Completing moves the learner to the reward: the panel takes the top of the pane and focus, once.
+  const panel = useRef<HTMLElement>(null)
+  const [completedOnArrival] = useState(attempt.completedAt)
+  useEffect(() => {
+    if (!attempt.completedAt || attempt.completedAt === completedOnArrival) return
+    panel.current?.scrollIntoView({ block: 'start', behavior: 'instant' })
+    panel.current?.focus({ preventScroll: true })
+  }, [attempt.completedAt, completedOnArrival])
   return (
     <section id="review-section" hidden={hidden} tabIndex={-1} className="reflection-section">
-      <h3>Review this attempt</h3>
-      <div className="reflection-fields">
+      {attempt.completedAt ? (
+        <section ref={panel} className="completion-panel" aria-labelledby="completion-title" tabIndex={-1}>
+          <p className="finish-status" role="status">
+            <Icon name="check" />
+            Rep completed
+          </p>
+          <h3 id="completion-title">You finished {rep.title}.</h3>
+          <p className="completion-evidence">
+            <StatusChip tone={evidence.chip.tone}>{evidence.chip.label}</StatusChip>
+            <span>{evidence.text}</span>
+          </p>
+          <div ref={badgeSlot} className="badge-slot" />
+          <div className="completion-actions">
+            <button
+              type="button"
+              className="primary-button"
+              onMouseEnter={preloadEditor}
+              onFocus={preloadEditor}
+              onClick={onCompletionNext}
+            >
+              {completionLabel}
+              <Icon name="arrow" />
+            </button>
+            <button type="button" className="text-button" onClick={onDone}>
+              Done for today
+            </button>
+          </div>
+          <p className="completion-saved">Your attempt is saved in the Journal.</p>
+        </section>
+      ) : (
+        <>
+          <h3>Ready to finish?</h3>
+          <ul className="completion-checklist" aria-label="Completion requirements">
+            {checklist
+              .filter(item => item.required || item.done)
+              .map(({ label, done }) => (
+                <li key={label} className={done ? 'done' : 'needed'}>
+                  <Icon name={done ? 'check' : 'circle'} />
+                  {label}
+                  {!done && <span className="visually-hidden"> still needed</span>}
+                </li>
+              ))}
+            <li className="optional">
+              <Icon name="circle" />
+              Reflection <span className="optional-note">optional</span>
+            </li>
+          </ul>
+          <div className="explain-actions">
+            <button
+              className="finish-button"
+              type="button"
+              aria-describedby={finishMissing ? 'finish-note' : undefined}
+              onClick={canComplete ? onComplete : onShowMissing}
+            >
+              Complete rep
+            </button>
+            {finishMissing && (
+              <p className="finish-note" id="finish-note">
+                Still needed: {finishMissing}.
+                {missingLabel && (
+                  <button type="button" className="text-button missing-work" onClick={onShowMissing}>
+                    Go to {missingLabel}
+                    <Icon name="arrow" />
+                  </button>
+                )}
+              </p>
+            )}
+          </div>
+        </>
+      )}
+      <div className="reflection-fields" role="group" aria-labelledby="reflect-heading">
+        <h4 id="reflect-heading">
+          Reflect <span className="optional-note">Optional · about 20 seconds · never blocks finishing</span>
+        </h4>
         <div role="group" aria-labelledby="difficulty-label">
-          <span className="field-label">
-            <span id="difficulty-label">What was hardest?</span> <span className="optional-note">Optional</span>
+          <span className="field-label" id="difficulty-label">
+            What was hardest?
           </span>
           <div id="difficulty-choice" className="segmented-control reflection-choice">
             <StepIndicator active={attempt.difficulty ?? ''} selector="button[aria-pressed=true]" />
@@ -553,8 +694,8 @@ export function ReviewSection({
           </div>
         </div>
         <div role="group" aria-labelledby="confidence-label">
-          <span className="field-label">
-            <span id="confidence-label">How confident do you feel?</span> <span className="optional-note">Optional</span>
+          <span className="field-label" id="confidence-label">
+            How confident do you feel?
           </span>
           <div className="segmented-control reflection-choice">
             <StepIndicator active={attempt.confidence ?? ''} selector="button[aria-pressed=true]" />
@@ -571,99 +712,32 @@ export function ReviewSection({
           </div>
         </div>
         <div role="group" aria-labelledby="mistakes-label">
-          <span className="field-label">
-            <span id="mistakes-label">Mistakes you made</span> <span className="optional-note">Optional</span>
+          <span className="field-label" id="mistakes-label">
+            Mistakes you made <span className="optional-note">choose any; for your Mistakes page</span>
           </span>
-          <div className="segmented-control reflection-choice">
-            {mistakeTags.map(tag => {
-              const chosen = attempt.mistakes?.includes(tag.id) ?? false
-              return (
-                <button
-                  key={tag.id}
-                  type="button"
-                  aria-pressed={chosen}
-                  disabled={!!attempt.completedAt}
-                  onClick={() => toggleMistake(tag.id, chosen)}
-                >
-                  {tag.label}
-                </button>
-              )
-            })}
-          </div>
-          <small className="optional-note">Your own note for the Mistakes page. It never blocks finishing.</small>
-        </div>
-      </div>
-      <ul className="completion-checklist" aria-label="Completion requirements">
-        {checklist.map(({ label, done, needed, required }) => {
-          const status = done ? (
-            label === 'Checks' ? (
-              'passed'
-            ) : (
-              'added'
-            )
-          ) : required ? (
-            <span className="checklist-need">Still needed: {needed}</span>
-          ) : (
-            <span className="optional-note">Optional</span>
-          )
-          return (
-            <li key={label} className={done ? 'done' : ''}>
-              <Icon name={done ? 'check' : 'circle'} /> {label} {status}
-            </li>
-          )
-        })}
-      </ul>
-      <div className="explain-actions">
-        <div>
-          {!attempt.completedAt && missingStep && (
-            <button type="button" className="text-button missing-work" onClick={onShowMissing}>
-              Continue: {missingStep}
-            </button>
-          )}
-          {finishMissing && !attempt.completedAt && (
-            <p className="finish-note" id="finish-note">
-              Still needed: {finishMissing}.
+          {attempt.completedAt ? (
+            <p className="mistake-tags is-recorded">
+              {attempt.mistakes?.length
+                ? mistakeTags
+                    .filter(tag => attempt.mistakes?.includes(tag.id))
+                    .map(tag => <StatusChip key={tag.id}>{tag.label}</StatusChip>)
+                : 'None noted for this attempt.'}
             </p>
+          ) : (
+            <div className="mistake-tags">
+              {mistakeTags.map(tag => {
+                const chosen = attempt.mistakes?.includes(tag.id) ?? false
+                return (
+                  <button key={tag.id} type="button" aria-pressed={chosen} onClick={() => toggleMistake(tag.id, chosen)}>
+                    {chosen && <Icon name="check" />}
+                    {tag.label}
+                  </button>
+                )
+              })}
+            </div>
           )}
         </div>
-        {attempt.completedAt ? (
-          <p className="finish-status" role="status">
-            <Icon name="check" />
-            Rep completed
-          </p>
-        ) : (
-          <button
-            className="finish-button"
-            type="button"
-            aria-describedby={finishMissing ? 'finish-note' : undefined}
-            onClick={canComplete ? onComplete : onShowMissing}
-          >
-            Complete rep
-          </button>
-        )}
       </div>
-      {attempt.completedAt && (
-        <section className="completion-panel" aria-labelledby="completion-title">
-          <h3 id="completion-title">You finished {rep.title}.</h3>
-          <p>Your attempt is saved in the Journal.</p>
-          <div ref={badgeSlot} className="badge-slot" />
-          <div>
-            <button
-              type="button"
-              className="primary-button"
-              onMouseEnter={preloadEditor}
-              onFocus={preloadEditor}
-              onClick={onCompletionNext}
-            >
-              {completionLabel}
-            </button>
-            <button type="button" className="text-button" onClick={onDone}>
-              Done for today
-            </button>
-          </div>
-          <p className="stop-for-today">Stop here; continue from Trail next time.</p>
-        </section>
-      )}
       {attempt.completedAt && (
         <button className="text-button retry-button" type="button" onClick={onFreshAttempt}>
           Start a fresh attempt

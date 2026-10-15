@@ -39,7 +39,7 @@ test('profile switching keeps drafts separate', async ({ page }) => {
   await replaceCode(page, solution)
   await page.getByRole('button', { name: 'Manage profiles' }).click()
   const dialog = page.getByRole('dialog', { name: 'Local profiles' })
-  await dialog.getByText('Create or rename a profile', { exact: true }).click()
+  await dialog.getByText('New profile', { exact: true }).click()
   await dialog.getByLabel('Profile name', { exact: true }).fill('Browser test learner')
   await dialog.getByRole('button', { name: 'Create profile', exact: true }).click()
   await expect(dialog.getByRole('status')).toHaveText('Profile created.')
@@ -127,12 +127,12 @@ test('A reasoned rep needs plan, passing checks and explanation; difficulty is o
   await page
     .getByLabel('Your explanation', { exact: true })
     .fill('I count each value, compare counts, and use the smaller value to break ties. Empty input returns null.')
-  await page.getByRole('button', { name: 'Review', exact: true }).click()
+  await page.getByRole('button', { name: 'Finish', exact: true }).click()
   const complete = page.getByRole('button', { name: 'Complete rep', exact: true })
   // Difficulty is optional: with plan, checks and explanation present nothing is missing.
   await expect(complete).toBeEnabled()
   await expect(page.locator('.finish-note')).toHaveCount(0)
-  await expect(page.locator('.completion-checklist')).toContainText('Difficulty')
+  await expect(page.locator('.completion-checklist')).toContainText('Reflection')
   await expect(page.locator('.completion-checklist')).not.toContainText('Still needed')
   await complete.click()
   await expect(page.getByText('Your attempt is saved in the Journal.', { exact: true })).toBeVisible()
@@ -169,9 +169,9 @@ test('practice steps preserve work, explain missing requirements, and record com
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto(route)
   const steps = page.getByRole('navigation', { name: 'Practice steps' })
-  await steps.getByRole('button', { name: 'Review', exact: true }).click()
+  await steps.getByRole('button', { name: 'Finish', exact: true }).click()
   await expect(page.locator('#review-section')).toBeFocused()
-  await page.getByRole('button', { name: 'Continue: plan', exact: false }).click()
+  await page.getByRole('button', { name: 'Go to Plan', exact: false }).click()
   await expect(page.locator('#plan-section')).toBeFocused()
   await page.getByLabel('Your plan', { exact: true }).fill('Count occurrences and choose the smaller number when counts tie.')
   await steps.getByRole('button', { name: 'Solve', exact: true }).click()
@@ -183,7 +183,7 @@ test('practice steps preserve work, explain missing requirements, and record com
   await page
     .getByLabel('Your explanation', { exact: true })
     .fill('I count each value, compare counts, and use the smaller value to break ties. Empty input returns null.')
-  await steps.getByRole('button', { name: 'Review', exact: true }).click()
+  await steps.getByRole('button', { name: 'Finish', exact: true }).click()
   await chooseSegment(page, 'What was hardest?', 'Handling edge cases')
   await chooseSegment(page, 'How confident do you feel?', 'Getting there')
   await page.getByRole('button', { name: 'Complete rep', exact: false }).click()
@@ -195,7 +195,7 @@ test('practice steps preserve work, explain missing requirements, and record com
   await expect(page.getByRole('button', { name: /^Next rep: / })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Done for today', exact: true })).toBeVisible()
   await page.reload()
-  await expect(steps.getByRole('button', { name: 'Review', exact: true })).toHaveAttribute('aria-current', 'step')
+  await expect(steps.getByRole('button', { name: 'Finish', exact: true })).toHaveAttribute('aria-current', 'step')
   await page.getByRole('button', { name: 'Explain', exact: true }).click()
   await expect(page.getByLabel('Your explanation', { exact: true })).toHaveValue(/I count each value/)
   await steps.getByRole('button', { name: 'Plan', exact: true }).click()
@@ -211,23 +211,13 @@ test('practice steps preserve work, explain missing requirements, and record com
   await expect(
     page
       .locator('[aria-label="Practice summary"] > div')
-      .filter({ has: page.locator('dt', { hasText: 'Current streak' }) })
-      .locator('dd'),
-  ).toHaveText('1 day')
+      .filter({ has: page.locator('dt', { hasText: 'Practice days' }) })
+      .locator('dt small'),
+  ).toHaveText('Streak 1 day · longest 1')
   await expect(page.locator('.badge-progress').first()).toHaveText('1 of 1 rep')
   // An unhinted solve before its guided journey is not evidence of independence.
-  await expect(
-    page
-      .locator('[aria-label="Practice summary"] > div')
-      .filter({ has: page.locator('dt', { hasText: 'Independent skills' }) })
-      .locator('dd'),
-  ).toHaveText('0')
-  await expect(
-    page
-      .locator('[aria-label="Practice summary"] > div')
-      .filter({ has: page.locator('dt', { hasText: 'Retained skills' }) })
-      .locator('dd'),
-  ).toHaveText('0')
+  await expect(page.locator('.skill-ladder-legend [data-rung="independent"] b')).toHaveText('0')
+  await expect(page.locator('.skill-ladder-legend [data-rung="retained"] b')).toHaveText('0')
 })
 
 test('lesson section navigation preserves predictions and opens self-review', async ({ page }) => {
@@ -275,8 +265,9 @@ test('narrow path discovery selects a path without horizontal scrolling', async 
 test('local profile progress is readable on narrow screens and links to the skill map', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/#/progress')
-  await expect(page.getByRole('heading', { name: 'My learning', exact: true })).toBeVisible()
-  await expect(page.getByRole('definition').filter({ hasText: /^0 days$/ })).toHaveCount(2)
+  await expect(page.getByRole('heading', { level: 1, name: 'Skills', exact: true })).toBeVisible()
+  await expect(page.locator('.page-eyebrow')).toHaveText('My learning · local profile')
+  await expect(page.locator('.practice-calendar')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Badges earned' })).toBeVisible()
   await expect(page.getByText(/Upcoming badges/)).toHaveCount(0)
   await expect(page.locator('.profile-summary')).toBeVisible()
@@ -285,7 +276,7 @@ test('local profile progress is readable on narrow screens and links to the skil
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/#\/skillmap/)
   await page.goBack()
-  await expect(page.getByRole('heading', { name: 'My learning', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Skills', exact: true })).toBeVisible()
 })
 
 test('checks open as a bounded drawer inside the coding desk above the run toolbar', async ({ page }) => {
@@ -302,13 +293,22 @@ test('checks open as a bounded drawer inside the coding desk above the run toolb
     const editorBox = await page.locator('#solution-section').boundingBox()
     const toolbar = await page.locator('.workspace-toolbar').boundingBox()
     await expect(page.locator('#code-workspace #checks-section')).toHaveCount(1)
-    expect(checksBox!.y).toBeGreaterThanOrEqual(editorBox!.y + editorBox!.height - 1)
-    // The toolbar is sticky on narrow screens, so compare flow order there instead of positions.
-    if (width > 900) expect(checksBox!.y + checksBox!.height).toBeLessThanOrEqual(toolbar!.y + 1)
-    expect(checksBox!.x).toBeGreaterThanOrEqual(desk!.x)
-    expect(checksBox!.x + checksBox!.width).toBeLessThanOrEqual(desk!.x + desk!.width + 1)
-    // Desktop bounds the drawer; narrow screens let it follow the editor in the Solve pane.
-    if (width > 900) expect(checksBox!.height).toBeLessThanOrEqual(desk!.height / 2 + 1)
+    if (width > 900) {
+      // Desktop: a bounded drawer between the editor and the run toolbar, inside the desk.
+      expect(checksBox!.y).toBeGreaterThanOrEqual(editorBox!.y + editorBox!.height - 1)
+      expect(checksBox!.y + checksBox!.height).toBeLessThanOrEqual(toolbar!.y + 1)
+      expect(checksBox!.x).toBeGreaterThanOrEqual(desk!.x)
+      expect(checksBox!.x + checksBox!.width).toBeLessThanOrEqual(desk!.x + desk!.width + 1)
+      expect(checksBox!.height).toBeLessThanOrEqual(desk!.height / 2 + 1)
+    } else {
+      // Phones: a bottom sheet resting on the run toolbar, which is fixed to the screen edge, so results show after a run.
+      expect(Math.abs(checksBox!.y + checksBox!.height - toolbar!.y)).toBeLessThanOrEqual(1)
+      expect(Math.abs(toolbar!.y + toolbar!.height - 900)).toBeLessThanOrEqual(1)
+      expect(checksBox!.x).toBeGreaterThanOrEqual(0)
+      expect(checksBox!.x + checksBox!.width).toBeLessThanOrEqual(width + 1)
+      expect(checksBox!.height).toBeLessThanOrEqual(900 * 0.72 + 1)
+      await expect(page.getByText('All checks passed', { exact: true })).toBeInViewport()
+    }
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     // The drawer is part of the dark desk: the passed surface is the desk's success tone.
     expect(await checks.evaluate(element => getComputedStyle(element).backgroundColor)).toBe('rgb(32, 60, 53)')

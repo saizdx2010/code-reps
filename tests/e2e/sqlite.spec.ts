@@ -139,24 +139,24 @@ test('browser backup validation preserves work and a valid restore reaches SQLit
   await page
     .getByLabel('Choose Code Reps backup')
     .setInputFiles({ name: 'broken.json', mimeType: 'application/json', buffer: Buffer.from('{broken') })
-  await expect(page.locator('.transfer-message')).toBeVisible()
-  await expect(page.locator('.transfer-message')).not.toContainText('Backup downloaded')
+  await expect(page.locator('.transfer-message[role=alert]')).toHaveText('This file is not valid JSON. Nothing was changed.')
+  await expect(page.locator('.restore-preview')).toHaveCount(0)
   await page.goto(service.url + route)
   await page.getByRole('button', { name: 'Plan', exact: true }).click()
   await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue('Exported plan')
   await page.getByRole('button', { name: 'Manage profiles' }).click()
   const dialog = page.getByRole('dialog', { name: 'Local profiles' })
-  await dialog.getByText('Create or rename a profile', { exact: true }).click()
+  await dialog.getByText('New profile', { exact: true }).click()
   await dialog.getByLabel('Profile name', { exact: true }).fill('Restored learner')
   await dialog.getByRole('button', { name: 'Create profile', exact: true }).click()
   await expect(dialog.getByRole('status')).toHaveText('Profile created.')
   await dialog.getByRole('button', { name: 'Close', exact: true }).click()
   await page.goto(service.url + '/#/progress')
   await page.locator('.local-data > summary').click()
-  await Promise.all([
-    page.waitForEvent('load'),
-    page.getByLabel('Choose Code Reps backup').setInputFiles({ name: 'backup.json', mimeType: 'application/json', buffer: contents }),
-  ])
+  await page.getByLabel('Choose Code Reps backup').setInputFiles({ name: 'backup.json', mimeType: 'application/json', buffer: contents })
+  await expect(page.locator('.restore-preview')).toContainText('Into profile: Restored learner')
+  await Promise.all([page.waitForEvent('load'), page.getByRole('button', { name: 'Merge into Restored learner', exact: true }).click()])
+  await expect(page.locator('.restore-receipt')).toContainText('Backup merged into Restored learner')
   await expect(page.locator('.transfer-message')).toHaveCount(0)
   await page.goto(service.url + route)
   await page.getByRole('button', { name: 'Plan', exact: true }).click()
@@ -211,10 +211,8 @@ test('legacy session records in a learner backup still import into SQLite withou
   )
   await page.goto(service.url + '/#/progress')
   await page.locator('.local-data > summary').click()
-  await Promise.all([
-    page.waitForEvent('load'),
-    page.getByLabel('Choose Code Reps backup').setInputFiles({ name: 'sessions.json', mimeType: 'application/json', buffer: contents }),
-  ])
+  await page.getByLabel('Choose Code Reps backup').setInputFiles({ name: 'sessions.json', mimeType: 'application/json', buffer: contents })
+  await Promise.all([page.waitForEvent('load'), page.getByRole('button', { name: /^Merge into / }).click()])
   await expect
     .poll(async () => {
       const { entries } = await (await fetch(service.url + '/api/state')).json()

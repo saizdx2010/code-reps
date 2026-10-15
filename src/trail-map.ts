@@ -6,7 +6,7 @@ import { repIndex as reps } from './catalog-index.ts'
 type TrailNodeState = 'done' | 'next' | 'draft' | 'later' | 'open'
 export type TrailNode =
   | { kind: 'lesson'; id: string; skillId: string; title: string; state: 'done' | 'open' }
-  | { kind: 'rep'; id: string; repId: string; title: string; role: string; state: TrailNodeState }
+  | { kind: 'rep'; id: string; repId: string; title: string; role: string; state: TrailNodeState; inProgress: boolean }
   | { kind: 'project'; id: string; repId: string; title: string; reason: string; state: 'done' | 'open' }
 export type TrailStage = {
   title: string
@@ -24,13 +24,19 @@ type TrailInput = {
   recallReady: (repId: string) => boolean
   lessonChecked: (skillId: string) => boolean
   skipStages?: number
+  /** The recommended rep. When it is on this trail and available, it is the trail's next node, so the two never disagree. */
+  focusRepId?: string
 }
 
 /** Interleave lessons before the first rep that needs them, mark each rep's state, and end with project milestones. */
 export function buildTrail(pathId: string, input: TrailInput): { stages: TrailStage[]; nextRepId?: string; done: number; total: number } {
   const path = paths.find(item => item.id === pathId) ?? paths[0]
   const placed = new Set<string>()
-  let nextRepId: string | undefined
+  const available = (repId: string) => !input.completed(repId) && input.recallReady(repId)
+  const shown = path.stages.slice(input.skipStages ?? 0).flatMap(stage => stage.repIds)
+  const nextRepId: string | undefined =
+    input.focusRepId && shown.includes(input.focusRepId) && available(input.focusRepId) ? input.focusRepId : shown.find(available)
+  let nextMarked = false
   const stages = path.stages.slice(input.skipStages ?? 0).map((stage): TrailStage => {
     const covered = stageCoveredByFoundations(path.id, stage.repIds)
     const nodes: TrailNode[] = []
@@ -48,18 +54,19 @@ export function buildTrail(pathId: string, input: TrailInput): { stages: TrailSt
           state: input.lessonChecked(lesson.id) ? 'done' : 'open',
         })
       }
-      let state: TrailNodeState = input.completed(repId)
+      const inProgress = input.inProgress(repId)
+      const isNext = !nextMarked && repId === nextRepId
+      if (isNext) nextMarked = true
+      const state: TrailNodeState = input.completed(repId)
         ? 'done'
         : !input.recallReady(repId)
           ? 'later'
-          : input.inProgress(repId)
-            ? 'draft'
-            : 'open'
-      if (!nextRepId && state !== 'done' && state !== 'later') {
-        nextRepId = repId
-        state = 'next'
-      }
-      nodes.push({ kind: 'rep', id: `rep:${repId}`, repId, title: rep.title, role: repCurriculumRole(repId), state })
+          : isNext
+            ? 'next'
+            : inProgress
+              ? 'draft'
+              : 'open'
+      nodes.push({ kind: 'rep', id: `rep:${repId}`, repId, title: rep.title, role: repCurriculumRole(repId), state, inProgress })
     }
     const repNodes = nodes.filter(node => node.kind === 'rep')
     return {

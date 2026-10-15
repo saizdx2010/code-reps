@@ -1,4 +1,5 @@
-import { catalogTopic } from '../../src/catalog-labels'
+import { catalogAreas, catalogTopic } from '../../src/catalog-labels'
+import { repLevel } from '../../src/rep-levels'
 import { expect, test } from '@playwright/test'
 import { reps } from '../../src/rep'
 import { diagnosticRepIds } from '../../src/fluency'
@@ -71,7 +72,7 @@ test('a slow lazy page still hands focus to its heading after the loading headin
   await page.goto('/#/home')
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name: 'Progress', exact: true }).click()
-  await expect(page.getByRole('status').filter({ hasText: 'Opening your progress' })).toBeVisible()
+  await expect(page.getByRole('status').filter({ hasText: 'Opening your skills' })).toBeVisible()
   await expect(page.locator('main:not([aria-busy="true"]) h1')).toBeFocused({ timeout: 15000 })
 })
 
@@ -152,11 +153,11 @@ test('all product pages fit a narrow screen and lessons open without the topic l
     await expect(page.getByText('Saved in browser', { exact: true })).toBeVisible()
   }
   await page.goto('/#/knowledge')
-  await expect(page.getByLabel('Search knowledge', { exact: true })).not.toBeVisible()
+  await expect(page.getByLabel('Find a lesson', { exact: true })).not.toBeVisible()
   await page.locator('.knowledge-browser > summary').click()
-  await page.getByLabel('Search knowledge', { exact: true }).fill('Cancellation and race conditions')
+  await page.getByLabel('Find a lesson', { exact: true }).fill('Cancellation and race conditions')
   await page.getByRole('button', { name: 'Cancellation and race conditions', exact: true }).click()
-  await expect(page.getByLabel('Search knowledge', { exact: true })).not.toBeVisible()
+  await expect(page.getByLabel('Find a lesson', { exact: true })).not.toBeVisible()
   await expect(page.getByRole('heading', { name: 'Cancellation and race conditions', exact: true })).toBeVisible()
 })
 
@@ -167,14 +168,22 @@ test('exercise topics start collapsed, remember expansion, and reveal search mat
   const groupCount = await groups.count()
   expect(groupCount).toBeGreaterThan(1)
   await expect(page.locator('.catalog-list .list-group[open]')).toHaveCount(0)
-  expect(await groups.locator('.list-group-title').allTextContents()).toEqual([...new Set(reps.map(catalogTopic))].sort())
+  // Topics follow the seven areas in learning order, not the alphabet.
+  const topics = new Set(reps.map(catalogTopic))
+  expect(await groups.locator('.list-group-title').allTextContents()).toEqual(
+    catalogAreas.flatMap(area => area.topics).filter(topic => topics.has(topic)),
+  )
   const first = groups.first()
   const topic = await first.locator('.list-group-title').innerText()
   await first.locator('summary').click()
   await expect(first).toHaveAttribute('open', '')
   await expect(first.locator('.list-row > button').first()).toBeVisible()
+  // Easiest first within a topic; equal levels keep catalog order.
   expect(await first.locator('.list-row-text strong').allTextContents()).toEqual(
-    reps.filter(rep => catalogTopic(rep) === topic).map(rep => rep.title),
+    reps
+      .filter(rep => catalogTopic(rep) === topic)
+      .sort((a, b) => (repLevel(a.id) ?? 4) - (repLevel(b.id) ?? 4))
+      .map(rep => rep.title),
   )
   await page.reload()
   await expect(groups.filter({ has: page.locator('.list-group-title', { hasText: topic }) }).first()).toHaveAttribute('open', '')

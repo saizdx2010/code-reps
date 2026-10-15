@@ -36,7 +36,7 @@ Use `E2E_PORT=4203 yarn test:e2e` to select another dedicated port. Ordinary ass
 - Confirm no session controls appear in the workspace, Home, or Journal, that `#/sessions` redirects to the Journal, and that legacy session records in a learner backup still import into SQLite using temporary service data.
 - Run the SQLite stock-transfer rep in browser-only Vite: real WASM worker queries, rejection of missing rollback, repeated fresh databases, authored review, completion, and reload. Its databases live only in worker memory, with no progress database or service access.
 - With actual SQLite, fail writes, export the cached work, replay pending saves after reload, retry, restart the service, and restore through a clean browser context. Delay an older acknowledgement while a newer edit is pending.
-- Reject malformed browser imports without replacing work, then restore a valid backup into a separate profile and verify SQLite persistence.
+- Reject malformed browser imports without replacing work, then preview and confirm a valid backup into a separate profile, see its receipt, and verify SQLite persistence. A cancelled preview writes nothing.
 - Block every external HTTP request during a cold local-server flow and exercise Monaco, worker checks, previews, and frontend checks. This tests the local assets for those flows while loopback remains available.
 - Complete the validation journey, reject early retention, start fresh delayed recall, and discover its further batch application. Preserve work and keyboard editor exit at 320 CSS pixels with reduced motion.
 - Attach local Home/editor readiness measurements and the build's bundle report. Timings are observations, not a speed threshold on shared CI machines.

@@ -1,6 +1,6 @@
 import { Icon } from './Icon'
 import { Input } from './Input'
-import { useLayoutEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import { SearchDrawer } from './Experience'
 import { useSessionPreference } from './useSessionPreference'
 import { navigationArea, navigationSections, sectionView } from './ui-navigation'
@@ -32,7 +32,10 @@ type Props = {
   onCommands: () => void
   /** A milestone notice shown inside the section bar, so it stays in the page frame and does not move the heading. */
   notice?: ReactNode
+  /** A request from Search to open Appearance or switch dark mode; each new `at` runs once. */
+  request?: NavigationRequest
 }
+export type NavigationRequest = { kind: 'appearance' | 'theme'; at: number }
 
 type Palette = 'sage' | 'ocean' | 'plum'
 const mainAreas = [
@@ -43,7 +46,7 @@ const mainAreas = [
 const paletteLabels: Record<Palette, string> = { sage: 'Sage', ocean: 'Ocean', plum: 'Plum' }
 const favicon = (palette: Palette) => (palette === 'sage' ? '/favicon.svg' : `/favicon-${palette}.svg`)
 
-export function AppNavigation({ view, profileName, saveState, onNavigate, onManageProfiles, onCommands, notice }: Props) {
+export function AppNavigation({ view, profileName, saveState, onNavigate, onManageProfiles, onCommands, notice, request }: Props) {
   const root = document.documentElement
   const [theme, setTheme] = useSessionPreference<'light' | 'dark'>('theme', root.dataset.theme === 'dark' ? 'dark' : 'light', 'device')
   useLayoutEffect(() => {
@@ -51,6 +54,16 @@ export function AppNavigation({ view, profileName, saveState, onNavigate, onMana
   }, [theme])
   const [palette, setPalette] = useSessionPreference<Palette>('palette', (root.dataset.palette as Palette) || 'sage', 'device')
   const [appearanceOpen, setAppearanceOpen] = useState(false)
+  const [handledRequest, setHandledRequest] = useState(request?.at)
+  if (request && request.at !== handledRequest) {
+    setHandledRequest(request.at)
+    if (request.kind === 'appearance') setAppearanceOpen(true)
+  }
+  useEffect(() => {
+    if (request?.kind === 'theme') crossfade(() => setTheme(theme === 'dark' ? 'light' : 'dark'))
+    // Only a new request toggles, from the theme shown when it arrives.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [request?.at])
   useLayoutEffect(() => {
     document.documentElement.dataset.palette = palette
     document.querySelector<HTMLLinkElement>('link[rel=icon]')?.setAttribute('href', favicon(palette))
@@ -109,7 +122,7 @@ export function AppNavigation({ view, profileName, saveState, onNavigate, onMana
               {mainNavigation}
             </details>
           )}
-          <button className="commands-trigger" type="button" onClick={onCommands} aria-label="Open commands and keyboard shortcuts">
+          <button className="commands-trigger" type="button" onClick={onCommands} aria-label="Search" aria-keyshortcuts="Control+K Meta+K">
             <Icon name="search" />
             <span className="commands-label">Search</span> <kbd>⌘ / Ctrl K</kbd>
           </button>

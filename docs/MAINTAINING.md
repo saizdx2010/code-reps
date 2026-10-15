@@ -140,7 +140,7 @@ Learner data is local. Know where it lives before you release, reset, or move an
 | --- | --- | --- |
 | SQLite progress | `~/.code-reps/progress.sqlite` (plus `-wal` and `-shm` files) | The local server writes here. Override the folder with `CODE_REPS_DATA_DIR` |
 | SQLite snapshots | `~/.code-reps/backups` | The server takes one on restart and once every 24 hours; seven dated snapshots are kept |
-| Learner JSON backup | **Progress → Download backup** in the app | The portable way to move work between machines. Import with **Progress → Import backup** |
+| Learner JSON backup | **Progress → Download backup** in the app | The portable way to move work between machines. Import with **Progress → Import backup**, then confirm the preview |
 | Browser copy | The browser's own storage for the same address and port | Used before the server saves. Changing the port hides it, so keep the port stable |
 | Portable bundle | `release/code-reps-<platform>-<arch>` after `yarn package` | Git-ignored. Built output, not learner data |
 

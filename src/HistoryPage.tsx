@@ -57,6 +57,11 @@ export function HistoryPage({ history, categories, journalTabs, openRep }: Props
       }),
     [history, historyQuery, historySkill, historyDifficulty, historyDate],
   )
+  const [filterPanel, setFilterPanel] = useSessionPreference<'open' | 'closed'>(
+    'history-filters',
+    matchMedia('(min-width: 901px)').matches ? 'open' : 'closed',
+  )
+  const activeFilters = [historySkill, historyDifficulty, historyDate].filter(Boolean).length
   function clearFilters() {
     setHistoryQuery('')
     setHistorySkill('')
@@ -71,39 +76,47 @@ export function HistoryPage({ history, categories, journalTabs, openRep }: Props
         description="Completed reps stay here so you can compare your thinking over time."
         actions={journalTabs}
       />
-      <div className="filter-bar" aria-label="History filters">
-        <label>
-          Find an attempt
-          <Input type="search" value={historyQuery} onChange={event => setHistoryQuery(event.target.value)} placeholder="Rep or skill…" />
-        </label>
-        <label>
-          Skill
-          <Select aria-label="Skill" value={historySkill} onChange={event => setHistorySkill(event.target.value)}>
-            <option value="">All skills</option>
-            {categories.map(category => (
-              <option key={category}>{category}</option>
-            ))}
-          </Select>
-        </label>
-        <label>
-          Difficulty
-          <Select aria-label="Difficulty" value={historyDifficulty} onChange={event => setHistoryDifficulty(event.target.value)}>
-            <option value="">Any difficulty</option>
-            {Object.entries(difficultyLabels).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </Select>
-        </label>
-        <label>
-          Date
-          <DateInput value={historyDate} onValueChange={setHistoryDate} />
-        </label>
-        <button className="text-button" type="button" onClick={clearFilters}>
-          Clear filters
-        </button>
-      </div>
+      <label className="history-search">
+        Find an attempt
+        <Input type="search" value={historyQuery} onChange={event => setHistoryQuery(event.target.value)} placeholder="Rep or skill…" />
+      </label>
+      {/* Like the Library, the filters fold away on narrow screens so the attempts come first. */}
+      <details
+        className="catalog-filters history-filters"
+        open={filterPanel === 'open'}
+        onToggle={event => setFilterPanel(event.currentTarget.open ? 'open' : 'closed')}
+      >
+        <summary>Filters{activeFilters > 0 && <span>{activeFilters} active</span>}</summary>
+        <div className="filter-bar" aria-label="History filters">
+          <label>
+            Skill
+            <Select aria-label="Skill" value={historySkill} onChange={event => setHistorySkill(event.target.value)}>
+              <option value="">All skills</option>
+              {categories.map(category => (
+                <option key={category}>{category}</option>
+              ))}
+            </Select>
+          </label>
+          <label>
+            Difficulty
+            <Select aria-label="Difficulty" value={historyDifficulty} onChange={event => setHistoryDifficulty(event.target.value)}>
+              <option value="">Any difficulty</option>
+              {Object.entries(difficultyLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </Select>
+          </label>
+          <label>
+            Date
+            <DateInput value={historyDate} onValueChange={setHistoryDate} />
+          </label>
+          <button className="text-button" type="button" onClick={clearFilters}>
+            Clear filters
+          </button>
+        </div>
+      </details>
       <p className="utility-note" aria-live="polite">
         {visibleHistory.length} matching attempts
       </p>
@@ -132,6 +145,11 @@ function AttemptRow({ record, previous, openRep }: { record: AttemptRecord; prev
         <span>
           {formatDate(record.completedAt, true)} · {record.hintCount} {plural(record.hintCount, 'hint')} used
         </span>
+        {item && (
+          <button className="text-button" type="button" onClick={() => openRep(item.id)}>
+            Open rep
+          </button>
+        )}
       </div>
       <details>
         <summary>Review attempt</summary>
@@ -167,11 +185,6 @@ function AttemptRow({ record, previous, openRep }: { record: AttemptRecord; prev
           </>
         )}
       </details>
-      {item && (
-        <button className="text-button" type="button" onClick={() => openRep(item.id)}>
-          Open rep
-        </button>
-      )}
     </li>
   )
 }

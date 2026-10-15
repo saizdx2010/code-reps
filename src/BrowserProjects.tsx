@@ -11,7 +11,7 @@ export function BrowserProjects({ openRep, recordReflection }: Props) {
     recordReflection(`Level ${project.level}: ${project.title}`, projectReflection(project))
   }
   return (
-    <section aria-labelledby="browser-project-heading">
+    <section className="project-section" aria-labelledby="browser-project-heading">
       <h2 id="browser-project-heading">Build outside Code Reps</h2>
       <InfoNote>
         <p>

@@ -68,9 +68,11 @@
 }
 .knowledge-index {
   max-height: calc(100dvh - 108px);
-  padding: 0 12px 0 0;
+  padding: 0 12px 28px 0;
   overflow-y: auto;
   scrollbar-width: thin;
+  /* The list fades out at its lower edge instead of cutting a title in half; the padding lets the last lesson clear it. */
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
 }
 .knowledge-index > label:first-child {
   margin-top: 0;
@@ -102,9 +104,9 @@
   gap: 8px;
   min-height: 44px;
   padding: 12px;
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 550;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
   list-style: none;
   cursor: pointer;
 }
@@ -195,6 +197,15 @@
     translate: 0;
   }
 }
+.lesson-checked {
+  display: inline-flex;
+  margin-left: auto;
+  color: var(--success);
+}
+.lesson-checked .ui-icon {
+  width: 16px;
+  height: 16px;
+}
 .knowledge-topic-list button[aria-current='page'] {
   background: var(--accent-soft);
   color: var(--accent);
@@ -227,6 +238,53 @@
 .knowledge-article p,
 .knowledge-article li {
   max-width: 72ch;
+}
+/* Lesson prose is the reading, not supporting text, so it takes the full text colour. */
+.learning-hub .knowledge-article #lesson-read p,
+.learning-hub .knowledge-article #lesson-read li {
+  color: var(--text);
+}
+.lesson-tab-progress {
+  margin-left: 6px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+.lesson-next {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+.reasoning-compare {
+  margin-top: 10px;
+}
+.reasoning-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+.reasoning-columns > div {
+  padding: 14px 16px;
+  border-radius: var(--radius-control);
+  background: var(--bg);
+}
+.reasoning-columns > div:last-child {
+  background: var(--accent-soft);
+}
+.reasoning-columns p {
+  margin: 6px 0 0;
+  white-space: pre-wrap;
+}
+.knowledge-article .lesson-reps {
+  margin-top: 8px;
+  padding-left: 0;
+}
+.knowledge-article .lesson-reps li {
+  max-width: none;
+  margin: 0;
 }
 .knowledge-article p {
   margin: 12px 0;
@@ -332,14 +390,41 @@
   margin-top: 12px;
 }
 .lesson-feedback {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  margin-top: 12px;
   font-size: 14px !important;
+}
+.lesson-feedback p {
+  margin: 0;
+  color: inherit !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
 }
 .lesson-feedback strong {
   color: inherit;
 }
-.lesson-feedback > span:not(.ui-icon) {
-  display: block;
-  margin-top: 8px;
+.lesson-feedback .lesson-feedback-meta {
+  margin-top: 6px;
+  color: var(--muted) !important;
+  font-size: 12px !important;
+}
+/* After a check, the answer and a wrong choice are marked in place, with words as well as colour. */
+.lesson-question label.is-answer,
+.lesson-question label.is-chosen-wrong {
+  margin-inline: -10px;
+  padding: 0 10px;
+  border: 1px solid var(--success-border);
+  border-radius: var(--radius-control);
+  background: var(--success-soft);
+}
+.lesson-question label.is-chosen-wrong {
+  border-color: var(--error-border);
+  background: var(--error-soft);
+}
+.lesson-option-note {
+  margin-left: auto;
   color: var(--muted);
   font-size: 12px;
 }
@@ -779,6 +864,10 @@
 .learning-hub .project-overview {
   margin-bottom: 0;
 }
+/* Each group of projects starts a new section with room above its heading. */
+.learning-hub .project-section + .project-section {
+  margin-top: 44px;
+}
 .learning-hub .project-overview > summary {
   padding: 14px 42px 14px 12px;
 }
@@ -807,5 +896,27 @@
   }
   .lesson-navigation {
     gap: 2px;
+  }
+}
+
+/* On phones, question code wraps instead of hiding the end of a line behind a sideways scroll. */
+@media (max-width: 600px) {
+  /* Tab progress sits under the label so four tabs still fit. */
+  .lesson-navigation button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 6px 0;
+    line-height: 1.2;
+  }
+  .lesson-tab-progress {
+    margin-left: 0;
+    font-size: 11px;
+  }
+  .lesson-question pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
 }

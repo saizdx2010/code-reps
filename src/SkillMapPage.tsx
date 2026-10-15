@@ -46,30 +46,28 @@ export function SkillMapPage({ goalPathId, progress, openRep, reviewRep }: Props
     <main className="skill-map-main">
       <PageHeader
         eyebrow="Skills"
-        title="Skill map."
+        title="Skill map"
         description="Every skill in a track, shown by the practice evidence recorded so far."
-        actions={
-          <>
-            <SkillsSwitch view="skillmap" />
-            <label className="path-select">
-              Track
-              <Select value={path.id} onChange={event => setPathId(event.target.value)}>
-                {paths.map(item => (
-                  <option key={item.id} value={item.id}>
-                    {item.title}
-                    {item.id === goalPathId ? ' (your goal)' : ''}
-                  </option>
-                ))}
-              </Select>
-            </label>
-          </>
-        }
+        actions={<SkillsSwitch view="skillmap" />}
       />
+      <div className="skill-map-tools">
+        <label className="path-select">
+          Track
+          <Select value={path.id} onChange={event => setPathId(event.target.value)}>
+            {paths.map(item => (
+              <option key={item.id} value={item.id}>
+                {item.title}
+                {item.id === goalPathId ? ' (your goal)' : ''}
+              </option>
+            ))}
+          </Select>
+        </label>
+      </div>
       <InfoNote label="What this map shows">
         <p>
-          Each state describes recorded practice evidence, not mastery. Practiced means a guided rep is completed, even with hints.
-          Independent means a related rep was solved without hints. Retained means a fresh recall rep was solved without hints after a
-          break. Checks show tested behavior, and you review your own writing.
+          Each state describes recorded practice evidence, not mastery. Guided means a guided rep is completed, even with hints. Independent
+          means a related rep was solved without hints. Retained means a fresh recall rep was solved without hints after a break. Checks
+          show tested behavior, and you review your own writing.
         </p>
       </InfoNote>
       <section className="skill-legend" aria-labelledby="skill-legend-title">
@@ -99,7 +97,8 @@ export function SkillMapPage({ goalPathId, progress, openRep, reviewRep }: Props
                     <h2>{stage.title}</h2>
                   </div>
                   <span className="trail-stage-count">
-                    {stage.nodes.filter(node => node.state === 'independent' || node.state === 'retained').length}/{stage.nodes.length}
+                    {/* A due review is still independent evidence, so waiting for recall never lowers the count. */}
+                    {stage.nodes.filter(node => ['independent', 'due', 'retained'].includes(node.state)).length}/{stage.nodes.length}
                   </span>
                 </summary>
                 <ol className="trail-nodes">

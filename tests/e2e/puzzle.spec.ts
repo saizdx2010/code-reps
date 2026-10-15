@@ -11,7 +11,7 @@ for (const id of ['puzzle-parse-part-one', 'puzzle-adapt-part-two']) {
     await page.getByRole('button', { name: 'Run checks', exact: true }).click()
     await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
     await page.getByRole('button', { name: 'Explain', exact: true }).click()
-    await page.getByText('Compare your plan and explanation', { exact: true }).click()
+    await page.getByText('Compare with a model answer', { exact: true }).click()
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.setViewportSize({ width: 320, height: 844 })
     const viewer = page.getByRole('region', { name: 'Step trace' })

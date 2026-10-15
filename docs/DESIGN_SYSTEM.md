@@ -91,15 +91,17 @@ All components are app-owned. Extend these before writing page-specific markup. 
 Home is the learner's trail: the chosen track drawn as stages of connected nodes on the reading background, with the recommended rep on a pale lime surface beside it. `trail-map.ts` derives node order and state from existing progress without storing anything.
 
 - Node shapes: square for a lesson (placed once, immediately before the first rep that uses it), circle for a rep, flag for a project milestone, repeat icon for a recall rep.
-- Node states: completed nodes use the dark action fill with a check; the single next rep uses the lime ring and `aria-current="step"`; drafts use the accent outline; recall that is not yet due uses a dashed outline and says when it becomes available.
+- Node states: completed nodes use the dark action fill with a check; the single next rep uses the lime ring, a Next chip, and `aria-current="step"` (Next · In progress when it is also a draft); drafts use the accent outline and an In progress chip; recall that is not yet due uses a dashed outline and says when it becomes available. The next node is the recommended rep whenever that rep is on the trail.
+- Rows are one line: the title, a level chip only when the rep's level differs from its stage's range, and the state at the far edge (wrapping below the title on phones). Not started is announced but not printed; journey evidence appears once a journey has some.
 - Stages are native disclosures. The current stage and an unfinished first stage start open; project stages stay open. Completed stages show a check in their index.
+- Returning learners start after the leading language-basics stages, the same reps the practice plan skips.
 - Generic “Application” roles are not labelled; Guided, Independent, and Recall are.
 
 ## Practice workspace
 
-Practice gives the working surfaces priority: one compact header row (back to Library, title, status chip, category, save status, Glossary, Tools), a slim vertical step rail on the left edge of the brief pane, and a resizable 40/60 reading/code split by default. Existing divider preferences remain in effect. On narrow screens the same moving indicator and buttons become a horizontal step bar above the selected pane, and both panes stay mounted.
+Practice gives the working surfaces priority: one compact header row (back to Library, title, status chip, category, save status, Glossary, Tools), a slim vertical step rail on the left edge of the brief pane, and a resizable 40/60 reading/code split by default. Existing divider preferences remain in effect. On narrow screens the same moving indicator and buttons become a horizontal step bar above the selected pane, and both panes stay mounted. On phones the header takes two rows (back link with Glossary and Tools, then the title) and one quiet line of chips with the save status, and checks become a bottom sheet over the editor, resting on a run toolbar fixed to the screen edge.
 
-Check results open as a drawer inside the dark coding desk, anchored above the run toolbar and limited to about half the desk (about a third beside a frontend preview); the editor shrinks rather than being covered. Use the desk's semantic surfaces for running, failed, and passed states. Keep passed cases visible with a status at the right; failed cases reveal one diagnostic at a time. The inline frontend preview is padded like the desk's other panels and keeps its state, viewport, Update, and Expand controls in one compact row.
+Check results open as a drawer inside the dark coding desk, anchored above the run toolbar and limited to about half the desk (about a third beside a frontend preview); the editor shrinks rather than being covered. Use the desk's semantic surfaces for running, failed, and passed states. Keep passed cases visible with a status at the right; failed cases reveal one diagnostic at a time. After an edit the drawer turns neutral with an Out of date chip and dimmed outcomes, keeping the open diagnostic readable. The inline frontend preview is padded like the desk's other panels and keeps its state, viewport, Update, and Expand controls in one compact row.
 
 Practice step tabs are direct buttons without tooltips. Active primary navigation uses a quiet sage surface; active practice and lesson steps use the stronger green fill with lime text. Do not make every navigation item a primary action. Written work and behavioral checks remain separate evidence.
 
@@ -110,6 +112,7 @@ Use `Icon.tsx` for decorative control icons. `icons.css` is the single geometry 
 - **Arrow:** forward actions and row navigation.
 - **Chevron:** every expand/collapse control. Collapsible groups and cards (topic groups, trail stages, journeys, project overviews, path picker, the Plan step brief) use a trailing chevron that points down and rotates 180° when open. Inline text disclosures (Quick vocabulary, Starting as) use the leading native marker. Buttons with `aria-expanded` rotate their chevron the same way; the checks drawer opens upward, so its chevron points up while closed.
 - **Plus/minus:** only for adding and subtracting values, such as number steppers. Never for disclosure.
+- **Hover tint:** a disclosure's rounded hover tint never touches or runs past a divider. It spans the divider's width with the chevron inset by at least 8px, and keeps 3px of air from the lines above and below (see the plain-disclosure and divided-list rules in `design.css`).
 - **Check / close:** success and selection / dismissal and failed checks.
 - **Info, book, repeat, flag:** `InfoNote`, lesson nodes, recall nodes, and project nodes.
 
@@ -126,17 +129,18 @@ Motion acknowledges interaction and shows where something came from; it never de
 | Section tab | Underline grows from the centre; the current tab keeps it |
 | Practice steps, lesson sections, segmented switches, Journal | Selected fill glides between options (`StepIndicator`); first placement and layout resizes snap |
 | Trail node | Marker grows to 114% with an accent ring; title takes the accent; press washes the row |
-| Next trail node | Lime ring pulses twice when the trail arrives, then stays still |
+| Next trail node | Lime ring pulses twice when the trail arrives or the next rep moves, then stays still |
+| Next-practice panel | When its rep changes in place (a starting choice or Undo), its words rise in over 320ms and a short confirmation rises beneath it; nothing moves on page arrival |
 | Trail stage, topic group, check results | Rows cascade in (30ms apart, capped at 180ms) when the group opens or results arrive |
 | List row | Stays in place; the arrow slides into its reserved space; press settles to 99.5% |
 | Track and starting cards | Lift 2px on hover; settle on press |
-| Progress bars | Fill grows from the left when the page arrives |
+| Progress bars | Fill grows from the left when the page arrives (path progress, topic meters, and the skill-ladder bar) |
 | Milestone notice | Rises 8px once when a badge is newly earned in this session; sits in the section bar inside the page frame (or in the completion panel) so the page heading does not move; never takes focus; is acknowledged as soon as it is shown, so moving on never repeats it; clears itself after 8 seconds |
 | Progress statistics, track cards | Rise in a short cascade |
 | Status chip | Settles in (scale and fade) when it appears or its status changes; an unchanged status stays still |
 | Checkbox and radio | Mark pops in |
 | Info note | Icon tilts on hover; the note takes the accent when open |
-| Disclosure | Native content expands and collapses over 420ms; chevron rotates over 180ms |
+| Disclosure | Native content expands and collapses over 420ms; chevron rotates over 180ms; with reduced motion it opens and closes at once |
 | Close and clear icons | Quarter-turn on hover |
 | Number stepper | Presses down |
 | Workspace divider | Grip lengthens on hover and focus |
@@ -144,6 +148,11 @@ Motion acknowledges interaction and shows where something came from; it never de
 | Dark mode toggle | The page crossfades over 260ms (View Transitions where supported). Colour-scheme radios apply immediately so their checked state never lags |
 | Menus, tooltips, dialogs | Menus enter over 240ms; tooltips 110ms; dialogs 380ms with native close and focus |
 | Page change | The page arrives over 380ms |
+| Out-of-date checks | Run invites a fresh run with one lime ring when an edit puts results out of date, then stays still |
+| Completion panel | Rises into the top of the Finish pane once; a finished step's check pops into the rail |
+| Hint question | The inline first-hint question settles in where the hint control was |
+| Checks sheet (phones) | Opening the sheet raises its contents into place once; closing is immediate |
+| Restore preview and receipt | The merge preview, an import error, and the post-merge receipt each rise in once where they appear |
 | Hints and real check feedback | Reveal over 320ms. Results appear as soon as they arrive: no simulated checks, delayed acknowledgements, or artificial progress |
 
 Practice steps select immediately; new pane content fades from 80% opacity for 120ms without translating, and rapid selections leave focus on the latest pane. Lesson rows, reading sheets, and editable forms stay stable: text fields and code never move on hover, and rows never inherit raised button shadows. Disabled controls stay still.

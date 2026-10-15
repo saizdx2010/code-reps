@@ -9,6 +9,8 @@ import type { TestResult } from './runner.types'
  */
 export function useCheckRun() {
   const [results, setResults] = useState<TestResult[] | null>(null)
+  // The last run's results after the code changed. Kept only as a reference for the learner; never a pass.
+  const [staleResults, setStaleResults] = useState<TestResult[] | null>(null)
   const [runError, setRunError] = useState('')
   const [running, setRunning] = useState(false)
   const [runNotice, setRunNotice] = useState('')
@@ -35,13 +37,18 @@ export function useCheckRun() {
   function reset() {
     stop()
     setResults(null)
+    setStaleResults(null)
     setRunError('')
     setRunNotice('')
   }
 
-  /** Edited code makes earlier feedback obsolete: stop any run and say why the results went away. */
+  /**
+   * Edited code makes the verdict obsolete: stop any run and clear the results, so nothing stale counts as a pass.
+   * The last results stay visible as an out-of-date reference, so the failing input is still there while it is fixed.
+   */
   function invalidate() {
     if (running || results || runError) setRunNotice('Your code changed. Run checks again to check this version.')
+    if (results) setStaleResults(results)
     stop()
     setResults(null)
     setRunError('')
@@ -96,5 +103,10 @@ export function useCheckRun() {
     })
   }
 
-  return { results, runError, running, runNotice, run, stop, cancel, reset, invalidate, clearResults: () => setResults(null) }
+  function clearResults() {
+    setResults(null)
+    setStaleResults(null)
+  }
+
+  return { results, staleResults, runError, running, runNotice, run, stop, cancel, reset, invalidate, clearResults }
 }

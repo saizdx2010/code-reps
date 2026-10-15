@@ -7,8 +7,11 @@ test('fresh Trail avoids a duplicate practice list and Progress explains its zer
   await expect(page.getByText("Choose today's practice", { exact: true })).toHaveCount(0)
   await page.goto('/#/progress')
   await expect(page.getByText('Finish a rep to record a practice day.', { exact: true })).toBeVisible()
-  await expect(page.getByText('Solve a related rep without hints after guided practice.', { exact: true })).toBeVisible()
-  await expect(page.getByText('Solve a fresh recall rep without hints after a break.', { exact: true })).toBeVisible()
+  await expect(page.getByText('Finish a rep by passing its checks.', { exact: true })).toBeVisible()
+  await expect(page.getByText('Reviews open a few days after a rep.', { exact: true })).toBeVisible()
+  // The ladder starts with every journey skill on the first rung, counted once.
+  await expect(page.locator('.skill-ladder-legend [data-rung="learning"] b')).not.toHaveText('0')
+  await expect(page.locator('.skill-ladder-legend [data-rung="independent"] b')).toHaveText('0')
   await page.setViewportSize({ width: 390, height: 844 })
   await expect(page.locator('main')).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)

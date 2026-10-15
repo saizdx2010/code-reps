@@ -148,7 +148,7 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
     assert.ok(document.querySelector('.knowledge-group summary').textContent.includes('Async & runtime'))
     await input(document.querySelector('.knowledge-index input[type="search"]'), 'Cancellation and race conditions')
     assert.equal(document.querySelectorAll('.knowledge-topic-list button').length, 1)
-    await click('Clear knowledge filters')
+    await click('Clear filters')
     await click('Quick lessons')
     assert.equal(window.location.hash, '#/learn')
     assert.ok(document.body.textContent.includes('Quick lessons'))
@@ -250,11 +250,11 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
     await click('Lessons')
     assert.equal(document.querySelector('.knowledge-index select').value, 'async')
     assert.equal(document.querySelectorAll('.knowledge-group').length, 1)
-    await click('Clear knowledge filters')
+    await click('Clear filters')
     const search = document.querySelector('.knowledge-index input[type="search"]')
     await input(search, 'no-such-topic')
-    assert.ok(document.body.textContent.includes('No matching knowledge.'))
-    await click('Clear knowledge filters')
+    assert.ok(document.body.textContent.includes('No lessons match.'))
+    await click('Clear filters')
 
     // Real profile drafts feed the Home queue; expanding must not discard hidden work.
     await click('Library')
@@ -274,7 +274,7 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
     await click('Trail')
     // Home stays compact: one saved draft beside the primary card, with a pointer to the rest; no draft is discarded.
     assert.equal(document.querySelectorAll('#home-drafts').length, 0)
-    assert.ok(document.body.textContent.includes('more saved') || document.body.textContent.includes('Saved draft'))
+    assert.ok(document.body.textContent.includes('more in progress') || document.body.textContent.includes('In progress'))
     assert.ok(document.body.textContent.includes('Find saved drafts in the Library'))
     assert.ok(!document.body.textContent.includes('Record a session'))
     assert.ok(!document.body.textContent.includes('Unfinished sessions'))

@@ -19,6 +19,8 @@ import { paths } from './path'
 import { JournalTabs } from './Journal'
 import { useReviewContent } from './useReviewContent'
 import { attemptStatus, getPracticePlan, nextRepInPath, practiceWritingPrompts } from './practice'
+import { completionEvidence } from './curriculum'
+import { skillSummaryById } from './skill-index.ts'
 import type { LearnerStart } from './learning'
 import { BadgeNotice } from './BadgeNotice'
 import './design.css'
@@ -27,14 +29,16 @@ import './trail.css'
 import { StepIndicator } from './StepIndicator'
 import { PreviewLoading } from './LoadingStates'
 import { revealElement } from './ui-motion'
-import { hubTabs } from './learning-pages'
 import { learnerStartKey, readAttempt, readLearnerStart } from './attempt-store'
 import type { Attempt, AttemptRecord } from './attempt-store'
 import { useAttempt } from './useAttempt'
 import { useCheckRun } from './useCheckRun'
-import { downloadBackup, restoreBackup } from './backup'
+import { applyBackup, backupDownloaded, downloadBackup, previewBackup } from './backup'
+import type { BackupPreview } from './backup'
 import { AppRoutes } from './AppRoutes'
 import { actionLabel } from './practice-actions'
+import type { SearchEntry, SearchTarget } from './command-search'
+import type { NavigationRequest } from './AppNavigation'
 import { WorkspaceHeader } from './WorkspaceHeader'
 import { BriefSection, ExplainSection, PlanSection, RepContentNotice, ReviewSection } from './PracticeSections'
 import type { UpdateAttempt } from './PracticeSections'
@@ -96,16 +100,6 @@ function usePracticeOverview(
 }
 
 const repById = new Map(reps.map(item => [item.id, item]))
-// Pages the command palette can open, in its order. Pages not named here are labelled by their route.
-const commandPages: View[] = ['home', 'paths', 'catalog', 'learn', ...hubTabs, 'mistakes', 'progress', 'skillmap', 'history']
-const commandPageLabels: Partial<Record<View, string>> = {
-  home: 'Home: your trail',
-  paths: 'all tracks',
-  catalog: 'practice library',
-  learn: 'quick lessons',
-  plan: 'this week',
-  skillmap: 'skill map',
-}
 const splitWidthKey = 'code-reps:split-width'
 const editorOptions = {
   tabFocusMode: true,
@@ -126,18 +120,24 @@ type IndonesianHelp = Pick<typeof import('./vocabulary-id'), 'indonesianGlossary
 function App({ profileName = 'My learning', onManageProfiles }: { profileName?: string; onManageProfiles?: () => void }) {
   const fluency = useFluency()
   const sessions = usePracticeSessions()
-  const [knowledgeSkill, setKnowledgeSkill] = useSessionPreference<string>('knowledge-skill', 'values')
+  // The lesson in the address wins; #/knowledge alone reopens the last lesson of this session.
+  const [lastLesson, setLastLesson] = useSessionPreference<string>('knowledge-skill', 'values')
+  // A rep opened from a lesson remembers it, so the workspace can lead back to that lesson instead of the Library.
+  const [repOrigin, setRepOrigin] = useSessionPreference<string>('rep-origin', '')
   function openKnowledge(id: string) {
-    setKnowledgeSkill(id)
-    setView('knowledge')
+    setLastLesson(id)
+    setView('knowledge', id)
   }
 
   function setView(next: View, id?: string) {
     if (next !== 'workspace') setEditorFocusRequest(0)
-    navigate(next, next === 'workspace' ? (id ?? repId) : undefined)
+    if (next === 'workspace') setRepOrigin(route.view === 'knowledge' && id ? `${id}:${knowledgeSkill}` : '')
+    navigate(next, next === 'workspace' ? (id ?? repId) : next === 'knowledge' ? id : undefined)
   }
   const [glossaryOpen, setGlossaryOpen] = useState(false)
   const [commandsOpen, setCommandsOpen] = useState(false)
+  // Search can open Appearance or switch dark mode, which the navigation owns.
+  const [navigationRequest, setNavigationRequest] = useState<NavigationRequest | undefined>(undefined)
   const [focusMode, setFocusMode] = useState(false)
   const [checksOpen, setChecksOpen] = useState(false)
   const workspaceRef = useRef<HTMLElement | null>(null)
@@ -213,6 +213,24 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   const checks = useCheckRun()
   const { results, runError, running, runNotice } = checks
   const [transferMessage, setTransferMessage] = useState('')
+  // A chosen backup waits here for confirmation; nothing is written until the learner merges it.
+  const [pendingRestore, setPendingRestore] = useState<BackupPreview | null>(null)
+  // After a merge the app reloads, so the receipt crosses the reload in session storage and shows once.
+  const receiptKey = `code-reps:ui:${getActiveProfile()}:restore-receipt`
+  const [restoreReceipt, setRestoreReceipt] = useState(() => {
+    try {
+      return sessionStorage.getItem(receiptKey) ?? ''
+    } catch {
+      return ''
+    }
+  })
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem(receiptKey)
+    } catch {
+      /* The receipt is optional. */
+    }
+  }, [receiptKey])
   const [now, setNow] = useState(Date.now)
 
   useEffect(() => {
@@ -240,6 +258,11 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     if (next.view === 'workspace' && next.repId) selectRep(next.repId)
   })
   const view = route.view
+  const knowledgeSkill = route.view === 'knowledge' && route.skillId ? route.skillId : lastLesson
+  useEffect(() => {
+    if (route.skillId && route.skillId !== lastLesson) setLastLesson(route.skillId)
+  }, [route.skillId, lastLesson, setLastLesson])
+  const originLesson = repOrigin.startsWith(`${repId}:`) ? repOrigin.slice(repId.length + 1) : undefined
 
   useEffect(() => {
     if (view === 'workspace') revealElement(document.querySelector('.task-column section:not([hidden])'), 'none')
@@ -311,9 +334,37 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   }
 
   async function importData(file: File) {
+    setTransferMessage('')
+    setRestoreReceipt('')
     try {
-      await restoreBackup(file, { learnerStart, history, learning: fluency.state, sessions })
+      setPendingRestore(await previewBackup(file, { history, learning: fluency.state }))
     } catch (error) {
+      setPendingRestore(null)
+      setTransferMessage(error instanceof Error ? error.message : 'The backup could not be imported.')
+    }
+  }
+
+  async function confirmRestore() {
+    if (!pendingRestore) return
+    const { newAttempts, newNotes } = pendingRestore
+    const added = [
+      `${newAttempts} new ${newAttempts === 1 ? 'attempt' : 'attempts'}`,
+      ...(newNotes ? [`${newNotes} new ${newNotes === 1 ? 'note' : 'notes'}`] : []),
+    ].join(' and ')
+    try {
+      sessionStorage.setItem(receiptKey, `Backup merged into ${profileName}: ${added}.`)
+    } catch {
+      /* The merge still happens; only the receipt is skipped. */
+    }
+    try {
+      await applyBackup(pendingRestore.backup, { learnerStart, history, learning: fluency.state, sessions })
+    } catch (error) {
+      try {
+        sessionStorage.removeItem(receiptKey)
+      } catch {
+        /* Nothing to clear. */
+      }
+      setPendingRestore(null)
       setTransferMessage(error instanceof Error ? error.message : 'The backup could not be imported.')
     }
   }
@@ -392,20 +443,54 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     setMobileTab('workspace')
     setActiveStep('solve')
   }
-  const commands = [
-    ...commandPages.map(page => ({ label: `Go to ${commandPageLabels[page] ?? page}`, run: () => setView(page) })),
-    { label: 'Open glossary', run: () => setGlossaryOpen(true) },
+  // Search actions, by id. The palette shows them in the groups below; pages, lessons, and exercises come from command-search.
+  const searchActions: Record<string, () => void> = {
+    continue: () => recommendation && openPracticeAction(recommendation),
+    run: runChecks,
+    editor: focusEditor,
+    'focus-mode': toggleFocusMode,
+    brief: () => revealSection('brief-section'),
+    checks: () => revealSection('checks-section'),
+    explain: () => revealSection('explain-section'),
+    glossary: () => setGlossaryOpen(true),
+    appearance: () => setNavigationRequest(current => ({ kind: 'appearance', at: (current?.at ?? 0) + 1 })),
+    theme: () => setNavigationRequest(current => ({ kind: 'theme', at: (current?.at ?? 0) + 1 })),
+    profiles: () => onManageProfiles?.(),
+    backup: exportData,
+  }
+  const action = (group: SearchEntry['group'], id: string, label: string, text = '', extra: Partial<SearchEntry> = {}): SearchEntry => ({
+    group,
+    label,
+    target: { kind: 'action', id },
+    text,
+    ...extra,
+  })
+  const searchContext: SearchEntry[] = [
+    ...(recommendedRep && recommendation && !(view === 'workspace' && recommendation.repId === repId)
+      ? [action('Continue', 'continue', recommendedRep.title, 'continue next', { detail: actionLabel(recommendation.mode) })]
+      : []),
     ...(view === 'workspace'
       ? [
-          { label: 'Run checks', shortcut: 'Ctrl / ⌘ Enter', run: runChecks },
-          { label: 'Focus editor', run: focusEditor },
-          { label: focusMode ? 'Leave focus mode' : 'Enter focus mode', run: toggleFocusMode },
-          { label: 'Read brief and hints', run: () => revealSection('brief-section') },
-          { label: 'View check results', run: () => revealSection('checks-section') },
-          { label: 'Explain solution', run: () => revealSection('explain-section') },
+          action('This rep', 'run', 'Run checks', 'test', { shortcut: 'Ctrl / ⌘ Enter' }),
+          action('This rep', 'editor', 'Focus the editor', 'code solve'),
+          action('This rep', 'focus-mode', focusMode ? 'Leave focus mode' : 'Enter focus mode'),
+          action('This rep', 'brief', 'Read the brief and hints', 'understand'),
+          action('This rep', 'checks', 'See check results', 'tests'),
+          action('This rep', 'explain', 'Explain your solution', 'explain'),
         ]
       : []),
+    action('Pages', 'glossary', 'Glossary', 'terms vocabulary words'),
+    action('Settings', 'appearance', 'Appearance', 'colors color scheme palette theme'),
+    action('Settings', 'theme', 'Dark mode', 'theme light appearance', { detail: 'Switch on or off' }),
+    ...(onManageProfiles ? [action('Settings', 'profiles', 'Manage profiles', 'learner profile switch rename export')] : []),
+    action('Settings', 'backup', 'Download practice backup', 'export save file'),
   ]
+  function chooseSearchTarget(target: SearchTarget) {
+    if (target.kind === 'rep') openRep(target.repId)
+    else if (target.kind === 'lesson') openKnowledge(target.skillId)
+    else if (target.kind === 'page') setView(target.view)
+    else searchActions[target.id]?.()
+  }
 
   function completeRep() {
     if (!canFinish) return
@@ -435,14 +520,22 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
       <FirstRepWalkthrough step={activeStep} completed={!!attempt.completedAt} onNext={revealSection} onDismiss={dismissWalkthrough} />
     </Suspense>
   )
+  // Finish is never "Optional": it is where the rep is completed. It reads Ready once nothing is missing.
   const stepStatus = (stepId: string) =>
     stepId === 'understand'
       ? 'Read'
-      : stepDone[stepId]
-        ? 'Done'
-        : stepId === 'solve' || (writingRequired && stepId !== 'review')
-          ? 'Needed'
-          : 'Optional'
+      : stepId === 'review'
+        ? attempt.completedAt
+          ? 'Done'
+          : canFinish
+            ? 'Ready'
+            : 'To do'
+        : stepDone[stepId]
+          ? 'Done'
+          : stepId === 'solve' || writingRequired
+            ? 'Needed'
+            : 'Optional'
+  const stepComplete = (stepId: string) => (stepId === 'review' ? !!attempt.completedAt : stepId !== 'understand' && stepDone[stepId])
   const layoutColumns = focusMode ? 'auto minmax(0, 1fr)' : `minmax(0, ${splitWidth}fr) 12px minmax(0, ${100 - splitWidth}fr)`
   const activeRound = fluency.state.rounds.find(round => !round.endedAt && round.repId === repId)
   const editorPath = `code-reps://${getActiveProfile()}/${rep.id}/solution.${full?.reactPreview ? 'tsx' : 'ts'}`
@@ -468,7 +561,8 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
         status={currentStatus}
         saveState={saveState}
         focusMode={focusMode}
-        onLibrary={() => setView('catalog')}
+        onLibrary={() => (originLesson ? openKnowledge(originLesson) : setView('catalog'))}
+        backLabel={originLesson ? skillSummaryById(originLesson)?.title : undefined}
         onGlossary={() => setGlossaryOpen(true)}
         onFocusMode={() => {
           setFocusMode(!focusMode)
@@ -497,6 +591,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
                 aria-current={activeStep === step.id ? 'step' : undefined}
                 aria-describedby={`step-status-${step.id}`}
                 aria-controls={step.section}
+                data-done={stepComplete(step.id) || undefined}
                 onClick={() => revealSection(step.section)}
               >
                 <span>{step.label}</span>
@@ -515,6 +610,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
             {walkthroughActive && activeStep !== 'solve' && walkthroughGuide}
             <BriefSection
               hidden={activeStep !== 'understand' && activeStep !== 'solve'}
+              understanding={activeStep === 'understand'}
               repId={repId}
               full={full}
               lesson={currentLesson}
@@ -570,6 +666,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
               onCompletionNext={() => (completionNext ? openPracticeAction(completionNext) : setView('home'))}
               onDone={() => setView('home')}
               onFreshAttempt={startNewAttempt}
+              evidence={completionEvidence(repId, attempt.hintCount, journeyStates)}
             />
           </div>
         </div>
@@ -626,6 +723,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
             repId={repId}
             openLesson={openKnowledge}
             onExplain={() => revealSection('explain-section')}
+            explaining={activeStep === 'explain' || stepDone.explain}
           />
           <WorkspaceToolbar
             ref={toolbarRef}
@@ -649,6 +747,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
         onNavigate={setView}
         onManageProfiles={onManageProfiles}
         onCommands={() => setCommandsOpen(true)}
+        request={navigationRequest}
         notice={view !== 'workspace' ? <BadgeNotice history={history} now={now} onView={() => setView('progress')} /> : undefined}
       />
       {view === 'workspace' && (
@@ -690,7 +789,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
           pathPicker={pathPicker}
           setPathPicker={setPathPicker}
           knowledgeSkill={knowledgeSkill}
-          setKnowledgeSkill={setKnowledgeSkill}
+          setKnowledgeSkill={openKnowledge}
           walkthroughSeen={walkthrough !== 'new'}
           launchWalkthrough={() => {
             setWalkthrough('active')
@@ -706,12 +805,21 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
             void importData(file)
           }}
           transferMessage={transferMessage}
+          transferTone={transferMessage === backupDownloaded ? 'success' : 'error'}
+          restore={{
+            pending: pendingRestore,
+            profileName,
+            onConfirm: () => void confirmRestore(),
+            onCancel: () => setPendingRestore(null),
+            receipt: restoreReceipt,
+            onDismissReceipt: () => setRestoreReceipt(''),
+          }}
         >
           {workspace}
         </AppRoutes>
       </ScreenMemory>
       {glossaryOpen && <GlossaryDrawer onClose={() => setGlossaryOpen(false)} />}
-      {commandsOpen && <CommandPalette reps={reps} commands={commands} onOpenRep={openRep} onClose={() => setCommandsOpen(false)} />}
+      {commandsOpen && <CommandPalette context={searchContext} onChoose={chooseSearchTarget} onClose={() => setCommandsOpen(false)} />}
       <dialog
         className="reset-dialog"
         ref={resetDialogRef}

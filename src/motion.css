@@ -339,6 +339,12 @@ summary {
     overflow: visible;
     transition: none;
   }
+  /* The global reduced-motion reset does not reach this pseudo-element, so disclosures switch state at once here. */
+  @media (prefers-reduced-motion: reduce) {
+    details::details-content {
+      transition: none;
+    }
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -582,6 +588,54 @@ summary {
   }
 }
 
+/* When the next action changes in place (a starting choice), its words settle in; the trail's ring moves with it. */
+.continue-body.is-changed {
+  animation: rise-arrive 320ms var(--motion-ease) both;
+}
+.trail-notice {
+  animation: notice-rise 240ms var(--motion-ease) both;
+}
+
+/* Completing a rep: the reward rises into the top of the Finish pane once, and a finished step's check pops in. */
+.completion-panel {
+  animation: rise-arrive 320ms var(--motion-ease) both;
+}
+.practice-steps button[data-done] > span::after {
+  animation: mark-pop 260ms var(--motion-spring) both;
+}
+
+/* The hint question settles in where the hint button was; it never covers the brief. */
+.hint-confirm {
+  animation: notice-rise 240ms var(--motion-ease) both;
+}
+
+/* On phones the checks sheet's contents rise into place when it opens. */
+@media (max-width: 600px) {
+  .code-column .checks-drawer #check-details:not([hidden]) {
+    animation: notice-rise 240ms var(--motion-ease) both;
+  }
+}
+
+/* Restoring a backup: the merge preview, an import error, and the receipt after reload each rise in once where they appear. */
+.restore-preview,
+.restore-receipt,
+.transfer-message {
+  animation: notice-rise 240ms var(--motion-ease) both;
+}
+
+/* When an edit puts the last run out of date, Run invites a fresh run with one lime ring, then stays still. */
+.workspace-toolbar-run.is-stale .primary-button {
+  animation: run-invite 900ms var(--motion-ease) 120ms backwards;
+}
+@keyframes run-invite {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--action) 60%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+
 /* Opened groups cascade their rows in: trail stages, exercise topics, and check results. */
 :is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li {
   animation: row-arrive 280ms var(--motion-ease) both;
@@ -640,7 +694,9 @@ summary {
 }
 
 /* Progress fills grow from the left when a page arrives. */
-.path-progress span {
+.path-progress span,
+.topic-meter > span,
+.skill-ladder-bar {
   transform-origin: left center;
   animation: fill-grow 720ms var(--motion-ease) 160ms both;
 }

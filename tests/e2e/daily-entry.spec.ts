@@ -11,8 +11,11 @@ for (const width of [1280, 390]) {
     await expect(page.getByText('Browsing another track does not change your learning goal.')).toHaveCount(0)
     await expect(page.getByText('Plan this week')).toHaveCount(0)
     await expect(page.getByText('How a rep works', { exact: true })).toHaveCount(0)
+    // One reason line and chips for level and effort; the goal is already the page title.
+    await expect(page.locator('.continue-panel')).toContainText('Next practice · Stage 01')
     await expect(page.locator('.continue-panel')).toContainText('Skill: Values, types, and functions.')
-    await expect(page.locator('.continue-panel')).toContainText('Afterward')
+    await expect(page.locator('.continue-panel .continue-chips')).toContainText('Beginner')
+    await expect(page.locator('.continue-panel')).not.toContainText('Afterward')
     const choices = page.locator('.list-group').filter({ hasText: "Choose today's practice" })
     await expect(choices).toHaveCount(0)
     await page.locator('.continue-panel').getByRole('button', { name: 'Start rep', exact: true }).focus()

@@ -11,6 +11,7 @@ import { emptySessions } from './practice-sessions.ts'
 import type { usePracticeSessions } from './usePracticeSessions.ts'
 
 type Sessions = ReturnType<typeof usePracticeSessions>
+export const backupDownloaded = 'Backup downloaded to this device.'
 type LearnerWork = {
   /** The open rep's attempt, which may be newer than its saved draft. */
   attempt: Attempt
@@ -49,20 +50,55 @@ export function downloadBackup({ attempt, repId, learnerStart, history, learning
     link.download = `code-reps-backup-${new Date().toISOString().slice(0, 10)}.json`
     link.click()
     window.setTimeout(() => URL.revokeObjectURL(url), 1000)
-    return 'Backup downloaded to this device.'
+    return backupDownloaded
   } catch (error) {
     return error instanceof BackupTooLargeError ? error.message : 'The backup could not be created on this device.'
   }
 }
 
+/** What a chosen backup would add to this profile, read without writing anything. */
+export type BackupPreview = {
+  backup: Backup
+  fileName: string
+  attempts: number
+  newAttempts: number
+  newNotes: number
+  draftsToFill: number
+}
+
+/** A chosen backup awaiting confirmation, and the one-time receipt after a merge. */
+export type RestoreFlow = {
+  pending: BackupPreview | null
+  profileName: string
+  onConfirm: () => void
+  onCancel: () => void
+  receipt: string
+  onDismissReceipt: () => void
+}
+
+/** Reads and validates a backup file and counts what merging it would add. Throws the same learner-facing errors as a restore. */
+export async function previewBackup(
+  file: File,
+  { history, learning }: Pick<ImportTargets, 'history' | 'learning'>,
+): Promise<BackupPreview> {
+  const backup = parseBackup(await file.text(), new Set(reps.map(item => item.id)))
+  return {
+    backup,
+    fileName: file.name,
+    attempts: backup.history.length,
+    newAttempts: mergeHistory(history, backup.history).length - history.length,
+    newNotes: backup.learning ? mergeHistory(learning.notes, backup.learning.notes).length - learning.notes.length : 0,
+    draftsToFill: Object.keys(backup.drafts).filter(id => localStore.getItem(attemptKey(id)) === null).length,
+  }
+}
+
 /**
- * Merges a backup into this profile without overwriting newer local work, then reloads the app.
- * Throws with a learner-facing message, leaving saved work untouched, when the file is invalid or a save fails.
+ * Merges a backup checked by previewBackup into this profile without overwriting newer local work, then reloads the app.
+ * Throws with a learner-facing message, leaving saved work untouched, when a save fails.
  */
-export async function restoreBackup(file: File, { learnerStart, history, learning, sessions }: ImportTargets) {
+export async function applyBackup(backup: Backup, { learnerStart, history, learning, sessions }: ImportTargets) {
   await sessions.flush()
   sessions.verifyRevision()
-  const backup = parseBackup(await file.text(), new Set(reps.map(item => item.id)))
   const merged = mergeHistory(history, backup.history).sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt))
   const updates: [string, string][] = [[historyKey, JSON.stringify(merged)]]
   for (const [id, draft] of Object.entries(backup.drafts)) {
