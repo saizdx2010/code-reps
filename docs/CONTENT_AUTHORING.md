@@ -114,7 +114,9 @@ The Trail has one root, Foundations (`typescript`), and four tracks: Problem sol
 
 `src/dsa-advanced-reps.ts` owns the guided prefix-sum, interval, linked-list, heap, subset, and dynamic-programming reps. Their depth and reflection guides live in `src/review-dsa-advanced.ts`. Register its exports alongside the existing DSA exports in `src/rep-sources.ts`, `src/rep-depth.ts`, and `src/learning.ts`. Independent references live in `tests/fixtures/dsa-solutions.mjs`; `tests/dsa-advanced.test.mjs` checks common mistakes and the taught heap repair.
 
-`src/dsa-linked-reps.ts` owns linked-list insertion and removal and the binary search tree journey, with reviews in `src/review-dsa-linked.ts` and mistake checks in `tests/dsa-linked.test.mjs`. Its tree reps use `{value, left, right}` nodes, unlike the `{value, children}` trees elsewhere.
+`src/dsa-linked-reps.ts` owns the linked-list journey (plus insertion and removal practice) and the binary search tree journey and practice, with reviews in `src/review-dsa-linked.ts` and mistake checks in `tests/dsa-linked.test.mjs`. Its tree reps use `{value, left, right}` nodes, unlike the `{value, children}` trees elsewhere.
+
+`src/dsa-dp-heap-reps.ts` owns the dynamic-programming and heap journeys (reviews in `src/review-dsa-dp-heap.ts`, mistake checks in `tests/dsa-dp-heap.test.mjs`). `src/string-reps.ts`, `src/debug-reps.ts`, `src/ai-review-reps.ts`, and `src/practical-journey-reps.ts` own the text-building, fresh-debugging, suggested-code, timing-policy, and reliable-request reps; their references are in `tests/fixtures/expansion-solutions.mjs` and their mistake checks in `tests/expansion-reps.test.mjs`.
 
 The linked-list contract requires fresh output nodes. Value comparisons and input-mutation checks cannot establish output identity; fresh allocation remains a learner self-review point. The authoring test checks reference-node identity separately. These guided reps alone do not establish independent or retained fluency.
 
@@ -147,8 +149,8 @@ busy start is not reported as an endless loop. Stop, edit, or timeout terminates
 and suppresses stale replies; termination cannot guarantee learner `finally` runs.
 Cooperative AbortSignal cancellation inside a fixture is a separate checked behavior.
 
-## SQLite stock-transfer task
+## SQLite tasks
 
-`src/sqlite-reps.ts` owns the single SQLite rep. It retains the backend function format and existing Explain/Review flow. `src/sqlite-task.ts` supplies a narrow synchronous `run`/`query` interface, seeds a new in-memory database for each check, independently queries resulting rows, rejects an unfinished transaction, and closes the database even on errors. The worker lazy-loads `src/sqlite-loader.ts` only for this stable rep ID. Node references inject the same SQLite engine using a database factory; ordinary function reps keep their synchronous runner.
+`src/sqlite-reps.ts` owns the SQLite reps: a rolled-back stock transfer, a LEFT JOIN report, and an all-or-nothing restock. They retain the backend function format and existing Explain/Review flow. `src/sqlite-task.ts` keeps one task per rep ID: each supplies a narrow synchronous `run`/`query` interface, seeds a new in-memory database for each check, independently queries resulting rows, rejects an unfinished transaction, and closes the database even on errors. Add a rep there to give it a schema and its own row checks. The worker lazy-loads `src/sqlite-loader.ts` only for those rep IDs (`isSqliteRep`). Node references inject the same SQLite engine using a database factory; ordinary function reps keep their synchronous runner.
 
-Do not expose progress storage, database files, or server endpoints to this adapter. The task checks real SQL behavior, including a late constraint failure after two successful updates, but does not establish disk durability, concurrency safety, SQL style, or learning effectiveness. SQL parameter binding and schema preservation also require authored self-review. See [ADR 0002](./adr/0002-in-memory-sqlite-practice.md).
+Do not expose progress storage, database files, or server endpoints to this adapter. The tasks check real SQL behavior, including a late constraint failure after successful updates and a CHECK constraint that SQLite applies to an upsert’s inserted row before resolving its conflict, but does not establish disk durability, concurrency safety, SQL style, or learning effectiveness. SQL parameter binding and schema preservation also require authored self-review. See [ADR 0002](./adr/0002-in-memory-sqlite-practice.md).

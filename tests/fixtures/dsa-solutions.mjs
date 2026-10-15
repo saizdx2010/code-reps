@@ -136,3 +136,36 @@ Object.assign(dsaSolutions, {
   'bst-check-order':
     'function isOrdered(root) { const values = []; const walk = node => { if (!node) return; walk(node.left); values.push(node.value); walk(node.right) }; walk(root); return values.every((v, i) => i === 0 || values[i - 1] < v) }',
 })
+
+// Linked-list journey and binary search tree practice. Each reference takes a different route from its review trace.
+Object.assign(dsaSolutions, {
+  'list-merge-sorted':
+    'function mergeSorted(a, b) { const values = []; for (let p = a; p; p = p.next) values.push(p.value); for (let p = b; p; p = p.next) values.push(p.value); values.sort((x, y) => x - y); return values.reduceRight((next, value) => ({ value, next }), null) }',
+  'list-split-at-first':
+    'function splitAtTrack(head, track) { if (head === null) return { before: null, from: null }; if (head.value === track) { const copy = node => node === null ? null : { value: node.value, next: copy(node.next) }; return { before: null, from: copy(head) } } const rest = splitAtTrack(head.next, track); return { before: { value: head.value, next: rest.before }, from: rest.from } }',
+  'list-rotate-route':
+    'function rotateRoute(head, k) { const values = []; for (let p = head; p; p = p.next) values.push(p.value); if (!values.length) return null; const cut = values.length - (k % values.length); return [...values.slice(cut), ...values.slice(0, cut)].reduceRight((next, value) => ({ value, next }), null) }',
+  'bst-insert-value':
+    'function insertTime(root, time) { if (root === null) return { value: time, left: null, right: null }; if (time === root.value) return root; return time < root.value ? { value: root.value, left: insertTime(root.left, time), right: root.right } : { value: root.value, left: root.left, right: insertTime(root.right, time) } }',
+  'bst-range-values':
+    'function bookingsBetween(root, start, end) { const values = []; const walk = node => { if (!node) return; walk(node.left); values.push(node.value); walk(node.right) }; walk(root); return values.filter(value => value >= start && value <= end) }',
+  'bst-nearest-slot':
+    'function nearestBooking(root, time) { const values = []; const walk = node => { if (!node) return; walk(node.left); values.push(node.value); walk(node.right) }; walk(root); let best = null; for (const value of values) if (best === null || Math.abs(value - time) < Math.abs(best - time)) best = value; return best }',
+})
+
+// Dynamic programming journey and heap journey practice. References use memoized recursion, sorting, or a simple
+// sorted window, so they stay independent of the review traces.
+Object.assign(dsaSolutions, {
+  'dp-garage-paths':
+    'function garageRoutes(grid) { const memo = new Map(); const count = (r, c) => { if (r < 0 || c < 0 || grid[r][c] === 1) return 0; if (r === 0 && c === 0) return 1; const key = r + "," + c; if (!memo.has(key)) memo.set(key, count(r - 1, c) + count(r, c - 1)); return memo.get(key) }; return count(grid.length - 1, grid[0].length - 1) }',
+  'dp-stall-revenue':
+    'function bestRevenue(revenues) { let prev = 0, current = 0; for (const value of revenues) { const next = Math.max(current, prev + value); prev = current; current = next } return current }',
+  'dp-tag-edits':
+    'function tagEdits(from, to) { const memo = new Map(); const solve = (i, j) => { if (i === from.length) return to.length - j; if (j === to.length) return from.length - i; const key = i * 64 + j; if (memo.has(key)) return memo.get(key); const result = from[i] === to[j] ? solve(i + 1, j + 1) : 1 + Math.min(solve(i + 1, j + 1), solve(i + 1, j), solve(i, j + 1)); memo.set(key, result); return result }; return solve(0, 0) }',
+  'heap-merge-log-streams':
+    'function mergeStreams(streams) { return streams.flatMap((stream, position) => stream.times.map(at => ({ at, name: stream.name, position }))).sort((a, b) => a.at - b.at || a.position - b.position).map(({ at, name }) => ({ at, name })) }',
+  'heap-rooms-needed':
+    'function roomsNeeded(meetings) { const events = meetings.flatMap(([start, end]) => [[start, 1], [end, -1]]).sort((a, b) => a[0] - b[0] || a[1] - b[1]); let open = 0, most = 0; for (const [, change] of events) { open += change; most = Math.max(most, open) } return most }',
+  'heap-kth-largest-stream':
+    'function cutoffs(scores, k) { const top = []; return scores.map(score => { let i = 0; while (i < top.length && top[i] < score) i++; top.splice(i, 0, score); if (top.length > k) top.shift(); return top.length < k ? null : top[0] }) }',
+})

@@ -42,7 +42,11 @@ export function buildFrontendFrame(
   const MISSING = '(missing)';
   const subscriptions = new Map();
   let subscriptionId = 0;
-  const source = { subscribe(channel, listener) { const id = ++subscriptionId; subscriptions.set(id, { channel, listener }); return () => subscriptions.delete(id) } };
+  const requests = [];
+  const source = {
+    subscribe(channel, listener) { const id = ++subscriptionId; subscriptions.set(id, { channel, listener }); return () => subscriptions.delete(id) },
+    request(query, done) { requests.push({ query, done, answered: false }) },
+  };
   let reactRoot;
   const flush = action => settings.react ? window.repReact.flushSync(action) : action();
   const unmount = () => { if (reactRoot) { flush(() => reactRoot.unmount()); reactRoot = null } };
@@ -52,6 +56,8 @@ export function buildFrontendFrame(
     if (how === 'exists') return find(target) !== null;
     if (how === 'count') return root.querySelectorAll('[data-testid="' + target + '"]').length;
     if (how === 'texts') return [...root.querySelectorAll('[data-testid="' + target + '"]')].map(item => item.textContent);
+    if (how === 'selectedTexts') return [...root.querySelectorAll('[data-testid="' + target + '"][aria-selected="true"]')].map(item => item.textContent);
+    if (how === 'requests') return requests.length;
     const el = find(target);
     if (!el) return MISSING;
     if (how === 'text') return el.textContent;
@@ -60,6 +66,7 @@ export function buildFrontendFrame(
     if (how === 'parentTag') return el.parentElement ? el.parentElement.tagName.toLowerCase() : null;
     if (how === 'label') return el.labels && el.labels.length ? el.labels[0].textContent.trim() : null;
     if (how === 'describedBy') return (el.getAttribute('aria-describedby') || '').split(/\\s+/).filter(Boolean).map(id => { const ref = document.getElementById(id); return ref ? ref.textContent : MISSING });
+    if (how === 'activeText') { const id = el.getAttribute('aria-activedescendant'); if (!id) return null; const ref = document.getElementById(id); return ref ? ref.textContent : MISSING };
     if (how === 'controls') { const id = el.getAttribute('aria-controls'); const ref = id ? document.getElementById(id) : null; return ref ? ref.getAttribute('data-testid') : null };
     if (how.startsWith('attr:')) return el.getAttribute(how.slice(5));
     if (how.startsWith('prop:')) return el[how.slice(5)];
@@ -67,19 +74,20 @@ export function buildFrontendFrame(
   };
   const act = step => {
     if (step.do === 'unmount') { unmount(); return }
+    if (step.do === 'respond') { for (const request of requests) if (request.query === step.query && !request.answered) { request.answered = true; request.done(step.value) } return }
     if (step.do === 'emit') { for (const subscription of [...subscriptions.values()]) if (subscription.channel === step.channel) subscription.listener(step.value); return }
     if (step.do === 'props') { flush(() => reactRoot.render(window.repReact.React.createElement(component, { ...step.props, source }))); return }
 
     if (step.do === 'key') {
       const el = document.activeElement && document.activeElement !== document.body ? document.activeElement : root;
-      el.dispatchEvent(new KeyboardEvent('keydown', { key: step.key, bubbles: true, cancelable: true }));
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: step.key, shiftKey: Boolean(step.shift), bubbles: true, cancelable: true }));
       return;
     }
     const el = find(step.target);
     if (!el) throw new Error('Add an element with data-testid="' + step.target + '".');
     if (step.do === 'type') {
       if (!(el instanceof HTMLInputElement)) throw new Error('data-testid="' + step.target + '" must be an input.');
-      el.value = step.value; el.dispatchEvent(new Event('input', { bubbles: true }));
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, step.value); el.dispatchEvent(new Event('input', { bubbles: true }));
     } else if (step.do === 'click') el.click();
     else if (step.do === 'focus') el.focus();
     else if (step.do === 'mark') el.__marked = true;
@@ -124,6 +132,7 @@ export function buildFrontendFrame(
       const results = settings.checks.map(check => {
         unmount();
         subscriptions.clear();
+        requests.length = 0;
         root.replaceChildren();
         if (settings.generic) return runDomCheck(check, mount);
         const state = JSON.parse(JSON.stringify(check.input[0]));

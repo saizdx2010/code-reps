@@ -91,7 +91,7 @@ Start with one connected plain TypeScript browser feature using the existing DOM
 - [x] Review the sorting, recursion, tree, and graph journeys for difficulty transitions and unfamiliar transfer. Findings and fixes (a fresh sorting recall, tree and graph bridge practice reps, trimmed lesson clues) are in the archived [journey review](./docs/archive/DSA_JOURNEY_REVIEW.md); this is editorial review, not learner evidence.
 - [ ] Add independent or recall tasks to queues, two pointers, windows, or binary search only when learner observations show a specific gap. Each of those four already has guided, independent, and delayed-recall journey stages.
 - [x] Deepen TypeScript through narrowing unknown input, discriminated unions, exhaustive handling, generics, and reusable typed APIs. Separate compile-time guarantees from behavioral checks.
-- [ ] Strengthen debugging and frontend practice with fresh contexts instead of cosmetic variants of the same problem.
+- [x] Strengthen debugging and frontend practice with fresh contexts instead of cosmetic variants of the same problem. A fresh-debugging journey (date filter boundaries, floating-point money, a reducer that breaks undo, captured loop variables), a suggested-code review journey, and a composite-widgets journey (reorderable list, modal dialog, combobox) ship. These are authored contexts, not observations from learner practice.
 - [x] Add structured step-by-step traces (`traceSteps`) to the reviews of `read-batch-labels`, `preview-slot-results`, `validate-import-batch`, `debug-page-offset`, and `leading-throttle`, the visual-trace candidates named in the archived [content audit](./docs/archive/CONTENT_AUDIT.md).
 - [x] Keep final hints as non-code guidance. `declare-variables`, `basic-types`, and `create-objects` now show their code in the post-attempt comparison instead. The eight array, text, lookup, and stack journey practice reps, whose final hints were complete solutions, also have specific progressive hints, task-specific plan prompts, and named checks.
 - [x] Strengthen weak recall variants: `first-duplicate-label` and `sum-matching-prices` repeat their guided comparison and accumulation patterns. `count-record-highs` (comparison with a running record) and `first-pair-to-target` (complement lookup) are appended to the arrays and lookup rotations, so saved review positions keep their meaning. The weaker variants stay in place, because removing them would change how saved history replays.
@@ -106,6 +106,7 @@ See [content authoring](./docs/CONTENT_AUTHORING.md) for requirements and the [c
 
 - [x] Introduce one complete React task with actual rendering and effect cleanup before expanding React content.
 - [x] Introduce one local SQLite task with real queries and transaction behavior before expanding database content. Use temporary learner-independent data.
+- [x] Expand React and SQLite modestly: row keys and stale request results in React; a JOIN report and an all-or-nothing restock in SQLite. They remain track practice without journeys.
 - [ ] Add alternative external projects after the existing browser progression is useful in practice.
 - [ ] Consider distributable content packs only after defining executable-content isolation, versioning, and evidence migration.
 

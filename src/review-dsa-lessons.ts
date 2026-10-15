@@ -98,4 +98,24 @@ export const dsaLessonDepth: Record<string, LessonDepth> = {
     answer:
       'There are 3 groups. Visited grows to {0,1}, then {0,1,2}, then {0,1,2,3,4}. Keeping it across seeds skips 1 and 4; resetting it would count every node as a fresh seed, giving 5. Removing 1 -> 0 violates the reciprocal-edge contract. Directed graphs distinguish weak connectivity (ignore direction) from strong connectivity (every member reaches every other); neither should be silently substituted. Here the weak group {0,1} would split into two strongly connected groups. This transfer changes the contract and remains self-reviewed; the existing rep checks cover undirected groups.',
   },
+  'dynamic-programming': {
+    title: 'A greedy rule looks like a recurrence until it fails',
+    code: '// Stalls [2, 3, 2]; never rent two neighbours.\n// Greedy: rent the highest stall, block its neighbours.\n//   rent 3 -> neighbours blocked -> total 3\n// Recurrence: best[i] = max(best[i - 1], revenue[i] + best[i - 2])\n//   best = [2, 3, 4] -> total 4',
+    reasoning:
+      'The greedy rule commits to one stall before it knows what that choice costs: renting 3 blocks both 2s, which together are worth more. The recurrence never commits early. At each stall it keeps both possibilities, skip or take, and compares their best totals, which are already final because they describe shorter prefixes. A local rule is only safe when you can prove that the locally best choice is always part of some best overall answer; here it is not.',
+    challenge:
+      'Write the state, recurrence, and base cases for counting the ways to climb n stairs taking 1, 2, or 3 steps at a time. Then explain why you add cases here instead of taking a maximum, and predict the count for n = 4. Discuss before revealing the answer.',
+    answer:
+      'ways[i] is the number of ordered step sequences that reach exactly stair i. The last step was 1, 2, or 3 stairs, so ways[i] = ways[i - 1] + ways[i - 2] + ways[i - 3], with ways[0] = 1 and negative stairs contributing 0. The cases are disjoint because they differ in their last step, so they add. ways: 1, 1, 2, 4, 7, so n = 4 has 7 sequences. This discussion is self-reviewed, not evidence of independent coding.',
+  },
+  heaps: {
+    title: 'A heap is ordered by level, not left to right',
+    code: '// Min-heap array: [1, 3, 8, 5, 4]\n//        1\n//      /   \\\n//     3     8\n//    / \\\n//   5   4\n// Is the array sorted? No. Is the top the minimum? Yes.',
+    reasoning:
+      'The heap rule only compares each parent with its own children: 1 ≤ 3 and 8, and 3 ≤ 5 and 4. It says nothing about 8 versus 5, or 5 versus 4, so the array is not sorted. That weaker rule is exactly why adding and removing are cheap: an update only repairs one path from a leaf to the root, about log₂ n swaps, instead of shifting everything into sorted order. Reading the minimum is still O(1) because the root is smaller than everything below it.',
+    challenge:
+      'Remove the top of [1, 3, 8, 5, 4] and write the array after each swap. Then add 2 and do the same. Which values moved, and why did 8 never move? Discuss before revealing the answer.',
+    answer:
+      'Removing 1 moves the last value, 4, to the top: [4, 3, 8, 5]. Its smaller child is 3, so swap: [3, 4, 8, 5]. 4 is now at index 1 with child 5, which is larger, so stop. Adding 2 appends it at index 4: [3, 4, 8, 5, 2]. Its parent at index 1 is 4, so swap: [3, 2, 8, 5, 4]; its parent 3 is larger, so swap again: [2, 3, 8, 5, 4]. 8 never moved because neither repair path passed through the right subtree. This discussion is self-reviewed, not evidence of independent coding.',
+  },
 }

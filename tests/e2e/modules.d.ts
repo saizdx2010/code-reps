@@ -13,6 +13,12 @@ declare module '*/fixtures/maintenance-journey-solutions.mjs' {
 }
 declare module '*/fixtures/react-solution.mjs' {
   export const reactSolution: string
+  export const reactSolutions: Record<string, string>
+}
+declare module '*/fixtures/sqlite-solution.mjs' {
+  export const sqliteSolution: string
+  export const sqliteCustomerTotalsSolution: string
+  export const sqliteRestockSolution: string
 }
 declare module '*/fixtures/rich-solutions.mjs' {
   export const richSolutions: Record<string, string>

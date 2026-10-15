@@ -114,6 +114,45 @@ export const domGuides: Record<string, ReflectionGuide> = {
     example:
       'I create every header and panel once and keep one current id. One function loops over the sections and sets aria-expanded and hidden from whether each id equals the current one. A click stores the clicked id, or null when that section was already open, then calls the function. The checks confirm the attributes in a sandbox; I still listen with a screen reader.',
   },
+  'dom-reorder-list': {
+    plan: [
+      'Where does the order live, and how do the list, the disabled states, and the status follow from it?',
+      'Decide where focus goes when an item reaches the top.',
+    ],
+    explanation: [
+      'Explain how one move updates the order, the list, every disabled state, and the status together.',
+      'Explain where focus lands after each move and why.',
+      'State what the checks cannot establish about screen-reader announcements.',
+    ],
+    example:
+      'I keep my own copy of the order and create each item’s row once. A move splices the order, re-appends the rows in that order, and recomputes every disabled state. Focus returns to the clicked button, or to the item’s other button when the clicked one became disabled, and the status names the new position. I still listen with a screen reader.',
+  },
+  'dom-modal-dialog': {
+    plan: [
+      'Which element should have focus after opening, Tab on the last button, Escape, and Confirm?',
+      'Decide where you listen for keys so every button is covered.',
+    ],
+    explanation: [
+      'Explain how focus is kept inside the dialog and why only the edges need code.',
+      'Explain how every way of closing returns focus to the opener.',
+      'State what a real browser adds that the checks do not establish.',
+    ],
+    example:
+      'Opening shows the dialog and focuses Confirm. One keydown listener on the dialog closes on Escape and wraps Tab from Cancel to Confirm and Shift+Tab from Confirm to Cancel, cancelling the default each time. One close function hides the dialog, writes the result, and focuses the opener, so every exit behaves the same.',
+  },
+  'dom-combobox': {
+    plan: [
+      'List the state the widget needs: the typed text, the matches, the active option, and whether the list is open.',
+      'Name the attributes that change when each piece of state changes.',
+    ],
+    explanation: [
+      'Explain how aria-activedescendant lets the active option change while focus stays in the input.',
+      'Explain how the arrow keys wrap and what clears the active option.',
+      'State what the checks cannot establish about announcements and pointer use.',
+    ],
+    example:
+      'I keep the matching option indexes, the active position, and whether the list is open, and one render function applies them to the options, hidden, aria-expanded, and aria-activedescendant. Typing recomputes matches and clears the active position; the arrow keys move it with wrapping; Enter fills the input and closes; Escape closes and keeps the text.',
+  },
 }
 
 export const domDepth: Record<string, RepDepth> = {
@@ -212,5 +251,41 @@ export const domDepth: Record<string, RepDepth> = {
       'Toggling only the clicked section leaves the previously open one expanded, so two answers show at once and the one-open rule fails. Setting hidden without aria-expanded tells a screen reader the visible section is collapsed.',
     transfer:
       'Let the accordion allow any number of open sections but add an expand-all button. Decide what the state becomes and when the button should say collapse all. This changed contract is self-reviewed, not checked.',
+  },
+  'dom-reorder-list': {
+    reasoning:
+      'The order array is the single source of truth: after each move, the list order, every button’s disabled state, and the status text are all recomputed from it, so they cannot disagree. Moving existing row elements keeps each button the same element, so a test or an assistive technology tracking it is not confused, and focusing the clicked button again, or its sibling when it has just become disabled, keeps the keyboard user next to the item they moved.',
+    trace:
+      'Eggs is second. Clicking Move Eggs up splices it to position 0 and re-appends the rows. Move Eggs up is now disabled, so focus moves to Move Eggs down, and the status reads “Eggs moved to position 1 of 4.” Milk’s Move up becomes enabled because Milk is now second.',
+    alternative:
+      'Rebuilding the whole list after each move is simpler, but every button becomes a new element and focus is lost unless you track which one to restore. Drag and drop with keyboard support, through grab and drop keys, is more powerful but much harder to make accessible; buttons are the dependable baseline.',
+    counterexample:
+      'Leaving focus on a button that has just become disabled drops focus to the page body in most browsers, so the next Tab starts from the top. Naming every button only “Move up” gives a screen-reader user a list of identical controls. Updating the order without the status leaves screen-reader users guessing whether anything moved.',
+    transfer:
+      'Add Move to top and Move to bottom buttons. Decide which buttons become disabled at each end and where focus goes after each one. This changed contract is self-reviewed, not checked.',
+  },
+  'dom-modal-dialog': {
+    reasoning:
+      'A real browser already moves focus between the two buttons with Tab, so code only has to handle the edges: Tab on the last button and Shift+Tab on the first would otherwise leave the dialog, so both are cancelled and redirected. A single close function guarantees that Escape, Cancel, and Confirm all hide the dialog, record a result, and return focus to the opener the same way.',
+    trace:
+      'Opening focuses Delete. Shift+Tab on Delete is an edge, so the default is cancelled and Cancel is focused. Escape then calls close with Cancelled., which hides the dialog and focuses Delete draft, where the user started.',
+    alternative:
+      'The native dialog element with showModal makes the page behind inert and handles Escape for you, which is the better choice in production; this rep builds the behavior by hand so you can see each piece. The inert attribute on the rest of the page blocks focus and clicks without any key handling.',
+    counterexample:
+      'Listening for keys on the document instead of the dialog can trap Tab even after the dialog closes. Forgetting to return focus leaves keyboard users on a hidden button, so the next Tab starts from the top of the page. Hiding the dialog with CSS but leaving it in the tab order lets Tab reach invisible buttons.',
+    transfer:
+      'Add a text field above the buttons that must be filled before Delete is enabled. Decide which element is first and last for the wrap, and where focus starts when the dialog opens. This changed contract is self-reviewed, not checked.',
+  },
+  'dom-combobox': {
+    reasoning:
+      'Focus never leaves the input, so assistive technology learns which option is active from aria-activedescendant, and aria-selected marks it in the list. Keeping the matches, the active position, and the open flag as state, and deriving every attribute from them in one render function, keeps the list, aria-expanded, and the active descendant consistent after typing, arrow keys, Enter, and Escape.',
+    trace:
+      'Typing ap matches Apple and Apricot, so the list opens with no active option. ArrowUp from none goes to the last match, Apricot, and the input points at option-2. Enter copies Apricot into the input, closes the list, and removes aria-activedescendant.',
+    alternative:
+      'Moving real focus onto each option is simpler to style but makes typing awkward, because focus has left the input. Native datalist gives suggestions with no code, but its keyboard and screen-reader behavior varies across browsers and cannot be styled or controlled like this.',
+    counterexample:
+      'Matching with includes shows Pineapple for ap. Forgetting to clear the active option when typing leaves aria-activedescendant pointing at an option that no longer exists. Clearing the input on Escape throws away what the user typed.',
+    transfer:
+      'Let a mouse click on an option pick it, and keep focus in the input afterwards. Decide which event to use so the input does not lose focus first. This changed contract is self-reviewed, not checked.',
   },
 }

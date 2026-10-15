@@ -124,6 +124,12 @@ export const paths = [
         repIds: ['has-duplicate', 'most-frequent-number', 'first-unique-character', 'first-repeated-number'],
       },
       {
+        title: 'Build and compare text',
+        description: 'Compress repeated characters, group scrambled words, check a palindrome after cleaning, and wrap text to a width.',
+        recap: 'You can now scan text in runs, build comparison keys, and normalize text before comparing it.',
+        repIds: ['text-run-length', 'text-anagram-groups', 'text-normalized-palindrome', 'text-wrap-column'],
+      },
+      {
         title: 'Stack and queue operations',
         description: 'Add and remove in both orders, and see how a stack differs from a queue.',
         recap: 'You can now trace stack and queue operations and their different removal orders.',
@@ -183,9 +189,16 @@ export const paths = [
       {
         title: 'Binary search trees',
         description:
-          'Use the left-smaller, right-larger rule to search one path, find the nearest earlier value, and check the rule itself.',
-        recap: 'You can now search a binary search tree along one path and check that a tree follows its ordering rule.',
-        repIds: ['bst-search-path', 'bst-latest-at-or-before', 'bst-check-order'],
+          'Use the left-smaller, right-larger rule to search one path, insert without changing the original, list a range, find the nearest value, and check the rule itself.',
+        recap: 'You can now search, extend, and query a binary search tree along the routes its ordering rule allows.',
+        repIds: [
+          'bst-search-path',
+          'bst-insert-value',
+          'bst-latest-at-or-before',
+          'bst-range-values',
+          'bst-check-order',
+          'bst-nearest-slot',
+        ],
       },
       {
         title: 'Grids',
@@ -214,10 +227,28 @@ export const paths = [
         ],
       },
       {
+        title: 'Rebuild linked lists',
+        description: 'Merge two sorted lists, split a playlist at a track, and rotate a route, creating new nodes each time.',
+        recap: 'You can now move several cursors through linked nodes and build new lists without changing the originals.',
+        repIds: ['list-merge-sorted', 'list-split-at-first', 'list-rotate-route'],
+      },
+      {
+        title: 'Heaps and priority queues',
+        description: 'Merge sorted log streams, count the meeting rooms a day needs, and track a live cutoff score.',
+        recap: 'You can now recognize when a problem keeps asking for the smallest item and keep that item ready.',
+        repIds: ['heap-merge-log-streams', 'heap-rooms-needed', 'heap-kth-largest-stream'],
+      },
+      {
         title: 'Backtracking and dynamic programming',
         description: 'List every choice with backtracking, then reuse answers to smaller problems.',
         recap: 'You can now explore choices and reuse answers to smaller problems.',
         repIds: ['algo-subsets', 'algo-climb-stairs', 'algo-coin-change'],
+      },
+      {
+        title: 'Fill tables of smaller answers',
+        description: 'Count routes through a garage, choose stalls for the most revenue, and measure the edits between two tags.',
+        recap: 'You can now name a subproblem, write how its answers combine, and fill a table in a safe order.',
+        repIds: ['dp-garage-paths', 'dp-stall-revenue', 'dp-tag-edits'],
       },
       {
         title: 'Harder patterns',
@@ -340,9 +371,10 @@ export const paths = [
       },
       {
         title: 'Render with React',
-        description: 'Keep state and release an effect subscription when its lifetime ends.',
-        recap: 'You can now render a component and verify effect cleanup.',
-        repIds: ['react-channel-counter'],
+        description:
+          'Keep state and release an effect subscription, keep list rows matched to their data with keys, and ignore stale results in an effect.',
+        recap: 'You can now render components whose state, rows, and effects stay matched to the current data.',
+        repIds: ['react-channel-counter', 'react-row-keys', 'react-stale-request'],
       },
       {
         title: 'Build accessible interactions',
@@ -360,6 +392,13 @@ export const paths = [
         ],
       },
       {
+        title: 'Build composite widgets',
+        description:
+          'Reorder a list with buttons, keep focus inside a modal dialog, and pick suggestions from a combobox with the keyboard.',
+        recap: 'You can now coordinate focus, state, and ARIA attributes across widgets made of several parts.',
+        repIds: ['dom-reorder-list', 'dom-modal-dialog', 'dom-combobox'],
+      },
+      {
         title: 'Build one connected browser feature',
         description: 'Model, render, edit, save, recover, test, then build independently.',
         recap: 'You can now model, render, edit, save, recover, and test a connected browser feature.',
@@ -375,11 +414,14 @@ export const paths = [
       },
       {
         title: 'Keep async updates current',
-        description: 'Delay, limit, and ignore stale requests so the screen shows the right result.',
-        recap: 'You can now trace delayed requests and keep stale results from replacing current ones.',
+        description:
+          'Delay, limit, and ignore stale requests so the screen shows the right result, then autosave and report scrolling at a steady rate.',
+        recap: 'You can now trace delayed and limited updates and keep stale results from replacing current ones.',
         repIds: [
           'debounce-schedule',
+          'autosave-debounce',
           'leading-throttle',
+          'scroll-report-throttle',
           'latest-request',
           'search-request-state',
           'preview-slot-results',
@@ -394,9 +436,9 @@ export const paths = [
       },
       {
         title: 'Apply it to real code',
-        description: 'Debug a cart total and build a small interactive directory.',
-        recap: 'You can now debug a cart total and build an interactive directory.',
-        repIds: ['debug-cart-total', 'frontend-directory'],
+        description: 'Debug a cart total, repair toolbar buttons that share one loop variable, and build a small interactive directory.',
+        recap: 'You can now debug real interface code and build an interactive directory.',
+        repIds: ['debug-cart-total', 'debug-stale-handlers', 'frontend-directory'],
       },
       {
         title: 'Interview round',
@@ -449,20 +491,23 @@ export const paths = [
         repIds: ['backend-query-filters', 'backend-error-response', 'parse-sort-param', 'page-response-envelope'],
       },
       {
-        title: 'Change local data atomically',
-        description: 'Run real SQLite queries and undo a failed stock transfer.',
-        recap: 'You can now inspect stored rows after commits and rollbacks.',
-        repIds: ['sqlite-stock-transfer'],
+        title: 'Query and change local data',
+        description:
+          'Run real SQLite queries: undo a failed stock transfer, total orders per customer with a join, and restock inventory all or nothing.',
+        recap: 'You can now write joins and aggregates and keep multi-statement changes atomic.',
+        repIds: ['sqlite-stock-transfer', 'sqlite-customer-totals', 'sqlite-restock-upsert'],
       },
       {
         title: 'Stay reliable',
         description:
-          'Check cache freshness, back off retries, limit request rates, avoid double effects, roll back optimistic updates, and share resources safely.',
+          'Check cache freshness, back off retries, limit request rates, avoid double effects, resubmit payments safely, roll back optimistic updates, and share resources safely.',
         recap: 'You can now trace caches, retries, rate limits, duplicate requests, and shared-resource ownership.',
         repIds: [
           'cache-freshness',
           'retry-backoff',
           'idempotent-ledger',
+          'payment-resubmit',
+          'quote-cache-retry',
           'optimistic-balance',
           'shared-resource',
           'room-leases',
@@ -476,6 +521,19 @@ export const paths = [
         description: 'Trace an existing importer, then refactor a working report without changing its behavior.',
         recap: 'You can now trace an importer and refactor a report while preserving its behavior.',
         repIds: ['read-batch-labels', 'refactor-stock-summary'],
+      },
+      {
+        title: 'Review suggested code',
+        description:
+          'Check suggested functions against their contracts: a skipped empty case, an invented method, and medians that only look right.',
+        recap: 'You can now verify suggested code against its contract before trusting it.',
+        repIds: ['ai-empty-input-suggestion', 'ai-invented-api', 'ai-expose-wrong-median'],
+      },
+      {
+        title: 'Debug in fresh contexts',
+        description: 'Repair a date filter that drops its boundaries, a total that loses a cent, and a reducer that breaks undo.',
+        recap: 'You can now reproduce a reported bug, find its cause, and repair it without breaking the rest of the contract.',
+        repIds: ['debug-date-range-filter', 'debug-invoice-rounding', 'debug-reducer-mutation'],
       },
       {
         title: 'Find bugs with your own cases',

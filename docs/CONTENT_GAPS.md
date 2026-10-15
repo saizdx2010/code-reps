@@ -18,12 +18,12 @@ A lesson's linked reps are applications, not necessarily independent practice. O
 These topics have a lesson and linked reps but no guided → independent → delayed-recall journey. Completing their reps records practice; it cannot establish retention.
 
 - **Language and analysis:** values, types, and functions; time, space, and tradeoffs. Behavior checks alone cannot assess complexity analysis.
-- **Runtime and application patterns:** closures, reference equality, the event loop, singletons, pub/sub, dependency injection, debouncing, throttling, WebSockets, polling and server-sent events, caching, retries, idempotency, and optimistic updates. Most are taught through a single authored policy trace; see [Practical concepts](./PRACTICAL_CONCEPTS.md) for what those traces establish.
-- **React and databases:** one React task (`react-channel-counter`) runs real rendering and effect cleanup, and one SQLite task (`sqlite-stock-transfer`) runs real queries and rollback. Neither has independent or recall applications. Expand them only when a concrete need appears (see the [roadmap](../ROADMAP.md#later-when-there-is-a-concrete-need)).
+- **Runtime and application patterns:** closures, reference equality, the event loop, singletons, pub/sub, dependency injection, WebSockets, polling and server-sent events, and optimistic updates. Most are taught through a single authored policy trace; see [Practical concepts](./PRACTICAL_CONCEPTS.md) for what those traces establish. Debouncing and throttling now share the `timing-policies` journey, and caching, retries, and idempotency share the `reliable-requests` journey; both still trace authored policies rather than real timers or networks.
+- **React and databases:** three React reps (subscription cleanup, row keys, and ignoring stale results) run real rendering in the sandboxed frame, and three SQLite reps (a rolled-back transfer, a LEFT JOIN report, and an all-or-nothing restock) run real queries in a fresh in-memory database. They are practice in their tracks, not journeys, so they establish no independent or retained evidence.
 
 ## Track stages without a journey
 
-- **Problem solving, later stages:** prefix sums, merged intervals, a min-heap, subsets, and introductory dynamic programming are single reps. Linked lists have a lesson and three reps (reversal, sorted insertion, and removal) but no journey. Binary search tree insertion is not yet authored. See [Algorithms & Data Structures](./ALGORITHMS_DATA_STRUCTURES.md#next-expansion).
+- **Problem solving, later stages:** prefix sums, merged intervals, and subsets are single reps. Linked lists, binary search trees, heaps, and dynamic programming have journeys. See [Algorithms & Data Structures](./ALGORITHMS_DATA_STRUCTURES.md#next-expansion).
 - **Harder patterns and the two-part puzzle:** these Problem solving reps, which Pattern Recognition also uses, are applications without recall evidence.
 
 ## Assessment gaps

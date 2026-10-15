@@ -76,3 +76,70 @@ test('learner query binds parameters, returns empty rows, and releases failed st
     transfers: [[1, 4]],
   })
 })
+
+const runTask = (id, code) => runRep(code, id, () => new SQL.Database())
+const failedNames = (id, code) =>
+  runTask(id, code)
+    .filter(row => !row.passed)
+    .map(row => row.name)
+
+test('customer totals checks reject inner joins, counting joined rows, missing COALESCE, and WHERE filtering', () => {
+  const id = 'sqlite-customer-totals'
+  const query = sql => `function customerTotals(db, minimumCents) { return db.query(${JSON.stringify(sql)}, [minimumCents]) }`
+  const good =
+    'SELECT c.name, COUNT(o.id), COALESCE(SUM(o.cents), 0) AS total FROM customers c LEFT JOIN orders o ON o.customer_id = c.id GROUP BY c.id HAVING total >= ? ORDER BY total DESC, c.name ASC'
+  assert.deepEqual(failedNames(id, query(good)), [])
+  for (const mistake of [
+    good.replace('LEFT JOIN', 'JOIN'),
+    good.replace('COUNT(o.id)', 'COUNT(*)'),
+    good.replace('COALESCE(SUM(o.cents), 0)', 'SUM(o.cents)'),
+    good.replace(', c.name ASC', ''),
+    good.replace('HAVING total >= ?', 'HAVING total > ?'),
+  ])
+    assert.ok(failedNames(id, query(mistake)).length > 0, mistake)
+  // A query that changes data is caught even when its rows are right.
+  assert.ok(
+    failedNames(id, query(good).replace('return db.query', "db.run('DELETE FROM orders WHERE cents = 0'); return db.query")).length > 0,
+  )
+})
+
+test('restock checks reject per-delivery commits, replacing rows, string-built SQL, and open transactions', () => {
+  const id = 'sqlite-restock-upsert'
+  const upsert = sql => `function restock(db, deliveries) {
+    db.run('BEGIN')
+    try {
+      for (const d of deliveries) ${sql}
+      db.run('COMMIT')
+      return true
+    } catch {
+      db.run('ROLLBACK')
+      return false
+    }
+  }`
+  const good =
+    "{ db.run('UPDATE inventory SET units = units + ? WHERE sku = ?', [d.units, d.sku]); if (db.query('SELECT changes()')[0][0] === 0) db.run('INSERT INTO inventory (sku, units) VALUES (?, ?)', [d.sku, d.units]) }"
+  assert.deepEqual(failedNames(id, upsert(good)), [])
+  // SQLite tests CHECK on the row it tries to insert before resolving the conflict, so the plain upsert rejects a valid correction.
+  assert.deepEqual(
+    failedNames(
+      id,
+      upsert(
+        "db.run('INSERT INTO inventory (sku, units) VALUES (?, ?) ON CONFLICT(sku) DO UPDATE SET units = units + excluded.units', [d.sku, d.units])",
+      ),
+    ),
+    ['A correction down to zero'],
+  )
+  assert.ok(failedNames(id, upsert("db.run('INSERT OR REPLACE INTO inventory (sku, units) VALUES (?, ?)', [d.sku, d.units])")).length > 0)
+  assert.ok(
+    failedNames(
+      id,
+      upsert(
+        "{ db.run('UPDATE inventory SET units = units + ' + d.units + \" WHERE sku = '\" + d.sku + \"'\"); if (db.query('SELECT changes()')[0][0] === 0) db.run(\"INSERT INTO inventory (sku, units) VALUES ('\" + d.sku + \"', \" + d.units + ')') }",
+      ),
+    ).includes('A SKU containing a quote'),
+  )
+  const perDelivery = `function restock(db, deliveries) { try { for (const d of deliveries) ${good} return true } catch { return false } }`
+  assert.ok(failedNames(id, perDelivery).includes('A failing correction undoes the whole batch'))
+  const noRollback = upsert(good).replace("db.run('ROLLBACK')", '')
+  assert.ok(failedNames(id, noRollback).includes('A failing correction undoes the whole batch'))
+})

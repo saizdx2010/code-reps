@@ -13,6 +13,11 @@ import { domDepth, domGuides } from './review-dom.ts'
 import { dsaDepth, dsaGuides } from './review-dsa.ts'
 import { dsaAdvancedDepth, dsaAdvancedGuides } from './review-dsa-advanced.ts'
 import { dsaLinkedDepth, dsaLinkedGuides } from './review-dsa-linked.ts'
+import { dsaDpHeapDepth, dsaDpHeapGuides } from './review-dsa-dp-heap.ts'
+import { stringDepth, stringGuides } from './review-strings.ts'
+import { debugDepth, debugGuides } from './review-debug.ts'
+import { aiReviewDepth, aiReviewGuides } from './review-ai-review.ts'
+import { practicalJourneyDepth, practicalJourneyGuides } from './review-practical-journeys.ts'
 import { fluencyDepth, fluencyGuides } from './review-fluency.ts'
 import { foundationsDepth, foundationsGuides } from './review-foundations.ts'
 import { journeyPracticeDepth, journeyPracticeGuides } from './review-journey-practice.ts'
@@ -39,6 +44,11 @@ export const reviews: Review[] = [
   { depth: dsaDepth, guides: dsaGuides },
   { depth: dsaAdvancedDepth, guides: dsaAdvancedGuides },
   { depth: dsaLinkedDepth, guides: dsaLinkedGuides },
+  { depth: dsaDpHeapDepth, guides: dsaDpHeapGuides },
+  { depth: stringDepth, guides: stringGuides },
+  { depth: debugDepth, guides: debugGuides },
+  { depth: aiReviewDepth, guides: aiReviewGuides },
+  { depth: practicalJourneyDepth, guides: practicalJourneyGuides },
   { depth: validationDepth, guides: validationGuides },
   { depth: appDepth, guides: appGuides },
   { depth: domDepth, guides: domGuides },

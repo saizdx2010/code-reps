@@ -24,7 +24,7 @@ The frontend frame has a five-second response timeout, but browser-frame code do
 
 ### DOM and accessibility reps
 
-Reps that set `domPreview` (see `src/dom-reps.ts`) reuse the same frame, token, timeout, and cleanup, but check an authored attribute-and-behavior contract instead of the directory contract. A check supplies `props` and ordered `steps` (`type`, `click`, `focus`, `key`, `submit`, `mark`) and lists observations by `data-testid` (text, attributes, properties, label, `aria-describedby` targets, focus, element identity). Steps run against the learner's real DOM inside the sandbox; keys are dispatched as `keydown` events on the focused element and `submit` dispatches a submit event on the form.
+Reps that set `domPreview` (see `src/dom-reps.ts`) reuse the same frame, token, timeout, and cleanup, but check an authored attribute-and-behavior contract instead of the directory contract. A check supplies `props` and ordered `steps` (`type`, `click`, `focus`, `key`, `submit`, `mark`) and lists observations by `data-testid` (text, attributes, properties, label, `aria-describedby` targets, focus, element identity, the text of the element named by `aria-activedescendant` with `activeText`, and the options marked `aria-selected="true"` with `selectedTexts`). Steps run against the learner's real DOM inside the sandbox; keys are dispatched as `keydown` events on the focused element, with `shift: true` for Shift+Tab, and nothing moves focus for the learner. `type` sets the value through the native setter, so React-controlled inputs see the change too, and `submit` dispatches a submit event on the form.
 
 These checks establish the stated ARIA, focus, and behavior contract only. They do not prove screen-reader announcements, visual design, or native key handling in other browsers; every rep says so and lists manual review steps. The checks frame is rendered offscreen (not `display:none`) because browsers cannot focus elements in a non-rendered frame.
 
@@ -66,9 +66,9 @@ Async practice with deterministic local fixtures is described in [Content author
 
 The checks establish that the learner's cases separate the supplied variants from the correct one. They do not establish that a table is complete, that unsupplied faults would be caught, or that expected values were derived independently; the reps say so and ask the learner to name a version their table would still accept. The repair rep is checked behaviorally, and its reasoning stays self-reviewed. See [Find the bug](./FIND_THE_BUG.md) for how to author more journeys of this kind.
 
-## One React task
+## React tasks
 
-`react-channel-counter` is the first and only React rep. It uses the existing
+`react-channel-counter`, `react-row-keys`, and `react-stale-request` are the React reps. They use the existing
 sandboxed frame and review flow. Learners write a single TSX component with the
 injected `React` global (no imports). The installed React and React DOM packages
 are bundled locally as a production IIFE by `scripts/react-frame-bundle.mjs`;
@@ -77,9 +77,11 @@ No CDN or network resource is requested by the frame, and the runtime text is
 outside the initial app chunk.
 
 The deterministic source exposes `subscribe(channel, listener)` returning a
-removal function. React checks flush rendering and effects around each event,
-click, props replacement, and unmount. They observe DOM text and active registration
-counts, including zero after unmount. This establishes behavior under this harness,
+removal function, and `request(query, done)`, which records a request that a check
+answers later with a `respond` step, in any order. React checks flush rendering and
+effects around each event, response, click, props replacement, and unmount. They
+observe DOM text, element identity across props changes, checkbox state, active
+registration counts, including zero after unmount, and the number of requests made. This establishes behavior under this harness,
 not useEffect usage, real timer scheduling, network behavior, accessible announcements,
 or disconnected-browser operation. Effect structure and dependencies are self-reviewed.
 
