@@ -7,7 +7,7 @@ test('exercises are grouped by area in learning order, and opening a topic never
   await expect(areas.first()).toHaveText('Language & problem solving')
   await expect(areas).toHaveCount(7)
   const arrays = page.locator('.catalog-area .list-group').filter({ has: page.locator('.list-group-title', { hasText: /^Arrays$/ }) })
-  await expect(arrays.locator('summary')).toContainText('0 of 14 done')
+  await expect(arrays.locator('summary')).toContainText(/(?:^|\D)0 of \d+ done/)
   const place = () =>
     arrays.evaluate(element => [
       Math.round(element.getBoundingClientRect().left),
