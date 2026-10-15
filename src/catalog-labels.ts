@@ -100,6 +100,7 @@ export const catalogAreas: { title: string; topics: string[] }[] = [
       'Ranges and linked structures',
       'Recursion',
       'Trees and graphs',
+      'Binary search trees',
       'Grids',
       'Backtracking and dynamic programming',
       'Harder patterns',
