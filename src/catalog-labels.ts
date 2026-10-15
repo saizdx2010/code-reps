@@ -55,7 +55,13 @@ const practicalTopics: Record<string, string> = {
   'optimistic-balance': 'Caching and retries',
 }
 const problemStages = paths.find(path => path.id === 'algorithms-data-structures')!.stages
-const lookupReps = new Set(['most-frequent-number', 'first-unique-character', 'first-duplicate-label', 'count-statuses'])
+const lookupReps = new Set([
+  'most-frequent-number',
+  'first-unique-character',
+  'first-duplicate-label',
+  'count-statuses',
+  'first-pair-to-target',
+])
 
 /** One primary topic per rep; authored categories and learner records stay unchanged. */
 export function catalogTopic(rep: Pick<RepSummary, 'id' | 'category'>): string {

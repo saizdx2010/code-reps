@@ -179,6 +179,14 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'binary-search-trees',
+    title: 'Search ordered trees',
+    guided: 'bst-search-path',
+    independent: 'bst-latest-at-or-before',
+    recall: 'bst-check-order',
+    delayDays: 3,
+  },
+  {
     id: 'grids',
     title: 'Move through a grid',
     guided: 'grid-open-neighbours',

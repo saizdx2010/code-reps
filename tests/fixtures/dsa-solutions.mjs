@@ -125,4 +125,14 @@ Object.assign(dsaSolutions, {
     'type TreeNode = { value: number; children: TreeNode[] }\n\nfunction countTreeLeaves(root: TreeNode | null): number { if (!root) return 0; if (!root.children.length) return 1; return root.children.reduce((total, child) => total + countTreeLeaves(child), 0) }',
   'graph-incoming-counts':
     'function incomingCounts(graph: number[][]): number[] { const counts = graph.map(() => 0); graph.forEach(list => list.forEach(next => { counts[next]++ })); return counts }',
+  'list-insert-sorted':
+    'function insertSorted(head, value) { const values = []; for (let p = head; p; p = p.next) values.push(p.value); let i = 0; while (i < values.length && values[i] <= value) i++; values.splice(i, 0, value); return values.reduceRight((next, v) => ({ value: v, next }), null) }',
+  'list-remove-value':
+    'function removeValue(head, value) { if (head === null) return null; const rest = removeValue(head.next, value); return head.value === value ? rest : { value: head.value, next: rest } }',
+  'bst-search-path':
+    'function searchPath(root, target) { const visit = (node, path) => node === null ? { path, found: false } : node.value === target ? { path: [...path, node.value], found: true } : visit(target < node.value ? node.left : node.right, [...path, node.value]); return visit(root, []) }',
+  'bst-latest-at-or-before':
+    'function latestAtOrBefore(root, time) { const values = []; const walk = node => { if (!node) return; walk(node.left); values.push(node.value); walk(node.right) }; walk(root); const earlier = values.filter(v => v <= time); return earlier.length ? earlier[earlier.length - 1] : null }',
+  'bst-check-order':
+    'function isOrdered(root) { const values = []; const walk = node => { if (!node) return; walk(node.left); values.push(node.value); walk(node.right) }; walk(root); return values.every((v, i) => i === 0 || values[i - 1] < v) }',
 })

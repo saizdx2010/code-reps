@@ -58,6 +58,16 @@ export const dsaLessonDepth: Record<string, LessonDepth> = {
     answer:
       'Return 0 when !Array.isArray(value), and 1 + Math.max(0, ...value.map(depth)) otherwise. The result for [1, [2, []]] is 3: the outer list, the inner list, and the empty list each add one level.',
   },
+  'linked-lists': {
+    title: 'An append without a tail pointer loses the copy',
+    code: '// Draft copy of 1 -> 2 -> 3:\nlet result = null\nfor (let current = head; current !== null; current = current.next) {\n  result = { value: current.value, next: result }\n}\nreturn result',
+    reasoning:
+      'Each new node is placed in front of the result built so far, so the last value visited ends up first. The draft returns 3 -> 2 -> 1: a correct reversal, but not a copy. Keeping the original order means attaching each new node after the last one, which needs a reference to that last node. A placeholder node before the head lets the very first append use the same code as every other.',
+    challenge:
+      'Repair the draft so it returns a fresh copy in the original order without walking the copy again for each value. Predict the result for an empty list. Then explain why returning head itself would pass a value comparison but break the contract. Discuss before revealing the answer.',
+    answer:
+      'Start with const placeholder = { value: 0, next: null } and let tail = placeholder. For each input node, create { value: current.value, next: null }, set tail.next to it, and move tail to it. Return placeholder.next, which is null for an empty list. Each value is copied once: O(n) time and O(n) storage. Returning head gives equal values but shares every node with the caller, so a later change to either list shows up in both. Checks compare values, so fresh nodes remain self-reviewed.',
+  },
   trees: {
     title: 'A shorter sibling must not replace the deepest route',
     code: '//     6\n//    / \\\n//   2   9\n//   |\n//   4\n// Draft: start best=0; for each child set best=depth(child);\n// then return 1 + best.',
@@ -67,6 +77,16 @@ export const dsaLessonDepth: Record<string, LessonDepth> = {
       'Repair the update without changing the children. Predict maximum node-count depth for null and for a root alone. Then explain how a queue-based alternative would count levels and what happens to recursive stack space on a chain of n nodes. Discuss before revealing the answer.',
     answer:
       'Use best = Math.max(best, depth(child)); return 1 + best for a real node, and return 0 for null. The diagram returns 3; null returns 0; a lone root returns 1. A BFS alternative increments a count after each complete nonempty level, not after each individual node. Both traverse n nodes in O(n) time. Recursion uses O(h) call frames, which becomes O(n) on a chain and may exceed the runtime stack; an explicit stack avoids recursive calls. Queue storage depends on the widest level when old entries are reclaimed. This discussion is self-reviewed, not evidence of independent coding.',
+  },
+  'binary-search-trees': {
+    title: 'Checking only children accepts an invalid tree',
+    code: '//      5\n//     / \\\n//    3   8\n//     \\\n//      6\n// Draft: valid if left.value < node.value < right.value at every node.',
+    reasoning:
+      'At node 5, the children 3 and 8 are in order. At node 3, its right child 6 is larger, which is also in order. The draft accepts the tree, but 6 is in the left subtree of 5, so a search for 6 would go right from 5 and never find it. Every ancestor adds a limit: moving left from a node sets an upper limit and moving right sets a lower one. A correct check compares each node with all of those limits, not only with its parent.',
+    challenge:
+      'Describe the allowed range for each of the four nodes and find the first one outside its range. Then predict what an in-order traversal of the tree produces and explain how that sequence also reveals the problem. Discuss before revealing the answer.',
+    answer:
+      'The ranges are 5: (-∞, ∞), 3: (-∞, 5), 6: (3, 5), and 8: (5, ∞). 6 is outside (3, 5), so the tree is invalid. An in-order traversal gives 3, 6, 5, 8; a valid tree would be strictly increasing, and 6 followed by 5 is a decrease. Both checks visit each node once: O(n) time and O(h) stack space for a tree of height h. This discussion is self-reviewed, not evidence of independent coding.',
   },
   graphs: {
     title: 'One traversal cannot count disconnected groups',

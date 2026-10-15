@@ -114,6 +114,8 @@ The Trail has one root, Foundations (`typescript`), and four tracks: Problem sol
 
 `src/dsa-advanced-reps.ts` owns the guided prefix-sum, interval, linked-list, heap, subset, and dynamic-programming reps. Their depth and reflection guides live in `src/review-dsa-advanced.ts`. Register its exports alongside the existing DSA exports in `src/rep-sources.ts`, `src/rep-depth.ts`, and `src/learning.ts`. Independent references live in `tests/fixtures/dsa-solutions.mjs`; `tests/dsa-advanced.test.mjs` checks common mistakes and the taught heap repair.
 
+`src/dsa-linked-reps.ts` owns linked-list insertion and removal and the binary search tree journey, with reviews in `src/review-dsa-linked.ts` and mistake checks in `tests/dsa-linked.test.mjs`. Its tree reps use `{value, left, right}` nodes, unlike the `{value, children}` trees elsewhere.
+
 The linked-list contract requires fresh output nodes. Value comparisons and input-mutation checks cannot establish output identity; fresh allocation remains a learner self-review point. The authoring test checks reference-node identity separately. These guided reps alone do not establish independent or retained fluency.
 
 ## Local asynchronous function checks

@@ -110,9 +110,9 @@ export const foundationReps: Rep[] = [
     starter: 'function makeGreeting(name: string): string {\n  // Create greeting with const and message with let.\n  return ""\n}\n',
     functionName: 'makeGreeting',
     hints: [
-      'Text values go inside quotes.',
-      'Use const greeting = "Hello, " and let message = greeting + name.',
-      'Return message after assigning it.',
+      'Text values go inside quotes. The greeting ends with a space after the comma.',
+      'const names a value you will not reassign; let names one you might. The + operator joins two strings.',
+      'Build message from greeting followed by name, then return message itself.',
     ],
     checks: [
       { name: 'Greets Ada', input: ['Ada'], expected: 'Hello, Ada' },
@@ -136,9 +136,9 @@ export const foundationReps: Rep[] = [
     starter: 'function describePerson(name: string, age: number, active: boolean): string {\n  // Use all three values.\n  return ""\n}\n',
     functionName: 'describePerson',
     hints: [
-      'The output must be one string.',
-      'A template string uses backticks and ${value}.',
-      'Try return `${name} is ${age}. Active: ${active}`.',
+      'The output must be one string, with the same spaces and punctuation as the format.',
+      'A template string uses backticks, and ${value} places a value inside the text.',
+      'Place name, age, and active in that order. Numbers and booleans become text, so 0 and false still appear.',
     ],
     checks: [
       { name: 'Describes Ada', input: ['Ada', 28, true], expected: 'Ada is 28. Active: true' },
@@ -163,9 +163,9 @@ export const foundationReps: Rep[] = [
       'type Person = { name: string; age: number }\n\nfunction introduce(name: string, age: number): string {\n  // Create a person object, then read its properties.\n  return ""\n}\n',
     functionName: 'introduce',
     hints: [
-      'Use const person: Person = { name, age }.',
-      'Read properties with person.name and person.age.',
-      'Return `${person.name} is ${person.age} years old`.',
+      'Create the object from the two parameters and annotate it with the Person type from the starter.',
+      'Read each value back from the object with dot notation, not from the parameters.',
+      'Match the format exactly: the name, the word is, the age, then years old, separated by single spaces.',
     ],
     checks: [
       { name: 'Introduces Ada', input: ['Ada', 28], expected: 'Ada is 28 years old' },
@@ -575,7 +575,8 @@ export const foundationReps: Rep[] = [
       { term: 'Capacity', meaning: 'the maximum number of items in one batch' },
       { term: 'Remainder', meaning: 'items left after full batches' },
     ],
-    planPrompt: 'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    planPrompt:
+      'How many batches do a total of 0, a total equal to capacity, and one item more than capacity produce? Write the labels for 7 items with capacity 3.',
     starter: "function batchLabels(total: number, capacity: number): string[] {\n  throw new Error('Not implemented')\n}\n",
     functionName: 'batchLabels',
     preserveInput: true,
@@ -619,7 +620,8 @@ export const foundationReps: Rep[] = [
       { term: 'Consecutive', meaning: 'next to each other with no gap' },
       { term: 'Threshold', meaning: 'a value that separates two categories' },
     ],
-    planPrompt: 'Write the expected result for an ordinary input and a boundary input. Which contract rules must your plan preserve?',
+    planPrompt:
+      'What happens to the current run at a reading equal to limit? Predict both counts for an empty list and for a list that ends during a run.',
     starter:
       "function inspectionSummary(readings: number[], limit: number): { alerts: number; longestRun: number } {\n  throw new Error('Not implemented')\n}\n",
     functionName: 'inspectionSummary',

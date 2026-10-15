@@ -12,6 +12,7 @@ import { coreDepth, coreGuides } from './review-core.ts'
 import { domDepth, domGuides } from './review-dom.ts'
 import { dsaDepth, dsaGuides } from './review-dsa.ts'
 import { dsaAdvancedDepth, dsaAdvancedGuides } from './review-dsa-advanced.ts'
+import { dsaLinkedDepth, dsaLinkedGuides } from './review-dsa-linked.ts'
 import { fluencyDepth, fluencyGuides } from './review-fluency.ts'
 import { foundationsDepth, foundationsGuides } from './review-foundations.ts'
 import { journeyPracticeDepth, journeyPracticeGuides } from './review-journey-practice.ts'
@@ -37,6 +38,7 @@ export const reviews: Review[] = [
   { depth: practicalRepDepth, guides: practicalGuides },
   { depth: dsaDepth, guides: dsaGuides },
   { depth: dsaAdvancedDepth, guides: dsaAdvancedGuides },
+  { depth: dsaLinkedDepth, guides: dsaLinkedGuides },
   { depth: validationDepth, guides: validationGuides },
   { depth: appDepth, guides: appGuides },
   { depth: domDepth, guides: domGuides },
