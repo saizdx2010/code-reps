@@ -1,12 +1,15 @@
 import { repTitle } from './rep-index.ts'
 import { formatDate, plural } from './ui-copy.ts'
-import { InfoNote, PageHeader, StatusChip } from './Layout'
+import { InfoNote, ListGroup, ListRow, PageHeader, StatusChip } from './Layout'
+import { Icon } from './Icon'
+import { withoutGoal } from './practice-actions'
 import { profileBadges } from './badges'
 import type { Badge } from './badges'
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import type { paths } from './path'
 import { profileProgress } from './profile-progress'
 import type { PortableRecord } from './portability'
+import type { BackupPreview, RestoreFlow } from './backup'
 import { Button } from './Button'
 import { stageLabels } from './learning'
 import type { JourneyProgress } from './learning'
@@ -43,68 +46,168 @@ type Props = {
   onExport: () => void
   onImport: (file: File) => void
   transferMessage: string
+  transferTone: 'success' | 'error'
+  restore: RestoreFlow
   serverReady: boolean
 }
 
 export function ProgressPage(props: Props) {
-  const { profileName, history, now, onManageProfiles, onOpenPath, progress, recommendation, dueReviews, onOpenRep, onReviewRep } = props
+  const { profileName, history, now, onOpenPath, progress, recommendation, dueReviews, onOpenRep, onReviewRep } = props
   const summary = profileProgress(history, new Date(now))
   const badges = profileBadges(history, new Date(now))
   const earned = badges.filter(badge => badge.earned)
   const open = (badge: Badge) =>
     badge.kind === 'path' && badge.pathId ? onOpenPath(badge.pathId as (typeof paths)[number]['id']) : onOpenRep(badge.repId)
-  const independentSkills = progress.filter(item => item.independent).length
-  const retainedSkills = progress.filter(item => item.retained).length
+  // One ladder: every journey sits on exactly one rung, so nothing is counted twice.
+  const rungs = ladder(progress)
+  const nextRecall = progress
+    .filter(item => item.recallAt && !item.retained && !item.recallDue)
+    .map(item => item.recallAt!)
+    .sort((a, b) => a - b)[0]
+  const [firstReview, ...moreReviews] = dueReviews
+  const groups = [
+    {
+      title: 'In progress',
+      // Due recall first, then the journeys with the most recent evidence.
+      items: progress
+        .filter(item => !item.retained && (item.guided || item.independent))
+        .sort((a, b) => Number(b.recallDue) - Number(a.recallDue) || lastEvidence(b) - lastEvidence(a)),
+      open: true,
+    },
+    { title: 'Retained', items: progress.filter(item => item.retained), open: false },
+    { title: 'Not started', items: progress.filter(item => !item.guided && !item.independent && !item.retained), open: false },
+  ].filter(group => group.items.length)
   return (
     <main className="progress-main">
       <PageHeader
-        title={profileName}
-        eyebrow="Your local learning profile"
-        description="Your practice, milestones, and evidence of what stayed with you."
-        actions={
-          <>
-            <SkillsSwitch view="progress" />
-            {onManageProfiles && <Button onClick={onManageProfiles}>Manage profiles</Button>}
-          </>
-        }
+        title="Skills"
+        eyebrow={`${profileName} · local profile`}
+        description="What you have practiced, what stayed with you, and what is due."
+        actions={<SkillsSwitch view="progress" />}
       />
-      {summary.completedReps === 0 && (
-        <p>
-          Welcome to your progress. Finish your first rep to start filling this in.
-          {recommendation && (
-            <>
-              {' '}
-              <Button variant="text" onClick={recommendation.open}>
-                {recommendation.label}
-              </Button>
-            </>
+      {props.restore.receipt && (
+        <div className="feedback-note restore-receipt" data-state="success" role="status">
+          <Icon name="check" />
+          <span className="restore-receipt-text">{props.restore.receipt}</span>
+          <Button variant="text" onClick={props.restore.onDismissReceipt}>
+            Dismiss
+          </Button>
+        </div>
+      )}
+      {(firstReview || recommendation) && (
+        <section className="progress-next" aria-labelledby="progress-next-title">
+          {firstReview ? (
+            <StatusChip tone="attention">Review due</StatusChip>
+          ) : (
+            <span className="home-label">{summary.completedReps ? 'Next on your trail' : 'Your first rep'}</span>
           )}
-        </p>
+          <div className="progress-next-text">
+            <h2 id="progress-next-title">{(firstReview ?? recommendation)!.title}</h2>
+            <p>{withoutGoal((firstReview ?? recommendation)!.reason)}</p>
+          </div>
+          <Button variant="primary" className="progress-next-action" onClick={(firstReview ?? recommendation)!.open}>
+            {(firstReview ?? recommendation)!.label}
+            <Icon name="arrow" />
+          </Button>
+          {moreReviews.length > 0 && (
+            <details className="progress-more-reviews">
+              <summary>
+                {moreReviews.length} more {plural(moreReviews.length, 'review')} ready
+              </summary>
+              <ul className="list-rows">
+                {moreReviews.map(review => (
+                  <ListRow key={review.repId} title={review.title} meta={review.reason} onOpen={review.open} />
+                ))}
+              </ul>
+            </details>
+          )}
+        </section>
       )}
       <dl className="progress-summary profile-summary" aria-label="Practice summary">
-        <SummaryItem label="Completed reps" value={summary.completedReps} empty="Finish a rep by passing its checks." />
-        <SummaryItem label="Current streak" value={summary.currentStreak} unit="day" empty="Finish a rep to start your streak." />
-        <SummaryItem label="Longest streak" value={summary.longestStreak} unit="day" empty="Finish a rep to start your streak." />
-        <SummaryItem label="Practice days" value={summary.practiceDays} empty="Finish a rep to record a practice day." />
-        <SummaryItem label="Reviews ready" value={dueReviews.length} empty="Finish a rep; reviews become ready after a break." />
-        <SummaryItem
-          label="Independent skills"
-          value={independentSkills}
-          empty="Solve a related rep without hints after guided practice."
-        />
-        <SummaryItem label="Retained skills" value={retainedSkills} empty="Solve a fresh recall rep without hints after a break." />
+        <div className="progress-stat">
+          <dd>{summary.completedReps}</dd>
+          <dt>
+            Completed reps
+            <small>
+              {summary.completedReps
+                ? `${summary.attempts} ${plural(summary.attempts, 'attempt')} in all`
+                : 'Finish a rep by passing its checks.'}
+            </small>
+          </dt>
+        </div>
+        <div className="progress-stat">
+          <dd>{dueReviews.length}</dd>
+          <dt>
+            Reviews ready
+            <small>
+              {dueReviews.length
+                ? 'Start the first one at the top of this page.'
+                : nextRecall
+                  ? `Next one opens ${formatDate(nextRecall)}.`
+                  : summary.completedReps
+                    ? 'None scheduled yet.'
+                    : 'Reviews open a few days after a rep.'}
+            </small>
+          </dt>
+        </div>
+        <div className="progress-days">
+          <dd>{summary.practiceDays}</dd>
+          <dt>
+            Practice days
+            <small>
+              {summary.currentStreak
+                ? `Streak ${summary.currentStreak} ${plural(summary.currentStreak, 'day')} · longest ${summary.longestStreak}`
+                : summary.longestStreak
+                  ? `Practice today to start a new streak. Longest: ${summary.longestStreak} ${plural(summary.longestStreak, 'day')}.`
+                  : 'Finish a rep to record a practice day.'}
+            </small>
+          </dt>
+          <PracticeCalendar history={history} now={now} />
+        </div>
+        <div className="skill-ladder">
+          <dt>
+            Skill ladder
+            <small>Each of the {progress.length} journey skills on its highest rung</small>
+          </dt>
+          <dd>
+            <span className="skill-ladder-bar" aria-hidden="true">
+              {rungs.map(rung => (rung.count ? <span key={rung.id} data-rung={rung.id} style={{ flexGrow: rung.count }} /> : null))}
+            </span>
+            <ul className="skill-ladder-legend" aria-label="Skills on each rung">
+              {rungs.map(rung => (
+                <li key={rung.id} data-rung={rung.id}>
+                  <span>{rung.label}</span>
+                  <b>{rung.count}</b>
+                </li>
+              ))}
+            </ul>
+          </dd>
+        </div>
       </dl>
       <InfoNote>
+        <p>
+          The ladder goes Not started, Guided (a guided rep finished, hints allowed), Independent (a related rep solved without hints after
+          the guided one), then Retained (a fresh recall rep solved without hints after a break). Each skill is counted once, on its highest
+          rung. Checks show behavior; you review your writing. These records are not an overall coding score.
+        </p>
         <p>
           Finish a rep to record a practice day. If you practiced yesterday, your streak stays active through today. Breaks are welcome;
           your milestones stay.
         </p>
-        <p>
-          Badges count finished reps, including work with hints. To record an independent skill, solve a related rep without hints after
-          guided practice. To record retention, solve a fresh recall rep without hints after a break. Checks show behavior; you review your
-          writing. These records are not an overall coding score.
-        </p>
       </InfoNote>
+      <h2 className="progress-skills-title">Your skill journeys</h2>
+      <div className="journey-groups">
+        {groups.map(group => (
+          // With nothing started yet, the journeys are the page, so that group starts open.
+          <ListGroup key={group.title} title={group.title} count={group.items.length} open={group.open || groups.length === 1}>
+            {group.items.map(item => (
+              <li key={item.journey.id}>
+                <JourneyEvidence progress={item} onOpenRep={onOpenRep} onReviewRep={onReviewRep} />
+              </li>
+            ))}
+          </ListGroup>
+        ))}
+      </div>
       <section className="profile-badges" aria-labelledby="profile-badges-title">
         <h2 id="profile-badges-title">Badges earned</h2>
         <p className="badge-count" role="status">
@@ -120,59 +223,84 @@ export function ProgressPage(props: Props) {
           <p className="badge-empty">No badges yet. Finish one rep to earn the first.</p>
         )}
       </section>
-      {dueReviews.length > 0 && (
-        <details className="progress-reviews">
-          <summary>Choose a review · {dueReviews.length} ready</summary>
-          <ul>
-            {dueReviews.map(review => (
-              <li key={review.repId}>
-                <div>
-                  <strong>{review.title}</strong>
-                  <p>{review.reason}</p>
-                </div>
-                <button type="button" className="text-button" onClick={review.open}>
-                  {review.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
-      <h2 className="progress-skills-title">Your skill journeys</h2>
-      {progress.map(item => (
-        <JourneyEvidence key={item.journey.id} progress={item} onOpenRep={onOpenRep} onReviewRep={onReviewRep} />
-      ))}
-      <p className="progress-quiet-links">
-        Also:{' '}
+      <nav className="progress-quiet-links" aria-label="More ways to practice">
         <Button variant="text" onClick={() => goToView('plan')}>
           Plan a practice week
-        </Button>{' '}
+          <Icon name="arrow" />
+        </Button>
         <Button variant="text" onClick={() => goToView('assessment')}>
           Take the self-assessment
+          <Icon name="arrow" />
         </Button>
-      </p>
+      </nav>
       <BackupSection
         serverReady={props.serverReady}
         onExport={props.onExport}
         onImport={props.onImport}
         transferMessage={props.transferMessage}
+        transferTone={props.transferTone}
+        restore={props.restore}
       />
     </main>
   )
 }
 
-/** One summary figure, with a hint for reaching it while it is still zero. */
-function SummaryItem({ label, value, unit, empty }: { label: string; value: number; unit?: string; empty: string }) {
+const lastEvidence = (item: JourneyProgress) =>
+  Math.max(0, ...[item.guided, item.independent, item.retained].map(record => (record ? Date.parse(record.completedAt) : 0)))
+
+/** Each journey on its highest rung, in ladder order. */
+function ladder(progress: JourneyProgress[]) {
+  const count = (stage: JourneyProgress['stage']) => progress.filter(item => item.stage === stage).length
+  // Highest rung first; the ids are the saved evidence stages, so they come from the shared label map.
+  return (Object.keys(stageLabels) as (keyof typeof stageLabels)[]).reverse().map(stage => ({
+    id: stage,
+    label: stageLabels[stage],
+    count: count(stage),
+  }))
+}
+
+/**
+ * Twelve weeks of practice days, Monday to Sunday down each column. A day with a hint-free completion is darker.
+ * Decorative grid with a text summary: the counts above carry the meaning.
+ */
+function PracticeCalendar({ history, now }: { history: PortableRecord[]; now: number }) {
+  const key = (date: Date) => `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
+  const days = new Map<string, 'any' | 'clean'>()
+  for (const record of history) {
+    const date = new Date(record.completedAt)
+    if (!Number.isFinite(date.getTime()) || date.getTime() > now) continue
+    const day = key(date)
+    if (record.hintCount === 0) days.set(day, 'clean')
+    else if (!days.has(day)) days.set(day, 'any')
+  }
+  const today = new Date(now)
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate() - ((today.getDay() + 6) % 7) - 7 * 11)
+  const weeks = Array.from({ length: 12 }, (_, week) =>
+    Array.from({ length: 7 }, (_, weekday) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + week * 7 + weekday)),
+  )
+  const recent = weeks.flat().filter(date => days.has(key(date))).length
   return (
-    <div>
-      <dt>
-        {label}
-        <small>{value === 0 ? empty : ''}</small>
-      </dt>
-      <dd>
-        {value}
-        {unit && <small> {plural(value, unit)}</small>}
-      </dd>
+    <div className="practice-calendar">
+      <div className="practice-calendar-grid" aria-hidden="true">
+        {weeks.map((week, index) => (
+          <span key={index}>
+            {week.map(date => (
+              <i key={key(date)} data-day={date > today ? 'future' : (days.get(key(date)) ?? 'none')} />
+            ))}
+          </span>
+        ))}
+      </div>
+      <small className="practice-calendar-key">
+        <span>
+          {recent} {plural(recent, 'day')} in 12 weeks
+        </span>
+        <span>
+          <i data-day="clean" /> hint-free
+        </span>
+        <span>
+          <i data-day="any" /> with hints
+        </span>
+      </small>
     </div>
   )
 }
@@ -216,7 +344,7 @@ function JourneyEvidence({ progress, onOpenRep, onReviewRep }: JourneyProps) {
   const markers = [
     ['Guided', Boolean(guided)],
     ['Independent', Boolean(independent)],
-    ['Recall', Boolean(retained)],
+    ['Retained', Boolean(retained)],
   ] as const
   const guidedHints = guided?.hintCount ? ` with ${guided.hintCount} ${plural(guided.hintCount, 'hint')}` : ' without hints'
   const guidedNote = guided ? `Completed ${formatDate(guided.completedAt)}${guidedHints}` : 'Start with a guided rep.'
@@ -234,10 +362,20 @@ function JourneyEvidence({ progress, onOpenRep, onReviewRep }: JourneyProps) {
           <h2 id={`progress-${journey.id}`}>{journey.title}</h2>
           <p>{status}</p>
         </div>
+        {/* A three-rung mini ladder: filled rungs are recorded; a due recall rung is ringed. */}
         <span className="journey-markers" aria-label={stageLabels[stage]}>
-          {markers.map(([label, complete]) => (
-            <span key={label} role="img" aria-label={`${label}: ${complete ? 'recorded' : 'not recorded'}`} data-complete={complete}>
-              {label}
+          {markers.map(([label, complete], index) => (
+            <span
+              key={label}
+              role="img"
+              aria-label={`${label}: ${complete ? 'recorded' : index === 2 && recallDue ? 'due now' : 'not recorded'}`}
+              data-complete={complete}
+              data-due={index === 2 && recallDue ? true : undefined}
+            >
+              <span className="journey-rung">
+                <Icon name={complete ? 'check' : index === 2 ? 'repeat' : 'circle'} />
+              </span>
+              <small>{label}</small>
             </span>
           ))}
         </span>
@@ -291,21 +429,34 @@ function JourneyEvidence({ progress, onOpenRep, onReviewRep }: JourneyProps) {
   )
 }
 
-type BackupProps = { serverReady: boolean; onExport: () => void; onImport: (file: File) => void; transferMessage: string }
+type BackupProps = {
+  serverReady: boolean
+  onExport: () => void
+  onImport: (file: File) => void
+  transferMessage: string
+  transferTone: 'success' | 'error'
+  restore: RestoreFlow
+}
 
-function BackupSection({ serverReady, onExport, onImport, transferMessage }: BackupProps) {
+function BackupSection({ serverReady, onExport, onImport, transferMessage, transferTone, restore }: BackupProps) {
   const importRef = useRef<HTMLInputElement | null>(null)
+  const panelRef = useRef<HTMLDetailsElement | null>(null)
+  const { pending } = restore
+  // A preview or message opens the section; clearing them leaves it as the learner set it.
+  useEffect(() => {
+    if ((pending || transferMessage) && panelRef.current) panelRef.current.open = true
+  }, [pending, transferMessage])
   return (
-    <details className="local-data">
+    <details className="local-data" ref={panelRef}>
       <summary>Back up or restore practice</summary>
       <section aria-labelledby="local-data-title">
         <div>
           <h2 id="local-data-title">Your work stays yours</h2>
           <p>
-            {serverReady ? 'Progress is saved on this laptop.' : 'Progress is saved in this browser.'} Download a practice backup to carry
-            it elsewhere. Use Profiles to export a full profile.
+            {serverReady ? 'Progress is saved on this laptop.' : 'Progress is saved in this browser.'} A practice backup holds your
+            attempts, drafts, and notes. Importing one shows what it adds before anything merges, and your existing drafts stay as they are.
+            To copy a whole profile instead, use Manage profiles.
           </p>
-          <p>Import adds completed attempts and fills empty drafts. Existing drafts stay as they are.</p>
         </div>
         <div className="local-data-actions">
           <button type="button" onClick={onExport}>
@@ -326,14 +477,51 @@ function BackupSection({ serverReady, onExport, onImport, transferMessage }: Bac
             }}
           />
         </div>
+        {pending && (
+          <div className="restore-preview" role="group" aria-labelledby="restore-preview-title">
+            <h3 id="restore-preview-title">Check before merging</h3>
+            <p className="restore-file">
+              <Icon name="check" />
+              {pending.fileName} is a valid practice backup.
+            </p>
+            <ul>
+              <li>Into profile: {restore.profileName}</li>
+              <li>{attemptsLine(pending)}</li>
+              {pending.newNotes > 0 && (
+                <li>
+                  Adds {pending.newNotes} {plural(pending.newNotes, 'note')}
+                </li>
+              )}
+              <li>
+                Fills {pending.draftsToFill} empty {plural(pending.draftsToFill, 'draft')}; your existing drafts stay as they are
+              </li>
+            </ul>
+            <div className="restore-actions">
+              <Button variant="primary" onClick={restore.onConfirm}>
+                Merge into {restore.profileName}
+              </Button>
+              <Button onClick={restore.onCancel}>Cancel</Button>
+            </div>
+          </div>
+        )}
         {transferMessage && (
-          <p className="transfer-message" role="status">
+          <p className="transfer-message feedback-note" data-state={transferTone} role={transferTone === 'error' ? 'alert' : 'status'}>
+            <Icon name={transferTone === 'error' ? 'alert' : 'check'} />
             {transferMessage}
+            {transferTone === 'error' && !/kept/.test(transferMessage) && ' Nothing was changed.'}
           </p>
         )}
       </section>
     </details>
   )
+}
+
+function attemptsLine({ attempts, newAttempts }: BackupPreview) {
+  const noun = plural(attempts, 'attempt')
+  if (!attempts) return 'Has no completed attempts'
+  if (!newAttempts) return `Adds no attempts; ${attempts === 1 ? 'its one completed attempt is' : `all ${attempts} are`} already here`
+  if (newAttempts === attempts) return `Adds ${attempts === 1 ? 'its' : `all ${attempts}`} completed ${noun}`
+  return `Adds ${newAttempts} of its ${attempts} completed ${noun}; the rest are already here`
 }
 
 function BadgeArt({ kind }: { kind: Badge['kind'] }) {

@@ -28,7 +28,7 @@ test('React TSX renders, checks cleanup, and completes the review flow', async (
     .fill(
       'The functional update adds to current state. The effect returns unsubscribe and depends on channel and source, so switching removes the old listener and unmount removes the final one.',
     )
-  await page.getByRole('button', { name: 'Review', exact: true }).click()
+  await page.getByRole('button', { name: 'Finish', exact: true }).click()
   await page.getByRole('button', { name: 'Complete rep', exact: true }).click()
   await expect(page.getByText('Your attempt is saved in the Journal.', { exact: true })).toBeVisible()
 })

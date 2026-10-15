@@ -2,6 +2,8 @@ import type { KeyboardEvent, MouseEvent } from 'react'
 import type { RepSummary } from './catalog-index'
 import { Icon } from './Icon'
 import { StatusChip } from './Layout'
+import { repCurriculumRole } from './curriculum'
+import { effortRange } from './rep-guidance'
 import { repLevelLabel } from './rep-levels.ts'
 import { skillSummariesForRep as skillsForRep } from './skill-index'
 import { statusTone } from './ui-status'
@@ -25,6 +27,7 @@ export function WorkspaceHeader({
   saveState,
   focusMode,
   onLibrary,
+  backLabel,
   onGlossary,
   onFocusMode,
   onReset,
@@ -35,23 +38,45 @@ export function WorkspaceHeader({
   saveState: string
   focusMode: boolean
   onLibrary: () => void
+  /** The lesson this rep was opened from; the back link returns there instead of the Library. */
+  backLabel?: string
   onGlossary: () => void
   onFocusMode: () => void
   onReset: () => void
   openLesson: (id: string) => void
 }) {
   const skills = skillsForRep(rep.id)
+  // The trail's role travels with the rep, so a recall or independent rep never looks like a first try.
+  const role = repCurriculumRole(rep.id)
   return (
     <header className="workspace-header">
       <div className="workspace-title">
-        <button type="button" className="breadcrumb-link" onClick={onLibrary}>
+        <button
+          type="button"
+          className="breadcrumb-link"
+          onClick={onLibrary}
+          aria-label={backLabel ? `Back to the lesson ${backLabel}` : undefined}
+        >
           <Icon name="left" />
-          Library
+          {backLabel ? (
+            <>
+              <Icon name="book" />
+              <span className="breadcrumb-lesson">{backLabel}</span>
+            </>
+          ) : (
+            'Library'
+          )}
         </button>
         <h1 tabIndex={-1}>{rep.title}</h1>
         {repLevelLabel(rep.id) && <StatusChip>{repLevelLabel(rep.id)}</StatusChip>}
+        {role !== 'Application' && <StatusChip>{role}</StatusChip>}
         <StatusChip tone={statusTone(status)}>{status}</StatusChip>
-        <span className="workspace-category">{rep.category}</span>
+        <span className="workspace-category">
+          {rep.category} ·{' '}
+          {effortRange(rep.id)
+            .replace(/, plus time to build$/, '')
+            .replace(' minutes', ' min')}
+        </span>
       </div>
       <div className="workspace-actions">
         <p className="workspace-save-status" role="status">

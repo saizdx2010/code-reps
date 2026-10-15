@@ -86,3 +86,12 @@ test('failed checks expose structured expected and actual feedback', () => {
   const thrown = runRep('function mostFrequent() { throw new Error("Try again") }', 'most-frequent-number')[0]
   assert.equal(thrown.message, 'Try again')
 })
+
+test('each lesson has its own address, and unknown lessons fall back to the lessons page', () => {
+  assert.deepEqual(readRoute('#/knowledge/arrays', []), { view: 'knowledge', skillId: 'arrays' })
+  assert.equal(routeHash({ view: 'knowledge', skillId: 'arrays' }), '#/knowledge/arrays')
+  assert.deepEqual(readRoute(routeHash({ view: 'knowledge', skillId: 'values' }), []), { view: 'knowledge', skillId: 'values' })
+  assert.deepEqual(readRoute('#/knowledge/not-a-lesson', []), { view: 'knowledge' })
+  assert.deepEqual(readRoute('#/knowledge/%E0%A4%A', []), { view: 'knowledge' })
+  assert.equal(routeHash({ view: 'knowledge' }), '#/knowledge')
+})

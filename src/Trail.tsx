@@ -1,6 +1,7 @@
 import { Icon } from './Icon'
 import { StatusChip } from './Layout'
 import { preloadEditor } from './editor-loader'
+import { stageLabels } from './learning.ts'
 import { repLevelLabel, stageLevelRange } from './rep-levels.ts'
 import type { TrailNode, TrailStage } from './trail-map'
 
@@ -14,11 +15,13 @@ type Props = {
 
 const stateLabels: Record<string, string> = {
   done: 'Completed',
-  next: 'Next on your trail',
+  next: 'Next',
   draft: 'In progress',
-  later: 'Recall available later',
+  later: 'Recall later',
   open: 'Not started',
 }
+// Journey evidence is shown once there is some: an untouched journey says nothing rather than "Learning".
+const untouched = `: ${stageLabels.learning}.`
 const markerIcon = (node: TrailNode) =>
   node.state === 'done'
     ? 'check'
@@ -78,9 +81,11 @@ export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenFoundat
                     <Icon name={markerIcon(node)} />
                   </span>
                   {node.kind === 'lesson' ? (
-                    <button type="button" onClick={() => onOpenLesson(node.skillId)}>
+                    <button type="button" id={`trail-lesson-${node.skillId}`} onClick={() => onOpenLesson(node.skillId)}>
                       <span className="trail-node-title">Lesson: {node.title}</span>
-                      <small>{node.state === 'done' ? 'Predictions checked' : 'Read and predict before practicing'}</small>
+                      <span className="trail-node-state">
+                        <small>{node.state === 'done' ? 'Predictions checked' : 'Read and predict first'}</small>
+                      </span>
                     </button>
                   ) : node.kind === 'project' ? (
                     <div className="trail-project">
@@ -94,20 +99,29 @@ export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenFoundat
                   ) : (
                     <button
                       type="button"
+                      id={`trail-${node.repId}`}
                       aria-current={node.state === 'next' ? 'step' : undefined}
                       onMouseEnter={preloadEditor}
                       onFocus={preloadEditor}
                       onClick={() => onOpenRep(node.repId)}
                     >
                       <span className="trail-node-title">{node.title}</span>
-                      {repLevelLabel(node.repId) && <StatusChip>{repLevelLabel(node.repId)}</StatusChip>}
-                      <small>
-                        <span className="path-role">
-                          {node.role === 'Application' ? '' : `${node.role} · `}
-                          {stateLabels[node.state]}
-                        </span>
-                        {evidence(node.repId) && <span className="path-evidence">{evidence(node.repId)}</span>}
-                      </small>
+                      {repLevelLabel(node.repId) && repLevelLabel(node.repId) !== levelRange(stage) && (
+                        <StatusChip>{repLevelLabel(node.repId)}</StatusChip>
+                      )}
+                      <span className="trail-node-state">
+                        {node.role !== 'Application' && node.state !== 'later' && <span className="path-role">{node.role}</span>}
+                        {node.state === 'next' || node.state === 'draft' ? (
+                          <StatusChip tone="progress">
+                            {node.state === 'next' && node.inProgress ? 'Next · In progress' : stateLabels[node.state]}
+                          </StatusChip>
+                        ) : (
+                          <small className={node.state === 'open' ? 'visually-hidden' : undefined}>{stateLabels[node.state]}</small>
+                        )}
+                      </span>
+                      {evidence(node.repId) && !evidence(node.repId).endsWith(untouched) && (
+                        <small className="path-evidence">{evidence(node.repId)}</small>
+                      )}
                     </button>
                   )}
                 </li>

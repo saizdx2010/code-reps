@@ -90,3 +90,17 @@ test('visible UI and authored content use US English and the shared term list', 
     visit(source)
   }
 })
+
+test('every practice topic sits in exactly one Library area, and the areas use the lesson group names', async () => {
+  const { catalogAreas } = await import('../src/catalog-labels.ts')
+  const { knowledgeGroups } = await import('../src/knowledge.ts')
+  const listed = catalogAreas.flatMap(area => area.topics)
+  assert.equal(new Set(listed).size, listed.length, 'a topic is listed twice')
+  assert.deepEqual([...new Set(reps.map(catalogTopic))].sort(), [...listed].sort())
+  assert.deepEqual(
+    catalogAreas.map(area => area.title),
+    knowledgeGroups.map(group => group.title),
+  )
+  // No catch-all or single-rep topics remain in the Library.
+  for (const topic of listed) assert.ok(reps.filter(rep => catalogTopic(rep) === topic).length >= 2, topic)
+})

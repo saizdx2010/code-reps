@@ -22,7 +22,7 @@ async function finishGuidedArrayRep(page: Page) {
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await page.getByRole('button', { name: 'Explain', exact: true }).first().click()
   await page.getByLabel('Your explanation', { exact: true }).fill('It keeps a running total and only adds values above zero.')
-  await page.getByRole('button', { name: 'Review', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Finish', exact: true }).first().click()
   await chooseSegment(page, 'What was hardest?', 'Nothing in particular')
   await page.getByRole('button', { name: 'Complete rep', exact: true }).click()
   await expect(page.getByText('Your attempt is saved in the Journal.', { exact: true })).toBeVisible()
@@ -30,7 +30,7 @@ async function finishGuidedArrayRep(page: Page) {
 
 test('a fresh profile shows every skill as not started', async ({ page }) => {
   await page.goto(mapRoute)
-  await expect(page.getByRole('heading', { level: 1, name: 'Skill map.' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Skill map' })).toBeVisible()
   await expect(page.getByRole('navigation', { name: 'Progress pages' }).getByRole('button', { name: 'Skills' })).toHaveAttribute(
     'aria-current',
     'page',
@@ -52,16 +52,16 @@ test('completing a guided rep marks its skill practiced and the route survives r
   await finishGuidedArrayRep(page)
   await page.goto(mapRoute)
   const arrays = node(page, 'Work through arrays')
-  await expect(arrays.locator('.status-chip')).toHaveText('Practiced')
+  await expect(arrays.locator('.status-chip')).toHaveText('Guided')
   await expect(arrays.getByRole('button', { name: /Try without hints/ })).toBeVisible()
   await expect(node(page, 'Work through words').locator('.status-chip')).toHaveText('Not started')
   await page.reload()
-  await expect(arrays.locator('.status-chip')).toHaveText('Practiced')
+  await expect(arrays.locator('.status-chip')).toHaveText('Guided')
   await arrays.getByRole('button', { name: /Try without hints/ }).click()
   await expect(page).toHaveURL(/#\/practice\/count-even-numbers/)
   await page.goBack()
   await expect(page).toHaveURL(/#\/skillmap/)
-  await expect(page.getByRole('heading', { level: 1, name: 'Skill map.' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Skill map' })).toBeVisible()
 })
 
 test('the keyboard reaches a node link and opens its rep; Progress links to the map', async ({ page }) => {

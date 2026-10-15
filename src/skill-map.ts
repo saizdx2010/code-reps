@@ -20,7 +20,7 @@ type SkillMap = { stages: SkillStage[]; counts: Record<SkillState, number>; tota
 
 export const skillStateLabels: Record<SkillState, string> = {
   untouched: 'Not started',
-  practiced: 'Practiced',
+  practiced: 'Guided',
   independent: 'Independent',
   retained: 'Retained',
   due: 'Review due',

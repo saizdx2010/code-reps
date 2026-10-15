@@ -1,10 +1,12 @@
 import { Suspense, useMemo } from 'react'
 import type { ReactNode } from 'react'
 import type { Attempt, AttemptRecord } from './attempt-store'
-import { catalogTopic } from './catalog-labels.ts'
+import { catalogAreas, catalogTopic } from './catalog-labels.ts'
+import { skillIndex } from './catalog-index'
+import { repLevel } from './rep-levels.ts'
 import { repIndex as reps } from './catalog-index'
 import type { RepSummary } from './catalog-index'
-import { foundationsPathId, repCurriculumEvidence } from './curriculum'
+import { repCurriculumEvidence, returningSkipStages } from './curriculum'
 import { HomePage } from './HomePage'
 import { isHubTab } from './learning-pages'
 import type { LearnerStart } from './learning'
@@ -17,6 +19,8 @@ import { actionLabel } from './practice-actions'
 import type { getPracticePlan, PracticeAction } from './practice'
 import { buildTrail } from './trail-map'
 import type { View } from './ui-navigation'
+import type { RestoreFlow } from './backup'
+import { repSearchText, searchWords } from './command-search'
 import type { useFluency } from './useFluency'
 import { useSessionPreference } from './useSessionPreference'
 
@@ -30,6 +34,12 @@ const HistoryPage = lazyRoute(() => import('./HistoryPage').then(module => modul
 const LearningHub = lazyRoute(() => import('./LearningHub').then(module => module.LearningHub), 'Learning tools', 'learning-hub')
 
 const categories = [...new Set(reps.map(catalogTopic))].sort()
+// The Library lists topics in learning order inside their areas; other pages keep the alphabetical list.
+const libraryTopics = [...catalogAreas.flatMap(area => area.topics), ...categories].filter(
+  (topic, index, all) => categories.includes(topic) && all.indexOf(topic) === index,
+)
+// Search also reads the titles of the lessons a rep practices, so concept words like "binary search" find reps.
+const searchText = new Map(reps.map(item => [item.id, repSearchText(item)]))
 const repById = new Map(reps.map(item => [item.id, item]))
 
 type PathId = (typeof paths)[number]['id']
@@ -68,6 +78,8 @@ type Props = {
   onExport: () => void
   onImport: (file: File) => void
   transferMessage: string
+  transferTone: 'success' | 'error'
+  restore: RestoreFlow
 }
 
 /** Renders the page for the current route. Pages other than Home load on demand. */
@@ -106,10 +118,11 @@ export function AppRoutes(props: Props) {
       inProgress: (repId: string) => attemptStatus(repId, drafts[repId]) === 'In progress',
       recallReady: ready,
       lessonChecked: (skillId: string) => checkedSkills.has(skillId),
-      skipStages: learnerStart === 'returning' && id === foundationsPathId ? 1 : 0,
+      skipStages: learnerStart === 'returning' ? returningSkipStages(id) : 0,
+      focusRepId: practicePlan.next?.repId,
     })
     return [buildTrail(goalPathId, input(goalPathId)), buildTrail(pathId, input(pathId))]
-  }, [goalPathId, pathId, completedPathIds, journeyStates, drafts, answers, learnerStart])
+  }, [goalPathId, pathId, completedPathIds, journeyStates, drafts, answers, learnerStart, practicePlan.next?.repId])
   const trailEvidence = (id: string) => repCurriculumEvidence(id, journeyStates)
   const openPath = (id: PathId) => {
     setPathId(id)
@@ -163,7 +176,6 @@ export function AppRoutes(props: Props) {
           goalPathId={goalPathId}
           onPath={openPath}
           practicePlan={practicePlan}
-          repStatus={repStatus}
           openPracticeAction={openPracticeAction}
           actionLabel={actionLabel}
           onProgress={() => setView('progress')}
@@ -172,6 +184,8 @@ export function AppRoutes(props: Props) {
           evidence={trailEvidence}
           openRep={openRep}
           openLesson={openLesson}
+          learnerStart={learnerStart}
+          onLearnerStart={props.onLearnerStart}
         />
       )
     case 'catalog':
@@ -183,12 +197,19 @@ export function AppRoutes(props: Props) {
             </main>
           }
         >
-          <CatalogRoute goalPathId={goalPathId} drafts={drafts} practicePlan={practicePlan} repStatus={repStatus} openRep={openRep} />
+          <CatalogRoute
+            goalPathId={goalPathId}
+            drafts={drafts}
+            practicePlan={practicePlan}
+            repStatus={repStatus}
+            openRep={openRep}
+            openLesson={openLesson}
+          />
         </Suspense>
       )
     case 'paths':
       return (
-        <Suspense fallback={<RouteLoading title="Choose a track." status="Opening tracks…" />}>
+        <Suspense fallback={<RouteLoading title="Choose a track" status="Opening tracks…" />}>
           <PathsPage
             goalPathId={goalPathId}
             setGoalPath={setGoalPath}
@@ -209,7 +230,7 @@ export function AppRoutes(props: Props) {
       )
     case 'skillmap':
       return (
-        <Suspense fallback={<RouteLoading title="Skill map." status="Opening the skill map…" />}>
+        <Suspense fallback={<RouteLoading title="Skill map" status="Opening the skill map…" />}>
           <SkillMapPage goalPathId={goalPathId} progress={journeyStates} openRep={openRep} reviewRep={openReview} />
         </Suspense>
       )
@@ -230,7 +251,7 @@ export function AppRoutes(props: Props) {
         repId: action.repId,
       }))
       return (
-        <Suspense fallback={<RouteLoading title="Your progress" status="Opening your progress…" />}>
+        <Suspense fallback={<RouteLoading title="Skills" status="Opening your skills…" />}>
           <ProgressPage
             profileName={props.profileName}
             history={history}
@@ -254,6 +275,8 @@ export function AppRoutes(props: Props) {
             onExport={props.onExport}
             onImport={props.onImport}
             transferMessage={props.transferMessage}
+            transferTone={props.transferTone}
+            restore={props.restore}
             serverReady={isServerReady()}
           />
         </Suspense>
@@ -295,44 +318,60 @@ function CatalogRoute({
   practicePlan,
   repStatus,
   openRep,
+  openLesson,
 }: {
   goalPathId: string
   drafts: Record<string, Attempt>
   practicePlan: PracticePlan
   repStatus: (rep: RepSummary) => string
   openRep: (id: string) => void
+  openLesson: (id: string) => void
 }) {
   const [query, setQuery] = useSessionPreference<string>('catalogQuery', '')
+  const [level, setLevel] = useSessionPreference<string>('catalogLevel', '')
   const [skill, setSkill] = useSessionPreference<string>('catalogSkill', '')
   const [format, setFormat] = useSessionPreference<string>('catalogFormat', '')
   const [status, setStatus] = useSessionPreference<string>('catalogStatus', '')
   const dueIds = useMemo(() => new Set(practicePlan.due.map(item => item.repId)), [practicePlan])
+  // A topic saved under an older label no longer exists; it is ignored rather than hiding every rep.
+  const topic = libraryTopics.includes(skill) ? skill : ''
   const visibleReps = useMemo(
     () =>
       reps.filter(
         item =>
-          `${item.title} ${catalogTopic(item)} ${item.category} ${item.format ?? 'algorithm'}`
-            .toLowerCase()
-            .includes(query.trim().toLowerCase()) &&
-          (!skill || catalogTopic(item) === skill) &&
+          searchWords(query).every(word => searchText.get(item.id)!.includes(word)) &&
+          (!topic || catalogTopic(item) === topic) &&
+          (!level || String(repLevel(item.id)) === level) &&
           (!format || (item.format ?? 'algorithm') === format) &&
           (!status || (status === 'review' ? dueIds.has(item.id) : attemptStatus(item.id, drafts[item.id]) === status)),
       ),
-    [query, skill, format, status, dueIds, drafts],
+    [query, topic, level, format, status, dueIds, drafts],
   )
-  const setters = { query: setQuery, skill: setSkill, format: setFormat, status: setStatus }
+  const lessonMatches = useMemo(
+    () =>
+      query.trim() && !visibleReps.length
+        ? skillIndex
+            .filter(skill => searchWords(query).every(word => `${skill.title} ${skill.summary}`.toLowerCase().includes(word)))
+            .slice(0, 3)
+        : [],
+    [query, visibleReps.length],
+  )
+  const setters = { query: setQuery, skill: setSkill, format: setFormat, status: setStatus, level: setLevel }
   return (
     <PracticeCatalog
       goalPathId={goalPathId}
-      filters={{ query, skill, format, status }}
+      filters={{ query, skill: topic, format, status, level }}
       onFilter={(field, value) => setters[field](value)}
       clearFilters={() => {
         setQuery('')
         setSkill('')
         setFormat('')
         setStatus('')
+        setLevel('')
       }}
-      categories={categories}
+      categories={libraryTopics}
+      lessonMatches={lessonMatches}
+      openLesson={openLesson}
       visibleReps={visibleReps}
       dueIds={dueIds}
       repStatus={repStatus}

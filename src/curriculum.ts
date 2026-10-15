@@ -1,6 +1,7 @@
 import { skillSummariesForRep as skillsForRep } from './skill-index.ts'
 import { repTitle } from './rep-index.ts'
 import { paths } from './path.ts'
+import { foundationRepIds } from './catalog-index.ts'
 import { journeys, stageLabels } from './learning.ts'
 import type { JourneyProgress } from './learning.ts'
 import { formatDate } from './ui-copy.ts'
@@ -37,6 +38,17 @@ export const trackGroups: { title: string; pathIds: PathId[] }[] = [
 
 const foundationsRepIds = new Set<string>(paths.find(path => path.id === foundationsPathId)!.stages.flatMap(stage => stage.repIds))
 
+/**
+ * Returning learners skip the language basics: the leading stages made only of the TypeScript foundation reps.
+ * The practice plan skips the same reps, so the trail and its recommendation start at the same place.
+ */
+export function returningSkipStages(pathId: string) {
+  if (pathId !== foundationsPathId) return 0
+  const stages = paths.find(path => path.id === pathId)!.stages
+  const skipped = stages.findIndex(stage => !stage.repIds.every(id => foundationRepIds.includes(id)))
+  return skipped === -1 ? 0 : skipped
+}
+
 /** A stage made only of Foundations reps is shown once, as a link back to Foundations, instead of repeating it. */
 export function stageCoveredByFoundations(pathId: string, repIds: readonly string[]) {
   return pathId !== foundationsPathId && repIds.length > 0 && repIds.every(id => foundationsRepIds.has(id))
@@ -55,4 +67,30 @@ export function repPracticeContext(repId: string) {
           ? 'Afterward, review your skill evidence and choose the next unfinished rep on your trail.'
           : 'Afterward, continue to the next unfinished rep in your trail.'
   return { reason: focus ? `Skill: ${focus}.` : 'A good next step on your trail.', afterward }
+}
+
+/**
+ * What a just-completed attempt counts as, in the same terms the journeys use: hints make it practice, a hint-free
+ * independent rep after its guided rep is independent evidence, and a hint-free recall after the break is retention.
+ * Derived from saved history only; it never predicts or grants anything the records do not show.
+ */
+export function completionEvidence(repId: string, hintCount: number, progress: JourneyProgress[]) {
+  const hints = hintCount === 1 ? '1 hint' : `${hintCount} hints`
+  const chip = hintCount ? { tone: 'neutral' as const, label: hints } : { tone: 'success' as const, label: 'No hints' }
+  const state = progress.find(item => [item.journey.guided, item.journey.independent, item.journey.recall].includes(repId))
+  if (!state) return { chip, text: hintCount ? `Completed with ${hints}.` : 'Completed without hints.' }
+  const { journey } = state
+  if (journey.guided === repId) return { chip, text: `Guided practice done. Next, solve ${repTitle(journey.independent)} without hints.` }
+  if (hintCount)
+    return { chip, text: `With ${hints}, this attempt is practice, not ${journey.recall === repId ? 'recall' : 'independent'} evidence.` }
+  if (journey.independent === repId)
+    return state.independent?.repId === repId && state.recallAt
+      ? { chip, text: `Solved without hints, so this skill is independent. Recall opens ${formatDate(state.recallAt)}.` }
+      : {
+          chip,
+          text: `Solved without hints. To count as independent, finish ${repTitle(journey.guided)} first, then solve this again without hints.`,
+        }
+  return state.retained
+    ? { chip, text: 'Recalled without hints after the break, so this skill is retained.' }
+    : { chip, text: 'Solved without hints. Recall counts once the break after independent practice has passed.' }
 }

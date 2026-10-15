@@ -46,47 +46,49 @@ export function LearningProjects({ state, update, history, openRep, openNotebook
       <Suspense fallback={<ProjectListLoading />}>
         <BrowserProjects openRep={openRep} recordReflection={recordReflection} />
       </Suspense>
-      <h2>Projects you can build here</h2>
-      {capstones.map(project => (
-        <details key={project.id} className="hub-panel project-overview">
-          <summary>
-            <h2>{project.title}</h2>
-            <p>{project.brief}</p>
-            <span>{project.milestones.length} milestones</span>
-          </summary>
-          <ol className="milestone-list">
-            {project.milestones.map(m => {
-              const completed = history.find(a => a.repId === m.repId)
-              return (
-                <li key={m.repId}>
-                  <div>
-                    <strong>{m.title}</strong>
-                    <p>
-                      {completed
-                        ? `Completed ${formatDate(completed.completedAt)} with ${completed.hintCount} ${plural(completed.hintCount, 'hint')}.`
-                        : 'Not completed yet.'}
-                    </p>
-                  </div>
-                  <Button variant="text" type="button" onClick={() => openRep(m.repId)}>
-                    Open milestone
-                  </Button>
-                </li>
-              )
-            })}
-          </ol>
-          <details className="project-review">
-            <summary>Final self-review</summary>
-            <ul>
-              {project.review.map(point => (
-                <li key={point}>{point}</li>
-              ))}
-            </ul>
-            <Button variant="text" type="button" onClick={openNotebook}>
-              Record a project reflection
-            </Button>
+      <section className="project-section" aria-labelledby="capstone-heading">
+        <h2 id="capstone-heading">Projects you can build here</h2>
+        {capstones.map(project => (
+          <details key={project.id} className="hub-panel project-overview">
+            <summary>
+              <h3>{project.title}</h3>
+              <p>{project.brief}</p>
+              <span>{project.milestones.length} milestones</span>
+            </summary>
+            <ol className="milestone-list">
+              {project.milestones.map(m => {
+                const completed = history.find(a => a.repId === m.repId)
+                return (
+                  <li key={m.repId}>
+                    <div>
+                      <strong>{m.title}</strong>
+                      <p>
+                        {completed
+                          ? `Completed ${formatDate(completed.completedAt)} with ${completed.hintCount} ${plural(completed.hintCount, 'hint')}.`
+                          : 'Not completed yet.'}
+                      </p>
+                    </div>
+                    <Button variant="text" type="button" onClick={() => openRep(m.repId)}>
+                      Open milestone
+                    </Button>
+                  </li>
+                )
+              })}
+            </ol>
+            <details className="project-review">
+              <summary>Final self-review</summary>
+              <ul>
+                {project.review.map(point => (
+                  <li key={point}>{point}</li>
+                ))}
+              </ul>
+              <Button variant="text" type="button" onClick={openNotebook}>
+                Record a project reflection
+              </Button>
+            </details>
           </details>
-        </details>
-      ))}
+        ))}
+      </section>
     </>
   )
 }

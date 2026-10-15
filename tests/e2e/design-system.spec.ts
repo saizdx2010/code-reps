@@ -47,14 +47,14 @@ test('reduced motion keeps buttons and dialogs usable without animated feedback'
 
 test('a cold learning route replaces the loading view with a usable lesson and leaves focus at the top', async ({ page }) => {
   await page.goto('/#/knowledge')
-  const heading = page.getByRole('heading', { name: 'Learn a concept.', exact: true })
+  const heading = page.getByRole('heading', { name: 'Learn a concept', exact: true })
   await expect(heading).toBeVisible()
   // A page load does not move focus to the heading; the first Tab reaches the skip link.
   await expect(heading).not.toBeFocused()
   await page.keyboard.press('Tab')
   await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused()
   await page.getByRole('button', { name: 'Predict', exact: true }).click()
-  await expect(page.locator('.lesson-navigation button[aria-current]')).toHaveText('Predict')
+  await expect(page.locator('.lesson-navigation button[aria-current]')).toHaveAccessibleName('Predict')
   await expect
     .poll(() =>
       page.locator('.lesson-navigation').evaluate(element => {
@@ -280,12 +280,12 @@ test('startup progress loading uses the light workbook before storage is ready',
 
 test('each pending learning page keeps its own heading and working surface', async ({ context }) => {
   const pages = [
-    ['knowledge', 'Learn a concept.', '.loading-lesson-layout', '.loading-lesson-layout > .loading-sheet', '.knowledge-article'],
-    ['notebook', 'Your notebook.', '.loading-notebook-surface', '.loading-notebook-heading', '.hub-heading'],
-    ['plan', 'Make room for practice.', '.loading-week', '.loading-sheet', '.hub-panel'],
-    ['assessment', 'Find your starting point.', '.loading-rows', '.loading-sheet', '.hub-panel'],
-    ['projects', 'Put your skills together.', '.loading-rows', 'h2', '#browser-project-heading'],
-    ['interview', 'Practice an interview.', '.loading-interview-sheet', '.loading-sheet', '.hub-panel'],
+    ['knowledge', 'Learn a concept', '.loading-lesson-layout', '.loading-lesson-layout > .loading-sheet', '.knowledge-article'],
+    ['notebook', 'Your notebook', '.loading-notebook-surface', '.loading-notebook-heading', '.hub-heading'],
+    ['plan', 'Make room for practice', '.loading-week', '.loading-sheet', '.hub-panel'],
+    ['assessment', 'Find your starting point', '.loading-rows', '.loading-sheet', '.hub-panel'],
+    ['projects', 'Put your skills together', '.loading-rows', 'h2', '#browser-project-heading'],
+    ['interview', 'Practice an interview', '.loading-interview-sheet', '.loading-sheet', '.hub-panel'],
   ]
   for (const [route, title, surface, pendingSurface, loadedSurface] of pages) {
     const page = await context.newPage()
@@ -399,9 +399,9 @@ test('utility drawers retain their exit and restore keyboard focus', async ({ pa
   await expect(glossary).toBeFocused()
   await expect(page.locator('.glossary-drawer')).toHaveCount(0)
   await page.keyboard.press('ControlOrMeta+K')
-  const commands = page.getByRole('dialog', { name: 'Commands & exercises' })
+  const commands = page.getByRole('dialog', { name: 'Search' })
   await expect(commands).toBeVisible()
-  await page.getByRole('combobox', { name: 'Search or choose an action' }).fill('Home')
+  await page.getByRole('combobox', { name: /^Search pages/ }).fill('Your trail')
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/#\/home$/)
   await expect(page.locator('.utility-dialog')).toHaveCount(0)

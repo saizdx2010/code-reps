@@ -26,13 +26,11 @@ const steps: Record<string, { title: string; text: string; next?: string; action
     title: '4 of 5 · Explain',
     text: 'Use Your explanation to describe what your code does and why. Then compare your reasoning with the review guide.',
     next: 'review-section',
-    action: 'Walkthrough: review next',
+    action: 'Walkthrough: finish next',
   },
   review: {
-    title: '5 of 5 · Review',
-    text:
-      'Review the completion checklist, optionally note difficulty and confidence, then Complete rep when ready. ' +
-      'Complete the rep to save your attempt.',
+    title: '5 of 5 · Finish',
+    text: 'Check what is still needed, then Complete rep to save your attempt. Reflecting on difficulty and confidence is optional.',
   },
 }
 
@@ -54,7 +52,7 @@ export function FirstRepWalkthrough({
     <aside className="first-rep-walkthrough" aria-label="First rep walkthrough">
       <strong>{saved ? 'Your attempt is saved' : help.title}</strong>
       <p tabIndex={step === 'solve' ? 0 : undefined}>
-        {saved ? 'You can revisit your work, choose another rep, or stop for today.' : help.text}
+        {saved ? 'Use Next rep above to keep going, or Done for today to stop here. Your work stays saved.' : help.text}
       </p>
       <div>
         {help.next && (

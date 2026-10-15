@@ -69,3 +69,41 @@ test('every authored stage has a recap that survives trail derivation', () => {
     })
   }
 })
+
+test('the recommended rep is the trail node marked next, so the panel and the trail agree', () => {
+  const inProgress = id => id === 'basic-types' || id === 'make-arrays'
+  const trail = buildTrail('typescript', { ...fresh, inProgress, focusRepId: 'make-arrays' })
+  const reps = trail.stages.flatMap(stage => stage.nodes).filter(node => node.kind === 'rep')
+  assert.equal(trail.nextRepId, 'make-arrays')
+  assert.deepEqual(
+    reps.filter(node => node.state === 'next').map(node => node.repId),
+    ['make-arrays'],
+  )
+  assert.equal(reps.find(node => node.repId === 'basic-types').state, 'draft')
+  assert.equal(reps.find(node => node.repId === 'make-arrays').inProgress, true)
+})
+
+test('a recommendation that is off the trail, done, or not ready leaves the first available rep as next', () => {
+  for (const focusRepId of ['not-on-this-trail', 'declare-variables', 'count-above-threshold']) {
+    const trail = buildTrail('typescript', {
+      ...fresh,
+      completed: id => id === 'declare-variables',
+      recallReady: id => id !== 'count-above-threshold',
+      focusRepId,
+    })
+    assert.equal(trail.nextRepId, 'basic-types', focusRepId)
+  }
+})
+
+test('returning learners skip every leading language-basics stage, matching the practice plan', async () => {
+  const { returningSkipStages } = await import('../src/curriculum.ts')
+  const { foundationRepIds } = await import('../src/catalog-index.ts')
+  const { getPracticePlan } = await import('../src/practice.ts')
+  const skip = returningSkipStages('typescript')
+  assert.ok(skip >= 1)
+  assert.ok(paths[0].stages.slice(0, skip).every(stage => stage.repIds.every(id => foundationRepIds.includes(id))))
+  assert.equal(returningSkipStages('frontend'), 0)
+  const trail = buildTrail('typescript', { ...fresh, skipStages: skip })
+  const plan = getPracticePlan({}, [], 'returning', '', Date.now(), 'typescript')
+  assert.equal(trail.nextRepId, plan.next.repId)
+})

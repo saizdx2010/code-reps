@@ -907,7 +907,13 @@ main {
   cursor: pointer;
 }
 .local-data section {
+  display: grid;
+  gap: 16px;
+  justify-items: start;
   padding: 16px 0;
+}
+.local-data section > * {
+  margin: 0;
 }
 .local-data h2 {
   font-size: var(--type-section);
@@ -926,7 +932,50 @@ main {
   display: none;
 }
 .transfer-message {
-  color: var(--accent);
+  max-width: 68ch;
+  padding: 12px 14px;
+  font-size: 14px;
+}
+.restore-preview {
+  max-width: 68ch;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+.restore-preview h3 {
+  margin: 0 0 6px;
+  font-size: var(--type-card);
+}
+.restore-preview .restore-file {
+  color: var(--text);
+}
+.restore-preview .restore-file .ui-icon {
+  margin-right: 6px;
+  color: var(--success);
+  vertical-align: text-bottom;
+}
+.restore-preview ul {
+  margin: 10px 0 16px;
+  padding-left: 20px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.restore-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.restore-receipt {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 20px;
+  padding: 10px 10px 10px 16px;
+}
+.restore-receipt-text {
+  flex: 1;
 }
 .history-main .filter-bar {
   margin-bottom: 16px;
@@ -943,7 +992,7 @@ main {
 }
 .history-list > li {
   border-bottom: 1px solid var(--border);
-  padding: 24px 0;
+  padding: 20px 0 14px;
 }
 .history-list > li > div {
   display: flex;
@@ -953,15 +1002,20 @@ main {
   gap: 8px 24px;
 }
 .history-list > li > div > strong {
+  flex: 1 1 auto;
   font-size: var(--type-section);
   font-weight: 600;
+}
+/* One header line per attempt: the rep, when and with how many hints, and the way back to it. */
+.history-list > li > div > .text-button {
+  flex: none;
 }
 .history-list > li > div > span {
   font-size: 13px;
   color: var(--muted);
 }
 .history-list details {
-  margin: 14px 0;
+  margin: 8px 0 0;
 }
 .history-list summary {
   color: var(--accent);
@@ -994,13 +1048,15 @@ main {
   margin: 20px 0 8px;
   font-size: 14px;
 }
+/* The footer line spans the page frame's content width, exactly like the dividers above it. */
 footer {
   display: flex;
   justify-content: space-between;
   gap: 20px;
-  max-width: 1048px;
+  width: calc(100% - 2 * var(--page-gutter));
+  max-width: calc(var(--page-width) - 2 * var(--page-gutter));
   margin: 0 auto;
-  padding: 24px 28px;
+  padding: 24px 0;
   border-top: 1px solid var(--border);
   color: var(--muted);
   font-size: 13px;
@@ -1035,6 +1091,18 @@ footer {
   margin: 0;
   overflow: hidden;
   font-size: clamp(19px, 1.8vw, 22px);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Back to the lesson a rep was opened from: the lesson's book mark and title, shortened if long. */
+.breadcrumb-link .icon-book {
+  width: 16px;
+  height: 16px;
+  margin: 0 4px 0 2px;
+}
+.breadcrumb-lesson {
+  max-width: 220px;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1323,6 +1391,72 @@ footer {
   font-size: 12px;
   color: var(--muted);
 }
+.hint-control > .hint-note {
+  flex-basis: 100%;
+}
+/* The first hint on an Independent or Recall rep asks once, inline, in the hint colour. */
+.hint-confirm {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 16px 18px;
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius-control);
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+.hint-confirm strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.hint-confirm p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.hint-confirm > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding-top: 4px;
+}
+.hint-confirm .text-button {
+  color: var(--warning);
+}
+.rep-guidance .info-note {
+  margin-top: 0;
+}
+.guidance-lessons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 14px;
+  margin: 8px 0 0;
+}
+.guidance-lessons strong {
+  flex-basis: 100%;
+  color: var(--text);
+}
+.guidance-lessons .text-button {
+  min-height: 32px;
+  padding: 4px 0;
+  font-size: 13px;
+}
+.guidance-lessons .guidance-more {
+  gap: 4px;
+  color: var(--muted);
+}
+.guidance-more .ui-icon {
+  width: 16px;
+  height: 16px;
+  transition: rotate var(--motion-fast) var(--motion-ease);
+}
+.guidance-more[aria-expanded='true'] .ui-icon {
+  rotate: 180deg;
+}
 .task-hints {
   margin-top: 20px;
   padding: 18px;
@@ -1430,26 +1564,54 @@ footer {
   gap: 18px;
 }
 .completion-checklist {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   padding: 0;
-  margin: 24px 0;
+  margin: 0 0 18px;
   list-style: none;
-  color: var(--muted);
   font-size: 13px;
 }
+/* Requirements read as chips: done in the success tone, still needed outlined, reflection dashed and optional. */
+.completion-checklist li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 3px 10px 3px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--text);
+}
+.completion-checklist .ui-icon {
+  width: 14px;
+  height: 14px;
+}
 .completion-checklist .done {
+  border-color: var(--success-border);
+  background: var(--success-soft);
   color: var(--success);
 }
-.completion-checklist .checklist-need {
-  display: block;
-  margin-left: 22px;
+.completion-checklist .optional {
+  border-style: dashed;
   color: var(--muted);
+}
+.completion-checklist .optional .optional-note {
+  margin-left: 0;
 }
 .explain-actions {
   display: grid;
-  gap: 14px;
+  gap: 10px;
+}
+.finish-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 12px;
+}
+.finish-note .missing-work {
+  min-height: 32px;
+  padding: 4px 0;
 }
 .explain-actions .finish-button {
   justify-self: start;
@@ -1461,6 +1623,21 @@ footer {
 }
 .finish-note.success {
   color: var(--success);
+}
+/* After passing, the reference trace leads the Explain step instead of hiding inside the model answer. */
+.see-it-run {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+.see-it-run h3 {
+  margin: 0 0 4px;
+  font-size: var(--type-card);
+}
+.see-it-run > p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 14px;
 }
 .reflection-guide {
   margin-top: 20px;
@@ -1494,27 +1671,117 @@ footer {
   margin-top: 18px;
   font-size: 18px;
 }
+/* The reward lands at the top of the Finish pane on the next-action surface, with one primary way forward. */
 .completion-panel {
-  margin-top: 24px;
-  padding: 20px;
-  border-radius: var(--radius-control);
-  background: var(--success-soft);
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: 24px;
+  border: 1px solid var(--feature-border);
+  border-radius: var(--radius);
+  background: var(--feature);
+  color: var(--feature-text);
+  scroll-margin-top: 12px;
+}
+.completion-panel:focus-visible {
+  outline-offset: 3px;
 }
 .completion-panel h3 {
-  font-size: var(--type-section);
+  margin: 0;
+  font-size: var(--type-feature);
+  line-height: 1.3;
 }
 .completion-panel p {
-  color: var(--muted);
+  margin: 0;
+  color: var(--feature-muted);
   font-size: 14px;
 }
-.completion-panel > div {
+.completion-panel .finish-status {
+  min-height: 0;
+  padding: 3px 10px 3px 8px;
+  border-color: var(--feature-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  color: var(--feature-text);
+  font-size: 13px;
+}
+.completion-panel .finish-status .ui-icon {
+  width: 14px;
+  height: 14px;
+}
+.completion-evidence {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.5;
+}
+.completion-evidence span:last-child {
+  color: var(--feature-text);
+}
+.completion-evidence .status-chip {
+  flex: none;
+}
+.completion-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  align-items: center;
+  gap: 8px 18px;
+  padding-top: 4px;
 }
 .completion-panel .primary-button {
+  background: var(--feature-text);
+  border-color: var(--feature-text);
+  color: var(--feature);
   white-space: normal;
   text-align: left;
+}
+.completion-panel .text-button {
+  color: var(--feature-text);
+}
+.completion-panel .completion-saved {
+  font-size: 13px;
+}
+/* Reflection sits below the finish line: optional, quick, and never in the way of completing. */
+.reflection-section > .reflection-fields {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+.reflection-fields h4 {
+  margin: 0;
+  font-size: 15px;
+}
+.mistake-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 0;
+}
+.mistake-tags button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+}
+.mistake-tags button[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+.mistake-tags .ui-icon {
+  width: 14px;
+  height: 14px;
+}
+.mistake-tags.is-recorded {
+  color: var(--muted);
+  font-size: 14px;
 }
 .retry-button {
   margin-top: 16px;
@@ -1696,6 +1963,33 @@ footer {
 .checks-drawer.running {
   background: var(--warning-soft);
   border-top-color: var(--warning-border);
+}
+/* After an edit the last run stays as a reference: neutral surface, dimmed outcomes, legible diagnostics. */
+.checks-drawer.stale {
+  background: var(--surface);
+}
+/* With results open, the summary line inside says the count once; the run bar's copy stays for screen readers only. */
+.checks-drawer:is(.passed, .failed):has(> #check-details:not([hidden])) ~ .workspace-toolbar .workspace-toolbar-run > [role='status'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.checks-toggle .status-chip {
+  margin-right: 10px;
+  vertical-align: middle;
+}
+.stale-note {
+  margin: 4px 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.result-list.is-stale :is(.pass-icon, .fail-icon),
+.result-list.is-stale .check-outcome {
+  opacity: 0.55;
 }
 .checks-toggle {
   display: flex;
@@ -1885,27 +2179,30 @@ footer {
     transform: translateX(185%);
   }
 }
-.checks-next {
-  margin-top: 18px;
+/* All passed: the next step sits in the summary line instead of under the list. */
+.result-summary .checks-next {
+  flex: none;
+  margin: -6px 0 0 auto;
   font-size: 14px;
 }
 .mistake-help {
-  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 14px 0 0;
+  padding-top: 12px;
   border-top: 1px solid var(--border);
-  padding-top: 16px;
-}
-.mistake-help h3 {
-  font-size: 16px;
-}
-.mistake-help p {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
 }
-.mistake-help button {
-  padding: 6px 0;
-  border: 0;
-  background: transparent;
-  color: var(--accent);
+.mistake-help > .ui-icon {
+  width: 16px;
+  height: 16px;
+}
+.mistake-help .text-button {
+  min-height: 32px;
+  padding: 4px 0;
   font-size: 14px;
 }
 .interview-banner {
@@ -2002,10 +2299,57 @@ dialog::backdrop {
 }
 .command-results {
   display: grid;
-  gap: 4px;
-  margin-top: 20px;
-  max-height: 50dvh;
+  gap: 14px;
+  margin-top: 16px;
+  max-height: 52dvh;
   overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.command-results [role='group'] {
+  display: grid;
+  gap: 2px;
+}
+/* Group labels name the results as the navigation does: Continue, This rep, Lessons, Exercises, Pages, Settings. */
+.command-group {
+  margin: 0 0 4px;
+  padding: 0 12px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+.command-results button > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.command-results button > small {
+  flex: none;
+  color: var(--muted);
+  font-size: 13px;
+}
+.command-empty {
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+/* Key hints are for keyboards; touch screens skip them. */
+@media (hover: none) {
+  .command-keys {
+    display: none !important;
+  }
+}
+.command-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 16px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
 }
 .command-results [role='option'] {
   border-radius: var(--radius-control);
@@ -2073,16 +2417,29 @@ dialog::backdrop {
   color: var(--muted);
   font-size: 14px;
 }
-.profile-portability {
-  margin: 28px 0 18px;
-  border-top: 1px solid var(--border);
-  padding-top: 22px;
+/* Each open section starts 8px under its summary and spaces its parts by 16px. */
+.profile-management > :is(label, p, .hub-actions) {
+  margin: 0 0 16px;
 }
-.profile-portability .file-button {
-  display: flex;
-  justify-content: flex-start;
-  gap: 12px;
-  flex-wrap: wrap;
+.profile-management > summary + * {
+  margin-top: 8px;
+}
+.profile-management > :last-child {
+  margin-bottom: 0;
+}
+.profile-import .ui-file-control {
+  margin-top: 7px;
+}
+.profile-status:empty {
+  display: none;
+}
+.profile-delete {
+  margin-top: 4px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+.profile-delete > p {
+  margin: 0;
 }
 .delete-confirm {
   padding: 18px;
@@ -2300,6 +2657,10 @@ dialog.preview-inline {
     background: var(--surface-2);
     padding: 5px;
   }
+  /* The completion panel lands just below the sticky step bar, not underneath it. */
+  .completion-panel {
+    scroll-margin-top: 76px;
+  }
   .practice-steps button {
     min-height: 44px;
     padding: 9px 4px;
@@ -2365,6 +2726,10 @@ dialog.preview-inline {
   }
 }
 @media (max-width: 600px) {
+  /* Phones keep the count and drop the meter so topic names keep their room. */
+  .topic-meter {
+    display: none;
+  }
   .topbar {
     padding-right: 18px;
     padding-left: 18px;
@@ -2496,7 +2861,7 @@ dialog.preview-inline {
     padding-right: 0;
   }
   footer {
-    padding: 20px 18px;
+    padding: 20px 0;
   }
   .workspace-topbar {
     padding: 0 18px;
@@ -2523,20 +2888,19 @@ dialog.preview-inline {
   .workspace-actions {
     display: contents;
   }
+  /* Phone header: back link and tools on one row, the title on the next, then one quiet line of chips and save state. */
   .workspace-header {
-    gap: 6px 8px;
+    gap: 6px;
   }
   .breadcrumb-link {
     order: 1;
+    border-right: 0;
   }
-  .workspace-actions .workspace-save-status {
+  .workspace-actions .reset-button {
     order: 2;
-    flex: 1;
-    font-size: 12px;
-    text-align: right;
-    white-space: nowrap;
+    margin-left: auto;
   }
-  .workspace-title .status-chip {
+  .workspace-options {
     order: 3;
   }
   .practice-main h1 {
@@ -2547,19 +2911,58 @@ dialog.preview-inline {
     text-overflow: clip;
     white-space: normal;
   }
-  .workspace-actions .reset-button {
-    order: 6;
-    margin-left: auto;
+  .workspace-title .status-chip {
+    order: 5;
+    padding-inline: 8px;
   }
-  .workspace-options {
-    order: 7;
+  .workspace-actions .workspace-save-status {
+    order: 6;
+    flex: 1 1 auto;
+    font-size: 12px;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  /*
+   * Checks become a bottom sheet: the run bar is fixed to the screen edge, the drawer's toggle peeks above it, and a run
+   * raises the results over the editor instead of below the fold.
+   */
+  .code-column.mobile-active {
+    padding-bottom: calc(var(--workspace-toolbar-height, 56px) + var(--control-height) + 12px);
+  }
+  .code-column .workspace-toolbar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 21;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    border-radius: 0;
+  }
+  .code-column .checks-drawer {
+    position: fixed;
+    right: 0;
+    bottom: var(--workspace-toolbar-height, 56px);
+    left: 0;
+    z-index: 20;
+    max-height: min(72dvh, calc(100dvh - var(--workspace-toolbar-height, 56px) - 96px));
+    border: 1px solid var(--border);
+    border-bottom: 0;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -10px 28px #0000002e;
+  }
+  .code-column .checks-drawer #check-details {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
   }
   .practice-steps {
     gap: 2px;
   }
   .practice-steps button {
+    flex: 1 1 auto;
     font-size: 13px;
-    padding: 8px 2px;
+    padding: 8px 4px;
   }
   .task-panel,
   .plan-panel,
@@ -2682,6 +3085,34 @@ dialog.preview-inline {
   .practice-steps button[aria-current='step'] > span::before {
     opacity: 1;
   }
+  /* A finished step trades its number for a check, so the rail shows progress at a glance. */
+  .practice-steps button > span {
+    position: relative;
+  }
+  .practice-steps button[data-done] > span::before {
+    content: '';
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    opacity: 1;
+  }
+  .practice-steps button[data-done][aria-current='step'] > span::before {
+    border-color: currentColor;
+    background: transparent;
+  }
+  .practice-steps button[data-done] > span::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    width: 14px;
+    height: 14px;
+    translate: -50% 0;
+    background: var(--accent);
+    mask: var(--icon-check) center / contain no-repeat;
+  }
+  .practice-steps button[data-done][aria-current='step'] > span::after {
+    background: currentColor;
+  }
   .task-column {
     border-radius: 0;
   }
@@ -2721,9 +3152,13 @@ dialog.preview-inline {
 }
 
 .profile-management {
-  margin-top: 22px;
   border-top: 1px solid var(--border);
-  padding-top: 12px;
+}
+.profile-dialog > label + .profile-management {
+  margin-top: 22px;
+}
+.profile-management[open] {
+  padding-bottom: 18px;
 }
 .profile-management > summary,
 .profile-portability > summary {
@@ -2818,11 +3253,13 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 .home-goal,
 .path-goal {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
-  margin: 20px 0;
+  gap: 4px 20px;
+  margin: 14px 0 0;
+}
+.path-goal p {
+  margin: 0;
 }
 .home-goal p,
 .path-goal p {
@@ -2936,12 +3373,52 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   padding: 8px 0;
 }
 .catalog-list {
+  display: grid;
+  gap: 28px;
   border: 0;
 }
-/* Groups draw the line above themselves so the last grid row never stacks a divider on the footer; the first row doubles as the heading rule. */
-.catalog-list > .list-group {
+/* One column of areas in learning order: opening a topic never moves it or its neighbours. */
+.catalog-area-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 0 8px;
+}
+.catalog-area-heading h3 {
+  margin: 0;
+  font-size: var(--type-card);
+}
+.catalog-area-heading > span {
+  color: var(--muted);
+  font-size: 13px;
+}
+/* Topics draw the line above themselves, so the last one never stacks a divider on the footer. */
+.catalog-area > .list-group {
   border-top: 1px solid var(--border);
   border-bottom: 0;
+}
+.topic-meter {
+  position: relative;
+  width: 72px;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--border);
+}
+.topic-meter > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 2px;
+  background: var(--success);
+}
+.list-row-level {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.catalog-lesson-matches {
+  margin: 10px 0 4px;
 }
 .catalog-list-heading {
   margin-bottom: 4px;
@@ -3161,21 +3638,6 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   }
   .journey-markers {
     width: 100%;
-  }
-}
-@media (min-width: 901px) {
-  .catalog-list {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 28px;
-    align-items: start;
-  }
-  .catalog-list > .list-group[open],
-  .catalog-list > .empty-state {
-    grid-column: 1 / -1;
-  }
-  .catalog-list[data-filtering='true'] {
-    grid-template-columns: minmax(0, 1fr);
   }
 }
 @media (max-width: 700px) {
@@ -3560,13 +4022,11 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   gap: 2px;
 }
 .practice-steps button small {
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.2;
   color: inherit;
 }
-.completion-panel .stop-for-today {
-  margin-bottom: 0;
-}
+
 .progress-quiet-links,
 .projects-more {
   color: var(--muted);
@@ -3605,4 +4065,404 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 }
 .indonesian-gloss {
   color: var(--muted);
+}
+
+/* Skills (Progress): what is next first, then four tiles, then journeys grouped by where they are on the ladder. */
+.progress-next {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 18px;
+  margin: 0 0 20px;
+  padding: 18px 22px;
+  border: 1px solid var(--feature-border);
+  border-radius: var(--radius);
+  background: var(--feature);
+  color: var(--feature-text);
+}
+.progress-next .home-label {
+  margin: 0;
+  color: var(--feature-muted);
+}
+.progress-next-text h2 {
+  margin: 0;
+  font-size: var(--type-card);
+}
+.progress-next-text p {
+  margin: 4px 0 0;
+  color: var(--feature-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.progress-next .progress-next-action {
+  background: var(--feature-text);
+  border-color: var(--feature-text);
+  color: var(--feature);
+}
+.progress-more-reviews {
+  grid-column: 1 / -1;
+  padding-top: 8px;
+  border-top: 1px solid var(--feature-border);
+}
+.progress-more-reviews > summary {
+  min-height: 36px;
+  padding: 6px 0;
+  cursor: pointer;
+  color: var(--feature-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+.progress-main .progress-summary {
+  /* Two compact counts stacked in the first column; the calendar and the ladder take full-height cards beside them. */
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr) minmax(0, 1.2fr);
+  grid-template-rows: auto auto;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 0;
+  border: 0;
+}
+.progress-main .progress-summary > div {
+  margin: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.progress-main .progress-summary dd {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 650;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.progress-main .progress-summary dt {
+  display: grid;
+  gap: 2px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+.progress-main .progress-summary dt small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+/* A compact count: the number beside its label. */
+.progress-main .progress-summary .progress-stat {
+  display: grid;
+  grid-template-columns: 3ch minmax(0, 1fr);
+  align-items: center;
+  align-content: center;
+  gap: 4px 16px;
+}
+.progress-main .progress-summary .progress-stat dd,
+.progress-main .progress-summary .progress-stat dt {
+  grid-row: 1;
+}
+.progress-main .progress-summary .progress-days,
+.progress-main .progress-summary .skill-ladder {
+  grid-row: 1 / span 2;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  align-content: start;
+  gap: 4px;
+}
+.progress-main .progress-summary .progress-days {
+  grid-column: 2;
+}
+.progress-main .progress-summary .skill-ladder {
+  grid-column: 3;
+  grid-template-rows: auto 1fr;
+}
+.progress-main .progress-summary .skill-ladder dt {
+  grid-row: 1;
+}
+.progress-main .progress-summary .skill-ladder dd {
+  grid-row: 2;
+}
+.progress-main .progress-summary .progress-days dd {
+  grid-row: 1;
+}
+.progress-main .progress-summary .progress-days dt {
+  grid-row: 2;
+}
+.progress-main .progress-summary .progress-days .practice-calendar {
+  grid-row: 3;
+}
+.practice-calendar {
+  display: grid;
+  gap: 10px;
+  align-self: end;
+  padding-top: 12px;
+}
+.practice-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 4px;
+  max-width: 264px;
+}
+.practice-calendar-grid > span {
+  display: grid;
+  gap: 4px;
+}
+.practice-calendar .practice-calendar-grid i {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+.practice-calendar i {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.practice-calendar i[data-day='any'] {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.practice-calendar i[data-day='clean'] {
+  background: var(--accent);
+  box-shadow: none;
+}
+.practice-calendar-grid i[data-day='future'] {
+  opacity: 0.35;
+}
+.practice-calendar-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.practice-calendar-key > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.practice-calendar-key > span:first-child {
+  margin-right: auto;
+}
+.practice-calendar-key i {
+  width: 10px;
+  height: 10px;
+}
+/* The ladder: one bar of skills by rung, then each rung as a row with its count, lowest rung last. */
+.progress-main .progress-summary .skill-ladder dd {
+  display: grid;
+  align-content: end;
+  gap: 14px;
+  padding-top: 14px;
+  font-size: 14px;
+  font-weight: 400;
+}
+.skill-ladder-bar {
+  display: flex;
+  gap: 2px;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.skill-ladder-bar > span {
+  min-width: 8px;
+  flex-basis: 0;
+}
+/* Four rungs that stay distinct in every scheme and mode: solid, mid, outlined, and empty. */
+.skill-ladder-bar [data-rung='retained'],
+.skill-ladder-legend [data-rung='retained']::before {
+  background: var(--action);
+}
+.skill-ladder-bar [data-rung='independent'],
+.skill-ladder-legend [data-rung='independent']::before {
+  background: color-mix(in srgb, var(--accent) 55%, var(--surface));
+}
+.skill-ladder-bar [data-rung='practising'],
+.skill-ladder-legend [data-rung='practising']::before {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+.skill-ladder-bar [data-rung='learning'],
+.skill-ladder-legend [data-rung='learning']::before {
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+.skill-ladder-legend {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+.skill-ladder-legend li {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-top: 1px solid var(--border);
+  color: var(--text);
+}
+.skill-ladder-legend li::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+.skill-ladder-legend b {
+  font-variant-numeric: tabular-nums;
+}
+.journey-groups {
+  display: grid;
+}
+.journey-groups > .list-group {
+  border-top: 1px solid var(--border);
+  border-bottom: 0;
+}
+.journey-groups .list-rows {
+  gap: 0;
+}
+.journey-groups .progress-journey {
+  border-bottom: 0;
+  border-top: 1px solid var(--border);
+}
+.journey-groups .progress-heading {
+  padding: 14px 4px 14px 12px;
+}
+.journey-groups .progress-heading h2 {
+  font-size: var(--type-card);
+}
+/* Each journey's three rungs, connected, with the label under each marker. */
+.journey-markers {
+  flex-wrap: nowrap;
+  gap: 0;
+}
+.journey-markers > span {
+  position: relative;
+  display: inline-grid;
+  justify-items: center;
+  gap: 2px;
+  width: 74px;
+}
+.journey-markers > span::before {
+  display: none;
+}
+.journey-markers > span + span::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  right: calc(50% + 12px);
+  width: calc(100% - 24px);
+  height: 2px;
+  border-radius: 2px;
+  background: var(--border);
+}
+.journey-markers > span[data-complete='true'] + span[data-complete='true']::after {
+  background: var(--accent);
+}
+.journey-rung {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--muted);
+}
+.journey-rung .ui-icon {
+  width: 12px;
+  height: 12px;
+}
+.journey-markers > span[data-complete='true'] .journey-rung {
+  border-color: var(--action);
+  background: var(--action);
+  color: var(--action-text);
+}
+.journey-markers > span[data-due] .journey-rung {
+  border-color: var(--feature-border);
+  background: var(--feature);
+  color: var(--feature-text);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--feature) 55%, transparent);
+}
+.journey-markers small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.progress-main .progress-quiet-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  margin: 8px 0 0;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+}
+@media (max-width: 900px) {
+  .progress-main .progress-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .progress-main .progress-summary .progress-days,
+  .progress-main .progress-summary .skill-ladder {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+}
+@media (max-width: 600px) {
+  .progress-main .progress-summary .progress-stat {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .progress-main .progress-summary .progress-stat dt {
+    grid-row: 2;
+  }
+}
+@media (max-width: 600px) {
+  .progress-next {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+  }
+  .journey-markers > span {
+    width: 64px;
+  }
+}
+
+/*
+ * Plain chevron disclosures: the hover tint spans exactly the divider's width with the chevron inset, and keeps a little
+ * air from the dividers above and below, as divided lists do.
+ */
+:is(
+    .starting-point-settings,
+    .catalog-filters,
+    .progress-reviews,
+    .local-data,
+    .history-list details,
+    .vocab,
+    .reflection-guide,
+    .progress-more-reviews,
+    .profile-management
+  )
+  > summary {
+  margin-block: 3px;
+  padding-inline: 8px;
+}
+
+/* In divided lists the rounded hover tint floats between the dividers with a little air, never touching them. */
+.list-group > summary,
+.progress-journey > .progress-heading {
+  margin-block: 3px;
+}
+.trail .path-stage-heading {
+  margin-block: 3px;
+}
+
+/* Journal: search stays in view; its filters share the Library's disclosure. */
+.history-search {
+  display: grid;
+  gap: 7px;
+  max-width: 420px;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 14px;
 }

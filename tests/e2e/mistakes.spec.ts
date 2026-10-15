@@ -14,7 +14,7 @@ async function prepareReview(page: import('@playwright/test').Page) {
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   await page.getByRole('button', { name: 'Explain', exact: true }).first().click()
   await page.getByLabel('Your explanation', { exact: true }).fill('I counted each number in a map and kept the smallest on ties.')
-  await page.getByRole('button', { name: 'Review', exact: true }).first().click()
+  await page.getByRole('button', { name: 'Finish', exact: true }).first().click()
 }
 
 test('an empty Mistakes page explains itself and states the self-reported caveat', async ({ page }) => {
@@ -48,7 +48,10 @@ test('tagging is optional, keyboard operable, and appears on Mistakes at a narro
   await group.getByRole('button', { name: 'Missed the empty case', exact: true }).click()
   await page.getByRole('button', { name: 'Complete rep', exact: true }).click()
   await expect(page.getByText('Your attempt is saved in the Journal.', { exact: true })).toBeVisible()
-  await expect(tag).toBeDisabled()
+  // Once complete, the tags become a read-only record of what was chosen.
+  await expect(group.getByRole('button')).toHaveCount(0)
+  await expect(group).toContainText('Off-by-one')
+  await expect(group).toContainText('Missed the empty case')
 
   await expect
     .poll(() =>

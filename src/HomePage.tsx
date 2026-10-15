@@ -1,14 +1,21 @@
+import { useState } from 'react'
 import { preloadEditor } from './editor-loader'
 import { Icon } from './Icon'
 import { Button } from './Button'
-import { repPracticeContext } from './curriculum'
+import { repCurriculumRole, repPracticeContext } from './curriculum'
+import type { LearnerStart } from './learning'
+import { effortRange } from './rep-guidance'
+import { repLevelLabel } from './rep-levels.ts'
 import { ListGroup, ListRow, PageHeader, StatusChip } from './Layout'
 import { Trail } from './Trail'
 import type { buildTrail } from './trail-map'
-import type { RepSummary } from './catalog-index'
 import { repSummaryById, repTitle } from './rep-index.ts'
 import { paths } from './path'
 import type { getPracticePlan, PracticeAction } from './practice'
+import { withoutGoal } from './practice-actions'
+
+// The first-rep walkthrough is authored for this rep only.
+const walkthroughRepId = 'declare-variables'
 
 type Props = {
   walkthroughSeen: boolean
@@ -16,7 +23,6 @@ type Props = {
   goalPathId: string
   onPath: (id: (typeof paths)[number]['id']) => void
   practicePlan: ReturnType<typeof getPracticePlan>
-  repStatus: (rep: RepSummary) => string
   openPracticeAction: (action: PracticeAction) => void
   actionLabel: (mode: string) => string
   onProgress: () => void
@@ -25,14 +31,28 @@ type Props = {
   evidence: (repId: string) => string
   openRep: (id: string) => void
   openLesson: (skillId: string) => void
+  learnerStart: LearnerStart | null
+  onLearnerStart: (value: LearnerStart) => void
 }
 
-const modeLabel = (mode?: string) => (mode === 'review' ? 'Ready to review' : mode === 'resume' ? 'Your saved draft' : 'Next practice')
+const modeLabel = (mode?: string) =>
+  mode === 'review'
+    ? 'Ready to review'
+    : mode === 'resume'
+      ? 'Continue your draft'
+      : mode === 'retry'
+        ? 'Try it without hints'
+        : 'Next practice'
+const stageNumber = (index: number) => `Stage ${String(index + 1).padStart(2, '0')}`
+const shortEffort = (repId: string) =>
+  effortRange(repId)
+    .replace(/, plus time to build$/, '')
+    .replace(' minutes', ' min')
 
 /** Home is the learner's trail: the goal drawn as connected stages, with the next useful action beside it. */
 export function HomePage(props: Props) {
-  const { walkthroughSeen, launchWalkthrough, goalPathId, onPath, practicePlan, repStatus, openPracticeAction, actionLabel } = props
-  const { onProgress, onLibrary, trail, evidence, openRep, openLesson } = props
+  const { walkthroughSeen, launchWalkthrough, goalPathId, onPath, practicePlan, openPracticeAction, actionLabel } = props
+  const { onProgress, onLibrary, trail, evidence, openRep, openLesson, learnerStart, onLearnerStart } = props
   const goal = paths.find(path => path.id === goalPathId) ?? paths[0]
   const recommendation = practicePlan.next
   const recommendedRep = recommendation && repSummaryById.get(recommendation.repId)
@@ -41,22 +61,48 @@ export function HomePage(props: Props) {
   const review = practicePlan.due.find(action => action.repId !== recommendation?.repId)
   const moreDrafts = practicePlan.unfinished.filter(action => action.repId !== recommendation?.repId).length - (draft ? 1 : 0)
   const moreReviews = practicePlan.due.filter(action => action.repId !== recommendation?.repId).length - (review ? 1 : 0)
+  const stageOf = (repId: string) => trail.stages.findIndex(stage => stage.nodes.some(node => node.kind === 'rep' && node.repId === repId))
+  const where = (repId: string) => {
+    const index = stageOf(repId)
+    return index >= 0 ? `${stageNumber(index)} · ${trail.stages[index].title}` : (repSummaryById.get(repId)?.category ?? '')
+  }
+  // The starting question belongs to a learner's very first visit: nothing finished, nothing started, nothing chosen.
+  const asksStart = learnerStart === null && trail.done === 0 && practicePlan.unfinished.length === 0 && practicePlan.due.length === 0
+  const [startChange, setStartChange] = useState<LearnerStart | null>(null)
+  // The panel settles in when its rep changes in place (after a starting choice), never on the page's own arrival.
+  const [shownRep, setShownRep] = useState(recommendation?.repId)
+  const [changedRep, setChangedRep] = useState<string>()
+  if (shownRep !== recommendation?.repId) {
+    setShownRep(recommendation?.repId)
+    setChangedRep(recommendation?.repId)
+  }
+  function chooseStart(value: LearnerStart) {
+    onLearnerStart(value)
+    setStartChange(value)
+  }
+  const chips = (repId: string) => {
+    const role = repCurriculumRole(repId)
+    return [repLevelLabel(repId), role === 'Application' ? '' : role, shortEffort(repId)].filter(Boolean)
+  }
+  const reason = recommendation && context ? (recommendation.mode === 'start' ? context.reason : withoutGoal(recommendation.reason)) : ''
+  const recommendedStage = recommendation ? stageOf(recommendation.repId) : -1
   return (
     <main className="home-main trail-home" id="top">
       <div className="trail-layout">
         <aside className="trail-aside" aria-label="Up next">
           {recommendation && recommendedRep ? (
             <section className="continue-panel" aria-labelledby="continue-heading">
-              <div>
-                <span className="home-label">{modeLabel(recommendation.mode)}</span>
+              <div key={recommendation.repId} className={`continue-body${changedRep === recommendation.repId ? ' is-changed' : ''}`}>
+                <span className="home-label">
+                  {modeLabel(recommendation.mode)}
+                  {recommendedStage >= 0 ? ` · ${stageNumber(recommendedStage)}` : ''}
+                </span>
                 <h2 id="continue-heading">{recommendedRep.title}</h2>
-                <p>
-                  {recommendation.reason} {!recommendation.reason.includes(context!.reason) && context!.reason}
-                </p>
-                <p>{context!.afterward}</p>
-                <span className="continue-status">
-                  {recommendedRep.category}
-                  <span>{repStatus(recommendedRep)}</span>
+                <p>{reason}</p>
+                <span className="continue-chips">
+                  {chips(recommendation.repId).map(chip => (
+                    <StatusChip key={chip}>{chip}</StatusChip>
+                  ))}
                 </span>
               </div>
               <Button
@@ -68,10 +114,18 @@ export function HomePage(props: Props) {
                 {actionLabel(recommendation.mode)}
                 <Icon name="arrow" />
               </Button>
-              {!walkthroughSeen && (
+              {!walkthroughSeen && recommendation.repId === walkthroughRepId && (
                 <Button variant="text" className="continue-guide" onClick={launchWalkthrough}>
                   Show me how a rep works
                 </Button>
+              )}
+              {asksStart && (
+                <p className="continue-start">
+                  <span>Coming back to coding?</span>
+                  <button type="button" className="text-button" onClick={() => chooseStart('returning')}>
+                    Skip the language basics
+                  </button>
+                </p>
               )}
             </section>
           ) : (
@@ -86,13 +140,31 @@ export function HomePage(props: Props) {
               </button>
             </section>
           )}
+          <p className="visually-hidden" role="status">
+            {startChange && recommendedRep ? `Your next rep is now ${recommendedRep.title}.` : ''}
+          </p>
+          {startChange && (
+            <p className="trail-notice">
+              <Icon name="check" />
+              <span>
+                {startChange === 'returning' ? 'Starting as returning to coding. ' : 'Starting with the language basics. '}
+                <button
+                  type="button"
+                  className="text-button"
+                  onClick={() => chooseStart(startChange === 'returning' ? 'new' : 'returning')}
+                >
+                  {startChange === 'returning' ? 'Undo' : 'Skip them instead'}
+                </button>
+              </span>
+            </p>
+          )}
           {(draft || review) && (
             <ListGroup title="Also waiting" open>
               {draft && (
                 <ListRow
                   title={repTitle(draft.repId)}
-                  meta={moreDrafts > 0 ? `Saved draft · ${moreDrafts} more saved` : 'Saved draft'}
-                  status={<StatusChip tone="progress">Saved</StatusChip>}
+                  meta={moreDrafts > 0 ? `${where(draft.repId)} · ${moreDrafts} more in progress` : where(draft.repId)}
+                  status={<StatusChip tone="progress">In progress</StatusChip>}
                   onOpen={() => openPracticeAction(draft)}
                   onPreview={preloadEditor}
                 />
@@ -100,7 +172,7 @@ export function HomePage(props: Props) {
               {review && (
                 <ListRow
                   title={repTitle(review.repId)}
-                  meta={moreReviews > 0 ? `Due review · ${moreReviews} more due` : 'Due review'}
+                  meta={moreReviews > 0 ? `Review · ${moreReviews} more due` : `Review · ${where(review.repId)}`}
                   status={<StatusChip tone="attention">Due</StatusChip>}
                   onOpen={() => openPracticeAction(review)}
                   onPreview={preloadEditor}

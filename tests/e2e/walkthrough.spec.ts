@@ -50,7 +50,7 @@ test('walkthrough uses real checks, hints, writing and completion without granti
   await page
     .getByLabel('Your explanation', { exact: true })
     .fill('I combine the greeting and name, then return the message. I reviewed const and let myself.')
-  await help(page).getByRole('button', { name: 'Walkthrough: review next' }).click()
+  await help(page).getByRole('button', { name: 'Walkthrough: finish next' }).click()
   // Difficulty is optional, so nothing is missing once checks pass.
   await expect(page.getByRole('button', { name: 'Complete rep', exact: true })).toBeEnabled()
   await expect(page.locator('.finish-note')).toHaveCount(0)
@@ -72,7 +72,7 @@ test('walkthrough uses real checks, hints, writing and completion without granti
     [1, 'plan'],
     [2, 'solve'],
     [3, 'explain'],
-    [4, 'review'],
+    [4, 'finish'],
   ] as const) {
     await expect(help(page)).toContainText(`${number} of 5`)
     await help(page)
@@ -82,18 +82,8 @@ test('walkthrough uses real checks, hints, writing and completion without granti
   await expect(help(page)).toContainText('Your attempt is saved')
   expect(await page.evaluate(() => Object.entries(localStorage).filter(([key]) => key.includes('declare-variables')))).toEqual(work)
   await page.goto('/#/progress')
-  await expect(
-    page
-      .locator('[aria-label="Practice summary"] > div')
-      .filter({ has: page.locator('dt', { hasText: 'Independent skills' }) })
-      .locator('dd'),
-  ).toHaveText('0')
-  await expect(
-    page
-      .locator('[aria-label="Practice summary"] > div')
-      .filter({ has: page.locator('dt', { hasText: 'Retained skills' }) })
-      .locator('dd'),
-  ).toHaveText('0')
+  await expect(page.locator('.skill-ladder-legend [data-rung="independent"] b')).toHaveText('0')
+  await expect(page.locator('.skill-ladder-legend [data-rung="retained"] b')).toHaveText('0')
 })
 
 test('walkthrough preference is session-only and separate for each profile', async ({ page }) => {
@@ -108,7 +98,7 @@ test('walkthrough preference is session-only and separate for each profile', asy
   expect(await page.evaluate(() => Object.keys(localStorage).some(key => key.includes('walkthrough')))).toBe(false)
   await page.getByRole('button', { name: 'Manage profiles' }).click()
   const dialog = page.getByRole('dialog', { name: 'Local profiles' })
-  await dialog.getByText('Create or rename a profile', { exact: true }).click()
+  await dialog.getByText('New profile', { exact: true }).click()
   await dialog.getByLabel('Profile name', { exact: true }).fill('Walkthrough learner')
   await dialog.getByRole('button', { name: 'Create profile', exact: true }).click()
   await expect(dialog.getByRole('status')).toHaveText('Profile created.')

@@ -4,7 +4,8 @@ export const practiceSteps = [
   { id: 'plan', label: 'Plan', section: 'plan-section' },
   { id: 'solve', label: 'Solve', section: 'solution-section' },
   { id: 'explain', label: 'Explain', section: 'explain-section' },
-  { id: 'review', label: 'Review', section: 'review-section' },
+  // The id stays "review" for saved session state; learners see Finish, where the rep is completed.
+  { id: 'review', label: 'Finish', section: 'review-section' },
 ] as const
 
 export const stepSection = (stepId: string) => practiceSteps.find(step => step.id === stepId)!.section

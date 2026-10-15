@@ -29,8 +29,9 @@ export function useNavigation(repIds: string[], onRestore: (route: Route) => voi
       window.removeEventListener('hashchange', receive)
     }
   }, [repIds])
-  function navigate(view: View, repId?: string) {
-    const next = { view, repId }
+  /** The id is the rep for the workspace and the lesson for Lessons; other pages ignore it. */
+  function navigate(view: View, id?: string) {
+    const next: Route = view === 'workspace' ? { view, repId: id } : view === 'knowledge' && id ? { view, skillId: id } : { view }
     if (location.hash !== routeHash(next)) history.pushState(null, '', routeHash(next))
     setRoute(next)
   }

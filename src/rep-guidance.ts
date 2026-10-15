@@ -93,7 +93,9 @@ export function getRepGuidance(repId: string, completedRepIds: Iterable<string>)
   const trackGap = level !== undefined && level >= 2 && !!track && !trackBeginners.some(id => completed.has(id))
   if (level && (jump || trackGap)) {
     const bridgeId = jump
-      ? (position?.before ?? [])
+      ? // Nearest first, so the bridge is the closest easier step rather than the start of the track.
+        [...(position?.before ?? [])]
+          .reverse()
           .filter(id => !completed.has(id) && (repLevel(id) ?? 3) < level)
           .sort((a, b) => (repLevel(b) ?? 0) - (repLevel(a) ?? 0))[0]
       : trackBeginners[0]

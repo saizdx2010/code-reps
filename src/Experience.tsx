@@ -6,7 +6,8 @@ import { setScreenNavigated } from './screen-focus'
 import { useGlossary } from './useGlossary'
 import { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
 import type { KeyboardEvent, MouseEvent, PointerEvent, ReactNode } from 'react'
-import type { RepSummary } from './catalog-index'
+import { searchPalette } from './command-search'
+import type { SearchEntry, SearchTarget } from './command-search'
 import type { TestResult } from './runner.types'
 
 type ScreenState = { windowY: number; scroll: [number, number][]; open: Record<string, boolean>; focusId?: string }
@@ -53,18 +54,51 @@ export function ScreenMemory({ screenKey, children }: { screenKey: string; child
         }
       })
       window.scrollTo(0, saved.windowY)
-      if (saved.focusId) element.querySelector<HTMLElement>(`[id="${CSS.escape(saved.focusId)}"]`)?.focus({ preventScroll: true })
+      const focusTarget = saved.focusId ? element.querySelector<HTMLElement>(`[id="${CSS.escape(saved.focusId)}"]`) : null
+      if (focusTarget) focusTarget.focus({ preventScroll: true })
+      else if (navigated) element.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true })
     } else {
       window.scrollTo(0, 0)
       // In-app navigation moves focus to the new page heading; a page load leaves focus at the top, so the skip link stays the first stop.
       if (navigated) element.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true })
     }
-    const capture = () => {
+    // By the time this cleanup runs, the arriving screen may already have reset the window scroll and moved focus, so a
+    // read at cleanup would save the new screen's position. Track both while this screen is shown and save those.
+    let windowY = saved && window.scrollY === saved.windowY ? saved.windowY : window.scrollY
+    let focusId = saved?.focusId
+    const onScroll = () => {
+      if (element.isConnected && shownScreen === memoryKey) windowY = window.scrollY
+    }
+    const onFocus = (event: FocusEvent) => {
+      if (event.target instanceof HTMLElement && element.contains(event.target)) focusId = event.target.id || undefined
+    }
+    // A lazy page may still be loading when its saved position is restored; scroll again once its content can hold it.
+    const pendingY = saved && window.scrollY < saved.windowY ? saved.windowY : undefined
+    const settleScroll =
+      pendingY !== undefined && typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(() => {
+            if (document.documentElement.scrollHeight - window.innerHeight < pendingY) return
+            if (window.scrollY < pendingY && windowY < pendingY) window.scrollTo(0, pendingY)
+            windowY = window.scrollY
+            settleScroll?.disconnect()
+          })
+        : undefined
+    settleScroll?.observe(element)
+    const settleScrollTimer = settleScroll ? window.setTimeout(() => settleScroll.disconnect(), 5000) : undefined
+    window.addEventListener('scroll', onScroll, { passive: true })
+    element.addEventListener('focusin', onFocus)
+    // A scroll event can still be pending when a click starts navigation; read the position before the click is handled.
+    document.addEventListener('click', onScroll, true)
+    const capture = (live = false) => {
+      if (live) {
+        windowY = window.scrollY
+        if (element.contains(document.activeElement)) focusId = document.activeElement?.id || undefined
+      }
       const state: ScreenState = {
-        windowY: window.scrollY,
+        windowY,
         scroll: scrollElements().map(item => [item.scrollTop, item.scrollLeft]),
         open: Object.fromEntries(Array.from(element.querySelectorAll('details')).map(item => [detailKey(item), item.open])),
-        focusId: element.contains(document.activeElement) ? document.activeElement?.id : undefined,
+        focusId,
       }
       screens.set(memoryKey, state)
       try {
@@ -86,12 +120,18 @@ export function ScreenMemory({ screenKey, children }: { screenKey: string; child
         : undefined
     settle?.observe(element, { childList: true, subtree: true })
     const settleTimer = settle ? window.setTimeout(() => settle.disconnect(), 30000) : undefined
-    window.addEventListener('pagehide', capture)
+    const captureLive = () => capture(true)
+    window.addEventListener('pagehide', captureLive)
     return () => {
       settle?.disconnect()
       window.clearTimeout(settleTimer)
+      settleScroll?.disconnect()
+      window.clearTimeout(settleScrollTimer)
+      window.removeEventListener('scroll', onScroll)
+      element.removeEventListener('focusin', onFocus)
+      document.removeEventListener('click', onScroll, true)
       capture()
-      window.removeEventListener('pagehide', capture)
+      window.removeEventListener('pagehide', captureLive)
     }
   }, [memoryKey])
   return (
@@ -124,6 +164,8 @@ export function SearchDrawer({ title, children, onClose, className = '', closeRe
   useEffect(() => {
     const node = dialog.current!
     node.showModal()
+    // showModal focuses the first control (Close); a search drawer starts in its field so typing searches at once.
+    node.querySelector<HTMLElement>('[data-autofocus]')?.focus()
     return () => {
       window.clearTimeout(timer.current)
       node.close()
@@ -179,7 +221,7 @@ export function GlossaryDrawer({ onClose }: { onClose: () => void }) {
       <Input
         id="glossary-query"
         type="search"
-        autoFocus
+        data-autofocus
         value={query}
         onChange={event => setQuery(event.target.value)}
         placeholder="Try index, map, or frequency"
@@ -207,18 +249,21 @@ export function GlossaryDrawer({ onClose }: { onClose: () => void }) {
   )
 }
 
-type Command = { label: string; shortcut?: string; run: () => void }
-type PaletteProps = { reps: RepSummary[]; commands: Command[]; onOpenRep: (id: string) => void; onClose: () => void }
-export function CommandPalette({ reps, commands, onOpenRep, onClose }: PaletteProps) {
+type PaletteProps = {
+  /** Entries that depend on where the learner is: what to continue, this rep's actions, and settings. */
+  context: SearchEntry[]
+  onChoose: (target: SearchTarget) => void
+  onClose: () => void
+}
+export function CommandPalette({ context, onChoose, onClose }: PaletteProps) {
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
   const closeRequest = useRef<(() => void) | null>(null)
-  const matches: Command[] = [...commands, ...reps.map(rep => ({ label: `Practice: ${rep.title}`, run: () => onOpenRep(rep.id) }))].filter(
-    item => item.label.toLowerCase().includes(query.toLowerCase()),
-  )
-  const execute = (command: Command) => {
+  const sections = searchPalette(query, context)
+  const matches = sections.flatMap(section => section.entries)
+  const execute = (entry: SearchEntry) => {
     closeRequest.current?.()
-    requestAnimationFrame(command.run)
+    requestAnimationFrame(() => onChoose(entry.target))
   }
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
@@ -233,14 +278,17 @@ export function CommandPalette({ reps, commands, onOpenRep, onClose }: PalettePr
   useEffect(() => {
     document.getElementById(`command-${active}`)?.scrollIntoView({ block: 'nearest' })
   }, [active])
+  // Each option's place in the flat list the arrow keys move through.
+  const starts = sections.map((_, i) => sections.slice(0, i).reduce((sum, section) => sum + section.entries.length, 0))
   return (
-    <SearchDrawer title="Commands & exercises" onClose={onClose} closeRequest={closeRequest}>
-      <label htmlFor="command-query" className="field-label">
-        Search or choose an action
+    <SearchDrawer title="Search" className="command-palette" onClose={onClose} closeRequest={closeRequest}>
+      <label htmlFor="command-query" className="visually-hidden">
+        Search pages, lessons, exercises, and settings
       </label>
       <Input
         id="command-query"
-        autoFocus
+        type="search"
+        data-autofocus
         value={query}
         onChange={event => {
           setQuery(event.target.value)
@@ -251,29 +299,52 @@ export function CommandPalette({ reps, commands, onOpenRep, onClose }: PalettePr
         aria-controls="command-results"
         aria-autocomplete="list"
         aria-activedescendant={matches.length ? `command-${active}` : undefined}
-        placeholder="Find a page, rep, or workspace action…"
+        placeholder="Find a lesson, exercise, page, or setting"
         onKeyDown={onKeyDown}
       />
-      <p className="utility-note">
-        <kbd>↑</kbd> <kbd>↓</kbd> choose · <kbd>Enter</kbd> open · <kbd>Ctrl / ⌘ K</kbd> commands · <kbd>Ctrl / ⌘ Enter</kbd> run checks
-      </p>
-      <div id="command-results" role="listbox" aria-label="Matching commands" className="command-results">
-        {matches.map((command, index) => (
-          <div
-            key={command.label}
-            id={`command-${index}`}
-            role="option"
-            aria-selected={index === active}
-            onMouseEnter={() => setActive(index)}
-          >
-            <button type="button" tabIndex={-1} onClick={() => execute(command)}>
-              {command.label}
-              {command.shortcut && <kbd>{command.shortcut}</kbd>}
-            </button>
+      <div id="command-results" role="listbox" aria-label="Results" className="command-results">
+        {sections.map((section, sectionIndex) => (
+          <div key={section.group} role="group" aria-labelledby={`command-group-${section.group.replace(' ', '-')}`}>
+            <p className="command-group" id={`command-group-${section.group.replace(' ', '-')}`} role="presentation">
+              {section.group}
+            </p>
+            {section.entries.map((entry, entryIndex) => {
+              const position = starts[sectionIndex] + entryIndex
+              return (
+                <div
+                  key={`${section.group}:${entry.label}`}
+                  id={`command-${position}`}
+                  role="option"
+                  aria-selected={position === active}
+                  onMouseEnter={() => setActive(position)}
+                >
+                  <button type="button" tabIndex={-1} onClick={() => execute(entry)}>
+                    <span>{entry.label}</span>
+                    {entry.detail && <small>{entry.detail}</small>}
+                    {entry.shortcut && <kbd>{entry.shortcut}</kbd>}
+                  </button>
+                </div>
+              )
+            })}
           </div>
         ))}
       </div>
-      {!matches.length && <p>No matching commands or exercises.</p>}
+      {!matches.length && (
+        <p className="command-empty" role="status">
+          Nothing matches “{query.trim()}”. Try a shorter word, or browse the Library.
+        </p>
+      )}
+      <p className="command-keys" aria-hidden="true">
+        <span>
+          <kbd>↑</kbd> <kbd>↓</kbd> to move
+        </span>
+        <span>
+          <kbd>Enter</kbd> to open
+        </span>
+        <span>
+          <kbd>Esc</kbd> to close
+        </span>
+      </p>
     </SearchDrawer>
   )
 }
@@ -301,13 +372,34 @@ function ValueDifference({ value, other }: { value: string; other: string }) {
   )
 }
 
-export function CheckFeedback({ results }: { results: TestResult[] }) {
+/** Failed checks first, one diagnostic open at a time, then the passed checks. Stale results are a dimmed reference. */
+export function CheckFeedback({
+  results,
+  stale = false,
+  open,
+  onOpen,
+}: {
+  results: TestResult[]
+  stale?: boolean
+  /** The failed check shown open. Owned by the caller so it survives a run going out of date. */
+  open?: string | null
+  onOpen?: (name: string | null) => void
+}) {
   const failed = results.filter(result => !result.passed)
   const passed = results.filter(result => result.passed)
-  const [activeFailed, setActiveFailed] = useState<string | null>(() => failed[0]?.name ?? null)
+  const [ownOpen, setOwnOpen] = useState<string | null>(() => failed[0]?.name ?? null)
+  const activeFailed = open === undefined ? ownOpen : open
+  const setActiveFailed = (next: (current: string | null) => string | null) => {
+    const value = next(activeFailed)
+    setOwnOpen(value)
+    onOpen?.(value)
+  }
   const row = (result: TestResult) => (
     <li key={result.name}>
-      <span className={result.passed ? 'pass-icon' : 'fail-icon'} aria-label={result.passed ? 'Passed' : 'Failed'}>
+      <span
+        className={result.passed ? 'pass-icon' : 'fail-icon'}
+        aria-label={`${result.passed ? 'Passed' : 'Failed'}${stale ? ' in the last run' : ''}`}
+      >
         <Icon name={result.passed ? 'check' : 'close'} />
       </span>
       <div>
@@ -321,18 +413,21 @@ export function CheckFeedback({ results }: { results: TestResult[] }) {
               setActiveFailed(current => (open ? result.name : current === result.name ? null : current))
             }}
           >
-            <FailedCheck result={result} />
+            <FailedCheck result={result} stale={stale} />
           </details>
         )}
       </div>
-      {result.passed && <span className="check-outcome">Passed</span>}
+      {result.passed && <span className="check-outcome">{stale ? 'Passed last run' : 'Passed'}</span>}
     </li>
   )
   return (
     <>
-      {!!failed.length && <ul className="result-list">{failed.map(row)}</ul>}
+      {!!failed.length && <ul className={`result-list${stale ? ' is-stale' : ''}`}>{failed.map(row)}</ul>}
       {!!passed.length && (
-        <ul className="result-list passed-checks" aria-label="Passed checks">
+        <ul
+          className={`result-list passed-checks${stale ? ' is-stale' : ''}`}
+          aria-label={stale ? 'Passed in the last run' : 'Passed checks'}
+        >
           {passed.map(row)}
         </ul>
       )}
@@ -341,7 +436,7 @@ export function CheckFeedback({ results }: { results: TestResult[] }) {
 }
 
 /** The input, expected and actual values, and message for one failed check. */
-function FailedCheck({ result }: { result: TestResult }) {
+function FailedCheck({ result, stale }: { result: TestResult; stale: boolean }) {
   const actual = result.actual ?? 'No returned value'
   return (
     <>
@@ -359,13 +454,13 @@ function FailedCheck({ result }: { result: TestResult }) {
             <ValueDifference value={result.expected} other={actual} />
           </div>
           <div>
-            <span className="field-label">Actual</span>
+            <span className="field-label">{stale ? 'Actual (last run)' : 'Actual'}</span>
             <ValueDifference value={actual} other={result.expected} />
           </div>
         </div>
       )}
       {result.message && !(result.expected !== undefined && result.message.startsWith('Expected ')) && <p>{result.message}</p>}
-      <p className="utility-note">Trace this input through your code, then try again.</p>
+      {!stale && <p className="utility-note">Trace this input through your code, then try again.</p>}
     </>
   )
 }

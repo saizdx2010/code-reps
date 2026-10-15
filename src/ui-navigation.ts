@@ -1,3 +1,5 @@
+import { skillIndex } from './catalog-index.ts'
+
 const views = [
   'sessions',
   'home',
@@ -17,7 +19,9 @@ const views = [
   'interview',
 ] as const
 export type View = (typeof views)[number]
-export type Route = { view: View; repId?: string }
+// A lesson has its own address, #/knowledge/<skill-id>, so it can be bookmarked and Back returns to it.
+export type Route = { view: View; repId?: string; skillId?: string }
+const skillIds = new Set(skillIndex.map(skill => skill.id))
 
 export const navigationSections = {
   trail: [
@@ -76,9 +80,19 @@ export function readRoute(hash: string, repIds: string[]): Route {
     return { view: 'catalog' }
   }
   if (page === 'practice') return { view: 'catalog' }
+  if (page === 'knowledge' && rawId) {
+    try {
+      const skillId = decodeURIComponent(rawId)
+      if (skillIds.has(skillId)) return { view: 'knowledge', skillId }
+    } catch {
+      /* An invalid lesson link opens the lessons page. */
+    }
+    return { view: 'knowledge' }
+  }
   return { view: views.includes(page as View) && page !== 'workspace' ? (page as View) : 'home' }
 }
 export function routeHash(route: Route): string {
   if (route.view === 'workspace' && route.repId) return `#/practice/${encodeURIComponent(route.repId)}`
+  if (route.view === 'knowledge' && route.skillId) return `#/knowledge/${encodeURIComponent(route.skillId)}`
   return `#/${route.view === 'catalog' ? 'practice' : route.view}`
 }

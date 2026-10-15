@@ -266,9 +266,10 @@ export type JourneyProgress = ReturnType<typeof getJourney> & { journey: Journey
 export const getAllJourneys = (records: LearningRecord[], now = Date.now()): JourneyProgress[] =>
   journeys.map(journey => ({ journey, ...getJourney(journey, records, now) }))
 
+// One evidence ladder everywhere: Not started, Guided, Independent, Retained. Review due is shown as an overlay.
 export const stageLabels: Record<JourneyStage, string> = {
-  learning: 'Learning',
-  practising: 'Practicing',
+  learning: 'Not started',
+  practising: 'Guided',
   independent: 'Independent',
   retained: 'Retained',
 }

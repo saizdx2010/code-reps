@@ -1,3 +1,4 @@
+import { stageLabels } from './learning'
 import { formatDate } from './ui-copy.ts'
 import { InfoNote, ListGroup } from './Layout'
 import { Button } from './Button'
@@ -92,13 +93,14 @@ type CardProps = { skillId: string; title: string; state: FluencyState; history:
 
 function SkillEvidenceCard({ skillId, title, state, history, onReview }: CardProps) {
   const evidence = skillEvidence(skillId, history, state)
+  // The same ladder words as Skills and the skill map.
   const stage = evidence.retained
-    ? 'Recall recorded'
+    ? stageLabels.retained
     : evidence.independent.length
-      ? 'Checked without hints'
+      ? stageLabels.independent
       : evidence.attempts.length
-        ? 'Practicing'
-        : 'Start practicing'
+        ? stageLabels.practising
+        : stageLabels.learning
   const selfReview = evidence.selfReview
   return (
     <li>

@@ -39,6 +39,8 @@ test('custom calendar handles month boundaries, leap days, cancellation, and rel
   await page.clock.setFixedTime(new Date('2026-01-31T12:00:00Z'))
   await page.setViewportSize({ width: 320, height: 568 })
   await page.goto('/#/history')
+  // Narrow screens fold the Journal filters away; the open state is remembered for the session.
+  await page.locator('.history-filters > summary').click()
   const date = page.getByRole('button', { name: 'Date', exact: true })
   await date.click()
   const calendar = page.getByRole('dialog')
@@ -119,7 +121,7 @@ test('custom popup works inside Profiles and the owned file control preserves fa
   await page.keyboard.press('Escape')
   await expect(profiles).toBeVisible()
   await expect(select).toBeFocused()
-  await profiles.getByText('Export or import a profile', { exact: true }).click()
+  await profiles.getByText('Full profile file', { exact: true }).click()
   const chooser = page.waitForEvent('filechooser')
   await profiles.getByRole('button', { name: 'Choose file', exact: true }).click()
   await (await chooser).setFiles({ name: 'invalid.json', mimeType: 'application/json', buffer: Buffer.from('{broken') })

@@ -55,6 +55,7 @@ export default function ProfileApp() {
   const [message, setMessage] = useState(initial.error)
   const [busy, setBusy] = useState('')
   const [name, setName] = useState('')
+  const [newName, setNewName] = useState('')
   const [deleteRequested, setDeleteRequested] = useState(false)
   const dialog = useRef<HTMLDialogElement>(null)
   const current = profiles.find(p => p.id === active)
@@ -120,8 +121,8 @@ export default function ProfileApp() {
   }
   function rename() {
     try {
-      saveProfiles(readCurrentProfiles().map(p => (p.id === active ? { ...p, name: name.trim() } : p)))
-      setName('')
+      saveProfiles(readCurrentProfiles().map(p => (p.id === active ? { ...p, name: newName.trim() } : p)))
+      setNewName('')
       setMessage('Profile renamed.')
     } catch (error) {
       setMessage(String(error))
@@ -180,6 +181,7 @@ export default function ProfileApp() {
     try {
       setProfiles(readCurrentProfiles())
       setName('')
+      setNewName('')
       dialog.current?.showModal()
     } catch (error) {
       setMessage(String(error))
@@ -224,7 +226,7 @@ export default function ProfileApp() {
           </Select>
         </label>
         <details className="profile-management">
-          <summary>Create or rename a profile</summary>
+          <summary>New profile</summary>
           <label>
             Profile name
             <Input maxLength={60} value={name} onChange={e => setName(e.target.value)} placeholder="Name a learner or learning track" />
@@ -233,19 +235,34 @@ export default function ProfileApp() {
             <Button variant="primary" type="button" disabled={disabled || !name.trim()} onClick={() => void create()}>
               Create profile
             </Button>
-            <Button type="button" disabled={disabled || !name.trim()} onClick={rename}>
-              Rename current
+          </div>
+        </details>
+        <details className="profile-management">
+          <summary>Rename {current?.name}</summary>
+          <label>
+            New name
+            <Input maxLength={60} value={newName} onChange={e => setNewName(e.target.value)} placeholder={current?.name} />
+          </label>
+          <div className="hub-actions">
+            <Button type="button" disabled={disabled || !newName.trim() || newName.trim() === current?.name} onClick={rename}>
+              Rename profile
             </Button>
           </div>
         </details>
-        <details className="profile-portability">
-          <summary>Export or import a profile</summary>
-          <p>Export a full copy or import a backup into a separate local profile.</p>
-          <Button type="button" disabled={disabled} onClick={() => void exportProfile()}>
-            Export current
-          </Button>
-          <label className="file-button">
-            Import profile
+        <details className="profile-management profile-portability">
+          <summary>Full profile file</summary>
+          <p>
+            A full profile file copies everything in a profile: attempts, drafts, notes, lesson answers, assessments, and preferences.
+            Importing one always adds a new profile and never changes {current?.name}. To merge practice into this profile instead, use Back
+            up or restore practice on Progress.
+          </p>
+          <div className="hub-actions">
+            <Button type="button" disabled={disabled} onClick={() => void exportProfile()}>
+              Export {current?.name}
+            </Button>
+          </div>
+          <label className="profile-import">
+            Import as a new profile
             <Input
               type="file"
               accept="application/json,.json"
@@ -258,24 +275,28 @@ export default function ProfileApp() {
             />
           </label>
         </details>
-        <p role="status" className={busy ? 'loading-status profile-loading-status' : undefined}>
+        <p role="status" className={busy ? 'loading-status profile-loading-status' : 'profile-status'}>
           {busy || message}
         </p>
-        {deleteRequested ? (
-          <div className="delete-confirm">
-            <p>Delete {current?.name} and its drafts, attempts, notes, and assessments? Export first if you want to keep them.</p>
-            <Button variant="danger" type="button" disabled={disabled} onClick={() => void remove()}>
-              Delete this profile
+        <div className="profile-delete">
+          {deleteRequested ? (
+            <div className="delete-confirm">
+              <p>Delete {current?.name} and its drafts, attempts, notes, and assessments? Export it first if you want to keep them.</p>
+              <Button variant="danger" type="button" disabled={disabled} onClick={() => void remove()}>
+                Delete this profile
+              </Button>
+              <Button type="button" disabled={disabled} onClick={() => setDeleteRequested(false)}>
+                Keep profile
+              </Button>
+            </div>
+          ) : profiles.length <= 1 ? (
+            <p>This is the only profile, so it cannot be deleted. Create another profile first.</p>
+          ) : (
+            <Button type="button" disabled={disabled} onClick={() => setDeleteRequested(true)}>
+              Delete {current?.name}…
             </Button>
-            <Button type="button" disabled={disabled} onClick={() => setDeleteRequested(false)}>
-              Keep profile
-            </Button>
-          </div>
-        ) : (
-          <Button type="button" disabled={disabled || profiles.length <= 1} onClick={() => setDeleteRequested(true)}>
-            Delete current profile…
-          </Button>
-        )}
+          )}
+        </div>
       </dialog>
     </>
   )

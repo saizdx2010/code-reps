@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import type { ReactNode } from 'react'
 import { Icon } from './Icon'
 import { foundationsPathId, trackGroups } from './curriculum'
@@ -33,6 +34,7 @@ const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matche
 export function PathsPage(props: Props) {
   const { goalPathId, setGoalPath, goalError, pathId, setPathId, pathPicker, setPathPicker, learnerStart, startingPoint } = props
   const { completedPathIds, trail, evidence, openRep, openLesson } = props
+  const goalLine = useRef<HTMLParagraphElement>(null)
   const selectedPath = paths.find(path => path.id === pathId) ?? paths[0]
   const refresher = learnerStart === 'returning' && selectedPath.id === foundationsPathId
   const pathIntroduction = refresher
@@ -77,7 +79,7 @@ export function PathsPage(props: Props) {
   return (
     <main className="paths-main">
       <PageHeader
-        title="Choose a track."
+        title="Choose a track"
         description="Every track builds on Foundations. Follow one as your goal or browse any of them freely."
         actions={
           <label className="path-select">
@@ -127,23 +129,30 @@ export function PathsPage(props: Props) {
       </details>
       <section className="path-overview" aria-labelledby="path-title">
         <div>
-          <span className="home-label">{selectedPath.id === foundationsPathId ? 'Foundations' : 'Builds on Foundations'}</span>
+          <span className="home-label">{selectedPath.id === foundationsPathId ? 'Start here' : 'Builds on Foundations'}</span>
           <h2 id="path-title" tabIndex={-1}>
             {refresher ? 'Return to problem solving' : selectedPath.title}
           </h2>
           <p>{refresher ? 'Start with guided problems, then revisit skills without hints after a break.' : selectedPath.description}</p>
           <div className="path-goal">
-            <p>
+            <p ref={goalLine} tabIndex={-1} role="status">
               {goalPathId === selectedPath.id ? 'Your current learning goal.' : 'Browsing this track does not change your learning goal.'}
             </p>
-            <button
-              type="button"
-              className="text-button"
-              disabled={goalPathId === selectedPath.id}
-              onClick={() => setGoalPath(selectedPath.id)}
-            >
-              Use this as my learning goal
-            </button>
+            {goalPathId !== selectedPath.id && (
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => {
+                  setGoalPath(selectedPath.id)
+                  // The button leaves once the goal is saved; keep keyboard focus on the line that confirms it.
+                  requestAnimationFrame(() => {
+                    if (document.activeElement === document.body) goalLine.current?.focus()
+                  })
+                }}
+              >
+                Use this as my learning goal
+              </button>
+            )}
             {goalError && <p role="alert">{goalError}</p>}
           </div>
         </div>

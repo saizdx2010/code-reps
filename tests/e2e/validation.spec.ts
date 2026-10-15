@@ -13,7 +13,7 @@ async function finish(page: Page, id: string, code: string) {
   await page
     .getByLabel('Your explanation', { exact: true })
     .fill('I traced the boundary and conflicting invalid cases. I return a new object and keep the documented error order.')
-  await page.getByRole('button', { name: 'Review', exact: true }).click()
+  await page.getByRole('button', { name: 'Finish', exact: true }).click()
   await chooseSegment(page, 'What was hardest?', 'Nothing in particular')
   // Confidence is optional: completing without it must work.
   await expect(page.getByText('Still needed', { exact: false })).toHaveCount(0)
@@ -40,7 +40,7 @@ test('validation journey requires a fresh delayed recall and remains discoverabl
     .locator('.progress-journey')
     .filter({ has: page.getByRole('heading', { name: 'Validate data at a boundary', exact: true }) })
   await journey.locator('summary').click()
-  await expect(journey.locator('.journey-markers')).toHaveAttribute('aria-label', 'Practicing')
+  await expect(journey.locator('.journey-markers')).toHaveAttribute('aria-label', 'Guided')
   await expect(journey.locator('.journey-markers [data-complete=true]')).toHaveCount(1)
   await journey.getByRole('button', { name: 'Try rep', exact: false }).click()
   await expect(page).toHaveURL(/validate-stock-adjustment$/)
@@ -63,6 +63,12 @@ test('validation journey requires a fresh delayed recall and remains discoverabl
   await expect(page.locator('.view-lines')).toContainText('Implement the written contract')
   await finish(page, 'parse-delivery-window', validationSolutions['parse-delivery-window'])
   await page.goto('/#/progress')
+  // A retained journey moves to its own group, which starts collapsed.
+  await page
+    .locator('.journey-groups > .list-group')
+    .filter({ has: page.locator('.list-group-title', { hasText: /^Retained$/ }) })
+    .locator(':scope > summary')
+    .click()
   await expect(journey.locator('.journey-markers')).toHaveAttribute('aria-label', 'Retained')
   await expect(journey.locator('.journey-markers [data-complete=true]')).toHaveCount(3)
   await page.goto('/#/practice')

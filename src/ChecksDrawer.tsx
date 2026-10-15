@@ -1,10 +1,12 @@
+import { useState } from 'react'
 import type { Ref } from 'react'
 import { CheckFeedback } from './Experience'
-import { relatedHelp } from './fluency'
 import { Icon } from './Icon'
+import { StatusChip } from './Layout'
+import { skillSummariesForRep } from './skill-index.ts'
 import type { TestResult } from './runner.types'
 
-type CheckRun = { results: TestResult[] | null; runError: string; running: boolean; runNotice: string }
+type CheckRun = { results: TestResult[] | null; staleResults: TestResult[] | null; runError: string; running: boolean; runNotice: string }
 
 const passedCount = (results: TestResult[]) => results.filter(result => result.passed).length
 
@@ -19,6 +21,7 @@ export function ChecksDrawer({
   repId,
   openLesson,
   onExplain,
+  explaining,
 }: {
   run: CheckRun
   allPassed: boolean
@@ -29,22 +32,49 @@ export function ChecksDrawer({
   repId: string
   openLesson: (id: string) => void
   onExplain: () => void
+  /** The Explain step is open or already written, so the drawer does not offer to go there. */
+  explaining: boolean
 }) {
-  const { results, runError, running, runNotice } = run
-  const state = running ? 'running' : runError ? 'failed' : results ? (allPassed ? 'passed' : 'failed') : ''
+  const { results, staleResults, runError, running, runNotice } = run
+  const stale = !running && !results && !runError ? staleResults : null
+  const state = running ? 'running' : runError ? 'failed' : results ? (allPassed ? 'passed' : 'failed') : stale ? 'stale' : ''
   const summary = running
     ? 'Running…'
     : results
       ? `${passedCount(results)} of ${results.length} passed`
       : runError
         ? 'Needs attention'
-        : 'Not run yet'
+        : stale
+          ? `Last run: ${passedCount(stale)} of ${stale.length} passed`
+          : 'Not run yet'
+  // The open failed case follows the learner from a fresh run into its out-of-date reference.
+  const shown = results ?? stale
+  const firstFailed = shown?.find(result => !result.passed)?.name ?? null
+  const [openCase, setOpenCase] = useState<{ run: TestResult[] | null; name: string | null }>({ run: null, name: null })
+  const openName = openCase.run === shown ? openCase.name : firstFailed
+  const chooseCase = (name: string | null) => setOpenCase({ run: shown, name })
+  // One direct lesson for the rep, never a guess from check names, and nothing when the rep has none.
+  const lesson = skillSummariesForRep(repId)[0]
   return (
-    <section id="checks-section" tabIndex={-1} className={`checks-drawer ${state}`} aria-live="polite" aria-busy={running}>
+    <section
+      id="checks-section"
+      tabIndex={-1}
+      className={`checks-drawer ${state}`}
+      aria-live="polite"
+      aria-busy={running}
+      onKeyDown={event => {
+        // Escape lowers the open results (on phones, the sheet over the editor) and returns focus to the toggle.
+        if (event.key !== 'Escape' || !open || event.defaultPrevented) return
+        event.preventDefault()
+        onToggle()
+        event.currentTarget.querySelector<HTMLButtonElement>('.checks-toggle')?.focus()
+      }}
+    >
       <button type="button" className="checks-toggle" aria-expanded={open} aria-controls="check-details" onClick={onToggle}>
         <span>Checks</span>
         <span>
-          {summary} <Icon name="chevron" />
+          {stale && <StatusChip>Out of date</StatusChip>}
+          {open && results && !running ? null : summary} <Icon name="chevron" />
         </span>
       </button>
       <div id="check-details" hidden={!open}>
@@ -69,31 +99,32 @@ export function ChecksDrawer({
               <div>
                 <strong>{allPassed ? 'All checks passed' : `${passedCount(results)} of ${results.length} checks passed`}</strong>
               </div>
+              {allPassed && !completed && !explaining && (
+                <button type="button" className="primary-button checks-next" onClick={onExplain}>
+                  Explain your solution
+                  <Icon name="arrow" />
+                </button>
+              )}
             </div>
-            <CheckFeedback results={results} />
-            {allPassed && !completed && (
-              <button type="button" className="primary-button checks-next" onClick={onExplain}>
-                Explain your solution
-              </button>
-            )}
-            {!allPassed && (
-              <aside className="mistake-help">
-                <h3>Explore the concepts behind these checks</h3>
-                <p>These references may help you trace the failure. They are suggestions, not a diagnosis of your code.</p>
-                {relatedHelp(
-                  repId,
-                  results.filter(result => !result.passed).map(result => result.name),
-                ).map(skill => (
-                  <div key={skill.id}>
-                    <button type="button" onClick={() => openLesson(skill.id)}>
-                      {skill.title}
-                    </button>
-                    <p>{skill.firstMistake}</p>
-                  </div>
-                ))}
-              </aside>
+            <CheckFeedback results={results} open={openName} onOpen={chooseCase} />
+            {!allPassed && lesson && (
+              <p className="mistake-help">
+                <Icon name="book" />
+                <span>Stuck? Review</span>
+                <button type="button" className="text-button" onClick={() => openLesson(lesson.id)}>
+                  {lesson.title}
+                  <Icon name="arrow" />
+                </button>
+              </p>
             )}
           </>
+        ) : stale ? (
+          <div className="stale-results">
+            <p className="stale-note">
+              Your code changed since this run. The results stay here for reference; run again to check your edit.
+            </p>
+            <CheckFeedback results={stale} stale open={openName} onOpen={chooseCase} />
+          </div>
         ) : (
           <div className="empty-results">
             <span className="empty-icon">
@@ -126,19 +157,26 @@ export function WorkspaceToolbar({
   onStop: () => void
   onResults: () => void
 }) {
-  const { results, runError, running } = run
+  const { results, staleResults, runError, running } = run
+  const stale = !running && !results && !runError && staleResults
   return (
     <div ref={ref} className="workspace-toolbar">
       <div className="workspace-toolbar-links">
-        {(results || runError) && (
+        {(results || runError || stale) && (
           <button type="button" onClick={onResults}>
-            {results?.some(result => !result.passed) ? 'View failed checks' : 'Results'}
+            {stale ? 'Last results' : results?.some(result => !result.passed) ? 'View failed checks' : 'Results'}
           </button>
         )}
       </div>
-      <div className="workspace-toolbar-run">
+      <div className={`workspace-toolbar-run${stale ? ' is-stale' : ''}`}>
         <span role="status">
-          {running ? 'Running checks…' : results ? `${passedCount(results)}/${results.length} passed` : 'Ready to run'}
+          {running
+            ? 'Running checks…'
+            : results
+              ? `${passedCount(results)}/${results.length} passed`
+              : stale
+                ? 'Run again to check your edit'
+                : 'Ready to run'}
         </span>
         {running ? (
           <button type="button" className="stop-checks-button" onClick={onStop}>
