@@ -22,8 +22,11 @@ import { practiceSteps } from './practice-steps'
 import { StepIndicator } from './StepIndicator'
 import type { useRepContent } from './useRepContent'
 import type { useReviewContent } from './useReviewContent'
+import type { Moments } from './LearningMoments'
 
 const RepGuidance = lazy(() => import('./RepGuidance'))
+// Growth notes appear only after a completion, so they load with it rather than with the app.
+const LearningMoments = lazy(() => import('./LearningMoments'))
 const TraceViewer = lazyRoute(() => import('./TraceViewer').then(module => module.TraceViewer), 'The trace')
 
 type Writing = ReturnType<typeof practiceWritingPrompts>
@@ -561,6 +564,7 @@ export function ReviewSection({
   onDone,
   onFreshAttempt,
   evidence,
+  moments,
 }: {
   hidden: boolean
   rep: RepSummary
@@ -580,6 +584,8 @@ export function ReviewSection({
   onFreshAttempt: () => void
   /** What this attempt counts as, shown once it is complete. */
   evidence: { chip: { tone: 'neutral' | 'success'; label: string }; text: string }
+  /** The completed record, for the skills it moved up and at most one personal best. */
+  moments?: Moments
 }) {
   function toggleMistake(id: string, chosen: boolean) {
     const next = chosen ? (attempt.mistakes ?? []).filter(tag => tag !== id) : [...(attempt.mistakes ?? []), id]
@@ -613,6 +619,11 @@ export function ReviewSection({
             <span>{evidence.text}</span>
           </p>
           <div ref={badgeSlot} className="badge-slot" />
+          {moments && (
+            <Suspense fallback={null}>
+              <LearningMoments {...moments} />
+            </Suspense>
+          )}
           <div className="completion-actions">
             <button
               type="button"

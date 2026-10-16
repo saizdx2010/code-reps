@@ -83,10 +83,18 @@ type ListRowProps = {
   onOpen?: () => void
   onPreview?: () => void
   action?: ReactNode
+  /** A small leading mark, such as a plan item's done state. Decorative: the status carries the meaning. */
+  marker?: ReactNode
+  className?: string
 }
-export function ListRow({ title, meta, status, current, onOpen, onPreview, action }: ListRowProps) {
+export function ListRow({ title, meta, status, current, onOpen, onPreview, action, marker, className }: ListRowProps) {
   const body = (
     <>
+      {marker && (
+        <span className="list-row-marker" aria-hidden="true">
+          {marker}
+        </span>
+      )}
       <span className="list-row-text">
         <strong>{title}</strong>
         {meta && <small>{meta}</small>}
@@ -95,7 +103,7 @@ export function ListRow({ title, meta, status, current, onOpen, onPreview, actio
     </>
   )
   return (
-    <li className="list-row">
+    <li className={`list-row${className ? ` ${className}` : ''}`}>
       {onOpen ? (
         <button type="button" aria-current={current ? 'step' : undefined} onClick={onOpen} onMouseEnter={onPreview} onFocus={onPreview}>
           {body}

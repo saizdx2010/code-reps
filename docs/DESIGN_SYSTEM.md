@@ -135,6 +135,9 @@ Motion acknowledges interaction and shows where something came from; it never de
 | List row | Stays in place; the arrow slides into its reserved space; press settles to 99.5% |
 | Track and starting cards | Lift 2px on hover; settle on press |
 | Progress bars | Fill grows from the left when the page arrives (path progress, topic meters, and the skill-ladder bar) |
+| Skill moved up, personal best | In the completion panel, the notice rises in just after the panel, the arrow slides in, and the new state's chip settles in after the old one; the personal-best note rises in last. Static text: reopening the finished rep shows it without replaying the skill map |
+| Skill map step | A step made by completing a rep plays once per browser session when its node is on screen: the node scrolls into view, the marker grows to 114% with a lime ring and settles, its icon and chip settle in, and the title takes the accent for a moment; announced in a status line |
+| Today plan, practice rhythm | A Today item finished since your last visit pops its check in and fills its meter segment once, and the done note rises in; nothing replays on reload or a fresh session. The last seven days on Progress pop in left to right |
 | Milestone notice | Rises 8px once when a badge is newly earned in this session; sits in the section bar inside the page frame (or in the completion panel) so the page heading does not move; never takes focus; is acknowledged as soon as it is shown, so moving on never repeats it; clears itself after 8 seconds |
 | Progress statistics, track cards | Rise in a short cascade |
 | Status chip | Settles in (scale and fade) when it appears or its status changes; an unchanged status stays still |

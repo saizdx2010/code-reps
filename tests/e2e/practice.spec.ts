@@ -208,12 +208,9 @@ test('practice steps preserve work, explain missing requirements, and record com
       .filter({ has: page.locator('dt', { hasText: 'Completed reps' }) })
       .locator('dd'),
   ).toHaveText('1')
-  await expect(
-    page
-      .locator('[aria-label="Practice summary"] > div')
-      .filter({ has: page.locator('dt', { hasText: 'Practice days' }) })
-      .locator('dt small'),
-  ).toHaveText('Streak 1 day · longest 1')
+  const streak = page.locator('.rhythm-stat').first()
+  await expect(streak.locator('b')).toHaveText('1')
+  await expect(streak.locator('small')).toHaveText('Longest 1')
   await expect(page.locator('.badge-progress').first()).toHaveText('1 of 1 rep')
   // An unhinted solve before its guided journey is not evidence of independence.
   await expect(page.locator('.skill-ladder-legend [data-rung="independent"] b')).toHaveText('0')
@@ -267,6 +264,8 @@ test('local profile progress is readable on narrow screens and links to the skil
   await page.goto('/#/progress')
   await expect(page.getByRole('heading', { level: 1, name: 'Skills', exact: true })).toBeVisible()
   await expect(page.locator('.page-eyebrow')).toHaveText('My learning · local profile')
+  await expect(page.locator('.rhythm-week li')).toHaveCount(7)
+  await page.locator('.practice-history > summary').click()
   await expect(page.locator('.practice-calendar')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Badges earned' })).toBeVisible()
   await expect(page.getByText(/Upcoming badges/)).toHaveCount(0)

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { preloadEditor } from './editor-loader'
 import { Icon } from './Icon'
 import { Button } from './Button'
@@ -13,6 +13,10 @@ import { repSummaryById, repTitle } from './rep-index.ts'
 import { paths } from './path'
 import type { getPracticePlan, PracticeAction } from './practice'
 import { withoutGoal } from './practice-actions'
+import type { PortableRecord } from './portability'
+
+// Today's plan loads beside the trail; it starts loading as soon as Trail renders.
+const TodayPlan = lazy(() => import('./TodayPlan'))
 
 // The first-rep walkthrough is authored for this rep only.
 const walkthroughRepId = 'declare-variables'
@@ -33,6 +37,8 @@ type Props = {
   openLesson: (skillId: string) => void
   learnerStart: LearnerStart | null
   onLearnerStart: (value: LearnerStart) => void
+  history: PortableRecord[]
+  now: number
 }
 
 const modeLabel = (mode?: string) =>
@@ -58,9 +64,7 @@ export function HomePage(props: Props) {
   const recommendedRep = recommendation && repSummaryById.get(recommendation.repId)
   const context = recommendation && repPracticeContext(recommendation.repId)
   const draft = practicePlan.unfinished.find(action => action.repId !== recommendation?.repId)
-  const review = practicePlan.due.find(action => action.repId !== recommendation?.repId)
   const moreDrafts = practicePlan.unfinished.filter(action => action.repId !== recommendation?.repId).length - (draft ? 1 : 0)
-  const moreReviews = practicePlan.due.filter(action => action.repId !== recommendation?.repId).length - (review ? 1 : 0)
   const stageOf = (repId: string) => trail.stages.findIndex(stage => stage.nodes.some(node => node.kind === 'rep' && node.repId === repId))
   const where = (repId: string) => {
     const index = stageOf(repId)
@@ -158,40 +162,33 @@ export function HomePage(props: Props) {
               </span>
             </p>
           )}
-          {(draft || review) && (
+          <Suspense fallback={null}>
+            <TodayPlan
+              history={props.history}
+              now={props.now}
+              practicePlan={practicePlan}
+              hasNext={Boolean(recommendation)}
+              where={where}
+              onOpen={item => (item.action ? openPracticeAction(item.action) : props.openRep(item.repId))}
+              onAllReviews={props.onProgress}
+            />
+          </Suspense>
+          {draft && (
             <ListGroup title="Also waiting" open>
-              {draft && (
-                <ListRow
-                  title={repTitle(draft.repId)}
-                  meta={moreDrafts > 0 ? `${where(draft.repId)} · ${moreDrafts} more in progress` : where(draft.repId)}
-                  status={<StatusChip tone="progress">In progress</StatusChip>}
-                  onOpen={() => openPracticeAction(draft)}
-                  onPreview={preloadEditor}
-                />
-              )}
-              {review && (
-                <ListRow
-                  title={repTitle(review.repId)}
-                  meta={moreReviews > 0 ? `Review · ${moreReviews} more due` : `Review · ${where(review.repId)}`}
-                  status={<StatusChip tone="attention">Due</StatusChip>}
-                  onOpen={() => openPracticeAction(review)}
-                  onPreview={preloadEditor}
-                />
-              )}
+              <ListRow
+                title={repTitle(draft.repId)}
+                meta={moreDrafts > 0 ? `${where(draft.repId)} · ${moreDrafts} more in progress` : where(draft.repId)}
+                status={<StatusChip tone="progress">In progress</StatusChip>}
+                onOpen={() => openPracticeAction(draft)}
+                onPreview={preloadEditor}
+              />
             </ListGroup>
           )}
-          {(moreDrafts > 0 || moreReviews > 0) && (
+          {moreDrafts > 0 && (
             <p className="trail-more">
-              {moreReviews > 0 && (
-                <button type="button" className="text-button" onClick={onProgress}>
-                  See all due reviews
-                </button>
-              )}{' '}
-              {moreDrafts > 0 && (
-                <button type="button" className="text-button" onClick={onLibrary}>
-                  Find saved drafts in the Library
-                </button>
-              )}
+              <button type="button" className="text-button" onClick={onLibrary}>
+                Find saved drafts in the Library
+              </button>
             </p>
           )}
           <nav className="trail-links" aria-label="Progress">

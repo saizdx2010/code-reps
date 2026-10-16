@@ -186,6 +186,8 @@ export function AppRoutes(props: Props) {
           openLesson={openLesson}
           learnerStart={learnerStart}
           onLearnerStart={props.onLearnerStart}
+          history={history}
+          now={now}
         />
       )
     case 'catalog':

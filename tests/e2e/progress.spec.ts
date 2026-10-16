@@ -57,12 +57,22 @@ test('journeys are grouped by where they are, with the due recall first and a co
   await expect(groups.nth(1)).not.toHaveAttribute('open', '')
 })
 
-test('the practice calendar marks hint-free and hinted days and the counts explain themselves', async ({ page }) => {
+test('the practice rhythm shows the streak and the last seven days, with the longer calendar one click away', async ({ page }) => {
+  const streak = page.locator('.rhythm-stat').first()
+  await expect(streak.locator('b')).toHaveText('2')
+  await expect(streak.locator('small')).toHaveText('Longest 3')
+  await expect(page.locator('.rhythm-stat').nth(1).locator('b')).toHaveText('3 of 7')
+  const week = page.getByRole('list', { name: 'The last seven days' }).locator('li')
+  await expect(week).toHaveCount(7)
+  await expect(week.last()).toHaveAttribute('data-today', 'true')
+  await expect(week.last()).toHaveAttribute('data-kind', 'new')
+  await expect(week.last()).toContainText('Today')
+  await expect(page.locator('.practice-calendar')).toBeHidden()
+  await page.locator('.practice-history > summary').click()
   const calendar = page.locator('.practice-calendar')
   await expect(calendar.locator('.practice-calendar-grid i[data-day="clean"]')).toHaveCount(3)
   await expect(calendar.locator('.practice-calendar-grid i[data-day="any"]')).toHaveCount(2)
   await expect(calendar).toContainText('5 days in 12 weeks')
-  await expect(page.locator('.progress-days dt small')).toHaveText(/^Streak 2 days · longest 2$/)
   for (const width of [1280, 390]) {
     await page.setViewportSize({ width, height: 900 })
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)

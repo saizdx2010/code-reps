@@ -150,19 +150,18 @@ export function ProgressPage(props: Props) {
             </small>
           </dt>
         </div>
-        <div className="progress-days">
-          <dd>{summary.practiceDays}</dd>
-          <dt>
-            Practice days
-            <small>
-              {summary.currentStreak
-                ? `Streak ${summary.currentStreak} ${plural(summary.currentStreak, 'day')} · longest ${summary.longestStreak}`
-                : summary.longestStreak
-                  ? `Practice today to start a new streak. Longest: ${summary.longestStreak} ${plural(summary.longestStreak, 'day')}.`
-                  : 'Finish a rep to record a practice day.'}
-            </small>
-          </dt>
-          <PracticeCalendar history={history} now={now} />
+        <div className="progress-days practice-rhythm">
+          <dt className="visually-hidden">Practice rhythm</dt>
+          <dd>
+            <PracticeRhythm summary={summary} />
+            <details className="practice-history">
+              <summary>
+                Last 12 weeks
+                <Icon name="chevron" />
+              </summary>
+              <PracticeCalendar history={history} now={now} />
+            </details>
+          </dd>
         </div>
         <div className="skill-ladder">
           <dt>
@@ -191,8 +190,9 @@ export function ProgressPage(props: Props) {
           rung. Checks show behavior; you review your writing. These records are not an overall coding score.
         </p>
         <p>
-          Finish a rep to record a practice day. If you practiced yesterday, your streak stays active through today. Breaks are welcome;
-          your milestones stay.
+          Finishing a rep or a review records a practice day. A streak counts practice days and carries over one missed day in any seven;
+          two missed days in a row end it, and if you practiced yesterday it stays active through today. Breaks are welcome; your milestones
+          stay.
         </p>
       </InfoNote>
       <h2 className="progress-skills-title">Your skill journeys</h2>
@@ -301,6 +301,61 @@ function PracticeCalendar({ history, now }: { history: PortableRecord[]; now: nu
           <i data-day="any" /> with hints
         </span>
       </small>
+    </div>
+  )
+}
+
+const dayKindText = { new: 'new practice', review: 'reviews only', rest: 'rest day, carried over', none: 'no practice' } as const
+
+/**
+ * The forgiving streak beside the last seven days. Reviews count as practice, and a single missed day can be carried
+ * over once in any seven, so the tile shows consistency without a number to lose.
+ */
+function PracticeRhythm({ summary }: { summary: ReturnType<typeof profileProgress> }) {
+  const { currentStreak, longestStreak, restDays, recentDays, practiceDays, week } = summary
+  const streakNote = currentStreak
+    ? [`Longest ${longestStreak}`, restDays ? `${restDays} rest ${plural(restDays, 'day')}` : ''].filter(Boolean).join(' · ')
+    : longestStreak
+      ? `Longest ${longestStreak} · a rep or review starts a new one`
+      : 'Finish a rep to record a practice day.'
+  return (
+    <div className="rhythm">
+      <div className="rhythm-stats">
+        <p className="rhythm-stat">
+          <b>{currentStreak}</b>
+          <span>Practice-day streak</span>
+          <small>{streakNote}</small>
+        </p>
+        <p className="rhythm-stat">
+          <b>{recentDays} of 7</b>
+          <span>Recent days practiced</span>
+          <small>
+            {practiceDays} practice {plural(practiceDays, 'day')} in all
+          </small>
+        </p>
+      </div>
+      <ol className="rhythm-week" aria-label="The last seven days">
+        {week.map(day => (
+          <li key={day.date.toISOString()} data-kind={day.kind} data-today={day.today || undefined}>
+            <span className="rhythm-day" aria-hidden="true">
+              {day.kind === 'new' ? <Icon name="check" /> : day.kind === 'review' ? <Icon name="repeat" /> : null}
+            </span>
+            <small>
+              {day.today ? (
+                'Today'
+              ) : (
+                <>
+                  <span>{day.date.toLocaleDateString(undefined, { weekday: 'short' })}</span> <span>{day.date.getDate()}</span>
+                </>
+              )}
+            </small>
+            <span className="visually-hidden">: {day.today && day.kind === 'none' ? 'not yet' : dayKindText[day.kind]}</span>
+          </li>
+        ))}
+      </ol>
+      <p className="rhythm-key">
+        Check: a new rep. Arrows: reviews only. Dashed: a rest day the streak carried over. Today fills in once you finish anything.
+      </p>
     </div>
   )
 }
