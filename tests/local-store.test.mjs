@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createLocalStore, keyAllowed } from '../src/local-store.ts'
-import { storageKeyAllowed } from '../server/storage-keys.mjs'
+import { createLocalStore, keyAllowed, migrationKey, requestBatches } from '../src/local-store.ts'
+import { maxEntriesPerRequest, maxRequestBytes, requestBatchBytes, storageKeyAllowed } from '../server/storage-keys.mjs'
 
 const draftKey = 'code-reps:attempt:sum-positive-numbers:v1'
 const journalKey = 'code-reps:pending-writes:v1'
@@ -26,10 +26,14 @@ function server(initial = {}) {
     calls.push({ url, options })
     if (!available) throw new TypeError('offline')
     if (url === '/api/state') return response({ entries: { ...entries } })
+    // The same limits the real server enforces, so an unsplit request fails here as it would there.
+    if (Buffer.byteLength(options.body) > maxRequestBytes) return response({ error: 'Request is too large.' }, 400)
     const body = JSON.parse(options.body)
+    if (Object.keys(body.entries).length > maxEntriesPerRequest) return response({ error: 'Invalid saved entries.' }, 400)
     if (url === '/api/migrate') {
-      if (!Object.keys(entries).length) Object.assign(entries, body.entries)
-      return response({ entries })
+      if (Object.keys(entries).length) return response({ migrated: false, entries })
+      Object.assign(entries, body.entries)
+      return response({ migrated: true, entries })
     }
     assert.equal(url, '/api/entries')
     assert.equal(options.method, 'PATCH')
@@ -177,9 +181,102 @@ test('browser and server share one saved-key allow-list; browser-only keys never
   ]
   for (const key of shared) assert.ok(storageKeyAllowed(key) && keyAllowed(key), key)
   for (const key of rejected) assert.ok(!storageKeyAllowed(key) && !keyAllowed(key), key)
-  for (const key of ['code-reps:pending-writes:v1', 'code-reps:server-mode:v1']) {
+  for (const key of ['code-reps:pending-writes:v1', 'code-reps:server-mode:v1', migrationKey]) {
     assert.ok(storageKeyAllowed(key), key)
     assert.ok(!keyAllowed(key), key)
   }
   assert.equal(storageKeyAllowed(42), false)
+})
+
+test('pending saves against an empty server keep, and send, the whole browser copy', async () => {
+  // A new or replaced data folder: the browser has history and profiles plus an unsent edit.
+  const kept = { 'code-reps:history:v1': '[{"id":"one"}]', 'code-reps:profiles:v1': '{"version":1}', [draftKey]: 'unsent edit' }
+  const cached = storage({ ...kept, 'code-reps:server-mode:v1': 'true', [journalKey]: JSON.stringify({ [draftKey]: 'unsent edit' }) })
+  const remote = server()
+  const store = createLocalStore({ storage: cached, request: remote.request, onError() {} })
+  await store.initializeStorage()
+  assert.equal(store.storageIssue(), '')
+  assert.deepEqual(remote.entries, kept)
+  for (const [key, value] of Object.entries(kept)) assert.equal(cached.getItem(key), value, key)
+  assert.equal(cached.getItem(journalKey), null)
+  assert.equal(cached.getItem(migrationKey), null)
+})
+
+test('an interrupted copy to an empty server resumes instead of pruning what it had not sent', async () => {
+  const local = Object.fromEntries(Array.from({ length: 1200 }, (_, index) => [`code-reps:attempt:rep-${index}:v1`, `draft ${index}`]))
+  const cached = storage(local)
+  const remote = server()
+  let patches = 0
+  const flaky = async (url, options) => {
+    if (url === '/api/entries' && ++patches === 2) throw new TypeError('offline')
+    return remote.request(url, options)
+  }
+  const first = createLocalStore({ storage: cached, request: flaky, onError() {} })
+  await first.initializeStorage()
+  assert.match(first.storageIssue(), /unavailable/)
+  assert.ok(Object.keys(remote.entries).length < 1200)
+  assert.equal(cached.getItem(migrationKey), 'true')
+  const restarted = createLocalStore({ storage: cached, request: remote.request, onError() {} })
+  await restarted.initializeStorage()
+  assert.equal(restarted.storageIssue(), '')
+  assert.deepEqual(remote.entries, local)
+  for (const [key, value] of Object.entries(local)) assert.equal(cached.getItem(key), value, key)
+  assert.equal(cached.getItem(migrationKey), null)
+})
+
+test('large saves split into requests the server accepts', async () => {
+  const many = Object.fromEntries(Array.from({ length: 1200 }, (_, index) => [`code-reps:attempt:rep-${index}:v1`, `draft ${index}`]))
+  const big = { 'code-reps:history:v1': 'é'.repeat(3_000_000), 'code-reps:fluency:v1': 'f'.repeat(3_000_000) }
+  const remote = server({ 'code-reps:selected-rep': 'one' })
+  const store = createLocalStore({ storage: storage(), request: remote.request, onError() {} })
+  await store.initializeStorage()
+  store.localStore.setEntries({ ...many, ...big })
+  await store.flushStorage()
+  assert.deepEqual(remote.entries, { 'code-reps:selected-rep': 'one', ...many, ...big })
+  const patches = remote.calls.filter(call => call.url === '/api/entries')
+  assert.ok(patches.length >= 4, `${patches.length} requests`)
+  for (const call of patches) assert.ok(Object.keys(JSON.parse(call.options.body).entries).length <= maxEntriesPerRequest)
+})
+
+test('request batches respect both the key and byte budgets, and a single large value goes alone', () => {
+  const entries = Object.fromEntries(Array.from({ length: 1001 }, (_, index) => [`code-reps:k${index}`, 'v']))
+  assert.deepEqual(
+    requestBatches(entries).map(batch => Object.keys(batch).length),
+    [maxEntriesPerRequest, maxEntriesPerRequest, 1],
+  )
+  const large = 'x'.repeat(requestBatchBytes)
+  const batches = requestBatches({ 'code-reps:a': 'small', 'code-reps:b': large, 'code-reps:c': null })
+  assert.deepEqual(batches.map(Object.keys), [['code-reps:a'], ['code-reps:b'], ['code-reps:c']])
+  assert.deepEqual(requestBatches({}), [])
+})
+
+test('an edit made while startup waits on the server is not replaced by the older server copy', async () => {
+  const cached = storage({
+    [draftKey]: 'unsent',
+    'code-reps:server-mode:v1': 'true',
+    [journalKey]: JSON.stringify({ [draftKey]: 'unsent' }),
+  })
+  const remote = server({ [draftKey]: 'old server draft', 'code-reps:history:v1': '[]' })
+  let store
+  let patches = 0
+  let release
+  const held = new Promise(resolve => {
+    release = resolve
+  })
+  store = createLocalStore({
+    storage: cached,
+    onError() {},
+    request: async (url, options) => {
+      if (url === '/api/entries' && ++patches === 2) await held
+      const result = await remote.request(url, options)
+      // The learner types right after the recovered save is acknowledged; that edit's own save is slow.
+      if (url === '/api/entries' && patches === 1) store.localStore.setItem(draftKey, 'typed during startup')
+      return result
+    },
+  })
+  await store.initializeStorage()
+  assert.equal(cached.getItem(draftKey), 'typed during startup')
+  release()
+  await store.flushStorage()
+  assert.equal(remote.entries[draftKey], 'typed during startup')
 })

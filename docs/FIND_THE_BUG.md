@@ -70,4 +70,4 @@ Use a port other than 4175 for the Playwright server if another checkout is runn
 
 ## Placement and badges
 
-Adding a rep to a path stage makes it required, so an earned stage or path badge moves back to upcoming until the new rep is finished. A new stage creates a new, unearned stage badge. There is no optional-rep support in `src/path.ts`. The journey is a new stage near the end of the Backend track, before the interview round.
+Adding a rep to a path stage makes it required, so an earned stage or path badge stops showing as earned until the new rep is finished. A new stage creates a new, unearned stage badge. There is no optional-rep support in `src/path.ts`. The journey is a new stage near the end of the Backend track, before the interview round.

@@ -156,6 +156,48 @@ export function parseFluency(raw: unknown): FluencyState {
     throw new Error('Duplicate learning records.')
   return raw as unknown as FluencyState
 }
+const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+/** `theirs` with each key that changed between `base` and `mine` set (or removed) as in `mine`. */
+function mergeRecord<T>(base: Record<string, T>, mine: Record<string, T>, theirs: Record<string, T>): Record<string, T> {
+  const merged = { ...theirs }
+  for (const key of new Set([...Object.keys(base), ...Object.keys(mine)])) {
+    if (same(base[key], mine[key])) continue
+    if (key in mine) merged[key] = mine[key]
+    else delete merged[key]
+  }
+  return merged
+}
+/** The same merge for records with IDs: entries this tab added lead, as new entries do, and the rest keep `theirs` order. */
+function mergeById<T extends { id: string }>(base: T[], mine: T[], theirs: T[]): T[] {
+  const byId = (list: T[]) => Object.fromEntries(list.map(item => [item.id, item]))
+  const merged = mergeRecord(byId(base), byId(mine), byId(theirs))
+  const known = new Set([...base, ...theirs].map(item => item.id))
+  const added = mine.filter(item => !known.has(item.id))
+  return [...added, ...theirs.filter(item => item.id in merged).map(item => merged[item.id])]
+}
+/**
+ * Applies the changes one tab made (from `base`, the state it loaded, to `mine`) onto `theirs`, a copy another tab saved
+ * meanwhile, so neither tab's lesson answers, reviews, notes, rounds, or bookmarks are lost.
+ */
+export function mergeFluency(base: FluencyState, mine: FluencyState, theirs: FluencyState): FluencyState {
+  const field = <K extends keyof FluencyState>(key: K) => (same(base[key], mine[key]) ? theirs[key] : mine[key])
+  const added = mine.bookmarks.filter(id => !base.bookmarks.includes(id))
+  const removed = new Set(base.bookmarks.filter(id => !mine.bookmarks.includes(id)))
+  const merged: FluencyState = {
+    ...theirs,
+    goal: field('goal'),
+    noteDraft: field('noteDraft'),
+    diagnosticStartedAt: field('diagnosticStartedAt'),
+    answers: mergeRecord(base.answers, mine.answers, theirs.answers),
+    reviews: mergeRecord(base.reviews, mine.reviews, theirs.reviews),
+    notes: mergeById(base.notes, mine.notes, theirs.notes),
+    rounds: mergeById(base.rounds, mine.rounds, theirs.rounds),
+    bookmarks: [...new Set([...theirs.bookmarks.filter(id => !removed.has(id)), ...added])],
+  }
+  if (merged.noteDraft === undefined) delete merged.noteDraft
+  if (merged.diagnosticStartedAt === undefined) delete merged.diagnosticStartedAt
+  return merged
+}
 export const recallVariants: Record<string, string[]> = {
   async: ['cancel-local-export', 'settle-local-panels', 'await-local-records'],
   'typescript-boundaries': ['sensor-import-report'],

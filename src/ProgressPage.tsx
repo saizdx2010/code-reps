@@ -5,7 +5,7 @@ import { Icon } from './Icon'
 import { withoutGoal } from './practice-actions'
 import { profileBadges } from './badges'
 import type { Badge } from './badges'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { BadgeArt } from './BadgeArt'
 import { useSessionPreference } from './useSessionPreference'
 import type { paths } from './path'
@@ -55,8 +55,9 @@ type Props = {
 
 export function ProgressPage(props: Props) {
   const { profileName, history, now, onOpenPath, progress, recommendation, dueReviews, onOpenRep, onReviewRep } = props
-  const summary = profileProgress(history, new Date(now))
-  const badges = profileBadges(history, new Date(now))
+  // Worked out once per saved history and clock tick, not on every render of the restore controls below.
+  const summary = useMemo(() => profileProgress(history, new Date(now)), [history, now])
+  const badges = useMemo(() => profileBadges(history, new Date(now)), [history, now])
   const earned = badges.filter(badge => badge.earned)
   const open = (badge: Badge) =>
     badge.kind === 'path' && badge.pathId ? onOpenPath(badge.pathId as (typeof paths)[number]['id']) : onOpenRep(badge.repId)

@@ -36,7 +36,8 @@ export function legacyMigration(entries: Record<string, string>) {
       key === profileRegistryKey ||
       key.startsWith('code-reps:profile:') ||
       key === 'code-reps:pending-writes:v1' ||
-      key === 'code-reps:server-mode:v1'
+      key === 'code-reps:server-mode:v1' ||
+      key === 'code-reps:migrating:v1'
     )
       continue
     const target = scopedKey('default', key)

@@ -52,6 +52,8 @@ test('focused writing steps preserve the real editor and hide unrelated forms', 
 
 test('a fresh load starts at the skip link, and in-app navigation moves focus to the page heading', async ({ page }) => {
   await page.goto('/#/home')
+  // Wait for the app itself: index.html's startup screen has its own h1, and React replaces it (dropping any focus) on mount.
+  await expect(page.locator('.startup-loading')).toHaveCount(0)
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   // The first Tab from a fresh load reaches the skip link before the header; the heading is not focused on load.
   await page.keyboard.press('Tab')

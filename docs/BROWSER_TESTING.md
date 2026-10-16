@@ -31,7 +31,9 @@ Use `E2E_PORT=4203 yarn test:e2e` to select another dedicated port. Ordinary ass
 
 - Stop and edit an endless worker run, reject obsolete feedback after its deadline, recover from the real five-second timeout, and run a corrected draft.
 - Fail the editor module request, recover the existing draft through the plain text editor, run checks, and restore Monaco with the edited draft after reload.
-- Exercise frontend preview states, filtering, Retry, viewport selection, modal Escape/focus restoration, stale preview feedback, and real sandboxed-frame checks/cleanup.
+- Exercise frontend preview states, filtering, Retry, viewport selection, modal Escape/focus restoration, stale preview feedback, and real sandboxed-frame checks/cleanup. Stop an endless loop in a frontend rep at the two-second loop limit, keep the page usable, and keep the draft after reload.
+- Fail the Today plan, badge notice, rep guidance, and learning-moment modules; the page and checks stay usable with a fallback message.
+- Complete the same rep in two tabs of one profile; both completions stay in history.
 - Choose a track as your goal explicitly at 1280px and 320px, preserve it on reload, and keep early recall accessible without claiming retention.
 - Confirm no session controls appear in the workspace, Home, or Journal, that `#/sessions` redirects to the Journal, and that legacy session records in a learner backup still import into SQLite using temporary service data.
 - Run the SQLite stock-transfer rep in browser-only Vite: real WASM worker queries, rejection of missing rollback, repeated fresh databases, authored review, completion, and reload. Its databases live only in worker memory, with no progress database or service access.

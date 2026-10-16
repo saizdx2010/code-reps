@@ -1,21 +1,48 @@
 import { scopedKey, profileRegistryKey, parseProfiles } from './profiles.ts'
 import { isPlainObject } from './guards.ts'
-import { storageKeyAllowed } from '../server/storage-keys.mjs'
+import { maxEntriesPerRequest, maxValueLength, requestBatchBytes, storageKeyAllowed } from '../server/storage-keys.mjs'
 const journalKey = 'code-reps:pending-writes:v1'
 const serverModeKey = 'code-reps:server-mode:v1'
+// Set while the browser copy is being copied to an empty server over several requests, so an interrupted copy resumes.
+export const migrationKey = 'code-reps:migrating:v1'
 type Entries = Record<string, string | null>
 type Environment = {
   storage: Storage
   request: (url: string, options?: RequestInit) => Promise<Response>
   onError: () => void
 }
-// The pending-write journal and server-mode flag stay in this browser and never reach the server.
-export const keyAllowed = (key: string) => storageKeyAllowed(key) && key !== journalKey && key !== serverModeKey
+// These browser-only keys never reach the server.
+export const keyAllowed = (key: string) => storageKeyAllowed(key) && key !== journalKey && key !== serverModeKey && key !== migrationKey
 const validEntries = (value: unknown, nullable = false): value is Entries =>
   isPlainObject(value) &&
   Object.entries(value).every(
-    ([key, entry]) => keyAllowed(key) && ((nullable && entry === null) || (typeof entry === 'string' && entry.length <= 1_000_000)),
+    ([key, entry]) => keyAllowed(key) && ((nullable && entry === null) || (typeof entry === 'string' && entry.length <= maxValueLength)),
   )
+
+/**
+ * Splits entries into requests the server accepts: at most `maxEntriesPerRequest` keys, and a new request once one
+ * reaches `requestBatchBytes`. Sizes are upper bounds (three UTF-8 bytes per JSON character), so no batch is undercounted.
+ */
+export function requestBatches<T extends string | null>(entries: Record<string, T>): Record<string, T>[] {
+  const batches: Record<string, T>[] = []
+  let batch: Record<string, T> = {}
+  let keys = 0
+  let bytes = 0
+  for (const [key, value] of Object.entries(entries)) {
+    const size = 3 * (JSON.stringify(key).length + JSON.stringify(value).length + 2)
+    if (keys && (keys === maxEntriesPerRequest || bytes + size > requestBatchBytes)) {
+      batches.push(batch)
+      batch = {}
+      keys = 0
+      bytes = 0
+    }
+    batch[key] = value
+    keys++
+    bytes += size
+  }
+  if (keys) batches.push(batch)
+  return batches
+}
 
 export function createLocalStore(environment: Environment) {
   let serverReady = false
@@ -50,7 +77,7 @@ export function createLocalStore(environment: Environment) {
     }
     return entries
   }
-  const send = async (entries: Entries) => {
+  const sendBatch = async (entries: Entries) => {
     const response = await environment.request('/api/entries', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -61,6 +88,43 @@ export function createLocalStore(environment: Environment) {
     const remaining = journal()
     for (const [key, value] of Object.entries(entries)) if (remaining[key] === value) delete remaining[key]
     saveJournal(remaining)
+  }
+  const send = async (entries: Entries) => {
+    for (const batch of requestBatches(entries)) await sendBatch(batch)
+  }
+  const loadState = async (failure: string) => {
+    const response = await environment.request('/api/state', { cache: 'no-store', signal: AbortSignal.timeout(5000) })
+    if (!response.ok) throw new Error(failure)
+    const { entries } = (await response.json()) as { entries: unknown }
+    if (!validEntries(entries)) throw new Error('The local server returned invalid progress. Your browser copy has been kept.')
+    return entries as Record<string, string>
+  }
+  /**
+   * Copies the browser copy, which already holds any pending writes, to the server. A fresh copy claims an empty server
+   * with /api/migrate, so two tabs cannot both seed it; a resumed one adds only the keys the server lacks.
+   */
+  const migrate = async (local: Record<string, string>, fresh: boolean) => {
+    environment.storage.setItem(migrationKey, 'true')
+    const batches = requestBatches(local)
+    if (fresh) {
+      const migrated = await environment.request('/api/migrate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entries: batches.shift() }),
+        signal: AbortSignal.timeout(5000),
+      })
+      if (!migrated.ok) throw new Error('Could not migrate browser progress. Your browser copy has been kept.')
+      const result = (await migrated.json()) as { migrated?: unknown; entries: unknown }
+      if (!validEntries(result.entries)) throw new Error('The migration returned invalid progress. Your browser copy has been kept.')
+      if (result.migrated === false) {
+        // Another tab or browser seeded the server first; pending writes still replay below.
+        environment.storage.removeItem(migrationKey)
+        return result.entries as Record<string, string>
+      }
+    }
+    for (const batch of batches) await sendBatch(batch)
+    environment.storage.removeItem(migrationKey)
+    return loadState('Could not migrate browser progress. Your browser copy has been kept.')
   }
   // Saves made while an earlier request is in flight merge into one follow-up request, so a slow server sees one PATCH rather than a backlog.
   let queued: Entries | null = null
@@ -127,31 +191,26 @@ export function createLocalStore(environment: Environment) {
       if (!validEntries(entries)) throw new Error('The local server returned invalid progress. Your browser copy has been kept.')
       serverReady = true
       environment.storage.setItem(serverModeKey, 'true')
+      // An empty server is a new or replaced data folder, never a reason to drop the browser copy.
+      const resuming = environment.storage.getItem(migrationKey) === 'true'
+      if (!Object.keys(entries).length || resuming) {
+        const local = cachedEntries()
+        const missing = Object.fromEntries(Object.entries(local).filter(([key]) => !resuming || !(key in (entries as Entries))))
+        if (Object.keys(missing).length) entries = await migrate(missing, !resuming)
+        else environment.storage.removeItem(migrationKey)
+      }
       const waiting = journal()
       if (Object.keys(waiting).length) {
         await send(waiting)
-        const refreshed = await environment.request('/api/state', { cache: 'no-store', signal: AbortSignal.timeout(5000) })
-        if (!refreshed.ok) throw new Error('Recovered saves could not be loaded. Your browser copy has been kept.')
-        entries = ((await refreshed.json()) as { entries: unknown }).entries
-        if (!validEntries(entries)) throw new Error('The local server returned invalid progress. Your browser copy has been kept.')
-      } else if (Object.keys(entries).length === 0) {
-        const legacy = cachedEntries()
-        if (Object.keys(legacy).length) {
-          const migrated = await environment.request('/api/migrate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ entries: legacy }),
-            signal: AbortSignal.timeout(5000),
-          })
-          if (!migrated.ok) throw new Error('Could not migrate browser progress. Your browser copy has been kept.')
-          entries = ((await migrated.json()) as { entries: unknown }).entries
-          if (!validEntries(entries)) throw new Error('The migration returned invalid progress. Your browser copy has been kept.')
-        }
+        entries = await loadState('Recovered saves could not be loaded. Your browser copy has been kept.')
       }
+      // Writes made while startup was waiting on the server are newer than its copy, and are already queued to send.
+      const newer = journal()
       const before = cachedEntries()
       try {
-        for (const [key, value] of Object.entries(entries)) environment.storage.setItem(key, value as string)
-        for (const key of Object.keys(before)) if (!(key in entries)) environment.storage.removeItem(key)
+        for (const [key, value] of Object.entries(entries as Entries))
+          if (!(key in newer)) environment.storage.setItem(key, value as string)
+        for (const key of Object.keys(before)) if (!(key in (entries as Entries)) && !(key in newer)) environment.storage.removeItem(key)
       } catch (error) {
         for (const key of Object.keys(cachedEntries())) if (!(key in before)) environment.storage.removeItem(key)
         for (const [key, value] of Object.entries(before)) environment.storage.setItem(key, value)

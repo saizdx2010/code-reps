@@ -3,7 +3,7 @@ import { DAY_MS } from './dates.ts'
 import { getAllJourneys } from './learning.ts'
 import type { JourneyProgress } from './learning.ts'
 import type { PortableRecord } from './portability.ts'
-import { dayNumber } from './profile-progress.ts'
+import { dayDate, dayNumber } from './profile-progress.ts'
 import { repTitle } from './rep-index.ts'
 import { buildSkillMap } from './skill-map.ts'
 import { formatDate } from './ui-copy.ts'
@@ -13,6 +13,8 @@ import { paths } from './path.ts'
 export const heldDays = 30
 /** "Welcome back" needs at least this many days without practice before the day you return. */
 export const breakDays = 14
+/** "Stage, independently" counts stages with at least this many skills, so it never repeats "First independent skill". */
+export const stageSkills = 2
 /** "Four steady weeks": this many weeks in a row, each with at least `steadyDays` practice days. */
 export const steadyWeeks = 4
 export const steadyDays = 3
@@ -108,7 +110,7 @@ export function evidenceBadges(history: PortableRecord[], now = new Date()): Bad
       steady = {
         at: record.completedAt,
         repId: record.repId,
-        detail: `${steadyDays} or more practice days a week from ${formatDate((week - 7 * (steadyWeeks - 1)) * DAY_MS)} to ${formatDate(record.completedAt)}.`,
+        detail: `${steadyDays} or more practice days a week from ${formatDate(dayDate(week - 7 * (steadyWeeks - 1)).getTime())} to ${formatDate(record.completedAt)}.`,
       }
       break
     }
@@ -119,7 +121,7 @@ export function evidenceBadges(history: PortableRecord[], now = new Date()): Bad
   const returned = back === undefined ? undefined : days.get(back)!
   const breakLength = back === undefined ? 0 : back - dayList[dayList.indexOf(back) - 1] - 1
 
-  // A whole stretch of trail done independently: every skill in one track stage at Independent or beyond.
+  // A whole stretch of trail done independently: every skill in one track stage of two or more skills at Independent or beyond.
   const stage = stageIndependently(journeys)
 
   const detail = (state: JourneyProgress, record: { repId: string }, how: string) =>
@@ -178,7 +180,13 @@ export function evidenceBadges(history: PortableRecord[], now = new Date()): Bad
         detail: `Back after ${breakLength} days away. Breaks are part of learning.`,
       },
     ),
-    badge('stage-independent', 'Stage, independently', 'Bring every skill in one track stage to Independent.', starter, stage),
+    badge(
+      'stage-independent',
+      'Stage, independently',
+      `Bring every skill in one track stage of ${stageSkills} or more skills to Independent.`,
+      starter,
+      stage,
+    ),
   ]
 }
 
@@ -186,6 +194,7 @@ function stageIndependently(journeys: JourneyProgress[]): Earned | undefined {
   const evidence = new Map(journeys.map(state => [state.journey.id, state]))
   const candidates = paths.flatMap(path =>
     buildSkillMap(path.id, journeys).stages.flatMap(stage => {
+      if (stage.nodes.length < stageSkills) return []
       if (!stage.nodes.every(node => node.state === 'independent' || node.state === 'due' || node.state === 'retained')) return []
       // Dated when the last of its skills became independent.
       const last = stage.nodes.map(node => evidence.get(node.id)!.independent!).sort((a, b) => time(b) - time(a))[0]

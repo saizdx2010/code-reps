@@ -4,6 +4,7 @@ import { realpathSync } from 'node:fs'
 import { join, resolve, extname, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createStore } from './store.mjs'
+import { maxRequestBytes } from './storage-keys.mjs'
 
 const distDir = resolve(fileURLToPath(new URL('../dist/', import.meta.url)))
 const mime = {
@@ -27,16 +28,27 @@ function sendJson(response, status, value) {
 }
 
 async function readJson(request) {
-  let body = ''
+  // Decode once at the end: a multi-byte character can be split across chunks.
+  const chunks = []
+  let size = 0
   for await (const chunk of request) {
-    body += chunk
-    if (body.length > 2_000_000) throw new Error('Request is too large.')
+    size += chunk.length
+    // Keep reading without storing, so the client gets this error instead of a reset connection.
+    if (size <= maxRequestBytes) chunks.push(chunk)
   }
+  if (size > maxRequestBytes) throw new Error('Request is too large.')
   try {
-    return JSON.parse(body)
+    return JSON.parse(Buffer.concat(chunks).toString('utf8'))
   } catch {
     throw new Error('Invalid JSON.')
   }
+}
+
+/** The request's `entries`, or a validation error for a body that is not a JSON object. */
+async function readEntries(request) {
+  const body = await readJson(request)
+  if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('Invalid request body.')
+  return body.entries
 }
 
 export async function startServer({ port = Number(process.env.CODE_REPS_PORT || 4173), dataDir, assetsDir = distDir } = {}) {
@@ -65,12 +77,10 @@ export async function startServer({ port = Number(process.env.CODE_REPS_PORT || 
     try {
       if (pathname === '/api/state' && request.method === 'GET') return sendJson(response, 200, { entries: store.entries() })
       if (pathname === '/api/migrate' && request.method === 'POST') {
-        const body = await readJson(request)
-        return sendJson(response, 200, store.migrate(body.entries))
+        return sendJson(response, 200, store.migrate(await readEntries(request)))
       }
       if (pathname === '/api/entries' && request.method === 'PATCH') {
-        const body = await readJson(request)
-        store.applyEntries(body.entries)
+        store.applyEntries(await readEntries(request))
         return sendJson(response, 200, { saved: true })
       }
       if (pathname.startsWith('/api/')) return sendJson(response, 404, { error: 'Unknown endpoint.' })

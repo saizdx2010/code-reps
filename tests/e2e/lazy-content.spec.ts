@@ -83,3 +83,16 @@ test('a failed load with no saved draft never saves a placeholder, and Retry bri
   await alert.getByRole('button', { name: 'Retry' }).click()
   await expect(page.locator('.view-lines')).toContainText('function mostFrequent')
 })
+
+test('a failed load of Today, the badge notice, guidance, or growth notes leaves a usable app', async ({ page }) => {
+  await page.route(/\/src\/(TodayPlan|BadgeNotice|RepGuidance|LearningMoments)\.tsx/, route => route.abort())
+  await page.goto('/#/home')
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  await expect(page.getByRole('status').filter({ hasText: "Today's plan could not load." })).toBeVisible()
+  await page.goto(route)
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  await expect(page.getByRole('status').filter({ hasText: "This rep's guidance could not load." })).toBeVisible()
+  await replaceCode(page, solution)
+  await page.getByRole('button', { name: 'Run checks', exact: true }).click()
+  await expectChecksFinished(page.getByText('All checks passed'))
+})

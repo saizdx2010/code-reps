@@ -22,7 +22,7 @@ export function decodeFiles(code: string): ProjectFiles | null {
   if (
     Object.keys(files).length < 1 ||
     Object.keys(files).length > 12 ||
-    !(project.entry in files) ||
+    !Object.hasOwn(files, project.entry) ||
     Object.entries(files).some(
       ([name, content]) => !/^[a-z][a-z0-9-]*\.ts$/.test(name) || typeof content !== 'string' || content.length > 100_000,
     )

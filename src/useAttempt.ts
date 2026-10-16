@@ -3,8 +3,10 @@ import { attemptKey, freshAttempt, historyKey, readAttempt, readHistory, saveAtt
 import type { Attempt } from './attempt-store'
 import { repIndex as reps } from './catalog-index'
 import type { RepSummary } from './catalog-index'
-import { flushStorage, localStore, retryStorage, storageIssue } from './local-store'
-import { savedMessage } from './save-status'
+import { flushStorage, getActiveProfile, localStore, retryStorage, storageIssue } from './local-store'
+import { mergeHistory } from './portability'
+import { scopedKey } from './profiles'
+import { deviceSaveFailure, savedMessage } from './save-status'
 import { readRoute } from './ui-navigation'
 
 const repIds = reps.map(rep => rep.id)
@@ -35,11 +37,15 @@ export function useAttempt() {
   const completing = useRef(false)
   const [saveState, setSaveState] = useState(storageIssue() || savedMessage())
   const saveGenerationRef = useRef(0)
+  // After a profile switch this workspace stays mounted briefly; its saves must not land in the new profile.
+  const [profile] = useState(getActiveProfile)
+  const ownsProfile = () => getActiveProfile() === profile
 
   useEffect(() => {
     const pendingSave = saveGenerationRef
     const generation = ++pendingSave.current
     const timer = window.setTimeout(() => {
+      if (getActiveProfile() !== profile) return
       try {
         saveAttempt(repId, attempt)
         void flushStorage()
@@ -49,15 +55,15 @@ export function useAttempt() {
           .catch(() => {
             if (generation === pendingSave.current) setSaveState('Could not save to the local server; download a backup')
           })
-      } catch {
-        setSaveState('Could not save on this device')
+      } catch (error) {
+        setSaveState(deviceSaveFailure(error))
       }
     }, 300)
     return () => {
       window.clearTimeout(timer)
       pendingSave.current++
     }
-  }, [attempt, repId])
+  }, [attempt, repId, profile])
 
   useEffect(() => {
     const onError = () => setSaveState(storageIssue() || 'Local server save failed; download a backup')
@@ -66,26 +72,33 @@ export function useAttempt() {
   }, [])
   useEffect(() => {
     const saveDraft = (event?: Event) => {
+      if (getActiveProfile() !== profile) return
       const { repId, attempt } = latestWork.current
       try {
         saveAttempt(repId, attempt)
-      } catch {
+      } catch (error) {
         event?.preventDefault()
-        setSaveState('Could not save on this device; download a backup')
+        setSaveState(deviceSaveFailure(error))
       }
+    }
+    // A completion saved in another tab joins this tab's history, so the next save here keeps it.
+    const receiveHistory = (event: StorageEvent) => {
+      if ((event.key === scopedKey(profile, historyKey) || event.key === null) && getActiveProfile() === profile) setHistory(readHistory())
     }
     const saveWhenHidden = () => {
       if (document.visibilityState === 'hidden') saveDraft()
     }
     window.addEventListener('code-reps-save-current', saveDraft)
     window.addEventListener('pagehide', saveDraft)
+    window.addEventListener('storage', receiveHistory)
     document.addEventListener('visibilitychange', saveWhenHidden)
     return () => {
       window.removeEventListener('code-reps-save-current', saveDraft)
       window.removeEventListener('pagehide', saveDraft)
+      window.removeEventListener('storage', receiveHistory)
       document.removeEventListener('visibilitychange', saveWhenHidden)
     }
-  }, [])
+  }, [profile])
 
   function update<K extends keyof Attempt>(key: K, value: Attempt[K]) {
     setAttempt(current => ({ ...current, [key]: value, completedAt: key === 'hintCount' ? current.completedAt : undefined }))
@@ -98,8 +111,8 @@ export function useAttempt() {
       saveAttempt(repId, attempt)
       localStore.setItem(selectedRepKey, nextRep.id)
       setSaveState('Saving…')
-    } catch {
-      setSaveState('Could not save on this device')
+    } catch (error) {
+      setSaveState(deviceSaveFailure(error))
     }
     setRepId(nextRep.id)
     setAttempt(readAttempt(nextRep))
@@ -113,13 +126,14 @@ export function useAttempt() {
 
   /** Records the open attempt as completed. Returns whether it was saved. */
   function complete() {
-    if (completing.current || attempt.completedAt) return false
+    if (completing.current || attempt.completedAt || !ownsProfile()) return false
     completing.current = true
     const completedAt = new Date().toISOString()
     const completed = { ...attempt, completedAt }
     const record = { ...completed, code: completed.code ?? '', id: crypto.randomUUID(), repId }
-    const nextHistory = [record, ...history]
     try {
+      // Read the saved history again: another tab may have recorded a completion since this one loaded.
+      const nextHistory = [record, ...mergeHistory(readHistory(), history)]
       // A draft newer than this render's attempt stays the draft instead of being replaced by the completed copy.
       const latest = latestWork.current
       const draft =
@@ -133,8 +147,8 @@ export function useAttempt() {
       setAttempt(current => (current === attempt ? completed : current))
       setSaveState('Saving…')
       return true
-    } catch {
-      setSaveState('Could not save on this device')
+    } catch (error) {
+      setSaveState(deviceSaveFailure(error))
       return false
     } finally {
       completing.current = false
