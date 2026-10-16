@@ -1,11 +1,13 @@
 import { firstPath, paths } from './path.ts'
 import type { PortableRecord } from './portability.ts'
 import { plural } from './ui-copy.ts'
+import { evidenceBadges } from './evidence-badges.ts'
 
 /** The path shape badges read. Passing a changed catalog shows how badges follow a path edit. */
 type BadgeCatalog = readonly { id: string; title: string; stages: readonly { title: string; repIds: readonly string[] }[] }[]
 
-type BadgeKind = 'first' | 'stage' | 'path'
+/** Completion badges (first rep, stage, track) are round; evidence badges (independence, retention, rhythm) are square. */
+type BadgeKind = 'first' | 'stage' | 'path' | 'evidence'
 export type Badge = {
   id: string
   kind: BadgeKind
@@ -20,6 +22,8 @@ export type Badge = {
   pathId?: string
   /** A rep that is the supporting work: the next unfinished rep, or the first one once earned. */
   repId: string
+  /** What earned it, in a sentence, for an earned evidence badge. */
+  detail?: string
 }
 
 const firstPathReps = new Set<string>(firstPath.stages.flatMap(stage => [...stage.repIds]))
@@ -108,7 +112,7 @@ export function profileBadges(history: PortableRecord[], now = new Date(), catal
       ),
     )
   }
-  return badges
+  return [...badges, ...evidenceBadges(history, now)]
 }
 
 /** Earned badges the learner has not been shown yet, given the badge IDs already acknowledged in this session. */

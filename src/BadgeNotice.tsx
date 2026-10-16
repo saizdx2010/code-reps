@@ -5,6 +5,7 @@ import type { Badge } from './badges'
 import type { PortableRecord } from './portability'
 import { useSessionPreference } from './useSessionPreference'
 import { plural } from './ui-copy.ts'
+import { BadgeArt } from './BadgeArt'
 
 type Props = { history: PortableRecord[]; now: number; onView: () => void; portalTarget?: HTMLElement | null }
 
@@ -69,6 +70,11 @@ export function BadgeNotice({ history, now, onView, portalTarget }: Props) {
   if (shown.length === 0) return null
   const notice = (
     <div ref={noticeRef} className={`badge-notice${portalTarget ? ' in-panel' : ' in-bar'}`} role="status">
+      <span className="badge-notice-art">
+        {shown.slice(0, 3).map(badge => (
+          <BadgeArt key={badge.id} badge={badge} earning />
+        ))}
+      </span>
       <p>
         <strong>{plural(shown.length, 'Badge')} earned:</strong> {shown.map(badge => badge.name).join(', ')}
       </p>
