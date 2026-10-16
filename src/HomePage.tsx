@@ -15,8 +15,21 @@ import type { getPracticePlan, PracticeAction } from './practice'
 import { withoutGoal } from './practice-actions'
 import type { PortableRecord } from './portability'
 
-// Today's plan loads beside the trail; it starts loading as soon as Trail renders.
-const TodayPlan = lazy(() => import('./TodayPlan'))
+// Today's plan loads beside the trail; it starts loading as soon as Trail renders. If it cannot load, due reviews stay
+// one link away on Progress.
+const TodayPlan = lazy(() =>
+  import('./TodayPlan').catch(() => ({
+    default: ({ onAllReviews }: { onAllReviews: () => void }) => (
+      <p className="today-more" role="status">
+        Today's plan could not load. Reload to try again, or{' '}
+        <button type="button" className="text-button" onClick={onAllReviews}>
+          see due reviews on Progress
+        </button>
+        .
+      </p>
+    ),
+  })),
+)
 
 // The first-rep walkthrough is authored for this rep only.
 const walkthroughRepId = 'declare-variables'

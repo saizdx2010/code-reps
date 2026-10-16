@@ -110,6 +110,20 @@ test('frontend preview states, keyboard modal exit, and frame checks use authore
   await expect(page.locator('iframe[title="Your directory implementation"]')).toHaveCount(0)
 })
 
+test('an endless loop in frontend checks is stopped and the page stays responsive with the draft kept', async ({ page }) => {
+  const { domSolutions } = await import('../fixtures/dom-solutions.mjs')
+  const looping = `${domSolutions['dom-tabs']}\nwhile (true) {}`
+  await page.goto('/#/practice/dom-tabs')
+  await replaceCode(page, looping, 'dom-tabs')
+  await page.getByRole('button', { name: 'Run checks', exact: true }).click()
+  await expect(page.getByText(/A loop ran for more than 2 seconds and was stopped/).first()).toBeVisible({ timeout: 8000 })
+  // The page still answers: the step rail responds and the draft is unchanged.
+  await page.getByRole('navigation', { name: 'Practice steps' }).getByRole('button', { name: 'Plan', exact: true }).click()
+  await expect(page.getByLabel('Your plan', { exact: true })).toBeVisible()
+  await page.reload()
+  await expect(page.locator('.view-lines')).toContainText('while (true)')
+})
+
 test('DOM accessibility rep previews its authored props and passes frame checks', async ({ page }) => {
   const { domSolutions } = await import('../fixtures/dom-solutions.mjs')
   await page.goto('/#/practice/dom-tabs')
@@ -138,3 +152,38 @@ for (const id of ['dom-accessible-form', 'dom-disclosure', 'dom-tabs', 'dom-live
     expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('IFRAME')
   })
 }
+
+test('two tabs on one profile each keep the completion they record', async ({ context }) => {
+  // Each tab loads the empty history first, then completes the same rep: neither save may drop the other's record.
+  const tabs = [await context.newPage(), await context.newPage()]
+  for (const page of tabs) {
+    await page.goto(route)
+    await expect(editor(page)).toBeVisible()
+  }
+  for (const page of tabs) {
+    await page.bringToFront()
+    await page.getByRole('button', { name: 'Plan', exact: true }).click()
+    await page.getByLabel('Your plan', { exact: true }).fill('Count occurrences and choose the smaller number when counts tie.')
+    await replaceCode(page, solution)
+    await page
+      .locator('.workspace-toolbar')
+      .getByRole('button', { name: /Run checks/ })
+      .click()
+    await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
+    await page.getByRole('button', { name: 'Explain', exact: true }).click()
+    await page
+      .getByLabel('Your explanation', { exact: true })
+      .fill('I count each value, compare counts, and use the smaller value to break ties. Empty input returns null.')
+    await page.getByRole('button', { name: 'Finish', exact: true }).click()
+    await page.getByRole('button', { name: 'Complete rep', exact: true }).click()
+    await expect(page.getByText('Your attempt is saved in the Journal.', { exact: true })).toBeVisible()
+  }
+  const history = await tabs[0].evaluate(() =>
+    JSON.parse(
+      Object.entries(localStorage)
+        .find(([key]) => key.endsWith(':history:v1'))
+        ?.at(1) ?? '[]',
+    ),
+  )
+  expect(history).toHaveLength(2)
+})

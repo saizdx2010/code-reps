@@ -3,7 +3,7 @@ import { existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 import { DatabaseSync, backup } from 'node:sqlite'
-import { storageKeyAllowed as keyAllowed } from './storage-keys.mjs'
+import { maxEntriesPerRequest, maxValueLength, storageKeyAllowed as keyAllowed } from './storage-keys.mjs'
 
 export function createStore(dataDir = process.env.CODE_REPS_DATA_DIR || join(homedir(), '.code-reps')) {
   mkdirSync(dataDir, { recursive: true, mode: 0o700 })
@@ -26,7 +26,10 @@ export function createStore(dataDir = process.env.CODE_REPS_DATA_DIR || join(hom
   function migrate(candidate) {
     if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) throw new Error('Invalid migration data.')
     const pairs = Object.entries(candidate)
-    if (pairs.length > 500 || pairs.some(([key, value]) => !keyAllowed(key) || typeof value !== 'string' || value.length > 1_000_000)) {
+    if (
+      pairs.length > maxEntriesPerRequest ||
+      pairs.some(([key, value]) => !keyAllowed(key) || typeof value !== 'string' || value.length > maxValueLength)
+    ) {
       throw new Error('Invalid migration data.')
     }
     db.exec('BEGIN IMMEDIATE')
@@ -47,8 +50,8 @@ export function createStore(dataDir = process.env.CODE_REPS_DATA_DIR || join(hom
     if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) throw new Error('Invalid saved entries.')
     const pairs = Object.entries(candidate)
     if (
-      pairs.length > 500 ||
-      pairs.some(([key, value]) => !keyAllowed(key) || (value !== null && (typeof value !== 'string' || value.length > 1_000_000)))
+      pairs.length > maxEntriesPerRequest ||
+      pairs.some(([key, value]) => !keyAllowed(key) || (value !== null && (typeof value !== 'string' || value.length > maxValueLength)))
     )
       throw new Error('Invalid saved entries.')
     db.exec('BEGIN IMMEDIATE')

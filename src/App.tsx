@@ -11,6 +11,7 @@ import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
 import type { View } from './ui-navigation'
 import { ProjectEditor } from './ProjectEditor'
 import { getActiveProfile, localStore } from './local-store'
+import { deviceSaveFailure } from './save-status'
 import { repIndex as reps } from './catalog-index'
 import type { RepSummary } from './catalog-index'
 import { useRepContent } from './useRepContent'
@@ -45,8 +46,11 @@ import { ChecksDrawer, WorkspaceToolbar } from './ChecksDrawer'
 import { practiceSteps, sectionStep, stepSection } from './practice-steps'
 
 const repIds = reps.map(rep => rep.id)
-// The badge notice and its artwork load on their own, keeping badge rules out of the first load.
-const BadgeNotice = lazy(() => import('./BadgeNotice').then(module => ({ default: module.BadgeNotice })))
+// The badge notice and its artwork load on their own, keeping badge rules out of the first load. The notice is a
+// courtesy: if it cannot load, the badges still appear on Progress.
+const BadgeNotice = lazy(() =>
+  import('./BadgeNotice').then(module => ({ default: module.BadgeNotice })).catch(() => ({ default: () => null })),
+)
 const FirstRepWalkthrough = lazy(() =>
   import('./FirstRepWalkthrough')
     .then(module => ({ default: module.FirstRepWalkthrough }))
@@ -325,8 +329,8 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     setLearnerStart(value)
     try {
       localStore.setItem(learnerStartKey, value)
-    } catch {
-      setSaveState('Could not save on this device')
+    } catch (error) {
+      setSaveState(deviceSaveFailure(error))
     }
   }
 

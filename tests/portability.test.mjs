@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   BackupTooLargeError,
+  UnrestorableBackupError,
   backupFileText,
   backupTextLimit,
   backupTooLargeMessage,
@@ -12,6 +13,7 @@ import { parseProfileBackup } from '../src/profile-backup.ts'
 
 const known = new Set(['sum-positive-numbers'])
 const attempt = { plan: 'Visit values', code: 'return 1', explanation: 'One pass', hintCount: 0 }
+const restores = text => parseBackup(text, known)
 const backup = {
   format: 'code-reps-backup',
   version: 1,
@@ -56,17 +58,18 @@ function largeBackup(records, extra = 0) {
 
 // Exact sizes come from measuring, so the test follows any change to the backup shape or its formatting.
 function backupOfLength(length) {
-  const empty = backupFileText(largeBackup(0)).length
-  const perRecord = backupFileText(largeBackup(1)).length - empty
+  const measure = value => JSON.stringify(value, null, 2).length
+  const empty = measure(largeBackup(0))
+  const perRecord = measure(largeBackup(1)) - empty
   const records = Math.floor((length - empty) / perRecord)
-  const extra = length - backupFileText(largeBackup(records)).length
+  const extra = length - measure(largeBackup(records))
   assert.ok(extra >= 0 && extra <= 3 * 99_000, 'the last record can make up the difference')
   return largeBackup(records, extra)
 }
 
 test('an export just under the shared limit serializes and restores', () => {
   const large = backupOfLength(backupTextLimit - 1)
-  const text = backupFileText(large)
+  const text = backupFileText(large, restores)
   assert.equal(text.length, backupTextLimit - 1)
   const restored = parseBackup(text, known)
   assert.equal(restored.history.length, large.history.length)
@@ -76,7 +79,7 @@ test('an export just under the shared limit serializes and restores', () => {
 test('an export over the shared limit is refused with a message instead of an unrestorable file', () => {
   const large = backupOfLength(backupTextLimit + 1)
   assert.throws(
-    () => backupFileText(large),
+    () => backupFileText(large, restores),
     error => error instanceof BackupTooLargeError && error.message === backupTooLargeMessage,
   )
   assert.match(backupTooLargeMessage, /20 MB/)
@@ -84,10 +87,31 @@ test('an export over the shared limit is refused with a message instead of an un
 })
 
 test('import still rejects backups and profiles over the shared limit', () => {
-  const text = backupFileText(backupOfLength(backupTextLimit))
+  const text = backupFileText(backupOfLength(backupTextLimit), restores)
   assert.equal(parseBackup(text, known).history.length > 0, true)
   assert.throws(() => parseBackup(`${text} `, known), /too large to import/)
   const profile = JSON.stringify({ format: 'code-reps-profile', version: 1, name: 'L', entries: {} })
   assert.equal(parseProfileBackup(profile, known).name, 'L')
   assert.throws(() => parseProfileBackup(profile.padEnd(backupTextLimit + 1), known), /import limit of 20 MB/)
+})
+
+test('an export import would reject is refused, and a long draft still round-trips', () => {
+  // Editors do not limit text, so a draft longer than any old per-field cap must still restore.
+  const long = { ...backup, drafts: { 'sum-positive-numbers': { ...attempt, code: 'x'.repeat(250_000) } } }
+  assert.equal(parseBackup(backupFileText(long, restores), known).drafts['sum-positive-numbers'].code.length, 250_000)
+  const unknown = { ...backup, drafts: { 'removed-rep': attempt } }
+  assert.throws(
+    () => backupFileText(unknown, restores),
+    error => error instanceof UnrestorableBackupError && /invalid draft/.test(error.message) && /not downloaded/.test(error.message),
+  )
+})
+
+test('a damaged profile file reports a readable error instead of a raw parse failure', () => {
+  const profile = entries => JSON.stringify({ format: 'code-reps-profile', version: 1, name: 'L', entries })
+  for (const key of ['sessions:v1', 'fluency:v1', 'history:v1']) {
+    assert.throws(
+      () => parseProfileBackup(profile({ [key]: '{broken' }), known),
+      error => !(error instanceof SyntaxError) && /unreadable learner records/.test(error.message),
+    )
+  }
 })

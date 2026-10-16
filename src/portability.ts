@@ -4,6 +4,7 @@ import { parseFluency } from './fluency.ts'
 import type { FluencyState } from './fluency.ts'
 import { normalizeMistakes } from './mistakes.ts'
 import { isDateString, isPlainObject } from './guards.ts'
+import { maxValueLength } from '../server/storage-keys.mjs'
 export type PortableAttempt = {
   plan: string
   code: string
@@ -43,22 +44,36 @@ export class BackupTooLargeError extends Error {
   }
 }
 
-/** Serializes a backup or profile export, refusing one that import would reject as too large. */
-export function backupFileText(value: unknown): string {
+export class UnrestorableBackupError extends Error {
+  constructor(reason: string) {
+    super(`This backup would not restore (${reason}), so it was not downloaded. Your saved work is unchanged.`)
+  }
+}
+
+/**
+ * Serializes a backup or profile export and reads it back with `parse`, the matching import, so a file that would not
+ * restore is refused rather than written.
+ */
+export function backupFileText(value: unknown, parse: (text: string) => unknown): string {
   const text = JSON.stringify(value, null, 2)
   if (text.length > backupTextLimit) throw new BackupTooLargeError()
+  try {
+    parse(text)
+  } catch (error) {
+    throw new UnrestorableBackupError(error instanceof Error ? error.message.replace(/\.$/, '') : 'it failed validation')
+  }
   return text
 }
+
+// Editors do not limit text, so a field may be as long as any saved value; the file limit bounds the whole backup.
+const text = (value: unknown) => typeof value === 'string' && value.length <= maxValueLength
 
 function attempt(value: unknown): value is PortableAttempt {
   if (!isPlainObject(value)) return false
   return (
-    typeof value.plan === 'string' &&
-    value.plan.length <= 100_000 &&
-    typeof value.code === 'string' &&
-    value.code.length <= 100_000 &&
-    typeof value.explanation === 'string' &&
-    value.explanation.length <= 100_000 &&
+    text(value.plan) &&
+    text(value.code) &&
+    text(value.explanation) &&
     Number.isInteger(value.hintCount) &&
     Number(value.hintCount) >= 0 &&
     Number(value.hintCount) <= 100 &&

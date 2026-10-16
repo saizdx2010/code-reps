@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Icon } from './Icon'
 import { StatusChip } from './Layout'
 import { personalBest } from './personal-best'
@@ -24,8 +24,9 @@ export type Moments = {
  * personal best. Both are worked out from saved attempts, so nothing is stored and backups are unchanged.
  */
 export default function LearningMoments({ history, recordId, now, fresh, onSkillMap }: Moments) {
-  const steps = skillSteps(history, recordId, now)
-  const best = personalBest(history, recordId, now)
+  // Worked out once per saved history, not on every keystroke elsewhere in the completion panel.
+  const steps = useMemo(() => skillSteps(history, recordId, now), [history, recordId, now])
+  const best = useMemo(() => personalBest(history, recordId, now), [history, recordId, now])
   const [pending, setPending] = useSessionPreference<string>('skill-steps-pending', '[]')
   const keys = fresh ? steps.map(step => skillStepKey(step.id, step.to)).join(' ') : ''
   useEffect(() => {

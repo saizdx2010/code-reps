@@ -312,8 +312,14 @@ export const arrayJourney = journeys[0]
 
 type JourneyStage = 'learning' | 'practising' | 'independent' | 'retained'
 
+const chronologicalRecords = (records: LearningRecord[]) => records.filter(record => isDateString(record.completedAt)).sort(byCompletedAt)
+
 export function getJourney(journey: Journey, records: LearningRecord[], now = Date.now()) {
-  const chronological = [...records].filter(record => isDateString(record.completedAt)).sort(byCompletedAt)
+  return journeyFrom(journey, chronologicalRecords(records), now)
+}
+
+/** Journey evidence from records already filtered to valid dates and sorted oldest first. */
+function journeyFrom(journey: Journey, chronological: LearningRecord[], now: number) {
   const guided = chronological.find(record => record.repId === journey.guided)
   const independent =
     guided &&
@@ -342,8 +348,11 @@ export function getJourney(journey: Journey, records: LearningRecord[], now = Da
 
 export const getArrayJourney = (records: LearningRecord[], now = Date.now()) => getJourney(arrayJourney, records, now)
 export type JourneyProgress = ReturnType<typeof getJourney> & { journey: Journey }
-export const getAllJourneys = (records: LearningRecord[], now = Date.now()): JourneyProgress[] =>
-  journeys.map(journey => ({ journey, ...getJourney(journey, records, now) }))
+// Sorted once for every journey, rather than once per journey.
+export const getAllJourneys = (records: LearningRecord[], now = Date.now()): JourneyProgress[] => {
+  const chronological = chronologicalRecords(records)
+  return journeys.map(journey => ({ journey, ...journeyFrom(journey, chronological, now) }))
+}
 
 // One evidence ladder everywhere: Not started, Guided, Independent, Retained. Review due is shown as an overlay.
 export const stageLabels: Record<JourneyStage, string> = {

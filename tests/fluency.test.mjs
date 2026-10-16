@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { emptyFluency, parseFluency, recurringReviews, skillEvidence, weeklyPlan, relatedHelp } from '../src/fluency.ts'
+import { emptyFluency, mergeFluency, parseFluency, recurringReviews, skillEvidence, weeklyPlan, relatedHelp } from '../src/fluency.ts'
 import { reps } from '../src/rep.ts'
 import { parseBackup } from '../src/portability.ts'
 import { completion, utcDay } from './helpers/records.mjs'
@@ -167,4 +167,35 @@ test('new DSA journeys schedule recurring recall without accepting early or hint
     assert.equal(review([...base, record(recall, 12)]).repId, independent)
     assert.equal(review([...base, record(recall, 12)]).interval, 14)
   }
+})
+
+test('a save from a tab that loaded earlier keeps what another tab saved meanwhile', () => {
+  const note = (id, title) => ({ id, title, body: '', skillId: '', repId: '', kind: 'note', updatedAt: '2026-01-01T00:00:00.000Z' })
+  const base = { ...emptyFluency(), bookmarks: ['kept', 'dropped-here'], notes: [note('shared', 'Shared')] }
+  // This tab removes a bookmark, adds a note, and changes the goal.
+  const mine = {
+    ...base,
+    goal: { ...base.goal, minutes: 45 },
+    bookmarks: ['kept'],
+    notes: [note('mine', 'Mine'), note('shared', 'Shared')],
+  }
+  // Meanwhile the other tab added a bookmark, a note, and an edit to the shared note.
+  const theirs = {
+    ...base,
+    bookmarks: ['kept', 'dropped-here', 'theirs'],
+    notes: [note('theirs', 'Theirs'), note('shared', 'Shared, edited')],
+  }
+  const merged = mergeFluency(base, mine, theirs)
+  assert.equal(merged.goal.minutes, 45)
+  assert.deepEqual(merged.bookmarks, ['kept', 'theirs'])
+  assert.deepEqual(
+    merged.notes.map(item => item.title),
+    ['Mine', 'Theirs', 'Shared, edited'],
+  )
+  // A note this tab deleted stays deleted; one it never touched is not resurrected or dropped.
+  const deleted = mergeFluency(base, { ...base, notes: [] }, theirs)
+  assert.deepEqual(
+    deleted.notes.map(item => item.id),
+    ['theirs'],
+  )
 })

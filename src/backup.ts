@@ -1,11 +1,11 @@
-import { attemptKey, historyKey, learnerStartKey, readAttempt } from './attempt-store.ts'
+import { attemptKey, historyKey, learnerStartKey, readAttempt, readHistory } from './attempt-store.ts'
 import type { Attempt, AttemptRecord } from './attempt-store.ts'
 import { repIndex as reps } from './catalog-index.ts'
 import { parseFluency } from './fluency.ts'
 import type { FluencyState } from './fluency.ts'
 import type { LearnerStart } from './learning.ts'
 import { flushStorage, localStore } from './local-store.ts'
-import { BackupTooLargeError, backupFileText, mergeHistory, parseBackup } from './portability.ts'
+import { BackupTooLargeError, UnrestorableBackupError, backupFileText, mergeHistory, parseBackup } from './portability.ts'
 import type { Backup } from './portability.ts'
 import { emptySessions } from './practice-sessions.ts'
 import type { usePracticeSessions } from './usePracticeSessions.ts'
@@ -44,7 +44,8 @@ export function downloadBackup({ attempt, repId, learnerStart, history, learning
       sessions: sessions.backup(),
     }
     // Refuses, rather than writes, a file that import would reject.
-    const url = URL.createObjectURL(new Blob([backupFileText(backup)], { type: 'application/json' }))
+    const text = backupFileText(backup, text => parseBackup(text, new Set(reps.map(item => item.id))))
+    const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }))
     const link = document.createElement('a')
     link.href = url
     link.download = `code-reps-backup-${new Date().toISOString().slice(0, 10)}.json`
@@ -52,7 +53,9 @@ export function downloadBackup({ attempt, repId, learnerStart, history, learning
     window.setTimeout(() => URL.revokeObjectURL(url), 1000)
     return backupDownloaded
   } catch (error) {
-    return error instanceof BackupTooLargeError ? error.message : 'The backup could not be created on this device.'
+    return error instanceof BackupTooLargeError || error instanceof UnrestorableBackupError
+      ? error.message
+      : 'The backup could not be created on this device.'
   }
 }
 
@@ -99,7 +102,10 @@ export async function previewBackup(
 export async function applyBackup(backup: Backup, { learnerStart, history, learning, sessions }: ImportTargets) {
   await sessions.flush()
   sessions.verifyRevision()
-  const merged = mergeHistory(history, backup.history).sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt))
+  // The saved history may include completions another tab recorded after this one loaded.
+  const merged = mergeHistory(mergeHistory(readHistory(), history), backup.history).sort(
+    (a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt),
+  )
   const updates: [string, string][] = [[historyKey, JSON.stringify(merged)]]
   for (const [id, draft] of Object.entries(backup.drafts)) {
     const key = attemptKey(id)

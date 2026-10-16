@@ -14,3 +14,18 @@ test('handles unusual user output without looping', () => {
   cyclic.self = cyclic
   assert.equal(sameValue(cyclic, { self: {} }), false)
 })
+
+test('an unfilled array slot never matches an authored value', () => {
+  assert.equal(sameValue(new Array(2), ['a', 'b']), false)
+  const partly = ['a']
+  partly.length = 2
+  assert.equal(sameValue(partly, ['a', 'b']), false)
+  assert.equal(sameValue(['a', 'b'], ['a', 'b']), true)
+})
+
+test('negative zero matches zero, as JSON has one zero', () => {
+  assert.equal(sameValue(-0, 0), true)
+  assert.equal(sameValue([0, -0], [-0, 0]), true)
+  assert.equal(sameValue(Number.NaN, Number.NaN), true)
+  assert.equal(sameValue(0, false), false)
+})

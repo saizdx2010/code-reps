@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { breakDays, evidenceBadges, heldDays, steadyDays, steadyWeeks } from '../src/evidence-badges.ts'
+import { breakDays, evidenceBadges, heldDays, stageSkills, steadyDays, steadyWeeks } from '../src/evidence-badges.ts'
 import { profileBadges } from '../src/badges.ts'
 import { journeys, getAllJourneys } from '../src/learning.ts'
 import { buildSkillMap } from '../src/skill-map.ts'
@@ -92,7 +92,7 @@ test('welcome back is the first practice day after a break of two weeks or more'
 })
 
 test('stage, independently needs every skill of one track stage at Independent', () => {
-  const stage = buildSkillMap('typescript', getAllJourneys([], now.getTime())).stages[0]
+  const stage = buildSkillMap('typescript', getAllJourneys([], now.getTime())).stages.find(item => item.nodes.length >= stageSkills)
   const stageJourneys = stage.nodes.map(node => journeys.find(journey => journey.id === node.id))
   const history = stageJourneys.flatMap((journey, index) => [rec(journey.guided, index * 3, 1), rec(journey.independent, index * 3 + 1)])
   const badge = earned(history, 'stage-independent')
@@ -107,4 +107,25 @@ test('invalid and future dates never count', () => {
   assert.equal(earned(future, 'first-independent').earned, false)
   const invalid = [{ ...rec(arrays.guided, 0, 2), completedAt: 'bad' }, rec(arrays.independent, 1)]
   assert.equal(earned(invalid, 'first-independent').earned, false)
+})
+
+test('one hint-free rep never earns both first independent skill and stage, independently', () => {
+  for (const journey of journeys) {
+    const history = [rec(journey.guided, 0, 2), rec(journey.independent, 1)]
+    const badges = evidenceBadges(history, now)
+    assert.equal(byId(badges, 'first-independent').earned, true, journey.id)
+    assert.equal(byId(badges, 'stage-independent').earned, false, journey.id)
+  }
+})
+
+test('the steady-weeks dates name the Monday it started on in every timezone', t => {
+  const original = process.env.TZ
+  t.after(() => (original === undefined ? delete process.env.TZ : (process.env.TZ = original)))
+  for (const zone of ['UTC', 'America/Los_Angeles', 'Asia/Kolkata', 'Pacific/Kiritimati']) {
+    process.env.TZ = zone
+    const week = w => Array.from({ length: steadyDays }, (_, d) => rec('basic-types', w * 7 + d))
+    const badge = earned(Array.from({ length: steadyWeeks }, (_, w) => week(w)).flat(), 'steady-weeks', at(400))
+    const monday = at(0).toLocaleString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+    assert.ok(badge.detail.includes(`from ${monday} to`), `${zone}: ${badge.detail}`)
+  }
 })

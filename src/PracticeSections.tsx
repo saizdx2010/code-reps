@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
+import type { ComponentType, ReactNode } from 'react'
 import { confidenceLabels, difficultyLabels } from './attempt-labels.ts'
 import type { Confidence, Difficulty } from './attempt-labels.ts'
 import type { Attempt, AttemptRecord } from './attempt-store'
@@ -24,9 +24,14 @@ import type { useRepContent } from './useRepContent'
 import type { useReviewContent } from './useReviewContent'
 import type { Moments } from './LearningMoments'
 
-const RepGuidance = lazy(() => import('./RepGuidance'))
-// Growth notes appear only after a completion, so they load with it rather than with the app.
-const LearningMoments = lazy(() => import('./LearningMoments'))
+const RepGuidance = lazy(() =>
+  import('./RepGuidance').catch(() => ({
+    default: () => <p role="status">This rep's guidance could not load. Reload to try again; your draft is kept.</p>,
+  })),
+)
+// Growth notes appear only after a completion, so they load with it rather than with the app. They describe a saved
+// attempt, so if they cannot load the completion panel simply goes without them.
+const LearningMoments = lazy<ComponentType<Moments>>(() => import('./LearningMoments').catch(() => ({ default: () => null })))
 const TraceViewer = lazyRoute(() => import('./TraceViewer').then(module => module.TraceViewer), 'The trace')
 
 type Writing = ReturnType<typeof practiceWritingPrompts>

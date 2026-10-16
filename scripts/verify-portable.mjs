@@ -7,17 +7,19 @@ import { join } from 'node:path'
 const root = await mkdtemp(join(tmpdir(), 'Code Reps portable '))
 const bundle = join(root, 'app with spaces')
 const data = join(root, 'progress')
+const windows = process.platform === 'win32'
 let child
-async function launch() {
-  child = spawn(
-    process.platform === 'win32' ? join(bundle, 'node.exe') : join(bundle, 'start-code-reps.sh'),
-    process.platform === 'win32' ? [join(bundle, 'server/index.mjs')] : [],
-    {
-      cwd: tmpdir(),
-      stdio: ['ignore', 'pipe', 'pipe', ...(process.platform === 'win32' ? ['ipc'] : [])],
-      env: { ...process.env, CODE_REPS_DATA_DIR: data, CODE_REPS_PORT: '0', PATH: '/usr/bin:/bin' },
-    },
-  )
+// Windows starts the bundled runtime directly so the smoke test can stop it cleanly over IPC; its launcher script runs separately.
+async function launch(
+  command = windows ? join(bundle, 'node.exe') : join(bundle, 'start-code-reps.sh'),
+  args = windows ? [join(bundle, 'server/index.mjs')] : [],
+  options = { stdio: ['ignore', 'pipe', 'pipe', ...(windows ? ['ipc'] : [])] },
+) {
+  child = spawn(command, args, {
+    cwd: tmpdir(),
+    env: { ...process.env, CODE_REPS_DATA_DIR: data, CODE_REPS_PORT: '0', PATH: '/usr/bin:/bin' },
+    ...options,
+  })
   let output = ''
   child.stderr.on('data', chunk => {
     output += chunk
@@ -46,7 +48,7 @@ async function stop() {
   const exiting = new Promise(resolve => child.once('exit', resolve))
   const timeout = setTimeout(() => child.kill('SIGKILL'), 10000)
   try {
-    if (process.platform === 'win32') child.send('shutdown')
+    if (windows) child.send('shutdown')
     else child.kill('SIGTERM')
     assert.equal(await exiting, 0)
   } finally {
@@ -75,8 +77,21 @@ try {
   assert.equal((await (await fetch(`${url}/api/state`)).json()).entries['code-reps:draft:portable'], 'portable saved')
   await stop()
   assert.equal((await readdir(join(data, 'backups'))).length, 1)
+  if (windows) {
+    // The double-click launcher: cmd /s strips the outer quotes, keeping the quoted path with spaces intact.
+    const script = join(bundle, 'Start Code Reps.cmd')
+    url = await launch(process.env.ComSpec || 'cmd.exe', ['/d', '/s', '/c', `""${script}""`], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsVerbatimArguments: true,
+    })
+    assert.equal((await (await fetch(`${url}/api/state`)).json()).entries['code-reps:draft:portable'], 'portable saved')
+    // The script waits for a key press after the server ends, so stop the whole process tree.
+    const exiting = once(child, 'exit')
+    await once(spawn('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' }), 'exit')
+    await exiting
+  }
   console.log(
-    `Portable ${process.platform} ${process.arch} smoke passed: ${assets.length} local assets, first run, path spaces, bundled runtime, save, restart, snapshot, clean shutdown.`,
+    `Portable ${process.platform} ${process.arch} smoke passed: ${assets.length} local assets, first run, path spaces, bundled runtime, save, restart, snapshot, clean shutdown${windows ? ', Start Code Reps.cmd launcher' : ''}.`,
   )
 } finally {
   if (child?.exitCode === null && child.signalCode === null) {

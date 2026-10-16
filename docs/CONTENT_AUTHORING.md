@@ -33,7 +33,7 @@ Completion questions should request a small, unambiguous token/expression and st
 
 For every new exercise, provide an independent reference solution in the test fixtures and an authored self-review guide. State input limits and mutation rules; include empty, equality, normalization, malformed-input, or conflicting-state checks where the contract requires them. Add recall variants to `src/fluency.ts` with distinct applications rather than changing only example values.
 
-Multi-file capstones use `encodeFiles` with an entry module and named `.ts` files. Use local relative imports; dependencies outside the project are unavailable. Keep frontend checks in the sandboxed frame and backend behavior in the timed worker. Neither environment is a security boundary for arbitrary third-party exercise packs. Avoid treating integration success as proof of module quality.
+Multi-file capstones use `encodeFiles` with an entry module and named `.ts` files. Use local relative imports; dependencies outside the project are unavailable. Keep frontend checks in the sandboxed frame and backend behavior in the timed worker. Neither environment is a security boundary for arbitrary third-party exercise packs. Avoid treating integration success as proof of module quality. A single-file solution may still mark its function `export` or `export default`, as learners used to modules often do; the compiler drops the keyword so the solution runs as written.
 
 Run `yarn content:check` before publishing an app/content update. Keep exercise IDs stable so saved attempts remain linked. If changing an interactive question's answer or option ordering, add a new question ID or migrate saved answers explicitly. Content version alone does not migrate learner evidence.
 

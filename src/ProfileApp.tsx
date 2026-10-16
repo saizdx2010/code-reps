@@ -22,7 +22,9 @@ function cachedEntries() {
 }
 function download(value: unknown, name: string) {
   // Throws instead of writing a file that import would reject; the export notice shows why.
-  const url = URL.createObjectURL(new Blob([backupFileText(value)], { type: 'application/json' }))
+  const url = URL.createObjectURL(
+    new Blob([backupFileText(value, text => parseProfileBackup(text, new Set(reps.map(r => r.id))))], { type: 'application/json' }),
+  )
   const link = document.createElement('a')
   link.href = url
   link.download = name

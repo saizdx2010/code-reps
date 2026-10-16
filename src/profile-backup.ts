@@ -2,6 +2,7 @@ import { parseSessions } from './practice-sessions.ts'
 import { backupLimitLabel, backupTextLimit, parseBackup } from './portability.ts'
 import { parseFluency } from './fluency.ts'
 import { isPlainObject } from './guards.ts'
+import { maxValueLength } from '../server/storage-keys.mjs'
 type ProfileBackup = { format: 'code-reps-profile'; version: 1; name: string; exportedAt: string; entries: Record<string, string> }
 export function parseProfileBackup(text: string, repIds: Set<string>): ProfileBackup {
   if (text.length > backupTextLimit) throw new Error(`Profile file exceeds the local import limit of ${backupLimitLabel}.`)
@@ -34,7 +35,7 @@ export function parseProfileBackup(text: string, repIds: Set<string>): ProfileBa
     'split-width',
     ...Array.from(repIds, id => `attempt:${id}:v1`),
   ])
-  if (Object.entries(entries).some(([key, entry]) => !allowed.has(key) || typeof entry !== 'string' || entry.length > 1_000_000)) {
+  if (Object.entries(entries).some(([key, entry]) => !allowed.has(key) || typeof entry !== 'string' || entry.length > maxValueLength)) {
     throw new Error('This profile contains unsupported or invalid entries.')
   }
   let history, drafts
@@ -51,8 +52,15 @@ export function parseProfileBackup(text: string, repIds: Set<string>): ProfileBa
   }
   const learnerStart = entries['learner-start:v1'] ?? null
   parseBackup(JSON.stringify({ format: 'code-reps-backup', version: 1, learnerStart, history, drafts }), repIds)
-  if (entries['sessions:v1'] !== undefined) parseSessions(JSON.parse(entries['sessions:v1']), repIds)
-  if (entries['fluency:v1']) parseFluency(JSON.parse(entries['fluency:v1']))
+  let sessions: unknown, fluency: unknown
+  try {
+    sessions = entries['sessions:v1'] === undefined ? undefined : JSON.parse(entries['sessions:v1'])
+    fluency = entries['fluency:v1'] ? JSON.parse(entries['fluency:v1']) : undefined
+  } catch {
+    throw new Error('Profile contains unreadable learner records.')
+  }
+  if (sessions !== undefined) parseSessions(sessions, repIds)
+  if (fluency !== undefined) parseFluency(fluency)
   if (entries['selected-rep'] && !repIds.has(entries['selected-rep'])) throw new Error('Profile refers to an unknown selected exercise.')
   const splitWidth = entries['split-width']
   if (splitWidth && (Number(splitWidth) < 25 || Number(splitWidth) > 60 || !Number.isFinite(Number(splitWidth)))) {

@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { request as httpRequest } from 'node:http'
 import { startServer } from '../server/index.mjs'
 import { writeAppAssets } from './helpers/app-assets.mjs'
+import { createLocalStore } from '../src/local-store.ts'
 
 test('local server migrates once, persists data, and backs up on restart', async () => {
   const root = await mkdtemp(join(tmpdir(), 'code-reps-test-'))
@@ -98,4 +99,103 @@ test('CLI closes through its parent IPC channel without exposing a shutdown endp
     if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL')
     await rm(root, { recursive: true, force: true })
   }
+})
+
+// Starts a server on a temporary data folder and passes `run` a same-origin fetch for it.
+async function withServer(run) {
+  const root = await mkdtemp(join(tmpdir(), 'code-reps-test-'))
+  const running = await startServer({ port: 0, dataDir: join(root, 'data'), assetsDir: await writeAppAssets(join(root, 'app')) })
+  try {
+    const request = (path, options = {}) =>
+      fetch(`${running.url}${path}`, {
+        ...options,
+        headers: { 'Content-Type': 'application/json', Origin: running.url, ...options.headers },
+      })
+    await run({ running, request })
+  } finally {
+    await running.close()
+    await rm(root, { recursive: true, force: true })
+  }
+}
+
+test('a save split across network chunks keeps characters that straddle the split', async () => {
+  await withServer(async ({ running }) => {
+    const body = Buffer.from(JSON.stringify({ entries: { 'code-reps:note': 'naïve café — 日本語 🎯' } }))
+    // Split inside the first multi-byte character so each chunk alone would decode to a replacement character.
+    const split = body.indexOf(Buffer.from('ï')) + 1
+    const status = await new Promise((resolve, reject) => {
+      const { port } = new URL(running.url)
+      const req = httpRequest(
+        {
+          host: '127.0.0.1',
+          port,
+          path: '/api/entries',
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Content-Length': body.length },
+        },
+        res => {
+          res.resume()
+          resolve(res.statusCode)
+        },
+      )
+      req.on('error', reject)
+      req.write(body.subarray(0, split))
+      setTimeout(() => req.end(body.subarray(split)), 20)
+    })
+    assert.equal(status, 200)
+    assert.equal(running.store.entries()['code-reps:note'], 'naïve café — 日本語 🎯')
+  })
+})
+
+test('bodies that are not an entries object, or too large, get a 400 with a reason', async () => {
+  await withServer(async ({ running, request }) => {
+    for (const body of ['null', '[]', '7', '"text"']) {
+      for (const [path, method] of [
+        ['/api/entries', 'PATCH'],
+        ['/api/migrate', 'POST'],
+      ]) {
+        const response = await request(path, { method, body })
+        assert.equal(response.status, 400, `${method} ${body}`)
+        assert.match((await response.json()).error, /Invalid/)
+      }
+    }
+    const huge = await request('/api/entries', {
+      method: 'PATCH',
+      body: JSON.stringify({ entries: { 'code-reps:x': 'x'.repeat(70 * 1024 * 1024) } }),
+    })
+    assert.equal(huge.status, 400)
+    assert.equal((await huge.json()).error, 'Request is too large.')
+    // The connection still serves the next request after a refused body.
+    assert.equal((await request('/api/state')).status, 200)
+    assert.deepEqual(running.store.entries(), {})
+  })
+})
+
+test('the browser store copies a large browser history to a new server and saves big imports', async () => {
+  await withServer(async ({ running, request }) => {
+    const map = new Map([
+      ...Array.from({ length: 1200 }, (_, index) => [`code-reps:profile:default:attempt:rep-${index}:v1`, `draft ${index} ✓`]),
+      ['code-reps:profile:default:history:v1', 'ü'.repeat(3_000_000)],
+    ])
+    const local = Object.fromEntries(map)
+    const storage = {
+      get length() {
+        return map.size
+      },
+      key: index => [...map.keys()][index] ?? null,
+      getItem: key => map.get(key) ?? null,
+      setItem: (key, value) => map.set(key, value),
+      removeItem: key => map.delete(key),
+    }
+    const store = createLocalStore({ storage, request, onError() {} })
+    await store.initializeStorage()
+    assert.equal(store.storageIssue(), '')
+    assert.deepEqual(running.store.entries(), local)
+    const imported = Object.fromEntries(
+      Array.from({ length: 700 }, (_, index) => [`code-reps:profile:second:attempt:rep-${index}:v1`, 'x'.repeat(10_000)]),
+    )
+    store.localStore.setEntries(imported)
+    await store.flushStorage()
+    assert.deepEqual(running.store.entries(), { ...local, ...imported })
+  })
 })

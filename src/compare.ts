@@ -1,6 +1,7 @@
 /** Compare the JSON-shaped values used by authored checks. */
 export function sameValue(actual: unknown, expected: unknown, seen = new WeakSet<object>()): boolean {
-  if (Object.is(actual, expected)) return true
+  // JSON has one zero, so -0 and 0 match; NaN still matches itself.
+  if (Object.is(actual, expected) || (actual === 0 && expected === 0)) return true
   if (typeof actual !== 'object' || actual === null || typeof expected !== 'object' || expected === null) return false
   if (seen.has(actual)) return false
   seen.add(actual)
@@ -9,7 +10,10 @@ export function sameValue(actual: unknown, expected: unknown, seen = new WeakSet
       Array.isArray(actual) &&
       Array.isArray(expected) &&
       actual.length === expected.length &&
-      actual.every((value, index) => sameValue(value, expected[index], seen))
+      // By index, not every(): every() skips holes, so an unfilled slot would match anything.
+      Array.from({ length: actual.length }, (_, index) => index).every(
+        index => index in actual === index in expected && sameValue(actual[index], expected[index], seen),
+      )
     seen.delete(actual)
     return result
   }

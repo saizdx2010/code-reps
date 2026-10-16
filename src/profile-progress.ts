@@ -7,6 +7,12 @@ export function dayNumber(date: Date) {
   return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / DAY_MS
 }
 
+/** Local midnight of a day number, so formatting it shows that calendar day in any timezone. */
+export function dayDate(day: number) {
+  const date = new Date(day * DAY_MS)
+  return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+}
+
 /** A streak carries over at most one missed day in any seven: two carried-over days are at least this far apart. */
 const restSpacing = 7
 const recallRepIds = new Set(journeys.map(journey => journey.recall))

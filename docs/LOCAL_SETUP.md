@@ -12,7 +12,7 @@ The server listens only on your own laptop. It saves progress in `~/.code-reps/p
 
 ## Bring over older progress
 
-If you used the earlier preview on `http://127.0.0.1:4173`, the first launch migrates its browser data automatically when the SQLite database is empty. If you used another address or port, open the old app, choose **Progress → Download backup**, then use **Import backup** in the local app.
+If you used the earlier preview on `http://127.0.0.1:4173`, the first launch migrates its browser data automatically when the SQLite database is empty. The same happens for a new or replaced data folder: an empty database never removes the browser copy, and a migration interrupted part-way resumes on the next launch. If you used another address or port, open the old app, choose **Progress → Download backup**, then use **Import backup** in the local app.
 
 Keep the downloaded JSON file until you have checked that your attempts appear in **Progress → Journal → Attempts**.
 
@@ -37,6 +37,6 @@ If you need a different data location or port, set `CODE_REPS_DATA_DIR` or `CODE
 
 The app keeps pending server writes in the browser and retries them before loading server progress on the next startup. Keep the same browser and address, restart the local server, then choose **Retry saving**. Use **Download backup** while the browser copy is still available. Clearing browser data can remove pending work.
 
-Backup imports are committed to SQLite as one batch. Invalid batches leave stored progress unchanged. An import that cannot reach the server stays pending in the browser until saving succeeds.
+Saves reach SQLite in requests of at most 500 keys and about 4 MB, so a large import may be committed in several batches. Each batch is all-or-nothing; an invalid batch leaves stored progress unchanged, and one that cannot reach the server stays pending in the browser until saving succeeds.
 
 See [Maintaining](./MAINTAINING.md#backups-and-data) for where each kind of data lives, and [local reliability](./LOCAL_RELIABILITY.md) for checks still pending on other platforms.

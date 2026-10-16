@@ -57,7 +57,7 @@ function build(first: Map<string, number>, base: Pick<Badge, 'id' | 'kind' | 'na
 
 /**
  * Badges are derived from the current path definitions on every render; nothing is awarded or stored.
- * A required rep added to an earned stage moves its badge back to upcoming with the completed count kept,
+ * A required rep added to an earned stage stops its badge showing as earned, with the completed count kept,
  * and a rep removed from a path stops being required. Completed attempts keep counting either way.
  */
 export function profileBadges(history: PortableRecord[], now = new Date(), catalog: BadgeCatalog = paths): Badge[] {

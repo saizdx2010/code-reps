@@ -1,4 +1,4 @@
-import { cp, mkdir, rm, writeFile, chmod } from 'node:fs/promises'
+import { cp, mkdir, rm, stat, writeFile, chmod } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -6,6 +6,12 @@ const root = resolve(fileURLToPath(new URL('../', import.meta.url)))
 const output = join(root, 'release', `code-reps-${process.platform}-${process.arch}`)
 const executable = process.platform === 'win32' ? 'node.exe' : 'node'
 
+try {
+  if (!(await stat(join(root, 'dist', 'index.html'))).isFile()) throw new Error('Missing index')
+} catch {
+  process.stderr.write('The built app is missing. Run yarn package, which builds before packaging, or yarn build first.\n')
+  process.exit(1)
+}
 await rm(output, { recursive: true, force: true })
 await mkdir(output, { recursive: true })
 await cp(join(root, 'dist'), join(output, 'dist'), { recursive: true })

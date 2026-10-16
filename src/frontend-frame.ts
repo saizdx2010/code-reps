@@ -19,7 +19,7 @@ export function buildFrontendFrame(
 ): string {
   const scenario = rep.domPreview?.props ?? requested
   if (typeof code !== 'string' || code.length > 100_000) throw new Error('The solution is too large to preview.')
-  const outputText = compileSolution(code, rep.functionName, rep.reactPreview)
+  const outputText = compileSolution(code, rep.functionName, rep.reactPreview, { guardLoops: true })
   const payload = JSON.stringify({
     code: outputText,
     functionName: rep.functionName,
