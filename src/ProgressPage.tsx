@@ -5,7 +5,9 @@ import { Icon } from './Icon'
 import { withoutGoal } from './practice-actions'
 import { profileBadges } from './badges'
 import type { Badge } from './badges'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { BadgeArt } from './BadgeArt'
+import { useSessionPreference } from './useSessionPreference'
 import type { paths } from './path'
 import { profileProgress } from './profile-progress'
 import type { PortableRecord } from './portability'
@@ -211,14 +213,10 @@ export function ProgressPage(props: Props) {
       <section className="profile-badges" aria-labelledby="profile-badges-title">
         <h2 id="profile-badges-title">Badges earned</h2>
         <p className="badge-count" role="status">
-          {earned.length} earned. Each finished rep counts once.
+          {earned.length} earned. Evidence first, then completion; each links to the work that earned it.
         </p>
         {earned.length > 0 ? (
-          <ul className="badge-grid" aria-label="Earned badges">
-            {earned.map(badge => (
-              <EarnedBadge key={badge.id} badge={badge} onOpen={open} />
-            ))}
-          </ul>
+          <EarnedBadges earned={earned} onOpen={open} />
         ) : (
           <p className="badge-empty">No badges yet. Finish one rep to earn the first.</p>
         )}
@@ -360,18 +358,64 @@ function PracticeRhythm({ summary }: { summary: ReturnType<typeof profileProgres
   )
 }
 
-function EarnedBadge({ badge, onOpen }: { badge: Badge; onOpen: (badge: Badge) => void }) {
+const readSeen = (value: string): string[] | null => {
+  try {
+    const parsed: unknown = JSON.parse(value)
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Earned badges in two quiet groups: evidence (square tiles) before completion (round tiles). A badge earned since this
+ * page was last shown in this browser session plays its earning motion once; without a session record, arriving never
+ * replays earlier badges. The record is session UI state, so it never enters backups.
+ */
+function EarnedBadges({ earned, onOpen }: { earned: Badge[]; onOpen: (badge: Badge) => void }) {
+  const [seenValue, setSeen] = useSessionPreference<string>('badges-art-seen', '')
+  const ids = earned.map(badge => badge.id)
+  const [fresh] = useState(() => {
+    const seen = readSeen(seenValue)
+    return new Set(seen ? ids.filter(id => !seen.includes(id)) : [])
+  })
+  const record = JSON.stringify(ids)
+  useEffect(() => {
+    if (seenValue !== record) setSeen(record)
+  }, [record, seenValue, setSeen])
+  const groups = [
+    { title: 'Evidence', badges: earned.filter(badge => badge.kind === 'evidence') },
+    { title: 'Completion', badges: earned.filter(badge => badge.kind !== 'evidence') },
+  ].filter(group => group.badges.length > 0)
+  return groups.map(group => (
+    <div key={group.title} className="badge-group">
+      <h3 className="badge-group-title">
+        {group.title} · {group.badges.length}
+      </h3>
+      <ul className="badge-grid" aria-label={`Earned ${group.title.toLowerCase()} badges`}>
+        {group.badges.map(badge => (
+          <EarnedBadge key={badge.id} badge={badge} earning={fresh.has(badge.id)} onOpen={onOpen} />
+        ))}
+      </ul>
+    </div>
+  ))
+}
+
+function EarnedBadge({ badge, earning, onOpen }: { badge: Badge; earning: boolean; onOpen: (badge: Badge) => void }) {
   const action = badge.kind === 'path' ? 'Open track' : 'Open rep'
   return (
     <li className="badge-card" data-kind={badge.kind}>
-      <BadgeArt kind={badge.kind} />
+      <BadgeArt badge={badge} earning={earning} />
       <div className="badge-text">
         <strong>{badge.name}</strong>
-        <span className="badge-rule">{badge.rule}</span>
+        {/* An earned evidence badge says what earned it; the general rule is for the ones that are not about one moment. */}
+        {badge.detail ? <span className="badge-detail">{badge.detail}</span> : <span className="badge-rule">{badge.rule}</span>}
         <StatusChip tone="success">Earned{badge.earnedAt ? ` ${formatDate(badge.earnedAt)}` : ''}</StatusChip>
-        <span className="badge-progress">
-          {badge.completed} of {badge.total} {plural(badge.total, 'rep')}
-        </span>
+        {badge.kind !== 'evidence' && (
+          <span className="badge-progress">
+            {badge.completed} of {badge.total} {plural(badge.total, 'rep')}
+          </span>
+        )}
       </div>
       <button type="button" className="text-button" aria-label={`${action} for ${badge.name}`} onClick={() => onOpen(badge)}>
         {action}
@@ -577,20 +621,4 @@ function attemptsLine({ attempts, newAttempts }: BackupPreview) {
   if (!newAttempts) return `Adds no attempts; ${attempts === 1 ? 'its one completed attempt is' : `all ${attempts} are`} already here`
   if (newAttempts === attempts) return `Adds ${attempts === 1 ? 'its' : `all ${attempts}`} completed ${noun}`
   return `Adds ${newAttempts} of its ${attempts} completed ${noun}; the rest are already here`
-}
-
-function BadgeArt({ kind }: { kind: Badge['kind'] }) {
-  // Decorative: the badge name, rule, and status chip carry the meaning.
-  return (
-    <svg className="badge-art" data-earned="true" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-      {kind === 'path' ? (
-        <path d="M16 3l11 5v8c0 7-5 11-11 13C10 27 5 23 5 16V8z" />
-      ) : kind === 'stage' ? (
-        <path d="M16 3l11 6.5v13L16 29 5 22.5v-13z" />
-      ) : (
-        <circle cx="16" cy="16" r="12" />
-      )}
-      <path className="badge-check" d="M10.5 16.5l4 4 7-8" />
-    </svg>
-  )
 }

@@ -797,20 +797,82 @@ summary {
 .rhythm-week li:nth-child(7) .rhythm-day {
   animation-delay: 180ms;
 }
-/* A newly shown badge settles its artwork in once; the stroke check draws itself. */
-.badge-card .badge-art {
+/*
+ * Earning a badge, once: the tile settles in, its rungs fill from the bottom (Guided, Independent, Retained), the glow
+ * rises with them, the kept rim draws around the tile, and a tag pops in last. Inside the badge's own box.
+ */
+.badge-art[data-earning] :is(.badge-tile, .badge-tag, .badge-weeks circle, .badge-trail-node, .badge-moon) {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.badge-art[data-earning] .badge-tile {
   animation: mark-pop 320ms var(--motion-spring) both;
 }
-.badge-check {
-  stroke-dasharray: 24;
-  animation: badge-draw 420ms var(--motion-ease) 200ms both;
+.badge-art[data-earning] .badge-stack {
+  animation: badge-fade 240ms var(--motion-ease) 60ms both;
+}
+.badge-art[data-earning] .badge-rung {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: fill-grow 260ms var(--motion-ease) 120ms both;
+}
+.badge-art[data-earning] .badge-rung[data-rung='mid'] {
+  animation-delay: 240ms;
+}
+.badge-art[data-earning] .badge-rung[data-rung='top'] {
+  animation-delay: 360ms;
+}
+.badge-art[data-earning] .badge-glow {
+  animation: badge-fade 480ms var(--motion-ease) 200ms both;
+}
+.badge-art[data-earning] :is(.badge-rim, .badge-mark) {
+  stroke-dasharray: 1;
+  animation: badge-draw 420ms var(--motion-ease) 520ms both;
+}
+.badge-art[data-earning] .badge-mark {
+  animation-delay: 200ms;
+}
+.badge-art[data-earning] .badge-weeks g circle {
+  animation: mark-pop 260ms var(--motion-spring) both;
+}
+.badge-art[data-earning] .badge-weeks g[data-week='0'] circle {
+  animation-delay: 120ms;
+}
+.badge-art[data-earning] .badge-weeks g[data-week='1'] circle {
+  animation-delay: 200ms;
+}
+.badge-art[data-earning] .badge-weeks g[data-week='2'] circle {
+  animation-delay: 280ms;
+}
+.badge-art[data-earning] .badge-weeks g[data-week='3'] circle {
+  animation-delay: 360ms;
+}
+.badge-art[data-earning] .badge-trail-node {
+  animation: mark-pop 260ms var(--motion-spring) 120ms both;
+}
+.badge-art[data-earning] .badge-trail-node:nth-of-type(2) {
+  animation-delay: 240ms;
+}
+.badge-art[data-earning] .badge-trail-node:nth-of-type(3) {
+  animation-delay: 360ms;
+}
+.badge-art[data-earning] :is(.badge-moon, .badge-sunrise) {
+  animation: badge-fade 320ms var(--motion-ease) 560ms both;
+}
+.badge-art[data-earning] .badge-tag {
+  animation: mark-pop 280ms var(--motion-spring) 700ms both;
 }
 @keyframes badge-draw {
   from {
-    stroke-dashoffset: 24;
+    stroke-dashoffset: 1;
   }
   to {
     stroke-dashoffset: 0;
+  }
+}
+@keyframes badge-fade {
+  from {
+    opacity: 0;
   }
 }
 /* The milestone notice rises into place once; it does not repeat or pulse. */
@@ -992,8 +1054,7 @@ summary {
   ::view-transition-new(root) {
     animation: none !important;
   }
-  .badge-card .badge-art,
-  .badge-check,
+  .badge-art *,
   .badge-notice {
     animation: none !important;
   }

@@ -116,3 +116,30 @@ test('with nothing due and nothing done, Trail shows no plan that would only rep
   await expect(page.locator('#continue-heading')).toBeVisible()
   await expect(page.locator('.today-plan')).toHaveCount(0)
 })
+
+test('evidence badges are listed before completion badges, drawn as square desk tiles that follow the colour scheme', async ({ page }) => {
+  await seed(page, [record('sum-positive-numbers', 9, 1), record('count-even-numbers', 8)])
+  await page.goto('/#/progress')
+  await expect(page.locator('.badge-group-title')).toHaveText(['Evidence · 1', 'Completion · 1'])
+  const card = page.getByRole('list', { name: 'Earned evidence badges' }).locator('.badge-card')
+  await expect(card).toHaveCount(1)
+  await expect(card.locator('strong')).toHaveText('First independent skill')
+  await expect(card.locator('.badge-detail')).toHaveText(
+    'Work through arrays: Count even numbers solved without hints after the guided rep.',
+  )
+  await expect(card.locator('.badge-art')).toHaveAttribute('data-shape', 'square')
+  await expect(card.locator('.badge-art')).toHaveAttribute('aria-hidden', 'true')
+  // The tile is the coding desk: it stays dark in light mode, and follows the selected scheme.
+  const lit = () =>
+    card
+      .locator('.badge-rung-lit')
+      .first()
+      .evaluate(element => getComputedStyle(element).stroke)
+  expect(await lit()).toBe('rgb(188, 229, 123)')
+  await page.evaluate(() => sessionStorage.setItem('code-reps:ui:device:palette', 'ocean'))
+  await page.reload()
+  await expect(card.locator('.badge-art')).toBeVisible()
+  expect(await lit()).toBe('rgb(151, 217, 245)')
+  await page.setViewportSize({ width: 390, height: 900 })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+})

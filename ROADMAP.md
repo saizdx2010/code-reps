@@ -73,6 +73,7 @@ Follow-up, rewarding what the app measures rather than volume (no points, levels
 - [x] Show at most one personal-best note, compared only with the learner's own earlier attempts.
 - [x] Give Trail a Today plan of one new rep and up to two due reviews, recalculated from today's attempts.
 - [x] Cover the rules with unit tests (`tests/profile-progress.test.mjs`, `tests/learning-moments.test.mjs`) and the flows in Chromium (`tests/e2e/learning-evidence.spec.ts`). The design is on the FigCraft page Proposals — Learning evidence.
+- [x] Add evidence badges for independence, retention, steady practice, and coming back, and redraw every badge from the logo (FigCraft page Proposals — Achievement badges; `tests/evidence-badges.test.mjs`).
 
 ## 4. Connect small exercises to working software
 

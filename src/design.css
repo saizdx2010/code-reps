@@ -3569,28 +3569,154 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   justify-self: start;
   color: var(--accent);
 }
+.badge-card .badge-detail {
+  color: var(--text);
+  font-size: 14px;
+}
+.badge-group-title {
+  margin: 4px 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+/*
+ * Badge art: a tile of the coding desk with the logo's brackets and rep bars. The desk tokens stay dark in light and
+ * dark mode and follow the colour scheme, like the logo and the coding desk do.
+ */
 .badge-art {
+  --badge-desk-top: #3b4b42;
+  --badge-desk: #303f38;
+  --badge-edge: #1e2a24;
+  --badge-bracket: #c0cbc1;
+  --badge-lit: #bce57b;
+  --badge-lit-hi: #ceeaa3;
+  --badge-ink: #293e33;
+  --badge-open: #55685b;
+  --badge-rest: #94a88c;
+  flex: none;
   width: 40px;
   height: 40px;
-  flex: none;
-  fill: none;
-  stroke: var(--border-strong);
-  stroke-width: 2;
-  stroke-linejoin: round;
-  stroke-linecap: round;
+  overflow: visible;
 }
-.badge-art[data-earned='true'] {
-  fill: var(--success-soft);
-  stroke: var(--success);
+:root[data-palette='ocean'] .badge-art {
+  --badge-desk-top: #2b4353;
+  --badge-desk: #213442;
+  --badge-edge: #12202a;
+  --badge-bracket: #acc3d2;
+  --badge-lit: #97d9f5;
+  --badge-lit-hi: #bdeaff;
+  --badge-ink: #203c4c;
+  --badge-open: #416072;
+  --badge-rest: #88aabe;
 }
-.badge-art .badge-check {
+:root[data-palette='plum'] .badge-art {
+  --badge-desk-top: #4b3748;
+  --badge-desk: #3a2b39;
+  --badge-edge: #241823;
+  --badge-bracket: #d0b6c9;
+  --badge-lit: #edb9e3;
+  --badge-lit-hi: #f9d6f2;
+  --badge-ink: #493047;
+  --badge-open: #70526a;
+  --badge-rest: #bd94b4;
+}
+.badge-tile-face {
+  stroke: var(--badge-edge);
+  stroke-width: 1.5;
+}
+.badge-highlight {
   fill: none;
-  stroke: var(--success);
+  stroke: #ffffff;
+  stroke-opacity: 0.1;
+}
+.badge-stack {
+  fill: var(--badge-desk);
+  stroke: var(--badge-lit);
+  stroke-width: 1.5;
+}
+.badge-rim {
+  fill: none;
+  stroke: var(--badge-lit);
   stroke-width: 2.5;
 }
+.badge-brackets {
+  fill: none;
+  stroke: var(--badge-bracket);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.badge-rung-lit,
+.badge-rung-shine {
+  fill: none;
+  stroke-linecap: round;
+}
+.badge-rung-lit {
+  stroke: var(--badge-lit);
+  stroke-width: 5;
+}
+.badge-rung-shine {
+  stroke: var(--badge-lit-hi);
+  stroke-width: 1.4;
+}
+.badge-rung-open,
+.badge-rung-rest {
+  fill: none;
+  stroke-width: 1.4;
+}
+.badge-rung-open {
+  stroke: var(--badge-open);
+}
+.badge-rung-rest {
+  stroke: var(--badge-rest);
+  stroke-dasharray: 2.2 2;
+}
+.badge-weeks circle,
+.badge-moon,
+.badge-trail-node {
+  fill: var(--badge-lit);
+}
+.badge-trail-node {
+  stroke: var(--badge-desk);
+  stroke-width: 1.4;
+}
+.badge-trail-line,
+.badge-horizon {
+  fill: none;
+  stroke: var(--badge-bracket);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+.badge-mark,
+.badge-sun {
+  fill: none;
+  stroke: var(--badge-lit);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.badge-mark {
+  stroke-width: 4;
+}
+.badge-sun {
+  stroke-width: 2;
+}
+.badge-tag rect {
+  fill: var(--badge-lit);
+  stroke: var(--badge-edge);
+  stroke-width: 1.5;
+}
+.badge-tag text {
+  fill: var(--badge-ink);
+  font-family: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+}
 .badge-card .badge-art {
-  width: 48px;
-  height: 48px;
+  width: 64px;
+  height: 64px;
+  margin: -6px -4px -4px -6px;
 }
 .badge-empty {
   color: var(--muted);
@@ -3651,8 +3777,25 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   font-weight: 400;
 }
 .badge-notice p {
+  flex: 1 1 auto;
+  min-width: 0;
   margin: 0;
   font-size: 14px;
+}
+/* The badge itself sits before the words, so earning one is something you see as well as read. */
+.badge-notice-art {
+  display: inline-flex;
+  flex: none;
+  gap: 4px;
+  margin: -2px 0;
+}
+.badge-notice-art .badge-art {
+  width: 32px;
+  height: 32px;
+}
+.badge-notice.in-bar .badge-notice-art .badge-art {
+  width: 26px;
+  height: 26px;
 }
 .badge-notice .text-button {
   color: var(--accent);

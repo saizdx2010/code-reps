@@ -22,7 +22,6 @@ import { attemptStatus, getPracticePlan, nextRepInPath, practiceWritingPrompts }
 import { completionEvidence } from './curriculum'
 import { skillSummaryById } from './skill-index.ts'
 import type { LearnerStart } from './learning'
-import { BadgeNotice } from './BadgeNotice'
 import './design.css'
 import './motion.css'
 import './trail.css'
@@ -46,6 +45,8 @@ import { ChecksDrawer, WorkspaceToolbar } from './ChecksDrawer'
 import { practiceSteps, sectionStep, stepSection } from './practice-steps'
 
 const repIds = reps.map(rep => rep.id)
+// The badge notice and its artwork load on their own, keeping badge rules out of the first load.
+const BadgeNotice = lazy(() => import('./BadgeNotice').then(module => ({ default: module.BadgeNotice })))
 const FirstRepWalkthrough = lazy(() =>
   import('./FirstRepWalkthrough')
     .then(module => ({ default: module.FirstRepWalkthrough }))
@@ -762,10 +763,23 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
         onManageProfiles={onManageProfiles}
         onCommands={() => setCommandsOpen(true)}
         request={navigationRequest}
-        notice={view !== 'workspace' ? <BadgeNotice history={history} now={now} onView={() => setView('progress')} /> : undefined}
+        notice={
+          view !== 'workspace' ? (
+            <Suspense fallback={null}>
+              <BadgeNotice history={history} now={now} onView={() => setView('progress')} />
+            </Suspense>
+          ) : undefined
+        }
       />
       {view === 'workspace' && (
-        <BadgeNotice portalTarget={attempt.completedAt ? badgeSlot : null} history={history} now={now} onView={() => setView('progress')} />
+        <Suspense fallback={null}>
+          <BadgeNotice
+            portalTarget={attempt.completedAt ? badgeSlot : null}
+            history={history}
+            now={now}
+            onView={() => setView('progress')}
+          />
+        </Suspense>
       )}
       {saveState !== 'Saving…' && !saveState.startsWith('Saved') && (
         <div className="storage-recovery" role="status">
