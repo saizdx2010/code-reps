@@ -566,6 +566,47 @@ summary {
     transform: none;
   }
 }
+/*
+ * A skill that moved up replays the change once, when its node is on screen: the marker grows into a lime ring and
+ * settles, its icon and status chip settle in, and the title takes the accent for a moment. Reduced motion: no replay.
+ */
+.skill-node[data-step='play'] .trail-marker {
+  animation: skill-step 820ms var(--motion-ease) 120ms both;
+}
+.skill-node[data-step='play'] .trail-marker .ui-icon {
+  animation: mark-pop 320ms var(--motion-spring) 260ms both;
+}
+.skill-node[data-step='play'] .status-chip {
+  animation: chip-settle 280ms var(--motion-spring) 420ms both;
+}
+.skill-node[data-step='play'] .trail-node-title {
+  animation: step-title 1200ms var(--motion-ease) 160ms both;
+}
+@keyframes skill-step {
+  0% {
+    scale: 1;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--feature-border) 45%, transparent);
+  }
+  30%,
+  60% {
+    scale: 1.14;
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--feature-border) 45%, transparent);
+  }
+  100% {
+    scale: 1;
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+@keyframes step-title {
+  0%,
+  100% {
+    color: var(--text);
+  }
+  25%,
+  60% {
+    color: var(--accent);
+  }
+}
 .trail-node > button:active {
   background: var(--accent-soft);
 }
@@ -602,6 +643,29 @@ summary {
 }
 .practice-steps button[data-done] > span::after {
   animation: mark-pop 260ms var(--motion-spring) both;
+}
+/* Its growth notes rise in just after the panel, and the new skill state settles in after the old one. */
+.skill-step-notice {
+  animation: notice-rise 240ms var(--motion-ease) 160ms both;
+}
+.personal-best {
+  animation: notice-rise 240ms var(--motion-ease) 240ms both;
+}
+.skill-step-change > .status-chip:last-child {
+  animation: chip-settle 260ms var(--motion-spring) 420ms both;
+}
+.skill-step-change > .ui-icon {
+  animation: step-arrow 260ms var(--motion-ease) 340ms both;
+}
+@keyframes step-arrow {
+  from {
+    opacity: 0;
+    translate: -4px 0;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
 }
 
 /* The hint question settles in where the hint button was; it never covers the brief. */
@@ -699,6 +763,39 @@ summary {
 .skill-ladder-bar {
   transform-origin: left center;
   animation: fill-grow 720ms var(--motion-ease) 160ms both;
+}
+/* Today's plan: an item finished since the last visit pops its check in and fills its meter segment, once. */
+.today-mark.is-fresh {
+  animation: mark-pop 320ms var(--motion-spring) 180ms both;
+}
+.today-meter > .is-fresh {
+  transform-origin: left center;
+  animation: fill-grow 560ms var(--motion-ease) 220ms both;
+}
+.today-done.is-fresh {
+  animation: notice-rise 240ms var(--motion-ease) 480ms both;
+}
+/* The last seven days pop in left to right when Progress arrives, ending on today. */
+.rhythm-week .rhythm-day {
+  animation: mark-pop 280ms var(--motion-spring) both;
+}
+.rhythm-week li:nth-child(2) .rhythm-day {
+  animation-delay: 30ms;
+}
+.rhythm-week li:nth-child(3) .rhythm-day {
+  animation-delay: 60ms;
+}
+.rhythm-week li:nth-child(4) .rhythm-day {
+  animation-delay: 90ms;
+}
+.rhythm-week li:nth-child(5) .rhythm-day {
+  animation-delay: 120ms;
+}
+.rhythm-week li:nth-child(6) .rhythm-day {
+  animation-delay: 150ms;
+}
+.rhythm-week li:nth-child(7) .rhythm-day {
+  animation-delay: 180ms;
 }
 /* A newly shown badge settles its artwork in once; the stroke check draws itself. */
 .badge-card .badge-art {

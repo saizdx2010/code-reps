@@ -66,6 +66,14 @@ Implemented features do not establish learner comprehension, full accessibility,
 
 **Done when:** You can see what you have finished, understand exactly how each badge was earned, and open the relevant work. Badge behavior stays consistent across profiles and backups without changing fluency rules.
 
+Follow-up, rewarding what the app measures rather than volume (no points, levels, leaderboards, timers, or locks):
+
+- [x] Mark a skill moving up to Independent or Retained in the completion panel, and replay the step once on the skill map.
+- [x] Count reviews as practice days, carry over one missed day in any seven, and show the last seven days beside the streak.
+- [x] Show at most one personal-best note, compared only with the learner's own earlier attempts.
+- [x] Give Trail a Today plan of one new rep and up to two due reviews, recalculated from today's attempts.
+- [x] Cover the rules with unit tests (`tests/profile-progress.test.mjs`, `tests/learning-moments.test.mjs`) and the flows in Chromium (`tests/e2e/learning-evidence.spec.ts`). The design is on the FigCraft page Proposals — Learning evidence.
+
 ## 4. Connect small exercises to working software
 
 **Goal:** Move from isolated functions to building and maintaining a complete feature.

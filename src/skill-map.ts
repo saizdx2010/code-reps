@@ -1,6 +1,8 @@
 import { paths } from './path.ts'
 import { repIndex as reps } from './catalog-index.ts'
+import { getAllJourneys } from './learning.ts'
 import type { JourneyProgress } from './learning.ts'
+import type { PortableRecord } from './portability.ts'
 
 /** One recorded state per skill, derived only from existing journey evidence. */
 export type SkillState = 'untouched' | 'practiced' | 'independent' | 'retained' | 'due'
@@ -38,6 +40,41 @@ export function skillState(progress: JourneyProgress): SkillState {
   if (progress.retained) return 'retained'
   if (progress.independent) return progress.recallDue ? 'due' : 'independent'
   return progress.guided ? 'practiced' : 'untouched'
+}
+
+/** Evidence rank: a due review is still independent evidence, so it is never a step down or up. */
+const stateRank: Record<SkillState, number> = { untouched: 0, practiced: 1, independent: 2, due: 2, retained: 3 }
+const shownState = (state: SkillState) => (state === 'due' ? 'independent' : state)
+
+export type SkillStep = { id: string; title: string; from: SkillState; to: 'independent' | 'retained' }
+
+/** Session key for a step the skill map should replay once; a due review still matches its Independent step. */
+export const skillStepKey = (id: string, state: SkillState) => `${id}:${shownState(state)}`
+export function parseStepKeys(value: string): string[] {
+  try {
+    const parsed: unknown = JSON.parse(value)
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+/**
+ * The skills that one completed attempt moved up to Independent or Retained, worked out by comparing the journeys
+ * without and with that record. Guided is not a step: hinted work earns completion, not a level.
+ */
+export function skillSteps(history: PortableRecord[], recordId: string, now = Date.now()): SkillStep[] {
+  const record = history.find(item => item.id === recordId)
+  if (!record) return []
+  // Only the attempts up to that moment: a later record never makes an earlier one look like a step.
+  const earlier = history.filter(item => item.id !== recordId && Date.parse(item.completedAt) <= Date.parse(record.completedAt))
+  const before = getAllJourneys(earlier, now)
+  return getAllJourneys([...earlier, record], now).flatMap((after, index) => {
+    const from = skillState(before[index])
+    const to = shownState(skillState(after))
+    if (stateRank[to] <= stateRank[from] || (to !== 'independent' && to !== 'retained')) return []
+    return [{ id: after.journey.id, title: after.journey.title, from: shownState(from), to }]
+  })
 }
 
 function skillNode(progress: JourneyProgress): SkillNode {

@@ -1,11 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from './Icon'
 import { Select } from './Input'
 import { EmptyState, InfoNote, PageHeader, StatusChip } from './Layout'
 import { preloadEditor } from './editor-loader'
 import { paths } from './path'
 import { repTitle } from './rep-index.ts'
-import { buildSkillMap, skillStateLabels, skillStateMeaning } from './skill-map'
+import { buildSkillMap, parseStepKeys, skillStateLabels, skillStateMeaning, skillStepKey } from './skill-map'
+import { useSessionPreference } from './useSessionPreference'
 import type { SkillNode, SkillState } from './skill-map'
 import type { JourneyProgress } from './learning'
 import type { ChipTone } from './ui-status'
@@ -42,6 +43,49 @@ export function SkillMapPage({ goalPathId, progress, openRep, reviewRep }: Props
   const [pathId, setPathId] = useState(goalPathId)
   const path = paths.find(item => item.id === pathId) ?? paths[0]
   const map = useMemo(() => buildSkillMap(path.id, progress), [path.id, progress])
+  const replay = useStepReplay()
+  const stepped = map.stages.flatMap(stage => stage.nodes).filter(node => replay.has(skillStepKey(node.id, node.state)))
+  const trail = useRef<HTMLOListElement>(null)
+  const steppedKey = stepped.map(node => node.id).join(',')
+  // Announced when the step plays: a live region only speaks when its text changes after it is shown.
+  const [announcement, setAnnouncement] = useState('')
+  const announce = stepped
+    .map(node => `${node.title} moved up to ${skillStateLabels[node.state === 'due' ? 'independent' : node.state]}.`)
+    .join(' ')
+  const latestAnnouncement = useRef(announce)
+  useEffect(() => {
+    latestAnnouncement.current = announce
+  })
+  // Bring the first stepped skill into view, then play each step once, when its node is actually on screen.
+  useEffect(() => {
+    const nodes = Array.from(trail.current?.querySelectorAll<HTMLElement>('[data-stepped]') ?? [])
+    if (nodes.length === 0) return
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+    const frame = requestAnimationFrame(() => nodes[0].scrollIntoView({ block: 'center', behavior: reduced ? 'instant' : 'smooth' }))
+    const play = (node: HTMLElement) => {
+      node.dataset.step = 'play'
+      setAnnouncement(latestAnnouncement.current)
+    }
+    if (typeof IntersectionObserver === 'undefined') nodes.forEach(play)
+    const observer =
+      typeof IntersectionObserver === 'undefined'
+        ? undefined
+        : new IntersectionObserver(
+            entries => {
+              for (const entry of entries) {
+                if (!entry.isIntersecting) continue
+                play(entry.target as HTMLElement)
+                observer?.unobserve(entry.target)
+              }
+            },
+            { threshold: 0.9 },
+          )
+    nodes.forEach(node => observer?.observe(node))
+    return () => {
+      cancelAnimationFrame(frame)
+      observer?.disconnect()
+    }
+  }, [steppedKey])
   return (
     <main className="skill-map-main">
       <PageHeader
@@ -82,10 +126,13 @@ export function SkillMapPage({ goalPathId, progress, openRep, reviewRep }: Props
           ))}
         </ul>
       </section>
+      <p className="visually-hidden" role="status">
+        {announcement}
+      </p>
       {map.total === 0 ? (
         <EmptyState title="No tracked skills in this track yet.">Choose another track to see its skills.</EmptyState>
       ) : (
-        <ol className="trail skill-trail" aria-label={`${path.title} skills`}>
+        <ol ref={trail} className="trail skill-trail" aria-label={`${path.title} skills`}>
           {map.stages.map((stage, index) => (
             <li key={stage.title} className="trail-stage">
               <details className="path-stage" open>
@@ -103,7 +150,11 @@ export function SkillMapPage({ goalPathId, progress, openRep, reviewRep }: Props
                 </summary>
                 <ol className="trail-nodes">
                   {stage.nodes.map(node => (
-                    <li key={node.id} className={`trail-node skill-node is-skill-${node.state}`}>
+                    <li
+                      key={node.id}
+                      className={`trail-node skill-node is-skill-${node.state}`}
+                      data-stepped={replay.has(skillStepKey(node.id, node.state)) || undefined}
+                    >
                       <span className="trail-marker" aria-hidden="true">
                         <Icon name={markers[node.state]} />
                       </span>
@@ -135,4 +186,23 @@ export function SkillMapPage({ goalPathId, progress, openRep, reviewRep }: Props
       )}
     </main>
   )
+}
+
+/**
+ * Steps queued when a rep was completed this session and not yet shown here. They are acknowledged as soon as the map
+ * opens, so each step plays once; the queue is session UI state and never enters backups.
+ */
+function useStepReplay() {
+  const [pending] = useSessionPreference<string>('skill-steps-pending', '[]')
+  const [shown, setShown] = useSessionPreference<string>('skill-steps-shown', '[]')
+  const [replay] = useState(() => {
+    const seen = parseStepKeys(shown)
+    return new Set(parseStepKeys(pending).filter(key => !seen.includes(key)))
+  })
+  useEffect(() => {
+    const seen = parseStepKeys(shown)
+    const fresh = [...replay].filter(key => !seen.includes(key))
+    if (fresh.length) setShown(JSON.stringify([...seen, ...fresh]))
+  }, [replay, shown, setShown])
+  return replay
 }

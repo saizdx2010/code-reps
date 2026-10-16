@@ -342,6 +342,101 @@
 .trail-aside .list-group {
   border-bottom: 0;
 }
+/* Today's plan: a quiet card with a count, a segmented meter, and inset rows, so hover tints never touch a line. */
+.today-plan {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.today-plan-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 10px 12px;
+  padding: 16px 16px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.today-plan-head h2 {
+  margin: 0;
+  font-size: var(--type-card);
+}
+.today-plan-count {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.today-meter {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 4px;
+}
+.today-meter > span {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.today-meter > [data-done] {
+  background: var(--action);
+}
+.today-plan .today-rows {
+  margin: 0;
+  padding: 6px;
+}
+.today-rows .list-row > button:hover,
+.today-rows .list-row > button:focus-visible {
+  background: var(--bg);
+}
+.list-row-marker {
+  display: grid;
+  flex: none;
+}
+.today-mark {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: 50%;
+  color: var(--action-text);
+}
+.today-mark[data-done] {
+  border: 1.5px solid var(--action);
+  background: var(--action);
+}
+.today-mark .ui-icon {
+  width: 14px;
+  height: 14px;
+}
+.today-more {
+  margin: -4px 0 0;
+  padding: 0 16px 10px;
+}
+.today-more .text-button {
+  min-height: 32px;
+  padding: 4px 0;
+}
+.today-done {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 16px;
+  border-top: 1px solid var(--success-border);
+  background: var(--success-soft);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.today-done > .ui-icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  color: var(--success);
+}
 .trail-links {
   display: flex;
   flex-wrap: wrap;

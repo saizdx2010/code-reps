@@ -407,6 +407,12 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     if (missingStep) revealSection(stepSection(missingStep))
   }
   const [badgeSlot, setBadgeSlot] = useState<HTMLElement | null>(null)
+  // What the saved attempt shows about growth, worked out from history: reopening a finished rep shows the same notes.
+  // Only a rep completed here queues its skill steps for the skill map to replay once.
+  const [completedHere, setCompletedHere] = useState<string>()
+  const completedRecord = attempt.completedAt
+    ? history.find(record => record.repId === repId && record.completedAt === attempt.completedAt)
+    : undefined
 
   const { drafts, practicePlan } = usePracticeOverview(repId, attempt, history, learnerStart, now, fluency.state.goal.pathId)
   const repStatus = (item: RepSummary) => attemptStatus(item.id, drafts[item.id])
@@ -495,7 +501,10 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   function completeRep() {
     if (!canFinish) return
     // The clock ticks once a minute; refresh it so a completion moments old is not dated in the future.
-    if (attempts.complete()) setNow(Date.now())
+    if (attempts.complete()) {
+      setNow(Date.now())
+      setCompletedHere(repId)
+    }
   }
 
   function startNewAttempt() {
@@ -667,6 +676,11 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
               onDone={() => setView('home')}
               onFreshAttempt={startNewAttempt}
               evidence={completionEvidence(repId, attempt.hintCount, journeyStates)}
+              moments={
+                completedRecord
+                  ? { history, recordId: completedRecord.id, now, fresh: completedHere === repId, onSkillMap: () => setView('skillmap') }
+                  : undefined
+              }
             />
           </div>
         </div>
