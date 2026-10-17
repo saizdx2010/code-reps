@@ -88,6 +88,70 @@ test('S1 catalog-page checks catch the wrong page, a missing tie-breaker, and hi
   ])
 })
 
+test('S2 grouped-filter checks catch missing parentheses, inexact categories, and the price boundary', () => {
+  const base = solution('sql-filter-groups')
+  assertCaught('sql-filter-groups', [
+    [
+      base.replace("category IN ('Poetry', 'Drama')", "category = 'Poetry' OR category = 'Drama'"),
+      'Price and stock rules apply to poetry too',
+    ],
+    [base.replace("category IN ('Poetry', 'Drama')", "lower(category) IN ('poetry', 'drama')"), 'Category is compared exactly'],
+    [base.replace('price_cents < 1500', 'price_cents <= 1500'), 'Cheap poetry and drama in stock'],
+    [base.replace(' AND in_stock = 1', ''), 'Cheap poetry and drama in stock'],
+  ])
+})
+
+test('S2 range checks catch exclusive ends, the beds rule, and the name tie-breaker', () => {
+  const base = solution('sql-price-band')
+  assertCaught('sql-price-band', [
+    [base.replace('BETWEEN 8000 AND 12000', '> 8000 AND nightly_cents < 12000'), 'Both ends of the range count'],
+    [base.replace('beds >= 2', 'beds > 2'), 'Both ends of the range count'],
+    [base.replace(' AND beds >= 2', ''), 'Both ends of the range count'],
+    [base.replace('ORDER BY nightly_cents, name', 'ORDER BY nightly_cents'), 'Equal prices in name order'],
+  ])
+})
+
+test('S2 pattern checks catch % for a fixed length, a loose prefix, and case-sensitive matching', () => {
+  const base = solution('sql-code-pattern')
+  assertCaught('sql-code-pattern', [
+    [base.replace("'BR-___'", "'BR-%'"), 'Exactly three characters after BR-'],
+    [base.replace("'BR-___'", "'%BR-___'"), 'Exactly three characters after BR-'],
+    [base.replace("code LIKE 'BR-___'", "code GLOB 'BR-???'"), 'Letter case does not matter'],
+  ])
+})
+
+test('S2 NULL checks catch a NULL status that blocks, an empty phone, and the id tie-breaker', () => {
+  const base = solution('sql-members-to-text')
+  assertCaught('sql-members-to-text', [
+    [
+      base.replace(" AND (status <> 'blocked' OR status IS NULL)", " AND status <> 'blocked'"),
+      'A status that was never set does not block',
+    ],
+    [base.replace("phone <> ''", 'phone IS NOT NULL'), 'Reachable members in name order'],
+    [base.replace('ORDER BY name, id', 'ORDER BY name, id DESC'), 'Same name, ordered by id'],
+    [base.replace("status <> 'blocked' OR status IS NULL", "status = 'active'"), 'Reachable members in name order'],
+  ])
+  // SQLite's IS NOT treats NULL as a value, so it is an accepted alternative here.
+  assert.deepEqual(failed('sql-members-to-text', base.replace("(status <> 'blocked' OR status IS NULL)", "status IS NOT 'blocked'")), [])
+})
+
+test('S2 search checks catch an ungrouped OR, a prefix-only pattern, drafts, and the tie-breaker', () => {
+  const base = solution('sql-search-articles')
+  assertCaught('sql-search-articles', [
+    [
+      base.replace(
+        "published_at IS NOT NULL AND section IN ('guides', 'news') AND title LIKE '%sql%'",
+        "published_at IS NOT NULL AND section = 'guides' OR section = 'news' AND title LIKE '%sql%'",
+      ),
+      'Drafts and other sections are left out',
+    ],
+    [base.replace("'%sql%'", "'sql%'"), 'Published guides and news about SQL, newest first'],
+    [base.replace('published_at IS NOT NULL AND ', ''), 'Published guides and news about SQL, newest first'],
+    [base.replace('published_at DESC, id', 'published_at DESC, id DESC'), 'Published guides and news about SQL, newest first'],
+    [base.replace("title LIKE '%sql%'", "title GLOB '*sql*'"), 'Any letter case, anywhere in the title'],
+  ])
+})
+
 test('the S1 journey keeps recall distinct from its guided and independent reps', () => {
   const journey = journeys.find(item => item.id === 'sql-reading')
   assert.deepEqual(

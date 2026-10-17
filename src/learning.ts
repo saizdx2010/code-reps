@@ -308,6 +308,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'sql-filtering',
+    title: 'Filter precisely',
+    guided: 'sql-filter-groups',
+    independent: 'sql-members-to-text',
+    recall: 'sql-search-articles',
+    practice: ['sql-price-band', 'sql-code-pattern'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

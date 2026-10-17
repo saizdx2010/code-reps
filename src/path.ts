@@ -431,6 +431,12 @@ export const paths = [
           'sql-catalog-page',
         ],
       },
+      {
+        title: 'Filter precisely',
+        description: 'Group AND and OR on purpose, match lists, ranges, and patterns, and decide what unknown values mean.',
+        recap: 'You can now write filters that mean what you intend, including for NULL values.',
+        repIds: ['sql-filter-groups', 'sql-price-band', 'sql-code-pattern', 'sql-members-to-text', 'sql-search-articles'],
+      },
     ] satisfies readonly PathStage[],
   },
   {

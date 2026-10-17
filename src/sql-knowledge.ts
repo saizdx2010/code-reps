@@ -81,4 +81,74 @@ export const sqlSkills: Skill[] = [
     ],
     related: ['databases'],
   },
+  {
+    id: 'sql-filtering',
+    title: 'Filter precisely: AND, OR, IN, LIKE, and NULL',
+    summary: 'Group conditions so they mean what you intend, match lists, ranges, and patterns, and handle unknown values on purpose.',
+    prerequisites: ['sql-reading'],
+    objectives: [
+      'Predict how AND and OR combine without parentheses, and add parentheses that state the intent.',
+      'Use IN, BETWEEN, and LIKE with % and _ for lists, inclusive ranges, and patterns.',
+      'Explain three-valued logic and test for missing values with IS NULL.',
+    ],
+    sections: [
+      {
+        title: 'AND is applied before OR',
+        body: "In `a OR b AND c`, AND binds first, so it means `a OR (b AND c)`. A filter for poetry or drama under 15.00 written that way lets every poetry book through at any price. Parentheses state what belongs together: `(category = 'Poetry' OR category = 'Drama') AND price_cents < 1500`. When the alternatives are values of one column, `category IN ('Poetry', 'Drama')` says the same thing more briefly.",
+      },
+      {
+        title: 'Ranges and patterns',
+        body: "`x BETWEEN 8000 AND 12000` includes both ends, exactly like `x >= 8000 AND x <= 12000`. LIKE matches text against a pattern: % stands for any run of characters, including none, and _ for exactly one character, so `'BR-___'` matches BR- and three more characters. In SQLite, LIKE ignores letter case for ASCII letters while = does not; other databases differ, which is why a rep says which rule it uses.",
+      },
+      {
+        title: 'NULL means unknown',
+        body: "SQL conditions have three outcomes: true, false, and unknown. Any comparison with NULL, even `NULL = NULL`, is unknown, and WHERE keeps only true rows. So `status <> 'blocked'` drops rows whose status is NULL, although NULL is not 'blocked'. Test missing values directly with `IS NULL` or `IS NOT NULL`, and decide on purpose what an unknown value should mean for your result.",
+      },
+      {
+        title: 'NOT and lists with NULL',
+        body: "NOT turns true into false and unknown stays unknown. `x NOT IN (1, NULL)` is never true, because x might equal the unknown value; this is a classic way for a filter to return nothing. Keep NULLs out of the lists you write, and when a column may be NULL, name what NULL should do: `(status <> 'blocked' OR status IS NULL)`.",
+      },
+    ],
+    example: "SELECT id, title\nFROM listings\nWHERE category IN ('Poetry', 'Drama')\n  AND price_cents < 1500\n  AND in_stock = 1;",
+    walkthrough: [
+      'IN keeps rows whose category is either value, so no OR needs grouping.',
+      'Each AND condition must also be true, for poetry and drama alike.',
+      'A listing with price 1500 fails the strict comparison.',
+      'If price_cents were NULL, the comparison would be unknown and the row would be left out.',
+    ],
+    mistakes: [
+      'Mixing AND and OR without parentheses and getting a different filter than intended.',
+      "Writing `column = NULL` or `column <> 'x'` and silently losing the rows where the column is NULL.",
+      'Using % where exactly one character is meant, so longer or shorter values match.',
+      'Assuming LIKE treats letter case the same way in every database.',
+    ],
+    questions: [
+      q(
+        'and-or-v1',
+        'Which rows does this keep?',
+        "WHERE kind = 'tea' OR kind = 'coffee' AND price < 5",
+        ['Cheap tea and cheap coffee', 'All tea, and coffee under 5', 'Nothing, the condition is invalid'],
+        1,
+        'AND binds first, so the condition means kind = tea OR (kind = coffee AND price < 5). Every tea passes at any price.',
+      ),
+      q(
+        'like-underscore-v1',
+        "Which code does LIKE 'A_1' match?",
+        '',
+        ['A1', 'AB1', 'ABC1'],
+        1,
+        '_ stands for exactly one character, so only AB1 has the right length. % would also match A1 and ABC1.',
+      ),
+      q(
+        'null-not-equal-v1',
+        "A row has status NULL. Does WHERE status <> 'blocked' keep it?",
+        '',
+        ['Yes, NULL is not blocked', 'No, the comparison is unknown', 'Only in SQLite'],
+        1,
+        'Comparing with NULL gives unknown, and WHERE keeps only true rows. Add OR status IS NULL to keep it.',
+      ),
+    ],
+    repIds: ['sql-filter-groups', 'sql-price-band', 'sql-code-pattern', 'sql-members-to-text', 'sql-search-articles'],
+    related: ['sql-reading'],
+  },
 ]

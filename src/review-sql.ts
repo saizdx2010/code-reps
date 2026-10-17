@@ -76,6 +76,66 @@ export const sqlDepth: Record<string, RepDepth> = {
     transfer:
       'The shop adds a sort by newest first, using an added_at column, and a page size of 10. Decide the full order, including what breaks ties when two products arrive in the same second, and the OFFSET for page 3. This changed contract is self-reviewed; the original checks do not cover it.',
   },
+  'sql-filter-groups': {
+    reasoning:
+      'The sale has one category rule and two rules that apply to every category, so the category alternatives must be grouped before AND joins the rest. With parentheses or IN, a row passes only when its category is one of the two and it is cheap and in stock. Strict less-than keeps 1499 and excludes 1500, and = compares the category text exactly.',
+    trace:
+      "With the expensive-poetry data, the grouped filter checks Collected Poems: Poetry, but 4200 is not under 1500, so it fails. Sonnets fails the stock rule. Oedipus passes all three. Without parentheses, Collected Poems and Sonnets would pass the bare category = 'Poetry' alternative and appear in the result.",
+    alternative:
+      "category IN ('Poetry', 'Drama') replaces the OR and needs no brackets, and it stays short when a third category joins the sale. Repeating the price and stock tests in each OR branch also works, but every later change to the sale rules must then be made twice.",
+    counterexample:
+      "category = 'Poetry' OR category = 'Drama' AND price_cents < 1500 AND in_stock = 1 keeps the sold-out Leaves of Grass on the shop data, and both the expensive and the sold-out poetry on the expensive-poetry data. price_cents <= 1500 keeps Medea at exactly 1500.",
+    transfer:
+      'The sale adds a rule: poetry is on sale at any price, but drama only under 15.00, and both must be in stock. Write the condition in words with brackets first, then decide whether IN still helps. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-price-band': {
+    reasoning:
+      'An inclusive range has two boundaries that both belong to it. BETWEEN 8000 AND 12000 expresses exactly that, and the beds rule joins it with AND. Sorting by price, then name, gives every room a defined position, because the checks never repeat a name at one price.',
+    trace:
+      'With the hotel data, Attic (7999) and Tower (12001) fall just outside, and Garden (8000) and Harbour (12000) sit on the ends and stay. Studio is in range but has one bed, so the beds rule removes it. Sorting leaves Garden, Loft, Harbour.',
+    alternative:
+      'nightly_cents >= 8000 AND nightly_cents <= 12000 says the same and makes each end visible. BETWEEN reads closer to the request. Both are inclusive; an exclusive upper end needs < instead, which BETWEEN cannot express.',
+    counterexample:
+      'nightly_cents > 8000 AND nightly_cents < 12000 drops Garden and Harbour; the boundary check catches it. beds > 2 drops every two-bed room.',
+    transfer:
+      'The family now asks for rooms under 120.00 a night but at least 80.00, written as a half-open range. Decide which end is included and whether BETWEEN can still express it. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-code-pattern': {
+    reasoning:
+      "The pattern 'BR-___' fixes the code to six characters: three literal ones and three _ wildcards, each matching exactly one character. LIKE must match the whole value, so codes that are longer, shorter, or have a prefix fail. In SQLite, LIKE ignores ASCII letter case, which the contract asks for.",
+    trace:
+      'With the bins data, BR-104 matches B, R, -, then one character each for 1, 0, 4. BR-12 runs out after two characters and BR-1050 has one left over, so both fail. XBR-110 fails at the first character. Sorting by code puts BR-009 before BR-104 and BR-A7Z, because digits come before capital letters.',
+    alternative:
+      "code LIKE 'BR-%' AND length(code) = 6 works too and says the length explicitly. SQLite's GLOB uses * and ? and respects letter case, so it would reject br-300 here. A regular expression is not built into SQLite.",
+    counterexample:
+      "LIKE 'BR-%' keeps BR-12 and BR-1050; the first check rejects it. LIKE '%BR-___' also matches XBR-110. Comparing with = instead of LIKE matches nothing, because the wildcards are then literal characters.",
+    transfer:
+      'Codes now end in a check letter: BR- then three digits then one capital letter, such as BR-104K. Decide what LIKE can and cannot express about digits versus letters, and what else you would need. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-members-to-text': {
+    reasoning:
+      "Each column has three kinds of value to decide on. For phone, NULL and empty text both mean no number, so phone <> '' handles both: an empty phone fails, and NULL makes the comparison unknown, which WHERE drops. For status, NULL must pass, so the condition says so explicitly: (status <> 'blocked' OR status IS NULL). Name, then id, gives every member one position.",
+    trace:
+      "With the club data, Dag has a phone and status NULL: status <> 'blocked' is unknown, but status IS NULL is true, so the OR is true and Dag stays. Eli's phone is empty, so phone <> '' is false. Bea's phone is NULL, so that comparison is unknown and she is dropped. Ade, Dag, and Fia remain, in name order.",
+    alternative:
+      "SQLite's status IS NOT 'blocked' treats NULL as a value, so it is true for NULL; it is concise but not portable to every database. COALESCE(status, 'active') <> 'blocked' substitutes a stand-in for NULL, which works but hides the decision in a made-up value.",
+    counterexample:
+      "status <> 'blocked' alone drops Dag, Zoe, and Yan, whose status was never set; the never-set check catches it. phone IS NOT NULL alone keeps Eli with an empty phone.",
+    transfer:
+      'The club adds an opted_out column that is 1, 0, or NULL for members who were never asked. Decide what NULL should mean for a marketing message versus an urgent safety message, and write both conditions. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-search-articles': {
+    reasoning:
+      "Three conditions must all hold: published, in one of two sections, and a title containing sql. Grouping the sections (with IN or brackets) keeps the OR from swallowing the other conditions. LIKE '%sql%' matches the letters anywhere, and SQLite's LIKE ignores ASCII letter case. published_at IS NOT NULL removes drafts; the text dates sort correctly because they are written year first.",
+    trace:
+      'With the site data, Writing better sql matches the title and section but is a draft, so it fails. MySQL or SQLite? is published and matches, but blog is not one of the sections. Of the four that pass, two were published on 2026-03-15; id orders them 2, then 6, followed by 8 and 1.',
+    alternative:
+      "instr(lower(title), 'sql') > 0 finds the letters without a pattern and makes the case rule explicit. A full-text index would rank results and match whole words, which this search does not attempt.",
+    counterexample:
+      "published_at IS NOT NULL AND section = 'guides' OR section = 'news' AND title LIKE '%sql%' lets the news draft through; the drafts check catches it. LIKE 'sql%' only matches titles that start with sql and misses Joins in SQL.",
+    transfer:
+      'Search now matches sql as a whole word only, so NoSQL and MySQL should not count. Decide whether LIKE patterns can express word boundaries in every position, including the start and end of a title. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
 }
 
 export const sqlGuides: Record<string, ReflectionGuide> = {
@@ -127,6 +187,36 @@ export const sqlGuides: Record<string, ReflectionGuide> = {
     example:
       'I keep active = 1, ORDER BY price_cents, name, id, then LIMIT 4 OFFSET 4. Page n skips (n - 1) × 4 rows. The name settles equal prices, and the id settles equal names, so no product can move between pages.',
   },
+  'sql-filter-groups': {
+    plan: ['Write the condition in words with brackets around the category choice.', 'Name the data set that shows missing brackets.'],
+    explanation: ['Explain what AND-before-OR does to the starter query.', 'Explain why 1499 counts and 1500 does not.'],
+    example:
+      "I keep category IN ('Poetry', 'Drama') AND price_cents < 1500 AND in_stock = 1, ordered by id. Without grouping, AND binds first, so every poetry book would pass whatever its price or stock.",
+  },
+  'sql-price-band': {
+    plan: ['Write the two ends of the range and whether each is included.', 'Add the beds rule and both sort keys.'],
+    explanation: ['Explain which rooms sit exactly on the ends and why they stay.'],
+    example:
+      'I keep nightly_cents BETWEEN 8000 AND 12000 AND beds >= 2, ordered by nightly_cents, name. BETWEEN includes both ends, so Garden and Harbour stay.',
+  },
+  'sql-code-pattern': {
+    plan: ['Write the pattern one position at a time.', 'Say which wildcard fixes the length.'],
+    explanation: ['Explain why BR-12 and BR-1050 fail.', 'Explain why br-300 passes in SQLite.'],
+    example:
+      "I keep code LIKE 'BR-___', ordered by code. Each _ matches one character, so the code must be exactly six characters, and SQLite's LIKE ignores ASCII letter case.",
+  },
+  'sql-members-to-text': {
+    plan: ['List every kind of phone and status value and whether it lets a member through.', 'Name both sort keys.'],
+    explanation: ['Trace a member whose status is NULL through your condition.', 'Explain how your phone test treats NULL and empty text.'],
+    example:
+      "I keep phone <> '' AND (status <> 'blocked' OR status IS NULL), ordered by name, id. A NULL phone makes the comparison unknown, so it is dropped, while a NULL status is let through on purpose.",
+  },
+  'sql-search-articles': {
+    plan: ['Write the three conditions and how they group.', 'Name the sort keys.'],
+    explanation: ['Explain why a news draft does not appear.', 'Explain why NoSQL myths does appear.'],
+    example:
+      "I keep published_at IS NOT NULL AND section IN ('guides', 'news') AND title LIKE '%sql%', ordered by published_at DESC, id. Grouping the sections stops the OR from letting drafts through, and LIKE ignores ASCII case in SQLite.",
+  },
 }
 
 export const sqlLessonDepth: Record<string, LessonDepth> = {
@@ -139,5 +229,15 @@ export const sqlLessonDepth: Record<string, LessonDepth> = {
       'Predict what LIMIT 4 OFFSET 4 shows on the shelf data with ORDER BY price_cents alone, then with ORDER BY price_cents, name, id. Which rows can change between runs in the first version? Discuss before revealing.',
     answer:
       'With price alone, the fourth and fifth rows are Ruler and Sticky notes in an order SQLite does not promise, so page 1 ends with one of them and page 2 starts with the other. With name and id added the order is total: page 2 is always Sticky notes, Notebook, Pencil case, Ink bottle. This discussion is self-reviewed; it explains why the catalog rep checks a tie across the page break.',
+  },
+  'sql-filtering': {
+    title: 'Unknown is not the same as false',
+    code: "-- status: 'active', 'blocked', NULL\nSELECT name FROM members\nWHERE NOT (status = 'blocked');",
+    reasoning:
+      "For a NULL status, status = 'blocked' is unknown, and NOT unknown is still unknown, so the row is dropped even though the condition looks like it asks for everyone who is not blocked. Unknown values pass through NOT, AND, and OR by their own rules: unknown AND false is false, unknown OR true is true, and otherwise the result stays unknown.",
+    challenge:
+      "Predict which of three members (active, blocked, NULL) each condition keeps: NOT (status = 'blocked'), status IS NOT 'blocked', and status <> 'blocked' OR status IS NULL. Discuss before revealing.",
+    answer:
+      'The first keeps only the active member: the NULL row is unknown under NOT. The second, a SQLite form that treats NULL as a value, keeps active and NULL. The third keeps active and NULL in any database. This discussion is self-reviewed; the members rep checks the NULL case.',
   },
 }

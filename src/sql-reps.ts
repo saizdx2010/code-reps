@@ -32,6 +32,12 @@ const products =
 
 const orderLines =
   'CREATE TABLE order_lines (id INTEGER PRIMARY KEY, product TEXT NOT NULL, quantity INTEGER NOT NULL, unit_cents INTEGER NOT NULL);'
+const listings =
+  'CREATE TABLE listings (id INTEGER PRIMARY KEY, title TEXT NOT NULL, category TEXT NOT NULL, price_cents INTEGER NOT NULL, in_stock INTEGER NOT NULL CHECK (in_stock IN (0, 1)));'
+const rooms = 'CREATE TABLE rooms (id INTEGER PRIMARY KEY, name TEXT NOT NULL, nightly_cents INTEGER NOT NULL, beds INTEGER NOT NULL);'
+const parts = 'CREATE TABLE parts (id INTEGER PRIMARY KEY, code TEXT NOT NULL, name TEXT NOT NULL);'
+const members = 'CREATE TABLE members (id INTEGER PRIMARY KEY, name TEXT NOT NULL, phone TEXT, status TEXT);'
+const articles = 'CREATE TABLE articles (id INTEGER PRIMARY KEY, title TEXT NOT NULL, section TEXT NOT NULL, published_at TEXT);'
 
 export const sqlReps: Rep[] = [
   {
@@ -621,6 +627,434 @@ export const sqlReps: Rep[] = [
         },
       },
       { name: 'No lines', input: [], sql: { seed: 'empty' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-filter-groups',
+    title: 'Group conditions with parentheses',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: listings,
+      seeds: {
+        shop: {
+          about: 'seven listings across poetry, drama, and fiction, priced around 1500 cents',
+          sql: "INSERT INTO listings VALUES (1,'Ariel','Poetry',1200,1),(2,'Hamlet','Drama',1800,1),(3,'Dune','Fiction',900,1),(4,'Antigone','Drama',1100,1),(5,'Leaves of Grass','Poetry',1400,0),(6,'Odes','Poetry',1499,1),(7,'Medea','Drama',1500,1);",
+        },
+        'expensive-poetry': {
+          about: 'an expensive poetry book in stock, a cheap one out of stock, and two dramas',
+          sql: "INSERT INTO listings VALUES (1,'Collected Poems','Poetry',4200,1),(2,'Sonnets','Poetry',800,0),(3,'Oedipus','Drama',1000,1),(4,'Faust','Drama',2000,0);",
+        },
+        'exact-category': {
+          about: "a category stored as lowercase 'poetry' and one stored as 'Poetry'",
+          sql: "INSERT INTO listings VALUES (1,'Howl','poetry',700,1),(2,'Ode to Joy','Poetry',700,1);",
+        },
+        'no-match': {
+          about: 'listings that each miss one condition',
+          sql: "INSERT INTO listings VALUES (1,'Atlas','Maps',500,1),(2,'Tartuffe','Drama',1600,1),(3,'Spring','Poetry',900,0);",
+        },
+      },
+      compare: 'ordered',
+      columns: ['id', 'title'],
+    },
+    context:
+      'A bookshop runs a sale on poetry and drama. The sale page shows books from those two categories that cost under 15.00 and are in stock.',
+    prompt:
+      "Write one SELECT statement on listings that returns id and title, in that column order, for every listing whose category is exactly 'Poetry' or exactly 'Drama', whose price_cents is less than 1500, and which is in stock (in_stock is 1). Order by id ascending. listings has id INTEGER PRIMARY KEY, title TEXT NOT NULL, category TEXT NOT NULL, price_cents INTEGER NOT NULL, and in_stock INTEGER NOT NULL (1 in stock, 0 sold out). The price and stock conditions apply to both categories. Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'List the poetry and drama books under 1500 cents that are in stock.',
+      rules: [
+        '`listings(id INTEGER PRIMARY KEY, title TEXT NOT NULL, category TEXT NOT NULL, price_cents INTEGER NOT NULL, in_stock INTEGER NOT NULL)`; in_stock is 1 or 0.',
+        "Keep a listing when its category is exactly `'Poetry'` or exactly `'Drama'`, its price_cents is less than 1500, and in_stock is 1. The price and stock rules apply to both categories.",
+        'Return the columns `id`, `title`, ordered by id ascending.',
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['1499 cents qualifies; 1500 does not.', "A category stored as `'poetry'` does not match."],
+    },
+    example: {
+      input: "listings (1, 'Ariel', 'Poetry', 1200, 1) and (2, 'Hamlet', 'Drama', 1800, 1)",
+      output: "one row: (1, 'Ariel')",
+    },
+    note: 'Checks compare rows and their order on fresh databases. They do not establish whether you used IN, OR with parentheses, or another equivalent form.',
+    vocabulary: [
+      { term: 'Operator precedence', meaning: 'the rule for which operator applies first when no parentheses say otherwise' },
+      { term: 'IN list', meaning: 'a condition that is true when a value equals any value in a list, such as IN (1, 2)' },
+      { term: 'OR', meaning: 'a condition that is true when at least one side is true' },
+    ],
+    planPrompt:
+      'Write the condition in words with brackets around the part that belongs together. Which data set would show the brackets missing?',
+    starter: "SELECT id, title\nFROM listings\nWHERE category = 'Poetry' OR category = 'Drama';\n",
+    hints: [
+      'Run the starter on the expensive-poetry data and look at which rows it keeps: the category test alone lets every poem through.',
+      'AND is applied before OR. Without brackets, a condition written as A OR B AND C means A OR (B AND C).',
+      'Put the two category tests together in brackets, or replace them with one IN list, then join the price and stock conditions with AND.',
+    ],
+    checks: [
+      {
+        name: 'Cheap poetry and drama in stock',
+        input: [],
+        sql: { seed: 'shop' },
+        expected: {
+          rows: [
+            [1, 'Ariel'],
+            [4, 'Antigone'],
+            [6, 'Odes'],
+          ],
+        },
+      },
+      {
+        name: 'Price and stock rules apply to poetry too',
+        input: [],
+        sql: { seed: 'expensive-poetry' },
+        expected: { rows: [[3, 'Oedipus']] },
+      },
+      { name: 'Category is compared exactly', input: [], sql: { seed: 'exact-category' }, expected: { rows: [[2, 'Ode to Joy']] } },
+      { name: 'Each listing misses one condition', input: [], sql: { seed: 'no-match' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-price-band',
+    title: 'Keep values inside a range',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: rooms,
+      seeds: {
+        hotel: {
+          about: 'seven rooms priced from 6500 to 15000 cents a night, with one to four beds',
+          sql: "INSERT INTO rooms VALUES (1,'Garden',8000,2),(2,'Attic',7999,2),(3,'Harbour',12000,3),(4,'Tower',12001,2),(5,'Studio',9500,1),(6,'Loft',10500,2),(7,'Suite',15000,4);",
+        },
+        'same-price': {
+          about: 'three two-bed rooms at the same price',
+          sql: "INSERT INTO rooms VALUES (1,'Willow',9000,2),(2,'Birch',9000,2),(3,'Aspen',9000,2);",
+        },
+        'outside-band': {
+          about: 'rooms just outside the price range, and one inside it with a single bed',
+          sql: "INSERT INTO rooms VALUES (1,'Cabin',7000,2),(2,'Penthouse',20000,4),(3,'Nook',9000,1);",
+        },
+      },
+      compare: 'ordered',
+      columns: ['name', 'nightly_cents'],
+    },
+    context: 'A family searches for a room for two or more people, from 80.00 to 120.00 a night, both prices included.',
+    prompt:
+      "Write one SELECT statement on rooms that returns name and nightly_cents, in that column order, for every room whose nightly_cents is from 8000 to 12000 inclusive and which has at least 2 beds. Order by nightly_cents ascending, then name ascending in SQLite's default text order. rooms has id INTEGER PRIMARY KEY, name TEXT NOT NULL, nightly_cents INTEGER NOT NULL, and beds INTEGER NOT NULL. Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'List rooms from 8000 to 12000 cents a night, both included, that have at least two beds, cheapest first.',
+      rules: [
+        '`rooms(id INTEGER PRIMARY KEY, name TEXT NOT NULL, nightly_cents INTEGER NOT NULL, beds INTEGER NOT NULL)`.',
+        'Keep rooms whose nightly_cents is from 8000 to 12000, both ends included, and whose beds is at least 2.',
+        "Return the columns `name`, `nightly_cents`, ordered by nightly_cents ascending, then name ascending in SQLite's default text order.",
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['8000 and 12000 qualify; 7999 and 12001 do not.', 'Exactly 2 beds qualifies.'],
+    },
+    example: { input: "rooms 'Garden' 8000 with 2 beds and 'Attic' 7999 with 2 beds", output: "one row: ('Garden', 8000)" },
+    note: 'Checks compare rows and their order on fresh databases; they do not establish whether you wrote BETWEEN or two comparisons.',
+    vocabulary: [
+      { term: 'BETWEEN', meaning: 'a range test that includes both of its ends, as in x BETWEEN 1 AND 5' },
+      { term: 'Inclusive range', meaning: 'a range that contains its first and last values' },
+    ],
+    planPrompt: 'Write the price range with its two ends and say whether each is included. Then the beds rule and both sort keys.',
+    starter: 'SELECT name, nightly_cents\nFROM rooms;\n',
+    hints: [
+      'Both ends of the price range belong to it. Check your comparison with the 8000 and 12000 rooms in mind.',
+      'One keyword tests an inclusive range in a single condition; two comparisons with >= and <= say the same thing.',
+      'Join the range and the beds condition with AND, and sort by price, then name.',
+    ],
+    checks: [
+      {
+        name: 'Both ends of the range count',
+        input: [],
+        sql: { seed: 'hotel' },
+        expected: {
+          rows: [
+            ['Garden', 8000],
+            ['Loft', 10500],
+            ['Harbour', 12000],
+          ],
+        },
+      },
+      {
+        name: 'Equal prices in name order',
+        input: [],
+        sql: { seed: 'same-price' },
+        expected: {
+          rows: [
+            ['Aspen', 9000],
+            ['Birch', 9000],
+            ['Willow', 9000],
+          ],
+        },
+      },
+      { name: 'Just outside the range, or too few beds', input: [], sql: { seed: 'outside-band' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-code-pattern',
+    title: 'Match codes with LIKE',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: parts,
+      seeds: {
+        bins: {
+          about: 'seven part codes, some starting with BR- and of different lengths',
+          sql: "INSERT INTO parts VALUES (1,'BR-104','Brake pad'),(2,'BR-12','Bracket'),(3,'BR-1050','Brake disc'),(4,'XBR-110','Cross brace'),(5,'BR-A7Z','Brush'),(6,'CL-200','Clamp'),(7,'BR-009','Bolt');",
+        },
+        'letter-case': {
+          about: 'codes written as br- in lowercase and as BR- in capitals',
+          sql: "INSERT INTO parts VALUES (1,'br-300','Bearing'),(2,'BR-301','Bushing');",
+        },
+        'no-codes': {
+          about: 'only codes that do not start with BR-',
+          sql: "INSERT INTO parts VALUES (1,'CL-200','Clamp'),(2,'B-R100','Rivet');",
+        },
+      },
+      compare: 'ordered',
+      columns: ['code', 'name'],
+    },
+    context:
+      'A warehouse labels brake parts BR- followed by exactly three characters. Older labels used other lengths and need a separate clean-up.',
+    prompt:
+      "Write one SELECT statement on parts that returns code and name, in that column order, for every part whose code is BR- followed by exactly three more characters of any kind. Letter case does not matter, so br-300 qualifies too. Order by code ascending in SQLite's default text order. parts has id INTEGER PRIMARY KEY, code TEXT NOT NULL, and name TEXT NOT NULL. Submit a single statement that only reads data; the checks use SQLite, whose LIKE ignores letter case for ASCII letters, and compare row order.",
+    brief: {
+      summary: 'List parts whose code is BR- followed by exactly three characters, in any letter case.',
+      rules: [
+        '`parts(id INTEGER PRIMARY KEY, code TEXT NOT NULL, name TEXT NOT NULL)`.',
+        'Keep a part when its code is BR- followed by exactly three more characters of any kind. Letter case does not matter.',
+        "Return the columns `code`, `name`, ordered by code ascending in SQLite's default text order.",
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['BR-12 is too short and BR-1050 too long.', 'XBR-110 does not start with BR-.', 'br-300 qualifies.'],
+    },
+    example: { input: "codes 'BR-104', 'BR-12', and 'XBR-110'", output: "one row: ('BR-104', 'Brake pad')" },
+    note: "SQLite's LIKE ignores letter case for ASCII letters by default; other databases often do not. Checks compare rows and their order on fresh databases.",
+    vocabulary: [
+      { term: 'LIKE', meaning: 'a text match against a pattern with wildcards' },
+      { term: 'Wildcard', meaning: 'a pattern character standing for others: % for any run of characters, _ for exactly one' },
+    ],
+    planPrompt: 'Write the pattern with one symbol per position. Which wildcard stands for exactly one character?',
+    starter: "SELECT code, name\nFROM parts\nWHERE code LIKE 'BR-%';\n",
+    hints: [
+      'The starter keeps BR-12 and BR-1050 as well: % matches any number of characters, including none.',
+      'One wildcard matches exactly one character, so a fixed number of them fixes the length.',
+      'Use BR- followed by three single-character wildcards, and sort by code.',
+    ],
+    checks: [
+      {
+        name: 'Exactly three characters after BR-',
+        input: [],
+        sql: { seed: 'bins' },
+        expected: {
+          rows: [
+            ['BR-009', 'Bolt'],
+            ['BR-104', 'Brake pad'],
+            ['BR-A7Z', 'Brush'],
+          ],
+        },
+      },
+      {
+        name: 'Letter case does not matter',
+        input: [],
+        sql: { seed: 'letter-case' },
+        expected: {
+          rows: [
+            ['BR-301', 'Bushing'],
+            ['br-300', 'Bearing'],
+          ],
+        },
+      },
+      { name: 'No brake codes', input: [], sql: { seed: 'no-codes' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-members-to-text',
+    title: 'Find members you can text',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: members,
+      seeds: {
+        club: {
+          about: 'six members with missing, empty, and present phone numbers and every status, including none set',
+          sql: "INSERT INTO members VALUES (1,'Ade','+4711111111','active'),(2,'Bea',NULL,'active'),(3,'Cai','+4722222222','blocked'),(4,'Dag','+4733333333',NULL),(5,'Eli','','active'),(6,'Fia','+4744444444','paused');",
+        },
+        'never-set': {
+          about: 'two members with phones whose status was never set',
+          sql: "INSERT INTO members VALUES (1,'Zoe','+4755555555',NULL),(2,'Yan','+4766666666',NULL);",
+        },
+        'same-name': {
+          about: 'two members both named Ola, and one blocked member',
+          sql: "INSERT INTO members VALUES (4,'Ola','+4777777777','active'),(2,'Ola','+4788888888','paused'),(3,'Kim','+4799999999','blocked');",
+        },
+        'nobody-reachable': {
+          about: 'members who are blocked or have no usable phone',
+          sql: "INSERT INTO members VALUES (1,'Rui',NULL,NULL),(2,'Sol','','active'),(3,'Tor','+4712121212','blocked');",
+        },
+      },
+      compare: 'ordered',
+      columns: ['id', 'name'],
+    },
+    context:
+      'A sports club sends a text message about a schedule change. It may text members who have a phone number on file, unless they are blocked.',
+    prompt:
+      "Write one SELECT statement on members that returns id and name, in that column order, for every member who can be texted: phone is present, meaning neither NULL nor empty text, and status is not 'blocked'. A NULL status means it was never set, and it does not block a member. Order by name ascending in SQLite's default text order, then id ascending. members has id INTEGER PRIMARY KEY, name TEXT NOT NULL, phone TEXT (NULL when unknown), and status TEXT (NULL when never set, otherwise 'active', 'paused', or 'blocked'). Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'List the members who have a phone number on file and are not blocked.',
+      rules: [
+        "`members(id INTEGER PRIMARY KEY, name TEXT NOT NULL, phone TEXT, status TEXT)`. phone is NULL when unknown; status is NULL when never set, otherwise 'active', 'paused', or 'blocked'.",
+        "A member can be texted when phone is neither NULL nor empty text and status is not `'blocked'`. A NULL status does not block a member.",
+        "Return the columns `id`, `name`, ordered by name ascending in SQLite's default text order, then id ascending.",
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['An empty phone is not a phone number.', 'A member whose status was never set can be texted.'],
+    },
+    example: {
+      input: "members (1, 'Ade', '+4711111111', 'active') and (2, 'Bea', NULL, 'active')",
+      output: "one row: (1, 'Ade')",
+    },
+    note: 'This is an independent rep: plan before you look at the hints. Checks compare rows and their order on fresh databases.',
+    vocabulary: [
+      { term: 'IS NULL', meaning: 'the test that is true exactly when a value is NULL' },
+      { term: 'Three-valued logic', meaning: 'SQL conditions can be true, false, or unknown; WHERE keeps only true' },
+    ],
+    planPrompt: 'For each column, list every kind of value it can hold and say whether that value lets a member through.',
+    starter: 'SELECT id, name\nFROM members;\n',
+    hints: [
+      'Check what each condition does with NULL. A comparison with NULL is neither true nor false, and WHERE keeps only true.',
+      "A member with no status set must pass the status test, so a plain comparison against 'blocked' is not enough on its own.",
+      'Test the phone against both NULL and empty text, let a NULL status through explicitly, and sort by name, then id.',
+    ],
+    checks: [
+      {
+        name: 'Reachable members in name order',
+        input: [],
+        sql: { seed: 'club' },
+        expected: {
+          rows: [
+            [1, 'Ade'],
+            [4, 'Dag'],
+            [6, 'Fia'],
+          ],
+        },
+      },
+      {
+        name: 'A status that was never set does not block',
+        input: [],
+        sql: { seed: 'never-set' },
+        expected: {
+          rows: [
+            [2, 'Yan'],
+            [1, 'Zoe'],
+          ],
+        },
+      },
+      {
+        name: 'Same name, ordered by id',
+        input: [],
+        sql: { seed: 'same-name' },
+        expected: {
+          rows: [
+            [2, 'Ola'],
+            [4, 'Ola'],
+          ],
+        },
+      },
+      { name: 'Nobody can be texted', input: [], sql: { seed: 'nobody-reachable' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-search-articles',
+    title: 'Search published articles',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: articles,
+      seeds: {
+        site: {
+          about: 'eight articles in three sections, two of them drafts',
+          sql: "INSERT INTO articles VALUES (1,'Intro to SQL','guides','2026-02-01'),(2,'SQLite tips','news','2026-03-15'),(3,'Release notes','news','2026-03-20'),(4,'MySQL or SQLite?','blog','2026-03-01'),(5,'Writing better sql','guides',NULL),(6,'Joins in SQL','guides','2026-03-15'),(7,'Indexes explained','guides','2026-01-10'),(8,'SQL for analysts','news','2026-02-20');",
+        },
+        'letter-case': {
+          about: 'published titles containing sql, Sql, and SQL',
+          sql: "INSERT INTO articles VALUES (1,'Learn sql','guides','2026-04-01'),(2,'Sql style','news','2026-04-02'),(3,'NoSQL myths','news','2026-04-03');",
+        },
+        'drafts-and-blog': {
+          about: 'matching titles that are drafts or in the blog section',
+          sql: "INSERT INTO articles VALUES (1,'SQL drafts','guides',NULL),(2,'SQL opinions','blog','2026-05-01'),(3,'Draft news on SQL','news',NULL);",
+        },
+        'no-match': {
+          about: 'published guides and news without sql in the title',
+          sql: "INSERT INTO articles VALUES (1,'Caching','guides','2026-06-01'),(2,'Queues','news','2026-06-02');",
+        },
+      },
+      compare: 'ordered',
+      columns: ['id', 'title'],
+    },
+    context:
+      "A documentation site's search box looks for a word in titles. It searches only published articles in the guides and news sections.",
+    prompt:
+      "Write one SELECT statement on articles that returns id and title, in that column order, for every published article (published_at is not NULL) in section 'guides' or section 'news' whose title contains the letters sql anywhere, in any letter case. Order by published_at from newest to oldest, then id ascending. articles has id INTEGER PRIMARY KEY, title TEXT NOT NULL, section TEXT NOT NULL (compared exactly), and published_at TEXT (a 'YYYY-MM-DD' date, or NULL for a draft). Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'List published guides and news articles whose title contains sql in any letter case, newest first.',
+      rules: [
+        "`articles(id INTEGER PRIMARY KEY, title TEXT NOT NULL, section TEXT NOT NULL, published_at TEXT)`. published_at is a 'YYYY-MM-DD' date, or NULL for a draft.",
+        "Keep published articles in section `'guides'` or `'news'` whose title contains sql anywhere, in any letter case. Sections are compared exactly.",
+        'Return the columns `id`, `title`, ordered by published_at newest first, then id ascending.',
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['A draft is never returned.', 'Words such as MySQL and NoSQL contain sql.'],
+    },
+    example: {
+      input: "articles (1, 'Intro to SQL', 'guides', '2026-02-01') and (5, 'Writing better sql', 'guides', NULL)",
+      output: "one row: (1, 'Intro to SQL')",
+    },
+    note: 'This is a delayed recall rep: solve it without hints after the break. Checks compare rows and their order on fresh databases; they do not establish how a real search ranks results.',
+    vocabulary: [
+      { term: 'Substring', meaning: 'a run of characters inside a longer text' },
+      { term: 'Draft article', meaning: 'an article that is saved but not published yet' },
+    ],
+    planPrompt: 'Write the conditions an article must meet and how they group, then the sort keys.',
+    starter: 'SELECT id, title\nFROM articles;\n',
+    hints: [
+      'Four facts decide each article: whether it is published, its section, its title, and nothing else. Make sure the section test cannot let a draft through.',
+      'A pattern can match text anywhere in a title, and in SQLite it ignores the letter case of ASCII letters.',
+      'Group the two sections, require a date, match the title anywhere, and sort newest first with the id after it.',
+    ],
+    checks: [
+      {
+        name: 'Published guides and news about SQL, newest first',
+        input: [],
+        sql: { seed: 'site' },
+        expected: {
+          rows: [
+            [2, 'SQLite tips'],
+            [6, 'Joins in SQL'],
+            [8, 'SQL for analysts'],
+            [1, 'Intro to SQL'],
+          ],
+        },
+      },
+      {
+        name: 'Any letter case, anywhere in the title',
+        input: [],
+        sql: { seed: 'letter-case' },
+        expected: {
+          rows: [
+            [3, 'NoSQL myths'],
+            [2, 'Sql style'],
+            [1, 'Learn sql'],
+          ],
+        },
+      },
+      { name: 'Drafts and other sections are left out', input: [], sql: { seed: 'drafts-and-blog' }, expected: { rows: [] } },
+      { name: 'No title mentions sql', input: [], sql: { seed: 'no-match' }, expected: { rows: [] } },
     ],
   },
 ]

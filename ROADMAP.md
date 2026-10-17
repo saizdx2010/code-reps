@@ -121,7 +121,7 @@ Every check is honest about what it establishes: SQL reps run SQLite's dialect o
 
 - [x] S0 · SQL text format with one complete playable rep (`sql-select-columns`): a data-driven `sql` block on the rep, one generic checker for every SQLite rep (fresh in-memory database per check, ordered, unordered, and stored-state comparisons, probes), read-only guards (one statement; a change is described and undone), Monaco SQL colouring, the brief's Tables card, row comparisons and SQLite errors in the checks drawer, and browser coverage. The three existing SQLite reps keep their IDs and behavior on the same checker.
 - [x] S1 · Read a table: SELECT, WHERE, ORDER BY, LIMIT, with a lesson (`sql-reading`) and the `sql-reading` journey: filter and sort, newest open tickets, then a delayed catalog page; distinct cities and calculated totals are practice.
-- [ ] S2 · Filter precisely: AND/OR precedence, IN, LIKE, and NULL's three-valued logic.
+- [x] S2 · Filter precisely: AND/OR precedence, IN, LIKE, and NULL's three-valued logic, with a lesson (`sql-filtering`) and the `sql-filtering` journey: grouped conditions, members you can text, then a delayed article search; ranges and code patterns are practice.
 - [ ] S3 · Summarize: COUNT, SUM, AVG, GROUP BY, HAVING, and COUNT(*) versus COUNT(column).
 - [ ] S4 · Combine tables: inner versus left joins, missing matches, and join fan-out inflating sums.
 - [ ] S5 · Ask in steps: subqueries, EXISTS, and common table expressions.
