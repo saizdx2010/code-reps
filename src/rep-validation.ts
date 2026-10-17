@@ -8,7 +8,11 @@ export function validateReps(reps: readonly Rep[], guides: Record<string, SelfRe
   const errors: string[] = []
   if (new Set(reps.map(rep => rep.id)).size !== reps.length) errors.push('Exercise IDs must be unique.')
   for (const rep of reps) {
-    for (const field of requiredFields) if (!rep[field]?.trim()) errors.push(`${rep.id}: missing ${field}`)
+    // SQL reps run the learner's SQL text directly, so they have no function name.
+    for (const field of requiredFields)
+      if (!rep[field]?.trim() && !(field === 'functionName' && rep.format === 'sql')) errors.push(`${rep.id}: missing ${field}`)
+    if (rep.format === 'sql' && (!rep.sql || rep.checks.some(check => !check.sql || !rep.sql?.seeds[check.sql.seed])))
+      errors.push(`${rep.id}: SQL checks need a task and known seeds`)
     if (!rep.example?.input || !rep.example.output) errors.push(`${rep.id}: missing example`)
     if (!rep.checks.length || new Set(rep.checks.map(check => check.name)).size !== rep.checks.length)
       errors.push(`${rep.id}: missing or duplicate checks`)

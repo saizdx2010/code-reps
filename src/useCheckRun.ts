@@ -13,6 +13,8 @@ export function useCheckRun() {
   const [staleResults, setStaleResults] = useState<TestResult[] | null>(null)
   const [runError, setRunError] = useState('')
   const [running, setRunning] = useState(false)
+  // A SQLite rep's engine loads before its checks run; the drawer says so instead of "Running checks".
+  const [loadingEngine, setLoadingEngine] = useState(false)
   const [runNotice, setRunNotice] = useState('')
   const cancelRunRef = useRef<(() => void) | null>(null)
 
@@ -25,6 +27,7 @@ export function useCheckRun() {
     cancelRunRef.current?.()
     cancelRunRef.current = null
     setRunning(false)
+    setLoadingEngine(false)
   }
 
   /** Stops checks at the learner's request. The draft is untouched. */
@@ -88,16 +91,21 @@ export function useCheckRun() {
         })
       return
     }
+    setLoadingEngine(Boolean(rep.sql))
     cancelRunRef.current = startCheckRun(code, repId, {
       createWorker: () => new Worker(new URL('./runner.worker.ts', import.meta.url), { type: 'module' }),
       schedule: (callback, milliseconds) => window.setTimeout(callback, milliseconds),
       clearTimer: id => window.clearTimeout(id),
+      usesSqlite: Boolean(rep.sql),
+      onReady: () => setLoadingEngine(false),
       onResults: nextResults => {
         setRunning(false)
+        setLoadingEngine(false)
         setResults(nextResults)
       },
       onError: message => {
         setRunning(false)
+        setLoadingEngine(false)
         setRunError(message)
       },
     })
@@ -108,5 +116,5 @@ export function useCheckRun() {
     setStaleResults(null)
   }
 
-  return { results, staleResults, runError, running, runNotice, run, stop, cancel, reset, invalidate, clearResults }
+  return { results, staleResults, runError, running, loadingEngine, runNotice, run, stop, cancel, reset, invalidate, clearResults }
 }

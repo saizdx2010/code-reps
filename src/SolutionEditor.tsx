@@ -9,7 +9,10 @@ import { loadEditor } from './editor-loader'
 const Editor = lazy(loadEditor)
 type Props = Omit<ComponentProps<typeof CodeEditor>, 'onChange'> & { onChange: (value: string) => void }
 
-class EditorRecovery extends Component<{ children: ReactNode; value: string; onChange: Props['onChange'] }, { failed: boolean }> {
+class EditorRecovery extends Component<
+  { children: ReactNode; value: string; onChange: Props['onChange']; fileLabel: string },
+  { failed: boolean }
+> {
   state = { failed: false }
   static getDerivedStateFromError() {
     return { failed: true }
@@ -20,7 +23,7 @@ class EditorRecovery extends Component<{ children: ReactNode; value: string; onC
       <div className="editor-recovery">
         <p role="status">The code editor could not load. You can keep working in this plain text editor and run the same checks.</p>
         <label htmlFor="fallback-code" className="field-label">
-          SOLUTION.TS
+          {this.props.fileLabel}
         </label>
         <Textarea
           id="fallback-code"
@@ -38,7 +41,11 @@ class EditorRecovery extends Component<{ children: ReactNode; value: string; onC
 export function SolutionEditor(props: Props) {
   const loading = <EditorLoading />
   return (
-    <EditorRecovery value={String(props.value ?? '')} onChange={props.onChange}>
+    <EditorRecovery
+      value={String(props.value ?? '')}
+      onChange={props.onChange}
+      fileLabel={props.language === 'sql' ? 'QUERY.SQL' : 'SOLUTION.TS'}
+    >
       <Suspense fallback={loading}>
         <Editor {...props} onChange={value => props.onChange(value ?? '')} loading={loading} />
       </Suspense>

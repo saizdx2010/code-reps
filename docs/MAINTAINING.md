@@ -94,7 +94,7 @@ Keep startup modules light. Put heavy review text in `src/review-*.ts`, not in `
 yarn content:index
 ```
 
-Run it after any change to a rep's ID, title, category, starter, hints, checks, or the list of lessons. `tests/catalog-index.test.mjs` fails with "Run `yarn content:index`" when the file is stale.
+Run it after any change to a rep's ID, title, category, starter, hints, checks, or the list of lessons. `tests/catalog-index.test.mjs` fails with "Run `yarn content:index`" when the file is stale. The same command regenerates `src/rep-chunks.ts` and `src/sql-previews.ts` (each SQLite rep's tables and first rows, produced by running its schema and first seed through SQLite).
 
 ## The Indonesian glossary rule
 
@@ -115,7 +115,8 @@ Every vocabulary term on a rep needs a gloss in `indonesianGlossary` in `src/voc
 | `yarn build` fails with "Unused language workers were bundled" | An extra worker was pulled in by a dependency | Check the imports that added the worker before changing the budget |
 | `yarn test:e2e` fails to start the server, or Vite reports the port is in use | Port 4175 is busy. The Playwright server uses `--strictPort`, so it will not pick another port | Run `E2E_PORT=4207 yarn test:e2e` (any free port). Use a different `E2E_PORT` for each checkout you test side by side |
 | `yarn content:check` reports "missing self-review" | No self-review guide in the matching `src/review-*.ts` module | Add the `plan`, `explanation`, and `example` guide for that rep |
-| `yarn content:check` reports "missing ... " for a field | A required field is empty | Fill the field. Required fields: `title`, `category`, `prompt`, `note`, `planPrompt`, `starter`, `functionName` |
+| `yarn content:check` reports "missing ... " for a field | A required field is empty | Fill the field. Required fields: `title`, `category`, `prompt`, `note`, `planPrompt`, `starter`, and `functionName` (SQL text reps, `format: 'sql'`, have none) |
+| `catalog-index.test.mjs` says to regenerate `src/sql-previews.ts` | A SQLite rep's schema or first seed changed | `yarn content:index`; the brief's Tables card is generated from that data |
 | `yarn content:check` reports "missing or duplicate checks" | No checks, or two checks share a name | Give every check a unique name |
 | `yarn content:check` reports "Exercise IDs must be unique." | Two reps share an ID, often after copying a rep | Rename the new rep with a fresh, stable ID |
 | `yarn content:check` reports a `missing preparation rep` or incomplete external project | A project refers to a rep that does not exist | Fix the reference or add the rep |

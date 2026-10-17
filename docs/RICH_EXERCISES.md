@@ -1,6 +1,6 @@
 # Richer exercises
 
-This guide covers the formats beyond single-function reps: debugging, code reading, DOM interfaces, request handlers, refactoring, multi-file projects, learner-written test cases, maintenance, and React. The SQLite task is covered in [content authoring](./CONTENT_AUTHORING.md) and [ADR 0002](./adr/0002-in-memory-sqlite-practice.md). The first five complete small tasks across the Frontend and Backend tracks are:
+This guide covers the formats beyond single-function reps: debugging, code reading, DOM interfaces, request handlers, refactoring, multi-file projects, learner-written test cases, maintenance, React, and SQL text. SQLite reps that call the database from TypeScript are covered in [content authoring](./CONTENT_AUTHORING.md#sqlite-tasks) and [ADR 0002](./adr/0002-in-memory-sqlite-practice.md). The first five complete small tasks across the Frontend and Backend tracks are:
 
 | Rep | Learner work | Checks |
 | --- | --- | --- |
@@ -88,3 +88,21 @@ or disconnected-browser operation. Effect structure and dependencies are self-re
 ## Maintenance journey
 
 `src/maintenance-journey-reps.ts` holds six Backend reps that follow one maintenance story, with reference solutions in `tests/fixtures/maintenance-journey-solutions.mjs`. See [Maintenance journey](./MAINTENANCE_JOURNEY.md) for how the checks work and how to author another.
+
+## SQL text reps
+
+A rep with `format: 'sql'` and a `sql` block (`SqlTask` in `src/rep-types.ts`) takes SQL text instead of a TypeScript function; `functionName` stays empty. The editor opens `query.sql` with Monaco's SQL keyword colouring (registered in `src/monaco.ts`; its tokenizer loads only when a SQL model opens), and its footer names the dialect and the rep's contract. If Monaco fails, the plain-text fallback is labelled `QUERY.SQL` and keeps the same draft. `src/sql-reps.ts` holds the SQL track's reps; `tests/fixtures/sql-solutions.mjs` holds an independent reference query for each.
+
+The task is data, so one generic checker in `src/sqlite-task.ts` runs every SQLite rep:
+
+- `schema` runs first, then the check's named seed from `seeds` (each seed has an `about` line that a failed check shows as its starting data). Every check opens a fresh in-memory database and closes it, even when the SQL fails. No files, progress data, or server endpoints reach it.
+- `compare: 'ordered' | 'unordered'`: the learner submits exactly one statement. A second statement is refused before anything runs. The statement runs inside a savepoint; if it changed any table or the schema, the check fails with what changed ("deleted 1 row from orders") and the change is rolled back. Rows compare by value against `expected.rows`, in order or as a multiset, and the result column names compare with `columns`, ignoring letter case.
+- `compare: 'state'`: the learner's statements run in order, as a script. An open transaction fails the check. Then the check's optional `probes` run (each recorded as accepted or rejected, for schema-design reps), and the authored `read` queries capture the stored rows that `expected` names by label.
+- A result over 1,000 rows fails its check. Statements cannot run longer than the worker's five-second limit; Stop, edit, and timeout terminate the worker as for every function rep, and stale results are rejected.
+- Numbers compare as JavaScript numbers, so an integer and a real with the same value (500 and 500.0) are equal. Text compares exactly.
+
+A failed check reports one structured comparison per differing table: columns first (a missing, extra, or renamed column), then rows paired with the fewest changes, sorted by every column first when order does not matter. The drawer (`src/SqlResults.tsx`, loaded with the first SQL failure) draws Expected and Received as real tables with row numbers; a wrong cell shows the received value and the expected one, an extra or missing row carries a text label, NULL shows as NULL, and one sentence names the first difference. Up to 20 rows show in full; longer results show the first difference with two rows either side. When SQLite rejects the SQL text itself on every check (a syntax error or an unknown name), the drawer shows SQLite's message with the offending line and a caret instead of the check list. The location comes from preparing growing prefixes of the failing statement until SQLite repeats the complaint; it is a best effort for other errors.
+
+The brief's Tables card (`src/SqlTables.tsx`) and its example rows come from `src/sql-previews.ts`, which `yarn content:index` generates by running each SQLite rep's schema and first seed through SQLite; `tests/catalog-index.test.mjs` fails when it is stale. Put the seed you want learners to read first in `seeds`.
+
+What the checks establish: SQLite's behavior for the authored schema and data. They do not establish another database's dialect, query performance, index use (except where a rep checks SQLite's own query plan), concurrency, or SQL style.

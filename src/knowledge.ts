@@ -984,7 +984,8 @@ export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[
     ],
   },
   { id: 'frontend', title: 'Frontend', skillIds: ['frontend', 'react'] },
-  { id: 'backend', title: 'Backend & data', skillIds: ['validation', 'http', 'databases'] },
+  { id: 'backend', title: 'Backend & data', skillIds: ['validation', 'http'] },
+  { id: 'sql', title: 'Databases & SQL', skillIds: ['databases'] },
   {
     id: 'async',
     title: 'Async & runtime',

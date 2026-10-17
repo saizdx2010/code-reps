@@ -1,11 +1,32 @@
 import type { AsyncFixtureSpec } from './async-fixture.ts'
 
-export type Check = { name: string; input: unknown[]; expected: unknown; fixture?: AsyncFixtureSpec }
+export type SqlValue = number | string | null
+/** A named starting data set for SQLite checks: what it holds, in words, and the statements that insert it. */
+export type SqlSeed = { about: string; sql: string }
+/**
+ * A rep checked against real SQLite. Every check builds a fresh in-memory database from `schema` and its seed.
+ * Learner SQL (`format: 'sql'`): with `compare` 'ordered' or 'unordered' the learner submits one read-only statement
+ * whose rows are compared with `columns`; with 'state' the statements may change data, and the `read` queries
+ * capture the stored rows afterwards. Learner TypeScript receives a narrow run/query interface instead; its return
+ * value is reported under `returns`, and `unchanged` reports whether every table kept its rows and schema.
+ */
+export type SqlTask = {
+  schema: string
+  seeds: Record<string, SqlSeed>
+  compare: 'ordered' | 'unordered' | 'state'
+  columns?: string[]
+  read?: { label: string; sql: string }[]
+  returns?: string
+  unchanged?: boolean
+}
+/** One SQLite check: its seed, and statements run after the learner's SQL that SQLite should accept or reject. */
+export type SqlCheck = { seed: string; probes?: string[] }
+export type Check = { name: string; input: unknown[]; expected: unknown; fixture?: AsyncFixtureSpec; sql?: SqlCheck }
 export type Rep = {
   id: string
   title: string
   category: string
-  format?: 'debug' | 'read' | 'transform' | 'frontend' | 'backend' | 'refactor'
+  format?: 'debug' | 'read' | 'transform' | 'frontend' | 'backend' | 'refactor' | 'sql'
   context?: string
   acceptanceCriteria?: string[]
   prompt: string
@@ -16,9 +37,12 @@ export type Rep = {
   vocabulary: { term: string; meaning: string }[]
   planPrompt: string
   starter: string
+  /** The learner's function. SQL reps (`format: 'sql'`) have no function and leave it empty. */
   functionName: string
   preserveInput?: boolean
   runtime?: 'async-fixture'
+  /** Checks run against a fresh in-memory SQLite database; the worker loads the engine only for these reps. */
+  sql?: SqlTask
   /** Frontend reps that check authored DOM and ARIA contracts. Without it the rep uses the directory scenarios. */
   reactPreview?: boolean
   domPreview?: { title: string; description: string; props: Record<string, unknown>; review: string[] }

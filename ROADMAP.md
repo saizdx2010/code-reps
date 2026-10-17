@@ -9,7 +9,7 @@ This roadmap uses ordered phases rather than promised dates or release numbers. 
 ## What already exists
 
 - [x] A practice workspace with plans, code, checks, explanations, hints, authored reviews, and saved attempts.
-- [x] Trail, Library, and Progress, with Foundations plus Problem solving, Pattern Recognition, Frontend, and Backend tracks.
+- [x] Trail, Library, and Progress, with Foundations plus Problem solving, Pattern Recognition, Frontend, SQL, and Backend tracks.
 - [x] Lessons, interactive predictions, glossary help, and guided → independent → delayed-recall skill journeys.
 - [x] Debugging, code reading, refactoring, DOM interactions, multi-file projects, and optional timed interviews.
 - [x] Problem-solving content covering collections, sorting, recursion, trees, graphs, linked structures, heaps, backtracking, and dynamic programming.
@@ -111,6 +111,53 @@ Start with one connected plain TypeScript browser feature using the existing DOM
 
 See [content authoring](./docs/CONTENT_AUTHORING.md) for requirements and the [content gap map](./docs/CONTENT_GAPS.md) for editorial context. Check documentation snapshots against current source before selecting work.
 
+## 6. Zero to hero: SQL, Backend, and DevOps
+
+**Goal:** Take a learner from no database or service knowledge to writing, changing, and shipping a small backend: SQL first, then Backend, then DevOps, each in small complete batches (a lesson where needed, guided, independent, and a distinct delayed recall, plus reference solutions, boundary checks, and authored reviews). The order is guidance on the track picker, never a lock.
+
+Every check is honest about what it establishes: SQL reps run SQLite's dialect on authored data; backend handlers are plain functions over request objects, not a live server; DevOps reps simulate authored policies in TypeScript, not Docker, a shell, or CI; anything time-dependent takes the clock and time zone as inputs.
+
+**Phase 1: SQL** (new `sql` track; the learner writes SQL text)
+
+- [x] S0 · SQL text format with one complete playable rep (`sql-select-columns`): a data-driven `sql` block on the rep, one generic checker for every SQLite rep (fresh in-memory database per check, ordered, unordered, and stored-state comparisons, probes), read-only guards (one statement; a change is described and undone), Monaco SQL colouring, the brief's Tables card, row comparisons and SQLite errors in the checks drawer, and browser coverage. The three existing SQLite reps keep their IDs and behavior on the same checker.
+- [ ] S1 · Read a table: SELECT, WHERE, ORDER BY, LIMIT, with a lesson.
+- [ ] S2 · Filter precisely: AND/OR precedence, IN, LIKE, and NULL's three-valued logic.
+- [ ] S3 · Summarize: COUNT, SUM, AVG, GROUP BY, HAVING, and COUNT(*) versus COUNT(column).
+- [ ] S4 · Combine tables: inner versus left joins, missing matches, and join fan-out inflating sums.
+- [ ] S5 · Ask in steps: subqueries, EXISTS, and common table expressions.
+- [ ] S6 · Design a schema: the learner writes CREATE TABLE; probe inserts check each constraint.
+- [ ] S7 · Change data safely: UPDATE and DELETE scope, upserts, and parameter binding from TypeScript (the three SQLite reps move here with the same IDs).
+- [ ] S8 · Rank and run totals: window functions and top-N per group.
+- [ ] S9 · Make it fast: indexes, checked through SQLite's `EXPLAIN QUERY PLAN` (the plan SQLite chose, not speed).
+- [ ] S10 · Evolve a schema: migrations and backfills that preserve rows.
+- [ ] S11 · Hero: a reporting capstone and a SQL interview round.
+
+**Phase 2: Backend** (extends the `backend` track; existing stages and rep IDs stay)
+
+- [ ] B1 · What a request is: method, path, query, headers, and body.
+- [ ] B2 · Routing: path parameters, and 404 versus 405.
+- [ ] B3 · Authorization: session expiry, roles, and ownership checks.
+- [ ] B4 · Concurrent writes: version numbers and lost updates.
+- [ ] B5 · Background jobs: retries, dead letters, and at-least-once processing.
+- [ ] B6 · Rate limits: token bucket and sliding window.
+- [ ] B7 · Evolve an API: versioning and webhook signature verification.
+
+**Phase 3: DevOps** (new `devops` track; TypeScript reps that simulate authored policies)
+
+- [ ] D1 · Read CI output: exit codes and the first real error in a log.
+- [ ] D2 · Configuration: environment-variable validation and secret redaction.
+- [ ] D3 · Versions: semver comparison and bumps, ranges, and lockfile diffs.
+- [ ] D4 · Pipelines: job ordering, cache keys, and skipping unchanged work.
+- [ ] D5 · Containers: which image layers rebuild, and tag rules.
+- [ ] D6 · Deploys: rolling, blue/green, and canary plans, stable-hash flags, and rollback decisions.
+- [ ] D7 · Health: liveness versus readiness, and draining before shutdown.
+- [ ] D8 · Scheduling: the next cron run across time zones and DST.
+- [ ] D9 · Observability: p95 latency, SLO burn rate, and alerts that stop flapping.
+- [ ] D10 · Incidents: a timeline from events, then a self-reviewed postmortem.
+- [ ] D11 · Hero: containerize an app and add CI on your own machine, recorded as a learner-reported self-review like Library → Projects.
+
+**Done when:** each phase's stages are playable end to end with honest notes, and a learner who finishes them can explain what each check did and did not establish. Completing a track earns the existing track badge; a Backend badge earned before its new stages shows as unearned again while its completed reps are kept, as for any added required rep.
+
 ## Later, when there is a concrete need
 
 - [x] Introduce one complete React task with actual rendering and effect cleanup before expanding React content.
@@ -118,6 +165,8 @@ See [content authoring](./docs/CONTENT_AUTHORING.md) for requirements and the [c
 - [x] Expand React and SQLite modestly: row keys and stale request results in React; a JOIN report and an all-or-nothing restock in SQLite. They remain track practice without journeys.
 - [ ] Add alternative external projects after the existing browser progression is useful in practice.
 - [ ] Consider distributable content packs only after defining executable-content isolation, versioning, and evidence migration.
+- [ ] A multi-file, SQLite-backed API capstone. It needs the project runner and the SQLite checker to work together, which neither does today.
+- [ ] A real Dockerfile or CI YAML exercise format. DevOps reps simulate policies in TypeScript until then.
 
 These options should not delay making daily personal practice clear and enjoyable.
 

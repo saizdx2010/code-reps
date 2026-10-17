@@ -19,7 +19,7 @@ export const solution = `function mostFrequent(numbers: number[]): number | null
   }
   return best
 }`
-export const editor = (page: Page) => page.getByRole('textbox', { name: /^TypeScript solution for/ })
+export const editor = (page: Page) => page.getByRole('textbox', { name: /^(TypeScript solution|SQL query) for/ })
 
 export async function replaceCode(page: Page, code: string, repId = 'most-frequent-number') {
   await expect(editor(page)).toBeVisible()

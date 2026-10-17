@@ -5,6 +5,7 @@ import { validateKnowledge } from '../src/knowledge-validation.ts'
 import { getArrayJourney, getJourney, journeys } from '../src/learning.ts'
 import { reps } from '../src/rep.ts'
 import { paths } from '../src/path.ts'
+import { pathIntroductions } from '../src/path-introductions.ts'
 import { coreLessons } from '../src/ai-era-reps.ts'
 import { completion, utcDay } from './helpers/records.mjs'
 
@@ -61,9 +62,10 @@ test('every path and new lesson points to playable content', () => {
     assert.equal(new Set(repIds).size, repIds.length, `${path.id} repeats a rep`)
     for (const id of repIds) assert.ok(ids.has(id), `${path.id}: ${id}`)
     for (const field of ['title', 'body', 'example', 'explanation', 'next']) {
-      assert.ok(path.introduction[field].trim(), `${path.id} introduction needs ${field}`)
+      assert.ok(pathIntroductions[path.id][field].trim(), `${path.id} introduction needs ${field}`)
     }
   }
+  assert.deepEqual(Object.keys(pathIntroductions).sort(), paths.map(path => path.id).sort())
   for (const lesson of coreLessons) {
     const rep = reps.find(item => item.id === lesson.repId)
     assert.ok(rep, lesson.repId)

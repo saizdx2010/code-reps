@@ -4,11 +4,20 @@ import { reducedMotion } from './ui-motion'
 import { getActiveProfile } from './local-store'
 import { setScreenNavigated } from './screen-focus'
 import { useGlossary } from './useGlossary'
-import { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
 import type { KeyboardEvent, MouseEvent, PointerEvent, ReactNode } from 'react'
 import { searchPalette } from './command-search'
 import type { SearchEntry, SearchTarget } from './command-search'
-import type { TestResult } from './runner.types'
+import type { ResultTable, TestResult } from './runner.types'
+
+// SQLite row comparisons load with the first failed SQL check. If they cannot load, the check's sentence still shows.
+const SqlComparison = lazy(() =>
+  import('./SqlResults')
+    .then(module => ({ default: module.SqlComparison }))
+    .catch(() => ({
+      default: ({ table }: { table: ResultTable; stale: boolean }) => <p>{[table.columnNote, table.first].filter(Boolean).join(' ')}</p>,
+    })),
+)
 
 type ScreenState = { windowY: number; scroll: [number, number][]; open: Record<string, boolean>; focusId?: string }
 const screens = new Map<string, ScreenState>()
@@ -441,11 +450,22 @@ function FailedCheck({ result, stale }: { result: TestResult; stale: boolean }) 
   return (
     <>
       <summary>{result.name}</summary>
-      {result.input && (
-        <div>
-          <span className="field-label">Input</span>
-          <pre>{result.input}</pre>
-        </div>
+      {result.input?.startsWith('Starting data: ') ? (
+        <p className="sql-starting">{result.input}</p>
+      ) : (
+        result.input && (
+          <div>
+            <span className="field-label">Input</span>
+            <pre>{result.input}</pre>
+          </div>
+        )
+      )}
+      {!!result.tables?.length && (
+        <Suspense fallback={<p className="utility-note">Loading the row comparison…</p>}>
+          {result.tables.map(table => (
+            <SqlComparison key={table.label} table={table} stale={stale} />
+          ))}
+        </Suspense>
       )}
       {result.expected !== undefined && (
         <div className="value-comparison">
@@ -459,7 +479,9 @@ function FailedCheck({ result, stale }: { result: TestResult; stale: boolean }) 
           </div>
         </div>
       )}
-      {result.message && !(result.expected !== undefined && result.message.startsWith('Expected ')) && <p>{result.message}</p>}
+      {result.message && !result.tables?.length && !(result.expected !== undefined && result.message.startsWith('Expected ')) && (
+        <p>{result.message}</p>
+      )}
       {!stale && <p className="utility-note">Trace this input through your code, then try again.</p>}
     </>
   )

@@ -8,6 +8,7 @@
   "ignorePatterns": [
     "src/catalog-index.ts",
     "src/rep-chunks.ts",
+    "src/sql-previews.ts",
     "**/*.md",
     "**/*.json",
     "index.html",

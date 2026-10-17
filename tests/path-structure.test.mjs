@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { firstPath, migratePathId, paths, retiredPathIds } from '../src/path.ts'
+import { pathIntroductions } from '../src/path-introductions.ts'
 import { foundationsPathId, pathApplications, trackGroups } from '../src/curriculum.ts'
 import { emptyFluency, parseFluency } from '../src/fluency.ts'
 import { journeys } from '../src/learning.ts'
@@ -84,15 +85,15 @@ const previouslyPlaced = [
   'project-ticket-api',
 ]
 
-test('the trail is Foundations plus four tracks', () => {
+test('the trail is Foundations plus its tracks', () => {
   assert.deepEqual(
     paths.map(path => path.id),
-    ['typescript', 'algorithms-data-structures', 'pattern-recognition', 'frontend', 'backend'],
+    ['typescript', 'algorithms-data-structures', 'pattern-recognition', 'frontend', 'sql', 'backend'],
   )
   assert.equal(foundationsPathId, 'typescript')
   assert.deepEqual(
     trackGroups.flatMap(group => group.pathIds),
-    ['algorithms-data-structures', 'pattern-recognition', 'frontend', 'backend'],
+    ['algorithms-data-structures', 'pattern-recognition', 'frontend', 'sql', 'backend'],
   )
 })
 
@@ -187,7 +188,7 @@ test('recognition practice reuses valid tasks with mixed journeys and unlabeled 
   assert.deepEqual(puzzle.repIds, ['puzzle-parse-part-one', 'puzzle-adapt-part-two'])
   assert.ok(puzzle.description && puzzle.recap)
   const lesson = skills.find(skill => skill.id === 'recognize-the-pattern')
-  assert.ok(path.introduction.body.includes(lesson.title))
+  assert.ok(pathIntroductions[path.id].body.includes(lesson.title))
   assert.ok(lesson.questions.length >= 6)
   assert.equal(new Set(lesson.questions.map(question => question.id)).size, lesson.questions.length)
   for (const question of lesson.questions) {

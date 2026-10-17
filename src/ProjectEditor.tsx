@@ -12,11 +12,13 @@ export function ProjectEditor({ showHeader, ...props }: Props) {
       : project.entry
     : props.path?.endsWith('.tsx')
       ? 'solution.tsx'
-      : 'solution.ts'
+      : props.path?.endsWith('.sql')
+        ? 'query.sql'
+        : 'solution.ts'
   const header = showHeader && (
     <div className="editor-top">
       <span className="file-tab">
-        <span className="ts-icon">TS</span> {filename}
+        <span className="ts-icon">{props.language === 'sql' ? 'SQL' : 'TS'}</span> {filename}
       </span>
       <span className="editor-hint">Ctrl / ⌘ Enter to run</span>
     </div>

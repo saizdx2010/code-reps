@@ -20,6 +20,9 @@ declare module '*/fixtures/sqlite-solution.mjs' {
   export const sqliteCustomerTotalsSolution: string
   export const sqliteRestockSolution: string
 }
+declare module '*/fixtures/sql-solutions.mjs' {
+  export const sqlSolutions: Record<string, string>
+}
 declare module '*/fixtures/rich-solutions.mjs' {
   export const richSolutions: Record<string, string>
 }

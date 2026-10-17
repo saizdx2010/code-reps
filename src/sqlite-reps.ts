@@ -7,6 +7,26 @@ export const sqliteReps: Rep[] = [
     category: 'Backend',
     format: 'backend',
     functionName: 'transferStock',
+    sql: {
+      schema:
+        'CREATE TABLE warehouses (id INTEGER PRIMARY KEY, units INTEGER NOT NULL CHECK(units >= 0)); CREATE TABLE transfers (id INTEGER PRIMARY KEY, amount INTEGER NOT NULL CHECK(amount > 0));',
+      seeds: {
+        standard: {
+          about: 'warehouses (1, 10), (2, 3), (3, 0) and no transfers',
+          sql: 'INSERT INTO warehouses VALUES (1,10),(2,3),(3,0);',
+        },
+        'existing-transfer': {
+          about: 'warehouses (1, 10), (2, 3), (3, 0) and an existing transfer (1, 2)',
+          sql: 'INSERT INTO warehouses VALUES (1,10),(2,3),(3,0); INSERT INTO transfers VALUES (1,2);',
+        },
+      },
+      compare: 'state',
+      returns: 'accepted',
+      read: [
+        { label: 'warehouses', sql: 'SELECT id, units FROM warehouses ORDER BY id' },
+        { label: 'transfers', sql: 'SELECT id, amount FROM transfers ORDER BY id' },
+      ],
+    },
     prompt:
       'Write transferStock(db, amount). Use real SQL to move amount units from warehouse 1 to warehouse 2 as one transaction. Return true after committing, or false after rolling back a SQL failure. The runner supplies a fresh in-memory SQLite database for every check. warehouses has id INTEGER PRIMARY KEY and units INTEGER NOT NULL CHECK(units >= 0); rows start as (1, 10), (2, 3), (3, 0). transfers has id INTEGER PRIMARY KEY, amount INTEGER NOT NULL CHECK(amount > 0), and starts empty. Debit warehouse 1, credit warehouse 2, and insert a transfers row with id 1 and the amount, all inside the transaction. A check may already contain transfer id 1, so that final insert must fail and undo both updates. amount is an integer from 1 to 20; insufficient stock must also roll back. Do not change the schema, warehouse 3, or existing transfer rows. db.run(sql, parameters?) executes SQL and throws on failure; db.query(sql, parameters?) returns rows as arrays of numbers, strings, or null. Bind values with ? placeholders and an array. Return synchronously; do not close the database. Checks independently query all rows after your function returns, rather than trusting your return value.',
     brief: {
@@ -55,7 +75,8 @@ function transferStock(db: Database, amount: number): boolean {
     checks: [
       {
         name: 'Ordinary transfer and recorded SQL rows',
-        input: [4, false],
+        input: [4],
+        sql: { seed: 'standard' },
         expected: {
           accepted: true,
           warehouses: [
@@ -68,7 +89,8 @@ function transferStock(db: Database, amount: number): boolean {
       },
       {
         name: 'One unit',
-        input: [1, false],
+        input: [1],
+        sql: { seed: 'standard' },
         expected: {
           accepted: true,
           warehouses: [
@@ -81,7 +103,8 @@ function transferStock(db: Database, amount: number): boolean {
       },
       {
         name: 'Exact available stock',
-        input: [10, false],
+        input: [10],
+        sql: { seed: 'standard' },
         expected: {
           accepted: true,
           warehouses: [
@@ -94,7 +117,8 @@ function transferStock(db: Database, amount: number): boolean {
       },
       {
         name: 'Insufficient stock rolls back',
-        input: [11, false],
+        input: [11],
+        sql: { seed: 'standard' },
         expected: {
           accepted: false,
           warehouses: [
@@ -107,7 +131,8 @@ function transferStock(db: Database, amount: number): boolean {
       },
       {
         name: 'Maximum amount rolls back',
-        input: [20, false],
+        input: [20],
+        sql: { seed: 'standard' },
         expected: {
           accepted: false,
           warehouses: [
@@ -120,7 +145,8 @@ function transferStock(db: Database, amount: number): boolean {
       },
       {
         name: 'Final insert failure undoes both updates',
-        input: [4, true],
+        input: [4],
+        sql: { seed: 'existing-transfer' },
         expected: {
           accepted: false,
           warehouses: [
@@ -133,7 +159,8 @@ function transferStock(db: Database, amount: number): boolean {
       },
       {
         name: 'Final failure at exact stock boundary',
-        input: [10, true],
+        input: [10],
+        sql: { seed: 'existing-transfer' },
         expected: {
           accepted: false,
           warehouses: [
@@ -153,6 +180,25 @@ function transferStock(db: Database, amount: number): boolean {
     category: 'Backend',
     format: 'backend',
     functionName: 'customerTotals',
+    sql: {
+      schema:
+        'CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT NOT NULL); CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL REFERENCES customers(id), cents INTEGER NOT NULL CHECK(cents >= 0));',
+      seeds: {
+        standard: {
+          about: 'Ada (orders 1200, 800), Bo (2000), Cy (none), and Di (150, 50, 300)',
+          sql: "INSERT INTO customers VALUES (1,'Ada'),(2,'Bo'),(3,'Cy'),(4,'Di'); INSERT INTO orders VALUES (1,1,1200),(2,2,2000),(3,4,150),(4,1,800),(5,4,50),(6,4,300);",
+        },
+        'free-order': {
+          about: 'Ada with one 0-cent order, and Bo with none',
+          sql: "INSERT INTO customers VALUES (1,'Ada'),(2,'Bo'); INSERT INTO orders VALUES (1,1,0);",
+        },
+        'no-orders': { about: 'Zed and Amy, with no orders', sql: "INSERT INTO customers VALUES (1,'Zed'),(2,'Amy');" },
+        empty: { about: 'no customers and no orders', sql: '' },
+      },
+      compare: 'state',
+      returns: 'rows',
+      unchanged: true,
+    },
     context:
       'A support dashboard lists customers by how much they have spent, so the team can spot their biggest accounts. Customers who have never ordered must still appear when the minimum is zero.',
     prompt:
@@ -197,7 +243,8 @@ function customerTotals(db: Database, minimumCents: number): SqlValue[][] {
     checks: [
       {
         name: 'Everyone, including a customer with no orders',
-        input: [0, 'standard'],
+        input: [0],
+        sql: { seed: 'standard' },
         expected: {
           rows: [
             ['Ada', 2, 2000],
@@ -210,7 +257,8 @@ function customerTotals(db: Database, minimumCents: number): SqlValue[][] {
       },
       {
         name: 'A minimum keeps only bigger accounts',
-        input: [600, 'standard'],
+        input: [600],
+        sql: { seed: 'standard' },
         expected: {
           rows: [
             ['Ada', 2, 2000],
@@ -221,7 +269,8 @@ function customerTotals(db: Database, minimumCents: number): SqlValue[][] {
       },
       {
         name: 'The minimum is inclusive',
-        input: [500, 'standard'],
+        input: [500],
+        sql: { seed: 'standard' },
         expected: {
           rows: [
             ['Ada', 2, 2000],
@@ -231,10 +280,11 @@ function customerTotals(db: Database, minimumCents: number): SqlValue[][] {
           unchanged: true,
         },
       },
-      { name: 'A minimum above every total', input: [2001, 'standard'], expected: { rows: [], unchanged: true } },
+      { name: 'A minimum above every total', input: [2001], sql: { seed: 'standard' }, expected: { rows: [], unchanged: true } },
       {
         name: 'A free order still counts as an order',
-        input: [0, 'free-order'],
+        input: [0],
+        sql: { seed: 'free-order' },
         expected: {
           rows: [
             ['Ada', 1, 0],
@@ -245,7 +295,8 @@ function customerTotals(db: Database, minimumCents: number): SqlValue[][] {
       },
       {
         name: 'No orders at all, ties sorted by name',
-        input: [0, 'no-orders'],
+        input: [0],
+        sql: { seed: 'no-orders' },
         expected: {
           rows: [
             ['Amy', 0, 0],
@@ -254,7 +305,7 @@ function customerTotals(db: Database, minimumCents: number): SqlValue[][] {
           unchanged: true,
         },
       },
-      { name: 'No customers', input: [0, 'empty'], expected: { rows: [], unchanged: true } },
+      { name: 'No customers', input: [0], sql: { seed: 'empty' }, expected: { rows: [], unchanged: true } },
     ],
   },
   {
@@ -263,6 +314,13 @@ function customerTotals(db: Database, minimumCents: number): SqlValue[][] {
     category: 'Backend',
     format: 'backend',
     functionName: 'restock',
+    sql: {
+      schema: 'CREATE TABLE inventory (sku TEXT PRIMARY KEY, units INTEGER NOT NULL CHECK(units >= 0));',
+      seeds: { standard: { about: 'inventory (A-1, 5) and (B-2, 0)', sql: "INSERT INTO inventory VALUES ('A-1',5),('B-2',0);" } },
+      compare: 'state',
+      returns: 'accepted',
+      read: [{ label: 'inventory', sql: 'SELECT sku, units FROM inventory ORDER BY sku' }],
+    },
     context:
       'A warehouse records deliveries and corrections. A delivery for a new product creates its row; a delivery for a known product adds to it. A batch is all or nothing: if one correction would push stock below zero, none of the batch is applied.',
     prompt:
@@ -308,6 +366,7 @@ function restock(db: Database, deliveries: { sku: string; units: number }[]): bo
     checks: [
       {
         name: 'Adds to an existing product',
+        sql: { seed: 'standard' },
         input: [[{ sku: 'A-1', units: 3 }]],
         expected: {
           accepted: true,
@@ -319,6 +378,7 @@ function restock(db: Database, deliveries: { sku: string; units: number }[]): bo
       },
       {
         name: 'Creates a new product',
+        sql: { seed: 'standard' },
         input: [[{ sku: 'C-3', units: 4 }]],
         expected: {
           accepted: true,
@@ -331,6 +391,7 @@ function restock(db: Database, deliveries: { sku: string; units: number }[]): bo
       },
       {
         name: 'The same product twice in one batch',
+        sql: { seed: 'standard' },
         input: [
           [
             { sku: 'C-3', units: 1 },
@@ -348,6 +409,7 @@ function restock(db: Database, deliveries: { sku: string; units: number }[]): bo
       },
       {
         name: 'An empty batch changes nothing',
+        sql: { seed: 'standard' },
         input: [[]],
         expected: {
           accepted: true,
@@ -359,6 +421,7 @@ function restock(db: Database, deliveries: { sku: string; units: number }[]): bo
       },
       {
         name: 'A correction down to zero',
+        sql: { seed: 'standard' },
         input: [[{ sku: 'A-1', units: -5 }]],
         expected: {
           accepted: true,
@@ -370,6 +433,7 @@ function restock(db: Database, deliveries: { sku: string; units: number }[]): bo
       },
       {
         name: 'A failing correction undoes the whole batch',
+        sql: { seed: 'standard' },
         input: [
           [
             { sku: 'A-1', units: 2 },
@@ -386,6 +450,7 @@ function restock(db: Database, deliveries: { sku: string; units: number }[]): bo
       },
       {
         name: 'A new product cannot start below zero',
+        sql: { seed: 'standard' },
         input: [[{ sku: 'D-4', units: -1 }]],
         expected: {
           accepted: false,
@@ -397,6 +462,7 @@ function restock(db: Database, deliveries: { sku: string; units: number }[]): bo
       },
       {
         name: 'A SKU containing a quote',
+        sql: { seed: 'standard' },
         input: [[{ sku: "O'NEIL-1", units: 2 }]],
         expected: {
           accepted: true,

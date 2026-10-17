@@ -8,6 +8,7 @@ export const formatLabels: Record<string, string> = {
   transform: 'Working with data',
   frontend: 'Frontend',
   backend: 'Backend',
+  sql: 'SQL',
   refactor: 'Improving code',
 }
 
@@ -68,6 +69,7 @@ const lookupReps = new Set([
 /** One primary topic per rep; authored categories and learner records stay unchanged. */
 export function catalogTopic(rep: Pick<RepSummary, 'id' | 'category'>): string {
   if (rep.id === 'simplify-file-path') return 'Stacks and queues'
+  if (rep.category === 'SQL' || rep.id.startsWith('sqlite-')) return 'Query with SQL'
   if (rep.category.startsWith('Algorithm ') || rep.category === 'Problem-solving patterns') {
     return problemStages.find(stage => (stage.repIds as readonly string[]).includes(rep.id))?.title ?? 'Problem solving'
   }
@@ -115,6 +117,7 @@ export const catalogAreas: { title: string; topics: string[] }[] = [
   },
   { title: 'Frontend', topics: ['Interface logic', 'Accessible interactions', 'Building a browser feature', 'Frontend projects'] },
   { title: 'Backend & data', topics: ['Requests and validation', 'Backend projects'] },
+  { title: 'Databases & SQL', topics: ['Query with SQL'] },
   { title: 'Async & runtime', topics: ['Async and timing'] },
   { title: 'Patterns & resources', topics: ['Shared resources and events'] },
   {

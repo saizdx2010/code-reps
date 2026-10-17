@@ -163,6 +163,59 @@ test('structured failed-check feedback is preserved', () => {
   assert.deepEqual(run.errors, [])
 })
 
+test('SQLite comparison tables and located errors pass through; malformed or oversized ones are refused', () => {
+  const side = { columns: ['name', 'total'], total: 3, before: 0, after: 0, rows: [{ n: 1, cells: ['Di', 450], wrong: [[1, 500]] }] }
+  const table = {
+    label: 'Rows',
+    ordered: true,
+    expected: { ...side, rows: [{ n: 1, cells: ['Di', 500] }] },
+    received: { ...side, rows: [...side.rows, { n: 2, cells: ['Cy', null], mark: 'extra' }] },
+    totals: { expected: 3, received: 4 },
+    first: 'First difference: row 1, total — expected 500, received 450.',
+  }
+  const sqlError = { message: 'near "FORM": syntax error', line: 2, column: 1, source: 'FORM customers', length: 4 }
+  const run = setup()
+  const results = [{ name: 'Rows', passed: false, message: 'Some values differ.', tables: [table], sqlError }]
+  run.worker.onmessage({ data: { results } })
+  assert.deepEqual(run.results, [results])
+  const unread = setup()
+  unread.worker.onmessage({ data: { results: [{ name: 'Rows', passed: false, tables: [{ ...table, expected: null }] }] } })
+  assert.equal(unread.results.length, 1)
+  for (const bad of [
+    { tables: [{ ...table, expected: { ...side, rows: [{ n: 1, cells: [{ nested: true }] }] } }] },
+    { tables: [{ ...table, received: { ...side, rows: Array.from({ length: 41 }, (_, n) => ({ n, cells: [] })) } }] },
+    { tables: [{ ...table, received: { ...side, rows: [{ n: 1, cells: [], mark: 'odd' }] } }] },
+    { tables: [{ ...table, received: { ...side, columns: [1] } }] },
+    { tables: [{ ...table, totals: undefined }] },
+    { tables: [{ ...table, label: undefined }] },
+    { tables: [{ ...table, ordered: 'yes' }] },
+    { sqlError: { line: 2 } },
+    { sqlError: { message: 'x', column: -1 } },
+  ]) {
+    const broken = setup()
+    broken.worker.onmessage({ data: { results: [{ name: 'Rows', passed: false, ...bad }] } })
+    assert.deepEqual(broken.results, [])
+    assert.match(broken.errors[0], /could not be read/)
+  }
+})
+
+test('a SQLite run reports when its engine has loaded', () => {
+  let ready = 0
+  const worker = { onmessage: null, onerror: null, postMessage() {}, terminate() {} }
+  startCheckRun('code', 'rep-id', {
+    createWorker: () => worker,
+    onResults() {},
+    onError() {},
+    schedule: () => 1,
+    clearTimer() {},
+    usesSqlite: true,
+    onReady: () => ready++,
+  })
+  assert.equal(ready, 0)
+  worker.onmessage({ data: { ready: true } })
+  assert.equal(ready, 1)
+})
+
 test('the SQLite rep gets a separate load allowance, then the usual five seconds after the engine is ready', () => {
   const delays = [],
     errors = []
@@ -178,6 +231,7 @@ test('the SQLite rep gets a separate load allowance, then the usual five seconds
       return 1
     },
     clearTimer() {},
+    usesSqlite: true,
   })
   worker.onmessage({ data: { ready: true } })
   assert.deepEqual(delays, [30000, 5000])

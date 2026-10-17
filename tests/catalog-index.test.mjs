@@ -3,7 +3,7 @@ import { readFileSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import test from 'node:test'
 import ts from 'typescript'
-import { renderCatalogIndex } from '../scripts/catalog-index.mjs'
+import { renderCatalogIndex, renderSqlPreviews } from '../scripts/catalog-index.mjs'
 import { foundationRepIds, repIndex, skillIndex } from '../src/catalog-index.ts'
 import { loadAllReps, loadRepContent } from '../src/rep-content.ts'
 import { starterHash } from '../src/starter-hash.ts'
@@ -16,6 +16,32 @@ test('the generated catalog index matches the authored reps and lessons', () => 
     renderCatalogIndex(),
     'Run `yarn content:index` and commit src/catalog-index.ts.',
   )
+})
+
+test('the generated SQL table previews match each SQLite rep schema and first seed', async () => {
+  assert.equal(
+    readFileSync(new URL('../src/sql-previews.ts', import.meta.url), 'utf8'),
+    await renderSqlPreviews(),
+    'Run `yarn content:index` and commit src/sql-previews.ts.',
+  )
+  const { sqlPreviews } = await import('../src/sql-previews.ts')
+  assert.deepEqual(
+    Object.keys(sqlPreviews).sort(),
+    reps
+      .filter(rep => rep.sql)
+      .map(rep => rep.id)
+      .sort(),
+  )
+  const preview = sqlPreviews['sqlite-customer-totals']
+  assert.deepEqual(
+    preview.tables.map(table => [table.name, table.rows, table.sample.length]),
+    [
+      ['customers', 4, 3],
+      ['orders', 6, 3],
+    ],
+  )
+  assert.ok(preview.tables[1].definition.includes('customer_id INTEGER NOT NULL → customers.id'))
+  assert.deepEqual(sqlPreviews['sql-select-columns'].example.columns, ['title', 'author', 'published'])
 })
 
 test('the index lists every rep and skill in catalog order with stable ids', () => {

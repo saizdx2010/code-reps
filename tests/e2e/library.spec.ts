@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test'
 import { chooseOption } from './helpers'
+import { catalogAreas } from '../../src/catalog-labels'
 
 test('exercises are grouped by area in learning order, and opening a topic never moves it', async ({ page }) => {
   await page.goto('/#/practice')
   const areas = page.locator('.catalog-area h3')
   await expect(areas.first()).toHaveText('Language & problem solving')
-  await expect(areas).toHaveCount(7)
+  await expect(areas).toHaveCount(catalogAreas.length)
   const arrays = page.locator('.catalog-area .list-group').filter({ has: page.locator('.list-group-title', { hasText: /^Arrays$/ }) })
   await expect(arrays.locator('summary')).toContainText(/(?:^|\D)0 of \d+ done/)
   const place = () =>
@@ -38,7 +39,7 @@ test('search finds concept words through the lessons a rep practises', async ({ 
   await expect(empty).toContainText('No reps mention “zzzz unknown”.')
   await empty.getByRole('button', { name: 'Clear search', exact: true }).click()
   await expect(search).toHaveValue('')
-  await expect(page.locator('.catalog-area')).toHaveCount(7)
+  await expect(page.locator('.catalog-area')).toHaveCount(catalogAreas.length)
 })
 
 test('the level filter narrows the list and empty filters say why', async ({ page }) => {
@@ -56,5 +57,5 @@ test('a topic saved under an old label is ignored instead of hiding every rep', 
   await page.goto('/#/practice')
   await page.evaluate(() => sessionStorage.setItem('code-reps:ui:default:catalogSkill', 'Practical concepts'))
   await page.reload()
-  await expect(page.locator('.catalog-area')).toHaveCount(7)
+  await expect(page.locator('.catalog-area')).toHaveCount(catalogAreas.length)
 })

@@ -1,11 +1,11 @@
-import { runAsyncRep } from './runner'
-import { isSqliteRep } from './sqlite-task.ts'
+import { repNeedsSqlite, runAsyncRep } from './runner'
 
 type RunRequest = { code: string; repId: string }
 
 self.onmessage = async (event: MessageEvent<RunRequest>) => {
   try {
-    const createDatabase = isSqliteRep(event.data.repId) ? await (await import('./sqlite-loader.ts')).loadSqlite() : undefined
+    // The SQLite engine loads only for reps whose checks use it, before the five-second check limit starts.
+    const createDatabase = repNeedsSqlite(event.data.repId) ? await (await import('./sqlite-loader.ts')).loadSqlite() : undefined
     self.postMessage({ ready: true })
     self.postMessage({ results: await runAsyncRep(event.data.code, event.data.repId, createDatabase) })
   } catch (error) {
