@@ -273,6 +273,11 @@ const repRows: [string, string, number, Rep['format'] | 0, string, number, numbe
   ["sql-count-visitors","Count visitors, not visits",38,"sql","552b61cb6e0976ad",3,93,3,34],
   ["sql-busy-days","Find the busy delivery days",38,"sql","5af1bef45f46970f",3,88,4,34],
   ["sql-month-spenders","Find the big spenders of a month",38,"sql","e49a5efb9c797297",3,113,4,34],
+  ["sql-join-orders","Join orders to their customers",38,"sql","bbe12c4dfd68df38",3,113,4,34],
+  ["sql-customers-without-orders","Find customers with no orders",38,"sql","2e194ccfea68d640",3,81,3,34],
+  ["sql-team-totals","Total two lists without double counting",38,"sql","ef60d534ccce8594",3,111,3,34],
+  ["sql-june-returns","Count each product’s returns in June",38,"sql","583233ac770af07d",3,105,4,34],
+  ["sql-authors-latest","Find each author’s latest book",38,"sql","fd9acc97f0db69a1",3,118,3,34],
 ]
 
 export const repIndex: RepSummary[] = repRows.map(([id, title, category, format, starterHash, hintTotal, briefWords, checkTotal, source]) => ({
@@ -339,4 +344,5 @@ export const skillIndex: SkillSummary[] = [
   {"id":"sql-reading","title":"Read rows with SELECT, WHERE, ORDER BY, and LIMIT","summary":"Choose columns, keep matching rows, put them in a defined order, and take a slice of the result.","prerequisites":[],"related":["databases"],"repIds":["sql-select-columns","sql-filter-sort","sql-distinct-cities","sql-line-totals","sql-recent-open-tickets","sql-catalog-page"],"questions":[{"id":"unordered-v1","optionCount":3,"answer":2},{"id":"offset-page-v1","optionCount":3,"answer":1},{"id":"null-filter-v1","optionCount":3,"answer":2}]},
   {"id":"sql-filtering","title":"Filter precisely: AND, OR, IN, LIKE, and NULL","summary":"Group conditions so they mean what you intend, match lists, ranges, and patterns, and handle unknown values on purpose.","prerequisites":["sql-reading"],"related":["sql-reading"],"repIds":["sql-filter-groups","sql-price-band","sql-code-pattern","sql-members-to-text","sql-search-articles"],"questions":[{"id":"and-or-v1","optionCount":3,"answer":1},{"id":"like-underscore-v1","optionCount":3,"answer":1},{"id":"null-not-equal-v1","optionCount":3,"answer":1}]},
   {"id":"sql-summarizing","title":"Summarize with COUNT, SUM, AVG, GROUP BY, and HAVING","summary":"Fold rows into one result per group, count what you mean to count, and filter before and after grouping.","prerequisites":["sql-filtering"],"related":["sql-filtering"],"repIds":["sql-count-by-status","sql-ratings-summary","sql-count-visitors","sql-busy-days","sql-month-spenders"],"questions":[{"id":"count-null-v1","optionCount":3,"answer":1},{"id":"having-v1","optionCount":3,"answer":1},{"id":"empty-sum-v1","optionCount":3,"answer":1}]},
+  {"id":"sql-joining","title":"Combine tables with JOIN","summary":"Pair rows of two tables, keep rows that have no match, and avoid sums that a join multiplies.","prerequisites":["sql-summarizing"],"related":["sql-summarizing","databases"],"repIds":["sql-join-orders","sql-customers-without-orders","sql-team-totals","sql-june-returns","sql-authors-latest"],"questions":[{"id":"inner-join-rows-v1","optionCount":3,"answer":1},{"id":"left-join-where-v1","optionCount":3,"answer":1},{"id":"fan-out-v1","optionCount":3,"answer":1}]},
 ]

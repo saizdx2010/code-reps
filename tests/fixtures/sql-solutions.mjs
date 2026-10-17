@@ -67,4 +67,29 @@ WHERE paid_on BETWEEN '2026-03-01' AND '2026-03-31'
 GROUP BY account
 HAVING SUM(amount_cents) >= 10000
 ORDER BY total_cents DESC, account;`,
+  'sql-join-orders': `SELECT o.id, c.name, o.cents
+FROM orders AS o
+JOIN customers AS c ON c.id = o.customer_id
+ORDER BY o.id;`,
+  'sql-customers-without-orders': `SELECT c.id, c.name
+FROM customers AS c
+LEFT JOIN orders AS o ON o.customer_id = c.id
+WHERE o.id IS NULL
+ORDER BY c.name, c.id;`,
+  'sql-team-totals': `SELECT t.name, COALESCE(m.members, 0) AS members, COALESCE(e.total, 0) AS expense_cents
+FROM teams AS t
+LEFT JOIN (SELECT team_id, COUNT(*) AS members FROM team_members GROUP BY team_id) AS m ON m.team_id = t.id
+LEFT JOIN (SELECT team_id, SUM(cents) AS total FROM expenses GROUP BY team_id) AS e ON e.team_id = t.id
+ORDER BY t.name;`,
+  'sql-june-returns': `SELECT p.name, COUNT(r.id) AS june_returns
+FROM products AS p
+LEFT JOIN product_returns AS r
+  ON r.product_id = p.id AND r.returned_on BETWEEN '2026-06-01' AND '2026-06-30'
+GROUP BY p.id
+ORDER BY june_returns DESC, p.name;`,
+  'sql-authors-latest': `SELECT a.name, COUNT(b.id) AS books, MAX(b.year) AS latest_year
+FROM authors AS a
+LEFT JOIN books AS b ON b.author_id = a.id
+GROUP BY a.id
+ORDER BY a.name, a.id;`,
 }

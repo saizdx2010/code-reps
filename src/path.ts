@@ -443,6 +443,12 @@ export const paths = [
         recap: 'You can now summarize groups of rows and filter both rows and groups.',
         repIds: ['sql-count-by-status', 'sql-ratings-summary', 'sql-count-visitors', 'sql-busy-days', 'sql-month-spenders'],
       },
+      {
+        title: 'Combine tables',
+        description: 'Pair rows of two tables, keep rows with no match, and stop a join from multiplying sums.',
+        recap: 'You can now join tables, find missing matches, and summarize lists without double counting.',
+        repIds: ['sql-join-orders', 'sql-customers-without-orders', 'sql-team-totals', 'sql-june-returns', 'sql-authors-latest'],
+      },
     ] satisfies readonly PathStage[],
   },
   {

@@ -222,4 +222,75 @@ export const sqlSkills: Skill[] = [
     repIds: ['sql-count-by-status', 'sql-ratings-summary', 'sql-count-visitors', 'sql-busy-days', 'sql-month-spenders'],
     related: ['sql-filtering'],
   },
+  {
+    id: 'sql-joining',
+    title: 'Combine tables with JOIN',
+    summary: 'Pair rows of two tables, keep rows that have no match, and avoid sums that a join multiplies.',
+    prerequisites: ['sql-summarizing'],
+    objectives: [
+      'Write an inner join with an ON condition and qualified column names.',
+      'Use a LEFT JOIN to keep unmatched rows, and place a condition in ON or WHERE on purpose.',
+      'Recognize join fan-out and summarize each list before joining.',
+    ],
+    sections: [
+      {
+        title: 'A join pairs matching rows',
+        body: 'FROM orders AS o JOIN customers AS c ON o.customer_id = c.id makes one result row for every pair of rows that satisfies the ON condition. An order with no matching customer, and a customer with no orders, produce no pair, so an inner join leaves them out. A customer with three orders appears three times. When both tables have a column called id, write o.id or c.id so SQLite knows which one you mean.',
+      },
+      {
+        title: 'LEFT JOIN keeps the first table',
+        body: 'customers AS c LEFT JOIN orders AS o ON o.customer_id = c.id keeps every customer. A customer with no orders appears once, with every column of orders set to NULL. That NULL is how you find missing matches: WHERE o.id IS NULL keeps exactly the customers with no orders. COUNT(o.id) counts 0 for them, while COUNT(*) would count their single row as 1.',
+      },
+      {
+        title: 'ON decides the pairs, WHERE decides the rows',
+        body: "With a LEFT JOIN, a condition on the second table means different things in different places. In ON, `AND r.returned_on >= '2026-06-01'` only limits which returns pair up, so every product still appears. In WHERE, the same condition runs after the join and removes the rows where r.returned_on is NULL, which turns the LEFT JOIN back into an inner join.",
+      },
+      {
+        title: 'Fan-out multiplies sums',
+        body: 'Joining a team to its 3 members and its 2 expenses produces 3 × 2 = 6 rows, so COUNT(m.id) reports 6 and SUM(e.cents) adds each expense three times. DISTINCT does not repair a sum, because two real expenses can have the same amount. Summarize each list first, one row per team, in a derived table such as (SELECT team_id, SUM(cents) AS total FROM expenses GROUP BY team_id), or in a subquery per column, and join the summaries instead.',
+      },
+    ],
+    example:
+      "SELECT p.name, COUNT(r.id) AS june_returns\nFROM products AS p\nLEFT JOIN product_returns AS r\n  ON r.product_id = p.id\n AND r.returned_on BETWEEN '2026-06-01' AND '2026-06-30'\nGROUP BY p.id\nORDER BY june_returns DESC, p.name;",
+    walkthrough: [
+      'Every product is kept by the LEFT JOIN.',
+      'Only June returns pair up, because the date is part of ON.',
+      'A product with no June return has one row with r.id NULL, which COUNT(r.id) counts as 0.',
+      'Grouping by p.id keeps two products with the same name apart.',
+    ],
+    mistakes: [
+      'Using an inner join when rows without a match must still appear.',
+      'Putting a condition on the second table of a LEFT JOIN in WHERE and losing the unmatched rows.',
+      'Counting with COUNT(*) after a LEFT JOIN, which counts an unmatched row as 1.',
+      'Joining two one-to-many lists at once and summing the multiplied rows.',
+    ],
+    questions: [
+      q(
+        'inner-join-rows-v1',
+        'Ada has two orders and Bo has none. How many rows does customers JOIN orders ON orders.customer_id = customers.id return?',
+        '',
+        ['1', '2', '3'],
+        1,
+        'Each of Ada’s two orders makes a pair; Bo has no pair, so the inner join leaves him out.',
+      ),
+      q(
+        'left-join-where-v1',
+        'After customers c LEFT JOIN orders o ON o.customer_id = c.id, which line removes customers who have no orders?',
+        '',
+        ['ON o.cents > 0 added to the join condition', 'WHERE o.cents > 0', 'ORDER BY o.cents'],
+        1,
+        'For a customer with no orders, o.cents is NULL, so o.cents > 0 is unknown and WHERE drops the row. In ON it would only limit which orders pair up.',
+      ),
+      q(
+        'fan-out-v1',
+        'A team has 2 members and 3 expenses of 100 cents. Joining the team to both lists and summing expense cents gives what?',
+        '',
+        ['300', '600', '100'],
+        1,
+        'The join makes 2 × 3 = 6 rows, so each expense is added twice: 600. Summing expenses before the join gives the real 300.',
+      ),
+    ],
+    repIds: ['sql-join-orders', 'sql-customers-without-orders', 'sql-team-totals', 'sql-june-returns', 'sql-authors-latest'],
+    related: ['sql-summarizing', 'databases'],
+  },
 ]

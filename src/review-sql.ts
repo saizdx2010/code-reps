@@ -196,6 +196,66 @@ export const sqlDepth: Record<string, RepDepth> = {
     transfer:
       'Finance now wants the same report for every month of 2026, one row per account and month. Decide what you group by and how you would label the month. This changed contract is self-reviewed; the original checks do not cover it.',
   },
+  'sql-join-orders': {
+    reasoning:
+      'The ON condition pairs each order with the customer whose id equals its customer_id. An inner join keeps only pairs, so an order whose customer was deleted, and a customer who never ordered, produce no row. Joining on the id rather than the name keeps two customers called Ola apart, and qualifying o.id avoids confusing the order id with the customer id.',
+    trace:
+      'With the shop data, order 10 pairs with Ada, 11 with Bo, and 12 with Ada again. Order 13 has customer_id 9, and no customer has id 9, so it produces no pair. Cy has no order, so Cy produces no row either. Sorting by o.id gives 10, 11, 12.',
+    alternative:
+      'Writing FROM customers JOIN orders gives the same rows; the table order does not change an inner join’s result, only which name feels natural to read first. A LEFT JOIN from orders would keep order 13 with a NULL name, which suits a report of broken links but not this invoice list.',
+    counterexample:
+      'Joining on names instead of ids pairs each Ola order with both Olas and doubles the rows. Selecting a bare id when both tables have one is an ambiguity error in SQLite. A LEFT JOIN from orders keeps order 13 with a NULL name.',
+    transfer:
+      'The invoice list now also shows orders of deleted customers, labelled "Deleted customer" instead of a name. Decide which join keeps those orders and how to fill the missing name. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-customers-without-orders': {
+    reasoning:
+      'A LEFT JOIN keeps every customer; one with no orders becomes a single row whose order columns are NULL. The order id is never NULL in a real order, because it is the primary key, so o.id IS NULL is true exactly for customers with no match. Orders of deleted customers never pair with anyone, so they cannot affect the result.',
+    trace:
+      'With the shop data, Ada pairs with orders 10 and 12, Cy with 11, and Bo and Di pair with nothing. The LEFT JOIN gives Bo and Di one row each with o.id NULL, and the filter keeps exactly those. Sorting by name, then id, gives Bo, Di.',
+    alternative:
+      'WHERE NOT EXISTS (SELECT 1 FROM orders AS o WHERE o.customer_id = c.id) states the question directly and never produces duplicate rows; the next stage covers it. WHERE c.id NOT IN (SELECT customer_id FROM orders) also works here because customer_id is NOT NULL, but returns nothing if that subquery ever yields a NULL.',
+    counterexample:
+      'Testing o.cents IS NULL works only while cents can never be NULL; testing the primary key is the safe habit. An inner join with WHERE o.id IS NULL always returns no rows, because an inner join never produces the NULL row.',
+    transfer:
+      'The campaign now targets customers whose only orders were cancelled, given a status column on orders. Decide whether this is still a missing-match question, and how the join or subquery changes. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-team-totals': {
+    reasoning:
+      'Each list is summarized on its own before it meets the team: one row per team with its member count, and one with its expense total. Joining one-row summaries cannot multiply anything. LEFT JOINs keep teams with no members or no expenses, and COALESCE turns a missing total into 0.',
+    trace:
+      'For Alpha, the expense summary gives one row (team 1, 500) and the member summary one row (team 1, 3). Joined to Alpha they make one row: 3 and 500. In the starter, Alpha met 3 members and 2 expenses at once, making 6 rows, so it reported 6 members and 1500 cents.',
+    alternative:
+      'Scalar subqueries per column, such as (SELECT COUNT(*) FROM team_members WHERE team_id = t.id), avoid the join entirely and read clearly for a few columns. COUNT(DISTINCT m.id) repairs the member count but not the sum, and SUM(DISTINCT e.cents) merges two real expenses of the same amount.',
+    counterexample:
+      'The starter reports Alpha with 6 members and 1500 cents. SUM(DISTINCT e.cents) reports Delta’s two 300-cent expenses as 300. Dropping COALESCE shows NULL instead of 0 for Beta.',
+    transfer:
+      'The page now also shows each team’s number of open tickets from a third list. Decide how your query grows and whether the join or the subquery form stays easier to read. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-june-returns': {
+    reasoning:
+      'The LEFT JOIN keeps every product, and the date range sits in ON, so it only decides which returns pair up. A product with no June return keeps one row with NULL return columns. COUNT(r.id) counts real returns only, so that row counts as 0. Grouping by p.id keeps every product exactly once, and returns of deleted products never pair.',
+    trace:
+      'For the Toaster, the only return is on 2026-07-01, which fails the date part of ON, so the Toaster keeps one row with r.id NULL; COUNT(r.id) gives 0. The Kettle pairs with 2026-06-03 and 2026-06-30 but not 2026-05-31, so it counts 2.',
+    alternative:
+      'A derived table that counts June returns per product, joined with a LEFT JOIN and wrapped in COALESCE(count, 0), separates the two steps and works well when more columns join later. A scalar subquery per product, counting its June returns, reads clearly for one column.',
+    counterexample:
+      'Moving the date range into WHERE drops the Toaster and Grill, because their return date is NULL or outside June after the join. COUNT(*) reports 1 for a product with no June returns. An inner join drops every product without a June return.',
+    transfer:
+      'The team now wants June returns and July returns side by side for every product. Decide whether one join can count both, for example with conditional counting, or whether you need two. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-authors-latest': {
+    reasoning:
+      'A LEFT JOIN keeps authors without books as one row with NULL book columns. COUNT(b.id) counts real books, so such an author counts 0, and MAX(b.year) skips NULL years, so an author whose books all lack a year gets NULL. Grouping by a.id keeps the two authors named Kim apart, and sorting by name, then id, orders them.',
+    trace:
+      "For Anonymous, the only book has year NULL: COUNT(b.id) is 1 and MAX(b.year) is NULL. For Newcomer, no book matches, so the single row has b.id NULL: COUNT gives 0 and MAX gives NULL. Le Guin's years 1969, 1974, and NULL give 3 and 1974.",
+    alternative:
+      'Correlated subqueries per column, (SELECT COUNT(*) FROM books WHERE author_id = a.id) and (SELECT MAX(year) …), avoid grouping and read well. Ordering books by year and picking the first per author needs window functions, a later stage; MAX is enough when only the year is needed.',
+    counterexample:
+      'An inner join drops Newcomer. COUNT(*) counts Newcomer as 1 book. Grouping by name merges the two Kims into one row with 3 books.',
+    transfer:
+      'The catalogue now shows the title of each author’s latest book, not just its year, and must choose when two books share the latest year. Decide why MAX(year) alone cannot pick the title and what would. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
 }
 
 export const sqlGuides: Record<string, ReflectionGuide> = {
@@ -307,6 +367,36 @@ export const sqlGuides: Record<string, ReflectionGuide> = {
     example:
       "I keep paid_on BETWEEN '2026-03-01' AND '2026-03-31', GROUP BY account, select COUNT(*) and SUM(amount_cents), keep HAVING SUM(amount_cents) >= 10000, and order by the total descending, then account.",
   },
+  'sql-join-orders': {
+    plan: ['Write the condition that pairs an order with its customer.', 'Predict what happens to order 13.'],
+    explanation: ['Explain why order 13 and Cy produce no rows.', 'Explain why joining on the id keeps the two Olas apart.'],
+    example:
+      'I join orders AS o to customers AS c ON o.customer_id = c.id, select o.id, c.name, o.cents, and order by o.id. The inner join keeps only matched pairs.',
+  },
+  'sql-customers-without-orders': {
+    plan: ['Describe the row a LEFT JOIN gives a customer with no orders.', 'Name the column that shows the missing match.'],
+    explanation: ['Explain why o.id IS NULL is a safe test.', 'Explain why orders of deleted customers change nothing.'],
+    example:
+      'I LEFT JOIN orders on the customer id and keep rows WHERE o.id IS NULL, ordered by name, id. The primary key is never NULL in a real order, so a NULL id means no match.',
+  },
+  'sql-team-totals': {
+    plan: ['Predict the rows of the starter’s join for Alpha.', 'Decide how to summarize each list before joining.'],
+    explanation: ['Explain why the starter reported 6 members.', 'Explain why SUM(DISTINCT …) is not a fix.'],
+    example:
+      'I select each team’s name with (SELECT COUNT(*) FROM team_members WHERE team_id = t.id) and COALESCE((SELECT SUM(cents) FROM expenses WHERE team_id = t.id), 0), ordered by name. Each list is counted alone, so neither multiplies the other.',
+  },
+  'sql-june-returns': {
+    plan: ['Trace the Toaster through the join, any filter, and the grouping.', 'Decide where the June rule goes.'],
+    explanation: ['Explain why the date range belongs in ON.', 'Explain why COUNT(r.id) gives 0 for a product without June returns.'],
+    example:
+      'I LEFT JOIN product_returns ON the product id AND the June range, GROUP BY p.id, count r.id, and order by the count descending, then name. The date in ON keeps every product.',
+  },
+  'sql-authors-latest': {
+    plan: ['Predict the rows for Newcomer and Anonymous.', 'Name the join, the grouping, and the two aggregates.'],
+    explanation: ['Explain why COUNT(b.id) and MAX(b.year) give 0 and NULL for Newcomer.', 'Explain why grouping by id matters.'],
+    example:
+      'I LEFT JOIN books on the author id, GROUP BY a.id, select the name, COUNT(b.id), and MAX(b.year), and order by name, then id.',
+  },
 }
 
 export const sqlLessonDepth: Record<string, LessonDepth> = {
@@ -339,5 +429,15 @@ export const sqlLessonDepth: Record<string, LessonDepth> = {
       'For a day with three delivered and one cancelled delivery, predict what each query returns for that day: the WHERE version and the HAVING version. Then describe a report that needs each one. Discuss before revealing.',
     answer:
       'The WHERE version returns the day with 3. The HAVING version drops the day entirely, because one delivery was cancelled. A workload report wants the first, counting what went ahead; a report of perfect days wants the second. This discussion is self-reviewed; the busy-days rep checks the WHERE version.',
+  },
+  'sql-joining': {
+    title: 'A WHERE after a LEFT JOIN can quietly undo it',
+    code: "SELECT p.name, COUNT(r.id)\nFROM products AS p\nLEFT JOIN product_returns AS r ON r.product_id = p.id\nWHERE r.returned_on >= '2026-06-01'\nGROUP BY p.id;",
+    reasoning:
+      'The LEFT JOIN keeps a product with no returns as a row whose returned_on is NULL. WHERE then tests NULL >= a date, which is unknown, so that row is removed before grouping. The result looks like a report of every product but silently omits every product that had no qualifying return.',
+    challenge:
+      'Predict which products this query returns for Kettle (two June returns), Toaster (one July return), and Grill (no returns). Then move the date condition into ON and predict again. Discuss before revealing.',
+    answer:
+      'As written it returns only Kettle (2) and Toaster (1): Toaster’s July return passes >= June 1, and Grill disappears. With the condition in ON and an upper bound for June, all three appear: Kettle 2, Toaster 0, Grill 0. This discussion is self-reviewed; the June returns rep checks the ON version.',
   },
 }

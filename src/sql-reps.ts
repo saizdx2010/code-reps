@@ -47,6 +47,15 @@ const deliveries =
 const payments =
   'CREATE TABLE payments (id INTEGER PRIMARY KEY, account TEXT NOT NULL, amount_cents INTEGER NOT NULL, paid_on TEXT NOT NULL);'
 
+const customerOrders =
+  'CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT NOT NULL); CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, cents INTEGER NOT NULL);'
+const teamTables =
+  'CREATE TABLE teams (id INTEGER PRIMARY KEY, name TEXT NOT NULL); CREATE TABLE team_members (id INTEGER PRIMARY KEY, team_id INTEGER NOT NULL, name TEXT NOT NULL); CREATE TABLE expenses (id INTEGER PRIMARY KEY, team_id INTEGER NOT NULL, cents INTEGER NOT NULL);'
+const productReturns =
+  'CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT NOT NULL); CREATE TABLE product_returns (id INTEGER PRIMARY KEY, product_id INTEGER NOT NULL, returned_on TEXT NOT NULL);'
+const authorBooks =
+  'CREATE TABLE authors (id INTEGER PRIMARY KEY, name TEXT NOT NULL); CREATE TABLE books (id INTEGER PRIMARY KEY, author_id INTEGER NOT NULL, title TEXT NOT NULL, year INTEGER);'
+
 export const sqlReps: Rep[] = [
   {
     id: 'sql-select-columns',
@@ -1420,6 +1429,386 @@ export const sqlReps: Rep[] = [
       { name: 'One account, one payment', input: [], sql: { seed: 'one-account' }, expected: { rows: [['fern', 1, 15000]] } },
       { name: 'Just below, or brought below by a refund', input: [], sql: { seed: 'below-threshold' }, expected: { rows: [] } },
       { name: 'No payments', input: [], sql: { seed: 'empty' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-join-orders',
+    title: 'Join orders to their customers',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: customerOrders,
+      seeds: {
+        shop: {
+          about: 'three customers and four orders, one of them for a deleted customer',
+          sql: "INSERT INTO customers VALUES (1,'Ada'),(2,'Bo'),(3,'Cy'); INSERT INTO orders VALUES (10,1,1200),(11,2,800),(12,1,300),(13,9,500);",
+        },
+        'same-name': {
+          about: 'two different customers both named Ola, with one order each',
+          sql: "INSERT INTO customers VALUES (1,'Ola'),(2,'Ola'); INSERT INTO orders VALUES (21,2,700),(20,1,400);",
+        },
+        'no-orders': { about: 'customers who have not ordered', sql: "INSERT INTO customers VALUES (1,'Ada'),(2,'Bo');" },
+        'deleted-customers': {
+          about: 'orders whose customers were all deleted',
+          sql: "INSERT INTO customers VALUES (1,'Ada'); INSERT INTO orders VALUES (30,7,900),(31,8,100);",
+        },
+      },
+      compare: 'ordered',
+      columns: ['id', 'name', 'cents'],
+    },
+    context:
+      'An invoice list shows each order with the name of the customer who placed it. Orders left behind by deleted customers are handled elsewhere.',
+    prompt:
+      "Write one SELECT statement that returns id, name, and cents, in that column order: the order's id, the name of the customer who placed it, and the order's cents, for every order whose customer_id matches a customer's id. Leave out orders whose customer no longer exists, and customers with no orders. Order by the order id ascending. customers has id INTEGER PRIMARY KEY and name TEXT NOT NULL (names can repeat). orders has id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, and cents INTEGER NOT NULL; a customer_id can point at a deleted customer, because these tables do not enforce the link. Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: "List every order with its customer's name, leaving out orders whose customer was deleted.",
+      rules: [
+        '`customers(id INTEGER PRIMARY KEY, name TEXT NOT NULL)`; names can repeat. `orders(id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, cents INTEGER NOT NULL)`.',
+        'An order belongs to the customer whose id equals its customer_id. Some customer_id values point at deleted customers; the tables do not enforce the link.',
+        'Return the columns `id` (the order id), `name`, `cents` for orders with a matching customer, ordered by the order id.',
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['An order for a deleted customer is left out.', 'Two customers with the same name are still different customers.'],
+    },
+    example: { input: "customer (1, 'Ada') and order (10, 1, 1200)", output: "(10, 'Ada', 1200)" },
+    note: 'Checks compare columns, rows, and their order on fresh databases. They do not establish whether you wrote JOIN or INNER JOIN, or which table you named first.',
+    vocabulary: [
+      { term: 'JOIN', meaning: 'combines rows of two tables that match an ON condition' },
+      { term: 'Table alias', meaning: 'a short name for a table in one query, such as orders AS o' },
+      { term: 'Orphan row', meaning: 'a row that points at a row in another table that no longer exists' },
+    ],
+    planPrompt: 'Write the condition that pairs an order with its customer, and predict what happens to order 13.',
+    starter: 'SELECT id, cents\nFROM orders;\n',
+    hints: [
+      'The name lives in another table. A join pairs each order with the customer row whose id matches.',
+      'When both tables have an id column, say which one you mean, for example with a short alias for each table.',
+      'Join orders to customers on customer_id = customer id, select the order id, the name, and the cents, and sort by the order id.',
+    ],
+    checks: [
+      {
+        name: 'Orders with their customer names',
+        input: [],
+        sql: { seed: 'shop' },
+        expected: {
+          rows: [
+            [10, 'Ada', 1200],
+            [11, 'Bo', 800],
+            [12, 'Ada', 300],
+          ],
+        },
+      },
+      {
+        name: 'Matched by id, not by name',
+        input: [],
+        sql: { seed: 'same-name' },
+        expected: {
+          rows: [
+            [20, 'Ola', 400],
+            [21, 'Ola', 700],
+          ],
+        },
+      },
+      { name: 'Customers without orders add nothing', input: [], sql: { seed: 'no-orders' }, expected: { rows: [] } },
+      { name: 'Orders of deleted customers are left out', input: [], sql: { seed: 'deleted-customers' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-customers-without-orders',
+    title: 'Find customers with no orders',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: customerOrders,
+      seeds: {
+        shop: {
+          about: 'four customers, two of whom have ordered, and an order for a deleted customer',
+          sql: "INSERT INTO customers VALUES (1,'Ada'),(2,'Bo'),(3,'Cy'),(4,'Di'); INSERT INTO orders VALUES (10,1,1200),(11,3,800),(12,1,300),(13,9,500);",
+        },
+        'everyone-ordered': {
+          about: 'two customers who have both ordered',
+          sql: "INSERT INTO customers VALUES (1,'Ada'),(2,'Bo'); INSERT INTO orders VALUES (10,2,100),(11,1,200);",
+        },
+        'nobody-ordered': {
+          about: 'three customers with no orders, two sharing a name',
+          sql: "INSERT INTO customers VALUES (3,'Zed'),(1,'Amy'),(2,'Amy');",
+        },
+      },
+      compare: 'ordered',
+      columns: ['id', 'name'],
+    },
+    context: 'A welcome campaign writes to customers who signed up but never ordered.',
+    prompt:
+      "Write one SELECT statement that returns id and name, in that column order, for every customer who has no orders: no row of orders has a customer_id equal to the customer's id. Order by name ascending in SQLite's default text order, then id ascending. customers has id INTEGER PRIMARY KEY and name TEXT NOT NULL. orders has id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, and cents INTEGER NOT NULL; some orders point at deleted customers. Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'List the customers who have never ordered.',
+      rules: [
+        '`customers(id INTEGER PRIMARY KEY, name TEXT NOT NULL)` and `orders(id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, cents INTEGER NOT NULL)`.',
+        "A customer has no orders when no order's customer_id equals the customer's id.",
+        "Return the columns `id`, `name`, ordered by name ascending in SQLite's default text order, then id ascending.",
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['Everyone has ordered: no rows.', 'Orders for deleted customers change nothing.'],
+    },
+    example: { input: 'customers Ada and Bo; one order for Ada', output: "(2, 'Bo')" },
+    note: 'Checks compare rows and their order on fresh databases; they do not establish whether you used a LEFT JOIN or NOT EXISTS.',
+    vocabulary: [
+      { term: 'LEFT JOIN', meaning: 'a join that keeps every row of the first table even when the second has no match' },
+      { term: 'Anti-join', meaning: 'a query for the rows of one table that have no match in another' },
+    ],
+    planPrompt: 'What does a LEFT JOIN produce for a customer with no orders, and which column tells you so?',
+    starter: 'SELECT c.id, c.name\nFROM customers AS c\nJOIN orders AS o ON o.customer_id = c.id;\n',
+    hints: [
+      'The starter keeps only customers who have orders, and repeats them once per order. You want the opposite set.',
+      'A LEFT JOIN keeps a customer with no orders as one row whose order columns are all NULL.',
+      'LEFT JOIN orders, keep the rows where the order id IS NULL, and sort by name, then id.',
+    ],
+    checks: [
+      {
+        name: 'Customers who never ordered',
+        input: [],
+        sql: { seed: 'shop' },
+        expected: {
+          rows: [
+            [2, 'Bo'],
+            [4, 'Di'],
+          ],
+        },
+      },
+      { name: 'Everyone has ordered', input: [], sql: { seed: 'everyone-ordered' }, expected: { rows: [] } },
+      {
+        name: 'Nobody has ordered',
+        input: [],
+        sql: { seed: 'nobody-ordered' },
+        expected: {
+          rows: [
+            [1, 'Amy'],
+            [2, 'Amy'],
+            [3, 'Zed'],
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: 'sql-team-totals',
+    title: 'Total two lists without double counting',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: teamTables,
+      seeds: {
+        office: {
+          about:
+            'three teams: one with three members and two expenses, one with a member and no expenses, one with an expense and no members',
+          sql: "INSERT INTO teams VALUES (1,'Alpha'),(2,'Beta'),(3,'Gamma'); INSERT INTO team_members VALUES (1,1,'Ana'),(2,1,'Ben'),(3,1,'Cleo'),(4,2,'Dov'); INSERT INTO expenses VALUES (1,1,200),(2,1,300),(3,3,400);",
+        },
+        'equal-expenses': {
+          about: 'one team with two members and two expenses of the same amount',
+          sql: "INSERT INTO teams VALUES (1,'Delta'); INSERT INTO team_members VALUES (1,1,'Eva'),(2,1,'Finn'); INSERT INTO expenses VALUES (1,1,300),(2,1,300);",
+        },
+        'empty-team': { about: 'one team with no members and no expenses', sql: "INSERT INTO teams VALUES (1,'Omega');" },
+      },
+      compare: 'ordered',
+      columns: ['name', 'members', 'expense_cents'],
+    },
+    context:
+      'A budget page shows every team with its head count and its total expenses. Both come from separate lists attached to the team.',
+    prompt:
+      "Write one SELECT statement that returns name, members, and expense_cents, in that column order, with one row per team: members is the number of the team's members, and expense_cents is the sum of the team's expenses, or 0 when it has none. Every team appears, even with no members or no expenses. Order by name ascending in SQLite's default text order. teams has id INTEGER PRIMARY KEY and name TEXT NOT NULL. team_members has id INTEGER PRIMARY KEY, team_id INTEGER NOT NULL, and name TEXT NOT NULL. expenses has id INTEGER PRIMARY KEY, team_id INTEGER NOT NULL, and cents INTEGER NOT NULL. Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'For every team, count its members and total its expenses, without one list multiplying the other.',
+      rules: [
+        '`teams(id INTEGER PRIMARY KEY, name TEXT NOT NULL)`, `team_members(id INTEGER PRIMARY KEY, team_id INTEGER NOT NULL, name TEXT NOT NULL)`, `expenses(id INTEGER PRIMARY KEY, team_id INTEGER NOT NULL, cents INTEGER NOT NULL)`.',
+        "Return the columns `name`, `members`, `expense_cents`: the team's member count and its expense total, 0 when it has none.",
+        "Every team appears. Order by name ascending in SQLite's default text order.",
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['Two expenses of the same amount both count.', 'A team with no members and no expenses shows 0 and 0.'],
+    },
+    example: { input: 'Alpha with three members and expenses of 200 and 300', output: "('Alpha', 3, 500)" },
+    note: 'Checks compare rows and their order on fresh databases; they do not establish how you avoided the duplication.',
+    vocabulary: [
+      { term: 'Fan-out', meaning: 'a join repeating a row once per match, which inflates counts and sums' },
+      { term: 'Derived table', meaning: 'a SELECT used in FROM as if it were a table' },
+    ],
+    planPrompt: 'Predict what joining Alpha to both lists produces, row by row, before you sum anything.',
+    starter:
+      'SELECT t.name, COUNT(m.id) AS members, COALESCE(SUM(e.cents), 0) AS expense_cents\nFROM teams AS t\nLEFT JOIN team_members AS m ON m.team_id = t.id\nLEFT JOIN expenses AS e ON e.team_id = t.id\nGROUP BY t.id\nORDER BY t.name;\n',
+    hints: [
+      'Run the starter and look at Alpha: three members and two expenses produce six joined rows, so each list is counted once per row of the other.',
+      'Summarize each list on its own first, one row per team, and only then join the summaries to teams.',
+      'Join teams to a derived table that sums expenses per team, count members in another one, or use a subquery per column, and replace a missing total with 0.',
+    ],
+    checks: [
+      {
+        name: 'Counts and totals that do not multiply',
+        input: [],
+        sql: { seed: 'office' },
+        expected: {
+          rows: [
+            ['Alpha', 3, 500],
+            ['Beta', 1, 0],
+            ['Gamma', 0, 400],
+          ],
+        },
+      },
+      { name: 'Equal expenses both count', input: [], sql: { seed: 'equal-expenses' }, expected: { rows: [['Delta', 2, 600]] } },
+      { name: 'A team with nothing attached', input: [], sql: { seed: 'empty-team' }, expected: { rows: [['Omega', 0, 0]] } },
+    ],
+  },
+  {
+    id: 'sql-june-returns',
+    title: 'Count each product’s returns in June',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: productReturns,
+      seeds: {
+        store: {
+          about: 'four products and returns from May to July 2026',
+          sql: "INSERT INTO products VALUES (1,'Kettle'),(2,'Toaster'),(3,'Blender'),(4,'Grill'); INSERT INTO product_returns VALUES (1,1,'2026-06-03'),(2,1,'2026-06-30'),(3,1,'2026-05-31'),(4,2,'2026-07-01'),(5,3,'2026-06-15');",
+        },
+        'no-june-returns': {
+          about: 'products whose returns all fall outside June',
+          sql: "INSERT INTO products VALUES (1,'Mixer'),(2,'Fan'); INSERT INTO product_returns VALUES (1,1,'2026-05-20'),(2,2,'2026-07-02');",
+        },
+        'deleted-product': {
+          about: 'a June return of a deleted product, and one product with a June return',
+          sql: "INSERT INTO products VALUES (1,'Iron'); INSERT INTO product_returns VALUES (1,1,'2026-06-10'),(2,5,'2026-06-11');",
+        },
+        empty: { about: 'no products and no returns', sql: '' },
+      },
+      compare: 'ordered',
+      columns: ['name', 'june_returns'],
+    },
+    context:
+      'A quality team reviews June: every product appears with its number of returns that month, so products with none can be noted as clean.',
+    prompt:
+      "Write one SELECT statement that returns name and june_returns, in that column order, for every product: june_returns is the number of its returns dated from 2026-06-01 to 2026-06-30 inclusive, and 0 when it has none in June. Every product appears exactly once. Order by june_returns from most to fewest, then name ascending in SQLite's default text order. products has id INTEGER PRIMARY KEY and name TEXT NOT NULL. product_returns has id INTEGER PRIMARY KEY, product_id INTEGER NOT NULL, and returned_on TEXT NOT NULL written as 'YYYY-MM-DD'; some returns point at deleted products. Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'List every product with its number of June 2026 returns, including products with none.',
+      rules: [
+        "`products(id INTEGER PRIMARY KEY, name TEXT NOT NULL)` and `product_returns(id INTEGER PRIMARY KEY, product_id INTEGER NOT NULL, returned_on TEXT NOT NULL)`; returned_on is 'YYYY-MM-DD'.",
+        'june_returns counts a product’s returns dated from 2026-06-01 to 2026-06-30, both included; it is 0 when there are none.',
+        "Return the columns `name`, `june_returns` for every product, ordered by june_returns descending, then name ascending in SQLite's default text order.",
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['A product with returns only outside June appears with 0.', 'Returns of deleted products are ignored.'],
+    },
+    example: { input: 'Kettle returned on 2026-06-03, 2026-06-30, and 2026-05-31', output: "('Kettle', 2)" },
+    note: 'This is an independent rep: plan before you look at the hints. Checks compare rows and their order on fresh databases.',
+    vocabulary: [{ term: 'Join condition', meaning: 'the ON expression that decides which rows of two tables pair up' }],
+    planPrompt: 'Trace the Toaster through your query: which rows does it have after the join, after any filter, and after grouping?',
+    starter: 'SELECT name\nFROM products;\n',
+    hints: [
+      'Every product must survive to the end, including one whose only return is in July. Watch where the June rule removes rows.',
+      'A condition in WHERE runs after a LEFT JOIN and can remove the very rows the LEFT JOIN kept. A condition in ON only decides which returns pair up.',
+      'LEFT JOIN returns ON the product id and the June date range, count the return ids per product, and sort by the count, then name.',
+    ],
+    checks: [
+      {
+        name: 'June returns for every product',
+        input: [],
+        sql: { seed: 'store' },
+        expected: {
+          rows: [
+            ['Kettle', 2],
+            ['Blender', 1],
+            ['Grill', 0],
+            ['Toaster', 0],
+          ],
+        },
+      },
+      {
+        name: 'Returns outside June still leave the product listed',
+        input: [],
+        sql: { seed: 'no-june-returns' },
+        expected: {
+          rows: [
+            ['Fan', 0],
+            ['Mixer', 0],
+          ],
+        },
+      },
+      { name: 'Returns of deleted products are ignored', input: [], sql: { seed: 'deleted-product' }, expected: { rows: [['Iron', 1]] } },
+      { name: 'No products', input: [], sql: { seed: 'empty' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-authors-latest',
+    title: 'Find each author’s latest book',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: authorBooks,
+      seeds: {
+        library: {
+          about: 'four authors: one with three books, one with one, one with none, and one whose only book has no known year',
+          sql: "INSERT INTO authors VALUES (1,'Le Guin'),(2,'Butler'),(3,'Newcomer'),(4,'Anonymous'); INSERT INTO books VALUES (1,1,'The Left Hand of Darkness',1969),(2,1,'The Dispossessed',1974),(3,1,'Collected Notes',NULL),(4,2,'Kindred',1979),(5,4,'Old Ballads',NULL);",
+        },
+        'same-name': {
+          about: 'two different authors both named Kim',
+          sql: "INSERT INTO authors VALUES (2,'Kim'),(1,'Kim'); INSERT INTO books VALUES (1,1,'First',2001),(2,2,'Second',2010),(3,2,'Third',2012);",
+        },
+        empty: { about: 'no authors and no books', sql: '' },
+      },
+      compare: 'ordered',
+      columns: ['name', 'books', 'latest_year'],
+    },
+    context: 'A library catalogue lists every author with how many of their books it holds and the year of the newest one.',
+    prompt:
+      "Write one SELECT statement that returns name, books, and latest_year, in that column order, for every author: books is the number of their books, and latest_year is the largest known year among them, or NULL when they have no books or no book with a known year. Every author appears exactly once. Order by name ascending in SQLite's default text order, then by author id ascending. authors has id INTEGER PRIMARY KEY and name TEXT NOT NULL (names can repeat). books has id INTEGER PRIMARY KEY, author_id INTEGER NOT NULL, title TEXT NOT NULL, and year INTEGER (NULL when unknown). Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'List every author with their number of books and the year of their newest one.',
+      rules: [
+        '`authors(id INTEGER PRIMARY KEY, name TEXT NOT NULL)`; names can repeat. `books(id INTEGER PRIMARY KEY, author_id INTEGER NOT NULL, title TEXT NOT NULL, year INTEGER)`; year is NULL when unknown.',
+        'Return the columns `name`, `books`, `latest_year` for every author: the number of their books, and the largest known year, or NULL when there is none.',
+        "Order by name ascending in SQLite's default text order, then by author id.",
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['An author with no books shows 0 and NULL.', 'A book with an unknown year counts as a book but has no year.'],
+    },
+    example: { input: 'Le Guin with books from 1969, 1974, and an unknown year', output: "('Le Guin', 3, 1974)" },
+    note: 'This is a delayed recall rep: solve it without hints after the break. Checks compare rows and their order on fresh databases.',
+    vocabulary: [{ term: 'MAX', meaning: 'an aggregate that returns the largest non-NULL value of a column' }],
+    planPrompt: 'Predict the row for Newcomer and for Anonymous, then the steps that produce them.',
+    starter: 'SELECT name\nFROM authors;\n',
+    hints: [
+      'Every author appears, so the books must attach without removing anyone.',
+      'Counting books needs a column that is NULL when an author has none, and the largest year should skip unknown years.',
+      'LEFT JOIN books, group by author id, count book ids, take the largest year, and sort by name, then author id.',
+    ],
+    checks: [
+      {
+        name: 'Book counts and newest years, including authors with none',
+        input: [],
+        sql: { seed: 'library' },
+        expected: {
+          rows: [
+            ['Anonymous', 1, null],
+            ['Butler', 1, 1979],
+            ['Le Guin', 3, 1974],
+            ['Newcomer', 0, null],
+          ],
+        },
+      },
+      {
+        name: 'Two authors with the same name',
+        input: [],
+        sql: { seed: 'same-name' },
+        expected: {
+          rows: [
+            ['Kim', 1, 2001],
+            ['Kim', 2, 2012],
+          ],
+        },
+      },
+      { name: 'No authors', input: [], sql: { seed: 'empty' }, expected: { rows: [] } },
     ],
   },
 ]

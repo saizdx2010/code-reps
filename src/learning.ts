@@ -326,6 +326,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'sql-joining',
+    title: 'Combine tables',
+    guided: 'sql-join-orders',
+    independent: 'sql-june-returns',
+    recall: 'sql-authors-latest',
+    practice: ['sql-customers-without-orders', 'sql-team-totals'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

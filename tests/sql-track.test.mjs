@@ -225,6 +225,71 @@ test('S3 monthly-spender checks catch per-payment thresholds, a missed month edg
   ])
 })
 
+test('S4 inner-join checks catch a LEFT JOIN, joining on names, and the order key', () => {
+  const base = solution('sql-join-orders')
+  assertCaught('sql-join-orders', [
+    [base.replace('FROM orders AS o\nJOIN customers', 'FROM orders AS o\nLEFT JOIN customers'), 'Orders with their customer names'],
+    [
+      base.replace('ON c.id = o.customer_id', 'ON c.name = (SELECT name FROM customers WHERE id = o.customer_id)'),
+      'Matched by id, not by name',
+    ],
+    [base.replace('ORDER BY o.id', 'ORDER BY c.name'), 'Orders with their customer names'],
+  ])
+})
+
+test('S4 missing-match checks catch an inner join and a test on the wrong side', () => {
+  const base = solution('sql-customers-without-orders')
+  assertCaught('sql-customers-without-orders', [
+    [base.replace('LEFT JOIN', 'JOIN'), 'Customers who never ordered'],
+    [base.replace('WHERE o.id IS NULL', 'WHERE c.id IS NULL'), 'Customers who never ordered'],
+    [base.replace('ORDER BY c.name, c.id', 'ORDER BY c.name, c.id DESC'), 'Nobody has ordered'],
+  ])
+})
+
+test('S4 fan-out checks catch joining both lists at once, DISTINCT sums, and missing zeroes', () => {
+  const base = solution('sql-team-totals')
+  const naive =
+    'SELECT t.name, COUNT(m.id) AS members, COALESCE(SUM(e.cents), 0) AS expense_cents FROM teams AS t LEFT JOIN team_members AS m ON m.team_id = t.id LEFT JOIN expenses AS e ON e.team_id = t.id GROUP BY t.id ORDER BY t.name'
+  assertCaught('sql-team-totals', [
+    [naive, 'Counts and totals that do not multiply'],
+    [naive.replace('COUNT(m.id)', 'COUNT(DISTINCT m.id)').replace('SUM(e.cents)', 'SUM(DISTINCT e.cents)'), 'Equal expenses both count'],
+    [base.replace('COALESCE(e.total, 0)', 'e.total'), 'Counts and totals that do not multiply'],
+  ])
+  // The starter is the naive query, so running it shows the multiplication.
+  assert.ok(
+    failed('sql-team-totals', reps.find(rep => rep.id === 'sql-team-totals').starter).includes('Counts and totals that do not multiply'),
+  )
+})
+
+test('S4 June-return checks catch the date in WHERE, COUNT(*), an inner join, and the wrong range', () => {
+  const base = solution('sql-june-returns')
+  assertCaught('sql-june-returns', [
+    [
+      base
+        .replace(" AND r.returned_on BETWEEN '2026-06-01' AND '2026-06-30'", '')
+        .replace('GROUP BY', "WHERE r.returned_on BETWEEN '2026-06-01' AND '2026-06-30'\nGROUP BY"),
+      'June returns for every product',
+    ],
+    [base.replace('COUNT(r.id)', 'COUNT(*)'), 'June returns for every product'],
+    [base.replace('LEFT JOIN', 'JOIN'), 'June returns for every product'],
+    [base.replace("'2026-06-30'", "'2026-06-29'"), 'June returns for every product'],
+    [
+      base.replace('ORDER BY june_returns DESC, p.name', 'ORDER BY june_returns DESC'),
+      'Returns outside June still leave the product listed',
+    ],
+  ])
+})
+
+test('S4 latest-book checks catch an inner join, COUNT(*), and grouping by name', () => {
+  const base = solution('sql-authors-latest')
+  assertCaught('sql-authors-latest', [
+    [base.replace('LEFT JOIN', 'JOIN'), 'Book counts and newest years, including authors with none'],
+    [base.replace('COUNT(b.id)', 'COUNT(*)'), 'Book counts and newest years, including authors with none'],
+    [base.replace('GROUP BY a.id', 'GROUP BY a.name'), 'Two authors with the same name'],
+    [base.replace('MAX(b.year)', 'MIN(b.year)'), 'Book counts and newest years, including authors with none'],
+  ])
+})
+
 test('the S1 journey keeps recall distinct from its guided and independent reps', () => {
   const journey = journeys.find(item => item.id === 'sql-reading')
   assert.deepEqual(
