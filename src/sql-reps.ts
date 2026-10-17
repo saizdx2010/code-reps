@@ -82,6 +82,13 @@ const stockTables =
 const archiveTables =
   'CREATE TABLE orders (id INTEGER PRIMARY KEY, placed_on TEXT NOT NULL, cents INTEGER NOT NULL); CREATE TABLE archived_orders (id INTEGER PRIMARY KEY, placed_on TEXT NOT NULL, cents INTEGER NOT NULL);'
 
+const arcadeScores = 'CREATE TABLE scores (id INTEGER PRIMARY KEY, player TEXT NOT NULL, level INTEGER NOT NULL, points INTEGER NOT NULL);'
+const raceResults = 'CREATE TABLE results (id INTEGER PRIMARY KEY, runner TEXT NOT NULL, seconds INTEGER NOT NULL);'
+const dailyVisits = 'CREATE TABLE visits (day TEXT PRIMARY KEY, visitors INTEGER NOT NULL);'
+const ledgerTable = 'CREATE TABLE ledger (id INTEGER PRIMARY KEY, account TEXT NOT NULL, posted_on TEXT NOT NULL, cents INTEGER NOT NULL);'
+const regionReps =
+  'CREATE TABLE sales_reps (id INTEGER PRIMARY KEY, name TEXT NOT NULL, region TEXT NOT NULL, revenue_cents INTEGER NOT NULL);'
+
 export const sqlReps: Rep[] = [
   {
     id: 'sql-select-columns',
@@ -3024,6 +3031,407 @@ export const sqlReps: Rep[] = [
           ],
         },
       },
+    ],
+  },
+  {
+    id: 'sql-rank-scores',
+    title: 'Number rows within each group',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: arcadeScores,
+      seeds: {
+        arcade: {
+          about: 'five scores on two levels, with a tie on level 1',
+          sql: "INSERT INTO scores VALUES (1,'Cy',1,300),(2,'Bo',1,500),(3,'Ana',1,300),(4,'Di',2,900),(5,'Ed',2,100);",
+        },
+        'one-level': { about: 'three scores on one level', sql: "INSERT INTO scores VALUES (1,'Zia',3,40),(2,'Yan',3,70),(3,'Xu',3,55);" },
+        empty: { about: 'no scores', sql: '' },
+      },
+      compare: 'ordered',
+      columns: ['level', 'player', 'points', 'place'],
+    },
+    context: 'An arcade shows a leaderboard per level: every score gets a place number, 1 for the best on that level.',
+    prompt:
+      "Write one SELECT statement on scores that returns level, player, points, and place, in that column order, for every score. place numbers the scores within their own level from 1, by points from highest to lowest, and equal points by player ascending in SQLite's default text order; every score gets a different place. Order the result by level ascending, then place ascending. scores has id INTEGER PRIMARY KEY, player TEXT NOT NULL, level INTEGER NOT NULL, and points INTEGER NOT NULL. Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'Give every score a place within its own level: 1 for the most points.',
+      rules: [
+        '`scores(id INTEGER PRIMARY KEY, player TEXT NOT NULL, level INTEGER NOT NULL, points INTEGER NOT NULL)`.',
+        "place numbers scores within their level from 1, by points descending, then player ascending in SQLite's default text order. Every score gets a different place.",
+        'Return the columns `level`, `player`, `points`, `place`, ordered by level, then place.',
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['Equal points still get different places, decided by name.', 'Each level starts again at 1.'],
+    },
+    example: { input: 'level 1 scores: Ana 300, Bo 500, Cy 300', output: "(1, 'Bo', 500, 1), (1, 'Ana', 300, 2), (1, 'Cy', 300, 3)" },
+    note: 'Checks compare rows and their order on fresh databases.',
+    vocabulary: [
+      {
+        term: 'Window function',
+        meaning: 'a function computed over a set of rows related to the current row, without merging them into one',
+      },
+      { term: 'PARTITION BY', meaning: 'splits the rows a window function sees into groups, like GROUP BY without collapsing them' },
+      { term: 'ROW_NUMBER', meaning: 'a window function numbering rows 1, 2, 3 in the window’s order, with no ties' },
+    ],
+    planPrompt: 'Write the places you expect on level 1, then what restarts the numbering and what orders it.',
+    starter: 'SELECT level, player, points\nFROM scores;\n',
+    hints: [
+      'GROUP BY would merge each level into one row, but every score must stay. You need numbering that looks at the other rows of the same level.',
+      'A window function with OVER (PARTITION BY …) restarts for each group, and its own ORDER BY decides the numbering.',
+      'ROW_NUMBER() OVER (PARTITION BY level ORDER BY points DESC, player) AS place, then ORDER BY level, place.',
+    ],
+    checks: [
+      {
+        name: 'Places within each level',
+        input: [],
+        sql: { seed: 'arcade' },
+        expected: {
+          rows: [
+            [1, 'Bo', 500, 1],
+            [1, 'Ana', 300, 2],
+            [1, 'Cy', 300, 3],
+            [2, 'Di', 900, 1],
+            [2, 'Ed', 100, 2],
+          ],
+        },
+      },
+      {
+        name: 'One level, no ties',
+        input: [],
+        sql: { seed: 'one-level' },
+        expected: {
+          rows: [
+            [3, 'Yan', 70, 1],
+            [3, 'Xu', 55, 2],
+            [3, 'Zia', 40, 3],
+          ],
+        },
+      },
+      { name: 'No scores', input: [], sql: { seed: 'empty' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-competition-rank',
+    title: 'Rank with shared places',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: raceResults,
+      seeds: {
+        race: {
+          about: 'five runners with two pairs of equal times',
+          sql: "INSERT INTO results VALUES (1,'Ana',61),(2,'Bo',59),(3,'Cy',61),(4,'Di',70),(5,'Ed',59);",
+        },
+        'all-different': {
+          about: 'three runners with different times',
+          sql: "INSERT INTO results VALUES (1,'Kai',80),(2,'Lu',75),(3,'Mo',90);",
+        },
+        'all-equal': {
+          about: 'three runners with the same time',
+          sql: "INSERT INTO results VALUES (1,'Pip',66),(2,'Ola',66),(3,'Ned',66);",
+        },
+      },
+      compare: 'ordered',
+      columns: ['runner', 'seconds', 'rank'],
+    },
+    context:
+      'A race result lists runners fastest first. Equal times share a rank, and the next rank skips as many places as were shared, so two runners in first are followed by third.',
+    prompt:
+      "Write one SELECT statement on results that returns runner, seconds, and rank, in that column order, for every runner. rank is 1 plus the number of runners with a strictly lower time, so equal times share a rank and the next rank skips (1, 1, 3). Order the result by rank ascending, then runner ascending in SQLite's default text order. results has id INTEGER PRIMARY KEY, runner TEXT NOT NULL, and seconds INTEGER NOT NULL. Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'Rank runners by time; equal times share a rank and the next rank skips.',
+      rules: [
+        '`results(id INTEGER PRIMARY KEY, runner TEXT NOT NULL, seconds INTEGER NOT NULL)`.',
+        'rank is 1 plus the number of runners with a strictly lower time: equal times share a rank, and the next rank skips (1, 1, 3).',
+        "Return the columns `runner`, `seconds`, `rank`, ordered by rank, then runner ascending in SQLite's default text order.",
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['All equal times share rank 1.'],
+    },
+    example: { input: 'Bo 59, Ed 59, Ana 61', output: "('Bo', 59, 1), ('Ed', 59, 1), ('Ana', 61, 3)" },
+    note: 'Checks compare rows and their order on fresh databases.',
+    vocabulary: [
+      { term: 'RANK', meaning: 'a window function where equal values share a rank and the next rank skips' },
+      { term: 'DENSE_RANK', meaning: 'a window function where equal values share a rank and the next rank does not skip' },
+    ],
+    planPrompt: 'Write the ranks for the race data, then say which of the three numbering functions produces them.',
+    starter: 'SELECT runner, seconds\nFROM results;\n',
+    hints: [
+      'Three numbering styles exist: always different numbers, shared numbers that skip, and shared numbers that do not skip.',
+      'The window needs only an order, by seconds; there are no groups here.',
+      'RANK() OVER (ORDER BY seconds) AS rank, then ORDER BY rank, runner.',
+    ],
+    checks: [
+      {
+        name: 'Equal times share a rank, the next one skips',
+        input: [],
+        sql: { seed: 'race' },
+        expected: {
+          rows: [
+            ['Bo', 59, 1],
+            ['Ed', 59, 1],
+            ['Ana', 61, 3],
+            ['Cy', 61, 3],
+            ['Di', 70, 5],
+          ],
+        },
+      },
+      {
+        name: 'Different times',
+        input: [],
+        sql: { seed: 'all-different' },
+        expected: {
+          rows: [
+            ['Lu', 75, 1],
+            ['Kai', 80, 2],
+            ['Mo', 90, 3],
+          ],
+        },
+      },
+      {
+        name: 'Everyone tied',
+        input: [],
+        sql: { seed: 'all-equal' },
+        expected: {
+          rows: [
+            ['Ned', 66, 1],
+            ['Ola', 66, 1],
+            ['Pip', 66, 1],
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: 'sql-day-over-day',
+    title: 'Compare each day with the one before',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: dailyVisits,
+      seeds: {
+        week: {
+          about: 'five recorded days with one day missing',
+          sql: "INSERT INTO visits VALUES ('2026-03-01',120),('2026-03-02',150),('2026-03-03',90),('2026-03-05',90),('2026-03-06',200);",
+        },
+        'one-day': { about: 'a single recorded day', sql: "INSERT INTO visits VALUES ('2026-04-01',75);" },
+        'out-of-order': {
+          about: 'three days inserted out of date order',
+          sql: "INSERT INTO visits VALUES ('2026-05-03',30),('2026-05-01',10),('2026-05-02',25);",
+        },
+      },
+      compare: 'ordered',
+      columns: ['day', 'visitors', 'change'],
+    },
+    context: 'A site report shows each day’s visitors and how much that changed from the previous recorded day.',
+    prompt:
+      "Write one SELECT statement on visits that returns day, visitors, and change, in that column order, for every recorded day. change is visitors minus the visitors of the previous recorded day in date order, or NULL for the first recorded day. A missing calendar day is skipped: compare with the previous row that exists. Order the result by day ascending. visits has day TEXT PRIMARY KEY written as 'YYYY-MM-DD' and visitors INTEGER NOT NULL. Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'Show each day’s visitors and the change from the previous recorded day.',
+      rules: [
+        "`visits(day TEXT PRIMARY KEY, visitors INTEGER NOT NULL)`; day is 'YYYY-MM-DD'.",
+        'change is visitors minus the previous recorded day’s visitors in date order, or NULL for the first day. A missing calendar day is skipped.',
+        'Return the columns `day`, `visitors`, `change`, ordered by day.',
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['The first day has change NULL.', 'Rows may have been inserted out of date order.'],
+    },
+    example: { input: "'2026-03-01' 120, '2026-03-02' 150", output: "('2026-03-01', 120, NULL), ('2026-03-02', 150, 30)" },
+    note: 'Checks compare rows and their order on fresh databases.',
+    vocabulary: [{ term: 'LAG', meaning: 'a window function that reads a value from an earlier row in the window’s order' }],
+    planPrompt: 'Write the change for 2026-03-05 and say which row it is compared with.',
+    starter: 'SELECT day, visitors\nFROM visits;\n',
+    hints: [
+      'Each row needs a value from another row: the one just before it in date order.',
+      'A window function can look back a row in a stated order, and returns NULL when there is no row before.',
+      'visitors - LAG(visitors) OVER (ORDER BY day) AS change, ordered by day.',
+    ],
+    checks: [
+      {
+        name: 'Change from the previous recorded day',
+        input: [],
+        sql: { seed: 'week' },
+        expected: {
+          rows: [
+            ['2026-03-01', 120, null],
+            ['2026-03-02', 150, 30],
+            ['2026-03-03', 90, -60],
+            ['2026-03-05', 90, 0],
+            ['2026-03-06', 200, 110],
+          ],
+        },
+      },
+      { name: 'One day has no change', input: [], sql: { seed: 'one-day' }, expected: { rows: [['2026-04-01', 75, null]] } },
+      {
+        name: 'Date order, not insert order',
+        input: [],
+        sql: { seed: 'out-of-order' },
+        expected: {
+          rows: [
+            ['2026-05-01', 10, null],
+            ['2026-05-02', 25, 15],
+            ['2026-05-03', 30, 5],
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: 'sql-running-balance',
+    title: 'Keep a running balance',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: ledgerTable,
+      seeds: {
+        'two-accounts': {
+          about: 'six entries in two accounts, two of them on the same day',
+          sql: "INSERT INTO ledger VALUES (1,'A','2026-01-02',1000),(2,'A','2026-01-05',-300),(3,'A','2026-01-01',50),(4,'B','2026-01-03',500),(5,'A','2026-01-05',200),(6,'B','2026-01-04',-100);",
+        },
+        'one-account': {
+          about: 'three entries on different days',
+          sql: "INSERT INTO ledger VALUES (1,'C','2026-02-01',400),(2,'C','2026-02-03',-150),(3,'C','2026-02-02',50);",
+        },
+        empty: { about: 'no entries', sql: '' },
+      },
+      compare: 'ordered',
+      columns: ['account', 'id', 'cents', 'balance'],
+    },
+    context: 'A bank statement shows every entry of an account with the balance right after it, oldest first.',
+    prompt:
+      "Write one SELECT statement on ledger that returns account, id, cents, and balance, in that column order, for every entry. balance is the sum of cents of all entries of the same account up to and including this one, where entries are ordered by posted_on and, on the same day, by id. Each account starts from 0. Order the result by account ascending, then posted_on, then id. ledger has id INTEGER PRIMARY KEY, account TEXT NOT NULL, posted_on TEXT NOT NULL written as 'YYYY-MM-DD', and cents INTEGER NOT NULL (negative for a withdrawal). Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'Show each ledger entry with its account’s balance just after it.',
+      rules: [
+        "`ledger(id INTEGER PRIMARY KEY, account TEXT NOT NULL, posted_on TEXT NOT NULL, cents INTEGER NOT NULL)`; posted_on is 'YYYY-MM-DD'; a withdrawal is negative.",
+        'balance sums the cents of the same account up to and including this entry, ordered by posted_on, then id on the same day. Each account starts from 0.',
+        'Return the columns `account`, `id`, `cents`, `balance`, ordered by account, then posted_on, then id.',
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['Two entries on the same day get different balances, in id order.'],
+    },
+    example: { input: 'account A: 50 on 2026-01-01, 1000 on 2026-01-02', output: "('A', 3, 50, 50), ('A', 1, 1000, 1050)" },
+    note: 'This is an independent rep: plan before you look at the hints. Checks compare rows and their order on fresh databases.',
+    vocabulary: [
+      { term: 'Running sum', meaning: 'a sum that grows row by row, including every earlier row' },
+      { term: 'Window frame', meaning: 'the rows a window function adds up for the current row, such as all earlier rows' },
+    ],
+    planPrompt: 'Write the two balances you expect on 2026-01-05 for account A, and what decides their order.',
+    starter: 'SELECT account, id, cents\nFROM ledger\nORDER BY account, posted_on, id;\n',
+    hints: [
+      'Each balance depends on all earlier entries of the same account, so every row needs a sum over other rows.',
+      'With a window ORDER BY, rows that tie on every ordering key are added up together. Make the order complete, or count rows rather than values.',
+      'SUM(cents) OVER (PARTITION BY account ORDER BY posted_on, id) AS balance.',
+    ],
+    checks: [
+      {
+        name: 'Balances per account, same-day entries in id order',
+        input: [],
+        sql: { seed: 'two-accounts' },
+        expected: {
+          rows: [
+            ['A', 3, 50, 50],
+            ['A', 1, 1000, 1050],
+            ['A', 2, -300, 750],
+            ['A', 5, 200, 950],
+            ['B', 4, 500, 500],
+            ['B', 6, -100, 400],
+          ],
+        },
+      },
+      {
+        name: 'One account in date order',
+        input: [],
+        sql: { seed: 'one-account' },
+        expected: {
+          rows: [
+            ['C', 1, 400, 400],
+            ['C', 3, 50, 450],
+            ['C', 2, -150, 300],
+          ],
+        },
+      },
+      { name: 'No entries', input: [], sql: { seed: 'empty' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-top-two-per-region',
+    title: 'Keep the top two in each region',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: regionReps,
+      seeds: {
+        company: {
+          about: 'eight sales reps in three regions, with ties in two of them',
+          sql: "INSERT INTO sales_reps VALUES (1,'Cy','North',900),(2,'Bo','North',1200),(3,'Ana','North',900),(4,'Di','North',300),(5,'Ed','South',500),(6,'Fi','West',700),(7,'Gu','West',800),(8,'Ha','West',800);",
+        },
+        'one-region': {
+          about: 'three reps in one region',
+          sql: "INSERT INTO sales_reps VALUES (1,'Kim','East',100),(2,'Lee','East',300),(3,'Max','East',200);",
+        },
+        empty: { about: 'no sales reps', sql: '' },
+      },
+      compare: 'ordered',
+      columns: ['region', 'name', 'revenue_cents'],
+    },
+    context:
+      'A quarterly review invites the two best sales reps of each region. When two reps tie, the one whose name comes first alphabetically is chosen.',
+    prompt:
+      "Write one SELECT statement on sales_reps that returns region, name, and revenue_cents, in that column order, for the top two reps of each region: highest revenue_cents first, and equal revenue by name ascending in SQLite's default text order, so exactly two reps per region are kept (fewer if the region has fewer). Order the result by region ascending, then revenue_cents from highest to lowest, then name. sales_reps has id INTEGER PRIMARY KEY, name TEXT NOT NULL, region TEXT NOT NULL, and revenue_cents INTEGER NOT NULL. Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'Keep the two best sales reps of each region.',
+      rules: [
+        '`sales_reps(id INTEGER PRIMARY KEY, name TEXT NOT NULL, region TEXT NOT NULL, revenue_cents INTEGER NOT NULL)`.',
+        "Within each region, order reps by revenue_cents descending, then name ascending in SQLite's default text order, and keep the first two.",
+        'Return the columns `region`, `name`, `revenue_cents`, ordered by region, then revenue_cents descending, then name.',
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['A region with one rep keeps one.', 'A tie for second place keeps only the name that comes first.'],
+    },
+    example: { input: 'North: Bo 1200, Ana 900, Cy 900, Di 300', output: "('North', 'Bo', 1200), ('North', 'Ana', 900)" },
+    note: 'This is a delayed recall rep: solve it without hints after the break. Checks compare rows and their order on fresh databases.',
+    vocabulary: [{ term: 'Top-N per group', meaning: 'the first N rows of each group in a stated order' }],
+    planPrompt: 'Write the rows you expect for North and West, then the steps: what is numbered, and where the cut happens.',
+    starter: 'SELECT region, name, revenue_cents\nFROM sales_reps;\n',
+    hints: [
+      'LIMIT cuts the whole result, not each region. The cut has to follow a numbering that restarts per region.',
+      'A window function cannot appear in WHERE, so number the rows in one step and filter them in the next.',
+      'Number reps with ROW_NUMBER() OVER (PARTITION BY region ORDER BY revenue_cents DESC, name) in a WITH step, then keep the numbers 1 and 2.',
+    ],
+    checks: [
+      {
+        name: 'Top two per region',
+        input: [],
+        sql: { seed: 'company' },
+        expected: {
+          rows: [
+            ['North', 'Bo', 1200],
+            ['North', 'Ana', 900],
+            ['South', 'Ed', 500],
+            ['West', 'Gu', 800],
+            ['West', 'Ha', 800],
+          ],
+        },
+      },
+      {
+        name: 'One region',
+        input: [],
+        sql: { seed: 'one-region' },
+        expected: {
+          rows: [
+            ['East', 'Lee', 300],
+            ['East', 'Max', 200],
+          ],
+        },
+      },
+      { name: 'No reps', input: [], sql: { seed: 'empty' }, expected: { rows: [] } },
     ],
   },
 ]

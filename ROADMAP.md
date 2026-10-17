@@ -127,7 +127,7 @@ Every check is honest about what it establishes: SQL reps run SQLite's dialect o
 - [x] S5 · Ask in steps: subqueries, EXISTS, and common table expressions, with a lesson (`sql-subqueries`) and the `sql-subqueries` journey: invoices above the average, rooms free on a night, then a delayed months-above-average report with WITH; category averages and the NOT IN NULL trap are practice.
 - [x] S6 · Design a schema: the learner writes CREATE TABLE; probe inserts check each constraint, one rule per check, with a lesson (`sql-schema-design`) and the `sql-schema-design` journey: a products table, linked members and clubs with enforced foreign keys, then a delayed shifts table; defaults and STRICT types are practice.
 - [x] S7 · Change data safely: UPDATE and DELETE scope, upserts, and parameter binding from TypeScript, with a lesson (`sql-changing-data`) and the `sql-changing-data` journey: a scoped price rise, a delivery upsert, then a delayed archive move. The three SQLite reps moved here with the same IDs; Backend's SQLite stage now links to SQL, so its stage badge is earned in SQL while those reps still count toward the Backend track badge.
-- [ ] S8 · Rank and run totals: window functions and top-N per group.
+- [x] S8 · Rank and run totals: window functions and top-N per group, with a lesson (`sql-window-functions`) and the `sql-window-functions` journey: places per level, a running balance, then a delayed top two per region; shared ranks and day-over-day changes are practice.
 - [ ] S9 · Make it fast: indexes, checked through SQLite's `EXPLAIN QUERY PLAN` (the plan SQLite chose, not speed).
 - [ ] S10 · Evolve a schema: migrations and backfills that preserve rows.
 - [ ] S11 · Hero: a reporting capstone and a SQL interview round.

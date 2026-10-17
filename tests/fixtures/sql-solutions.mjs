@@ -168,4 +168,27 @@ INSERT INTO archived_orders (id, placed_on, cents)
   SELECT id, placed_on, cents FROM orders WHERE placed_on < '2026-01-01';
 DELETE FROM orders WHERE placed_on < '2026-01-01';
 COMMIT;`,
+  'sql-rank-scores': `SELECT level, player, points,
+  ROW_NUMBER() OVER (PARTITION BY level ORDER BY points DESC, player) AS place
+FROM scores
+ORDER BY level, place;`,
+  'sql-competition-rank': `SELECT runner, seconds, RANK() OVER (ORDER BY seconds) AS rank
+FROM results
+ORDER BY rank, runner;`,
+  'sql-day-over-day': `SELECT day, visitors, visitors - LAG(visitors) OVER (ORDER BY day) AS change
+FROM visits
+ORDER BY day;`,
+  'sql-running-balance': `SELECT account, id, cents,
+  SUM(cents) OVER (PARTITION BY account ORDER BY posted_on, id) AS balance
+FROM ledger
+ORDER BY account, posted_on, id;`,
+  'sql-top-two-per-region': `WITH ranked AS (
+  SELECT region, name, revenue_cents,
+    ROW_NUMBER() OVER (PARTITION BY region ORDER BY revenue_cents DESC, name) AS n
+  FROM sales_reps
+)
+SELECT region, name, revenue_cents
+FROM ranked
+WHERE n <= 2
+ORDER BY region, revenue_cents DESC, name;`,
 }

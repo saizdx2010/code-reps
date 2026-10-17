@@ -300,6 +300,11 @@ export const repLevels: Record<string, RepLevel> = {
   'sql-delete-scope': 1,
   'sql-upsert-stock': 2,
   'sql-archive-orders': 2,
+  'sql-rank-scores': 2,
+  'sql-competition-rank': 2,
+  'sql-day-over-day': 2,
+  'sql-running-balance': 3,
+  'sql-top-two-per-region': 3,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

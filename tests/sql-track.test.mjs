@@ -488,6 +488,55 @@ test('S7 archive checks catch disagreeing conditions, a missing delete, and the 
   ])
 })
 
+test('S8 numbering checks catch a missing partition, a missing tie-breaker, and the wrong numbering kind', () => {
+  const base = solution('sql-rank-scores')
+  assertCaught('sql-rank-scores', [
+    [base.replace('PARTITION BY level ', ''), 'Places within each level'],
+    [base.replace('points DESC, player', 'points DESC'), 'Places within each level'],
+    // RANK lets equal points share a place once the name no longer separates them.
+    [base.replace('ROW_NUMBER()', 'RANK()').replace('points DESC, player', 'points DESC'), 'Places within each level'],
+  ])
+  const rank = solution('sql-competition-rank')
+  assertCaught('sql-competition-rank', [
+    [rank.replace('RANK()', 'ROW_NUMBER()'), 'Equal times share a rank, the next one skips'],
+    [rank.replace('RANK()', 'DENSE_RANK()'), 'Equal times share a rank, the next one skips'],
+  ])
+})
+
+test('S8 neighbour checks catch LEAD, a calendar-day join, and insertion order', () => {
+  const base = solution('sql-day-over-day')
+  assertCaught('sql-day-over-day', [
+    [base.replace('LAG(visitors)', 'LEAD(visitors)'), 'Change from the previous recorded day'],
+    [
+      "SELECT v.day, v.visitors, v.visitors - p.visitors AS change FROM visits AS v LEFT JOIN visits AS p ON p.day = date(v.day, '-1 day') ORDER BY v.day",
+      'Change from the previous recorded day',
+    ],
+    [base.replace('OVER (ORDER BY day)', 'OVER (ORDER BY rowid)'), 'Date order, not insert order'],
+  ])
+})
+
+test('S8 running-balance checks catch peers, a missing partition, and the outer order', () => {
+  const base = solution('sql-running-balance')
+  assertCaught('sql-running-balance', [
+    [
+      base.replace('ORDER BY posted_on, id) AS balance', 'ORDER BY posted_on) AS balance'),
+      'Balances per account, same-day entries in id order',
+    ],
+    [base.replace('PARTITION BY account ', ''), 'Balances per account, same-day entries in id order'],
+    [base.replace('ORDER BY account, posted_on, id;', 'ORDER BY account, id;'), 'One account in date order'],
+  ])
+})
+
+test('S8 top-two checks catch LIMIT, RANK, and a missing name tie-breaker', () => {
+  const base = solution('sql-top-two-per-region')
+  assertCaught('sql-top-two-per-region', [
+    ['SELECT region, name, revenue_cents FROM sales_reps ORDER BY region, revenue_cents DESC, name LIMIT 2', 'Top two per region'],
+    [base.replace('ROW_NUMBER()', 'RANK()').replace('revenue_cents DESC, name) AS n', 'revenue_cents DESC) AS n'), 'Top two per region'],
+    [base.replace('revenue_cents DESC, name) AS n', 'revenue_cents DESC) AS n'), 'Top two per region'],
+    [base.replace('n <= 2', 'n < 2'), 'Top two per region'],
+  ])
+})
+
 test('the S1 journey keeps recall distinct from its guided and independent reps', () => {
   const journey = journeys.find(item => item.id === 'sql-reading')
   assert.deepEqual(

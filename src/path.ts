@@ -477,6 +477,12 @@ export const paths = [
           'sql-archive-orders',
         ],
       },
+      {
+        title: 'Rank and run totals',
+        description: 'Number and rank rows within groups, compare neighbours, keep running totals, and take the top rows of each group.',
+        recap: 'You can now use window functions for ranks, running totals, neighbours, and top rows per group.',
+        repIds: ['sql-rank-scores', 'sql-competition-rank', 'sql-day-over-day', 'sql-running-balance', 'sql-top-two-per-region'],
+      },
     ] satisfies readonly PathStage[],
   },
   {

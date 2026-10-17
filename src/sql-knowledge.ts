@@ -527,4 +527,75 @@ export const sqlSkills: Skill[] = [
     ],
     related: ['sql-schema-design', 'databases'],
   },
+  {
+    id: 'sql-window-functions',
+    title: 'Rank and run totals with window functions',
+    summary: 'Compute ranks, running totals, and neighbouring values for every row without collapsing rows into groups.',
+    prerequisites: ['sql-summarizing', 'sql-subqueries'],
+    objectives: [
+      'Write a window with OVER, PARTITION BY, and its own ORDER BY.',
+      'Choose between ROW_NUMBER, RANK, and DENSE_RANK, and read neighbours with LAG.',
+      'Build running totals with a complete order, and keep the top N rows of each group.',
+    ],
+    sections: [
+      {
+        title: 'A window keeps every row',
+        body: 'GROUP BY folds a group into one row. A window function computes over related rows but keeps every row: ROW_NUMBER() OVER (PARTITION BY level ORDER BY points DESC) numbers each score within its level. PARTITION BY splits the rows like GROUP BY without merging them, and the window’s ORDER BY decides the order inside each part; it is separate from the query’s final ORDER BY.',
+      },
+      {
+        title: 'Three ways to number',
+        body: 'ROW_NUMBER gives 1, 2, 3, … and never ties; add a tie-breaker so equal values get a defined order. RANK gives equal values the same rank and skips after them (1, 1, 3). DENSE_RANK shares ranks without skipping (1, 1, 2). LAG(visitors) reads the value from the previous row in the window’s order, or NULL when there is none, and LEAD reads the next one.',
+      },
+      {
+        title: 'Running totals and peers',
+        body: 'SUM(cents) OVER (PARTITION BY account ORDER BY posted_on) is a running total, but by default rows that tie on the window’s ORDER BY are peers and are added in together, so two entries on the same day show the same balance. Make the order complete, ORDER BY posted_on, id, or state the frame as ROWS UNBOUNDED PRECEDING to add exactly the rows up to this one.',
+      },
+      {
+        title: 'Top N per group needs a second step',
+        body: 'A window function cannot appear in WHERE, because WHERE runs before windows are computed. Number the rows in a WITH step, then filter that step: WITH ranked AS (SELECT …, ROW_NUMBER() OVER (PARTITION BY region ORDER BY revenue_cents DESC, name) AS n FROM sales_reps) SELECT … FROM ranked WHERE n <= 2.',
+      },
+    ],
+    example:
+      'SELECT account, id, cents,\n  SUM(cents) OVER (\n    PARTITION BY account\n    ORDER BY posted_on, id\n  ) AS balance\nFROM ledger\nORDER BY account, posted_on, id;',
+    walkthrough: [
+      'PARTITION BY account starts each account’s total from 0.',
+      'ORDER BY posted_on, id puts same-day entries in a fixed order.',
+      'For each row, SUM adds the account’s entries up to and including it.',
+      'The final ORDER BY only arranges the output; it does not change the totals.',
+    ],
+    mistakes: [
+      'Expecting LIMIT to keep the top rows of each group.',
+      'Filtering a window function in WHERE instead of in a second step.',
+      'Leaving ties in a running total’s order, so peers share one total.',
+      'Using RANK where every row must get a different number, or ROW_NUMBER where ties must share.',
+    ],
+    questions: [
+      q(
+        'rank-kinds-v1',
+        'Times 59, 59, 61 in that order. What does DENSE_RANK() OVER (ORDER BY seconds) give?',
+        '',
+        ['1, 2, 3', '1, 1, 3', '1, 1, 2'],
+        2,
+        'DENSE_RANK shares the rank for equal values without skipping. RANK would give 1, 1, 3 and ROW_NUMBER 1, 2, 3.',
+      ),
+      q(
+        'peers-v1',
+        'Entries of 100 and 50 share the same posted_on. With SUM(cents) OVER (ORDER BY posted_on), what balance does each show if 400 came before?',
+        '',
+        ['500 and 550', '550 and 550', '500 and 500'],
+        1,
+        'Rows that tie on the window order are peers, and the default frame includes all peers, so both show 400 + 100 + 50.',
+      ),
+      q(
+        'window-where-v1',
+        'Where can you keep only rows with ROW_NUMBER() … = 1?',
+        '',
+        ['In WHERE of the same SELECT', 'In an outer query or WITH step that reads the numbered rows', 'In GROUP BY'],
+        1,
+        'Windows are computed after WHERE, so the filter belongs to a later step that reads their results.',
+      ),
+    ],
+    repIds: ['sql-rank-scores', 'sql-competition-rank', 'sql-day-over-day', 'sql-running-balance', 'sql-top-two-per-region'],
+    related: ['sql-summarizing', 'sql-subqueries'],
+  },
 ]

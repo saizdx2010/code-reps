@@ -362,6 +362,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'sql-window-functions',
+    title: 'Rank and run totals',
+    guided: 'sql-rank-scores',
+    independent: 'sql-running-balance',
+    recall: 'sql-top-two-per-region',
+    practice: ['sql-competition-rank', 'sql-day-over-day'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

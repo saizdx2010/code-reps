@@ -424,6 +424,65 @@ export const sqlDepth: Record<string, RepDepth> = {
     transfer:
       'Archived orders must now also take their order lines from an order_lines table. Decide the order of the statements so that no line is ever left pointing at a missing order. This changed contract is self-reviewed; the original checks do not cover it.',
   },
+  'sql-rank-scores': {
+    reasoning:
+      'ROW_NUMBER() OVER (PARTITION BY level ORDER BY points DESC, player) numbers each level separately, from 1 for the most points. The player name breaks equal points, so every row gets a different, defined place. The window keeps every row, which GROUP BY would not.',
+    trace:
+      'For level 1 the window sees Ana 300, Bo 500, and Cy 300. Ordered by points descending, then player, they are Bo, Ana, Cy, numbered 1, 2, 3. Level 2 starts again: Di 1, Ed 2.',
+    alternative:
+      'A correlated count, 1 + (SELECT COUNT(*) FROM scores AS s WHERE s.level = scores.level AND (s.points > scores.points OR (s.points = scores.points AND s.player < scores.player))), gives the same places without windows but is harder to read and slower on large tables.',
+    counterexample:
+      'Leaving out PARTITION BY numbers all scores together, so Di gets 1 and Bo 2. Leaving out the player tie-breaker lets Ana and Cy swap. RANK gives Ana and Cy both 2.',
+    transfer:
+      'The leaderboard now shows only each player’s best score per level before placing them. Decide what to collapse first and what to number afterwards. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-competition-rank': {
+    reasoning:
+      'RANK() OVER (ORDER BY seconds) gives each runner 1 plus the number of runners with a strictly lower time, which is exactly the contract: equal times share a rank, and the next rank skips past the shared ones.',
+    trace:
+      'Ordered by seconds, Bo and Ed (59) share rank 1. Ana and Cy (61) come next; two runners are ahead, so they share rank 3. Di (70) has four runners ahead and gets 5.',
+    alternative:
+      'DENSE_RANK would give 1, 1, 2, 2, 3, which some leaderboards prefer. The correlated count from the contract, 1 + (SELECT COUNT(*) FROM results AS r WHERE r.seconds < results.seconds), computes the same ranks without a window.',
+    counterexample: 'ROW_NUMBER gives Bo and Ed 1 and 2. DENSE_RANK gives Ana 2 instead of 3.',
+    transfer:
+      'A runner who did not finish now has seconds NULL and must be listed last without a rank. Decide where NULL sorts in the window and how to show no rank. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-day-over-day': {
+    reasoning:
+      'LAG(visitors) OVER (ORDER BY day) reads the visitors of the previous row in date order, which is the previous recorded day whether or not a calendar day is missing. The first row has no previous row, so LAG returns NULL and the subtraction stays NULL.',
+    trace:
+      'For 2026-03-05 the previous row in date order is 2026-03-03 (90), because 2026-03-04 was not recorded; 90 − 90 = 0. For 2026-03-01 there is no earlier row, so change is NULL.',
+    alternative:
+      'A self-join to the row with the greatest earlier day, or a correlated subquery for it, works without windows but needs care to find exactly one previous row. Comparing with the previous calendar day instead would give NULL for 2026-03-05, which is a different contract.',
+    counterexample:
+      'Joining each day to day − 1 calendar day misses 2026-03-05. LEAD instead of LAG compares with the next day. Ordering the window by insertion order gives wrong changes for the out-of-order data.',
+    transfer:
+      'The report now shows the change as a percentage of the previous day, rounded to one decimal, and NULL when the previous day had 0 visitors. Decide how to avoid dividing by zero. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-running-balance': {
+    reasoning:
+      'SUM(cents) OVER (PARTITION BY account ORDER BY posted_on, id) adds, for each entry, the account’s entries up to and including it. Including id in the window order makes it complete, so no two rows are peers and each gets its own balance. PARTITION BY account starts each account from 0.',
+    trace:
+      'For account A, ordered by posted_on then id: 50 gives 50, 1000 gives 1050, then the two 2026-01-05 entries in id order: -300 gives 750 and 200 gives 950. Ordered by posted_on alone, both 2026-01-05 entries would be peers and both would show 950.',
+    alternative:
+      'ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW with ORDER BY posted_on also avoids peers but leaves same-day order to chance, so the in-between balance could differ between runs. A correlated SUM over earlier entries works without windows but repeats work for every row.',
+    counterexample:
+      'ORDER BY posted_on alone shows 950 for both same-day entries. Leaving out PARTITION BY carries account A’s balance into account B.',
+    transfer:
+      'The statement now flags the first entry that takes an account below zero. Decide how to find it from the running balance and keep only that row per account. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-top-two-per-region': {
+    reasoning:
+      'The cut must restart in each region, so a WITH step numbers reps with ROW_NUMBER() OVER (PARTITION BY region ORDER BY revenue_cents DESC, name), and the main query keeps numbers 1 and 2. ROW_NUMBER never ties, so exactly two reps survive per region, and the name decides a tie for second.',
+    trace:
+      'In North the order is Bo 1200, then Ana and Cy at 900 ordered by name, then Di: numbers 1, 2, 3, 4, so Bo and Ana stay. In West, Gu and Ha tie at 800 and are numbered 1 and 2 by name; Fi gets 3 and is dropped. South has only Ed, numbered 1.',
+    alternative:
+      'A correlated count of reps that beat each rep in its region, kept when fewer than two beat it, works without windows but must spell out the tie rule by hand. RANK would keep every rep tied for second place, which is a different, also reasonable, policy.',
+    counterexample:
+      'LIMIT 2 keeps two reps for the whole company. RANK keeps Ana and Cy in North, three rows. Filtering ROW_NUMBER in the same SELECT’s WHERE is an error.',
+    transfer:
+      'The review now invites every rep tied for a top-two revenue, so ties for second all come. Decide which numbering function expresses that and how many rows a region can then return. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
 }
 
 export const sqlGuides: Record<string, ReflectionGuide> = {
@@ -652,6 +711,35 @@ export const sqlGuides: Record<string, ReflectionGuide> = {
     example:
       "I BEGIN, copy orders WHERE placed_on < '2026-01-01' into archived_orders, delete the same rows from orders, and COMMIT. The same condition picks the same rows, and the transaction keeps the pair together.",
   },
+  'sql-rank-scores': {
+    plan: ['Write the places you expect on level 1.', 'Say what restarts the numbering and what orders it.'],
+    explanation: ['Explain why Ana comes before Cy.', 'Explain why the window keeps every row.'],
+    example:
+      'I select ROW_NUMBER() OVER (PARTITION BY level ORDER BY points DESC, player) AS place and order by level, place. Each level restarts at 1, and the name settles equal points.',
+  },
+  'sql-competition-rank': {
+    plan: ['Write the ranks for the race data.', 'Pick the numbering function that produces them.'],
+    explanation: ['Explain why Ana and Cy get 3, not 2.'],
+    example: 'I select RANK() OVER (ORDER BY seconds) AS rank and order by rank, runner. RANK shares equal times and skips past them.',
+  },
+  'sql-day-over-day': {
+    plan: ['Write the change for 2026-03-05 and the row it is compared with.'],
+    explanation: ['Explain why the first day is NULL.', 'Explain why a missing day does not break the change.'],
+    example:
+      'I select visitors - LAG(visitors) OVER (ORDER BY day) AS change, ordered by day. LAG reads the previous recorded row, or NULL for the first.',
+  },
+  'sql-running-balance': {
+    plan: ['Write both balances for account A on 2026-01-05.', 'Say what decides their order.'],
+    explanation: ['Explain what peers are and why id removes them.', 'Explain why each account starts from 0.'],
+    example:
+      'I select SUM(cents) OVER (PARTITION BY account ORDER BY posted_on, id) AS balance. The id makes the window order complete, so same-day entries get their own balances.',
+  },
+  'sql-top-two-per-region': {
+    plan: ['Write the rows you expect for North and West.', 'Say what is numbered and where the cut happens.'],
+    explanation: ['Explain why the cut needs a second step.', 'Explain why Cy is dropped.'],
+    example:
+      'WITH ranked AS (SELECT region, name, revenue_cents, ROW_NUMBER() OVER (PARTITION BY region ORDER BY revenue_cents DESC, name) AS n FROM sales_reps) SELECT region, name, revenue_cents FROM ranked WHERE n <= 2 ORDER BY region, revenue_cents DESC, name.',
+  },
 }
 
 export const sqlLessonDepth: Record<string, LessonDepth> = {
@@ -724,5 +812,15 @@ export const sqlLessonDepth: Record<string, LessonDepth> = {
       "With an order placed_on '2025-12-31 18:00', predict what each statement does to it. Then rewrite the move so the condition is written once. Discuss before revealing.",
     answer:
       "The INSERT skips it, because '2025-12-31 18:00' sorts after '2025-12-31'; the DELETE removes it, because it sorts before '2026-01-01'. The order disappears from both tables. Using < '2026-01-01' in both statements, or first selecting the ids to move into a temporary table and using it for both, keeps the two steps in agreement. This discussion is self-reviewed; the archive rep checks the stored rows.",
+  },
+  'sql-window-functions': {
+    title: 'A running total adds peers together',
+    code: '-- account A: 1050 before 2026-01-05\n-- 2026-01-05: id 2 (-300), id 5 (200)\nSUM(cents) OVER (PARTITION BY account ORDER BY posted_on)',
+    reasoning:
+      'With ORDER BY posted_on, the two 2026-01-05 entries tie on every key of the window order, so they are peers. The default frame runs from the first row to the last peer of the current row, so each of them adds both same-day entries and shows 950. No balance of 750 ever appears, although the account really held 750 between the two entries.',
+    challenge:
+      'Predict the balance shown for id 2 and id 5 with ORDER BY posted_on, then with ORDER BY posted_on, id, then with ORDER BY posted_on ROWS UNBOUNDED PRECEDING. Which of the three gives the same answer on every run? Discuss before revealing.',
+    answer:
+      'ORDER BY posted_on shows 950 and 950. ORDER BY posted_on, id shows 750 then 950, and always in that order. The ROWS frame gives each entry its own balance, but which same-day entry comes first is not promised, so a run may show 750 then 950, or 1250 then 950. Only the complete order is both correct and stable. This discussion is self-reviewed; the running-balance rep checks the same-day case.',
   },
 }
