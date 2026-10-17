@@ -999,6 +999,7 @@ export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[
       'sql-schema-design',
       'sql-changing-data',
       'sql-window-functions',
+      'sql-indexes',
       'databases',
     ],
   },

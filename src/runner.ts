@@ -22,8 +22,9 @@ function runSqlRep(code: string, rep: Rep & { sql: NonNullable<Rep['sql']> }, cr
     try {
       if (!check.sql) throw new Error('Missing SQLite check specification.')
       const verdict = judgeSql(rep.sql, check, observeSql(rep.sql, check.sql, code, createDatabase))
+      const plan = verdict.plan ? { plan: verdict.plan } : {}
       return verdict.passed
-        ? { name: check.name, passed: true }
+        ? { name: check.name, passed: true, ...plan }
         : {
             name: check.name,
             passed: false,
@@ -31,6 +32,7 @@ function runSqlRep(code: string, rep: Rep & { sql: NonNullable<Rep['sql']> }, cr
             message: verdict.message,
             ...(verdict.tables.length ? { tables: verdict.tables } : {}),
             ...(verdict.sqlError ? { sqlError: verdict.sqlError } : {}),
+            ...plan,
           }
     } catch (error) {
       return {

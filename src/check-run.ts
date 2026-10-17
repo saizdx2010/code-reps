@@ -72,7 +72,8 @@ function isTestResult(value: unknown): value is TestResult {
     typeof result.passed === 'boolean' &&
     ['message', 'input', 'expected', 'actual'].every(key => result[key] === undefined || typeof result[key] === 'string') &&
     (result.tables === undefined || (Array.isArray(result.tables) && result.tables.length <= 10 && result.tables.every(isResultTable))) &&
-    (result.sqlError === undefined || isSqlError(result.sqlError))
+    (result.sqlError === undefined || isSqlError(result.sqlError)) &&
+    (result.plan === undefined || (Array.isArray(result.plan) && result.plan.length <= 50 && result.plan.every(line => isText(line, 500))))
   )
 }
 

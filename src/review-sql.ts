@@ -483,6 +483,66 @@ export const sqlDepth: Record<string, RepDepth> = {
     transfer:
       'The review now invites every rep tied for a top-two revenue, so ties for second all come. Decide which numbering function expresses that and how many rows a region can then return. This changed contract is self-reviewed; the original checks do not cover it.',
   },
+  'sql-index-lookup': {
+    reasoning:
+      'The lookup compares email for equality, so an index on email lets SQLite search the sorted emails for that one value and follow it to the row. The plan line changes from SCAN users to SEARCH users USING INDEX … (email=?). The stored rows are untouched, so the lookup returns the same rows as before.',
+    trace:
+      'Before the index, EXPLAIN QUERY PLAN shows SCAN users: SQLite reads all five rows and compares each email. After CREATE INDEX users_email ON users (email), it shows SEARCH users USING INDEX users_email (email=?): SQLite finds cy@example.com in the index and reads only row 3.',
+    alternative:
+      'CREATE UNIQUE INDEX also refuses duplicate emails, which sign-in usually needs anyway, and the plan uses it the same way. A UNIQUE constraint in the table definition creates such an index automatically, but changing a table definition in SQLite means rebuilding the table.',
+    counterexample:
+      'An index on name leaves the plan at SCAN users. An index on lower(email) is not used by WHERE email = …, because the expression differs. Deleting rows to make the scan cheap changes the result.',
+    transfer:
+      'Sign-in now matches emails without regard to letter case. Decide what the query and the index must look like so the plan still searches. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-index-sort': {
+    reasoning:
+      'The index (kind, happened_at) groups events by kind and keeps each kind in time order. WHERE kind = ? searches straight to the logins, and ORDER BY happened_at DESC reads that part of the index backwards, so no separate sort is needed and LIMIT 5 stops after five entries. id is the rowid, which every index entry carries, so the index even covers the query.',
+    trace:
+      'With an index on kind alone, the plan is SEARCH events USING INDEX … (kind=?) followed by USE TEMP B-TREE FOR ORDER BY: SQLite finds six logins and sorts them. With (kind, happened_at) the second line disappears, and the newest five logins, 8, 7, 5, 4, 3, are read in order.',
+    alternative:
+      'An index declared (kind, happened_at DESC) gives the same plan; SQLite can read an index in either direction for one sort key. An index on happened_at alone lets SQLite walk events in time order and skip non-logins, which avoids the sort but scans the index.',
+    counterexample:
+      'An index on (happened_at, kind) gives SCAN events USING COVERING INDEX, which reads every entry. An index on kind alone keeps the temporary B-tree.',
+    transfer:
+      'The admin screen now filters by kind and by a user_id as well. Decide the column order of an index for WHERE kind = ? AND user_id = ? ORDER BY happened_at DESC. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-covering-index': {
+    reasoning:
+      "The query filters on category, sorts by sku, and outputs sku and price_cents. An index on (category, sku, price_cents) is searched by category, holds each category's rows already in sku order, and contains price_cents too, so SQLite reads only the index: SEARCH products USING COVERING INDEX … (category=?), with no temporary sort.",
+    trace:
+      'With the shelf data the index entries for tea are (tea, T-100, 800), (tea, T-200, 1200), (tea, T-300, 650), already in sku order. SQLite searches to the first tea entry and reads three entries, never the table rows.',
+    alternative:
+      '(category, sku) alone avoids the sort but must read each table row for the price. (category, price_cents, sku) covers the query but is in price order, so a temporary sort comes back. Covering indexes speed up hot read queries at the cost of extra storage and slower writes.',
+    counterexample:
+      'An index on category alone gives SEARCH … (category=?) plus USE TEMP B-TREE FOR ORDER BY. (sku, category, price_cents) gives SCAN products USING COVERING INDEX, reading every entry.',
+    transfer:
+      'The price list now also shows the product name. Decide whether to add it to the index or accept reading the table, and what that choice costs. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-composite-index': {
+    reasoning:
+      "The query has an equality on customer_id and a range on placed_on. In an index on (customer_id, placed_on), one customer's entries sit together in date order, so SQLite can search to customer 7 and then to the first date on or after 2026-01-01, and read only the matching run. The plan says SEARCH orders USING INDEX … (customer_id=? AND placed_on>?).",
+    trace:
+      'For customer 7 since 2026-01-01, the index holds (7, 2025-11-02), (7, 2025-12-31), (7, 2026-01-01), (7, 2026-01-15), (7, 2026-03-09). The search lands on (7, 2026-01-01) and reads three entries: orders 7, 2, and 4, which ORDER BY id returns as 2, 4, 7.',
+    alternative:
+      'An index on customer_id alone is often enough when customers have few orders; it searches by customer and checks each date. Adding cents as a third column makes the index cover the query. Keeping the ORDER BY id sort is cheap here because few rows reach it.',
+    counterexample:
+      'An index on (placed_on, customer_id) leaves the plan at SCAN orders here, because the range comes first. Two separate indexes on customer_id and placed_on give SEARCH … (customer_id=?) only: SQLite uses one index per table access.',
+    transfer:
+      'The page now lists orders between two dates for a customer and shows the newest first. Decide whether the same index serves BETWEEN and ORDER BY placed_on DESC, and what the plan should show. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-index-join': {
+    reasoning:
+      'The query starts from one customer by email and then needs that customer’s orders. An index on customers (email) lets SQLite search for the customer, and an index on orders (customer_id) lets it search for the orders instead of scanning them. With both, the plan reads customers first by email and searches orders by customer_id; neither table is scanned.',
+    trace:
+      'Without indexes, the plan is SCAN o then SEARCH c USING INTEGER PRIMARY KEY: SQLite reads every order and looks up its customer. With only the email index, the plan stays the same. With both, it is SEARCH c USING COVERING INDEX … (email=?) and SEARCH o USING INDEX … (customer_id=?), then a small sort by o.id for orders 10, 12, and 14.',
+    alternative:
+      'An index on orders (customer_id, id) would also return the orders already in id order and drop the final sort. A UNIQUE index on email both speeds the lookup and stops two customers sharing an email.',
+    counterexample:
+      'Indexing only customers.email leaves SCAN o, because SQLite still finds orders by reading all of them. Indexing orders.customer_id only leaves SCAN c.',
+    transfer:
+      'The tool now shows each order’s product names from an order_lines table. Decide which extra index the third table needs and what the plan should show for it. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
 }
 
 export const sqlGuides: Record<string, ReflectionGuide> = {
@@ -740,6 +800,36 @@ export const sqlGuides: Record<string, ReflectionGuide> = {
     example:
       'WITH ranked AS (SELECT region, name, revenue_cents, ROW_NUMBER() OVER (PARTITION BY region ORDER BY revenue_cents DESC, name) AS n FROM sales_reps) SELECT region, name, revenue_cents FROM ranked WHERE n <= 2 ORDER BY region, revenue_cents DESC, name.',
   },
+  'sql-index-lookup': {
+    plan: ['Name the column the lookup filters on.', 'Predict the plan line before and after your change.'],
+    explanation: ['Explain the difference between SCAN users and SEARCH users USING INDEX.', 'Explain what the plan does not prove.'],
+    example:
+      'I run CREATE INDEX users_email ON users (email). The plan changes from SCAN users to SEARCH users USING INDEX users_email (email=?), and the rows stay the same.',
+  },
+  'sql-index-sort': {
+    plan: ['Say which column narrows the rows and which orders them.', 'Decide the order of the index columns.'],
+    explanation: ['Explain why the temporary B-tree disappears.', 'Explain why an index on kind alone is not enough.'],
+    example:
+      'I run CREATE INDEX events_kind_time ON events (kind, happened_at). SQLite searches the logins and reads them in time order, so no temporary sort is needed.',
+  },
+  'sql-covering-index': {
+    plan: ['List every column the query uses and its role: filter, order, or output.'],
+    explanation: ['Explain why the index order is category, sku, price_cents.', 'Explain what COVERING means in the plan.'],
+    example:
+      'I run CREATE INDEX products_price_list ON products (category, sku, price_cents). SQLite searches by category, reads in sku order, and finds the price in the index, so it never reads the table.',
+  },
+  'sql-composite-index': {
+    plan: ['Say which condition is an equality and which a range.', 'Decide which column comes first.'],
+    explanation: ['Explain why (placed_on, customer_id) does not work here.', 'Trace customer 7 through the index.'],
+    example:
+      'I run CREATE INDEX orders_customer_date ON orders (customer_id, placed_on). The plan searches by customer_id=? AND placed_on>?, so only the matching run of entries is read.',
+  },
+  'sql-index-join': {
+    plan: ['Trace which table SQLite reads first and how it finds the matching rows of the other.'],
+    explanation: ['Explain why the email index alone left SCAN o.', 'Explain what each index lets SQLite search.'],
+    example:
+      'I create one index on customers (email) and one on orders (customer_id). SQLite searches the customer by email, then the orders by customer_id, and scans neither table.',
+  },
 }
 
 export const sqlLessonDepth: Record<string, LessonDepth> = {
@@ -822,5 +912,15 @@ export const sqlLessonDepth: Record<string, LessonDepth> = {
       'Predict the balance shown for id 2 and id 5 with ORDER BY posted_on, then with ORDER BY posted_on, id, then with ORDER BY posted_on ROWS UNBOUNDED PRECEDING. Which of the three gives the same answer on every run? Discuss before revealing.',
     answer:
       'ORDER BY posted_on shows 950 and 950. ORDER BY posted_on, id shows 750 then 950, and always in that order. The ROWS frame gives each entry its own balance, but which same-day entry comes first is not promised, so a run may show 750 then 950, or 1250 then 950. Only the complete order is both correct and stable. This discussion is self-reviewed; the running-balance rep checks the same-day case.',
+  },
+  'sql-indexes': {
+    title: 'The same columns in another order make a different index',
+    code: "-- WHERE customer_id = 7 AND placed_on >= '2026-01-01'\nCREATE INDEX a ON orders (placed_on, customer_id);\n-- plan: SEARCH orders USING INDEX a (placed_on>?)\nCREATE INDEX b ON orders (customer_id, placed_on);\n-- plan: SEARCH orders USING INDEX b (customer_id=? AND placed_on>?)",
+    reasoning:
+      "Index a is sorted by date first. Every order since 1 January is one run of entries, but customer 7's are spread through it, so SQLite can use a only for the date range and then checks the customer of every order in that run. Index b keeps each customer's orders together in date order, so an equality search lands on customer 7 and the range then narrows to the right dates; both conditions appear in the plan.",
+    challenge:
+      'Predict which index each of these can search: WHERE placed_on >= ? alone, and WHERE customer_id = ? alone. Which single index serves the customer page best? Discuss before revealing.',
+    answer:
+      'For placed_on alone, a can be searched and b cannot, because b starts with customer_id. For customer_id alone, b can be searched and a cannot. Index b serves the customer page, the frequent query here; a separate index on placed_on would serve date-only reports. This discussion is self-reviewed; the composite index rep checks the customer query.',
   },
 }

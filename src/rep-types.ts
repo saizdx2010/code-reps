@@ -23,9 +23,18 @@ export type SqlTask = {
 }
 /**
  * One SQLite check: its seed, and probe statements run after the learner's SQL that SQLite should accept or reject.
- * `labels` names each probe in feedback ("price -5"); without one, the statement itself is shown.
+ * `labels` names each probe in feedback ("price -5"); without one, the statement itself is shown. `plan` runs an
+ * authored query after the learner's SQL: its rows are compared as `result`, and SQLite's EXPLAIN QUERY PLAN lines
+ * must match every `uses` pattern and no `avoids` pattern (regular expressions) for `plan: 'matches'`. Each pattern's
+ * `about` finishes the feedback sentence "SQLite's plan does not …" or "SQLite's plan still …".
  */
-export type SqlCheck = { seed: string; probes?: string[]; labels?: string[] }
+export type PlanFact = { pattern: string; about: string }
+export type SqlCheck = {
+  seed: string
+  probes?: string[]
+  labels?: string[]
+  plan?: { sql: string; uses?: PlanFact[]; avoids?: PlanFact[] }
+}
 export type Check = { name: string; input: unknown[]; expected: unknown; fixture?: AsyncFixtureSpec; sql?: SqlCheck }
 export type Rep = {
   id: string

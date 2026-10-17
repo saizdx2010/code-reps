@@ -175,7 +175,7 @@ test('SQLite comparison tables and located errors pass through; malformed or ove
   }
   const sqlError = { message: 'near "FORM": syntax error', line: 2, column: 1, source: 'FORM customers', length: 4 }
   const run = setup()
-  const results = [{ name: 'Rows', passed: false, message: 'Some values differ.', tables: [table], sqlError }]
+  const results = [{ name: 'Rows', passed: false, message: 'Some values differ.', tables: [table], sqlError, plan: ['SCAN users'] }]
   run.worker.onmessage({ data: { results } })
   assert.deepEqual(run.results, [results])
   const unread = setup()
@@ -190,6 +190,8 @@ test('SQLite comparison tables and located errors pass through; malformed or ove
     { tables: [{ ...table, label: undefined }] },
     { tables: [{ ...table, ordered: 'yes' }] },
     { sqlError: { line: 2 } },
+    { plan: 'SCAN users' },
+    { plan: [1] },
     { sqlError: { message: 'x', column: -1 } },
   ]) {
     const broken = setup()

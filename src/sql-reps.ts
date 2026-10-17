@@ -1,4 +1,4 @@
-import type { Rep, SqlTask } from './rep-types.ts'
+import type { PlanFact, Rep, SqlTask } from './rep-types.ts'
 
 // SQL track reps: the learner writes SQL text, and every check runs it against a fresh in-memory SQLite database.
 // Expected rows are authored by hand; tests/fixtures/sql-solutions.mjs holds an independent reference query for each.
@@ -88,6 +88,40 @@ const dailyVisits = 'CREATE TABLE visits (day TEXT PRIMARY KEY, visitors INTEGER
 const ledgerTable = 'CREATE TABLE ledger (id INTEGER PRIMARY KEY, account TEXT NOT NULL, posted_on TEXT NOT NULL, cents INTEGER NOT NULL);'
 const regionReps =
   'CREATE TABLE sales_reps (id INTEGER PRIMARY KEY, name TEXT NOT NULL, region TEXT NOT NULL, revenue_cents INTEGER NOT NULL);'
+
+const userAccounts = 'CREATE TABLE users (id INTEGER PRIMARY KEY, email TEXT NOT NULL, name TEXT NOT NULL);'
+const eventLog = 'CREATE TABLE events (id INTEGER PRIMARY KEY, kind TEXT NOT NULL, happened_at TEXT NOT NULL);'
+const teaProducts =
+  'CREATE TABLE products (id INTEGER PRIMARY KEY, sku TEXT NOT NULL, category TEXT NOT NULL, price_cents INTEGER NOT NULL);'
+const datedOrders =
+  'CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, placed_on TEXT NOT NULL, cents INTEGER NOT NULL);'
+const joinTables =
+  'CREATE TABLE customers (id INTEGER PRIMARY KEY, email TEXT NOT NULL, name TEXT NOT NULL); CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, cents INTEGER NOT NULL);'
+
+// Plan facts are patterns over SQLite 3.49's EXPLAIN QUERY PLAN text, each with the words feedback uses.
+const scanOf = (name: string, label = name): PlanFact => ({ pattern: `SCAN ${name}\\b`, about: `reads every row of ${label}` })
+const tempSort: PlanFact = { pattern: 'USE TEMP B-TREE FOR ORDER BY', about: 'sorts the rows in a temporary B-tree afterwards' }
+const emailSearch: PlanFact[] = [
+  { pattern: 'SEARCH users USING (COVERING )?INDEX \\S+ \\(email=\\?\\)', about: 'search users through an index on email' },
+]
+const kindSearch: PlanFact[] = [
+  { pattern: 'SEARCH events USING (COVERING )?INDEX \\S+ \\(kind=\\?\\)', about: 'search events through an index on kind' },
+]
+const coveringCategory: PlanFact[] = [
+  { pattern: 'SEARCH products USING COVERING INDEX \\S+ \\(category=\\?\\)', about: 'answer from a covering index searched by category' },
+]
+const customerDateSearch: PlanFact[] = [
+  {
+    pattern: 'SEARCH orders USING (COVERING )?INDEX \\S+ \\(customer_id=\\? AND placed_on>\\?\\)',
+    about: 'search one index by customer_id and placed_on together',
+  },
+]
+const joinSearches: PlanFact[] = [
+  { pattern: 'SEARCH c USING (COVERING )?INDEX \\S+ \\(email=\\?\\)', about: 'search customers by email' },
+  { pattern: 'SEARCH o USING (COVERING )?INDEX \\S+ \\(customer_id=\\?\\)', about: 'search orders by customer_id' },
+]
+const joinQuery = (email: string) =>
+  `SELECT o.id, o.cents FROM customers AS c JOIN orders AS o ON o.customer_id = c.id WHERE c.email = '${email}' ORDER BY o.id`
 
 export const sqlReps: Rep[] = [
   {
@@ -3432,6 +3466,435 @@ export const sqlReps: Rep[] = [
         },
       },
       { name: 'No reps', input: [], sql: { seed: 'empty' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-index-lookup',
+    title: 'Index a lookup column',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: userAccounts,
+      seeds: {
+        members: {
+          about: 'five users with different emails',
+          sql: "INSERT INTO users VALUES (1,'ana@example.com','Ana'),(2,'bo@example.com','Bo'),(3,'cy@example.com','Cy'),(4,'di@example.com','Di'),(5,'ed@example.com','Ed');",
+        },
+        empty: { about: 'no users yet', sql: '' },
+      },
+      compare: 'state',
+    },
+    context:
+      'Every sign-in looks a user up by email. Today SQLite reads every row of users to find one. An index lets it jump to the match instead.',
+    prompt:
+      "Write SQL that lets SQLite answer SELECT id, name FROM users WHERE email = ? by searching an index on email instead of scanning every row. Do not change the stored rows. users has id INTEGER PRIMARY KEY, email TEXT NOT NULL, and name TEXT NOT NULL. Each check runs the lookup with a literal email after your SQL, compares its rows, and reads SQLite's EXPLAIN QUERY PLAN for it: the plan must search users with an index on email and must not scan users. The checks use SQLite 3.49; a plan shows which index SQLite chose for this data, not how fast the query runs.",
+    brief: {
+      summary: 'Add an index so a lookup by email searches instead of reading every row.',
+      rules: [
+        '`users(id INTEGER PRIMARY KEY, email TEXT NOT NULL, name TEXT NOT NULL)`.',
+        'After your SQL, the checks run `SELECT id, name FROM users WHERE email = …` with a literal email and compare its rows.',
+        "SQLite's EXPLAIN QUERY PLAN for that lookup must search users with an index on email, and must not scan users.",
+        'Do not change the stored rows. The checks use SQLite 3.49.',
+      ],
+      edgeCases: ['An email that is not stored still finds nothing.', 'The index works on an empty table too.'],
+    },
+    example: {
+      input: 'CREATE INDEX … then the lookup for cy@example.com',
+      output: 'plan: SEARCH users USING INDEX … (email=?); row (3, Cy)',
+    },
+    note: "A query plan is SQLite's choice for this data and version; it shows which index is used, not how fast the query runs. Checks compare the lookup's rows and its plan.",
+    vocabulary: [
+      { term: 'Database index', meaning: 'a sorted copy of some columns that lets the database find rows without reading them all' },
+      { term: 'Query plan', meaning: 'the steps the database chooses to answer a query, shown by EXPLAIN QUERY PLAN' },
+      { term: 'Full scan', meaning: 'reading every row of a table to answer a query' },
+    ],
+    planPrompt: 'Name the column the lookup filters on, and predict the plan line before and after your change.',
+    starter:
+      '-- Sign-in runs: SELECT id, name FROM users WHERE email = ?\n-- Write the statement that lets SQLite search for the email instead of scanning.\n',
+    hints: [
+      'Run the checks once as the starter is: the plan box shows SCAN users, which reads every row.',
+      'An index is created on the column the WHERE clause compares. It needs a name of its own.',
+      'CREATE INDEX users_email ON users (email);',
+    ],
+    checks: [
+      {
+        name: 'A lookup by email searches an index',
+        input: [],
+        sql: {
+          seed: 'members',
+          plan: { sql: "SELECT id, name FROM users WHERE email = 'cy@example.com'", uses: emailSearch, avoids: [scanOf('users')] },
+        },
+        expected: { plan: 'matches', result: [[3, 'Cy']] },
+      },
+      {
+        name: 'An email that is not stored finds nothing',
+        input: [],
+        sql: {
+          seed: 'members',
+          plan: { sql: "SELECT id, name FROM users WHERE email = 'CY@example.com'", uses: emailSearch, avoids: [scanOf('users')] },
+        },
+        expected: { plan: 'matches', result: [] },
+      },
+      {
+        name: 'The index works on an empty table',
+        input: [],
+        sql: {
+          seed: 'empty',
+          plan: { sql: "SELECT id, name FROM users WHERE email = 'ana@example.com'", uses: emailSearch, avoids: [scanOf('users')] },
+        },
+        expected: { plan: 'matches', result: [] },
+      },
+    ],
+  },
+  {
+    id: 'sql-index-sort',
+    title: 'Index a filter and its sort',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: eventLog,
+      seeds: {
+        log: {
+          about: 'eight events: six logins and two logouts',
+          sql: "INSERT INTO events VALUES (1,'login','2026-03-01 09:00'),(2,'logout','2026-03-01 17:00'),(3,'login','2026-03-02 08:30'),(4,'login','2026-03-03 10:15'),(5,'login','2026-03-04 07:45'),(6,'logout','2026-03-04 18:00'),(7,'login','2026-03-05 09:05'),(8,'login','2026-03-06 11:20');",
+        },
+        empty: { about: 'no events', sql: '' },
+      },
+      compare: 'state',
+    },
+    context:
+      'An admin screen shows the five most recent logins. SQLite currently finds the logins and then sorts them in a temporary structure every time.',
+    prompt:
+      "Write SQL that lets SQLite answer SELECT id FROM events WHERE kind = ? ORDER BY happened_at DESC LIMIT 5 by searching an index on kind and reading the rows already in happened_at order, with no separate sort. Do not change the stored rows. events has id INTEGER PRIMARY KEY, kind TEXT NOT NULL, and happened_at TEXT NOT NULL written as 'YYYY-MM-DD HH:MM'. Each check runs the query with a literal kind after your SQL, compares its rows, and reads SQLite's EXPLAIN QUERY PLAN: it must search events by kind, must not scan events, and must not use a temporary B-tree for ORDER BY. The checks use SQLite 3.49; a plan shows SQLite's choice for this data, not speed.",
+    brief: {
+      summary: 'Add an index so the newest logins are found and already sorted.',
+      rules: [
+        "`events(id INTEGER PRIMARY KEY, kind TEXT NOT NULL, happened_at TEXT NOT NULL)`; happened_at is 'YYYY-MM-DD HH:MM'.",
+        'The checks run `SELECT id FROM events WHERE kind = … ORDER BY happened_at DESC LIMIT 5` and compare its rows.',
+        'The plan must search events by kind, must not scan events, and must not use a temporary B-tree for ORDER BY.',
+        'Do not change the stored rows. The checks use SQLite 3.49.',
+      ],
+      edgeCases: ['A kind with fewer than five events returns them all.'],
+    },
+    example: { input: 'the newest five logins', output: 'ids 8, 7, 5, 4, 3, with no USE TEMP B-TREE line in the plan' },
+    note: "A query plan is SQLite's choice for this data and version, not a speed measurement. Checks compare the query's rows and its plan.",
+    vocabulary: [
+      { term: 'Composite index', meaning: 'an index on two or more columns, sorted by the first, then the next' },
+      { term: 'Temporary B-tree', meaning: 'a structure SQLite builds during a query to sort rows that are not already in order' },
+    ],
+    planPrompt: 'Which column narrows the rows, and which one orders them? Decide the order of columns in your index.',
+    starter: '-- The admin screen runs:\n--   SELECT id FROM events WHERE kind = ? ORDER BY happened_at DESC LIMIT 5\n',
+    hints: [
+      'An index on kind alone finds the logins but leaves them unsorted, so SQLite still sorts them afterwards.',
+      'An index on several columns keeps rows with the same first column sorted by the second.',
+      'CREATE INDEX events_kind_time ON events (kind, happened_at);',
+    ],
+    checks: [
+      {
+        name: 'The newest logins come from the index, already sorted',
+        input: [],
+        sql: {
+          seed: 'log',
+          plan: {
+            sql: "SELECT id FROM events WHERE kind = 'login' ORDER BY happened_at DESC LIMIT 5",
+            uses: kindSearch,
+            avoids: [scanOf('events'), tempSort],
+          },
+        },
+        expected: { plan: 'matches', result: [[8], [7], [5], [4], [3]] },
+      },
+      {
+        name: 'Fewer than five of a kind',
+        input: [],
+        sql: {
+          seed: 'log',
+          plan: {
+            sql: "SELECT id FROM events WHERE kind = 'logout' ORDER BY happened_at DESC LIMIT 5",
+            uses: kindSearch,
+            avoids: [scanOf('events'), tempSort],
+          },
+        },
+        expected: { plan: 'matches', result: [[6], [2]] },
+      },
+      {
+        name: 'No events',
+        input: [],
+        sql: {
+          seed: 'empty',
+          plan: {
+            sql: "SELECT id FROM events WHERE kind = 'login' ORDER BY happened_at DESC LIMIT 5",
+            uses: kindSearch,
+            avoids: [scanOf('events'), tempSort],
+          },
+        },
+        expected: { plan: 'matches', result: [] },
+      },
+    ],
+  },
+  {
+    id: 'sql-covering-index',
+    title: 'Answer a query from the index alone',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: teaProducts,
+      seeds: {
+        shelf: {
+          about: 'six products, three of them teas',
+          sql: "INSERT INTO products VALUES (1,'T-300','tea',650),(2,'M-100','ware',900),(3,'T-100','tea',800),(4,'C-200','coffee',700),(5,'T-200','tea',1200),(6,'M-200','ware',300);",
+        },
+        empty: { about: 'no products', sql: '' },
+      },
+      compare: 'state',
+    },
+    context:
+      'A price list shows the sku and price of every tea, sorted by sku. With the right index SQLite never has to read the table itself.',
+    prompt:
+      "Write SQL that lets SQLite answer SELECT sku, price_cents FROM products WHERE category = ? ORDER BY sku from a covering index: an index that holds every column the query needs, searched by category and already in sku order, so SQLite neither reads the table rows nor sorts afterwards. Do not change the stored rows. products has id INTEGER PRIMARY KEY, sku TEXT NOT NULL, category TEXT NOT NULL, and price_cents INTEGER NOT NULL. Each check runs the query with a literal category after your SQL, compares its rows, and reads SQLite's EXPLAIN QUERY PLAN. The checks use SQLite 3.49; a plan shows SQLite's choice for this data, not speed.",
+    brief: {
+      summary: 'Add an index that answers the tea price list on its own, already sorted.',
+      rules: [
+        '`products(id INTEGER PRIMARY KEY, sku TEXT NOT NULL, category TEXT NOT NULL, price_cents INTEGER NOT NULL)`.',
+        'The checks run `SELECT sku, price_cents FROM products WHERE category = … ORDER BY sku` and compare its rows.',
+        'The plan must search products with a covering index by category, and must not use a temporary B-tree for ORDER BY.',
+        'Do not change the stored rows. The checks use SQLite 3.49.',
+      ],
+      edgeCases: ['A category with no products returns no rows.'],
+    },
+    example: { input: 'the tea price list', output: "plan: SEARCH products USING COVERING INDEX … (category=?); rows ('T-100', 800), …" },
+    note: "A query plan is SQLite's choice for this data and version, not a speed measurement. Checks compare the query's rows and its plan.",
+    vocabulary: [{ term: 'Covering index', meaning: 'an index that contains every column a query needs, so the table itself is not read' }],
+    planPrompt: 'List every column the query mentions and the role each plays: filter, order, or output.',
+    starter: '-- The price list runs:\n--   SELECT sku, price_cents FROM products WHERE category = ? ORDER BY sku\n',
+    hints: [
+      'An index on category finds the teas, but SQLite then reads each row for its sku and price and sorts them.',
+      'Column order matters: the filtered column first, then the sort column, then anything else the query only outputs.',
+      'CREATE INDEX products_price_list ON products (category, sku, price_cents);',
+    ],
+    checks: [
+      {
+        name: 'The tea list comes from a covering index, already sorted',
+        input: [],
+        sql: {
+          seed: 'shelf',
+          plan: {
+            sql: "SELECT sku, price_cents FROM products WHERE category = 'tea' ORDER BY sku",
+            uses: coveringCategory,
+            avoids: [tempSort],
+          },
+        },
+        expected: {
+          plan: 'matches',
+          result: [
+            ['T-100', 800],
+            ['T-200', 1200],
+            ['T-300', 650],
+          ],
+        },
+      },
+      {
+        name: 'Another category from the same index',
+        input: [],
+        sql: {
+          seed: 'shelf',
+          plan: {
+            sql: "SELECT sku, price_cents FROM products WHERE category = 'ware' ORDER BY sku",
+            uses: coveringCategory,
+            avoids: [tempSort],
+          },
+        },
+        expected: {
+          plan: 'matches',
+          result: [
+            ['M-100', 900],
+            ['M-200', 300],
+          ],
+        },
+      },
+      {
+        name: 'No products',
+        input: [],
+        sql: {
+          seed: 'empty',
+          plan: {
+            sql: "SELECT sku, price_cents FROM products WHERE category = 'tea' ORDER BY sku",
+            uses: coveringCategory,
+            avoids: [tempSort],
+          },
+        },
+        expected: { plan: 'matches', result: [] },
+      },
+    ],
+  },
+  {
+    id: 'sql-composite-index',
+    title: 'Index two conditions at once',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: datedOrders,
+      seeds: {
+        history: {
+          about: 'seven orders for two customers across 2025 and 2026',
+          sql: "INSERT INTO orders VALUES (1,7,'2025-11-02',500),(2,7,'2026-01-15',800),(3,8,'2026-02-01',300),(4,7,'2026-03-09',1200),(5,7,'2025-12-31',250),(6,8,'2025-06-30',900),(7,7,'2026-01-01',400);",
+        },
+        empty: { about: 'no orders', sql: '' },
+      },
+      compare: 'state',
+    },
+    context:
+      "An account page lists a customer's orders since the start of 2026. Both conditions should narrow the search inside one index.",
+    prompt:
+      "Write SQL that lets SQLite answer SELECT id, cents FROM orders WHERE customer_id = ? AND placed_on >= ? ORDER BY id by searching one index with both conditions: customer_id for equality and placed_on for the range. Do not change the stored rows. orders has id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, placed_on TEXT NOT NULL written as 'YYYY-MM-DD', and cents INTEGER NOT NULL. Each check runs the query with literal values after your SQL, compares its rows, and reads SQLite's EXPLAIN QUERY PLAN: it must search orders using customer_id and placed_on together, and must not scan orders. The checks use SQLite 3.49; a plan shows SQLite's choice for this data, not speed.",
+    brief: {
+      summary: "Add an index that narrows a customer's recent orders by both conditions at once.",
+      rules: [
+        "`orders(id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, placed_on TEXT NOT NULL, cents INTEGER NOT NULL)`; placed_on is 'YYYY-MM-DD'.",
+        'The checks run `SELECT id, cents FROM orders WHERE customer_id = … AND placed_on >= … ORDER BY id` and compare its rows.',
+        'The plan must search orders using customer_id and placed_on together, and must not scan orders.',
+        'Do not change the stored rows. The checks use SQLite 3.49.',
+      ],
+      edgeCases: ['An order placed exactly on the start date is included.'],
+    },
+    example: { input: "customer 7 since '2026-01-01'", output: 'plan: SEARCH orders USING INDEX … (customer_id=? AND placed_on>?)' },
+    note: "This is an independent rep: plan before you look at the hints. A query plan is SQLite's choice for this data and version, not a speed measurement.",
+    vocabulary: [{ term: 'Leftmost prefix', meaning: 'the leading columns of an index, which a search must use in order' }],
+    planPrompt: 'Which condition is an equality and which a range? Decide which column comes first and why.',
+    starter: '-- The account page runs:\n--   SELECT id, cents FROM orders WHERE customer_id = ? AND placed_on >= ? ORDER BY id\n',
+    hints: [
+      'An index on customer_id alone finds all of a customer’s orders, then checks each date one by one.',
+      'An index search uses its columns from the left. Equality on the first column lets the range on the next one narrow further; a range first stops the search there.',
+      'CREATE INDEX orders_customer_date ON orders (customer_id, placed_on);',
+    ],
+    checks: [
+      {
+        name: 'Both conditions narrow one index search',
+        input: [],
+        sql: {
+          seed: 'history',
+          plan: {
+            sql: "SELECT id, cents FROM orders WHERE customer_id = 7 AND placed_on >= '2026-01-01' ORDER BY id",
+            uses: customerDateSearch,
+            avoids: [scanOf('orders')],
+          },
+        },
+        expected: {
+          plan: 'matches',
+          result: [
+            [2, 800],
+            [4, 1200],
+            [7, 400],
+          ],
+        },
+      },
+      {
+        name: 'Another customer and date',
+        input: [],
+        sql: {
+          seed: 'history',
+          plan: {
+            sql: "SELECT id, cents FROM orders WHERE customer_id = 8 AND placed_on >= '2025-07-01' ORDER BY id",
+            uses: customerDateSearch,
+            avoids: [scanOf('orders')],
+          },
+        },
+        expected: { plan: 'matches', result: [[3, 300]] },
+      },
+      {
+        name: 'No orders',
+        input: [],
+        sql: {
+          seed: 'empty',
+          plan: {
+            sql: "SELECT id, cents FROM orders WHERE customer_id = 7 AND placed_on >= '2026-01-01' ORDER BY id",
+            uses: customerDateSearch,
+            avoids: [scanOf('orders')],
+          },
+        },
+        expected: { plan: 'matches', result: [] },
+      },
+    ],
+  },
+  {
+    id: 'sql-index-join',
+    title: 'Index both sides of a join',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: joinTables,
+      seeds: {
+        shop: {
+          about: 'three customers and five orders',
+          sql: "INSERT INTO customers VALUES (1,'ana@example.com','Ana'),(2,'bo@example.com','Bo'),(3,'cy@example.com','Cy'); INSERT INTO orders VALUES (10,3,700),(11,1,200),(12,3,150),(13,2,900),(14,3,50);",
+        },
+        empty: { about: 'no customers and no orders', sql: '' },
+      },
+      compare: 'state',
+    },
+    context: "A support tool shows a customer's orders after an agent types their email. Today SQLite scans orders to find them.",
+    prompt:
+      "Write SQL that lets SQLite answer SELECT o.id, o.cents FROM customers AS c JOIN orders AS o ON o.customer_id = c.id WHERE c.email = ? ORDER BY o.id by searching customers by email and searching orders by customer_id, scanning neither table. Do not change the stored rows. customers has id INTEGER PRIMARY KEY, email TEXT NOT NULL, and name TEXT NOT NULL. orders has id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, and cents INTEGER NOT NULL. Each check runs the query with a literal email after your SQL, compares its rows, and reads SQLite's EXPLAIN QUERY PLAN. The checks use SQLite 3.49; a plan shows SQLite's choice for this data, not speed.",
+    brief: {
+      summary: "Add the indexes that let SQLite find a customer's orders by email without scanning either table.",
+      rules: [
+        '`customers(id INTEGER PRIMARY KEY, email TEXT NOT NULL, name TEXT NOT NULL)` and `orders(id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, cents INTEGER NOT NULL)`.',
+        'The checks run `SELECT o.id, o.cents FROM customers AS c JOIN orders AS o ON o.customer_id = c.id WHERE c.email = … ORDER BY o.id` and compare its rows.',
+        'The plan must search customers by email and orders by customer_id, and must scan neither table.',
+        'Do not change the stored rows. The checks use SQLite 3.49.',
+      ],
+      edgeCases: ['An email with no customer returns no rows.'],
+    },
+    example: { input: 'the orders of cy@example.com', output: 'plan: SEARCH c … (email=?), SEARCH o … (customer_id=?); rows 10, 12, 14' },
+    note: "This is a delayed recall rep: solve it without hints after the break. A query plan is SQLite's choice for this data and version, not a speed measurement.",
+    vocabulary: [{ term: 'Join order', meaning: 'which table the database reads first when it pairs rows of two tables' }],
+    planPrompt: 'Trace how SQLite should answer the query: which table it reads first, and how it finds the matching rows of the other.',
+    starter:
+      '-- The support tool runs:\n--   SELECT o.id, o.cents FROM customers AS c JOIN orders AS o ON o.customer_id = c.id\n--   WHERE c.email = ? ORDER BY o.id\n',
+    hints: [
+      'Two lookups happen: first the customer by email, then that customer’s orders. Each needs its own way in.',
+      'Without an index on the linking column, SQLite may start from orders and scan it, even with an index on email.',
+      'CREATE INDEX customers_email ON customers (email); CREATE INDEX orders_customer ON orders (customer_id);',
+    ],
+    checks: [
+      {
+        name: 'Both tables are searched, neither is scanned',
+        input: [],
+        sql: {
+          seed: 'shop',
+          plan: { sql: joinQuery('cy@example.com'), uses: joinSearches, avoids: [scanOf('c', 'customers'), scanOf('o', 'orders')] },
+        },
+        expected: {
+          plan: 'matches',
+          result: [
+            [10, 700],
+            [12, 150],
+            [14, 50],
+          ],
+        },
+      },
+      {
+        name: 'An email with no customer',
+        input: [],
+        sql: {
+          seed: 'shop',
+          plan: { sql: joinQuery('zoe@example.com'), uses: joinSearches, avoids: [scanOf('c', 'customers'), scanOf('o', 'orders')] },
+        },
+        expected: { plan: 'matches', result: [] },
+      },
+      {
+        name: 'No customers or orders',
+        input: [],
+        sql: {
+          seed: 'empty',
+          plan: { sql: joinQuery('ana@example.com'), uses: joinSearches, avoids: [scanOf('c', 'customers'), scanOf('o', 'orders')] },
+        },
+        expected: { plan: 'matches', result: [] },
+      },
     ],
   },
 ]

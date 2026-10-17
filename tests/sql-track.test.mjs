@@ -31,7 +31,8 @@ test('every SQL track rep is SQL text with a reference query and fresh-database 
     // A schema rep starts empty and probes one rule per check; every other rep needs several data sets.
     const schemaRep = rep.checks.every(check => check.sql.probes?.length)
     if (schemaRep) assert.ok(rep.checks.length >= 4 && rep.checks.some(check => check.expected.probes.includes('rejected')), id)
-    else assert.ok(Object.keys(rep.sql.seeds).length >= 3, `${id} needs several data sets`)
+    // Index reps vary the query more than the data, so two data sets are enough for them.
+    else assert.ok(Object.keys(rep.sql.seeds).length >= (rep.checks.some(check => check.sql.plan) ? 2 : 3), `${id} needs several data sets`)
   }
 })
 
@@ -535,6 +536,51 @@ test('S8 top-two checks catch LIMIT, RANK, and a missing name tie-breaker', () =
     [base.replace('revenue_cents DESC, name) AS n', 'revenue_cents DESC) AS n'), 'Top two per region'],
     [base.replace('n <= 2', 'n < 2'), 'Top two per region'],
   ])
+})
+
+test('S9 plan checks report the plan on every result and name what the plan lacks', () => {
+  const run = code => runRep(code, 'sql-index-lookup', () => new SQL.Database())
+  const passed = run(solution('sql-index-lookup'))
+  assert.ok(
+    passed.every(result => result.passed && result.plan.some(line => /SEARCH users USING INDEX users_email \(email=\?\)/.test(line))),
+  )
+  const empty = run('-- nothing yet')
+  assert.ok(empty.every(result => !result.passed && result.plan.join() === 'SCAN users'))
+  assert.equal(
+    empty[0].message,
+    "SQLite's plan does not search users through an index on email. SQLite's plan still reads every row of users.",
+  )
+  assert.deepEqual(failed('sql-index-lookup', 'CREATE UNIQUE INDEX users_email ON users (email);'), [])
+  assertCaught('sql-index-lookup', [
+    ['CREATE INDEX users_name ON users (name);', 'A lookup by email searches an index'],
+    ['CREATE INDEX users_email ON users (lower(email));', 'A lookup by email searches an index'],
+    ['CREATE INDEX users_email ON users (email); DELETE FROM users WHERE id = 3;', 'A lookup by email searches an index'],
+  ])
+})
+
+test('S9 index checks catch the wrong column order, a missing sort column, and a half-indexed join', () => {
+  assertCaught('sql-index-sort', [
+    ['CREATE INDEX k ON events (kind);', 'The newest logins come from the index, already sorted'],
+    ['CREATE INDEX k ON events (happened_at, kind);', 'The newest logins come from the index, already sorted'],
+  ])
+  assert.deepEqual(failed('sql-index-sort', 'CREATE INDEX k ON events (kind, happened_at DESC);'), [])
+  assertCaught('sql-covering-index', [
+    ['CREATE INDEX a ON products (category);', 'The tea list comes from a covering index, already sorted'],
+    ['CREATE INDEX a ON products (category, sku);', 'The tea list comes from a covering index, already sorted'],
+    ['CREATE INDEX a ON products (category, price_cents, sku);', 'The tea list comes from a covering index, already sorted'],
+  ])
+  assertCaught('sql-composite-index', [
+    ['CREATE INDEX a ON orders (placed_on, customer_id);', 'Both conditions narrow one index search'],
+    ['CREATE INDEX a ON orders (customer_id);', 'Both conditions narrow one index search'],
+    ['CREATE INDEX a ON orders (customer_id); CREATE INDEX b ON orders (placed_on);', 'Both conditions narrow one index search'],
+  ])
+  assert.deepEqual(failed('sql-composite-index', 'CREATE INDEX a ON orders (customer_id, placed_on, cents);'), [])
+  assertCaught('sql-index-join', [
+    ['CREATE INDEX e ON customers (email);', 'Both tables are searched, neither is scanned'],
+    ['CREATE INDEX f ON orders (customer_id);', 'Both tables are searched, neither is scanned'],
+  ])
+  const halfJoin = runRep('CREATE INDEX e ON customers (email);', 'sql-index-join', () => new SQL.Database())[0]
+  assert.match(halfJoin.message, /SQLite's plan still reads every row of orders\./)
 })
 
 test('the S1 journey keeps recall distinct from its guided and independent reps', () => {

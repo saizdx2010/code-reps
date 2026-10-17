@@ -2394,6 +2394,29 @@ footer {
   font-size: 13px;
   font-weight: 600;
 }
+.sql-plan {
+  margin: 8px 0 4px;
+  color: var(--text);
+  font-weight: 400;
+}
+.sql-plan-code {
+  padding: 12px 14px;
+  margin: 0 0 8px;
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  font: 12px/1.6 var(--font-mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.sql-plan-label {
+  color: var(--muted);
+  font-size: 11px;
+}
+.sql-plan p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
 .sql-error-code {
   padding: 12px 14px;
   margin: 0 0 10px;

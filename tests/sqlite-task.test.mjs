@@ -360,7 +360,14 @@ test('state comparisons run a script, read tables back, and report the failing s
   )
   assert.match(judge(task, check, 'BEGIN; UPDATE items SET qty = 5 WHERE id = 2').message, /transaction is still open/)
   assert.match(judge(task, check, 'DROP TABLE items').message, /could not read items afterwards: no such table: items/)
-  assert.match(judge(task, check, '  ').message, /Write at least one SQL statement/)
+  // An empty script changes nothing, so the comparison shows the unchanged rows.
+  assert.deepEqual(
+    judge(task, check, '  -- not yet').tables[0].received.rows.map(row => row.cells),
+    [
+      ['bolt', 4],
+      ['nut', 0],
+    ],
+  )
   const second = judge(task, check, 'UPDATE items SET qty = 5 WHERE id = 2;\nUPDAT items SET qty = 1')
   assert.equal(second.message, 'SQLite could not run statement 2 (line 2): near "UPDAT": syntax error')
   assert.equal(second.sqlError.line, 2)

@@ -483,6 +483,12 @@ export const paths = [
         recap: 'You can now use window functions for ranks, running totals, neighbours, and top rows per group.',
         repIds: ['sql-rank-scores', 'sql-competition-rank', 'sql-day-over-day', 'sql-running-balance', 'sql-top-two-per-region'],
       },
+      {
+        title: 'Make it fast',
+        description: 'Create indexes that match a query, and read the plan SQLite chooses: search or scan, sorted or not, covered or not.',
+        recap: "You can now design indexes for a query and read SQLite's query plan, knowing it shows choices rather than speed.",
+        repIds: ['sql-index-lookup', 'sql-index-sort', 'sql-covering-index', 'sql-composite-index', 'sql-index-join'],
+      },
     ] satisfies readonly PathStage[],
   },
   {

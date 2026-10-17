@@ -11,6 +11,11 @@ import type { SearchEntry, SearchTarget } from './command-search'
 import type { ResultTable, TestResult } from './runner.types'
 
 // SQLite row comparisons load with the first failed SQL check. If they cannot load, the check's sentence still shows.
+const SqlPlan = lazy(() =>
+  import('./SqlResults')
+    .then(module => ({ default: module.SqlPlan }))
+    .catch(() => ({ default: ({ lines }: { lines: string[] }) => <pre>{lines.join('\n')}</pre> })),
+)
 const SqlComparison = lazy(() =>
   import('./SqlResults')
     .then(module => ({ default: module.SqlComparison }))
@@ -413,7 +418,14 @@ export function CheckFeedback({
       </span>
       <div>
         {result.passed ? (
-          <strong>{result.name}</strong>
+          <>
+            <strong>{result.name}</strong>
+            {result.plan && (
+              <Suspense fallback={null}>
+                <SqlPlan lines={result.plan} />
+              </Suspense>
+            )}
+          </>
         ) : (
           <details
             open={activeFailed === result.name}
@@ -467,6 +479,11 @@ function FailedCheck({ result, stale }: { result: TestResult; stale: boolean }) 
           ))}
         </Suspense>
       )}
+      {result.plan && (
+        <Suspense fallback={<pre>{result.plan.join('\n')}</pre>}>
+          <SqlPlan lines={result.plan} />
+        </Suspense>
+      )}
       {result.expected !== undefined && (
         <div className="value-comparison">
           <div>
@@ -479,9 +496,9 @@ function FailedCheck({ result, stale }: { result: TestResult; stale: boolean }) 
           </div>
         </div>
       )}
-      {result.message && !result.tables?.length && !(result.expected !== undefined && result.message.startsWith('Expected ')) && (
-        <p>{result.message}</p>
-      )}
+      {result.message &&
+        (!result.tables?.length || result.plan) &&
+        !(result.expected !== undefined && result.message.startsWith('Expected ')) && <p>{result.message}</p>}
       {!stale && <p className="utility-note">Trace this input through your code, then try again.</p>}
     </>
   )

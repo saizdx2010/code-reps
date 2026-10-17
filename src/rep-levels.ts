@@ -305,6 +305,11 @@ export const repLevels: Record<string, RepLevel> = {
   'sql-day-over-day': 2,
   'sql-running-balance': 3,
   'sql-top-two-per-region': 3,
+  'sql-index-lookup': 2,
+  'sql-index-sort': 2,
+  'sql-covering-index': 3,
+  'sql-composite-index': 3,
+  'sql-index-join': 3,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

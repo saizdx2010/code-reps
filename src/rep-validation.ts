@@ -13,6 +13,14 @@ export function validateReps(reps: readonly Rep[], guides: Record<string, SelfRe
       if (!rep[field]?.trim() && !(field === 'functionName' && rep.format === 'sql')) errors.push(`${rep.id}: missing ${field}`)
     if (rep.format === 'sql' && (!rep.sql || rep.checks.some(check => !check.sql || !rep.sql?.seeds[check.sql.seed])))
       errors.push(`${rep.id}: SQL checks need a task and known seeds`)
+    for (const check of rep.checks) {
+      for (const { pattern } of [...(check.sql?.plan?.uses ?? []), ...(check.sql?.plan?.avoids ?? [])])
+        try {
+          new RegExp(pattern)
+        } catch {
+          errors.push(`${rep.id}: ${check.name} has an invalid plan pattern`)
+        }
+    }
     for (const check of rep.checks)
       if (check.sql?.labels && check.sql.labels.length !== (check.sql.probes?.length ?? 0))
         errors.push(`${rep.id}: ${check.name} needs one label per probe`)

@@ -160,3 +160,19 @@ export function SqlErrorBox({ error }: { error: SqlError }) {
     </div>
   )
 }
+
+/** SQLite's EXPLAIN QUERY PLAN for a check's query, with what it does and does not show. */
+export function SqlPlan({ lines }: { lines: string[] }) {
+  return (
+    <div className="sql-plan">
+      <pre className="sql-plan-code">
+        <code>
+          <span className="sql-plan-label">QUERY PLAN</span>
+          {'\n'}
+          {lines.join('\n')}
+        </code>
+      </pre>
+      <p>This is the plan SQLite chose for the check data. It shows which index is used, not how fast the query runs.</p>
+    </div>
+  )
+}

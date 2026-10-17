@@ -191,4 +191,10 @@ SELECT region, name, revenue_cents
 FROM ranked
 WHERE n <= 2
 ORDER BY region, revenue_cents DESC, name;`,
+  'sql-index-lookup': `CREATE INDEX users_email ON users (email);`,
+  'sql-index-sort': `CREATE INDEX events_kind_time ON events (kind, happened_at);`,
+  'sql-covering-index': `CREATE INDEX products_price_list ON products (category, sku, price_cents);`,
+  'sql-composite-index': `CREATE INDEX orders_customer_date ON orders (customer_id, placed_on);`,
+  'sql-index-join': `CREATE INDEX customers_email ON customers (email);
+CREATE INDEX orders_customer ON orders (customer_id);`,
 }

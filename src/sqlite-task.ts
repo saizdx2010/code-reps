@@ -252,7 +252,7 @@ function runScript(db: SqliteDatabase, sql: string) {
   } finally {
     drain(statements)
   }
-  if (position === 0) throw new SqlProblem('Write at least one SQL statement for the checks to run.')
+  // An empty script is allowed: the checks then show the data, probes, or plan as they are before any change.
 }
 
 // An open transaction is neither a committed success nor a completed rollback.
@@ -298,8 +298,37 @@ export type SqlObservation = {
   outcome: Record<string, unknown>
   columns: Record<string, string[]>
   probeErrors?: string[]
+  plan?: string[]
   problem?: string
   sqlError?: SqlError
+}
+
+/**
+ * Runs a check's authored query after the learner's SQL: its rows become `result`, and SQLite's plan for it becomes
+ * `plan`, 'matches' when every `uses` pattern appears and no `avoids` pattern does. The plan is SQLite's choice for
+ * this data and version, not a measure of speed.
+ */
+function readPlan(
+  db: SqliteDatabase,
+  plan: NonNullable<SqlCheck['plan']>,
+  outcome: Record<string, unknown>,
+  columns: Record<string, string[]>,
+) {
+  try {
+    const lines = queryTable(db, `EXPLAIN QUERY PLAN ${plan.sql}`).rows.map(row => String(row[3]))
+    const text = lines.join('\n')
+    const matches =
+      (plan.uses ?? []).every(fact => new RegExp(fact.pattern).test(text)) &&
+      !(plan.avoids ?? []).some(fact => new RegExp(fact.pattern).test(text))
+    outcome.plan = matches ? 'matches' : 'differs'
+    const result = queryTable(db, plan.sql)
+    outcome.result = result.rows
+    columns.result = result.columns
+    return lines
+  } catch (error) {
+    if (error instanceof SqlProblem) throw error
+    throw new SqlProblem(`The checks could not run their query afterwards: ${error instanceof Error ? error.message : String(error)}`)
+  }
 }
 
 function readBack(db: SqliteDatabase, task: SqlTask, outcome: Record<string, unknown>, columns: Record<string, string[]>) {
@@ -374,7 +403,8 @@ export function observeSql(task: SqlTask, check: SqlCheck, sql: string, createDa
           probeErrors = probes.errors
         }
         readBack(db, task, outcome, columns)
-        return { outcome, columns, probeErrors }
+        const plan = check.plan ? readPlan(db, check.plan, outcome, columns) : undefined
+        return { outcome, columns, probeErrors, ...(plan ? { plan } : {}) }
       }
       const table = runReadOnly(db, sql)
       outcome.rows = task.compare === 'unordered' ? sortRows(table.rows) : table.rows
@@ -583,9 +613,9 @@ export function compareRows(
  */
 export function judgeSql(task: SqlTask, check: Check, observation: SqlObservation) {
   const expected = expectedOutcome(task, check.expected) as Record<string, unknown>
-  const { outcome, columns, problem, sqlError } = observation
+  const { outcome, columns, problem, sqlError, plan } = observation
   const tables: ResultTable[] = []
-  if (problem) return { passed: false, message: problem, tables, sqlError }
+  if (problem) return { passed: false, message: problem, tables, sqlError, plan }
   const messages: string[] = []
   let passed = true
   const compare = (label: string, wantColumns: string[], want: SqlValue[][], gotColumns: string[], got: unknown, ordered?: boolean) => {
@@ -599,6 +629,16 @@ export function judgeSql(task: SqlTask, check: Check, observation: SqlObservatio
     compare('Rows', task.columns ?? [], expected.rows as SqlValue[][], columns.rows ?? [], outcome.rows, task.compare === 'ordered')
   for (const { label } of task.read ?? [])
     if (label in expected) compare(label, columns[label] ?? [], expected[label] as SqlValue[][], columns[label] ?? [], outcome[label])
+  if (check.sql?.plan && 'result' in expected)
+    compare('Query result', columns.result ?? [], expected.result as SqlValue[][], columns.result ?? [], outcome.result)
+  if (check.sql?.plan && 'plan' in expected && outcome.plan !== expected.plan) {
+    passed = false
+    const text = (plan ?? []).join('\n')
+    for (const fact of check.sql.plan.uses ?? [])
+      if (!new RegExp(fact.pattern).test(text)) messages.push(`SQLite's plan does not ${fact.about}.`)
+    for (const fact of check.sql.plan.avoids ?? [])
+      if (new RegExp(fact.pattern).test(text)) messages.push(`SQLite's plan still ${fact.about}.`)
+  }
   const probes = check.sql?.probes
   if (probes && 'probes' in expected && !sameValue(outcome.probes, expected.probes)) {
     passed = false
@@ -619,5 +659,5 @@ export function judgeSql(task: SqlTask, check: Check, observation: SqlObservatio
     passed = false
     messages.push('The result does not match the contract.')
   }
-  return { passed, message: passed ? undefined : messages.join(' '), tables, sqlError: undefined }
+  return { passed, message: passed ? undefined : messages.join(' '), tables, sqlError: undefined, plan }
 }

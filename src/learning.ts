@@ -371,6 +371,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'sql-indexes',
+    title: 'Make queries use indexes',
+    guided: 'sql-index-lookup',
+    independent: 'sql-composite-index',
+    recall: 'sql-index-join',
+    practice: ['sql-index-sort', 'sql-covering-index'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

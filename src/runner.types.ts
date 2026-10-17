@@ -36,4 +36,6 @@ export type TestResult = {
   tables?: ResultTable[]
   /** SQLite checks: SQLite could not prepare the learner's SQL. The same error on every check means nothing ran. */
   sqlError?: SqlError
+  /** SQLite checks of an index: the EXPLAIN QUERY PLAN lines SQLite chose for the check's query, passed or not. */
+  plan?: string[]
 }

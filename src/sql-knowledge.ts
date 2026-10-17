@@ -598,4 +598,75 @@ export const sqlSkills: Skill[] = [
     repIds: ['sql-rank-scores', 'sql-competition-rank', 'sql-day-over-day', 'sql-running-balance', 'sql-top-two-per-region'],
     related: ['sql-summarizing', 'sql-subqueries'],
   },
+  {
+    id: 'sql-indexes',
+    title: 'Make it fast: indexes and query plans',
+    summary: "Create indexes that match a query's filters and order, and read SQLite's query plan to see whether it uses them.",
+    prerequisites: ['sql-reading', 'sql-joining'],
+    objectives: [
+      'Create an index on the columns a query filters by, and read EXPLAIN QUERY PLAN for SCAN and SEARCH.',
+      'Order the columns of a composite index: equalities first, then a range or the sort.',
+      'Recognize a covering index and a temporary sort, and say what a plan does not tell you.',
+    ],
+    sections: [
+      {
+        title: 'An index is a sorted copy',
+        body: 'CREATE INDEX users_email ON users (email) keeps the emails sorted, each pointing at its row, so SQLite can jump to one email instead of reading every row. EXPLAIN QUERY PLAN before a query shows what SQLite will do: SCAN users reads the whole table, and SEARCH users USING INDEX users_email (email=?) uses the index. An index costs storage and makes every insert and update a little slower, so add the ones your frequent queries need.',
+      },
+      {
+        title: 'Column order in a composite index',
+        body: 'An index on (customer_id, placed_on) is sorted by customer, then by date within each customer. A search uses it from the left: an equality on customer_id, then a range on placed_on, gives SEARCH … (customer_id=? AND placed_on>?). The same columns in the other order put the range first, and SQLite cannot use the equality behind it. Put equality columns first, then the one range or sort column.',
+      },
+      {
+        title: 'Sorting and covering',
+        body: 'USE TEMP B-TREE FOR ORDER BY means SQLite sorted the rows itself after finding them. If the index already holds them in the order the query asks for, as (kind, happened_at) does for WHERE kind = ? ORDER BY happened_at, that step disappears. When an index holds every column the query needs, the plan says USING COVERING INDEX: SQLite answers from the index and never reads the table rows.',
+      },
+      {
+        title: 'What a plan tells you',
+        body: 'A plan is the choice SQLite made for this query, this data, and this version. It shows which index is used and whether a sort or scan happens; it does not measure time, and on a table of five rows a scan is just as quick. Without ANALYZE statistics, SQLite guesses from the schema, so a plan can change when data or versions change. Measure real queries on real data before calling them fast.',
+      },
+    ],
+    example:
+      "CREATE INDEX events_kind_time ON events (kind, happened_at);\nEXPLAIN QUERY PLAN\nSELECT id FROM events\nWHERE kind = 'login'\nORDER BY happened_at DESC LIMIT 5;\n-- SEARCH events USING COVERING INDEX events_kind_time (kind=?)",
+    walkthrough: [
+      'The index sorts events by kind, then by time within each kind.',
+      'SEARCH … (kind=?) jumps to the logins instead of scanning every event.',
+      'Within the logins the index is already in time order, so no temporary sort appears; SQLite reads it backwards for DESC.',
+      'id is the rowid, which every index entry carries, so the index covers the query.',
+    ],
+    mistakes: [
+      'Indexing the right columns in the wrong order, so only the first condition is used.',
+      'Treating USING INDEX as proof that a query is fast enough.',
+      'Adding an index for every column, which slows every write.',
+      'Forgetting that the join column of the second table needs its own index.',
+    ],
+    questions: [
+      q(
+        'scan-search-v1',
+        'Which plan line shows SQLite reading every row of users?',
+        '',
+        ['SEARCH users USING INDEX users_email (email=?)', 'SCAN users', 'USE TEMP B-TREE FOR ORDER BY'],
+        1,
+        'SCAN reads the whole table. SEARCH jumps through an index, and the temp B-tree line is about sorting.',
+      ),
+      q(
+        'composite-order-v1',
+        "Which index lets SQLite use both conditions of WHERE customer_id = 7 AND placed_on >= '2026-01-01'?",
+        '',
+        ['(placed_on, customer_id)', '(customer_id, placed_on)', 'Either one'],
+        1,
+        'The equality must come first; after a range on the first column, SQLite cannot use the next one.',
+      ),
+      q(
+        'plan-meaning-v1',
+        'A plan says SEARCH … USING COVERING INDEX. What does that establish?',
+        '',
+        ['The query is fast', 'SQLite answered from the index without reading table rows', 'The index is the best possible one'],
+        1,
+        'It describes the steps SQLite chose for this data and version. Speed needs measuring on real data.',
+      ),
+    ],
+    repIds: ['sql-index-lookup', 'sql-index-sort', 'sql-covering-index', 'sql-composite-index', 'sql-index-join'],
+    related: ['sql-joining', 'sql-schema-design'],
+  },
 ]
