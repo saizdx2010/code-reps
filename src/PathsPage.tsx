@@ -199,7 +199,7 @@ export function PathsPage(props: Props) {
         evidence={evidence}
         onOpenRep={openRep}
         onOpenLesson={openLesson}
-        onOpenFoundations={selectedPath.id === foundationsPathId ? undefined : () => choose(foundationsPathId)}
+        onOpenTrack={id => choose(id as PathId)}
       />
     </main>
   )

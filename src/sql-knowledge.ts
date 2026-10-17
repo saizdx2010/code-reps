@@ -443,4 +443,88 @@ export const sqlSkills: Skill[] = [
     repIds: ['sql-create-products', 'sql-default-values', 'sql-strict-types', 'sql-create-memberships', 'sql-create-shifts'],
     related: ['databases', 'sql-joining'],
   },
+  {
+    id: 'sql-changing-data',
+    title: 'Change data safely: UPDATE, DELETE, upserts, and transactions',
+    summary:
+      'Scope every change with WHERE, insert from queries and upsert on conflicts, group related changes, and bind values from code.',
+    prerequisites: ['sql-filtering', 'sql-schema-design'],
+    objectives: [
+      'Write UPDATE and DELETE whose WHERE clause picks exactly the intended rows.',
+      'Insert rows from a query, and upsert with ON CONFLICT … DO UPDATE using excluded.',
+      'Wrap related changes in a transaction, and pass values from code as parameters.',
+    ],
+    sections: [
+      {
+        title: 'WHERE is the scope of a change',
+        body: "UPDATE products SET price_cents = price_cents + 50 changes every row; adding WHERE category = 'tea' AND active = 1 limits it to the rows a SELECT with that WHERE would return. Run that SELECT first on real data. DELETE works the same way, and without WHERE it empties the table. SQLite's changes() reports how many rows the last statement changed.",
+      },
+      {
+        title: 'Insert from a query, or update on conflict',
+        body: "INSERT INTO archived_orders SELECT id, placed_on, cents FROM orders WHERE … copies rows a query finds. An upsert, INSERT … ON CONFLICT(sku) DO UPDATE SET units = units + excluded.units, updates the existing row when the key is taken; excluded is the row that was about to be inserted. When the rows come from a SELECT, SQLite needs a WHERE clause before ON CONFLICT, even WHERE true, to read it unambiguously. SQLite checks the inserted row's CHECK constraints before it resolves the conflict, so a negative correction to an existing row can fail as an insert.",
+      },
+      {
+        title: 'Transactions make several statements one change',
+        body: 'Moving rows is an insert plus a delete; if the second fails after the first succeeded, the data is half moved. BEGIN starts a transaction, COMMIT makes all its changes permanent together, and ROLLBACK undoes everything since BEGIN. Every statement on its own is already atomic; a transaction extends that to a group.',
+      },
+      {
+        title: 'From application code, bind values',
+        body: "In TypeScript, pass values separately: db.run('UPDATE stock SET units = units + ? WHERE sku = ?', [units, sku]). The database receives the SQL and the values apart, so a SKU containing a quote, or a hostile one, can never become SQL. Building the text with string concatenation is how SQL injection happens.",
+      },
+    ],
+    example:
+      "BEGIN;\nINSERT INTO archived_orders\n  SELECT id, placed_on, cents FROM orders\n  WHERE placed_on < '2026-01-01';\nDELETE FROM orders WHERE placed_on < '2026-01-01';\nCOMMIT;",
+    walkthrough: [
+      'BEGIN opens a transaction.',
+      'The INSERT copies every 2025 order into the archive.',
+      'The DELETE removes exactly the same rows, chosen by the same condition.',
+      'COMMIT makes both changes permanent together; after a failure, ROLLBACK would undo the copy.',
+    ],
+    mistakes: [
+      'Running UPDATE or DELETE without WHERE, or with a WHERE you never previewed.',
+      'Copying and deleting with two slightly different conditions, so rows are lost or duplicated.',
+      'Leaving out WHERE true before ON CONFLICT in INSERT … SELECT, which SQLite cannot parse.',
+      'Concatenating values into SQL text from application code instead of binding them.',
+    ],
+    questions: [
+      q(
+        'update-scope-v1',
+        'How many rows does this change in a table of 40 products, 3 of them teas?',
+        'UPDATE products SET price_cents = price_cents + 50;',
+        ['3', '40', 'None until COMMIT'],
+        1,
+        'Without WHERE, UPDATE changes every row. Outside an explicit transaction the change is committed at once.',
+      ),
+      q(
+        'excluded-v1',
+        'In ON CONFLICT(sku) DO UPDATE SET units = units + excluded.units, what is excluded.units?',
+        '',
+        ['The units already stored', 'The units of the row that was about to be inserted', 'The units removed by the conflict'],
+        1,
+        'excluded is the proposed row; units alone refers to the stored row being updated.',
+      ),
+      q(
+        'binding-v1',
+        'Which call is safe when sku comes from a form?',
+        '',
+        [
+          'db.run("DELETE FROM stock WHERE sku = \'" + sku + "\'")',
+          "db.run('DELETE FROM stock WHERE sku = ?', [sku])",
+          'Both, if the form trims spaces',
+        ],
+        1,
+        'Binding keeps the value apart from the SQL text, so a quote in the SKU stays data. Trimming does not remove quotes.',
+      ),
+    ],
+    repIds: [
+      'sql-update-scope',
+      'sql-delete-scope',
+      'sql-upsert-stock',
+      'sqlite-customer-totals',
+      'sqlite-stock-transfer',
+      'sqlite-restock-upsert',
+      'sql-archive-orders',
+    ],
+    related: ['sql-schema-design', 'databases'],
+  },
 ]

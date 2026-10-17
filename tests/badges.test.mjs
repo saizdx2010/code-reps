@@ -77,13 +77,20 @@ test('badges derive from the history given, so profiles stay separate', () => {
   )
 })
 
-test('stages made only of Foundations reps are not repeated in other paths', () => {
+test('stages made only of another track’s reps are not repeated as stage badges', () => {
   const ids = profileBadges([], now).map(badge => badge.id)
   const foundations = new Set(firstPath.stages.flatMap(item => [...item.repIds]))
+  const sql = new Set(paths.find(path => path.id === 'sql').stages.flatMap(item => [...item.repIds]))
   for (const path of paths.slice(1))
     path.stages.forEach((item, index) => {
-      assert.equal(ids.includes(`${path.id}:stage:${index}`), !item.repIds.every(id => foundations.has(id)))
+      const linked = item.repIds.every(id => foundations.has(id)) || (path.id !== 'sql' && item.repIds.every(id => sql.has(id)))
+      assert.equal(ids.includes(`${path.id}:stage:${index}`), !linked)
     })
+  // Backend's SQLite stage is earned in SQL, but its reps still count toward the Backend track badge.
+  const backend = paths.find(path => path.id === 'backend')
+  const linkedStage = backend.stages.findIndex(item => item.repIds.includes('sqlite-stock-transfer'))
+  assert.ok(!ids.includes(`backend:stage:${linkedStage}`))
+  assert.equal(byId(profileBadges([], now), 'backend:path').total, new Set(backend.stages.flatMap(item => item.repIds)).size)
 })
 
 const withStage0 = repIds =>

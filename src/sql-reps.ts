@@ -73,6 +73,15 @@ const membershipSetup = [
 ]
 const membershipLabels = ['member Ana', 'the Chess club', 'the Rowing club']
 
+const shopProducts =
+  'CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT NOT NULL, category TEXT NOT NULL, price_cents INTEGER NOT NULL, active INTEGER NOT NULL CHECK (active IN (0, 1)));'
+const sessionTable =
+  'CREATE TABLE sessions (id INTEGER PRIMARY KEY, user_name TEXT NOT NULL, expires_at TEXT NOT NULL, revoked INTEGER NOT NULL CHECK (revoked IN (0, 1)));'
+const stockTables =
+  'CREATE TABLE stock (sku TEXT PRIMARY KEY, units INTEGER NOT NULL CHECK (units >= 0)); CREATE TABLE incoming (id INTEGER PRIMARY KEY, sku TEXT NOT NULL, units INTEGER NOT NULL CHECK (units > 0));'
+const archiveTables =
+  'CREATE TABLE orders (id INTEGER PRIMARY KEY, placed_on TEXT NOT NULL, cents INTEGER NOT NULL); CREATE TABLE archived_orders (id INTEGER PRIMARY KEY, placed_on TEXT NOT NULL, cents INTEGER NOT NULL);'
+
 export const sqlReps: Rep[] = [
   {
     id: 'sql-select-columns',
@@ -2202,7 +2211,7 @@ export const sqlReps: Rep[] = [
     context:
       'A shop moves its product list into SQLite. Bad rows have slipped in before: missing names, repeated SKUs, and negative prices. This time the table itself should refuse them.',
     prompt:
-      "Write the SQL that creates a table named products with exactly these columns: id INTEGER PRIMARY KEY; sku TEXT, required and unique; name TEXT, required; price_cents INTEGER, required and never negative (0 is allowed). The checks then insert rows that name their columns and expect SQLite to accept or reject each one. Each check starts from an empty database. Do not add other required columns. The checks use SQLite.",
+      'Write the SQL that creates a table named products with exactly these columns: id INTEGER PRIMARY KEY; sku TEXT, required and unique; name TEXT, required; price_cents INTEGER, required and never negative (0 is allowed). The checks then insert rows that name their columns and expect SQLite to accept or reject each one. Each check starts from an empty database. Do not add other required columns. The checks use SQLite.',
     brief: {
       summary: 'Create a products table whose own rules reject missing names, repeated SKUs, and negative prices.',
       rules: [
@@ -2651,6 +2660,369 @@ export const sqlReps: Rep[] = [
           labels: ['a shift with no worker'],
         },
         expected: { probes: ['rejected'] },
+      },
+    ],
+  },
+  {
+    id: 'sql-update-scope',
+    title: 'Update only the rows you mean',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: shopProducts,
+      seeds: {
+        shelf: {
+          about: "five products: two active teas, an inactive tea, a mug, and a category written 'Tea'",
+          sql: "INSERT INTO products VALUES (1,'Sencha','tea',800,1),(2,'Earl Grey','tea',650,1),(3,'Mug','ware',900,1),(4,'Old Oolong','tea',700,0),(5,'Chai','Tea',500,1);",
+        },
+        'no-tea': {
+          about: 'products with no active tea',
+          sql: "INSERT INTO products VALUES (1,'Mug','ware',900,1),(2,'Old Oolong','tea',700,0);",
+        },
+        'all-tea': {
+          about: 'three active teas',
+          sql: "INSERT INTO products VALUES (1,'Sencha','tea',800,1),(2,'Matcha','tea',1500,1),(3,'Rooibos','tea',0,1);",
+        },
+      },
+      compare: 'state',
+      read: [{ label: 'products', sql: 'SELECT id, category, price_cents, active FROM products ORDER BY id' }],
+    },
+    context:
+      'A tea shop raises the price of its active teas by 50 cents. Other products, inactive teas, and anything not filed as tea keep their prices.',
+    prompt:
+      "Write SQL that adds 50 to price_cents for every product whose category is exactly 'tea' and whose active is 1, and changes nothing else in any row. products has id INTEGER PRIMARY KEY, name TEXT NOT NULL, category TEXT NOT NULL, price_cents INTEGER NOT NULL, and active INTEGER NOT NULL (1 or 0). The checks then read every product's id, category, price_cents, and active in id order. The checks use SQLite.",
+    brief: {
+      summary: 'Add 50 cents to the price of every active tea, and change nothing else.',
+      rules: [
+        '`products(id INTEGER PRIMARY KEY, name TEXT NOT NULL, category TEXT NOT NULL, price_cents INTEGER NOT NULL, active INTEGER NOT NULL)`; active is 1 or 0.',
+        "Add 50 to price_cents only where category is exactly `'tea'` and active is 1.",
+        'Change nothing else in any row. The checks read every product back in id order.',
+        'The checks use SQLite.',
+      ],
+      edgeCases: ['An inactive tea keeps its price.', "A category written 'Tea' is not 'tea'."],
+    },
+    example: {
+      input: "products (1, 'Sencha', 'tea', 800, 1) and (3, 'Mug', 'ware', 900, 1)",
+      output: 'Sencha becomes 850; the mug stays 900',
+    },
+    note: 'Checks compare every stored row afterwards. They do not establish that you previewed the rows first, which is a habit worth keeping on real data.',
+    vocabulary: [
+      { term: 'UPDATE', meaning: 'the statement that changes values in existing rows' },
+      { term: 'Scope', meaning: 'the set of rows a change applies to, set by its WHERE clause' },
+    ],
+    planPrompt: 'Write the SELECT that would list exactly the rows to change. Then turn it into the change.',
+    starter: 'UPDATE products\nSET price_cents = price_cents + 50;\n',
+    hints: [
+      'Run the starter and look at the stored rows: without a WHERE clause, UPDATE changes every row in the table.',
+      'The rows to change are the ones a SELECT with the same conditions would return. Text comparison is exact.',
+      "Add WHERE category = 'tea' AND active = 1 to the UPDATE.",
+    ],
+    checks: [
+      {
+        name: 'Only active teas change',
+        input: [],
+        sql: { seed: 'shelf' },
+        expected: {
+          products: [
+            [1, 'tea', 850, 1],
+            [2, 'tea', 700, 1],
+            [3, 'ware', 900, 1],
+            [4, 'tea', 700, 0],
+            [5, 'Tea', 500, 1],
+          ],
+        },
+      },
+      {
+        name: 'Nothing to change',
+        input: [],
+        sql: { seed: 'no-tea' },
+        expected: {
+          products: [
+            [1, 'ware', 900, 1],
+            [2, 'tea', 700, 0],
+          ],
+        },
+      },
+      {
+        name: 'Every active tea changes, even a free one',
+        input: [],
+        sql: { seed: 'all-tea' },
+        expected: {
+          products: [
+            [1, 'tea', 850, 1],
+            [2, 'tea', 1550, 1],
+            [3, 'tea', 50, 1],
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: 'sql-delete-scope',
+    title: 'Delete only expired or revoked sessions',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: sessionTable,
+      seeds: {
+        logins: {
+          about: 'six sessions: expired, revoked, both, and current ones, one expiring exactly at the cutoff',
+          sql: "INSERT INTO sessions VALUES (1,'ana','2026-05-20 10:00',0),(2,'bo','2026-06-03 09:00',1),(3,'cy','2026-05-01 08:00',1),(4,'di','2026-06-01 00:00',0),(5,'ed','2026-07-01 12:00',0),(6,'fu','2026-05-31 23:59',0);",
+        },
+        'all-current': {
+          about: 'two current sessions',
+          sql: "INSERT INTO sessions VALUES (1,'ana','2026-06-02 10:00',0),(2,'bo','2026-08-01 10:00',0);",
+        },
+        empty: { about: 'no sessions', sql: '' },
+      },
+      compare: 'state',
+      read: [{ label: 'sessions', sql: 'SELECT id, user_name FROM sessions ORDER BY id' }],
+    },
+    context:
+      'A nightly job clears sign-in sessions that can no longer be used: those that expired before 1 June 2026 and those an administrator revoked.',
+    prompt:
+      "Write SQL that deletes every session whose expires_at is before '2026-06-01 00:00' or whose revoked is 1, and keeps every other session unchanged. sessions has id INTEGER PRIMARY KEY, user_name TEXT NOT NULL, expires_at TEXT NOT NULL written as 'YYYY-MM-DD HH:MM', and revoked INTEGER NOT NULL (1 or 0). The checks then read every remaining session's id and user_name in id order. The checks use SQLite.",
+    brief: {
+      summary: 'Delete the sessions that expired before 1 June 2026 or were revoked.',
+      rules: [
+        "`sessions(id INTEGER PRIMARY KEY, user_name TEXT NOT NULL, expires_at TEXT NOT NULL, revoked INTEGER NOT NULL)`; expires_at is 'YYYY-MM-DD HH:MM'; revoked is 1 or 0.",
+        "Delete a session when its expires_at is before '2026-06-01 00:00', or when revoked is 1.",
+        'Keep every other session unchanged. The checks read the remaining sessions back in id order.',
+        'The checks use SQLite.',
+      ],
+      edgeCases: ["A session expiring exactly at '2026-06-01 00:00' is kept unless revoked."],
+    },
+    example: {
+      input: "sessions expiring '2026-05-20 10:00' and '2026-07-01 12:00', neither revoked",
+      output: 'only the July session remains',
+    },
+    note: 'Checks compare the remaining rows. They do not establish that you previewed the rows with a SELECT first.',
+    vocabulary: [{ term: 'DELETE', meaning: 'the statement that removes rows; without WHERE it removes every row' }],
+    planPrompt: 'Write the SELECT that lists exactly the sessions to delete, and check it against session 4.',
+    starter: 'DELETE FROM sessions\nWHERE revoked = 1;\n',
+    hints: [
+      'The starter handles one of the two reasons. A session goes when either reason applies.',
+      'Text times written year first compare correctly; "before" the cutoff means strictly less.',
+      "Delete WHERE expires_at < '2026-06-01 00:00' OR revoked = 1.",
+    ],
+    checks: [
+      {
+        name: 'Expired and revoked sessions go',
+        input: [],
+        sql: { seed: 'logins' },
+        expected: {
+          sessions: [
+            [4, 'di'],
+            [5, 'ed'],
+          ],
+        },
+      },
+      {
+        name: 'Current sessions stay',
+        input: [],
+        sql: { seed: 'all-current' },
+        expected: {
+          sessions: [
+            [1, 'ana'],
+            [2, 'bo'],
+          ],
+        },
+      },
+      { name: 'No sessions to delete', input: [], sql: { seed: 'empty' }, expected: { sessions: [] } },
+    ],
+  },
+  {
+    id: 'sql-upsert-stock',
+    title: 'Add a delivery to stock',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: stockTables,
+      seeds: {
+        delivery: {
+          about: 'stock of A-1 (5) and B-2 (0), and a delivery of A-1 and a new C-3',
+          sql: "INSERT INTO stock VALUES ('A-1',5),('B-2',0); INSERT INTO incoming VALUES (1,'A-1',3),(2,'C-3',4);",
+        },
+        'repeated-sku': {
+          about: 'a delivery listing A-1 twice and a new C-3 twice',
+          sql: "INSERT INTO stock VALUES ('A-1',5),('B-2',0); INSERT INTO incoming VALUES (1,'C-3',1),(2,'A-1',1),(3,'C-3',2),(4,'A-1',1);",
+        },
+        'empty-delivery': { about: 'stock and no incoming rows', sql: "INSERT INTO stock VALUES ('A-1',5),('B-2',0);" },
+      },
+      compare: 'state',
+      read: [
+        { label: 'stock', sql: 'SELECT sku, units FROM stock ORDER BY sku' },
+        { label: 'incoming', sql: 'SELECT id, sku, units FROM incoming ORDER BY id' },
+      ],
+    },
+    context:
+      'A warehouse receives a delivery list. A product it already stocks gains the delivered units; a new product gets its own stock row.',
+    prompt:
+      'Write SQL that adds every row of incoming to stock: for a sku already in stock, add the incoming units to its units; for a sku not yet in stock, create its row with those units. incoming may list the same sku more than once, and every listing counts. Leave incoming unchanged. stock has sku TEXT PRIMARY KEY and units INTEGER NOT NULL CHECK (units >= 0). incoming has id INTEGER PRIMARY KEY, sku TEXT NOT NULL, and units INTEGER NOT NULL CHECK (units > 0). The checks then read stock in sku order and incoming in id order. The checks use SQLite.',
+    brief: {
+      summary: 'Add each delivery row to stock, creating rows for new products.',
+      rules: [
+        '`stock(sku TEXT PRIMARY KEY, units INTEGER NOT NULL CHECK (units >= 0))` and `incoming(id INTEGER PRIMARY KEY, sku TEXT NOT NULL, units INTEGER NOT NULL CHECK (units > 0))`.',
+        'A sku already in stock gains the incoming units; a new sku gets a stock row with them. Every listing of a repeated sku counts.',
+        'Leave incoming unchanged. The checks read stock and incoming back.',
+        'The checks use SQLite.',
+      ],
+      edgeCases: ['A new sku listed twice ends with the sum of both listings.', 'An empty delivery changes nothing.'],
+    },
+    example: { input: 'stock A-1 = 5; incoming A-1 3 and C-3 4', output: 'stock A-1 = 8, B-2 = 0, C-3 = 4' },
+    note: 'This is an independent rep: plan before you look at the hints. Checks compare the stored rows afterwards.',
+    vocabulary: [
+      { term: 'Upsert', meaning: 'insert a row, or update it if a row with the same key already exists' },
+      { term: 'excluded', meaning: 'in an ON CONFLICT clause, the row that was about to be inserted' },
+    ],
+    planPrompt: 'Predict the stock rows after the repeated-sku delivery, then the statements that produce them.',
+    starter: '-- Add the incoming rows to stock.\n',
+    hints: [
+      'Each incoming row either changes an existing stock row or creates one. Decide what happens when a new sku appears for the second time.',
+      'An INSERT can take its rows from a SELECT, and SQLite can turn a key conflict into an update that refers to the incoming value.',
+      'INSERT INTO stock (sku, units) SELECT sku, units FROM incoming WHERE true ON CONFLICT(sku) DO UPDATE SET units = units + excluded.units. SQLite needs the WHERE true there.',
+    ],
+    checks: [
+      {
+        name: 'Known products gain units, new ones are added',
+        input: [],
+        sql: { seed: 'delivery' },
+        expected: {
+          stock: [
+            ['A-1', 8],
+            ['B-2', 0],
+            ['C-3', 4],
+          ],
+          incoming: [
+            [1, 'A-1', 3],
+            [2, 'C-3', 4],
+          ],
+        },
+      },
+      {
+        name: 'A product listed twice counts twice',
+        input: [],
+        sql: { seed: 'repeated-sku' },
+        expected: {
+          stock: [
+            ['A-1', 7],
+            ['B-2', 0],
+            ['C-3', 3],
+          ],
+          incoming: [
+            [1, 'C-3', 1],
+            [2, 'A-1', 1],
+            [3, 'C-3', 2],
+            [4, 'A-1', 1],
+          ],
+        },
+      },
+      {
+        name: 'An empty delivery changes nothing',
+        input: [],
+        sql: { seed: 'empty-delivery' },
+        expected: {
+          stock: [
+            ['A-1', 5],
+            ['B-2', 0],
+          ],
+          incoming: [],
+        },
+      },
+    ],
+  },
+  {
+    id: 'sql-archive-orders',
+    title: 'Move old orders to an archive',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: archiveTables,
+      seeds: {
+        'year-end': {
+          about: 'four orders around the new year and one order already archived',
+          sql: "INSERT INTO orders VALUES (1,'2025-11-30',500),(2,'2025-12-31',700),(3,'2026-01-01',900),(4,'2026-02-10',300); INSERT INTO archived_orders VALUES (90,'2025-01-15',100);",
+        },
+        'nothing-old': {
+          about: 'only 2026 orders and an empty archive',
+          sql: "INSERT INTO orders VALUES (1,'2026-03-01',250),(2,'2026-04-02',350);",
+        },
+        'all-old': { about: 'only 2025 orders', sql: "INSERT INTO orders VALUES (5,'2025-06-01',400),(6,'2025-07-15',600);" },
+      },
+      compare: 'state',
+      read: [
+        { label: 'orders', sql: 'SELECT id, placed_on, cents FROM orders ORDER BY id' },
+        { label: 'archived_orders', sql: 'SELECT id, placed_on, cents FROM archived_orders ORDER BY id' },
+      ],
+    },
+    context:
+      'At the start of 2026 a shop moves last year’s orders into an archive table, so the live table stays small. Each order must end up in exactly one of the two tables.',
+    prompt:
+      "Write SQL that moves every order placed before 2026-01-01 from orders into archived_orders, keeping its id, placed_on, and cents, so that each order is in exactly one of the two tables afterwards. Orders already in archived_orders stay there. orders and archived_orders both have id INTEGER PRIMARY KEY, placed_on TEXT NOT NULL written as 'YYYY-MM-DD', and cents INTEGER NOT NULL. The checks then read both tables in id order. The checks use SQLite.",
+    brief: {
+      summary: 'Move the orders placed before 2026 into archived_orders, so each order is in exactly one table.',
+      rules: [
+        "`orders(id INTEGER PRIMARY KEY, placed_on TEXT NOT NULL, cents INTEGER NOT NULL)`, and `archived_orders` with the same columns; placed_on is 'YYYY-MM-DD'.",
+        'Move every order placed before 2026-01-01 into archived_orders with the same id, placed_on, and cents.',
+        'Afterwards each order is in exactly one table. Orders already archived stay.',
+        'The checks read both tables back. The checks use SQLite.',
+      ],
+      edgeCases: ['An order from 2026-01-01 stays in orders.', 'Nothing old: both tables keep their rows.'],
+    },
+    example: { input: "orders placed '2025-12-31' and '2026-01-01'", output: 'the first moves to archived_orders; the second stays' },
+    note: 'This is a delayed recall rep: solve it without hints after the break. Checks read both tables after your SQL; they cannot see whether a transaction wrapped the steps, which belongs in your self-review.',
+    vocabulary: [{ term: 'INSERT … SELECT', meaning: 'an insert whose rows come from a query' }],
+    planPrompt: 'List the steps, the condition each uses, and what a failure between them would leave behind.',
+    starter: '-- Move last year’s orders into archived_orders.\n',
+    hints: [
+      'Moving is two changes: copying rows into the archive and removing them from orders. Both must pick exactly the same rows.',
+      'A row can be inserted from a SELECT, and the same condition can drive the delete. A transaction makes the pair all or nothing.',
+      "BEGIN; INSERT INTO archived_orders SELECT id, placed_on, cents FROM orders WHERE placed_on < '2026-01-01'; DELETE FROM orders WHERE placed_on < '2026-01-01'; COMMIT;",
+    ],
+    checks: [
+      {
+        name: 'Last year’s orders move, this year’s stay',
+        input: [],
+        sql: { seed: 'year-end' },
+        expected: {
+          orders: [
+            [3, '2026-01-01', 900],
+            [4, '2026-02-10', 300],
+          ],
+          archived_orders: [
+            [1, '2025-11-30', 500],
+            [2, '2025-12-31', 700],
+            [90, '2025-01-15', 100],
+          ],
+        },
+      },
+      {
+        name: 'Nothing old to move',
+        input: [],
+        sql: { seed: 'nothing-old' },
+        expected: {
+          orders: [
+            [1, '2026-03-01', 250],
+            [2, '2026-04-02', 350],
+          ],
+          archived_orders: [],
+        },
+      },
+      {
+        name: 'Every order is old',
+        input: [],
+        sql: { seed: 'all-old' },
+        expected: {
+          orders: [],
+          archived_orders: [
+            [5, '2025-06-01', 400],
+            [6, '2025-07-15', 600],
+          ],
+        },
       },
     ],
   },

@@ -353,6 +353,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'sql-changing-data',
+    title: 'Change data safely',
+    guided: 'sql-update-scope',
+    independent: 'sql-upsert-stock',
+    recall: 'sql-archive-orders',
+    practice: ['sql-delete-scope', 'sqlite-restock-upsert'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

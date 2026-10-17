@@ -241,7 +241,7 @@ export function HomePage(props: Props) {
             evidence={evidence}
             onOpenRep={openRep}
             onOpenLesson={openLesson}
-            onOpenFoundations={() => onPath('typescript')}
+            onOpenTrack={id => onPath(id as (typeof paths)[number]['id'])}
           />
         </section>
       </div>

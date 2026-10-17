@@ -296,6 +296,10 @@ export const repLevels: Record<string, RepLevel> = {
   'sql-strict-types': 2,
   'sql-create-memberships': 2,
   'sql-create-shifts': 2,
+  'sql-update-scope': 1,
+  'sql-delete-scope': 1,
+  'sql-upsert-stock': 2,
+  'sql-archive-orders': 2,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

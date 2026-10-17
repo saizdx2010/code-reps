@@ -52,6 +52,18 @@ test('language refreshers in other tracks are shown as covered by Foundations', 
   assert.equal(buildTrail(dsa.id, fresh).stages[1].covered, true)
 })
 
+test('a Backend stage made of SQL reps links to the SQL track instead of repeating it', () => {
+  const backend = buildTrail('backend', fresh)
+  const linked = backend.stages.filter(stage => stage.coveredBy)
+  assert.deepEqual(
+    linked.map(stage => [stage.coveredBy.id, stage.coveredBy.title, stage.covered]),
+    [['sql', 'SQL', true]],
+  )
+  // The SQL track shows the same reps as its own stage, never as a link.
+  assert.ok(buildTrail('sql', fresh).stages.every(stage => !stage.coveredBy))
+  assert.equal(buildTrail('algorithms-data-structures', fresh).stages[1].coveredBy.title, 'Foundations')
+})
+
 test('project applications end the trail without changing path completion counts', () => {
   const trail = buildTrail('frontend', fresh)
   const last = trail.stages.at(-1)

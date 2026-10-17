@@ -10,7 +10,8 @@ type Props = {
   evidence: (repId: string) => string
   onOpenRep: (repId: string) => void
   onOpenLesson: (skillId: string) => void
-  onOpenFoundations?: () => void
+  /** Opens the track that owns a linked stage, such as Foundations. */
+  onOpenTrack?: (pathId: string) => void
 }
 
 const stateLabels: Record<string, string> = {
@@ -37,13 +38,13 @@ const stageDone = (stage: Stage) => stage.total > 0 && stage.done === stage.tota
 const stageSummary = (stage: Stage) =>
   stageDone(stage) && stage.recap
     ? stage.recap
-    : stage.covered
-      ? 'Covered in Foundations. Open it to revisit these reps here.'
+    : stage.coveredBy
+      ? `Covered in ${stage.coveredBy.title}. Open it to revisit these reps here.`
       : stage.description
 const levelRange = (stage: TrailStage) => stageLevelRange(stage.nodes.flatMap(node => (node.kind === 'lesson' ? [] : [node.repId])))
 
 /** A path drawn as stages of connected nodes: lessons before the reps that use them, then recall and projects. */
-export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenFoundations }: Props) {
+export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenTrack }: Props) {
   return (
     <ol className="trail path-stages">
       {stages.map((stage, index) => (
@@ -69,9 +70,9 @@ export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenFoundat
                 {stage.done}/{stage.total}
               </span>
             </summary>
-            {stage.covered && onOpenFoundations && (
-              <button type="button" className="text-button trail-covered" onClick={onOpenFoundations}>
-                Open Foundations
+            {stage.coveredBy && onOpenTrack && (
+              <button type="button" className="text-button trail-covered" onClick={() => onOpenTrack(stage.coveredBy!.id)}>
+                Open {stage.coveredBy.title}
               </button>
             )}
             <ol className="trail-nodes">

@@ -288,6 +288,10 @@ const repRows: [string, string, number, Rep['format'] | 0, string, number, numbe
   ["sql-strict-types","Make SQLite enforce column types",38,"sql","4e382628ff46a709",3,98,4,34],
   ["sql-create-memberships","Link members and clubs",38,"sql","a95e2bfcde784b86",3,109,6,34],
   ["sql-create-shifts","Design a table of work shifts",38,"sql","f95128fcadb4b4b9",3,85,5,34],
+  ["sql-update-scope","Update only the rows you mean",38,"sql","4ad6c14cecdc5b08",3,85,3,34],
+  ["sql-delete-scope","Delete only expired or revoked sessions",38,"sql","ae54d0c751a4f8f2",3,82,3,34],
+  ["sql-upsert-stock","Add a delivery to stock",38,"sql","c991a96b8da43284",3,96,3,34],
+  ["sql-archive-orders","Move old orders to an archive",38,"sql","70feccc900594706",3,88,3,34],
 ]
 
 export const repIndex: RepSummary[] = repRows.map(([id, title, category, format, starterHash, hintTotal, briefWords, checkTotal, source]) => ({
@@ -357,4 +361,5 @@ export const skillIndex: SkillSummary[] = [
   {"id":"sql-joining","title":"Combine tables with JOIN","summary":"Pair rows of two tables, keep rows that have no match, and avoid sums that a join multiplies.","prerequisites":["sql-summarizing"],"related":["sql-summarizing","databases"],"repIds":["sql-join-orders","sql-customers-without-orders","sql-team-totals","sql-june-returns","sql-authors-latest"],"questions":[{"id":"inner-join-rows-v1","optionCount":3,"answer":1},{"id":"left-join-where-v1","optionCount":3,"answer":1},{"id":"fan-out-v1","optionCount":3,"answer":1}]},
   {"id":"sql-subqueries","title":"Ask in steps: subqueries, EXISTS, and WITH","summary":"Use the answer of one query inside another, test whether related rows exist, and name the steps of a longer question.","prerequisites":["sql-joining"],"related":["sql-joining","sql-summarizing"],"repIds":["sql-above-average","sql-category-average","sql-students-without-work","sql-free-rooms","sql-strong-months"],"questions":[{"id":"not-in-null-v1","optionCount":3,"answer":1},{"id":"exists-v1","optionCount":3,"answer":0},{"id":"correlated-v1","optionCount":3,"answer":1}]},
   {"id":"sql-schema-design","title":"Design a table: keys, constraints, and types","summary":"Let the table itself refuse bad rows with keys, NOT NULL, UNIQUE, CHECK, DEFAULT, foreign keys, and SQLite’s STRICT tables.","prerequisites":["sql-reading"],"related":["databases","sql-joining"],"repIds":["sql-create-products","sql-default-values","sql-strict-types","sql-create-memberships","sql-create-shifts"],"questions":[{"id":"unique-null-v1","optionCount":3,"answer":1},{"id":"default-null-v1","optionCount":3,"answer":1},{"id":"foreign-key-default-v1","optionCount":3,"answer":1}]},
+  {"id":"sql-changing-data","title":"Change data safely: UPDATE, DELETE, upserts, and transactions","summary":"Scope every change with WHERE, insert from queries and upsert on conflicts, group related changes, and bind values from code.","prerequisites":["sql-filtering","sql-schema-design"],"related":["sql-schema-design","databases"],"repIds":["sql-update-scope","sql-delete-scope","sql-upsert-stock","sqlite-customer-totals","sqlite-stock-transfer","sqlite-restock-upsert","sql-archive-orders"],"questions":[{"id":"update-scope-v1","optionCount":3,"answer":1},{"id":"excluded-v1","optionCount":3,"answer":1},{"id":"binding-v1","optionCount":3,"answer":1}]},
 ]

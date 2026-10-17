@@ -434,6 +434,60 @@ test('S6 shift checks catch a zero-length shift, a one-column unique rule, and u
   ])
 })
 
+test('S7 change checks catch an unscoped update, a loose category, and an inactive row', () => {
+  const base = solution('sql-update-scope')
+  assertCaught('sql-update-scope', [
+    [reps.find(rep => rep.id === 'sql-update-scope').starter, 'Only active teas change'],
+    [base.replace(' AND active = 1', ''), 'Only active teas change'],
+    [base.replace("category = 'tea'", "lower(category) = 'tea'"), 'Only active teas change'],
+  ])
+})
+
+test('S7 delete checks catch one missing reason, the cutoff, and AND for OR', () => {
+  const base = solution('sql-delete-scope')
+  assertCaught('sql-delete-scope', [
+    [reps.find(rep => rep.id === 'sql-delete-scope').starter, 'Expired and revoked sessions go'],
+    [base.replace('expires_at <', 'expires_at <='), 'Expired and revoked sessions go'],
+    [base.replace(' OR revoked', ' AND revoked'), 'Expired and revoked sessions go'],
+    ['DELETE FROM sessions', 'Current sessions stay'],
+  ])
+})
+
+test('S7 upsert checks catch a replace, a skipped repeat, and a changed delivery list', () => {
+  const base = solution('sql-upsert-stock')
+  assertCaught('sql-upsert-stock', [
+    ['INSERT OR REPLACE INTO stock (sku, units) SELECT sku, units FROM incoming', 'Known products gain units, new ones are added'],
+    [base.replace('units + excluded.units', 'excluded.units'), 'Known products gain units, new ones are added'],
+    [base.replace('DO UPDATE SET units = units + excluded.units', 'DO NOTHING'), 'A product listed twice counts twice'],
+    [`${base}\nDELETE FROM incoming;`, 'Known products gain units, new ones are added'],
+  ])
+  assert.match(failed('sql-upsert-stock', base.replace(' WHERE true', '')).join(), /Known products/)
+  // A two-step version without upsert is also accepted.
+  assert.deepEqual(
+    failed(
+      'sql-upsert-stock',
+      'UPDATE stock SET units = units + (SELECT SUM(units) FROM incoming WHERE incoming.sku = stock.sku) WHERE sku IN (SELECT sku FROM incoming); INSERT INTO stock (sku, units) SELECT sku, SUM(units) FROM incoming WHERE sku NOT IN (SELECT sku FROM stock) GROUP BY sku;',
+    ),
+    [],
+  )
+})
+
+test('S7 archive checks catch disagreeing conditions, a missing delete, and the wrong order of steps', () => {
+  const base = solution('sql-archive-orders')
+  assertCaught('sql-archive-orders', [
+    [
+      base.replace("DELETE FROM orders WHERE placed_on < '2026-01-01';", "DELETE FROM orders WHERE placed_on <= '2026-01-01';"),
+      'Last year’s orders move, this year’s stay',
+    ],
+    [base.replace("DELETE FROM orders WHERE placed_on < '2026-01-01';\n", ''), 'Last year’s orders move, this year’s stay'],
+    [
+      "BEGIN; DELETE FROM orders WHERE placed_on < '2026-01-01'; INSERT INTO archived_orders SELECT id, placed_on, cents FROM orders WHERE placed_on < '2026-01-01'; COMMIT;",
+      'Last year’s orders move, this year’s stay',
+    ],
+    [base.replace('COMMIT;', ''), 'Last year’s orders move, this year’s stay'],
+  ])
+})
+
 test('the S1 journey keeps recall distinct from its guided and independent reps', () => {
   const journey = journeys.find(item => item.id === 'sql-reading')
   assert.deepEqual(

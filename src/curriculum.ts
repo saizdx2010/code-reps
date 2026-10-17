@@ -39,7 +39,23 @@ export const trackGroups: { title: string; pathIds: PathId[] }[] = [
 /** The track each one builds on, as reading guidance on the track picker. Nothing is locked, dimmed, or reordered by it. */
 export const trackBuildsOn: Partial<Record<PathId, PathId>> = { sql: foundationsPathId, backend: 'sql' }
 
-const foundationsRepIds = new Set<string>(paths.find(path => path.id === foundationsPathId)!.stages.flatMap(stage => stage.repIds))
+const repsOf = (pathId: PathId) => new Set<string>(paths.find(path => path.id === pathId)!.stages.flatMap(stage => stage.repIds))
+const foundationsRepIds = repsOf(foundationsPathId)
+/** Tracks whose reps other tracks may list as a whole stage, shown there as a link instead of repeated. */
+const linkedTracks = new Map<PathId, Set<string>>([
+  [foundationsPathId, foundationsRepIds],
+  ['sql', repsOf('sql')],
+])
+
+/**
+ * The track that owns a stage made only of its reps, when that is not the track showing the stage. The stage is drawn as
+ * a link to its owner, and its stage badge is earned there; the reps still count toward the showing track's completion.
+ */
+export function stageHomeTrack(pathId: string, repIds: readonly string[]): PathId | undefined {
+  if (!repIds.length) return undefined
+  for (const [owner, ids] of linkedTracks) if (owner !== pathId && repIds.every(id => ids.has(id))) return owner
+  return undefined
+}
 
 /**
  * Returning learners skip the language basics: the leading stages made only of the TypeScript foundation reps.
@@ -54,7 +70,7 @@ export function returningSkipStages(pathId: string) {
 
 /** A stage made only of Foundations reps is shown once, as a link back to Foundations, instead of repeating it. */
 export function stageCoveredByFoundations(pathId: string, repIds: readonly string[]) {
-  return pathId !== foundationsPathId && repIds.length > 0 && repIds.every(id => foundationsRepIds.has(id))
+  return stageHomeTrack(pathId, repIds) === foundationsPathId
 }
 
 /** Name the authored task and the next learning step without predicting assessment results. */

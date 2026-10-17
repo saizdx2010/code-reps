@@ -155,4 +155,17 @@ CREATE TABLE memberships (
   CHECK (ends_at > starts_at),
   UNIQUE (worker, starts_at)
 );`,
+  'sql-update-scope': `UPDATE products
+SET price_cents = price_cents + 50
+WHERE category = 'tea' AND active = 1;`,
+  'sql-delete-scope': `DELETE FROM sessions
+WHERE expires_at < '2026-06-01 00:00' OR revoked = 1;`,
+  'sql-upsert-stock': `INSERT INTO stock (sku, units)
+SELECT sku, units FROM incoming WHERE true
+ON CONFLICT(sku) DO UPDATE SET units = units + excluded.units;`,
+  'sql-archive-orders': `BEGIN;
+INSERT INTO archived_orders (id, placed_on, cents)
+  SELECT id, placed_on, cents FROM orders WHERE placed_on < '2026-01-01';
+DELETE FROM orders WHERE placed_on < '2026-01-01';
+COMMIT;`,
 }

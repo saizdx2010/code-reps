@@ -376,6 +376,54 @@ export const sqlDepth: Record<string, RepDepth> = {
     transfer:
       'The restaurant now refuses any two shifts of one worker that overlap, not only those with equal start times. Decide why no table constraint can express that and what would. This changed contract is self-reviewed; the original checks do not cover it.',
   },
+  'sql-update-scope': {
+    reasoning:
+      "The WHERE clause is the scope of the change: only rows for which category = 'tea' AND active = 1 is true are updated, and SET adds 50 to each of their own prices. Every other row is untouched because UPDATE never visits rows its WHERE rejects. The text comparison is exact, so 'Tea' is outside the scope.",
+    trace:
+      "With the shelf data, Sencha (tea, active) goes from 800 to 850 and Earl Grey from 650 to 700. Old Oolong is tea but inactive, the Mug is ware, and Chai is filed as 'Tea', so their rows keep 700, 900, and 500.",
+    alternative:
+      "Running SELECT id FROM products WHERE category = 'tea' AND active = 1 first previews the scope, and on real data wrapping the update in BEGIN … COMMIT lets you check the result and ROLLBACK if it is wrong. lower(category) = 'tea' would include Chai, which this contract excludes.",
+    counterexample:
+      "The starter without WHERE raises every price, including the Mug and the inactive tea. WHERE category = 'tea' alone raises Old Oolong.",
+    transfer:
+      'The shop now raises active teas by 5%, rounded to whole cents, with a minimum increase of 10 cents. Decide how to express the rounding and the minimum in one SET. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-delete-scope': {
+    reasoning:
+      "A session goes when either reason applies, so the condition is expires_at < '2026-06-01 00:00' OR revoked = 1. Strict < keeps a session expiring exactly at the cutoff. The text times compare correctly because they are written year first with a fixed width.",
+    trace:
+      "With the logins data, ana's session expired on 20 May, bo's is revoked, cy's is both, and fu's expired at 23:59 on 31 May, so all four are deleted. di's expires exactly at the cutoff and is not revoked, so it stays, as does ed's July session.",
+    alternative:
+      'Two DELETE statements, one per reason, give the same result and can be easier to log separately. Marking rows as deleted instead of removing them keeps an audit trail, at the cost of filtering them out everywhere else.',
+    counterexample:
+      "The starter keeps ana's and fu's expired sessions. expires_at <= '2026-06-01 00:00' deletes di's. AND instead of OR deletes only cy's.",
+    transfer:
+      'Sessions now also expire after 30 days without activity, given a last_seen_at column. Decide how to compute 30 days before the cutoff in SQLite text dates. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-upsert-stock': {
+    reasoning:
+      'INSERT … SELECT feeds every incoming row into stock in turn. The first row for a new sku is inserted; any later row whose sku already exists conflicts on the primary key, and DO UPDATE adds its units with units + excluded.units. Because each listing is processed separately, a sku listed twice gains both amounts, whether or not it was in stock before.',
+    trace:
+      'With the repeated-sku data, incoming row 1 (C-3, 1) inserts C-3 with 1. Row 2 (A-1, 1) conflicts and makes A-1 6. Row 3 (C-3, 2) now conflicts too and makes C-3 3. Row 4 makes A-1 7. incoming is only read, so it is unchanged.',
+    alternative:
+      'An UPDATE that adds each sku’s summed incoming units, followed by an INSERT of the skus not yet in stock, also works and runs on databases without upsert. Summing incoming by sku first and then upserting the sums processes each sku once.',
+    counterexample:
+      'INSERT OR REPLACE replaces the stock row with the incoming units, so A-1 becomes 3 instead of 8. Inserting the new skus straight from the raw incoming rows fails on the second C-3 listing with a primary key conflict. Leaving out WHERE true is a parse error in SQLite.',
+    transfer:
+      'Deliveries can now also contain corrections with negative units that must never take stock below zero, and a failing correction must undo the whole delivery. Decide where the CHECK constraint fires during an upsert, as the restock rep showed. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-archive-orders': {
+    reasoning:
+      "Moving is copy then delete, and both statements use the same condition, placed_on < '2026-01-01', so exactly the copied rows are removed. The ids move with the rows, so nothing else that refers to an order id has to change. A transaction around the pair makes the move all or nothing: if the delete failed, ROLLBACK would also undo the copy.",
+    trace:
+      "With the year-end data, the INSERT copies orders 1 (2025-11-30) and 2 (2025-12-31) next to archived order 90. The DELETE then removes 1 and 2 from orders. Order 3, placed on 2026-01-01, fails < '2026-01-01' in both statements and stays.",
+    alternative:
+      'SQLite’s DELETE … RETURNING could feed an insert in application code, moving rows in one pass. Marking orders as archived with a flag avoids moving them at all, at the cost of every query filtering on the flag.',
+    counterexample:
+      "Using <= '2026-01-01' in one statement and < in the other duplicates or loses order 3. Deleting first and then copying from orders copies nothing. Without a transaction, a failure between the two statements leaves the copy without the delete.",
+    transfer:
+      'Archived orders must now also take their order lines from an order_lines table. Decide the order of the statements so that no line is ever left pointing at a missing order. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
 }
 
 export const sqlGuides: Record<string, ReflectionGuide> = {
@@ -580,6 +628,30 @@ export const sqlGuides: Record<string, ReflectionGuide> = {
     example:
       "I declare every column NOT NULL, CHECK (role IN ('cook', 'server', 'host')), and the table constraints CHECK (ends_at > starts_at) and UNIQUE (worker, starts_at).",
   },
+  'sql-update-scope': {
+    plan: ['Write the SELECT that lists exactly the rows to change.', 'Turn it into the change.'],
+    explanation: ['Explain why Old Oolong and Chai keep their prices.', 'Explain what the starter did to every row.'],
+    example:
+      "I run UPDATE products SET price_cents = price_cents + 50 WHERE category = 'tea' AND active = 1. The WHERE is the scope: only active rows filed exactly as tea change.",
+  },
+  'sql-delete-scope': {
+    plan: ['Write the SELECT that lists the sessions to delete.', 'Check it against session 4.'],
+    explanation: ["Explain why di's session stays.", 'Explain why the two reasons are joined with OR.'],
+    example:
+      "I run DELETE FROM sessions WHERE expires_at < '2026-06-01 00:00' OR revoked = 1. Strict < keeps a session expiring at the cutoff.",
+  },
+  'sql-upsert-stock': {
+    plan: ['Predict the stock rows after the repeated-sku delivery.', 'Name the statements that produce them.'],
+    explanation: ['Trace C-3 through both of its listings.', 'Explain what excluded.units refers to.'],
+    example:
+      'I run INSERT INTO stock (sku, units) SELECT sku, units FROM incoming WHERE true ON CONFLICT(sku) DO UPDATE SET units = units + excluded.units. Each listing is processed in turn, so repeats add up.',
+  },
+  'sql-archive-orders': {
+    plan: ['List the steps and the condition each uses.', 'Say what a failure between them would leave behind.'],
+    explanation: ['Explain why both statements must use the same condition.', 'Explain what the transaction protects.'],
+    example:
+      "I BEGIN, copy orders WHERE placed_on < '2026-01-01' into archived_orders, delete the same rows from orders, and COMMIT. The same condition picks the same rows, and the transaction keeps the pair together.",
+  },
 }
 
 export const sqlLessonDepth: Record<string, LessonDepth> = {
@@ -642,5 +714,15 @@ export const sqlLessonDepth: Record<string, LessonDepth> = {
       "Predict which of these the table above accepts: ('A', -1), ('A', 5) twice, and (NULL, 5) twice. Then add the smallest change that refuses every row with a missing value. Discuss before revealing.",
     answer:
       "('A', -1) is rejected by the CHECK. The second ('A', 5) is rejected by UNIQUE. Both (NULL, 5) rows are accepted. Adding NOT NULL to sku and price_cents refuses missing values; UNIQUE and CHECK stay as they are. This discussion is self-reviewed; the products rep checks these rules with real inserts.",
+  },
+  'sql-changing-data': {
+    title: 'A move is two changes that must agree',
+    code: "INSERT INTO archived_orders SELECT id, placed_on, cents FROM orders\n  WHERE placed_on <= '2025-12-31';\nDELETE FROM orders WHERE placed_on < '2026-01-01';",
+    reasoning:
+      "For well-formed dates the two conditions pick the same rows, so this move works. But one stored value such as '2025-12-31 18:00', or a later edit to just one condition, makes them disagree: the copy skips the row because the longer text sorts after '2025-12-31', while the delete still removes it, and the order is lost. Writing the condition once and reusing it, inside one transaction, removes that whole class of mistake.",
+    challenge:
+      "With an order placed_on '2025-12-31 18:00', predict what each statement does to it. Then rewrite the move so the condition is written once. Discuss before revealing.",
+    answer:
+      "The INSERT skips it, because '2025-12-31 18:00' sorts after '2025-12-31'; the DELETE removes it, because it sorts before '2026-01-01'. The order disappears from both tables. Using < '2026-01-01' in both statements, or first selecting the ids to move into a temporary table and using it for both, keeps the two steps in agreement. This discussion is self-reviewed; the archive rep checks the stored rows.",
   },
 }

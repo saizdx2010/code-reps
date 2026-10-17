@@ -462,6 +462,21 @@ export const paths = [
         recap: 'You can now design tables whose constraints guard every insert.',
         repIds: ['sql-create-products', 'sql-default-values', 'sql-strict-types', 'sql-create-memberships', 'sql-create-shifts'],
       },
+      {
+        title: 'Change data safely',
+        description:
+          'Scope UPDATE and DELETE, insert from queries and upsert, keep related changes in one transaction, and bind values from TypeScript.',
+        recap: 'You can now change data with a deliberate scope, upsert, move rows, and keep multi-step changes atomic.',
+        repIds: [
+          'sql-update-scope',
+          'sql-delete-scope',
+          'sql-upsert-stock',
+          'sqlite-customer-totals',
+          'sqlite-stock-transfer',
+          'sqlite-restock-upsert',
+          'sql-archive-orders',
+        ],
+      },
     ] satisfies readonly PathStage[],
   },
   {
@@ -502,7 +517,7 @@ export const paths = [
       {
         title: 'Query and change local data',
         description:
-          'Run real SQLite queries: undo a failed stock transfer, total orders per customer with a join, and restock inventory all or nothing.',
+          'Run real SQLite from TypeScript: undo a failed stock transfer, total orders per customer with a join, and restock inventory all or nothing. These reps live in the SQL track.',
         recap: 'You can now write joins and aggregates and keep multi-statement changes atomic.',
         repIds: ['sqlite-stock-transfer', 'sqlite-customer-totals', 'sqlite-restock-upsert'],
       },
