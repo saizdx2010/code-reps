@@ -276,6 +276,11 @@ export const repLevels: Record<string, RepLevel> = {
   'dom-live-search': 2,
   'dom-tabs': 3,
   'dom-accordion': 2,
+  'sql-count-by-status': 1,
+  'sql-ratings-summary': 2,
+  'sql-count-visitors': 2,
+  'sql-busy-days': 2,
+  'sql-month-spenders': 2,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

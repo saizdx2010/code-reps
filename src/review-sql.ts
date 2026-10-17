@@ -136,6 +136,66 @@ export const sqlDepth: Record<string, RepDepth> = {
     transfer:
       'Search now matches sql as a whole word only, so NoSQL and MySQL should not count. Decide whether LIKE patterns can express word boundaries in every position, including the start and end of a title. This changed contract is self-reviewed; the original checks do not cover it.',
   },
+  'sql-count-by-status': {
+    reasoning:
+      'GROUP BY status gives one group per distinct status, with all NULL statuses in one group, and COUNT(*) counts the rows of each group. Ordering by the count, then the status, gives every group one position because statuses are distinct within the result. With no orders there are no groups, so no row appears.',
+    trace:
+      'With the week data, the groups are shipped (orders 1, 4, 8), pending (2, 6), NULL (3, 7), and cancelled (5). Their counts are 3, 2, 2, and 1. The tie between NULL and pending is settled by status, and SQLite sorts NULL before any text, so NULL comes first.',
+    alternative:
+      "COUNT(status) would count only non-NULL statuses and report 0 for the NULL group, which hides two real orders. COALESCE(status, 'none') would label the NULL group with text, which reads well on screen but breaks the contract's NULL and changes where it sorts.",
+    counterexample:
+      'SELECT COUNT(*) FROM shop_orders without GROUP BY returns one row with the total. Sorting by count alone leaves pending and shipped in an order SQLite does not promise; the equal-counts check catches it. COUNT(status) reports 0 for the NULL group.',
+    transfer:
+      'The owner now wants each status with its count and its share of all orders as a percentage, rounded to one decimal. Decide where the total comes from and how to avoid integer division. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-ratings-summary': {
+    reasoning:
+      'Each column answers a different counting question over the same group. COUNT(*) counts every review, COUNT(stars) counts reviews with a value, and AVG(stars) averages only those values, so the unrated reviews neither count as zero stars nor shrink the average. AVG over no values is NULL, and ROUND keeps NULL as NULL.',
+    trace:
+      'For Lamp the group holds 5, 4, NULL, and 4. COUNT(*) is 4, COUNT(stars) is 3, and AVG(stars) is 13 / 3 = 4.333…, which ROUND turns into 4.33. For Rug both stars are NULL: COUNT(*) is 2, COUNT(stars) is 0, and AVG(stars) is NULL.',
+    alternative:
+      'SUM(stars) * 1.0 / COUNT(stars) computes the same average by hand but divides by zero for Rug, which SQLite turns into NULL; AVG says it directly. Treating an unrated review as 0 stars with COALESCE would lower every average, which is a product decision, not a technical one.',
+    counterexample:
+      'COUNT(*) used for rated reports 4 rated reviews for Lamp. AVG(COALESCE(stars, 0)) gives Lamp 3.25 and Rug 0 instead of NULL. Rounding before averaging changes nothing here, but rounding to 1 decimal reports 4.3.',
+    transfer:
+      'The shop now shows a rating only when at least three reviews have stars, and otherwise shows nothing. Decide whether that rule belongs in HAVING, in a CASE expression, or in the application. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-count-visitors': {
+    reasoning:
+      'Views and visitors are two counts of the same group. COUNT(*) counts every view, including anonymous ones. COUNT(DISTINCT visitor) first removes repeated values and NULL, then counts what is left, so a visitor who returns counts once and anonymous views never count as visitors.',
+    trace:
+      'For /home the group holds ana, ana, bo, NULL, NULL. COUNT(*) is 5. DISTINCT keeps ana and bo, and NULL is skipped, so visitors is 2. /pricing has one NULL visitor: one view, zero visitors.',
+    alternative:
+      'Counting visitors in a subquery that first selects DISTINCT page and visitor, then grouping, gives the same numbers in two steps. Treating every anonymous view as a different person would need a session identifier that this table does not have.',
+    counterexample:
+      'COUNT(visitor) counts ana twice and reports 3 visitors for /home. COUNT(DISTINCT page) per page always reports 1. Sorting by views alone leaves /a and /b in an order SQLite does not promise.',
+    transfer:
+      'The site now wants, for each page, the number of visitors who viewed it on at least two different days, given a viewed_on column. Decide what you group by first and what you count afterwards. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-busy-days': {
+    reasoning:
+      "Two filters work at different times. WHERE status <> 'cancelled' removes single deliveries before grouping, so they never reach a count. HAVING COUNT(*) >= 3 then removes whole days whose remaining count is too small. A day whose deliveries were all cancelled leaves no rows behind and forms no group.",
+    trace:
+      'For 2026-05-03 there are two delivered and two cancelled. WHERE keeps the two delivered, the group counts 2, and HAVING drops the day. Without the WHERE filter the count would be 4 and the day would wrongly qualify. 2026-05-02 keeps two delivered and one late: 3, so it stays.',
+    alternative:
+      "COUNT(CASE WHEN status <> 'cancelled' THEN 1 END) counts only kept deliveries inside each group, without WHERE. It is useful when the same query also needs the cancelled count, but here it keeps days with only cancelled deliveries as groups with a count of 0 that HAVING must then remove.",
+    counterexample:
+      'Counting every delivery and filtering in HAVING alone makes 2026-05-03 busy with 4. HAVING COUNT(*) > 3 drops the two days with exactly 3. Putting COUNT(*) >= 3 in WHERE is an error in SQLite.',
+    transfer:
+      'A day is now busy when at least three deliveries went ahead or at least two were late. Decide which counts you need per day and how HAVING combines them. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-month-spenders': {
+    reasoning:
+      "The date range picks the March payments before grouping, so payments from other months never touch a total. Text dates written year first compare like dates, so BETWEEN '2026-03-01' AND '2026-03-31' includes both edges. Each account's group is counted and summed with its refunds, then HAVING keeps totals of at least 10000, and the order is total descending, then account.",
+    trace:
+      'For dune, WHERE keeps 2026-03-31 (4000) and 2026-03-01 (6000) and drops 2026-04-01. The group counts 2 and sums 10000, which meets the threshold. For bolt, 12000 and the -3000 refund sum to 9000, so HAVING drops it. core and dune tie at 10000 and the account name orders them.',
+    alternative:
+      "paid_on >= '2026-03-01' AND paid_on < '2026-04-01' states a half-open range, which keeps working if times are ever added to the dates. Filtering the month with strftime('%Y-%m', paid_on) = '2026-03' reads clearly but cannot use an index on paid_on.",
+    counterexample:
+      "Filtering amount_cents >= 10000 in WHERE checks single payments, so acme's two smaller payments never qualify. paid_on < '2026-03-31' drops dune's last-day payment. Leaving out WHERE adds acme's February payment and dune's April payment.",
+    transfer:
+      'Finance now wants the same report for every month of 2026, one row per account and month. Decide what you group by and how you would label the month. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
 }
 
 export const sqlGuides: Record<string, ReflectionGuide> = {
@@ -217,6 +277,36 @@ export const sqlGuides: Record<string, ReflectionGuide> = {
     example:
       "I keep published_at IS NOT NULL AND section IN ('guides', 'news') AND title LIKE '%sql%', ordered by published_at DESC, id. Grouping the sections stops the OR from letting drafts through, and LIKE ignores ASCII case in SQLite.",
   },
+  'sql-count-by-status': {
+    plan: ['Say what one result row stands for and what is counted in it.', 'Decide where orders with no status go.'],
+    explanation: ['Explain where the NULL group appears and why.', 'Explain what an empty table returns and why.'],
+    example:
+      'I GROUP BY status and select status with COUNT(*) AS order_count, ordered by order_count DESC, status. NULL statuses form one group, and SQLite sorts NULL before text, so it comes ahead of pending at the same count.',
+  },
+  'sql-ratings-summary': {
+    plan: ['Predict the four values for the Rug.', 'Say which count includes unrated reviews.'],
+    explanation: ['Explain the difference between COUNT(*) and COUNT(stars).', 'Explain why the Rug average is NULL.'],
+    example:
+      'I GROUP BY product and select COUNT(*), COUNT(stars), and ROUND(AVG(stars), 2), ordered by product. AVG skips NULL stars, so unrated reviews do not drag the average down, and with no stars at all it is NULL.',
+  },
+  'sql-count-visitors': {
+    plan: ['Write the views and visitors you expect for /home.', 'Say which rows each count includes.'],
+    explanation: ['Explain why ana counts once and anonymous views not at all.'],
+    example:
+      'I GROUP BY page and select COUNT(*) AS views and COUNT(DISTINCT visitor) AS visitors, ordered by views DESC, page. DISTINCT removes repeat visitors and COUNT skips NULL.',
+  },
+  'sql-busy-days': {
+    plan: ['Name the filter on rows and the filter on groups.', 'Check your plan against 2026-05-03.'],
+    explanation: ['Explain why cancelled deliveries must go before counting.', 'Explain why exactly 3 qualifies.'],
+    example:
+      "I keep status <> 'cancelled' in WHERE, GROUP BY day, keep HAVING COUNT(*) >= 3, and order by day. Cancelled deliveries leave before counting, so they cannot make a day busy.",
+  },
+  'sql-month-spenders': {
+    plan: ['Write which of bolt’s and dune’s payments count, and their totals.', 'Order the steps: rows, groups, totals, sort.'],
+    explanation: ['Explain why the threshold belongs to the total, not to a payment.', 'Explain how both month edges are included.'],
+    example:
+      "I keep paid_on BETWEEN '2026-03-01' AND '2026-03-31', GROUP BY account, select COUNT(*) and SUM(amount_cents), keep HAVING SUM(amount_cents) >= 10000, and order by the total descending, then account.",
+  },
 }
 
 export const sqlLessonDepth: Record<string, LessonDepth> = {
@@ -239,5 +329,15 @@ export const sqlLessonDepth: Record<string, LessonDepth> = {
       "Predict which of three members (active, blocked, NULL) each condition keeps: NOT (status = 'blocked'), status IS NOT 'blocked', and status <> 'blocked' OR status IS NULL. Discuss before revealing.",
     answer:
       'The first keeps only the active member: the NULL row is unknown under NOT. The second, a SQLite form that treats NULL as a value, keeps active and NULL. The third keeps active and NULL in any database. This discussion is self-reviewed; the members rep checks the NULL case.',
+  },
+  'sql-summarizing': {
+    title: 'A filter means something different before and after grouping',
+    code: "SELECT day, COUNT(*) AS kept\nFROM deliveries\nWHERE status <> 'cancelled'\nGROUP BY day;\n-- versus HAVING SUM(status = 'cancelled') = 0",
+    reasoning:
+      "WHERE status <> 'cancelled' removes cancelled rows, so a day still appears with a smaller count. HAVING SUM(status = 'cancelled') = 0 instead removes every day that had any cancellation, keeping its full count when it had none. The same words, cancelled and not, ask two different questions depending on whether they run before or after the groups exist.",
+    challenge:
+      'For a day with three delivered and one cancelled delivery, predict what each query returns for that day: the WHERE version and the HAVING version. Then describe a report that needs each one. Discuss before revealing.',
+    answer:
+      'The WHERE version returns the day with 3. The HAVING version drops the day entirely, because one delivery was cancelled. A workload report wants the first, counting what went ahead; a report of perfect days wants the second. This discussion is self-reviewed; the busy-days rep checks the WHERE version.',
   },
 }

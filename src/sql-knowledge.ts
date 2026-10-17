@@ -151,4 +151,75 @@ export const sqlSkills: Skill[] = [
     repIds: ['sql-filter-groups', 'sql-price-band', 'sql-code-pattern', 'sql-members-to-text', 'sql-search-articles'],
     related: ['sql-reading'],
   },
+  {
+    id: 'sql-summarizing',
+    title: 'Summarize with COUNT, SUM, AVG, GROUP BY, and HAVING',
+    summary: 'Fold rows into one result per group, count what you mean to count, and filter before and after grouping.',
+    prerequisites: ['sql-filtering'],
+    objectives: [
+      'Choose between COUNT(*), COUNT(column), and COUNT(DISTINCT column), and predict SUM and AVG with NULL values.',
+      'Write GROUP BY so that each result row stands for one group.',
+      'Put a filter on rows in WHERE and a filter on groups in HAVING.',
+    ],
+    sections: [
+      {
+        title: 'Aggregates fold many rows into one value',
+        body: 'COUNT(*) counts rows. COUNT(stars) counts the rows where stars is not NULL, and COUNT(DISTINCT visitor) counts different non-NULL values. SUM, AVG, MIN, and MAX skip NULL values too, and over no values SUM, AVG, MIN, and MAX give NULL while COUNT gives 0. AVG returns a real number; ROUND(AVG(stars), 2) keeps two decimal places.',
+      },
+      {
+        title: 'GROUP BY makes one row per group',
+        body: 'GROUP BY status puts rows with the same status into one group, and each aggregate then works on one group at a time. Rows whose status is NULL form a single group of their own. Every selected column should either be grouped or sit inside an aggregate; SQLite accepts other columns but fills them from an arbitrary row of the group, which is rarely what you want. An empty table has no groups, so a grouped query returns no rows.',
+      },
+      {
+        title: 'WHERE runs before grouping, HAVING after',
+        body: "SQLite works through FROM, WHERE, GROUP BY, HAVING, SELECT, then ORDER BY. WHERE removes single rows before they are grouped, so `WHERE status <> 'cancelled'` keeps cancelled deliveries out of every count. HAVING removes whole groups after the aggregates exist, so `HAVING COUNT(*) >= 3` keeps busy days. An aggregate cannot appear in WHERE, because no group exists yet at that point.",
+      },
+      {
+        title: 'Name and sort the summary',
+        body: 'Give each aggregate a column name with AS, such as COUNT(*) AS order_count, and ORDER BY that name. A summary still needs a tie-breaker: two statuses with the same count otherwise come out in an order SQLite does not promise.',
+      },
+    ],
+    example:
+      "SELECT day, COUNT(*) AS deliveries\nFROM deliveries\nWHERE status <> 'cancelled'\nGROUP BY day\nHAVING COUNT(*) >= 3\nORDER BY day;",
+    walkthrough: [
+      'WHERE drops cancelled deliveries before anything is counted.',
+      'GROUP BY day makes one group per remaining day.',
+      'COUNT(*) counts the deliveries in each group.',
+      'HAVING keeps only days with at least three, and ORDER BY sorts them by day.',
+    ],
+    mistakes: [
+      'Using COUNT(*) when the question is how many rows have a value, or the reverse.',
+      'Filtering an aggregate in WHERE, or filtering single rows in HAVING after they have already been counted.',
+      'Selecting a column that is neither grouped nor aggregated and trusting the value SQLite picks.',
+      'Expecting a grouped query over no rows to return a row with a count of 0.',
+    ],
+    questions: [
+      q(
+        'count-null-v1',
+        'Three reviews have stars 5, NULL, and 3. What are COUNT(*) and COUNT(stars)?',
+        '',
+        ['3 and 3', '3 and 2', '2 and 2'],
+        1,
+        'COUNT(*) counts every row; COUNT(stars) skips the NULL value.',
+      ),
+      q(
+        'having-v1',
+        'Which clause can keep only the days with at least three deliveries?',
+        'SELECT day, COUNT(*) FROM deliveries GROUP BY day',
+        ['WHERE COUNT(*) >= 3', 'HAVING COUNT(*) >= 3', 'Either one'],
+        1,
+        'The count exists only after grouping, so the filter belongs in HAVING. WHERE runs before any group is formed.',
+      ),
+      q(
+        'empty-sum-v1',
+        'The payments table is empty. What does SELECT SUM(amount_cents) FROM payments return?',
+        '',
+        ['One row with 0', 'One row with NULL', 'No rows'],
+        1,
+        'Without GROUP BY an aggregate query always returns one row, and the sum of no values is NULL. COUNT(*) would give 0.',
+      ),
+    ],
+    repIds: ['sql-count-by-status', 'sql-ratings-summary', 'sql-count-visitors', 'sql-busy-days', 'sql-month-spenders'],
+    related: ['sql-filtering'],
+  },
 ]

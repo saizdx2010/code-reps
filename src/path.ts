@@ -437,6 +437,12 @@ export const paths = [
         recap: 'You can now write filters that mean what you intend, including for NULL values.',
         repIds: ['sql-filter-groups', 'sql-price-band', 'sql-code-pattern', 'sql-members-to-text', 'sql-search-articles'],
       },
+      {
+        title: 'Summarize',
+        description: 'Count, add, and average rows per group, and filter before and after grouping.',
+        recap: 'You can now summarize groups of rows and filter both rows and groups.',
+        repIds: ['sql-count-by-status', 'sql-ratings-summary', 'sql-count-visitors', 'sql-busy-days', 'sql-month-spenders'],
+      },
     ] satisfies readonly PathStage[],
   },
   {

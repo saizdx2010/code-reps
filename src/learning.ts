@@ -317,6 +317,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'sql-summarizing',
+    title: 'Summarize groups of rows',
+    guided: 'sql-count-by-status',
+    independent: 'sql-busy-days',
+    recall: 'sql-month-spenders',
+    practice: ['sql-ratings-summary', 'sql-count-visitors'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

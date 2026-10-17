@@ -39,6 +39,14 @@ const parts = 'CREATE TABLE parts (id INTEGER PRIMARY KEY, code TEXT NOT NULL, n
 const members = 'CREATE TABLE members (id INTEGER PRIMARY KEY, name TEXT NOT NULL, phone TEXT, status TEXT);'
 const articles = 'CREATE TABLE articles (id INTEGER PRIMARY KEY, title TEXT NOT NULL, section TEXT NOT NULL, published_at TEXT);'
 
+const shopOrders = 'CREATE TABLE shop_orders (id INTEGER PRIMARY KEY, customer TEXT NOT NULL, status TEXT);'
+const reviews = 'CREATE TABLE reviews (id INTEGER PRIMARY KEY, product TEXT NOT NULL, stars INTEGER CHECK (stars BETWEEN 1 AND 5));'
+const pageViews = 'CREATE TABLE page_views (id INTEGER PRIMARY KEY, page TEXT NOT NULL, visitor TEXT);'
+const deliveries =
+  "CREATE TABLE deliveries (id INTEGER PRIMARY KEY, day TEXT NOT NULL, status TEXT NOT NULL CHECK (status IN ('delivered', 'late', 'cancelled')));"
+const payments =
+  'CREATE TABLE payments (id INTEGER PRIMARY KEY, account TEXT NOT NULL, amount_cents INTEGER NOT NULL, paid_on TEXT NOT NULL);'
+
 export const sqlReps: Rep[] = [
   {
     id: 'sql-select-columns',
@@ -1055,6 +1063,363 @@ export const sqlReps: Rep[] = [
       },
       { name: 'Drafts and other sections are left out', input: [], sql: { seed: 'drafts-and-blog' }, expected: { rows: [] } },
       { name: 'No title mentions sql', input: [], sql: { seed: 'no-match' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-count-by-status',
+    title: 'Count rows in each group',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: shopOrders,
+      seeds: {
+        week: {
+          about: 'eight orders: three shipped, two pending, one cancelled, and two with no status yet',
+          sql: "INSERT INTO shop_orders VALUES (1,'Ada','shipped'),(2,'Bo','pending'),(3,'Cy',NULL),(4,'Di','shipped'),(5,'Ed','cancelled'),(6,'Fu','pending'),(7,'Gil',NULL),(8,'Hu','shipped');",
+        },
+        'one-order': { about: 'a single pending order', sql: "INSERT INTO shop_orders VALUES (1,'Ada','pending');" },
+        'equal-counts': {
+          about: 'two statuses with two orders each',
+          sql: "INSERT INTO shop_orders VALUES (1,'Ada','shipped'),(2,'Bo','pending'),(3,'Cy','shipped'),(4,'Di','pending');",
+        },
+        empty: { about: 'no orders', sql: '' },
+      },
+      compare: 'ordered',
+      columns: ['status', 'order_count'],
+    },
+    context: 'A shop owner wants one line per order status with the number of orders in it, the biggest pile first.',
+    prompt:
+      "Write one SELECT statement on shop_orders that returns status and order_count, in that column order: one row per distinct status, with the number of orders that have it. Orders whose status is NULL form one group of their own, shown with status NULL. Sort by order_count from largest to smallest, then by status ascending in SQLite's default order, which puts NULL first. With no orders, return no rows. shop_orders has id INTEGER PRIMARY KEY, customer TEXT NOT NULL, and status TEXT (NULL when not set yet). Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'Return one row per order status with the number of orders in it, biggest group first.',
+      rules: [
+        '`shop_orders(id INTEGER PRIMARY KEY, customer TEXT NOT NULL, status TEXT)`; status is NULL when not set yet.',
+        'Return the columns `status`, `order_count`: one row per distinct status. Orders with a NULL status form one group, shown as NULL.',
+        "Sort by order_count descending, then status ascending in SQLite's default order, which puts NULL first.",
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['No orders gives no rows, not a row with a count of 0.'],
+    },
+    example: { input: 'three shipped orders and one cancelled order', output: "rows ('shipped', 3), ('cancelled', 1)" },
+    note: 'Checks compare columns, rows, and their order on fresh databases; they do not establish how you counted.',
+    vocabulary: [
+      { term: 'GROUP BY', meaning: 'the clause that folds rows with equal values into one result row per group' },
+      { term: 'COUNT', meaning: 'an aggregate that counts rows, or the non-NULL values of a column' },
+      { term: 'Group', meaning: 'the set of rows that share the grouped values' },
+    ],
+    planPrompt: 'Say what one result row stands for, and what is counted inside it. Where does a NULL status go?',
+    starter: 'SELECT status\nFROM shop_orders;\n',
+    hints: [
+      'Each result row stands for one status, not one order. Something must fold the orders of a status into a single row.',
+      'Once rows are grouped, an aggregate such as COUNT(*) works on each group separately. NULL values of the grouped column form one group of their own.',
+      'Group by status, count the rows of each group as order_count, and sort by that count descending, then by status.',
+    ],
+    checks: [
+      {
+        name: 'One row per status, biggest first',
+        input: [],
+        sql: { seed: 'week' },
+        expected: {
+          rows: [
+            ['shipped', 3],
+            [null, 2],
+            ['pending', 2],
+            ['cancelled', 1],
+          ],
+        },
+      },
+      { name: 'A single order', input: [], sql: { seed: 'one-order' }, expected: { rows: [['pending', 1]] } },
+      {
+        name: 'Equal counts by status',
+        input: [],
+        sql: { seed: 'equal-counts' },
+        expected: {
+          rows: [
+            ['pending', 2],
+            ['shipped', 2],
+          ],
+        },
+      },
+      { name: 'No orders gives no rows', input: [], sql: { seed: 'empty' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-ratings-summary',
+    title: 'Count rated and unrated reviews',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: reviews,
+      seeds: {
+        shop: {
+          about: 'seven reviews of three products, three of them without stars',
+          sql: "INSERT INTO reviews VALUES (1,'Lamp',5),(2,'Lamp',4),(3,'Mug',3),(4,'Lamp',NULL),(5,'Rug',NULL),(6,'Lamp',4),(7,'Rug',NULL);",
+        },
+        'half-star': { about: 'two rated reviews of one product', sql: "INSERT INTO reviews VALUES (1,'Pen',1),(2,'Pen',2);" },
+        empty: { about: 'no reviews', sql: '' },
+      },
+      compare: 'ordered',
+      columns: ['product', 'reviews', 'rated', 'avg_stars'],
+    },
+    context: 'A shop shows each product with its review count and average rating. Some reviewers wrote text without choosing stars.',
+    prompt:
+      "Write one SELECT statement on reviews that returns product, reviews, rated, and avg_stars, in that column order, with one row per product: reviews is the number of reviews, rated is the number of reviews with stars, and avg_stars is the average of the stars given, rounded to 2 decimal places, or NULL when no review has stars. Order by product ascending in SQLite's default text order. reviews has id INTEGER PRIMARY KEY, product TEXT NOT NULL, and stars INTEGER from 1 to 5, or NULL for a review without stars. Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'For each product, count all reviews, count the rated ones, and average the stars given.',
+      rules: [
+        '`reviews(id INTEGER PRIMARY KEY, product TEXT NOT NULL, stars INTEGER)`; stars is 1 to 5, or NULL for a review without stars.',
+        'Return the columns `product`, `reviews`, `rated`, `avg_stars`: all reviews, reviews with stars, and the average of the stars given, rounded to 2 decimal places.',
+        'avg_stars is NULL when no review of the product has stars.',
+        "Order by product ascending in SQLite's default text order. Submit a single statement that only reads data.",
+      ],
+      edgeCases: ['A review without stars counts as a review but not in the average.'],
+    },
+    example: { input: 'Lamp reviews with stars 5, 4, 4, and one without stars', output: "('Lamp', 4, 3, 4.33)" },
+    note: 'Rounding uses SQLite’s ROUND on the average. Checks compare rows and their order on fresh databases.',
+    vocabulary: [
+      { term: 'AVG', meaning: 'an aggregate that averages the non-NULL values of a column' },
+      { term: 'COUNT(*)', meaning: 'counts every row of a group, whatever its values' },
+      { term: 'ROUND', meaning: 'a function that rounds a number to a given number of decimal places' },
+    ],
+    planPrompt: 'For the Rug, predict each of the four values before you write anything.',
+    starter: 'SELECT product\nFROM reviews\nGROUP BY product;\n',
+    hints: [
+      'Counting rows and counting values of one column are different questions when the column can be NULL.',
+      'Aggregates such as AVG skip NULL values, and the average of no values is NULL.',
+      'Use COUNT(*) for reviews, COUNT(stars) for rated, and ROUND(AVG(stars), 2) for the average.',
+    ],
+    checks: [
+      {
+        name: 'All, rated, and average per product',
+        input: [],
+        sql: { seed: 'shop' },
+        expected: {
+          rows: [
+            ['Lamp', 4, 3, 4.33],
+            ['Mug', 1, 1, 3],
+            ['Rug', 2, 0, null],
+          ],
+        },
+      },
+      { name: 'An average between whole stars', input: [], sql: { seed: 'half-star' }, expected: { rows: [['Pen', 2, 2, 1.5]] } },
+      { name: 'No reviews', input: [], sql: { seed: 'empty' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-count-visitors',
+    title: 'Count visitors, not visits',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: pageViews,
+      seeds: {
+        site: {
+          about: 'eight views of three pages, three of them by visitors who were not signed in',
+          sql: "INSERT INTO page_views VALUES (1,'/home','ana'),(2,'/home','ana'),(3,'/docs','bo'),(4,'/home','bo'),(5,'/home',NULL),(6,'/docs','cy'),(7,'/pricing',NULL),(8,'/home',NULL);",
+        },
+        'equal-views': {
+          about: 'two pages with two views each',
+          sql: "INSERT INTO page_views VALUES (1,'/b','x'),(2,'/a','x'),(3,'/b','x'),(4,'/a','y');",
+        },
+        empty: { about: 'no views', sql: '' },
+      },
+      compare: 'ordered',
+      columns: ['page', 'views', 'visitors'],
+    },
+    context: 'A small site counts how often each page was viewed and by how many different signed-in visitors.',
+    prompt:
+      "Write one SELECT statement on page_views that returns page, views, and visitors, in that column order, with one row per page: views is the number of views, and visitors is the number of different signed-in visitors who viewed it. A view by someone not signed in has visitor NULL; it counts as a view but not as a visitor. Order by views from most to fewest, then page ascending in SQLite's default text order. page_views has id INTEGER PRIMARY KEY, page TEXT NOT NULL, and visitor TEXT. Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'For each page, count its views and its different signed-in visitors.',
+      rules: [
+        '`page_views(id INTEGER PRIMARY KEY, page TEXT NOT NULL, visitor TEXT)`; visitor is NULL for someone not signed in.',
+        'Return the columns `page`, `views`, `visitors`: all views of the page, and the number of different non-NULL visitors.',
+        "Order by views descending, then page ascending in SQLite's default text order.",
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['Two views by one visitor count once as a visitor.', 'A page viewed only by people not signed in has 0 visitors.'],
+    },
+    example: { input: "'/home' viewed by ana twice and once by someone not signed in", output: "('/home', 3, 1)" },
+    note: 'Checks compare rows and their order on fresh databases.',
+    vocabulary: [{ term: 'COUNT(DISTINCT)', meaning: 'counts the different non-NULL values of a column' }],
+    planPrompt: 'For /home, write the views and visitors you expect and which rows each count includes.',
+    starter: 'SELECT page, COUNT(*) AS views\nFROM page_views\nGROUP BY page;\n',
+    hints: [
+      'The starter counts views. Visitors need a count that ignores repeats and people who were not signed in.',
+      'DISTINCT can sit inside COUNT, and COUNT of a column already skips NULL values.',
+      'Add COUNT(DISTINCT visitor) AS visitors, then sort by views descending and page ascending.',
+    ],
+    checks: [
+      {
+        name: 'Views and different visitors per page',
+        input: [],
+        sql: { seed: 'site' },
+        expected: {
+          rows: [
+            ['/home', 5, 2],
+            ['/docs', 2, 2],
+            ['/pricing', 1, 0],
+          ],
+        },
+      },
+      {
+        name: 'Equal views by page',
+        input: [],
+        sql: { seed: 'equal-views' },
+        expected: {
+          rows: [
+            ['/a', 2, 2],
+            ['/b', 2, 1],
+          ],
+        },
+      },
+      { name: 'No views', input: [], sql: { seed: 'empty' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-busy-days',
+    title: 'Find the busy delivery days',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: deliveries,
+      seeds: {
+        month: {
+          about: 'deliveries on five days, some of them cancelled',
+          sql: "INSERT INTO deliveries VALUES (1,'2026-05-01','delivered'),(2,'2026-05-01','delivered'),(3,'2026-05-01','delivered'),(4,'2026-05-02','delivered'),(5,'2026-05-02','late'),(6,'2026-05-02','cancelled'),(7,'2026-05-02','delivered'),(8,'2026-05-03','delivered'),(9,'2026-05-03','cancelled'),(10,'2026-05-03','cancelled'),(11,'2026-05-03','delivered'),(12,'2026-05-04','delivered'),(13,'2026-05-04','delivered'),(14,'2026-05-04','late'),(15,'2026-05-04','delivered'),(16,'2026-05-05','delivered');",
+        },
+        'all-cancelled': {
+          about: 'a day with four cancelled deliveries and a day with three delivered',
+          sql: "INSERT INTO deliveries VALUES (1,'2026-06-01','cancelled'),(2,'2026-06-01','cancelled'),(3,'2026-06-01','cancelled'),(4,'2026-06-01','cancelled'),(5,'2026-06-02','delivered'),(6,'2026-06-02','late'),(7,'2026-06-02','delivered');",
+        },
+        quiet: {
+          about: 'two days with two deliveries each',
+          sql: "INSERT INTO deliveries VALUES (1,'2026-07-01','delivered'),(2,'2026-07-01','late'),(3,'2026-07-02','delivered'),(4,'2026-07-02','delivered');",
+        },
+        empty: { about: 'no deliveries', sql: '' },
+      },
+      compare: 'ordered',
+      columns: ['day', 'deliveries'],
+    },
+    context:
+      'A courier company adds a second van on busy days. A day is busy when at least three deliveries went ahead; cancelled ones do not count.',
+    prompt:
+      "Write one SELECT statement on deliveries that returns day and deliveries, in that column order, for every day with at least 3 deliveries whose status is not 'cancelled', where deliveries is that number. Order by day ascending. deliveries has id INTEGER PRIMARY KEY, day TEXT NOT NULL written as 'YYYY-MM-DD', and status TEXT NOT NULL, one of 'delivered', 'late', or 'cancelled'. Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'List the days with at least three deliveries that were not cancelled, with that number.',
+      rules: [
+        "`deliveries(id INTEGER PRIMARY KEY, day TEXT NOT NULL, status TEXT NOT NULL)`; day is 'YYYY-MM-DD'; status is 'delivered', 'late', or 'cancelled'.",
+        "Count only deliveries whose status is not `'cancelled'`. A day qualifies when that count is at least 3.",
+        'Return the columns `day`, `deliveries`, ordered by day ascending.',
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['Late deliveries count.', 'Exactly 3 qualifies; cancelled deliveries never help a day qualify.'],
+    },
+    example: { input: "'2026-05-02': two delivered, one late, one cancelled", output: "('2026-05-02', 3)" },
+    note: 'This is an independent rep: plan before you look at the hints. Checks compare rows and their order on fresh databases.',
+    vocabulary: [{ term: 'HAVING', meaning: 'a filter applied to groups after aggregates are calculated' }],
+    planPrompt: 'Which rows are removed before counting, and which groups are removed after? Use 2026-05-03 to check your plan.',
+    starter: 'SELECT day\nFROM deliveries;\n',
+    hints: [
+      'Two filters happen at different times here: one removes individual deliveries, the other removes whole days.',
+      'A filter on single rows runs before grouping; a filter on a count can only run after it.',
+      'Remove cancelled deliveries first, group by day, keep groups whose count is at least 3, and sort by day.',
+    ],
+    checks: [
+      {
+        name: 'Busy days counted without cancellations',
+        input: [],
+        sql: { seed: 'month' },
+        expected: {
+          rows: [
+            ['2026-05-01', 3],
+            ['2026-05-02', 3],
+            ['2026-05-04', 4],
+          ],
+        },
+      },
+      {
+        name: 'Cancelled deliveries do not make a day busy',
+        input: [],
+        sql: { seed: 'all-cancelled' },
+        expected: { rows: [['2026-06-02', 3]] },
+      },
+      { name: 'No busy days', input: [], sql: { seed: 'quiet' }, expected: { rows: [] } },
+      { name: 'No deliveries', input: [], sql: { seed: 'empty' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-month-spenders',
+    title: 'Find the big spenders of a month',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: payments,
+      seeds: {
+        quarter: {
+          about: 'payments and refunds from February to April 2026 for five accounts',
+          sql: "INSERT INTO payments VALUES (1,'acme',6000,'2026-03-04'),(2,'acme',5000,'2026-03-18'),(3,'acme',9000,'2026-02-11'),(4,'bolt',12000,'2026-03-09'),(5,'bolt',-3000,'2026-03-12'),(6,'core',10000,'2026-03-20'),(7,'dune',4000,'2026-03-31'),(8,'dune',6000,'2026-03-01'),(9,'dune',20000,'2026-04-01'),(10,'echo',50000,'2026-02-28');",
+        },
+        'one-account': {
+          about: 'one account with one large March payment',
+          sql: "INSERT INTO payments VALUES (1,'fern',15000,'2026-03-15');",
+        },
+        'below-threshold': {
+          about: 'March totals all below 10000, one only because of a refund',
+          sql: "INSERT INTO payments VALUES (1,'gale',9999,'2026-03-02'),(2,'hale',11000,'2026-03-05'),(3,'hale',-2000,'2026-03-06');",
+        },
+        empty: { about: 'no payments', sql: '' },
+      },
+      compare: 'ordered',
+      columns: ['account', 'payments', 'total_cents'],
+    },
+    context: 'A finance team thanks every account that paid at least 100.00 in total during March 2026. Refunds reduce the total.',
+    prompt:
+      "Write one SELECT statement on payments that returns account, payments, and total_cents, in that column order, for every account whose payments dated from 2026-03-01 to 2026-03-31 inclusive total at least 10000 cents. payments is the number of those March payments, refunds included, and total_cents is their sum. Payments outside March are ignored. Order by total_cents from largest to smallest, then account ascending in SQLite's default text order. payments has id INTEGER PRIMARY KEY, account TEXT NOT NULL, amount_cents INTEGER NOT NULL (negative for a refund), and paid_on TEXT NOT NULL written as 'YYYY-MM-DD'. Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'List the accounts whose March 2026 payments total at least 10000 cents, with their March payment count and total.',
+      rules: [
+        "`payments(id INTEGER PRIMARY KEY, account TEXT NOT NULL, amount_cents INTEGER NOT NULL, paid_on TEXT NOT NULL)`; a refund has a negative amount; paid_on is 'YYYY-MM-DD'.",
+        'Only payments dated from 2026-03-01 to 2026-03-31, both included, count. Refunds count in both the number and the sum.',
+        'Return the columns `account`, `payments`, `total_cents` for accounts whose March total is at least 10000.',
+        "Order by total_cents descending, then account ascending in SQLite's default text order. Submit a single statement that only reads data.",
+      ],
+      edgeCases: ['A total of exactly 10000 qualifies.', 'A refund can take an account below the threshold.'],
+    },
+    example: { input: 'acme paid 6000 and 5000 in March and 9000 in February', output: "('acme', 2, 11000)" },
+    note: 'This is a delayed recall rep: solve it without hints after the break. Checks compare rows and their order on fresh databases.',
+    vocabulary: [
+      { term: 'SUM', meaning: 'an aggregate that adds the non-NULL values of a column' },
+      { term: 'Refund', meaning: 'money paid back, stored here as a negative amount' },
+    ],
+    planPrompt: 'For bolt and dune, write which payments count and the total you expect, then the steps that produce it.',
+    starter: 'SELECT account\nFROM payments;\n',
+    hints: [
+      'Decide which payments belong to March before adding anything up, and which accounts qualify only after.',
+      'The date text is written year first, so a range of text compares as a range of dates. The threshold applies to a total, not to single payments.',
+      'Keep March payments, group by account, count and sum each group, keep totals of at least 10000, and sort by total, then account.',
+    ],
+    checks: [
+      {
+        name: 'March totals of at least 10000, refunds included',
+        input: [],
+        sql: { seed: 'quarter' },
+        expected: {
+          rows: [
+            ['acme', 2, 11000],
+            ['core', 1, 10000],
+            ['dune', 2, 10000],
+          ],
+        },
+      },
+      { name: 'One account, one payment', input: [], sql: { seed: 'one-account' }, expected: { rows: [['fern', 1, 15000]] } },
+      { name: 'Just below, or brought below by a refund', input: [], sql: { seed: 'below-threshold' }, expected: { rows: [] } },
+      { name: 'No payments', input: [], sql: { seed: 'empty' }, expected: { rows: [] } },
     ],
   },
 ]

@@ -43,4 +43,28 @@ ORDER BY name, id;`,
 FROM articles
 WHERE published_at IS NOT NULL AND section IN ('guides', 'news') AND title LIKE '%sql%'
 ORDER BY published_at DESC, id;`,
+  'sql-count-by-status': `SELECT status, COUNT(*) AS order_count
+FROM shop_orders
+GROUP BY status
+ORDER BY order_count DESC, status;`,
+  'sql-ratings-summary': `SELECT product, COUNT(*) AS reviews, COUNT(stars) AS rated, ROUND(AVG(stars), 2) AS avg_stars
+FROM reviews
+GROUP BY product
+ORDER BY product;`,
+  'sql-count-visitors': `SELECT page, COUNT(*) AS views, COUNT(DISTINCT visitor) AS visitors
+FROM page_views
+GROUP BY page
+ORDER BY views DESC, page;`,
+  'sql-busy-days': `SELECT day, COUNT(*) AS deliveries
+FROM deliveries
+WHERE status <> 'cancelled'
+GROUP BY day
+HAVING COUNT(*) >= 3
+ORDER BY day;`,
+  'sql-month-spenders': `SELECT account, COUNT(*) AS payments, SUM(amount_cents) AS total_cents
+FROM payments
+WHERE paid_on BETWEEN '2026-03-01' AND '2026-03-31'
+GROUP BY account
+HAVING SUM(amount_cents) >= 10000
+ORDER BY total_cents DESC, account;`,
 }

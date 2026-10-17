@@ -152,6 +152,79 @@ test('S2 search checks catch an ungrouped OR, a prefix-only pattern, drafts, and
   ])
 })
 
+test('S3 grouping checks catch a missing group, COUNT of a nullable column, and the tie-breaker', () => {
+  const base = solution('sql-count-by-status')
+  assertCaught('sql-count-by-status', [
+    [base.replace('COUNT(*)', 'COUNT(status)'), 'One row per status, biggest first'],
+    [base.replace('ORDER BY order_count DESC, status', 'ORDER BY order_count DESC'), 'Equal counts by status'],
+    [base.replace('ORDER BY order_count DESC, status', 'ORDER BY order_count DESC, status DESC'), 'One row per status, biggest first'],
+    ["SELECT 'all' AS status, COUNT(*) AS order_count FROM shop_orders", 'No orders gives no rows'],
+  ])
+})
+
+test('S3 rating checks catch COUNT(*) for rated reviews, NULL as zero stars, and rounding', () => {
+  const base = solution('sql-ratings-summary')
+  assertCaught('sql-ratings-summary', [
+    [base.replace('COUNT(stars) AS rated', 'COUNT(*) AS rated'), 'All, rated, and average per product'],
+    [base.replace('AVG(stars)', 'AVG(COALESCE(stars, 0))'), 'All, rated, and average per product'],
+    [base.replace('ROUND(AVG(stars), 2)', 'ROUND(AVG(stars), 1)'), 'All, rated, and average per product'],
+    [base.replace('ROUND(AVG(stars), 2)', 'AVG(stars)'), 'All, rated, and average per product'],
+  ])
+})
+
+test('S3 visitor checks catch repeat visitors, anonymous visitors, and the tie-breaker', () => {
+  const base = solution('sql-count-visitors')
+  assertCaught('sql-count-visitors', [
+    [base.replace('COUNT(DISTINCT visitor)', 'COUNT(visitor)'), 'Views and different visitors per page'],
+    [base.replace('COUNT(DISTINCT visitor)', 'COUNT(DISTINCT COALESCE(visitor, id))'), 'Views and different visitors per page'],
+    [base.replace('ORDER BY views DESC, page', 'ORDER BY views DESC'), 'Equal views by page'],
+  ])
+})
+
+test('S3 busy-day checks catch counting cancellations, a strict threshold, and filtering in the wrong place', () => {
+  const base = solution('sql-busy-days')
+  assertCaught('sql-busy-days', [
+    [base.replace("WHERE status <> 'cancelled'\n", ''), 'Busy days counted without cancellations'],
+    [base.replace('COUNT(*) >= 3', 'COUNT(*) > 3'), 'Busy days counted without cancellations'],
+    [
+      base
+        .replace("WHERE status <> 'cancelled'\n", '')
+        .replace('HAVING COUNT(*) >= 3', "HAVING COUNT(*) >= 3 AND SUM(status = 'cancelled') = 0"),
+      'Busy days counted without cancellations',
+    ],
+  ])
+  assert.match(
+    failed(
+      'sql-busy-days',
+      base.replace('HAVING COUNT(*) >= 3', '').replace("WHERE status <> 'cancelled'", "WHERE status <> 'cancelled' AND COUNT(*) >= 3"),
+    ).join(),
+    /Busy days/,
+  )
+})
+
+test('S3 monthly-spender checks catch per-payment thresholds, a missed month edge, and other months', () => {
+  const base = solution('sql-month-spenders')
+  assertCaught('sql-month-spenders', [
+    [
+      base.replace("BETWEEN '2026-03-01' AND '2026-03-31'", ">= '2026-03-01' AND paid_on < '2026-03-31'"),
+      'March totals of at least 10000, refunds included',
+    ],
+    [base.replace("WHERE paid_on BETWEEN '2026-03-01' AND '2026-03-31'\n", ''), 'March totals of at least 10000, refunds included'],
+    [base.replace('SUM(amount_cents) >= 10000', 'SUM(amount_cents) > 10000'), 'March totals of at least 10000, refunds included'],
+    [
+      base.replace(
+        "WHERE paid_on BETWEEN '2026-03-01' AND '2026-03-31'",
+        "WHERE paid_on BETWEEN '2026-03-01' AND '2026-03-31' AND amount_cents > 0",
+      ),
+      'Just below, or brought below by a refund',
+    ],
+    [
+      base.replace('ORDER BY total_cents DESC, account', 'ORDER BY total_cents DESC, account DESC'),
+      'March totals of at least 10000, refunds included',
+    ],
+  ])
+})
+
 test('the S1 journey keeps recall distinct from its guided and independent reps', () => {
   const journey = journeys.find(item => item.id === 'sql-reading')
   assert.deepEqual(

@@ -268,6 +268,11 @@ const repRows: [string, string, number, Rep['format'] | 0, string, number, numbe
   ["sql-code-pattern","Match codes with LIKE",38,"sql","2927b0bd8522a240",3,91,3,34],
   ["sql-members-to-text","Find members you can text",38,"sql","db4555954d5a5450",3,115,4,34],
   ["sql-search-articles","Search published articles",38,"sql","ec08d1393f84e5f5",3,99,4,34],
+  ["sql-count-by-status","Count rows in each group",38,"sql","3b9b900ed4306b1b",3,94,4,34],
+  ["sql-ratings-summary","Count rated and unrated reviews",38,"sql","45f8fb35dbce5f53",3,102,3,34],
+  ["sql-count-visitors","Count visitors, not visits",38,"sql","552b61cb6e0976ad",3,93,3,34],
+  ["sql-busy-days","Find the busy delivery days",38,"sql","5af1bef45f46970f",3,88,4,34],
+  ["sql-month-spenders","Find the big spenders of a month",38,"sql","e49a5efb9c797297",3,113,4,34],
 ]
 
 export const repIndex: RepSummary[] = repRows.map(([id, title, category, format, starterHash, hintTotal, briefWords, checkTotal, source]) => ({
@@ -333,4 +338,5 @@ export const skillIndex: SkillSummary[] = [
   {"id":"heaps","title":"Heaps and priority queues: always the smallest next","summary":"Use a priority queue when you repeatedly need the smallest or largest item from a collection that keeps changing.","prerequisites":["trees","sorting-basics"],"related":["queues","sorting-basics","trees"],"repIds":["algo-min-heap","heap-merge-log-streams","heap-rooms-needed","heap-kth-largest-stream","top-k-frequent-tags"],"questions":[{"id":"heaps-top-v1","optionCount":3,"answer":0},{"id":"heaps-k-highest-v1","optionCount":3,"answer":0}]},
   {"id":"sql-reading","title":"Read rows with SELECT, WHERE, ORDER BY, and LIMIT","summary":"Choose columns, keep matching rows, put them in a defined order, and take a slice of the result.","prerequisites":[],"related":["databases"],"repIds":["sql-select-columns","sql-filter-sort","sql-distinct-cities","sql-line-totals","sql-recent-open-tickets","sql-catalog-page"],"questions":[{"id":"unordered-v1","optionCount":3,"answer":2},{"id":"offset-page-v1","optionCount":3,"answer":1},{"id":"null-filter-v1","optionCount":3,"answer":2}]},
   {"id":"sql-filtering","title":"Filter precisely: AND, OR, IN, LIKE, and NULL","summary":"Group conditions so they mean what you intend, match lists, ranges, and patterns, and handle unknown values on purpose.","prerequisites":["sql-reading"],"related":["sql-reading"],"repIds":["sql-filter-groups","sql-price-band","sql-code-pattern","sql-members-to-text","sql-search-articles"],"questions":[{"id":"and-or-v1","optionCount":3,"answer":1},{"id":"like-underscore-v1","optionCount":3,"answer":1},{"id":"null-not-equal-v1","optionCount":3,"answer":1}]},
+  {"id":"sql-summarizing","title":"Summarize with COUNT, SUM, AVG, GROUP BY, and HAVING","summary":"Fold rows into one result per group, count what you mean to count, and filter before and after grouping.","prerequisites":["sql-filtering"],"related":["sql-filtering"],"repIds":["sql-count-by-status","sql-ratings-summary","sql-count-visitors","sql-busy-days","sql-month-spenders"],"questions":[{"id":"count-null-v1","optionCount":3,"answer":1},{"id":"having-v1","optionCount":3,"answer":1},{"id":"empty-sum-v1","optionCount":3,"answer":1}]},
 ]
