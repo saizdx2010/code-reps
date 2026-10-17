@@ -58,6 +58,9 @@ const practicalTopics: Record<string, string> = {
   'quote-cache-retry': 'Caching and retries',
 }
 const problemStages = paths.find(path => path.id === 'algorithms-data-structures')!.stages
+const sqlStages = paths.find(path => path.id === 'sql')!.stages
+// SQLite reps written in TypeScript keep this topic until a SQL stage lists them.
+const sqliteTopic = 'Query and change local data'
 const lookupReps = new Set([
   'most-frequent-number',
   'first-unique-character',
@@ -69,7 +72,8 @@ const lookupReps = new Set([
 /** One primary topic per rep; authored categories and learner records stay unchanged. */
 export function catalogTopic(rep: Pick<RepSummary, 'id' | 'category'>): string {
   if (rep.id === 'simplify-file-path') return 'Stacks and queues'
-  if (rep.category === 'SQL' || rep.id.startsWith('sqlite-')) return 'Query with SQL'
+  if (rep.category === 'SQL' || rep.id.startsWith('sqlite-'))
+    return sqlStages.find(stage => (stage.repIds as readonly string[]).includes(rep.id))?.title ?? sqliteTopic
   if (rep.category.startsWith('Algorithm ') || rep.category === 'Problem-solving patterns') {
     return problemStages.find(stage => (stage.repIds as readonly string[]).includes(rep.id))?.title ?? 'Problem solving'
   }
@@ -117,7 +121,7 @@ export const catalogAreas: { title: string; topics: string[] }[] = [
   },
   { title: 'Frontend', topics: ['Interface logic', 'Accessible interactions', 'Building a browser feature', 'Frontend projects'] },
   { title: 'Backend & data', topics: ['Requests and validation', 'Backend projects'] },
-  { title: 'Databases & SQL', topics: ['Query with SQL'] },
+  { title: 'Databases & SQL', topics: [...sqlStages.map(stage => stage.title), sqliteTopic] },
   { title: 'Async & runtime', topics: ['Async and timing'] },
   { title: 'Patterns & resources', topics: ['Shared resources and events'] },
   {

@@ -86,7 +86,6 @@ export function renderCatalogIndex() {
     prerequisites: skill.prerequisites,
     related: skill.related,
     repIds: skill.repIds,
-    firstMistake: skill.mistakes[0] ?? '',
     questions: skill.questions.map(question => ({
       id: question.id,
       optionCount: question.options.length,
@@ -116,7 +115,7 @@ import type { Rep } from './rep-types.ts'
 export type RepSourceName = ${names}
 export type RepSummary = { id: string; title: string; category: string; format?: Rep['format']; starterHash: string; hintTotal: number; briefWords: number; checkTotal: number; source: RepSourceName }
 export type QuestionSummary = { id: string; optionCount: number; answer: number; completion?: true; answerText?: string }
-export type SkillSummary = { id: string; title: string; summary: string; prerequisites: string[]; related: string[]; repIds: string[]; firstMistake: string; questions: QuestionSummary[] }
+export type SkillSummary = { id: string; title: string; summary: string; prerequisites: string[]; related: string[]; repIds: string[]; questions: QuestionSummary[] }
 
 const sources: RepSourceName[] = ${JSON.stringify(sourceNames)}
 const categories: string[] = ${JSON.stringify(categories)}

@@ -299,6 +299,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'sql-reading',
+    title: 'Read rows precisely',
+    guided: 'sql-filter-sort',
+    independent: 'sql-recent-open-tickets',
+    recall: 'sql-catalog-page',
+    practice: ['sql-distinct-cities', 'sql-line-totals'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

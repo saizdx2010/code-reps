@@ -46,7 +46,7 @@ export const pathIntroductions: Record<PathId, PathIntroduction> = {
   },
   sql: {
     title: 'Ask questions of stored data',
-    body: 'A database keeps information in tables of rows and columns. SQL is the language for reading and changing them: you describe the result you want, and the database works out how to produce it. Here you write SQL directly, and every check runs it on a fresh SQLite database. You can start without Foundations.',
+    body: 'A database keeps information in tables of rows and columns. SQL is the language for reading and changing them: you describe the result you want, and the database works out how to produce it. Here you write SQL directly, and every check runs it on a fresh SQLite database. The first stages need no TypeScript; Foundations helps once SQL meets application code.',
     example: 'SELECT title, author\nFROM books\nWHERE year < 1980\nORDER BY year;',
     explanation:
       'FROM names the table to read. WHERE keeps only the rows that match. SELECT chooses the columns, and ORDER BY sorts the result.',

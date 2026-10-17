@@ -67,8 +67,8 @@ test('the index lists every rep and skill in catalog order with stable ids', () 
       skill.questions.map(question => [question.id, question.answer, question.options.length]),
     )
     assert.deepEqual(
-      [summary.title, summary.prerequisites, summary.related, summary.repIds, summary.firstMistake],
-      [skill.title, skill.prerequisites, skill.related, skill.repIds, skill.mistakes[0]],
+      [summary.title, summary.prerequisites, summary.related, summary.repIds],
+      [skill.title, skill.prerequisites, skill.related, skill.repIds],
     )
   }
   assert.ok(foundationRepIds.length > 0 && foundationRepIds.every(id => repIndex.some(item => item.id === id)))

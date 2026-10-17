@@ -420,9 +420,16 @@ export const paths = [
     stages: [
       {
         title: 'Read a table',
-        description: 'Choose the columns a result needs from one table.',
-        recap: 'You can now choose and rename the columns a query returns.',
-        repIds: ['sql-select-columns'],
+        description: 'Choose columns, keep matching rows, sort them with tie-breakers, and take one page of the result.',
+        recap: 'You can now choose columns, filter rows, give a result a complete order, and page through it.',
+        repIds: [
+          'sql-select-columns',
+          'sql-filter-sort',
+          'sql-distinct-cities',
+          'sql-line-totals',
+          'sql-recent-open-tickets',
+          'sql-catalog-page',
+        ],
       },
     ] satisfies readonly PathStage[],
   },

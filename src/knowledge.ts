@@ -2,6 +2,7 @@ import { typescriptBoundarySkill } from './typescript-depth-knowledge.ts'
 import { browserStateSkill } from './browser-state-knowledge.ts'
 import { dsaSkills } from './dsa-knowledge.ts'
 import { practicalSkills } from './practical-knowledge.ts'
+import { sqlSkills } from './sql-knowledge.ts'
 import { q } from './knowledge-question.ts'
 export type Question = {
   completion?: boolean
@@ -954,6 +955,7 @@ export const skills: Skill[] = [
   typescriptBoundarySkill,
   browserStateSkill,
   ...dsaSkills,
+  ...sqlSkills,
 ]
 export const skillById = (id: string) => skills.find(skill => skill.id === id)
 export const contentVersion = 7
@@ -985,7 +987,7 @@ export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[
   },
   { id: 'frontend', title: 'Frontend', skillIds: ['frontend', 'react'] },
   { id: 'backend', title: 'Backend & data', skillIds: ['validation', 'http'] },
-  { id: 'sql', title: 'Databases & SQL', skillIds: ['databases'] },
+  { id: 'sql', title: 'Databases & SQL', skillIds: ['sql-reading', 'databases'] },
   {
     id: 'async',
     title: 'Async & runtime',

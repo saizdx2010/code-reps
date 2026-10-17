@@ -234,6 +234,7 @@ export const recallVariants: Record<string, string[]> = {
   'dom-interactions': ['dom-accordion', 'dom-live-search', 'dom-disclosure'],
   'find-the-bug': ['expose-overlap-bugs', 'expose-stock-bugs', 'expose-access-bugs'],
   maintenance: ['maintain-room-booking'],
+  'sql-reading': ['sql-catalog-page', 'sql-recent-open-tickets', 'sql-filter-sort'],
 }
 export function recurringReviews(history: PortableRecord[], now = Date.now()) {
   return getAllJourneys(history, now).flatMap(state => {
