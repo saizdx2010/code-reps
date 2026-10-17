@@ -759,6 +759,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
             openLesson={openKnowledge}
             onExplain={() => revealSection('explain-section')}
             explaining={activeStep === 'explain' || stepDone.explain}
+            probes={Boolean(full?.sql && full.checks.every(check => check.sql?.probes?.length))}
           />
           <WorkspaceToolbar
             ref={toolbarRef}

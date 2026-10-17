@@ -275,6 +275,7 @@ function withDatabase<T>(createDatabase: SqliteFactory, task: SqlTask, check: Sq
   const db = createDatabase()
   const query: Query = (sql, parameters = []) => queryTable(db, sql, parameters).rows
   try {
+    if (task.foreignKeys) db.run('PRAGMA foreign_keys = ON')
     db.run(`${task.schema}\n${seed.sql}`)
     return body(db, query)
   } finally {
@@ -604,10 +605,13 @@ export function judgeSql(task: SqlTask, check: Check, observation: SqlObservatio
     const got = (outcome.probes as string[] | undefined) ?? []
     ;(expected.probes as string[]).forEach((want, index) => {
       if (got[index] === want) return
+      const label = check.sql?.labels?.[index]
       messages.push(
         want === 'rejected'
-          ? `Your table accepted ${probes[index]} instead of rejecting it.`
-          : `Your table rejected ${probes[index]}: ${observation.probeErrors?.[index] ?? 'SQLite refused it'}.`,
+          ? label
+            ? `Your table stored ${label} instead of rejecting it.`
+            : `Your table accepted ${probes[index]} instead of rejecting it.`
+          : `Your table rejected ${label ?? probes[index]}: ${observation.probeErrors?.[index] ?? 'SQLite refused it'}.`,
       )
     })
   }

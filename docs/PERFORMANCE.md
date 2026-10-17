@@ -4,10 +4,10 @@
 
 | Group | Raw byte budget | Gzip byte budget |
 | --- | ---: | ---: |
-| Initial route JavaScript and static dependencies | 530,000 | 153,000 |
+| Initial route JavaScript and static dependencies | 530,000 | 157,500 |
 | Additional editor JavaScript, including its dynamic language modules | 4,200,000 | 1,050,000 |
 | Additional frontend preview/check JavaScript | 3,900,000 | 1,050,000 |
-| Editor, TypeScript, and practice worker JavaScript | 11,700,000 | 3,100,000 |
+| Editor, TypeScript, and practice worker JavaScript | 12,000,000 | 3,100,000 |
 
 The script deduplicates shared chunks within each group, excludes initial-route dependencies from the additional groups, and requires all three local workers. Worker totals also include their shared and dynamically imported JavaScript chunks. It also rejects unused CSS, HTML, and JSON language workers. Editor and frontend groups describe separate features; their totals are not a sum of every possible network request.
 
@@ -17,7 +17,7 @@ The learning-tools presentation in `LearningHub.tsx` also loads on demand. Home,
 
 Secondary route pages (`PathsPage`, `ProgressPage`, `SkillMapPage`, `MistakesPage`) and the `TraceViewer` in the review panel also load on demand through `lazyRoute` in `src/lazy-route.tsx`. Each shows a `RouteLoading` placeholder with its page heading while the chunk loads, and a failed load offers a reload without touching saved work. Home, the library, and the workspace stay in the initial chunk. `tests/catalog-index.test.mjs` fails if `App.tsx` imports these modules statically again. This reclaimed headroom for new reps: initial JavaScript went from 530,571 raw / 152,008 gzip bytes (over the then-current 530,000 / 153,000 budgets) to 499,742 raw / 143,606 gzip bytes, about 30 KB raw and 9 KB gzip under budget, with no budget changed. The remaining startup weight is mostly React DOM plus `src/catalog-index.ts`. Starter code has since left that catalog: it keeps only `starterHash` (`src/starter-hash.ts`, shared with `practice.ts` so "unchanged starter" stays a synchronous check), and the starter text loads with the rep's other content through `useRepContent`. Initial JavaScript went from 522,951 raw / 148,044 gzip bytes to 462,087 raw / 138,291 gzip bytes with no budget changed. An attempt with no saved draft has no code until that content arrives, so the editor shows a short loading state; it is never saved in that state, and a saved draft is shown immediately and never replaced by the starter.
 
-The SQL track added startup data (its path stages, journeys, lessons, and catalog rows) while staying inside the 153,000 gzip budget: track introductions moved to `src/path-introductions.ts`, which only All tracks loads; the generated catalog stores rep entries as compact rows instead of repeated object keys; and the unused first-mistake text left the lesson index. Together these saved about 4.3 KB gzip before new content was counted.
+The SQL track added startup data (its path stages, journeys, lessons, and catalog rows) while staying inside the 153,000 gzip budget: track introductions moved to `src/path-introductions.ts`, which only All tracks loads; the generated catalog stores rep entries as compact rows instead of repeated object keys; and the unused first-mistake text left the lesson index. Together these saved about 4.3 KB gzip before new content was counted. The SQL track's sixth stage still crossed 153,000 (153,207 gzip bytes), because a track's stages, journeys, lesson summaries, and rep entries must be synchronous for Home's Trail, the practice plan, and fluency validation. The gzip budget was raised to 157,500 to hold the rest of the planned SQL track (five more stages), and the worker's raw budget from 11,700,000 to 12,000,000 because the worker bundles every rep's checks and seed data. Each later track should check this headroom again before raising it.
 
 The SQLite browser suite attaches Home and editor readiness durations alongside the bundle report. It uses the built app and a fresh browser context on the local machine, without CPU/network throttling. Measurements include Playwright observation overhead and are not representative of every learner's hardware. Shared CI timing has no hard speed threshold; byte budgets provide the reproducible regression gate.
 

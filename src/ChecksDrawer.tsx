@@ -42,6 +42,7 @@ export function ChecksDrawer({
   openLesson,
   onExplain,
   explaining,
+  probes = false,
 }: {
   run: CheckRun
   allPassed: boolean
@@ -54,6 +55,8 @@ export function ChecksDrawer({
   onExplain: () => void
   /** The Explain step is open or already written, so the drawer does not offer to go there. */
   explaining: boolean
+  /** Every check of a schema rep is a probe of one rule, so the summary counts probes. */
+  probes?: boolean
 }) {
   const { results, staleResults, runError, running, loadingEngine, runNotice } = run
   const stale = !running && !results && !runError ? staleResults : null
@@ -145,7 +148,15 @@ export function ChecksDrawer({
                 <Icon name={allPassed ? 'check' : 'alert'} />
               </span>
               <div>
-                <strong>{allPassed ? 'All checks passed' : `${passedCount(results)} of ${results.length} checks passed`}</strong>
+                <strong>
+                  {probes
+                    ? allPassed
+                      ? 'All probes behaved as the contract says'
+                      : `${passedCount(results)} of ${results.length} probes behaved as the contract says`
+                    : allPassed
+                      ? 'All checks passed'
+                      : `${passedCount(results)} of ${results.length} checks passed`}
+                </strong>
               </div>
               {allPassed && !completed && !explaining && (
                 <button type="button" className="primary-button checks-next" onClick={onExplain}>

@@ -344,6 +344,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'sql-schema-design',
+    title: 'Design a schema',
+    guided: 'sql-create-products',
+    independent: 'sql-create-memberships',
+    recall: 'sql-create-shifts',
+    practice: ['sql-default-values', 'sql-strict-types'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

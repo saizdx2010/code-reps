@@ -291,6 +291,11 @@ export const repLevels: Record<string, RepLevel> = {
   'sql-students-without-work': 2,
   'sql-free-rooms': 2,
   'sql-strong-months': 3,
+  'sql-create-products': 1,
+  'sql-default-values': 2,
+  'sql-strict-types': 2,
+  'sql-create-memberships': 2,
+  'sql-create-shifts': 2,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

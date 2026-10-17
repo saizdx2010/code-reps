@@ -35,4 +35,9 @@ export const sqlPreviews: Record<string, SqlPreview> = {
   "sql-students-without-work": {"seed":"class","tables":[{"name":"students","rows":4,"definition":["id INTEGER PRIMARY KEY","name TEXT NOT NULL"],"columns":["id","name"],"sample":[[1,"Ana"],[2,"Bo"],[3,"Cy"]]},{"name":"submissions","rows":4,"definition":["id INTEGER PRIMARY KEY","student_id INTEGER","task TEXT NOT NULL"],"columns":["id","student_id","task"],"sample":[[1,1,"essay"],[2,null,"essay"],[3,4,"quiz"]]}],"example":{"columns":["id","name"],"rows":[[2,"Bo"],[3,"Cy"]]}},
   "sql-free-rooms": {"seed":"inn","tables":[{"name":"rooms","rows":6,"definition":["id INTEGER PRIMARY KEY","name TEXT NOT NULL"],"columns":["id","name"],"sample":[[1,"Ash"],[2,"Birch"],[3,"Cedar"]]},{"name":"bookings","rows":7,"definition":["id INTEGER PRIMARY KEY","room_id INTEGER NOT NULL","starts_on TEXT NOT NULL","ends_on TEXT NOT NULL"],"columns":["id","room_id","starts_on","ends_on"],"sample":[[1,1,"2026-08-14","2026-08-16"],[2,2,"2026-08-10","2026-08-15"],[3,3,"2026-08-15","2026-08-17"]]}],"example":{"columns":["id","name"],"rows":[[2,"Birch"],[4,"Dogwood"],[5,"Elm"]]}},
   "sql-strong-months": {"seed":"year","tables":[{"name":"sales","rows":7,"definition":["id INTEGER PRIMARY KEY","sold_on TEXT NOT NULL","cents INTEGER NOT NULL"],"columns":["id","sold_on","cents"],"sample":[[1,"2026-01-05",400],[2,"2026-01-20",600],[3,"2026-02-11",3500]]}],"example":{"columns":["month","total_cents"],"rows":[["2026-02",3500],["2026-05",5500]]}},
+  "sql-create-products": {"seed":"empty","tables":[]},
+  "sql-default-values": {"seed":"empty","tables":[]},
+  "sql-strict-types": {"seed":"empty","tables":[]},
+  "sql-create-memberships": {"seed":"empty","tables":[]},
+  "sql-create-shifts": {"seed":"empty","tables":[]},
 }

@@ -316,6 +316,66 @@ export const sqlDepth: Record<string, RepDepth> = {
     transfer:
       'The shop now counts months without sales as 0 when averaging, so April counts. Decide where the missing months would come from, since no table lists them. This changed contract is self-reviewed; the original checks do not cover it.',
   },
+  'sql-create-products': {
+    reasoning:
+      'Each rule in the brief maps to one constraint: NOT NULL on sku, name, and price_cents refuses missing values, UNIQUE on sku refuses a repeat, and CHECK (price_cents >= 0) refuses a negative price while allowing 0. Because the rules live in the table, every program that inserts a product is held to them.',
+    trace:
+      'For the repeated SKU check, the first insert of D-4 is stored. The second insert of D-4 finds the value already present, so UNIQUE fails and SQLite rejects the row; the first row stays. For price -5, the CHECK condition -5 >= 0 is false, so the insert is rejected.',
+    alternative:
+      'Validating in application code before inserting gives friendlier messages, but a second program or a manual fix can bypass it. The usual design keeps both: constraints as the guarantee, application checks for the message. Making sku the primary key would also enforce uniqueness, but a separate integer id keeps links stable if a SKU is ever renamed.',
+    counterexample:
+      'CHECK (price_cents > 0) rejects the free sample. UNIQUE without NOT NULL on sku still accepts a product with no SKU, because NULLs never clash.',
+    transfer:
+      'Products now have a sale_price_cents that may be missing but, when present, must be lower than price_cents. Decide how one CHECK expresses an optional rule that compares two columns. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-default-values': {
+    reasoning:
+      "DEFAULT supplies a value only when an insert leaves the column out; CHECK limits the values; NOT NULL refuses an explicit NULL. Together they make a title-only insert produce ('…', 'open', 3) while 'blocked', priority 0 or 6, and an explicit NULL status are refused. The CHECKs also apply to the defaults, which keeps them honest.",
+    trace:
+      "INSERT INTO tasks (title) VALUES ('Write report') names only title, so status takes 'open' and priority takes 3; both pass their CHECKs and the row reads back as ('Write report', 'open', 3). INSERT … (title, status) VALUES ('Vague', NULL) names status, so no default applies, and NOT NULL rejects the row.",
+    alternative:
+      'Filling defaults in application code works but has to be repeated in every program that inserts tasks. A trigger could replace an explicit NULL with the default, which changes what NULL means and surprises readers; refusing it is clearer.',
+    counterexample:
+      "DEFAULT 'open' without NOT NULL stores the explicit NULL. CHECK (priority BETWEEN 0 AND 5) accepts priority 0. A default of 'Open' fails its own CHECK on every title-only insert.",
+    transfer:
+      'Tasks now record when they were created, defaulting to the current time. Decide what default expression SQLite allows here and why a check of the stored value would depend on the clock. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-strict-types': {
+    reasoning:
+      "In an ordinary SQLite table, REAL is only a type affinity: SQLite converts values to a real number when it can and otherwise stores them as they are, so 'warm' is kept as text. STRICT makes the declared type a rule. SQLite still converts what it can without loss, so 20 and '19.5' become real numbers, and rejects what it cannot, so 'warm' is refused.",
+    trace:
+      "With the starter, INSERT … VALUES ('south', 'warm') stores the text, and typeof(celsius) reads back 'text'. With ) STRICT, the same insert fails with cannot store TEXT value in REAL column. '19.5' converts to 19.5 and reads back as 'real' in both tables.",
+    alternative:
+      "CHECK (typeof(celsius) = 'real') also rejects 'warm', because affinity converts numbers before the check runs, but it must be written for every column. Validating in application code helps only the programs that remember to do it.",
+    counterexample:
+      "The starter's NOT NULL rules cannot catch 'warm', because the value is not missing. A CHECK (celsius > -100) also lets 'warm' through: in SQLite any text compares greater than any number.",
+    transfer:
+      'The greenhouse now stores the reading time as an INTEGER of Unix seconds. Decide whether STRICT is enough to keep a text date out, and what else would check the range. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-create-memberships': {
+    reasoning:
+      'memberships links two tables, so each of its key columns REFERENCES the table it points into, and PRIMARY KEY (member_id, club_id) makes the pair the identity of a membership: a member can appear in many clubs and a club can have many members, but the same pair only once. NOT NULL on the dates, emails, and names covers the required values, and UNIQUE covers emails and club names.',
+    trace:
+      'The setup inserts member 1 and clubs 1 and 2. Ana joining Chess stores the pair (1, 1). Joining Chess again repeats (1, 1), so the primary key rejects it. A membership for member 9 finds no member with id 9, so with foreign keys on, the reference fails and SQLite rejects the row.',
+    alternative:
+      'An id INTEGER PRIMARY KEY on memberships with a separate UNIQUE (member_id, club_id) gives each membership its own id, which helps when other tables point at memberships. Without foreign key enforcement, the same rules would need triggers or application checks.',
+    counterexample:
+      'UNIQUE (member_id) alone stops Ana from joining Rowing. Leaving out REFERENCES lets the membership for member 9 through even with foreign keys on.',
+    transfer:
+      'Deleting a member should now delete their memberships, while deleting a club with members should be refused. Decide which ON DELETE actions express that. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-create-shifts': {
+    reasoning:
+      'Single-column rules sit on their columns: NOT NULL for required values and CHECK (role IN (…)) for known roles. Two rules involve two columns and are written as table constraints: CHECK (ends_at > starts_at) compares values in the same row, and UNIQUE (worker, starts_at) refuses a repeated pair while letting different workers share a start time. Text times compare correctly because they are written year first with a fixed width.',
+    trace:
+      "Dee's first 12:00 shift is stored, Eli's 12:00 shift is a different pair and is stored, and Dee's second 12:00 shift repeats (Dee, 2026-09-03 12:00), so UNIQUE rejects it. A shift ending at 18:00 when it starts at 18:00 fails ends_at > starts_at, because the two texts are equal.",
+    alternative:
+      'Storing times as INTEGER minutes since midnight plus a date column makes arithmetic easy and avoids text comparison, at the cost of readability. Refusing overlapping shifts, not just equal starts, needs a trigger or application logic, because a CHECK sees only one row.',
+    counterexample:
+      'UNIQUE (starts_at) refuses Eli’s shift. CHECK (ends_at >= starts_at) accepts the zero-length shift. A role column without CHECK accepts manager.',
+    transfer:
+      'The restaurant now refuses any two shifts of one worker that overlap, not only those with equal start times. Decide why no table constraint can express that and what would. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
 }
 
 export const sqlGuides: Record<string, ReflectionGuide> = {
@@ -490,6 +550,36 @@ export const sqlGuides: Record<string, ReflectionGuide> = {
     example:
       "WITH monthly AS (SELECT substr(sold_on, 1, 7) AS month, SUM(cents) AS total_cents FROM sales WHERE sold_on LIKE '2026-%' GROUP BY month) SELECT month, total_cents FROM monthly WHERE total_cents > (SELECT AVG(total_cents) FROM monthly) ORDER BY month.",
   },
+  'sql-create-products': {
+    plan: ['For each column, write its rule and one insert the rule must reject.'],
+    explanation: ['Explain which constraint rejects each bad row.', 'Explain why a price of 0 is still accepted.'],
+    example:
+      'I declare sku TEXT NOT NULL UNIQUE, name TEXT NOT NULL, and price_cents INTEGER NOT NULL CHECK (price_cents >= 0). Each probe that should fail meets exactly one of those rules.',
+  },
+  'sql-default-values': {
+    plan: ['Write the default, the allowed values, and what an explicit NULL should do for status and priority.'],
+    explanation: ['Explain why a title-only task reads back as open with priority 3.', 'Explain why an explicit NULL is rejected.'],
+    example:
+      "I declare status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'done')) and priority INTEGER NOT NULL DEFAULT 3 CHECK (priority BETWEEN 1 AND 5). Defaults fill omitted columns; NOT NULL refuses an explicit NULL.",
+  },
+  'sql-strict-types': {
+    plan: ['Predict what the starter stores for each insert, including the type of celsius.'],
+    explanation: ["Explain why the starter keeps 'warm'.", "Explain why '19.5' is still accepted."],
+    example:
+      "I add STRICT after the closing bracket. SQLite then converts 20 and '19.5' to real numbers and refuses 'warm', which an ordinary REAL column would store as text.",
+  },
+  'sql-create-memberships': {
+    plan: ['List every rule and the table it belongs to.', 'Decide how to state the rule about the same club twice.'],
+    explanation: ['Explain which rule rejects each refused membership.', 'Explain why foreign keys needed the PRAGMA.'],
+    example:
+      'I create members and clubs with NOT NULL UNIQUE email and name, and memberships with member_id REFERENCES members(id), club_id REFERENCES clubs(id), joined_on NOT NULL, and PRIMARY KEY (member_id, club_id).',
+  },
+  'sql-create-shifts': {
+    plan: ['List each rule and whether it involves one column or several.'],
+    explanation: ['Explain why Eli’s 12:00 shift is accepted and Dee’s second one is not.', 'Explain why a zero-length shift is rejected.'],
+    example:
+      "I declare every column NOT NULL, CHECK (role IN ('cook', 'server', 'host')), and the table constraints CHECK (ends_at > starts_at) and UNIQUE (worker, starts_at).",
+  },
 }
 
 export const sqlLessonDepth: Record<string, LessonDepth> = {
@@ -542,5 +632,15 @@ export const sqlLessonDepth: Record<string, LessonDepth> = {
       'Predict the result of the query above for students 1, 2, and 3. Then rewrite it twice: once with NOT EXISTS and once keeping NOT IN but making it safe. Discuss before revealing.',
     answer:
       'It returns no students. With NOT EXISTS (SELECT 1 FROM submissions AS s WHERE s.student_id = students.id) it returns 2 and 3. Adding WHERE student_id IS NOT NULL inside the NOT IN subquery also returns 2 and 3. This discussion is self-reviewed; the students rep checks the guest-submission case.',
+  },
+  'sql-schema-design': {
+    title: 'A constraint guards every insert, not just yours',
+    code: 'CREATE TABLE products (\n  sku TEXT UNIQUE,\n  price_cents INTEGER CHECK (price_cents >= 0)\n);\nINSERT INTO products VALUES (NULL, NULL);\nINSERT INTO products VALUES (NULL, NULL);',
+    reasoning:
+      'Both inserts succeed. UNIQUE compares known values and NULL is not equal to NULL, so two missing SKUs do not clash. The CHECK condition NULL >= 0 is unknown, and a CHECK fails only when its condition is false, so a missing price passes too. Constraints treat NULL as "not known", which is why required columns need NOT NULL in addition to their other rules.',
+    challenge:
+      "Predict which of these the table above accepts: ('A', -1), ('A', 5) twice, and (NULL, 5) twice. Then add the smallest change that refuses every row with a missing value. Discuss before revealing.",
+    answer:
+      "('A', -1) is rejected by the CHECK. The second ('A', 5) is rejected by UNIQUE. Both (NULL, 5) rows are accepted. Adding NOT NULL to sku and price_cents refuses missing values; UNIQUE and CHECK stay as they are. This discussion is self-reviewed; the products rep checks these rules with real inserts.",
   },
 }

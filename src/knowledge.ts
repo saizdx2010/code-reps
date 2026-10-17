@@ -990,7 +990,7 @@ export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[
   {
     id: 'sql',
     title: 'Databases & SQL',
-    skillIds: ['sql-reading', 'sql-filtering', 'sql-summarizing', 'sql-joining', 'sql-subqueries', 'databases'],
+    skillIds: ['sql-reading', 'sql-filtering', 'sql-summarizing', 'sql-joining', 'sql-subqueries', 'sql-schema-design', 'databases'],
   },
   {
     id: 'async',

@@ -455,6 +455,13 @@ export const paths = [
         recap: 'You can now use subqueries, EXISTS, and WITH to answer a question in steps.',
         repIds: ['sql-above-average', 'sql-category-average', 'sql-students-without-work', 'sql-free-rooms', 'sql-strong-months'],
       },
+      {
+        title: 'Design a schema',
+        description:
+          'Write CREATE TABLE so the table itself refuses bad rows: keys, required and unique values, checks, defaults, links, and types.',
+        recap: 'You can now design tables whose constraints guard every insert.',
+        repIds: ['sql-create-products', 'sql-default-values', 'sql-strict-types', 'sql-create-memberships', 'sql-create-shifts'],
+      },
     ] satisfies readonly PathStage[],
   },
   {

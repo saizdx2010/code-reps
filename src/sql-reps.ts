@@ -65,6 +65,14 @@ const roomBookings =
   'CREATE TABLE rooms (id INTEGER PRIMARY KEY, name TEXT NOT NULL); CREATE TABLE bookings (id INTEGER PRIMARY KEY, room_id INTEGER NOT NULL, starts_on TEXT NOT NULL, ends_on TEXT NOT NULL);'
 const salesLedger = 'CREATE TABLE sales (id INTEGER PRIMARY KEY, sold_on TEXT NOT NULL, cents INTEGER NOT NULL);'
 
+// Schema reps start empty; these inserts set up members and clubs before the membership probes.
+const membershipSetup = [
+  "INSERT INTO members (id, email) VALUES (1, 'ana@example.com')",
+  "INSERT INTO clubs (id, name) VALUES (1, 'Chess')",
+  "INSERT INTO clubs (id, name) VALUES (2, 'Rowing')",
+]
+const membershipLabels = ['member Ana', 'the Chess club', 'the Rowing club']
+
 export const sqlReps: Rep[] = [
   {
     id: 'sql-select-columns',
@@ -2182,6 +2190,468 @@ export const sqlReps: Rep[] = [
       { name: 'A refund lowers a month', input: [], sql: { seed: 'refunds' }, expected: { rows: [['2026-08', 3000]] } },
       { name: 'Equal months are not above their average', input: [], sql: { seed: 'even-months' }, expected: { rows: [] } },
       { name: 'No 2026 sales', input: [], sql: { seed: 'other-year' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-create-products',
+    title: 'Create a table that guards its data',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: { schema: '', seeds: { empty: { about: 'an empty database; your statements create the table', sql: '' } }, compare: 'state' },
+    context:
+      'A shop moves its product list into SQLite. Bad rows have slipped in before: missing names, repeated SKUs, and negative prices. This time the table itself should refuse them.',
+    prompt:
+      "Write the SQL that creates a table named products with exactly these columns: id INTEGER PRIMARY KEY; sku TEXT, required and unique; name TEXT, required; price_cents INTEGER, required and never negative (0 is allowed). The checks then insert rows that name their columns and expect SQLite to accept or reject each one. Each check starts from an empty database. Do not add other required columns. The checks use SQLite.",
+    brief: {
+      summary: 'Create a products table whose own rules reject missing names, repeated SKUs, and negative prices.',
+      rules: [
+        'Create a table named `products` with the columns `id`, `sku`, `name`, `price_cents`.',
+        '`id` is INTEGER PRIMARY KEY. `sku` is TEXT, required and unique. `name` is TEXT and required. `price_cents` is INTEGER, required, and never negative.',
+        'The checks insert rows naming their columns and expect SQLite to accept or reject each one. Each check starts from an empty database.',
+        'Do not add other required columns. The checks use SQLite.',
+      ],
+      edgeCases: ['A price of 0 is allowed.', 'A row with no SKU or no name is rejected.'],
+    },
+    example: {
+      input: "INSERT INTO products (sku, name, price_cents) VALUES ('B-2', 'Ink', -5)",
+      output: 'rejected by a CHECK constraint',
+    },
+    note: 'Each check is one rule, probed with real inserts. Checks establish how SQLite treats these rows; they do not establish that the column names, types, or rule wording are the best design.',
+    vocabulary: [
+      { term: 'CREATE TABLE', meaning: 'the statement that defines a new table, its columns, and their rules' },
+      { term: 'NOT NULL', meaning: 'a column rule that rejects a missing value' },
+      { term: 'UNIQUE', meaning: 'a rule that rejects a second row with the same value; NULL values do not clash' },
+      { term: 'CHECK constraint', meaning: 'a rule with a condition every stored row must meet' },
+    ],
+    planPrompt: 'For each column, write the rule it needs and one insert that the rule must reject.',
+    starter: 'CREATE TABLE products (\n  id INTEGER PRIMARY KEY,\n  sku TEXT,\n  name TEXT,\n  price_cents INTEGER\n);\n',
+    hints: [
+      'Run the starter: it accepts every row. Each failed check names a row the table should have refused.',
+      'Rules can follow a column’s type: one rejects a missing value, one rejects a repeat, and one tests a condition.',
+      'Add NOT NULL to sku, name, and price_cents, UNIQUE to sku, and CHECK (price_cents >= 0) to price_cents.',
+    ],
+    checks: [
+      {
+        name: 'Accepts a complete product',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: ["INSERT INTO products (sku, name, price_cents) VALUES ('A-1', 'Pen', 250)"],
+          labels: ['a pen for 250 cents'],
+        },
+        expected: { probes: ['accepted'] },
+      },
+      {
+        name: 'Accepts a free product',
+        input: [],
+        sql: { seed: 'empty', probes: ["INSERT INTO products (sku, name, price_cents) VALUES ('F-0', 'Sample', 0)"], labels: ['price 0'] },
+        expected: { probes: ['accepted'] },
+      },
+      {
+        name: 'Rejects a negative price',
+        input: [],
+        sql: { seed: 'empty', probes: ["INSERT INTO products (sku, name, price_cents) VALUES ('B-2', 'Ink', -5)"], labels: ['price -5'] },
+        expected: { probes: ['rejected'] },
+      },
+      {
+        name: 'Rejects a product with no name',
+        input: [],
+        sql: { seed: 'empty', probes: ["INSERT INTO products (sku, price_cents) VALUES ('C-3', 100)"], labels: ['a product with no name'] },
+        expected: { probes: ['rejected'] },
+      },
+      {
+        name: 'Rejects a product with no SKU',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: ["INSERT INTO products (name, price_cents) VALUES ('Clip', 100)"],
+          labels: ['a product with no SKU'],
+        },
+        expected: { probes: ['rejected'] },
+      },
+      {
+        name: 'Rejects a repeated SKU',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: [
+            "INSERT INTO products (sku, name, price_cents) VALUES ('D-4', 'Tape', 300)",
+            "INSERT INTO products (sku, name, price_cents) VALUES ('D-4', 'Glue', 400)",
+          ],
+          labels: ['the first D-4', 'a second product with SKU D-4'],
+        },
+        expected: { probes: ['accepted', 'rejected'] },
+      },
+    ],
+  },
+  {
+    id: 'sql-default-values',
+    title: 'Fill in values with DEFAULT',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: '',
+      seeds: { empty: { about: 'an empty database; your statements create the table', sql: '' } },
+      compare: 'state',
+      read: [{ label: 'tasks', sql: 'SELECT title, status, priority FROM tasks ORDER BY id' }],
+    },
+    context:
+      'A to-do app adds tasks by title alone. Every new task should start open with a middle priority, and odd values should be refused.',
+    prompt:
+      "Write the SQL that creates a table named tasks with exactly these columns: id INTEGER PRIMARY KEY; title TEXT, required; status TEXT, required, either 'open' or 'done', and 'open' when an insert leaves it out; priority INTEGER, required, from 1 to 5, and 3 when an insert leaves it out. The checks insert rows naming their columns, expect SQLite to accept or reject each one, and then read title, status, and priority back in id order. An insert that writes NULL explicitly is not leaving the column out. Each check starts from an empty database. The checks use SQLite.",
+    brief: {
+      summary: 'Create a tasks table where a new task starts open with priority 3, and odd values are refused.',
+      rules: [
+        'Create a table named `tasks` with the columns `id` (INTEGER PRIMARY KEY), `title`, `status`, `priority`.',
+        "`title` is TEXT and required. `status` is TEXT, required, 'open' or 'done', and 'open' when an insert leaves it out.",
+        '`priority` is INTEGER, required, from 1 to 5, and 3 when an insert leaves it out.',
+        'The checks insert rows naming their columns, then read title, status, and priority back. Each check starts from an empty database.',
+      ],
+      edgeCases: ['Writing NULL explicitly is not leaving a column out, and NULL is rejected.', 'Priority 5 is allowed; 0 and 6 are not.'],
+    },
+    example: { input: "INSERT INTO tasks (title) VALUES ('Write report')", output: "stored as ('Write report', 'open', 3)" },
+    note: 'Checks establish how SQLite treats these rows and what it stores. They do not establish the best default for your own app.',
+    vocabulary: [{ term: 'DEFAULT', meaning: 'the value a column gets when an insert leaves it out' }],
+    planPrompt: 'For status and priority, write the default, the allowed values, and what an explicit NULL should do.',
+    starter: 'CREATE TABLE tasks (\n  id INTEGER PRIMARY KEY,\n  title TEXT NOT NULL,\n  status TEXT,\n  priority INTEGER\n);\n',
+    hints: [
+      'A default fills a column only when the insert does not mention it. Rules about allowed values are separate.',
+      'DEFAULT gives the value; CHECK limits the values; NOT NULL refuses an explicit NULL, which a default does not replace.',
+      "Give status DEFAULT 'open', NOT NULL, and CHECK (status IN ('open', 'done')); give priority DEFAULT 3, NOT NULL, and CHECK (priority BETWEEN 1 AND 5).",
+    ],
+    checks: [
+      {
+        name: 'A new task starts open with priority 3',
+        input: [],
+        sql: { seed: 'empty', probes: ["INSERT INTO tasks (title) VALUES ('Write report')"], labels: ['a task with only a title'] },
+        expected: { probes: ['accepted'], tasks: [['Write report', 'open', 3]] },
+      },
+      {
+        name: 'Given values are kept',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: ["INSERT INTO tasks (title, status, priority) VALUES ('Ship', 'done', 1)"],
+          labels: ['a done task with priority 1'],
+        },
+        expected: { probes: ['accepted'], tasks: [['Ship', 'done', 1]] },
+      },
+      {
+        name: 'Rejects an unknown status',
+        input: [],
+        sql: { seed: 'empty', probes: ["INSERT INTO tasks (title, status) VALUES ('Plan', 'blocked')"], labels: ["status 'blocked'"] },
+        expected: { probes: ['rejected'], tasks: [] },
+      },
+      {
+        name: 'Priority stays from 1 to 5',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: [
+            "INSERT INTO tasks (title, priority) VALUES ('Edge', 5)",
+            "INSERT INTO tasks (title, priority) VALUES ('Low', 0)",
+            "INSERT INTO tasks (title, priority) VALUES ('High', 6)",
+          ],
+          labels: ['priority 5', 'priority 0', 'priority 6'],
+        },
+        expected: { probes: ['accepted', 'rejected', 'rejected'], tasks: [['Edge', 'open', 5]] },
+      },
+      {
+        name: 'An explicit NULL status is rejected',
+        input: [],
+        sql: { seed: 'empty', probes: ["INSERT INTO tasks (title, status) VALUES ('Vague', NULL)"], labels: ['status NULL'] },
+        expected: { probes: ['rejected'], tasks: [] },
+      },
+    ],
+  },
+  {
+    id: 'sql-strict-types',
+    title: 'Make SQLite enforce column types',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: '',
+      seeds: { empty: { about: 'an empty database; your statements create the table', sql: '' } },
+      compare: 'state',
+      read: [{ label: 'readings', sql: 'SELECT sensor, celsius, typeof(celsius) FROM readings ORDER BY id' }],
+    },
+    context:
+      "A greenhouse logs temperatures. Someone once stored the word 'warm' in the temperature column, and SQLite kept it. The new table should refuse values that are not numbers.",
+    prompt:
+      "Write the SQL that creates a table named readings with exactly these columns: id INTEGER PRIMARY KEY; sensor TEXT, required; celsius REAL, required. SQLite normally stores any value in any column, so make the table enforce its declared types: a celsius value that is not a number must be rejected, while whole numbers and numeric text such as '19.5' are stored as real numbers. The checks insert rows naming their columns, expect SQLite to accept or reject each one, and read sensor, celsius, and the stored type of celsius back in id order. Each check starts from an empty database. The checks use SQLite 3.49.",
+    brief: {
+      summary: 'Create a readings table that refuses a temperature that is not a number.',
+      rules: [
+        'Create a table named `readings` with `id` (INTEGER PRIMARY KEY), `sensor` (TEXT, required), and `celsius` (REAL, required).',
+        "Make the table enforce its declared types: a celsius value such as 'warm' is rejected.",
+        "Whole numbers and numeric text such as '19.5' are accepted and stored as real numbers.",
+        'The checks insert rows naming their columns, then read the values and the stored type of celsius back. Each check starts from an empty database; the checks use SQLite 3.49.',
+      ],
+      edgeCases: ['Without type enforcement, SQLite would store the text.'],
+    },
+    example: { input: "INSERT INTO readings (sensor, celsius) VALUES ('north', 'warm')", output: 'rejected' },
+    note: 'SQLite gives columns a type affinity rather than a fixed type unless a table is declared STRICT; other databases enforce types by default. Checks establish SQLite 3.49 behavior for these rows.',
+    vocabulary: [
+      {
+        term: 'Type affinity',
+        meaning: "SQLite's preferred type for a column, which converts values when it can but does not reject others",
+      },
+      { term: 'STRICT table', meaning: 'a SQLite table that rejects values that cannot be stored as the declared column type' },
+    ],
+    planPrompt: 'Predict what the starter stores for each insert, including the type of celsius.',
+    starter: 'CREATE TABLE readings (\n  id INTEGER PRIMARY KEY,\n  sensor TEXT NOT NULL,\n  celsius REAL NOT NULL\n);\n',
+    hints: [
+      "Run the starter: it accepts 'warm' and stores it as text in a REAL column. The rules already in place cannot catch it.",
+      'SQLite has a table option, written after the closing bracket of CREATE TABLE, that turns declared types into enforced types.',
+      'End the statement with ) STRICT; a CHECK with typeof would also work but must list every type rule by hand.',
+    ],
+    checks: [
+      {
+        name: 'Accepts a number',
+        input: [],
+        sql: { seed: 'empty', probes: ["INSERT INTO readings (sensor, celsius) VALUES ('north', 21.5)"], labels: ['21.5'] },
+        expected: { probes: ['accepted'], readings: [['north', 21.5, 'real']] },
+      },
+      {
+        name: 'Rejects text that is not a number',
+        input: [],
+        sql: { seed: 'empty', probes: ["INSERT INTO readings (sensor, celsius) VALUES ('south', 'warm')"], labels: ["the text 'warm'"] },
+        expected: { probes: ['rejected'], readings: [] },
+      },
+      {
+        name: 'Whole numbers and numeric text become real numbers',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: [
+            "INSERT INTO readings (sensor, celsius) VALUES ('east', 20)",
+            "INSERT INTO readings (sensor, celsius) VALUES ('west', '19.5')",
+          ],
+          labels: ['20', "the text '19.5'"],
+        },
+        expected: {
+          probes: ['accepted', 'accepted'],
+          readings: [
+            ['east', 20, 'real'],
+            ['west', 19.5, 'real'],
+          ],
+        },
+      },
+      {
+        name: 'Rejects a missing temperature',
+        input: [],
+        sql: { seed: 'empty', probes: ["INSERT INTO readings (sensor) VALUES ('roof')"], labels: ['a reading with no temperature'] },
+        expected: { probes: ['rejected'], readings: [] },
+      },
+    ],
+  },
+  {
+    id: 'sql-create-memberships',
+    title: 'Link members and clubs',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: '',
+      seeds: { empty: { about: 'an empty database; your statements create the tables', sql: '' } },
+      compare: 'state',
+      foreignKeys: true,
+    },
+    context:
+      'A sports centre records which members belong to which clubs. A member can join many clubs, but not the same club twice, and a membership must point at a real member and a real club.',
+    prompt:
+      "Write the SQL that creates three tables. members: id INTEGER PRIMARY KEY; email TEXT, required and unique. clubs: id INTEGER PRIMARY KEY; name TEXT, required and unique. memberships: member_id INTEGER, required, referring to members.id; club_id INTEGER, required, referring to clubs.id; joined_on TEXT, required; and no member may hold two memberships of the same club. The checks turn on SQLite's foreign key enforcement (PRAGMA foreign_keys = ON) before your SQL runs, insert rows naming their columns, and expect SQLite to accept or reject each one. Each check starts from an empty database. The checks use SQLite.",
+    brief: {
+      summary: 'Create members, clubs, and memberships so that every membership points at a real member and club, once.',
+      rules: [
+        '`members`: `id` INTEGER PRIMARY KEY, `email` TEXT required and unique. `clubs`: `id` INTEGER PRIMARY KEY, `name` TEXT required and unique.',
+        '`memberships`: `member_id` INTEGER required, referring to members.id; `club_id` INTEGER required, referring to clubs.id; `joined_on` TEXT required.',
+        'No member may hold two memberships of the same club.',
+        "The checks turn on SQLite's foreign key enforcement before your SQL runs, then insert rows naming their columns. Each check starts from an empty database.",
+      ],
+      edgeCases: ['One member in two different clubs is fine.', 'A membership for a member or club that does not exist is rejected.'],
+    },
+    example: {
+      input: 'a membership for member 9, who does not exist',
+      output: 'rejected by the foreign key',
+    },
+    note: 'This is an independent rep: plan before you look at the hints. SQLite enforces foreign keys only when PRAGMA foreign_keys = ON is set on the connection; the checks set it, and a real application must too. Checks establish how SQLite treats these rows.',
+    vocabulary: [
+      { term: 'Foreign key', meaning: 'a column whose value must match a key in another table' },
+      { term: 'Composite primary key', meaning: 'a primary key made of two or more columns together' },
+    ],
+    planPrompt: 'List every rule in the brief, the table it belongs to, and how you will state it.',
+    starter: '-- Create members, clubs, and memberships.\n',
+    hints: [
+      'Three different kinds of rule appear: required values, uniqueness, and links to other tables. The last one involves two columns at once.',
+      'A REFERENCES clause links a column to another table’s key. A uniqueness rule on a pair of columns can be written after the columns.',
+      'Give memberships member_id REFERENCES members(id), club_id REFERENCES clubs(id), and PRIMARY KEY (member_id, club_id), all with NOT NULL where required.',
+    ],
+    checks: [
+      {
+        name: 'Accepts a member joining two clubs',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: [
+            ...membershipSetup,
+            "INSERT INTO memberships (member_id, club_id, joined_on) VALUES (1, 1, '2026-01-05')",
+            "INSERT INTO memberships (member_id, club_id, joined_on) VALUES (1, 2, '2026-02-01')",
+          ],
+          labels: [...membershipLabels, 'Ana joining Chess', 'Ana joining Rowing'],
+        },
+        expected: { probes: ['accepted', 'accepted', 'accepted', 'accepted', 'accepted'] },
+      },
+      {
+        name: 'Rejects joining the same club twice',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: [
+            ...membershipSetup,
+            "INSERT INTO memberships (member_id, club_id, joined_on) VALUES (1, 1, '2026-01-05')",
+            "INSERT INTO memberships (member_id, club_id, joined_on) VALUES (1, 1, '2026-03-01')",
+          ],
+          labels: [...membershipLabels, 'Ana joining Chess', 'Ana joining Chess again'],
+        },
+        expected: { probes: ['accepted', 'accepted', 'accepted', 'accepted', 'rejected'] },
+      },
+      {
+        name: 'Rejects a membership for a member who does not exist',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: [...membershipSetup, "INSERT INTO memberships (member_id, club_id, joined_on) VALUES (9, 1, '2026-01-05')"],
+          labels: [...membershipLabels, 'a membership for member 9, who does not exist'],
+        },
+        expected: { probes: ['accepted', 'accepted', 'accepted', 'rejected'] },
+      },
+      {
+        name: 'Rejects a membership for a club that does not exist',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: [...membershipSetup, "INSERT INTO memberships (member_id, club_id, joined_on) VALUES (1, 9, '2026-01-05')"],
+          labels: [...membershipLabels, 'a membership of club 9, which does not exist'],
+        },
+        expected: { probes: ['accepted', 'accepted', 'accepted', 'rejected'] },
+      },
+      {
+        name: 'Rejects a repeated email',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: [...membershipSetup, "INSERT INTO members (id, email) VALUES (2, 'ana@example.com')"],
+          labels: [...membershipLabels, 'a second member with ana@example.com'],
+        },
+        expected: { probes: ['accepted', 'accepted', 'accepted', 'rejected'] },
+      },
+      {
+        name: 'Rejects a membership with no date',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: [...membershipSetup, 'INSERT INTO memberships (member_id, club_id) VALUES (1, 2)'],
+          labels: [...membershipLabels, 'a membership with no joined_on date'],
+        },
+        expected: { probes: ['accepted', 'accepted', 'accepted', 'rejected'] },
+      },
+    ],
+  },
+  {
+    id: 'sql-create-shifts',
+    title: 'Design a table of work shifts',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: { schema: '', seeds: { empty: { about: 'an empty database; your statements create the table', sql: '' } }, compare: 'state' },
+    context:
+      'A restaurant schedules shifts. A shift must end after it starts, use a known role, and a worker cannot be booked for two shifts starting at the same time.',
+    prompt:
+      "Write the SQL that creates a table named shifts with exactly these columns: id INTEGER PRIMARY KEY; worker TEXT, required; role TEXT, required, one of 'cook', 'server', or 'host'; starts_at TEXT, required; ends_at TEXT, required and later than starts_at. Times are written 'YYYY-MM-DD HH:MM'. One worker cannot have two shifts with the same starts_at, but two workers can start at the same time. The checks insert rows naming their columns and expect SQLite to accept or reject each one. Each check starts from an empty database. The checks use SQLite.",
+    brief: {
+      summary: 'Create a shifts table that refuses impossible shifts, unknown roles, and double bookings.',
+      rules: [
+        'Create a table named `shifts` with `id` (INTEGER PRIMARY KEY), `worker`, `role`, `starts_at`, `ends_at`, all required TEXT apart from id.',
+        "`role` is 'cook', 'server', or 'host'. `ends_at` is later than `starts_at`; times are 'YYYY-MM-DD HH:MM'.",
+        'One worker cannot have two shifts with the same starts_at; two different workers can.',
+        'The checks insert rows naming their columns. Each check starts from an empty database.',
+      ],
+      edgeCases: ['A shift that ends when it starts is rejected.'],
+    },
+    example: { input: "a cook shift from '2026-09-01 18:00' to '2026-09-01 17:00'", output: 'rejected' },
+    note: 'This is a delayed recall rep: solve it without hints after the break. Text times compare correctly only because they are written year first with the same width. Checks establish how SQLite treats these rows.',
+    vocabulary: [{ term: 'Table constraint', meaning: 'a rule written after the columns that can involve several of them' }],
+    planPrompt: 'List each rule, whether it involves one column or several, and where you will write it.',
+    starter: '-- Create the shifts table.\n',
+    hints: [
+      'Some rules concern a single column; two of them compare or combine two columns.',
+      'A CHECK can compare two columns of the same row, and a uniqueness rule can cover a pair of columns.',
+      "Use CHECK (role IN ('cook', 'server', 'host')), CHECK (ends_at > starts_at), and UNIQUE (worker, starts_at), with NOT NULL on every required column.",
+    ],
+    checks: [
+      {
+        name: 'Accepts a normal shift',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: ["INSERT INTO shifts (worker, role, starts_at, ends_at) VALUES ('Ana', 'cook', '2026-09-01 10:00', '2026-09-01 16:00')"],
+          labels: ['a cook shift from 10:00 to 16:00'],
+        },
+        expected: { probes: ['accepted'] },
+      },
+      {
+        name: 'Rejects a shift that does not end after it starts',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: [
+            "INSERT INTO shifts (worker, role, starts_at, ends_at) VALUES ('Ben', 'host', '2026-09-01 18:00', '2026-09-01 17:00')",
+            "INSERT INTO shifts (worker, role, starts_at, ends_at) VALUES ('Ben', 'host', '2026-09-01 18:00', '2026-09-01 18:00')",
+          ],
+          labels: ['a shift ending before it starts', 'a shift ending when it starts'],
+        },
+        expected: { probes: ['rejected', 'rejected'] },
+      },
+      {
+        name: 'Rejects an unknown role',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: [
+            "INSERT INTO shifts (worker, role, starts_at, ends_at) VALUES ('Cy', 'manager', '2026-09-02 09:00', '2026-09-02 17:00')",
+          ],
+          labels: ["role 'manager'"],
+        },
+        expected: { probes: ['rejected'] },
+      },
+      {
+        name: 'One worker cannot start two shifts at once',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: [
+            "INSERT INTO shifts (worker, role, starts_at, ends_at) VALUES ('Dee', 'server', '2026-09-03 12:00', '2026-09-03 15:00')",
+            "INSERT INTO shifts (worker, role, starts_at, ends_at) VALUES ('Eli', 'server', '2026-09-03 12:00', '2026-09-03 15:00')",
+            "INSERT INTO shifts (worker, role, starts_at, ends_at) VALUES ('Dee', 'host', '2026-09-03 12:00', '2026-09-03 14:00')",
+          ],
+          labels: ['Dee at 12:00', 'Eli at 12:00', 'a second shift for Dee at 12:00'],
+        },
+        expected: { probes: ['accepted', 'accepted', 'rejected'] },
+      },
+      {
+        name: 'Rejects a shift with no worker',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: ["INSERT INTO shifts (role, starts_at, ends_at) VALUES ('cook', '2026-09-04 08:00', '2026-09-04 12:00')"],
+          labels: ['a shift with no worker'],
+        },
+        expected: { probes: ['rejected'] },
+      },
     ],
   },
 ]

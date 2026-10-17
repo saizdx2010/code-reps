@@ -188,3 +188,17 @@ test('SQL tables and results stay inside their boxes at a phone width', async ({
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(0)
 })
+
+test('a schema rep counts probes and names the row a rule let through', async ({ page }) => {
+  await page.goto('/#/practice/sql-create-products')
+  await expect(page.locator('.editor-foot')).toContainText('Your schema · probe statements run after')
+  await expect(page.locator('details.sql-tables')).toHaveCount(0)
+  await run(page)
+  await expectChecksFinished(page.getByText('2 of 6 probes behaved as the contract says', { exact: true }))
+  const failure = openFailure(page)
+  await expect(failure.locator('summary')).toHaveText('Rejects a negative price')
+  await expect(failure).toContainText('Your table stored price -5 instead of rejecting it.')
+  await replaceCode(page, sqlSolutions['sql-create-products'], 'sql-create-products')
+  await run(page)
+  await expectChecksFinished(page.getByText('All probes behaved as the contract says', { exact: true }))
+})

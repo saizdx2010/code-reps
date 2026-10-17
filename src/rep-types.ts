@@ -18,9 +18,14 @@ export type SqlTask = {
   read?: { label: string; sql: string }[]
   returns?: string
   unchanged?: boolean
+  /** Turn on SQLite's foreign key enforcement (off by default) before the schema runs. */
+  foreignKeys?: boolean
 }
-/** One SQLite check: its seed, and statements run after the learner's SQL that SQLite should accept or reject. */
-export type SqlCheck = { seed: string; probes?: string[] }
+/**
+ * One SQLite check: its seed, and probe statements run after the learner's SQL that SQLite should accept or reject.
+ * `labels` names each probe in feedback ("price -5"); without one, the statement itself is shown.
+ */
+export type SqlCheck = { seed: string; probes?: string[]; labels?: string[] }
 export type Check = { name: string; input: unknown[]; expected: unknown; fixture?: AsyncFixtureSpec; sql?: SqlCheck }
 export type Rep = {
   id: string

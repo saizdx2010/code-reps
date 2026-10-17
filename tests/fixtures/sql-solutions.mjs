@@ -121,4 +121,38 @@ SELECT month, total_cents
 FROM monthly
 WHERE total_cents > (SELECT AVG(total_cents) FROM monthly)
 ORDER BY month;`,
+  'sql-create-products': `CREATE TABLE products (
+  id INTEGER PRIMARY KEY,
+  sku TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  price_cents INTEGER NOT NULL CHECK (price_cents >= 0)
+);`,
+  'sql-default-values': `CREATE TABLE tasks (
+  id INTEGER PRIMARY KEY,
+  title TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'done')),
+  priority INTEGER NOT NULL DEFAULT 3 CHECK (priority BETWEEN 1 AND 5)
+);`,
+  'sql-strict-types': `CREATE TABLE readings (
+  id INTEGER PRIMARY KEY,
+  sensor TEXT NOT NULL,
+  celsius REAL NOT NULL
+) STRICT;`,
+  'sql-create-memberships': `CREATE TABLE members (id INTEGER PRIMARY KEY, email TEXT NOT NULL UNIQUE);
+CREATE TABLE clubs (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE);
+CREATE TABLE memberships (
+  member_id INTEGER NOT NULL REFERENCES members(id),
+  club_id INTEGER NOT NULL REFERENCES clubs(id),
+  joined_on TEXT NOT NULL,
+  PRIMARY KEY (member_id, club_id)
+);`,
+  'sql-create-shifts': `CREATE TABLE shifts (
+  id INTEGER PRIMARY KEY,
+  worker TEXT NOT NULL,
+  role TEXT NOT NULL CHECK (role IN ('cook', 'server', 'host')),
+  starts_at TEXT NOT NULL,
+  ends_at TEXT NOT NULL,
+  CHECK (ends_at > starts_at),
+  UNIQUE (worker, starts_at)
+);`,
 }

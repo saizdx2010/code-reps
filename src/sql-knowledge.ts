@@ -372,4 +372,75 @@ export const sqlSkills: Skill[] = [
     repIds: ['sql-above-average', 'sql-category-average', 'sql-students-without-work', 'sql-free-rooms', 'sql-strong-months'],
     related: ['sql-joining', 'sql-summarizing'],
   },
+  {
+    id: 'sql-schema-design',
+    title: 'Design a table: keys, constraints, and types',
+    summary: 'Let the table itself refuse bad rows with keys, NOT NULL, UNIQUE, CHECK, DEFAULT, foreign keys, and SQLite’s STRICT tables.',
+    prerequisites: ['sql-reading'],
+    objectives: [
+      'Write CREATE TABLE with a primary key and column rules for required, unique, and allowed values.',
+      'Use DEFAULT for values an insert leaves out, and explain why an explicit NULL is different.',
+      'Link tables with foreign keys and know what SQLite enforces by default, including STRICT typing.',
+    ],
+    sections: [
+      {
+        title: 'Rules belong in the table',
+        body: 'Application code changes and has bugs; a constraint applies to every insert from every program. INTEGER PRIMARY KEY gives each row a unique id that SQLite fills in when an insert leaves it out. NOT NULL rejects a missing value. UNIQUE rejects a second row with the same value, though several NULLs never clash with each other. CHECK (price_cents >= 0) rejects any row for which the condition is false.',
+      },
+      {
+        title: 'Defaults fill what an insert leaves out',
+        body: "status TEXT NOT NULL DEFAULT 'open' gives a new row 'open' when the insert does not name status. A default does not replace an explicit NULL: INSERT … (status) VALUES (NULL) still hits NOT NULL. Rules about allowed values, such as CHECK (status IN ('open', 'done')), apply to defaults and given values alike.",
+      },
+      {
+        title: 'Rules over several columns',
+        body: 'Some rules involve more than one column, so they are written after the columns as table constraints: CHECK (ends_at > starts_at) compares two values of the same row, UNIQUE (worker, starts_at) refuses a repeated pair while allowing each value alone to repeat, and PRIMARY KEY (member_id, club_id) makes a pair the identity of a row in a linking table.',
+      },
+      {
+        title: 'Foreign keys and types in SQLite',
+        body: 'member_id INTEGER REFERENCES members(id) declares that each value must match a member. SQLite enforces this only after PRAGMA foreign_keys = ON on that connection; by default it stores the row anyway. SQLite also treats a declared type as a preference, its type affinity: a REAL column accepts the text warm. Adding STRICT after the closing bracket of CREATE TABLE makes SQLite reject values that cannot be stored as the declared type. Other databases differ on both points.',
+      },
+    ],
+    example:
+      "CREATE TABLE tasks (\n  id INTEGER PRIMARY KEY,\n  title TEXT NOT NULL,\n  status TEXT NOT NULL DEFAULT 'open'\n    CHECK (status IN ('open', 'done')),\n  priority INTEGER NOT NULL DEFAULT 3\n    CHECK (priority BETWEEN 1 AND 5)\n);",
+    walkthrough: [
+      "INSERT INTO tasks (title) VALUES ('Plan') stores status 'open' and priority 3.",
+      "INSERT … (title, status) VALUES ('Plan', 'blocked') fails the status CHECK.",
+      "INSERT … (title, status) VALUES ('Plan', NULL) fails NOT NULL: the default does not apply.",
+      "INSERT … (title, priority) VALUES ('Plan', 6) fails the priority CHECK.",
+    ],
+    mistakes: [
+      'Expecting UNIQUE to reject a second NULL.',
+      'Expecting a DEFAULT to replace an explicit NULL.',
+      'Declaring REFERENCES and assuming SQLite enforces it without PRAGMA foreign_keys = ON.',
+      'Assuming a declared column type rejects other values in a table that is not STRICT.',
+    ],
+    questions: [
+      q(
+        'unique-null-v1',
+        'A column is declared email TEXT UNIQUE. How many rows with email NULL can the table hold?',
+        '',
+        ['One', 'Any number', 'None'],
+        1,
+        'UNIQUE compares known values. NULLs are not equal to each other, so they never clash. Add NOT NULL if a value is required.',
+      ),
+      q(
+        'default-null-v1',
+        "status is TEXT NOT NULL DEFAULT 'open'. What happens to INSERT INTO tasks (title, status) VALUES ('Plan', NULL)?",
+        '',
+        ["SQLite stores 'open'", 'SQLite rejects it', 'SQLite stores NULL'],
+        1,
+        'The insert names status and gives NULL, so the default does not apply and NOT NULL rejects the row.',
+      ),
+      q(
+        'foreign-key-default-v1',
+        'orders.customer_id REFERENCES customers(id), with SQLite’s default settings. What happens to an order for customer 99, who does not exist?',
+        '',
+        ['It is rejected', 'It is stored', 'SQLite creates customer 99'],
+        1,
+        'SQLite checks foreign keys only after PRAGMA foreign_keys = ON on the connection. By default the order is stored.',
+      ),
+    ],
+    repIds: ['sql-create-products', 'sql-default-values', 'sql-strict-types', 'sql-create-memberships', 'sql-create-shifts'],
+    related: ['databases', 'sql-joining'],
+  },
 ]

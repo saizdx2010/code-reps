@@ -28,7 +28,10 @@ test('every SQL track rep is SQL text with a reference query and fresh-database 
     assert.equal(rep.format, 'sql', id)
     assert.equal(rep.functionName, '', id)
     assert.ok(sqlSolutions[id], `${id} needs a reference query`)
-    assert.ok(Object.keys(rep.sql.seeds).length >= 3, `${id} needs several data sets`)
+    // A schema rep starts empty and probes one rule per check; every other rep needs several data sets.
+    const schemaRep = rep.checks.every(check => check.sql.probes?.length)
+    if (schemaRep) assert.ok(rep.checks.length >= 4 && rep.checks.some(check => check.expected.probes.includes('rejected')), id)
+    else assert.ok(Object.keys(rep.sql.seeds).length >= 3, `${id} needs several data sets`)
   }
 })
 
@@ -351,6 +354,83 @@ test('S5 monthly-average checks catch averaging sales, the wrong year filter, an
     ],
     [base.replace("  WHERE sold_on BETWEEN '2026-01-01' AND '2026-12-31'\n", ''), 'Months above the average month'],
     [base.replace('total_cents > (SELECT', 'total_cents >= (SELECT'), 'A refund lowers a month'],
+  ])
+})
+
+const probeMessages = (id, code) =>
+  runRep(code, id, () => new SQL.Database())
+    .filter(result => !result.passed)
+    .map(result => `${result.name}: ${result.message}`)
+
+test('S6 product checks name each rule the starter misses, in words', () => {
+  const starter = reps.find(rep => rep.id === 'sql-create-products').starter
+  assert.deepEqual(probeMessages('sql-create-products', starter), [
+    'Rejects a negative price: Your table stored price -5 instead of rejecting it.',
+    'Rejects a product with no name: Your table stored a product with no name instead of rejecting it.',
+    'Rejects a product with no SKU: Your table stored a product with no SKU instead of rejecting it.',
+    'Rejects a repeated SKU: Your table stored a second product with SKU D-4 instead of rejecting it.',
+  ])
+  const base = solution('sql-create-products')
+  assertCaught('sql-create-products', [
+    [base.replace('price_cents >= 0', 'price_cents > 0'), 'Accepts a free product'],
+    [base.replace('sku TEXT NOT NULL UNIQUE', 'sku TEXT UNIQUE'), 'Rejects a product with no SKU'],
+    [base.replace('sku TEXT NOT NULL UNIQUE', 'sku TEXT NOT NULL'), 'Rejects a repeated SKU'],
+  ])
+  assert.match(
+    probeMessages('sql-create-products', 'CREATE TABLE goods (id INTEGER PRIMARY KEY)')[0],
+    /Your table rejected a pen for 250 cents: no such table: products/,
+  )
+})
+
+test('S6 default checks catch a missing default, an explicit NULL, and a range off by one', () => {
+  const base = solution('sql-default-values')
+  assertCaught('sql-default-values', [
+    [base.replace("DEFAULT 'open' ", ''), 'A new task starts open with priority 3'],
+    [base.replace("status TEXT NOT NULL DEFAULT 'open'", "status TEXT DEFAULT 'open'"), 'An explicit NULL status is rejected'],
+    [base.replace('BETWEEN 1 AND 5', 'BETWEEN 0 AND 5'), 'Priority stays from 1 to 5'],
+    [base.replace("CHECK (status IN ('open', 'done'))", ''), 'Rejects an unknown status'],
+  ])
+})
+
+test('S6 type checks catch an ordinary table, and a typeof CHECK is an accepted alternative', () => {
+  const base = solution('sql-strict-types')
+  assertCaught('sql-strict-types', [
+    [base.replace(') STRICT;', ');'), 'Rejects text that is not a number'],
+    [base.replace(') STRICT;', ', CHECK (celsius > -100));'), 'Rejects text that is not a number'],
+  ])
+  assert.deepEqual(failed('sql-strict-types', base.replace(') STRICT;', ", CHECK (typeof(celsius) = 'real'));")), [])
+})
+
+test('S6 membership checks need foreign keys, a pair key, and required dates', () => {
+  const base = solution('sql-create-memberships')
+  assertCaught('sql-create-memberships', [
+    [base.replace(' REFERENCES members(id)', ''), 'Rejects a membership for a member who does not exist'],
+    [base.replace(' REFERENCES clubs(id)', ''), 'Rejects a membership for a club that does not exist'],
+    [base.replace('PRIMARY KEY (member_id, club_id)', 'UNIQUE (member_id)'), 'Accepts a member joining two clubs'],
+    [base.replace(',\n  PRIMARY KEY (member_id, club_id)', ''), 'Rejects joining the same club twice'],
+    [base.replace('joined_on TEXT NOT NULL', 'joined_on TEXT'), 'Rejects a membership with no date'],
+    [base.replace('email TEXT NOT NULL UNIQUE', 'email TEXT NOT NULL'), 'Rejects a repeated email'],
+  ])
+  // Foreign keys are enforced only because the task turns them on before the learner's SQL.
+  const rep = reps.find(item => item.id === 'sql-create-memberships')
+  assert.equal(rep.sql.foreignKeys, true)
+  const withoutPragma = runRep(base, 'sql-create-memberships', () => {
+    const db = new SQL.Database()
+    const run = db.run.bind(db)
+    db.run = (sql, ...rest) => (sql === 'PRAGMA foreign_keys = ON' ? db : run(sql, ...rest))
+    return db
+  })
+  assert.ok(withoutPragma.some(result => result.name === 'Rejects a membership for a member who does not exist' && !result.passed))
+})
+
+test('S6 shift checks catch a zero-length shift, a one-column unique rule, and unknown roles', () => {
+  const base = solution('sql-create-shifts')
+  assertCaught('sql-create-shifts', [
+    [base.replace('ends_at > starts_at', 'ends_at >= starts_at'), 'Rejects a shift that does not end after it starts'],
+    [base.replace('UNIQUE (worker, starts_at)', 'UNIQUE (starts_at)'), 'One worker cannot start two shifts at once'],
+    [base.replace(',\n  UNIQUE (worker, starts_at)', ''), 'One worker cannot start two shifts at once'],
+    [base.replace(" CHECK (role IN ('cook', 'server', 'host'))", ''), 'Rejects an unknown role'],
+    [base.replace('worker TEXT NOT NULL', 'worker TEXT'), 'Rejects a shift with no worker'],
   ])
 })
 

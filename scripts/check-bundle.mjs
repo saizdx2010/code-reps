@@ -33,11 +33,13 @@ for (const file of workerFiles) {
   for (const match of code.matchAll(/["'`](\.\/[^"'`]+\.js)["'`]/g)) workerFiles.add(join('assets', match[1]))
 }
 const groups = [
-  { name: 'Initial JavaScript', files: [...initial], limit: 153_000, rawLimit: 530_000 },
+  // The startup catalog and path data grow with each track's stages, journeys, lessons, and rep entries; raised from
+  // 153,000 for the SQL track after moving track introductions out of startup and compacting the catalog rows.
+  { name: 'Initial JavaScript', files: [...initial], limit: 157_500, rawLimit: 530_000 },
   { name: 'Additional editor JavaScript', files: [...editor], limit: 1_050_000, rawLimit: 4_200_000 },
   { name: 'Additional frontend JavaScript', files: [...frontend], limit: 1_050_000, rawLimit: 3_900_000 },
   // The practice worker bundles every rep's checks, so its raw size grows with the catalog.
-  { name: 'Local worker JavaScript', files: [...workerFiles], limit: 3_100_000, rawLimit: 11_700_000 },
+  { name: 'Local worker JavaScript', files: [...workerFiles], limit: 3_100_000, rawLimit: 12_000_000 },
 ]
 const report = []
 for (const group of groups) {
