@@ -290,6 +290,70 @@ test('S4 latest-book checks catch an inner join, COUNT(*), and grouping by name'
   ])
 })
 
+test('S5 average checks catch >=, a grouped HAVING, and the tie-breaker', () => {
+  const base = solution('sql-above-average')
+  assertCaught('sql-above-average', [
+    [base.replace('cents > (SELECT', 'cents >= (SELECT'), 'Equal to the average is not above it'],
+    ['SELECT id, cents FROM invoices GROUP BY id HAVING cents > AVG(cents) ORDER BY cents DESC, id', 'Invoices above the average'],
+    [base.replace('ORDER BY cents DESC, id', 'ORDER BY cents DESC, id DESC'), 'Equal amounts by id'],
+  ])
+})
+
+test('S5 correlated checks catch an uncorrelated average and correlating on the wrong column', () => {
+  const base = solution('sql-category-average')
+  assertCaught('sql-category-average', [
+    [reps.find(rep => rep.id === 'sql-category-average').starter, 'Above the average of their own category'],
+    [base.replace('i.category = c.category', 'i.name = c.name'), 'Above the average of their own category'],
+    [base.replace('c.price_cents > (', 'c.price_cents >= ('), 'Equal prices are never above their average'],
+  ])
+})
+
+test('S5 missing-work checks catch NOT IN over a NULL and an inner join', () => {
+  const base = solution('sql-students-without-work')
+  assertCaught('sql-students-without-work', [
+    [reps.find(rep => rep.id === 'sql-students-without-work').starter, 'A guest submission does not hide anyone'],
+    [
+      'SELECT DISTINCT st.id, st.name FROM students AS st JOIN submissions AS s ON s.student_id <> st.id ORDER BY st.id',
+      'A guest submission does not hide anyone',
+    ],
+  ])
+  assert.deepEqual(
+    failed(
+      'sql-students-without-work',
+      'SELECT id, name FROM students WHERE id NOT IN (SELECT student_id FROM submissions WHERE student_id IS NOT NULL) ORDER BY id',
+    ),
+    [],
+  )
+})
+
+test('S5 free-room checks catch a join that keeps old bookings, the leaving day, and duplicates', () => {
+  const base = solution('sql-free-rooms')
+  assertCaught('sql-free-rooms', [
+    [
+      "SELECT r.id, r.name FROM rooms AS r LEFT JOIN bookings AS b ON b.room_id = r.id WHERE b.id IS NULL OR NOT (b.starts_on <= '2026-08-15' AND b.ends_on > '2026-08-15') ORDER BY r.name, r.id",
+      'Free rooms on the night',
+    ],
+    [base.replace("b.ends_on > '2026-08-15'", "b.ends_on >= '2026-08-15'"), 'Free rooms on the night'],
+    [base.replace("b.starts_on <= '2026-08-15'", "b.starts_on < '2026-08-15'"), 'Free rooms on the night'],
+    [base.replace('ORDER BY r.name, r.id', 'ORDER BY r.name, r.id DESC'), 'Rooms with no bookings, same name'],
+  ])
+})
+
+test('S5 monthly-average checks catch averaging sales, the wrong year filter, and >=', () => {
+  const base = solution('sql-strong-months')
+  assertCaught('sql-strong-months', [
+    [
+      base.replace(
+        '(SELECT AVG(total_cents) FROM monthly)',
+        "(SELECT AVG(cents) FROM sales WHERE sold_on BETWEEN '2026-01-01' AND '2026-12-31')",
+      ),
+      'A refund lowers a month',
+    ],
+    [base.replace("  WHERE sold_on BETWEEN '2026-01-01' AND '2026-12-31'\n", ''), 'Months above the average month'],
+    [base.replace('total_cents > (SELECT', 'total_cents >= (SELECT'), 'A refund lowers a month'],
+  ])
+})
+
 test('the S1 journey keeps recall distinct from its guided and independent reps', () => {
   const journey = journeys.find(item => item.id === 'sql-reading')
   assert.deepEqual(

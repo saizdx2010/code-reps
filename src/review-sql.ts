@@ -256,6 +256,66 @@ export const sqlDepth: Record<string, RepDepth> = {
     transfer:
       'The catalogue now shows the title of each author’s latest book, not just its year, and must choose when two books share the latest year. Decide why MAX(year) alone cannot pick the title and what would. This changed contract is self-reviewed; the original checks do not cover it.',
   },
+  'sql-above-average': {
+    reasoning:
+      'The scalar subquery computes one number, the average of all invoices, and WHERE compares each invoice with it. Strict > leaves out invoices equal to the average. With one invoice the average equals that invoice, and with none the average is NULL, so the comparison is never true and no rows come back.',
+    trace:
+      'With the month data, the subquery averages 300, 500, 700, 500, and 1000: 3000 / 5 = 600. Invoice 3 (700) and invoice 5 (1000) are greater; the two 500s and the 300 are not. Sorting by cents descending gives 5, then 3.',
+    alternative:
+      'A WITH step that computes the average once, joined to invoices, says the same thing in two named steps and is easier to extend, for example to show the average beside each row. A window function, AVG(cents) OVER (), puts the average on every row; a later stage covers it.',
+    counterexample:
+      '>= keeps the two 500-cent invoices in the at-average data. HAVING cents > AVG(cents) without GROUP BY collapses the table into one group and returns at most one row.',
+    transfer:
+      'The accountant now wants invoices more than 50% above the average, with the average shown in a third column. Decide where the average is computed so it is written only once. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-category-average': {
+    reasoning:
+      'The subquery refers to the outer row’s category, so it averages only the products of that category, once for each product the outer query examines. A product alone in its category is compared with its own price and never passes, because > is strict.',
+    trace:
+      'For the Hose, the subquery averages the garden products 400 and 600 to 500, and 600 > 500, so the Hose stays. For the Globe, the only decor product, the average is 2500, and 2500 > 2500 is false. The starter instead compared every product with the store average of about 1583, which let the Pan and the Globe through.',
+    alternative:
+      'A derived table of category averages, joined on category, computes each average once and makes the comparison visible as a column. A window function, AVG(price_cents) OVER (PARTITION BY category), attaches the category average to each row; the window stage returns to it.',
+    counterexample:
+      'Leaving the subquery uncorrelated compares every product with the whole store, the starter’s mistake. Correlating on name instead of category compares each product with itself.',
+    transfer:
+      'The buyer now wants products more expensive than every other product in their category, that is, the most expensive one, with ties all kept. Decide between a correlated MAX and NOT EXISTS of a pricier product. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-students-without-work': {
+    reasoning:
+      'NOT EXISTS keeps a student when no submission has their id. A guest submission has student_id NULL; NULL = s.id is never true, so it simply matches nobody and cannot hide anyone. NOT IN instead compares each id with every value in the list, and a NULL in that list makes the result unknown for everyone.',
+    trace:
+      'With the class data, the subquery for Bo looks for submissions with student_id 2 and finds none, so NOT EXISTS is true. With the starter, 2 NOT IN (1, NULL, 4, 1) asks whether 2 differs from the unknown value; that is unknown, so Bo is dropped, and so is everyone else.',
+    alternative:
+      'NOT IN (SELECT student_id FROM submissions WHERE student_id IS NOT NULL) repairs the starter by keeping NULL out of the list. A LEFT JOIN with WHERE sub.id IS NULL also works and suits a query that needs columns from both tables.',
+    counterexample:
+      'The starter returns no rows for the class data, and it fails the same way whenever any guest submission exists, however many students there are. Testing s.task IS NULL after a LEFT JOIN works only while task can never be NULL; test the joined key instead.',
+    transfer:
+      'The teacher now wants students with no essay, even if they submitted a quiz. Decide where the task condition belongs in your subquery and why it must not go in the outer WHERE. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-free-rooms': {
+    reasoning:
+      'A room is free when no covering booking exists, so the question is NOT EXISTS: for the outer room, look for a booking of that room with starts_on on or before the night and ends_on after it. Because the guest leaves on ends_on, a booking ending on 2026-08-15 does not cover that night. EXISTS never repeats the outer row, so a room with many bookings still appears at most once.',
+    trace:
+      "For Fir, the subquery finds the 2026-08-14 to 2026-08-20 booking, which starts before and ends after the night, so NOT EXISTS is false and Fir is left out, even though its other booking is in early August. For Birch, the only booking ends on 2026-08-15, and '2026-08-15' > '2026-08-15' is false, so nothing covers the night and Birch stays.",
+    alternative:
+      'A LEFT JOIN of bookings with the covering condition in ON, followed by WHERE b.id IS NULL, gives the same rooms. Selecting room ids that are NOT IN a subquery of covering bookings also works here, because room_id is NOT NULL.',
+    counterexample:
+      'Joining bookings and keeping rows whose booking does not cover the night keeps Fir through its old booking, and lists Dogwood twice. ends_on >= the night marks Birch as busy on the morning its guest leaves.',
+    transfer:
+      'The guest now asks for rooms free for three nights, 15 to 17 August, leaving on the 18th. Write the condition for a booking that overlaps a range of nights. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-strong-months': {
+    reasoning:
+      'The question has two steps, so WITH names the first: 2026 sales grouped into one row per month, with the month taken as the first seven characters of the date. The main query then reads that step twice, once for the rows and once inside a scalar subquery for their average, and keeps totals strictly above it. Months without sales never appear in the step, so they do not lower the average.',
+    trace:
+      'With the year data, the step produces 2026-01 (1000), 2026-02 (3500), 2026-03 (2000), and 2026-05 (5500); the 2025 sale is filtered out. Their average is 12000 / 4 = 3000. February and May are above it.',
+    alternative:
+      "A derived table in FROM, plus a second copy of the same grouping in the subquery, computes the same result but repeats the grouping. strftime('%Y-%m', sold_on) extracts the month as clearly as substr for well-formed dates.",
+    counterexample:
+      'Averaging single sales instead of monthly totals gives 1500 for the refunds data and adds July. Filtering 2026 in the outer query instead of the step still averages the 2025 month in. >= keeps July in the refunds data.',
+    transfer:
+      'The shop now counts months without sales as 0 when averaging, so April counts. Decide where the missing months would come from, since no table lists them. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
 }
 
 export const sqlGuides: Record<string, ReflectionGuide> = {
@@ -397,6 +457,39 @@ export const sqlGuides: Record<string, ReflectionGuide> = {
     example:
       'I LEFT JOIN books on the author id, GROUP BY a.id, select the name, COUNT(b.id), and MAX(b.year), and order by name, then id.',
   },
+  'sql-above-average': {
+    plan: ['Work out the average for the month data.', 'Write the condition each invoice must meet.'],
+    explanation: [
+      'Explain why the 500-cent invoices are left out of the at-average data.',
+      'Explain what happens with one invoice and with none.',
+    ],
+    example:
+      'I keep cents > (SELECT AVG(cents) FROM invoices) and order by cents DESC, id. The subquery gives one number, and strict > leaves out invoices equal to it.',
+  },
+  'sql-category-average': {
+    plan: ['Write the average the Hose is compared with.', 'Say which rows that average covers.'],
+    explanation: ['Explain how the subquery knows which category to average.', 'Explain why the Globe is left out.'],
+    example:
+      'I alias the outer table c and keep price_cents > (SELECT AVG(price_cents) FROM catalog_items AS i WHERE i.category = c.category). Each product is compared with its own category.',
+  },
+  'sql-students-without-work': {
+    plan: ['Explain the starter’s empty result.', 'Choose a form that a NULL cannot break.'],
+    explanation: ['Explain what the guest submission does to NOT IN.', 'Explain why NOT EXISTS is safe.'],
+    example:
+      'I keep students WHERE NOT EXISTS (SELECT 1 FROM submissions AS s WHERE s.student_id = students.id). A NULL student_id never equals an id, so a guest submission hides nobody.',
+  },
+  'sql-free-rooms': {
+    plan: ['Trace Fir through your plan.', 'Write the condition for a booking that covers the night.'],
+    explanation: ['Explain why Birch is free.', 'Explain why each free room appears once.'],
+    example:
+      "I keep rooms WHERE NOT EXISTS a booking with b.room_id = r.id, b.starts_on <= '2026-08-15', and b.ends_on > '2026-08-15', ordered by name, id.",
+  },
+  'sql-strong-months': {
+    plan: ['Write the monthly totals for the year data and their average.', 'Name the two steps.'],
+    explanation: ['Explain why the average is of months, not of sales.', 'Explain why 2025 is filtered inside the first step.'],
+    example:
+      "WITH monthly AS (SELECT substr(sold_on, 1, 7) AS month, SUM(cents) AS total_cents FROM sales WHERE sold_on LIKE '2026-%' GROUP BY month) SELECT month, total_cents FROM monthly WHERE total_cents > (SELECT AVG(total_cents) FROM monthly) ORDER BY month.",
+  },
 }
 
 export const sqlLessonDepth: Record<string, LessonDepth> = {
@@ -439,5 +532,15 @@ export const sqlLessonDepth: Record<string, LessonDepth> = {
       'Predict which products this query returns for Kettle (two June returns), Toaster (one July return), and Grill (no returns). Then move the date condition into ON and predict again. Discuss before revealing.',
     answer:
       'As written it returns only Kettle (2) and Toaster (1): Toaster’s July return passes >= June 1, and Grill disappears. With the condition in ON and an upper bound for June, all three appear: Kettle 2, Toaster 0, Grill 0. This discussion is self-reviewed; the June returns rep checks the ON version.',
+  },
+  'sql-subqueries': {
+    title: 'One NULL can empty a NOT IN',
+    code: 'SELECT name FROM students\nWHERE id NOT IN (SELECT student_id FROM submissions);\n-- submissions.student_id: 1, NULL',
+    reasoning:
+      'NOT IN is shorthand for id <> 1 AND id <> NULL. For student 2, the first part is true and the second is unknown, and true AND unknown is unknown. WHERE keeps only true rows, so student 2 disappears, and so does every other student. NOT EXISTS asks a different question, whether any row matches, and an unknown comparison simply matches nothing.',
+    challenge:
+      'Predict the result of the query above for students 1, 2, and 3. Then rewrite it twice: once with NOT EXISTS and once keeping NOT IN but making it safe. Discuss before revealing.',
+    answer:
+      'It returns no students. With NOT EXISTS (SELECT 1 FROM submissions AS s WHERE s.student_id = students.id) it returns 2 and 3. Adding WHERE student_id IS NOT NULL inside the NOT IN subquery also returns 2 and 3. This discussion is self-reviewed; the students rep checks the guest-submission case.',
   },
 }

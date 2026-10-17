@@ -293,4 +293,83 @@ export const sqlSkills: Skill[] = [
     repIds: ['sql-join-orders', 'sql-customers-without-orders', 'sql-team-totals', 'sql-june-returns', 'sql-authors-latest'],
     related: ['sql-summarizing', 'databases'],
   },
+  {
+    id: 'sql-subqueries',
+    title: 'Ask in steps: subqueries, EXISTS, and WITH',
+    summary: 'Use the answer of one query inside another, test whether related rows exist, and name the steps of a longer question.',
+    prerequisites: ['sql-joining'],
+    objectives: [
+      'Compare rows with a value computed by a scalar subquery, including one correlated with the outer row.',
+      'Use EXISTS and NOT EXISTS for questions about related rows, and avoid NOT IN with NULL.',
+      'Break a question into named steps with WITH.',
+    ],
+    sections: [
+      {
+        title: 'A subquery can stand for a value',
+        body: 'A SELECT in parentheses that produces one value can stand wherever a value goes: WHERE cents > (SELECT AVG(cents) FROM invoices) compares every invoice with the average of all of them. A correlated subquery refers to the outer row, as in (SELECT AVG(price_cents) FROM catalog_items AS i WHERE i.category = c.category), so each row gets the average of its own category. Give the tables aliases so the two copies of a table cannot be confused.',
+      },
+      {
+        title: 'EXISTS asks whether related rows are there',
+        body: 'EXISTS (subquery) is true when the subquery returns at least one row, whatever it selects; NOT EXISTS is true when it returns none. WHERE NOT EXISTS (SELECT 1 FROM bookings AS b WHERE b.room_id = r.id AND …) keeps rooms with no matching booking. Unlike a join, EXISTS never repeats the outer row, however many matches there are.',
+      },
+      {
+        title: 'NOT IN and NULL',
+        body: 'x IN (subquery) works like a list of values. NOT IN has a trap: if the subquery returns a NULL, x NOT IN (…) can never be true, because x might equal the unknown value. A single guest submission with student_id NULL then hides every student. Prefer NOT EXISTS, or filter the NULL out inside the subquery.',
+      },
+      {
+        title: 'WITH names the steps',
+        body: 'WITH monthly AS (SELECT substr(sold_on, 1, 7) AS month, SUM(cents) AS total_cents FROM sales GROUP BY month) SELECT … FROM monthly … defines a named result, a common table expression, that the main query reads like a table, as many times as it needs. Steps read top to bottom, each one small enough to check on its own. A derived table in FROM does the same job without a name.',
+      },
+    ],
+    example:
+      'WITH monthly AS (\n  SELECT substr(sold_on, 1, 7) AS month, SUM(cents) AS total_cents\n  FROM sales\n  GROUP BY month\n)\nSELECT month, total_cents\nFROM monthly\nWHERE total_cents > (SELECT AVG(total_cents) FROM monthly);',
+    walkthrough: [
+      'The WITH step turns sales into one row per month with its total.',
+      'The scalar subquery averages those monthly totals once.',
+      'The main query keeps the months above that average.',
+      'Each step can be run alone while you check it.',
+    ],
+    mistakes: [
+      'Writing NOT IN (subquery) over a column that can be NULL and getting no rows.',
+      'Forgetting to correlate a subquery, so every row is compared with the whole table.',
+      'Using a join where EXISTS is meant, and repeating rows once per match.',
+      'Assuming a scalar subquery that returns several rows is an error: SQLite quietly uses the first row.',
+    ],
+    questions: [
+      q(
+        'not-in-null-v1',
+        'submissions.student_id holds 1, 2, and NULL. Which students does WHERE id NOT IN (SELECT student_id FROM submissions) return?',
+        '',
+        ['Every student except 1 and 2', 'No students', 'Every student'],
+        1,
+        'For student 3, 3 NOT IN (1, 2, NULL) is unknown, because 3 might equal the unknown value. WHERE keeps no unknown rows, so nobody is returned.',
+      ),
+      q(
+        'exists-v1',
+        'When is EXISTS (subquery) true?',
+        '',
+        [
+          'When the subquery returns at least one row',
+          'When the subquery returns a value that is not NULL',
+          'When the subquery returns exactly one row',
+        ],
+        0,
+        'EXISTS only asks whether rows come back. Even SELECT NULL inside it makes EXISTS true when a row matches.',
+      ),
+      q(
+        'correlated-v1',
+        'Which subquery gives each product the average price of its own category?',
+        'SELECT name FROM catalog_items AS c WHERE price_cents > (…)',
+        [
+          'SELECT AVG(price_cents) FROM catalog_items',
+          'SELECT AVG(price_cents) FROM catalog_items AS i WHERE i.category = c.category',
+          'SELECT AVG(price_cents) FROM catalog_items GROUP BY category',
+        ],
+        1,
+        'Only the correlated version refers to the outer row c. The grouped version returns several rows, and SQLite would quietly compare with the first.',
+      ),
+    ],
+    repIds: ['sql-above-average', 'sql-category-average', 'sql-students-without-work', 'sql-free-rooms', 'sql-strong-months'],
+    related: ['sql-joining', 'sql-summarizing'],
+  },
 ]

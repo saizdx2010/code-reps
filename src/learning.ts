@@ -335,6 +335,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'sql-subqueries',
+    title: 'Ask in steps',
+    guided: 'sql-above-average',
+    independent: 'sql-free-rooms',
+    recall: 'sql-strong-months',
+    practice: ['sql-category-average', 'sql-students-without-work'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

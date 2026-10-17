@@ -92,4 +92,33 @@ FROM authors AS a
 LEFT JOIN books AS b ON b.author_id = a.id
 GROUP BY a.id
 ORDER BY a.name, a.id;`,
+  'sql-above-average': `SELECT id, cents
+FROM invoices
+WHERE cents > (SELECT AVG(cents) FROM invoices)
+ORDER BY cents DESC, id;`,
+  'sql-category-average': `SELECT c.name, c.category, c.price_cents
+FROM catalog_items AS c
+WHERE c.price_cents > (SELECT AVG(i.price_cents) FROM catalog_items AS i WHERE i.category = c.category)
+ORDER BY c.category, c.price_cents DESC, c.name;`,
+  'sql-students-without-work': `SELECT st.id, st.name
+FROM students AS st
+WHERE NOT EXISTS (SELECT 1 FROM submissions AS s WHERE s.student_id = st.id)
+ORDER BY st.id;`,
+  'sql-free-rooms': `SELECT r.id, r.name
+FROM rooms AS r
+WHERE NOT EXISTS (
+  SELECT 1 FROM bookings AS b
+  WHERE b.room_id = r.id AND b.starts_on <= '2026-08-15' AND b.ends_on > '2026-08-15'
+)
+ORDER BY r.name, r.id;`,
+  'sql-strong-months': `WITH monthly AS (
+  SELECT substr(sold_on, 1, 7) AS month, SUM(cents) AS total_cents
+  FROM sales
+  WHERE sold_on BETWEEN '2026-01-01' AND '2026-12-31'
+  GROUP BY month
+)
+SELECT month, total_cents
+FROM monthly
+WHERE total_cents > (SELECT AVG(total_cents) FROM monthly)
+ORDER BY month;`,
 }

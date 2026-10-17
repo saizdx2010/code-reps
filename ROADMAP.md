@@ -124,7 +124,7 @@ Every check is honest about what it establishes: SQL reps run SQLite's dialect o
 - [x] S2 · Filter precisely: AND/OR precedence, IN, LIKE, and NULL's three-valued logic, with a lesson (`sql-filtering`) and the `sql-filtering` journey: grouped conditions, members you can text, then a delayed article search; ranges and code patterns are practice.
 - [x] S3 · Summarize: COUNT, SUM, AVG, GROUP BY, HAVING, and COUNT(*) versus COUNT(column), with a lesson (`sql-summarizing`) and the `sql-summarizing` journey: counts per status, busy delivery days, then a delayed monthly spenders report; rated reviews and distinct visitors are practice.
 - [x] S4 · Combine tables: inner versus left joins, missing matches, and join fan-out inflating sums, with a lesson (`sql-joining`) and the `sql-joining` journey: orders with customer names, June returns for every product, then a delayed latest-book report; customers without orders and fan-out-free team totals are practice.
-- [ ] S5 · Ask in steps: subqueries, EXISTS, and common table expressions.
+- [x] S5 · Ask in steps: subqueries, EXISTS, and common table expressions, with a lesson (`sql-subqueries`) and the `sql-subqueries` journey: invoices above the average, rooms free on a night, then a delayed months-above-average report with WITH; category averages and the NOT IN NULL trap are practice.
 - [ ] S6 · Design a schema: the learner writes CREATE TABLE; probe inserts check each constraint.
 - [ ] S7 · Change data safely: UPDATE and DELETE scope, upserts, and parameter binding from TypeScript (the three SQLite reps move here with the same IDs).
 - [ ] S8 · Rank and run totals: window functions and top-N per group.

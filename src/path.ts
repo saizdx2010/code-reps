@@ -449,6 +449,12 @@ export const paths = [
         recap: 'You can now join tables, find missing matches, and summarize lists without double counting.',
         repIds: ['sql-join-orders', 'sql-customers-without-orders', 'sql-team-totals', 'sql-june-returns', 'sql-authors-latest'],
       },
+      {
+        title: 'Ask in steps',
+        description: 'Compare rows with a computed value, ask whether related rows exist, and name the steps of a longer question.',
+        recap: 'You can now use subqueries, EXISTS, and WITH to answer a question in steps.',
+        repIds: ['sql-above-average', 'sql-category-average', 'sql-students-without-work', 'sql-free-rooms', 'sql-strong-months'],
+      },
     ] satisfies readonly PathStage[],
   },
   {

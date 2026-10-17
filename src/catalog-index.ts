@@ -278,6 +278,11 @@ const repRows: [string, string, number, Rep['format'] | 0, string, number, numbe
   ["sql-team-totals","Total two lists without double counting",38,"sql","ef60d534ccce8594",3,111,3,34],
   ["sql-june-returns","Count each product’s returns in June",38,"sql","583233ac770af07d",3,105,4,34],
   ["sql-authors-latest","Find each author’s latest book",38,"sql","fd9acc97f0db69a1",3,118,3,34],
+  ["sql-above-average","Compare each row with an average",38,"sql","6aeee3319735add9",3,77,5,34],
+  ["sql-category-average","Compare each row with its own group",38,"sql","a8e0d587e073def2",3,82,3,34],
+  ["sql-students-without-work","Find students with no submissions",38,"sql","57e300e80522d06d",3,80,3,34],
+  ["sql-free-rooms","Find the rooms free on a night",38,"sql","c9d65f4dd1f233f6",3,114,3,34],
+  ["sql-strong-months","Find the months above the monthly average",38,"sql","0566feb8dcb6556d",3,105,4,34],
 ]
 
 export const repIndex: RepSummary[] = repRows.map(([id, title, category, format, starterHash, hintTotal, briefWords, checkTotal, source]) => ({
@@ -345,4 +350,5 @@ export const skillIndex: SkillSummary[] = [
   {"id":"sql-filtering","title":"Filter precisely: AND, OR, IN, LIKE, and NULL","summary":"Group conditions so they mean what you intend, match lists, ranges, and patterns, and handle unknown values on purpose.","prerequisites":["sql-reading"],"related":["sql-reading"],"repIds":["sql-filter-groups","sql-price-band","sql-code-pattern","sql-members-to-text","sql-search-articles"],"questions":[{"id":"and-or-v1","optionCount":3,"answer":1},{"id":"like-underscore-v1","optionCount":3,"answer":1},{"id":"null-not-equal-v1","optionCount":3,"answer":1}]},
   {"id":"sql-summarizing","title":"Summarize with COUNT, SUM, AVG, GROUP BY, and HAVING","summary":"Fold rows into one result per group, count what you mean to count, and filter before and after grouping.","prerequisites":["sql-filtering"],"related":["sql-filtering"],"repIds":["sql-count-by-status","sql-ratings-summary","sql-count-visitors","sql-busy-days","sql-month-spenders"],"questions":[{"id":"count-null-v1","optionCount":3,"answer":1},{"id":"having-v1","optionCount":3,"answer":1},{"id":"empty-sum-v1","optionCount":3,"answer":1}]},
   {"id":"sql-joining","title":"Combine tables with JOIN","summary":"Pair rows of two tables, keep rows that have no match, and avoid sums that a join multiplies.","prerequisites":["sql-summarizing"],"related":["sql-summarizing","databases"],"repIds":["sql-join-orders","sql-customers-without-orders","sql-team-totals","sql-june-returns","sql-authors-latest"],"questions":[{"id":"inner-join-rows-v1","optionCount":3,"answer":1},{"id":"left-join-where-v1","optionCount":3,"answer":1},{"id":"fan-out-v1","optionCount":3,"answer":1}]},
+  {"id":"sql-subqueries","title":"Ask in steps: subqueries, EXISTS, and WITH","summary":"Use the answer of one query inside another, test whether related rows exist, and name the steps of a longer question.","prerequisites":["sql-joining"],"related":["sql-joining","sql-summarizing"],"repIds":["sql-above-average","sql-category-average","sql-students-without-work","sql-free-rooms","sql-strong-months"],"questions":[{"id":"not-in-null-v1","optionCount":3,"answer":1},{"id":"exists-v1","optionCount":3,"answer":0},{"id":"correlated-v1","optionCount":3,"answer":1}]},
 ]

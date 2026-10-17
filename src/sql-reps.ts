@@ -56,6 +56,15 @@ const productReturns =
 const authorBooks =
   'CREATE TABLE authors (id INTEGER PRIMARY KEY, name TEXT NOT NULL); CREATE TABLE books (id INTEGER PRIMARY KEY, author_id INTEGER NOT NULL, title TEXT NOT NULL, year INTEGER);'
 
+const invoices = 'CREATE TABLE invoices (id INTEGER PRIMARY KEY, client TEXT NOT NULL, cents INTEGER NOT NULL);'
+const catalogItems =
+  'CREATE TABLE catalog_items (id INTEGER PRIMARY KEY, name TEXT NOT NULL, category TEXT NOT NULL, price_cents INTEGER NOT NULL);'
+const studentWork =
+  'CREATE TABLE students (id INTEGER PRIMARY KEY, name TEXT NOT NULL); CREATE TABLE submissions (id INTEGER PRIMARY KEY, student_id INTEGER, task TEXT NOT NULL);'
+const roomBookings =
+  'CREATE TABLE rooms (id INTEGER PRIMARY KEY, name TEXT NOT NULL); CREATE TABLE bookings (id INTEGER PRIMARY KEY, room_id INTEGER NOT NULL, starts_on TEXT NOT NULL, ends_on TEXT NOT NULL);'
+const salesLedger = 'CREATE TABLE sales (id INTEGER PRIMARY KEY, sold_on TEXT NOT NULL, cents INTEGER NOT NULL);'
+
 export const sqlReps: Rep[] = [
   {
     id: 'sql-select-columns',
@@ -1809,6 +1818,370 @@ export const sqlReps: Rep[] = [
         },
       },
       { name: 'No authors', input: [], sql: { seed: 'empty' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-above-average',
+    title: 'Compare each row with an average',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: invoices,
+      seeds: {
+        month: {
+          about: 'five invoices averaging 600 cents',
+          sql: "INSERT INTO invoices VALUES (1,'Acme',300),(2,'Bolt',500),(3,'Core',700),(4,'Dune',500),(5,'Echo',1000);",
+        },
+        'at-average': {
+          about: 'four invoices averaging 500 cents, two of them exactly 500',
+          sql: "INSERT INTO invoices VALUES (1,'Ash',500),(2,'Bay',500),(3,'Cove',800),(4,'Dell',200);",
+        },
+        'equal-highs': {
+          about: 'two invoices of 900 and one of 100',
+          sql: "INSERT INTO invoices VALUES (3,'Fig',900),(2,'Gum',100),(1,'Hop',900);",
+        },
+        single: { about: 'one invoice', sql: "INSERT INTO invoices VALUES (1,'Ivy',450);" },
+        empty: { about: 'no invoices', sql: '' },
+      },
+      compare: 'ordered',
+      columns: ['id', 'cents'],
+    },
+    context: "An accountant reviews the invoices that are larger than this month's average invoice.",
+    prompt:
+      'Write one SELECT statement on invoices that returns id and cents, in that column order, for every invoice whose cents is greater than the average cents of all invoices. Order by cents from largest to smallest, then id ascending. invoices has id INTEGER PRIMARY KEY, client TEXT NOT NULL, and cents INTEGER NOT NULL. An invoice equal to the average is not greater than it. Submit a single statement that only reads data; the checks use SQLite and compare row order.',
+    brief: {
+      summary: 'List the invoices larger than the average invoice, largest first.',
+      rules: [
+        '`invoices(id INTEGER PRIMARY KEY, client TEXT NOT NULL, cents INTEGER NOT NULL)`.',
+        'Keep an invoice when its cents is greater than the average cents of all invoices.',
+        'Return the columns `id`, `cents`, ordered by cents descending, then id ascending.',
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['An invoice equal to the average is left out.', 'One invoice, or none, gives no rows.'],
+    },
+    example: { input: 'invoices of 300, 500, 700, 500, and 1000 cents', output: 'rows (5, 1000), (3, 700)' },
+    note: 'Checks compare rows and their order on fresh databases; they do not establish whether the average was computed once.',
+    vocabulary: [
+      { term: 'Subquery', meaning: 'a SELECT written inside another statement' },
+      { term: 'Scalar subquery', meaning: 'a subquery in parentheses that produces a single value' },
+    ],
+    planPrompt: 'Write the average for the month data, then the condition each invoice must meet.',
+    starter: 'SELECT id, cents\nFROM invoices;\n',
+    hints: [
+      'Each invoice is compared with one number that describes all invoices together. Work that number out separately first.',
+      'An aggregate cannot sit directly in WHERE, but a whole SELECT in parentheses can stand where a value goes.',
+      'Compare cents with (SELECT AVG(cents) FROM invoices) using >, then sort by cents descending, then id.',
+    ],
+    checks: [
+      {
+        name: 'Invoices above the average',
+        input: [],
+        sql: { seed: 'month' },
+        expected: {
+          rows: [
+            [5, 1000],
+            [3, 700],
+          ],
+        },
+      },
+      { name: 'Equal to the average is not above it', input: [], sql: { seed: 'at-average' }, expected: { rows: [[3, 800]] } },
+      {
+        name: 'Equal amounts by id',
+        input: [],
+        sql: { seed: 'equal-highs' },
+        expected: {
+          rows: [
+            [1, 900],
+            [3, 900],
+          ],
+        },
+      },
+      { name: 'A single invoice is never above itself', input: [], sql: { seed: 'single' }, expected: { rows: [] } },
+      { name: 'No invoices', input: [], sql: { seed: 'empty' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-category-average',
+    title: 'Compare each row with its own group',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: catalogItems,
+      seeds: {
+        store: {
+          about: 'six products in three categories; kitchen averages 2000 and garden 500',
+          sql: "INSERT INTO catalog_items VALUES (1,'Whisk','kitchen',1000),(2,'Pan','kitchen',2000),(3,'Mixer','kitchen',3000),(4,'Rake','garden',400),(5,'Hose','garden',600),(6,'Globe','decor',2500);",
+        },
+        'one-price': {
+          about: 'a category where every product costs the same',
+          sql: "INSERT INTO catalog_items VALUES (1,'Cup','kitchen',800),(2,'Bowl','kitchen',800);",
+        },
+        empty: { about: 'no products', sql: '' },
+      },
+      compare: 'ordered',
+      columns: ['name', 'category', 'price_cents'],
+    },
+    context: 'A buyer looks for products priced above the usual price of their own category, not above the store as a whole.',
+    prompt:
+      "Write one SELECT statement on catalog_items that returns name, category, and price_cents, in that column order, for every product whose price_cents is greater than the average price_cents of the products in its own category. Order by category ascending in SQLite's default text order, then price_cents from highest to lowest, then name ascending. catalog_items has id INTEGER PRIMARY KEY, name TEXT NOT NULL, category TEXT NOT NULL, and price_cents INTEGER NOT NULL. Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'List the products priced above the average of their own category.',
+      rules: [
+        '`catalog_items(id INTEGER PRIMARY KEY, name TEXT NOT NULL, category TEXT NOT NULL, price_cents INTEGER NOT NULL)`.',
+        'Keep a product when its price_cents is greater than the average price_cents of its category.',
+        'Return the columns `name`, `category`, `price_cents`, ordered by category, then price_cents descending, then name.',
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['A product alone in its category equals its own average and is left out.'],
+    },
+    example: { input: 'kitchen products at 1000, 2000, and 3000', output: "('Mixer', 'kitchen', 3000)" },
+    note: 'Checks compare rows and their order on fresh databases.',
+    vocabulary: [{ term: 'Correlated subquery', meaning: 'a subquery that refers to the row the outer query is looking at' }],
+    planPrompt: 'For the Hose, write the average it is compared with and which rows that average covers.',
+    starter: 'SELECT name, category, price_cents\nFROM catalog_items\nWHERE price_cents > (SELECT AVG(price_cents) FROM catalog_items);\n',
+    hints: [
+      'The starter compares every product with the whole store’s average. The Globe, alone in decor, should never pass.',
+      'Give the outer table an alias, and let the subquery average only the rows whose category equals the outer row’s category.',
+      'Add WHERE inner.category = outer.category inside the subquery, then sort by category, price descending, and name.',
+    ],
+    checks: [
+      {
+        name: 'Above the average of their own category',
+        input: [],
+        sql: { seed: 'store' },
+        expected: {
+          rows: [
+            ['Hose', 'garden', 600],
+            ['Mixer', 'kitchen', 3000],
+          ],
+        },
+      },
+      { name: 'Equal prices are never above their average', input: [], sql: { seed: 'one-price' }, expected: { rows: [] } },
+      { name: 'No products', input: [], sql: { seed: 'empty' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-students-without-work',
+    title: 'Find students with no submissions',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: studentWork,
+      seeds: {
+        class: {
+          about: 'four students, two of whom submitted, and one guest submission with no student',
+          sql: "INSERT INTO students VALUES (1,'Ana'),(2,'Bo'),(3,'Cy'),(4,'Di'); INSERT INTO submissions VALUES (1,1,'essay'),(2,NULL,'essay'),(3,4,'quiz'),(4,1,'quiz');",
+        },
+        'no-guests': {
+          about: 'three students and submissions that all name a student',
+          sql: "INSERT INTO students VALUES (1,'Ana'),(2,'Bo'),(3,'Cy'); INSERT INTO submissions VALUES (1,2,'essay');",
+        },
+        'all-submitted': {
+          about: 'two students who both submitted, and a guest submission',
+          sql: "INSERT INTO students VALUES (1,'Ana'),(2,'Bo'); INSERT INTO submissions VALUES (1,1,'essay'),(2,2,'essay'),(3,NULL,'quiz');",
+        },
+      },
+      compare: 'ordered',
+      columns: ['id', 'name'],
+    },
+    context: 'A teacher emails students who have not handed in any work yet. Guests can also submit, without a student record.',
+    prompt:
+      "Write one SELECT statement that returns id and name, in that column order, for every student with no submission: no row of submissions has a student_id equal to the student's id. Order by id ascending. students has id INTEGER PRIMARY KEY and name TEXT NOT NULL. submissions has id INTEGER PRIMARY KEY, student_id INTEGER (NULL for a guest submission), and task TEXT NOT NULL. Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'List the students who have not submitted anything.',
+      rules: [
+        '`students(id INTEGER PRIMARY KEY, name TEXT NOT NULL)` and `submissions(id INTEGER PRIMARY KEY, student_id INTEGER, task TEXT NOT NULL)`; student_id is NULL for a guest submission.',
+        "A student has no submission when no submission's student_id equals the student's id.",
+        'Return the columns `id`, `name`, ordered by id ascending.',
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['A guest submission belongs to no student and must not hide anyone.'],
+    },
+    example: { input: 'students Ana and Bo; Ana submitted an essay', output: "(2, 'Bo')" },
+    note: 'Checks compare rows and their order on fresh databases.',
+    vocabulary: [
+      { term: 'NOT EXISTS', meaning: 'a condition that is true when its subquery returns no rows' },
+      { term: 'NOT IN', meaning: 'a condition that is true when a value equals none of a list; a NULL in the list makes it never true' },
+    ],
+    planPrompt: 'Run the starter on the class data and explain the result before changing it.',
+    starter: 'SELECT id, name\nFROM students\nWHERE id NOT IN (SELECT student_id FROM submissions)\nORDER BY id;\n',
+    hints: [
+      'The starter returns nothing for the class data. Look at what the subquery returns for the guest submission.',
+      'x NOT IN (1, NULL) asks whether x differs from an unknown value, which is unknown, so the row is never kept.',
+      'Use NOT EXISTS with a subquery matching student_id to the outer id, or keep NULL out of the NOT IN list.',
+    ],
+    checks: [
+      {
+        name: 'A guest submission does not hide anyone',
+        input: [],
+        sql: { seed: 'class' },
+        expected: {
+          rows: [
+            [2, 'Bo'],
+            [3, 'Cy'],
+          ],
+        },
+      },
+      {
+        name: 'Students without submissions',
+        input: [],
+        sql: { seed: 'no-guests' },
+        expected: {
+          rows: [
+            [1, 'Ana'],
+            [3, 'Cy'],
+          ],
+        },
+      },
+      { name: 'Everyone submitted', input: [], sql: { seed: 'all-submitted' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-free-rooms',
+    title: 'Find the rooms free on a night',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: roomBookings,
+      seeds: {
+        inn: {
+          about: 'six rooms with bookings around the night of 2026-08-15',
+          sql: "INSERT INTO rooms VALUES (1,'Ash'),(2,'Birch'),(3,'Cedar'),(4,'Dogwood'),(5,'Elm'),(6,'Fir'); INSERT INTO bookings VALUES (1,1,'2026-08-14','2026-08-16'),(2,2,'2026-08-10','2026-08-15'),(3,3,'2026-08-15','2026-08-17'),(4,4,'2026-08-16','2026-08-18'),(5,4,'2026-08-01','2026-08-03'),(6,6,'2026-08-01','2026-08-03'),(7,6,'2026-08-14','2026-08-20');",
+        },
+        'nothing-booked': { about: 'two rooms with no bookings', sql: "INSERT INTO rooms VALUES (2,'Oak'),(1,'Oak');" },
+        'all-busy': {
+          about: 'two rooms that are both booked over that night, one of them twice',
+          sql: "INSERT INTO rooms VALUES (1,'Pine'),(2,'Yew'); INSERT INTO bookings VALUES (1,1,'2026-08-15','2026-08-16'),(2,2,'2026-08-12','2026-08-19'),(3,2,'2026-08-14','2026-08-16');",
+        },
+      },
+      compare: 'ordered',
+      columns: ['id', 'name'],
+    },
+    context:
+      'A guest asks which rooms are free for the night of 15 August 2026. Guests leave on the end date, so that night is free again.',
+    prompt:
+      "Write one SELECT statement that returns id and name, in that column order, for every room that has no booking covering the night of 2026-08-15. A booking covers that night when its starts_on is on or before '2026-08-15' and its ends_on is after '2026-08-15'; the guest leaves on ends_on. Each free room appears once. Order by name ascending in SQLite's default text order, then id ascending. rooms has id INTEGER PRIMARY KEY and name TEXT NOT NULL (names can repeat). bookings has id INTEGER PRIMARY KEY, room_id INTEGER NOT NULL, starts_on TEXT NOT NULL, and ends_on TEXT NOT NULL, both written as 'YYYY-MM-DD'. Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'List the rooms with no booking covering the night of 2026-08-15.',
+      rules: [
+        "`rooms(id INTEGER PRIMARY KEY, name TEXT NOT NULL)` and `bookings(id INTEGER PRIMARY KEY, room_id INTEGER NOT NULL, starts_on TEXT NOT NULL, ends_on TEXT NOT NULL)`; dates are 'YYYY-MM-DD'.",
+        "A booking covers the night when starts_on is on or before '2026-08-15' and ends_on is after it. The guest leaves on ends_on.",
+        "Return the columns `id`, `name` for rooms with no covering booking, each once, ordered by name in SQLite's default text order, then id.",
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['A booking ending on 2026-08-15 leaves the room free that night.', 'A booking starting on 2026-08-15 covers it.'],
+    },
+    example: {
+      input: 'Birch booked 2026-08-10 to 2026-08-15; Cedar booked 2026-08-15 to 2026-08-17',
+      output: 'Birch is free; Cedar is not',
+    },
+    note: 'This is an independent rep: plan before you look at the hints. Checks compare rows and their order on fresh databases.',
+    vocabulary: [{ term: 'Date overlap', meaning: 'two date ranges sharing at least one night' }],
+    planPrompt: 'Trace Fir, which has one old booking and one covering booking, through your plan.',
+    starter: 'SELECT id, name\nFROM rooms;\n',
+    hints: [
+      'A room is free when something does not exist: no booking of that room covers the night. Joining and filtering bookings answers a different question.',
+      'A subquery can look for a covering booking of the room the outer query is looking at.',
+      'Keep rooms WHERE NOT EXISTS a booking with the same room_id, starts_on on or before the night, and ends_on after it; sort by name, then id.',
+    ],
+    checks: [
+      {
+        name: 'Free rooms on the night',
+        input: [],
+        sql: { seed: 'inn' },
+        expected: {
+          rows: [
+            [2, 'Birch'],
+            [4, 'Dogwood'],
+            [5, 'Elm'],
+          ],
+        },
+      },
+      {
+        name: 'Rooms with no bookings, same name',
+        input: [],
+        sql: { seed: 'nothing-booked' },
+        expected: {
+          rows: [
+            [1, 'Oak'],
+            [2, 'Oak'],
+          ],
+        },
+      },
+      { name: 'Every room is booked', input: [], sql: { seed: 'all-busy' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-strong-months',
+    title: 'Find the months above the monthly average',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: salesLedger,
+      seeds: {
+        year: {
+          about: 'sales in four months of 2026 and one December 2025 sale',
+          sql: "INSERT INTO sales VALUES (1,'2026-01-05',400),(2,'2026-01-20',600),(3,'2026-02-11',3500),(4,'2026-03-02',2000),(5,'2026-05-09',5000),(6,'2026-05-28',500),(7,'2025-12-30',9000);",
+        },
+        refunds: {
+          about: 'three months of 2026, one reduced by a refund',
+          sql: "INSERT INTO sales VALUES (1,'2026-06-01',4000),(2,'2026-06-15',-3000),(3,'2026-07-01',2000),(4,'2026-08-01',3000);",
+        },
+        'even-months': {
+          about: 'two months of 2026 with equal totals',
+          sql: "INSERT INTO sales VALUES (1,'2026-09-01',700),(2,'2026-10-01',700);",
+        },
+        'other-year': { about: 'sales only in 2025', sql: "INSERT INTO sales VALUES (1,'2025-04-01',900),(2,'2025-05-01',100);" },
+      },
+      compare: 'ordered',
+      columns: ['month', 'total_cents'],
+    },
+    context: 'A shop compares the months of 2026 with each other: which months sold more than a typical month with sales?',
+    prompt:
+      "Write one SELECT statement on sales that returns month and total_cents, in that column order. Consider only sales dated in 2026, ignoring other years. For each month of 2026 that has at least one sale, total_cents is the sum of that month's cents, refunds included, and month is written 'YYYY-MM'. Return the months whose total is greater than the average of those monthly totals, ordered by month ascending. sales has id INTEGER PRIMARY KEY, sold_on TEXT NOT NULL written as 'YYYY-MM-DD', and cents INTEGER NOT NULL (negative for a refund). Months without sales are not part of the average. Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary: 'List the months of 2026 whose sales total is above the average monthly total.',
+      rules: [
+        "`sales(id INTEGER PRIMARY KEY, sold_on TEXT NOT NULL, cents INTEGER NOT NULL)`; sold_on is 'YYYY-MM-DD'; a refund is negative.",
+        "Only 2026 sales count. A month's total is the sum of its sales, refunds included; months without sales are not part of the average.",
+        "Return the columns `month` ('YYYY-MM') and `total_cents` for months whose total is greater than the average monthly total, ordered by month.",
+        'Submit a single statement that only reads data. Row order is checked.',
+      ],
+      edgeCases: ['A month equal to the average is left out.', 'No 2026 sales gives no rows.'],
+    },
+    example: { input: '2026 monthly totals 1000, 3500, 2000, and 5500', output: "rows ('2026-02', 3500), ('2026-05', 5500)" },
+    note: 'This is a delayed recall rep: solve it without hints after the break. Checks compare rows and their order on fresh databases.',
+    vocabulary: [
+      { term: 'Common table expression', meaning: 'a named query written with WITH before the main SELECT, used like a table' },
+      { term: 'substr', meaning: 'a SQLite function that takes part of a text value, such as its first seven characters' },
+    ],
+    planPrompt: 'Write the monthly totals for the year data, their average, and which months pass.',
+    starter: 'SELECT sold_on, cents\nFROM sales;\n',
+    hints: [
+      'This is two questions in a row: first the total of each month, then which of those totals beat their own average.',
+      'The month is the first seven characters of the date. A named step can be queried twice: once for the rows and once for their average.',
+      'Group 2026 sales by month into a step called monthly, then select from it where total_cents is greater than the average of monthly totals, ordered by month.',
+    ],
+    checks: [
+      {
+        name: 'Months above the average month',
+        input: [],
+        sql: { seed: 'year' },
+        expected: {
+          rows: [
+            ['2026-02', 3500],
+            ['2026-05', 5500],
+          ],
+        },
+      },
+      { name: 'A refund lowers a month', input: [], sql: { seed: 'refunds' }, expected: { rows: [['2026-08', 3000]] } },
+      { name: 'Equal months are not above their average', input: [], sql: { seed: 'even-months' }, expected: { rows: [] } },
+      { name: 'No 2026 sales', input: [], sql: { seed: 'other-year' }, expected: { rows: [] } },
     ],
   },
 ]
