@@ -489,6 +489,12 @@ export const paths = [
         recap: "You can now design indexes for a query and read SQLite's query plan, knowing it shows choices rather than speed.",
         repIds: ['sql-index-lookup', 'sql-index-sort', 'sql-covering-index', 'sql-composite-index', 'sql-index-join'],
       },
+      {
+        title: 'Evolve a schema',
+        description: 'Add, rename, and remove columns, backfill existing rows, and rebuild a table when SQLite cannot change it in place.',
+        recap: 'You can now migrate a schema step by step without losing rows.',
+        repIds: ['sql-add-column', 'sql-rename-column', 'sql-split-name', 'sql-rebuild-table', 'sql-migrate-status-codes'],
+      },
     ] satisfies readonly PathStage[],
   },
   {

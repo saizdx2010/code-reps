@@ -380,6 +380,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'sql-migrations',
+    title: 'Evolve a schema',
+    guided: 'sql-add-column',
+    independent: 'sql-rebuild-table',
+    recall: 'sql-migrate-status-codes',
+    practice: ['sql-rename-column', 'sql-split-name'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

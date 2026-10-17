@@ -243,6 +243,7 @@ export const recallVariants: Record<string, string[]> = {
   'sql-changing-data': ['sql-archive-orders', 'sql-upsert-stock', 'sql-update-scope'],
   'sql-window-functions': ['sql-top-two-per-region', 'sql-running-balance', 'sql-rank-scores'],
   'sql-indexes': ['sql-index-join', 'sql-composite-index', 'sql-index-lookup'],
+  'sql-migrations': ['sql-migrate-status-codes', 'sql-rebuild-table', 'sql-add-column'],
 }
 export function recurringReviews(history: PortableRecord[], now = Date.now()) {
   return getAllJourneys(history, now).flatMap(state => {

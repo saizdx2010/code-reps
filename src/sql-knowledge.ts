@@ -669,4 +669,87 @@ export const sqlSkills: Skill[] = [
     repIds: ['sql-index-lookup', 'sql-index-sort', 'sql-covering-index', 'sql-composite-index', 'sql-index-join'],
     related: ['sql-joining', 'sql-schema-design'],
   },
+  {
+    id: 'sql-migrations',
+    title: 'Evolve a schema without losing rows',
+    summary: 'Add, rename, and remove columns, backfill existing rows, and rebuild a table when SQLite cannot alter it in place.',
+    prerequisites: ['sql-schema-design', 'sql-changing-data'],
+    objectives: [
+      'Add a column with a default and backfill existing rows in a second step.',
+      'Rename and drop columns with ALTER TABLE, and know which changes SQLite cannot make in place.',
+      'Rebuild a table inside a transaction so no row is lost.',
+    ],
+    sections: [
+      {
+        title: 'A migration is a careful script',
+        body: 'A migration moves a database from one schema version to the next while its data stays useful. Each step should keep every row it is not meant to change. Write the steps in order, run them inside a transaction where SQLite allows it, and check row counts before and after.',
+      },
+      {
+        title: 'Add, then backfill',
+        body: "ALTER TABLE customers ADD COLUMN tier TEXT NOT NULL DEFAULT 'standard' adds the column and gives every existing row the default; SQLite refuses a NOT NULL column without a default. A backfill is a separate UPDATE that sets the right value for existing rows, such as tier = 'gold' for big spenders. New inserts keep using the default.",
+      },
+      {
+        title: 'Rename and drop',
+        body: 'ALTER TABLE stock RENAME COLUMN qty TO quantity renames in place and keeps the data and rules; every query that still says qty breaks. ALTER TABLE orders DROP COLUMN status_code removes a column and its data, so copy what you need out of it first. SQLite refuses to drop a column that an index, a key, or a constraint still uses.',
+      },
+      {
+        title: 'Rebuild when ALTER cannot',
+        body: 'SQLite cannot add NOT NULL, CHECK, or UNIQUE to an existing column. The standard way is a rebuild inside one transaction: create a new table with the right rules, copy the rows in (fixing any that would break the rules), drop the old table, and rename the new one to the old name. Indexes and triggers on the old table must be created again.',
+      },
+    ],
+    example:
+      'BEGIN;\nCREATE TABLE products_new (\n  id INTEGER PRIMARY KEY,\n  sku TEXT NOT NULL,\n  price_cents INTEGER NOT NULL CHECK (price_cents >= 0)\n);\nINSERT INTO products_new\n  SELECT id, sku, COALESCE(price_cents, 0) FROM products;\nDROP TABLE products;\nALTER TABLE products_new RENAME TO products;\nCOMMIT;',
+    walkthrough: [
+      'The new table has the rules the old one lacked.',
+      'COALESCE turns missing prices into 0, so every copied row meets the new rule.',
+      'The old table is dropped only after the copy succeeded.',
+      'Renaming gives the new table the old name, so queries keep working; COMMIT makes it all one change.',
+    ],
+    mistakes: [
+      'Adding a NOT NULL column without a default, which SQLite refuses.',
+      'Dropping a column before copying the data the new column needs.',
+      'Rebuilding a table outside a transaction, so a failure leaves two half-finished tables.',
+      'Forgetting to recreate the indexes of a rebuilt table.',
+    ],
+    questions: [
+      q(
+        'add-not-null-v1',
+        'What does SQLite do with ALTER TABLE customers ADD COLUMN tier TEXT NOT NULL?',
+        '',
+        [
+          'Adds the column with NULL in every row',
+          'Refuses it, because existing rows would break the rule',
+          'Adds it and fills empty text',
+        ],
+        1,
+        'Existing rows need a value, so a NOT NULL column needs a default. With DEFAULT, every existing row gets it.',
+      ),
+      q(
+        'add-check-v1',
+        'How do you add CHECK (price_cents >= 0) to an existing SQLite column?',
+        '',
+        [
+          'ALTER TABLE products ADD CHECK (price_cents >= 0)',
+          'Rebuild the table with the rule and copy the rows',
+          'Run UPDATE products SET price_cents = abs(price_cents)',
+        ],
+        1,
+        'SQLite’s ALTER TABLE cannot add constraints to existing columns. A rebuild in a transaction is the documented way.',
+      ),
+      q(
+        'drop-order-v1',
+        'A migration must turn status_code into a readable status column. Which order is safe?',
+        '',
+        [
+          'Drop status_code, add status, fill status',
+          'Add status, fill it from status_code, drop status_code',
+          'Fill status, add status, drop status_code',
+        ],
+        1,
+        'The new column must exist before it is filled, and the old one is still needed to fill it.',
+      ),
+    ],
+    repIds: ['sql-add-column', 'sql-rename-column', 'sql-split-name', 'sql-rebuild-table', 'sql-migrate-status-codes'],
+    related: ['sql-schema-design', 'sql-changing-data'],
+  },
 ]

@@ -1000,6 +1000,7 @@ export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[
       'sql-changing-data',
       'sql-window-functions',
       'sql-indexes',
+      'sql-migrations',
       'databases',
     ],
   },

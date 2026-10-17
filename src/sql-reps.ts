@@ -123,6 +123,33 @@ const joinSearches: PlanFact[] = [
 const joinQuery = (email: string) =>
   `SELECT o.id, o.cents FROM customers AS c JOIN orders AS o ON o.customer_id = c.id WHERE c.email = '${email}' ORDER BY o.id`
 
+const loyaltyCustomers = 'CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT NOT NULL, lifetime_cents INTEGER NOT NULL);'
+const tierColumns = [
+  ['id', 'INTEGER', 0],
+  ['name', 'TEXT', 1],
+  ['lifetime_cents', 'INTEGER', 1],
+  ['tier', 'TEXT', 1],
+]
+const stockCounts = 'CREATE TABLE stock (id INTEGER PRIMARY KEY, sku TEXT NOT NULL, qty INTEGER NOT NULL);'
+const renamedColumns = [
+  ['id', 'INTEGER', 0],
+  ['sku', 'TEXT', 1],
+  ['quantity', 'INTEGER', 1],
+]
+const peopleNames = 'CREATE TABLE people (id INTEGER PRIMARY KEY, full_name TEXT NOT NULL);'
+const loosePrices = 'CREATE TABLE products (id INTEGER PRIMARY KEY, sku TEXT NOT NULL, price_cents INTEGER);'
+const strictPriceColumns = [
+  ['id', 'INTEGER', 0],
+  ['sku', 'TEXT', 1],
+  ['price_cents', 'INTEGER', 1],
+]
+const codedOrders = 'CREATE TABLE orders (id INTEGER PRIMARY KEY, status_code INTEGER NOT NULL, cents INTEGER NOT NULL);'
+const statusColumns = [
+  ['id', 'INTEGER', 0],
+  ['cents', 'INTEGER', 1],
+  ['status', 'TEXT', 1],
+]
+
 export const sqlReps: Rep[] = [
   {
     id: 'sql-select-columns',
@@ -3894,6 +3921,404 @@ export const sqlReps: Rep[] = [
           plan: { sql: joinQuery('ana@example.com'), uses: joinSearches, avoids: [scanOf('c', 'customers'), scanOf('o', 'orders')] },
         },
         expected: { plan: 'matches', result: [] },
+      },
+    ],
+  },
+  {
+    id: 'sql-add-column',
+    title: 'Add a column and fill it in',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: loyaltyCustomers,
+      seeds: {
+        book: {
+          about: 'four customers with lifetime spend around 100000 cents',
+          sql: "INSERT INTO customers VALUES (1,'Ada',250000),(2,'Bo',99999),(3,'Cy',100000),(4,'Di',0);",
+        },
+        empty: { about: 'no customers yet', sql: '' },
+      },
+      compare: 'state',
+      read: [
+        { label: 'customers', sql: 'SELECT id, name, lifetime_cents, tier FROM customers ORDER BY id' },
+        { label: 'columns', sql: 'SELECT name, upper(type), "notnull" FROM pragma_table_info(\'customers\') ORDER BY cid' },
+      ],
+    },
+    context:
+      'A shop introduces loyalty tiers. Every customer needs a tier from now on; existing big spenders start as gold, everyone else as standard.',
+    prompt:
+      "Write SQL that adds a column tier to customers: TEXT, required, and 'standard' when an insert leaves it out. Then set tier to 'gold' for every existing customer whose lifetime_cents is at least 100000. Keep every existing row and value. customers starts with id INTEGER PRIMARY KEY, name TEXT NOT NULL, and lifetime_cents INTEGER NOT NULL. The checks read every customer and the table's columns (name, type, and whether NOT NULL) afterwards, and some insert a row to test the default and the rule. The checks use SQLite 3.49.",
+    brief: {
+      summary: 'Add a required tier column that defaults to standard, then mark existing big spenders as gold.',
+      rules: [
+        '`customers(id INTEGER PRIMARY KEY, name TEXT NOT NULL, lifetime_cents INTEGER NOT NULL)` to start with.',
+        "Add `tier`: TEXT, required, and `'standard'` when an insert leaves it out.",
+        "Then set tier to `'gold'` for existing customers whose lifetime_cents is at least 100000. Keep every existing row and value.",
+        'The checks read the customers and the column list afterwards, and some insert a row. The checks use SQLite 3.49.',
+      ],
+      edgeCases: ['Exactly 100000 is gold; 99999 is standard.', 'A tier of NULL is rejected.'],
+    },
+    example: { input: 'customers Ada (250000) and Bo (99999)', output: 'Ada gold, Bo standard; tier is TEXT NOT NULL' },
+    note: 'Checks compare stored rows, the column list, and probe inserts. They do not establish that the migration would be safe to run twice; that is part of your self-review.',
+    vocabulary: [
+      { term: 'Migration', meaning: 'a script that changes a database schema from one version to the next' },
+      { term: 'Backfill', meaning: 'filling a new column for rows that already exist' },
+      { term: 'ALTER TABLE', meaning: 'the statement that changes an existing table, such as adding or renaming a column' },
+    ],
+    planPrompt: 'Write the two steps in order, and what each existing customer’s tier is after each step.',
+    starter: 'ALTER TABLE customers ADD COLUMN tier TEXT;\n',
+    hints: [
+      'Run the starter: the column appears, but it is NULL for every customer and nothing stops a NULL later.',
+      'SQLite can add a NOT NULL column only together with a default, which also fills the existing rows. A second statement then corrects the big spenders.',
+      "ALTER TABLE customers ADD COLUMN tier TEXT NOT NULL DEFAULT 'standard'; then UPDATE customers SET tier = 'gold' WHERE lifetime_cents >= 100000.",
+    ],
+    checks: [
+      {
+        name: 'Existing customers keep their rows and get a tier',
+        input: [],
+        sql: { seed: 'book' },
+        expected: {
+          customers: [
+            [1, 'Ada', 250000, 'gold'],
+            [2, 'Bo', 99999, 'standard'],
+            [3, 'Cy', 100000, 'gold'],
+            [4, 'Di', 0, 'standard'],
+          ],
+          columns: tierColumns,
+        },
+      },
+      {
+        name: 'A new customer gets the default tier',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: ["INSERT INTO customers (name, lifetime_cents) VALUES ('Eve', 500000)"],
+          labels: ['a new customer with no tier'],
+        },
+        expected: { probes: ['accepted'], customers: [[1, 'Eve', 500000, 'standard']], columns: tierColumns },
+      },
+      {
+        name: 'The tier cannot be NULL',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: ["INSERT INTO customers (name, lifetime_cents, tier) VALUES ('Fay', 10, NULL)"],
+          labels: ['tier NULL'],
+        },
+        expected: { probes: ['rejected'], customers: [], columns: tierColumns },
+      },
+    ],
+  },
+  {
+    id: 'sql-rename-column',
+    title: 'Rename a column and keep its data',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: stockCounts,
+      seeds: {
+        shelf: { about: 'three stock rows', sql: "INSERT INTO stock VALUES (1,'A-1',5),(2,'B-2',0),(3,'C-3',12);" },
+        empty: { about: 'no stock rows', sql: '' },
+      },
+      compare: 'state',
+      read: [
+        { label: 'stock', sql: 'SELECT * FROM stock ORDER BY id' },
+        { label: 'columns', sql: 'SELECT name, upper(type), "notnull" FROM pragma_table_info(\'stock\') ORDER BY cid' },
+      ],
+    },
+    context: 'A team agrees that short names like qty hurt readability. The column becomes quantity, and no stock count may be lost.',
+    prompt:
+      'Write SQL that renames the column qty of stock to quantity, keeping its type, its NOT NULL rule, its position, and every stored value. stock has id INTEGER PRIMARY KEY, sku TEXT NOT NULL, and qty INTEGER NOT NULL. The checks read every row and the column list afterwards, and some insert a row using the new or the old name. The checks use SQLite 3.49.',
+    brief: {
+      summary: 'Rename qty to quantity without losing any stock count.',
+      rules: [
+        '`stock(id INTEGER PRIMARY KEY, sku TEXT NOT NULL, qty INTEGER NOT NULL)` to start with.',
+        'Rename `qty` to `quantity`, keeping its type, its NOT NULL rule, its position, and every stored value.',
+        'The checks read the rows and the column list afterwards, and some insert a row using the new or the old name.',
+        'The checks use SQLite 3.49.',
+      ],
+      edgeCases: ['An insert that still says qty is rejected afterwards.'],
+    },
+    example: { input: "stock (1, 'A-1', 5)", output: 'columns id, sku, quantity; row (1, A-1, 5)' },
+    note: 'Checks compare stored rows, the column list, and probe inserts. Renaming breaks every query and program that still uses the old name; finding those is part of your self-review.',
+    vocabulary: [{ term: 'RENAME COLUMN', meaning: 'an ALTER TABLE action that gives an existing column a new name and keeps its data' }],
+    planPrompt: 'Predict the column list after your change, and what happens to an old insert that still says qty.',
+    starter: 'ALTER TABLE stock ADD COLUMN quantity INTEGER;\n',
+    hints: [
+      'The starter adds a second, empty column instead of renaming the first, so the counts are not in quantity.',
+      'SQLite can rename a column in place, keeping its data and rules.',
+      'ALTER TABLE stock RENAME COLUMN qty TO quantity;',
+    ],
+    checks: [
+      {
+        name: 'Every count keeps its value under the new name',
+        input: [],
+        sql: { seed: 'shelf' },
+        expected: {
+          stock: [
+            [1, 'A-1', 5],
+            [2, 'B-2', 0],
+            [3, 'C-3', 12],
+          ],
+          columns: renamedColumns,
+        },
+      },
+      {
+        name: 'New inserts use quantity',
+        input: [],
+        sql: { seed: 'empty', probes: ["INSERT INTO stock (sku, quantity) VALUES ('D-4', 7)"], labels: ['an insert naming quantity'] },
+        expected: { probes: ['accepted'], stock: [[1, 'D-4', 7]], columns: renamedColumns },
+      },
+      {
+        name: 'The old name is gone',
+        input: [],
+        sql: { seed: 'empty', probes: ["INSERT INTO stock (sku, qty) VALUES ('E-5', 2)"], labels: ['an insert still naming qty'] },
+        expected: { probes: ['rejected'], stock: [], columns: renamedColumns },
+      },
+    ],
+  },
+  {
+    id: 'sql-split-name',
+    title: 'Fill new columns from existing text',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: peopleNames,
+      seeds: {
+        staff: {
+          about: 'four names: two words, three words, one word, and two spaces in a row',
+          sql: "INSERT INTO people VALUES (1,'Ada Lovelace'),(2,'Mary Ann Evans'),(3,'Plato'),(4,'Grace  Hopper');",
+        },
+        empty: { about: 'no people', sql: '' },
+        'one-word': { about: 'two single-word names', sql: "INSERT INTO people VALUES (1,'Sappho'),(2,'Homer');" },
+      },
+      compare: 'state',
+      read: [{ label: 'people', sql: 'SELECT id, full_name, first_name, last_name FROM people ORDER BY id' }],
+    },
+    context:
+      'A contact list stores full names in one column. Mail merges need first and last names separately, so two new columns are added and filled from the old one.',
+    prompt:
+      "Write SQL that adds two columns to people, first_name TEXT and last_name TEXT, and fills them for every existing row from full_name: first_name is the text before the first space, and last_name is everything after that space, exactly as stored. A name without a space gets the whole name as first_name and '' (empty text) as last_name. Keep full_name unchanged. people has id INTEGER PRIMARY KEY and full_name TEXT NOT NULL. The checks read id, full_name, first_name, and last_name afterwards. The checks use SQLite 3.49.",
+    brief: {
+      summary: 'Add first_name and last_name and fill them by splitting full_name at its first space.',
+      rules: [
+        '`people(id INTEGER PRIMARY KEY, full_name TEXT NOT NULL)` to start with. Add `first_name TEXT` and `last_name TEXT`.',
+        'first_name is the text before the first space; last_name is everything after that space, exactly as stored.',
+        "A name without a space: first_name is the whole name and last_name is '' (empty text). Keep full_name unchanged.",
+        'The checks read the rows back. The checks use SQLite 3.49.',
+      ],
+      edgeCases: ["'Mary Ann Evans' gives 'Mary' and 'Ann Evans'.", "'Grace  Hopper' with two spaces gives 'Grace' and ' Hopper'."],
+    },
+    example: { input: "'Ada Lovelace'", output: "first_name 'Ada', last_name 'Lovelace'" },
+    note: 'Checks compare the stored rows. Splitting names is a rough rule; many real names do not fit it, which is worth noting in your self-review.',
+    vocabulary: [
+      { term: 'instr', meaning: 'a SQLite function that returns the position of one text inside another, or 0 when it is absent' },
+    ],
+    planPrompt: 'For Plato and Mary Ann Evans, write the first and last name you expect and how you find the split point.',
+    starter: 'ALTER TABLE people ADD COLUMN first_name TEXT;\nALTER TABLE people ADD COLUMN last_name TEXT;\n',
+    hints: [
+      'The starter adds the columns but leaves them NULL. An UPDATE has to compute both values for every row.',
+      "instr(full_name, ' ') finds the first space, or 0 when there is none; substr takes the parts on either side.",
+      "UPDATE people SET first_name = CASE WHEN instr(full_name, ' ') = 0 THEN full_name ELSE substr(full_name, 1, instr(full_name, ' ') - 1) END, and last_name the same way with substr after the space or ''.",
+    ],
+    checks: [
+      {
+        name: 'Names split at the first space',
+        input: [],
+        sql: { seed: 'staff' },
+        expected: {
+          people: [
+            [1, 'Ada Lovelace', 'Ada', 'Lovelace'],
+            [2, 'Mary Ann Evans', 'Mary', 'Ann Evans'],
+            [3, 'Plato', 'Plato', ''],
+            [4, 'Grace  Hopper', 'Grace', ' Hopper'],
+          ],
+        },
+      },
+      {
+        name: 'One-word names keep an empty last name',
+        input: [],
+        sql: { seed: 'one-word' },
+        expected: {
+          people: [
+            [1, 'Sappho', 'Sappho', ''],
+            [2, 'Homer', 'Homer', ''],
+          ],
+        },
+      },
+      { name: 'No people', input: [], sql: { seed: 'empty' }, expected: { people: [] } },
+    ],
+  },
+  {
+    id: 'sql-rebuild-table',
+    title: 'Add a rule to an existing table',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: loosePrices,
+      seeds: {
+        catalog: {
+          about: 'four products, one with no price',
+          sql: "INSERT INTO products VALUES (1,'A-1',500),(2,'B-2',NULL),(3,'C-3',0),(4,'D-4',1250);",
+        },
+        empty: { about: 'no products', sql: '' },
+      },
+      compare: 'state',
+      read: [
+        { label: 'products', sql: 'SELECT id, sku, price_cents FROM products ORDER BY id' },
+        { label: 'columns', sql: 'SELECT name, upper(type), "notnull" FROM pragma_table_info(\'products\') ORDER BY cid' },
+        { label: 'tables', sql: "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name" },
+      ],
+    },
+    context:
+      'Prices were optional when the product table was first made, and some are missing. From now on a price is required and never negative. Missing prices become 0 so they can be reviewed.',
+    prompt:
+      "Write SQL that changes products so that price_cents is INTEGER NOT NULL and never negative, enforced by the table itself. First set every NULL price_cents to 0. Keep every id, sku, and other price, keep the table name products, the column order, and the other columns' rules, and leave no other table behind. products has id INTEGER PRIMARY KEY, sku TEXT NOT NULL, and price_cents INTEGER (nullable, with no rule). SQLite's ALTER TABLE cannot add NOT NULL or CHECK to an existing column. The checks read every product, the column list, and the list of tables afterwards, and some insert rows to test the new rules. The checks use SQLite 3.49.",
+    brief: {
+      summary: 'Make price_cents required and never negative on an existing table, turning missing prices into 0.',
+      rules: [
+        '`products(id INTEGER PRIMARY KEY, sku TEXT NOT NULL, price_cents INTEGER)` to start with; price_cents may be NULL and has no rule.',
+        'Afterwards price_cents is INTEGER NOT NULL and never negative, enforced by the table. Missing prices become 0.',
+        'Keep every id, sku, and price, the table name products, the column order, and the other rules. Leave no other table behind.',
+        "SQLite's ALTER TABLE cannot add NOT NULL or CHECK to an existing column. The checks read the rows, the column list, and the tables. SQLite 3.49.",
+      ],
+      edgeCases: ['A price of 0 is allowed.', 'A negative price or a missing price is rejected afterwards.'],
+    },
+    example: { input: "products (2, 'B-2', NULL)", output: "becomes (2, 'B-2', 0); a later price of -5 is rejected" },
+    note: 'This is an independent rep: plan before you look at the hints. Checks compare stored rows, the column list, the table list, and probe inserts. Whether a transaction wrapped your steps is part of your self-review.',
+    vocabulary: [
+      { term: 'Table rebuild', meaning: 'creating a new table with the right rules, copying the rows in, and replacing the old table' },
+    ],
+    planPrompt: 'List the steps, what could go wrong between them, and how the rows get from the old table to the new one.',
+    starter: '-- Make price_cents required and never negative.\n',
+    hints: [
+      'ALTER TABLE cannot add these rules, so the table must be built again with them and the rows moved across.',
+      'Create the new table under another name, copy the rows with the missing prices replaced, drop the old table, and give the new one the old name, all inside one transaction.',
+      'BEGIN; CREATE TABLE products_new (id INTEGER PRIMARY KEY, sku TEXT NOT NULL, price_cents INTEGER NOT NULL CHECK (price_cents >= 0)); INSERT INTO products_new SELECT id, sku, COALESCE(price_cents, 0) FROM products; DROP TABLE products; ALTER TABLE products_new RENAME TO products; COMMIT;',
+    ],
+    checks: [
+      {
+        name: 'Rows are kept and missing prices become 0',
+        input: [],
+        sql: { seed: 'catalog' },
+        expected: {
+          products: [
+            [1, 'A-1', 500],
+            [2, 'B-2', 0],
+            [3, 'C-3', 0],
+            [4, 'D-4', 1250],
+          ],
+          columns: strictPriceColumns,
+          tables: [['products']],
+        },
+      },
+      {
+        name: 'A negative price is rejected',
+        input: [],
+        sql: { seed: 'catalog', probes: ["INSERT INTO products (sku, price_cents) VALUES ('E-5', -5)"], labels: ['price -5'] },
+        expected: {
+          probes: ['rejected'],
+          products: [
+            [1, 'A-1', 500],
+            [2, 'B-2', 0],
+            [3, 'C-3', 0],
+            [4, 'D-4', 1250],
+          ],
+          columns: strictPriceColumns,
+          tables: [['products']],
+        },
+      },
+      {
+        name: 'A missing price is rejected, 0 is accepted',
+        input: [],
+        sql: {
+          seed: 'empty',
+          probes: ["INSERT INTO products (sku) VALUES ('F-6')", "INSERT INTO products (sku, price_cents) VALUES ('G-7', 0)"],
+          labels: ['a product with no price', 'price 0'],
+        },
+        expected: { probes: ['rejected', 'accepted'], products: [[1, 'G-7', 0]], columns: strictPriceColumns, tables: [['products']] },
+      },
+    ],
+  },
+  {
+    id: 'sql-migrate-status-codes',
+    title: 'Replace codes with readable values',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: codedOrders,
+      seeds: {
+        orders: { about: 'four orders with codes 1, 2, and 3', sql: 'INSERT INTO orders VALUES (1,2,500),(2,1,250),(3,3,900),(4,2,100);' },
+        'all-new': { about: 'two orders, both code 1', sql: 'INSERT INTO orders VALUES (7,1,300),(8,1,50);' },
+        empty: { about: 'no orders', sql: '' },
+      },
+      compare: 'state',
+      read: [
+        { label: 'orders', sql: 'SELECT id, cents, status FROM orders ORDER BY id' },
+        { label: 'columns', sql: 'SELECT name, upper(type), "notnull" FROM pragma_table_info(\'orders\') ORDER BY cid' },
+      ],
+    },
+    context:
+      'Orders store their status as a number that nobody remembers: 1, 2, or 3. The team replaces it with readable text and removes the number.',
+    prompt:
+      "Write SQL that adds a column status to orders, TEXT, required, and 'new' when an insert leaves it out; fills it for every existing order from status_code (1 is 'new', 2 is 'paid', 3 is 'shipped'); and then removes status_code. Keep every id and cents. Afterwards the columns are id, cents, and status, in that order. orders has id INTEGER PRIMARY KEY, status_code INTEGER NOT NULL (always 1, 2, or 3), and cents INTEGER NOT NULL. The checks read every order and the column list afterwards, and one inserts an order to test the default. The checks use SQLite 3.49.",
+    brief: {
+      summary: 'Replace the numeric status_code with a readable status column.',
+      rules: [
+        '`orders(id INTEGER PRIMARY KEY, status_code INTEGER NOT NULL, cents INTEGER NOT NULL)`; status_code is always 1, 2, or 3.',
+        "Add `status`: TEXT, required, `'new'` when an insert leaves it out. Fill it from status_code: 1 'new', 2 'paid', 3 'shipped'.",
+        'Then remove status_code. Keep every id and cents; the columns end as id, cents, status.',
+        'The checks read the orders and the column list, and one inserts an order. The checks use SQLite 3.49.',
+      ],
+      edgeCases: ['No orders: the columns still change.'],
+    },
+    example: { input: 'order (1, 2, 500)', output: "becomes (1, 500, 'paid')" },
+    note: 'This is a delayed recall rep: solve it without hints after the break. Checks compare stored rows, the column list, and a probe insert. Programs that still read status_code break after this change; finding them is part of your self-review.',
+    vocabulary: [{ term: 'DROP COLUMN', meaning: 'an ALTER TABLE action that removes a column and its data' }],
+    planPrompt: 'Write the steps in order and what would be lost if the last one ran first.',
+    starter: '-- Replace status_code with status.\n',
+    hints: [
+      'Three changes happen in order: a new column appears, it is filled from the old one, and the old one goes. The order matters.',
+      'A CASE expression maps each code to its text inside one UPDATE. ALTER TABLE can both add and drop a column.',
+      "ALTER TABLE orders ADD COLUMN status TEXT NOT NULL DEFAULT 'new'; UPDATE orders SET status = CASE status_code WHEN 1 THEN 'new' WHEN 2 THEN 'paid' WHEN 3 THEN 'shipped' END; ALTER TABLE orders DROP COLUMN status_code;",
+    ],
+    checks: [
+      {
+        name: 'Every order gets its readable status',
+        input: [],
+        sql: { seed: 'orders' },
+        expected: {
+          orders: [
+            [1, 500, 'paid'],
+            [2, 250, 'new'],
+            [3, 900, 'shipped'],
+            [4, 100, 'paid'],
+          ],
+          columns: statusColumns,
+        },
+      },
+      {
+        name: 'Orders that were already new',
+        input: [],
+        sql: { seed: 'all-new' },
+        expected: {
+          orders: [
+            [7, 300, 'new'],
+            [8, 50, 'new'],
+          ],
+          columns: statusColumns,
+        },
+      },
+      {
+        name: 'A new order defaults to new',
+        input: [],
+        sql: { seed: 'empty', probes: ['INSERT INTO orders (cents) VALUES (750)'], labels: ['an order with only cents'] },
+        expected: { probes: ['accepted'], orders: [[1, 750, 'new']], columns: statusColumns },
       },
     ],
   },

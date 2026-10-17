@@ -31,8 +31,12 @@ test('every SQL track rep is SQL text with a reference query and fresh-database 
     // A schema rep starts empty and probes one rule per check; every other rep needs several data sets.
     const schemaRep = rep.checks.every(check => check.sql.probes?.length)
     if (schemaRep) assert.ok(rep.checks.length >= 4 && rep.checks.some(check => check.expected.probes.includes('rejected')), id)
-    // Index reps vary the query more than the data, so two data sets are enough for them.
-    else assert.ok(Object.keys(rep.sql.seeds).length >= (rep.checks.some(check => check.sql.plan) ? 2 : 3), `${id} needs several data sets`)
+    // Index and migration reps vary their queries and probes more than the data, so two data sets are enough.
+    else
+      assert.ok(
+        Object.keys(rep.sql.seeds).length >= (rep.checks.some(check => check.sql.plan || check.sql.probes) ? 2 : 3),
+        `${id} needs several data sets`,
+      )
   }
 })
 
@@ -581,6 +585,73 @@ test('S9 index checks catch the wrong column order, a missing sort column, and a
   ])
   const halfJoin = runRep('CREATE INDEX e ON customers (email);', 'sql-index-join', () => new SQL.Database())[0]
   assert.match(halfJoin.message, /SQLite's plan still reads every row of orders\./)
+})
+
+test('S10 migration checks catch a nullable column, a strict boundary, and a rename that adds a column', () => {
+  const add = solution('sql-add-column')
+  assertCaught('sql-add-column', [
+    [reps.find(rep => rep.id === 'sql-add-column').starter, 'Existing customers keep their rows and get a tier'],
+    [add.replace('>= 100000', '> 100000'), 'Existing customers keep their rows and get a tier'],
+    [add.replace("TEXT NOT NULL DEFAULT 'standard'", "TEXT DEFAULT 'standard'"), 'The tier cannot be NULL'],
+    [add.replace("DEFAULT 'standard'", "DEFAULT 'gold'"), 'A new customer gets the default tier'],
+  ])
+  assertCaught('sql-rename-column', [
+    [reps.find(rep => rep.id === 'sql-rename-column').starter, 'Every count keeps its value under the new name'],
+    ['ALTER TABLE stock RENAME COLUMN qty TO amount;', 'Every count keeps its value under the new name'],
+  ])
+  // Adding, copying, and dropping ends in the same table here, because qty was the last column.
+  assert.deepEqual(
+    failed(
+      'sql-rename-column',
+      'ALTER TABLE stock ADD COLUMN quantity INTEGER NOT NULL DEFAULT 0; UPDATE stock SET quantity = qty; ALTER TABLE stock DROP COLUMN qty;',
+    ),
+    [],
+  )
+})
+
+test('S10 backfill checks catch splitting at the wrong space, NULL for one-word names, and trimming', () => {
+  const base = solution('sql-split-name')
+  assertCaught('sql-split-name', [
+    [base.replace("THEN '' ELSE", 'THEN NULL ELSE'), 'One-word names keep an empty last name'],
+    [
+      base.replace("substr(full_name, instr(full_name, ' ') + 1)", "trim(substr(full_name, instr(full_name, ' ') + 1))"),
+      'Names split at the first space',
+    ],
+    [
+      "ALTER TABLE people ADD COLUMN first_name TEXT; ALTER TABLE people ADD COLUMN last_name TEXT; UPDATE people SET first_name = substr(full_name, 1, instr(full_name, ' ') - 1), last_name = substr(full_name, instr(full_name, ' ') + 1);",
+      'One-word names keep an empty last name',
+    ],
+  ])
+})
+
+test('S10 rebuild checks catch an update without a rebuild, a leftover table, and a lost row', () => {
+  const base = solution('sql-rebuild-table')
+  assertCaught('sql-rebuild-table', [
+    ['UPDATE products SET price_cents = 0 WHERE price_cents IS NULL;', 'A negative price is rejected'],
+    [
+      base.replace(
+        'DROP TABLE products;\nALTER TABLE products_new RENAME TO products;',
+        'ALTER TABLE products RENAME TO products_old;\nALTER TABLE products_new RENAME TO products;',
+      ),
+      'Rows are kept and missing prices become 0',
+    ],
+    [
+      base.replace(
+        'SELECT id, sku, COALESCE(price_cents, 0) FROM products',
+        'SELECT id, sku, price_cents FROM products WHERE price_cents IS NOT NULL',
+      ),
+      'Rows are kept and missing prices become 0',
+    ],
+  ])
+  const codes = solution('sql-migrate-status-codes')
+  assertCaught('sql-migrate-status-codes', [
+    [codes.replace(" WHEN 3 THEN 'shipped'", ''), 'Every order gets its readable status'],
+    [
+      "ALTER TABLE orders DROP COLUMN status_code; ALTER TABLE orders ADD COLUMN status TEXT NOT NULL DEFAULT 'new';",
+      'Every order gets its readable status',
+    ],
+    [codes.replace('\nALTER TABLE orders DROP COLUMN status_code;', ''), 'Orders that were already new'],
+  ])
 })
 
 test('the S1 journey keeps recall distinct from its guided and independent reps', () => {

@@ -197,4 +197,26 @@ ORDER BY region, revenue_cents DESC, name;`,
   'sql-composite-index': `CREATE INDEX orders_customer_date ON orders (customer_id, placed_on);`,
   'sql-index-join': `CREATE INDEX customers_email ON customers (email);
 CREATE INDEX orders_customer ON orders (customer_id);`,
+  'sql-add-column': `ALTER TABLE customers ADD COLUMN tier TEXT NOT NULL DEFAULT 'standard';
+UPDATE customers SET tier = 'gold' WHERE lifetime_cents >= 100000;`,
+  'sql-rename-column': `ALTER TABLE stock RENAME COLUMN qty TO quantity;`,
+  'sql-split-name': `ALTER TABLE people ADD COLUMN first_name TEXT;
+ALTER TABLE people ADD COLUMN last_name TEXT;
+UPDATE people SET
+  first_name = CASE WHEN instr(full_name, ' ') = 0 THEN full_name ELSE substr(full_name, 1, instr(full_name, ' ') - 1) END,
+  last_name = CASE WHEN instr(full_name, ' ') = 0 THEN '' ELSE substr(full_name, instr(full_name, ' ') + 1) END;`,
+  'sql-rebuild-table': `BEGIN;
+CREATE TABLE products_new (
+  id INTEGER PRIMARY KEY,
+  sku TEXT NOT NULL,
+  price_cents INTEGER NOT NULL CHECK (price_cents >= 0)
+);
+INSERT INTO products_new (id, sku, price_cents)
+  SELECT id, sku, COALESCE(price_cents, 0) FROM products;
+DROP TABLE products;
+ALTER TABLE products_new RENAME TO products;
+COMMIT;`,
+  'sql-migrate-status-codes': `ALTER TABLE orders ADD COLUMN status TEXT NOT NULL DEFAULT 'new';
+UPDATE orders SET status = CASE status_code WHEN 1 THEN 'new' WHEN 2 THEN 'paid' WHEN 3 THEN 'shipped' END;
+ALTER TABLE orders DROP COLUMN status_code;`,
 }

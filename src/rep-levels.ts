@@ -310,6 +310,11 @@ export const repLevels: Record<string, RepLevel> = {
   'sql-covering-index': 3,
   'sql-composite-index': 3,
   'sql-index-join': 3,
+  'sql-add-column': 2,
+  'sql-rename-column': 1,
+  'sql-split-name': 2,
+  'sql-rebuild-table': 3,
+  'sql-migrate-status-codes': 2,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

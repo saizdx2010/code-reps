@@ -543,6 +543,66 @@ export const sqlDepth: Record<string, RepDepth> = {
     transfer:
       'The tool now shows each order’s product names from an order_lines table. Decide which extra index the third table needs and what the plan should show for it. This changed contract is self-reviewed; the original checks do not cover it.',
   },
+  'sql-add-column': {
+    reasoning:
+      "ADD COLUMN tier TEXT NOT NULL DEFAULT 'standard' adds the column and gives every existing row the default, which satisfies NOT NULL immediately. The backfill, UPDATE … SET tier = 'gold' WHERE lifetime_cents >= 100000, then corrects only the big spenders. New inserts that leave tier out keep getting 'standard', and an explicit NULL is refused.",
+    trace:
+      "After the ALTER, all four customers read 'standard'. The UPDATE checks each one: Ada (250000) and Cy (exactly 100000) become gold; Bo (99999) and Di (0) stay standard. The column list now ends with tier TEXT NOT NULL.",
+    alternative:
+      'Adding the column as nullable, backfilling every row, and then rebuilding the table to add NOT NULL also works, but it is more work in SQLite. Computing the tier in every query instead of storing it avoids the migration but repeats the rule everywhere.',
+    counterexample:
+      "The starter adds a nullable column with NULL everywhere. Backfilling with > 100000 leaves Cy standard. Adding the default as 'gold' marks every new customer gold.",
+    transfer:
+      'Tiers now change every night as spend grows. Decide whether tier should stay a stored column with a nightly UPDATE, or be computed when read, and what each choice costs. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-rename-column': {
+    reasoning:
+      'RENAME COLUMN changes only the name: the column keeps its position, type, NOT NULL rule, and every value. Afterwards inserts must use quantity, and SQLite rejects one that still says qty because no such column exists.',
+    trace:
+      "Before, the columns are id, sku, qty. After ALTER TABLE stock RENAME COLUMN qty TO quantity they are id, sku, quantity, and row (1, 'A-1', 5) reads the same. An insert naming qty fails with table stock has no column named qty.",
+    alternative:
+      'Adding a new column, copying the values, and dropping the old one gives the same result in three steps here, because qty was the last column; elsewhere the column would move to the end, and the NOT NULL rule needs a default. A view that exposes qty AS quantity keeps old and new names working during a transition.',
+    counterexample:
+      'The starter adds an empty quantity column next to qty. Renaming the table instead of the column changes nothing about qty.',
+    transfer:
+      'Old programs still write qty for another month. Decide how a view or a second column could keep them working, and how you would know when to remove it. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-split-name': {
+    reasoning:
+      "instr(full_name, ' ') gives the position of the first space, or 0 when there is none. With a space, substr up to the position minus one is the first name and substr from the position plus one is the rest. Without one, the CASE keeps the whole name as first_name and '' as last_name. full_name is only read, so it stays unchanged.",
+    trace:
+      "For 'Mary Ann Evans' the first space is at 5: first_name is substr(…, 1, 4) = 'Mary' and last_name is substr(…, 6) = 'Ann Evans'. For 'Grace  Hopper' the first space is at 6, so last_name starts at the second space: ' Hopper'. For 'Plato', instr is 0 and the CASE gives 'Plato' and ''.",
+    alternative:
+      'Splitting in application code allows richer rules, such as known surname prefixes, and can be run once as a script. trim() on last_name would remove the extra space, but the contract asks for the text exactly as stored.',
+    counterexample:
+      "Using instr = 0 without a CASE makes substr(full_name, 1, -1) return '' for Plato. Splitting at the last space gives 'Mary Ann' and 'Evans'. Leaving last_name NULL for one-word names breaks the ''-for-missing rule.",
+    transfer:
+      'The list now also has names written as "Lovelace, Ada". Decide how to detect that form and split it differently, and how many names you would check by hand. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-rebuild-table': {
+    reasoning:
+      'SQLite cannot add NOT NULL or CHECK to an existing column, so the table is rebuilt: a new table with the rules, a copy of every row with COALESCE(price_cents, 0) for missing prices, then DROP TABLE and a rename to products. Inside one transaction the whole change happens or none of it does, and no extra table is left behind.',
+    trace:
+      'products_new is created with price_cents INTEGER NOT NULL CHECK (price_cents >= 0). The copy turns B-2’s NULL into 0 and keeps 500, 0, and 1250. After DROP TABLE products and the rename, the column list reads price_cents INTEGER with NOT NULL, and an insert of -5 is rejected by the CHECK.',
+    alternative:
+      'A trigger that rejects NULL and negative prices on insert and update enforces the rule without a rebuild, but it is not visible in the column list and must be kept alongside the table. Renaming the old table first and creating the new one under the original name is an equivalent rebuild order.',
+    counterexample:
+      'Updating NULL prices to 0 without a rebuild leaves the column nullable, so a later NULL insert is accepted. Leaving products_new or products_old in the database fails the table list. Copying with SELECT * into a table whose columns are in another order scrambles values.',
+    transfer:
+      'products also has an index on sku and a view that reads it. Decide what happens to each during the rebuild and how you would restore them. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-migrate-status-codes': {
+    reasoning:
+      "The new column is added first, with NOT NULL and the default 'new'. One UPDATE with a CASE maps each code to its text while status_code still exists, and only then DROP COLUMN removes the old column. The column order ends id, cents, status because the dropped column leaves its place and the added one sits at the end.",
+    trace:
+      "Order 1 has status_code 2. After ADD COLUMN its status is 'new'; the UPDATE's CASE turns code 2 into 'paid'; DROP COLUMN removes the 2 and leaves (1, 500, 'paid'). An order inserted afterwards with only cents gets the default 'new'.",
+    alternative:
+      'A lookup table of codes and names, joined in the UPDATE, scales better when there are many codes. Keeping status_code and adding a view with readable names avoids a migration but leaves both forms in the schema.',
+    counterexample:
+      "Dropping status_code before the UPDATE leaves every order 'new'. Writing the CASE without WHEN 3 turns shipped orders into NULL, which NOT NULL then rejects, stopping the script.",
+    transfer:
+      'A fourth code, 4 for returned, appears in old backups that may be restored later. Decide whether the migration should map it, refuse it, or keep the number, and how the CHECK on status changes. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
 }
 
 export const sqlGuides: Record<string, ReflectionGuide> = {
@@ -830,6 +890,35 @@ export const sqlGuides: Record<string, ReflectionGuide> = {
     example:
       'I create one index on customers (email) and one on orders (customer_id). SQLite searches the customer by email, then the orders by customer_id, and scans neither table.',
   },
+  'sql-add-column': {
+    plan: ['Write the two steps in order and each customer’s tier after each step.'],
+    explanation: ['Explain why the default fills existing rows.', 'Explain why Cy becomes gold and Bo does not.'],
+    example:
+      "I ADD COLUMN tier TEXT NOT NULL DEFAULT 'standard', then UPDATE customers SET tier = 'gold' WHERE lifetime_cents >= 100000. The default fills every row first; the backfill corrects the big spenders.",
+  },
+  'sql-rename-column': {
+    plan: ['Predict the column list after the change.', 'Say what happens to an insert that still says qty.'],
+    explanation: ['Explain why RENAME keeps the data and rules.', 'Explain what breaks outside the database.'],
+    example:
+      'I run ALTER TABLE stock RENAME COLUMN qty TO quantity. The values, type, and NOT NULL rule stay; anything that still says qty fails.',
+  },
+  'sql-split-name': {
+    plan: ['Write the first and last name for Plato and for Mary Ann Evans.', 'Say how you find the split point.'],
+    explanation: ['Explain the CASE for names without a space.', "Explain why 'Grace  Hopper' keeps a leading space."],
+    example:
+      "I add both columns, then UPDATE with CASE WHEN instr(full_name, ' ') = 0 THEN full_name ELSE substr(full_name, 1, instr(full_name, ' ') - 1) END for first_name and the matching substr or '' for last_name.",
+  },
+  'sql-rebuild-table': {
+    plan: ['List the steps and what could go wrong between them.'],
+    explanation: ['Explain why ALTER TABLE cannot do this.', 'Explain what the transaction protects.'],
+    example:
+      'Inside BEGIN … COMMIT I create products_new with NOT NULL and CHECK, copy the rows with COALESCE(price_cents, 0), drop products, and rename products_new to products.',
+  },
+  'sql-migrate-status-codes': {
+    plan: ['Write the steps in order.', 'Say what would be lost if the drop ran first.'],
+    explanation: ['Explain why the old column is still needed during the UPDATE.', 'Explain the final column order.'],
+    example: "I add status TEXT NOT NULL DEFAULT 'new', fill it with a CASE over status_code, then drop status_code.",
+  },
 }
 
 export const sqlLessonDepth: Record<string, LessonDepth> = {
@@ -922,5 +1011,15 @@ export const sqlLessonDepth: Record<string, LessonDepth> = {
       'Predict which index each of these can search: WHERE placed_on >= ? alone, and WHERE customer_id = ? alone. Which single index serves the customer page best? Discuss before revealing.',
     answer:
       'For placed_on alone, a can be searched and b cannot, because b starts with customer_id. For customer_id alone, b can be searched and a cannot. Index b serves the customer page, the frequent query here; a separate index on placed_on would serve date-only reports. This discussion is self-reviewed; the composite index rep checks the customer query.',
+  },
+  'sql-migrations': {
+    title: 'A rebuild is safe only as one change',
+    code: 'CREATE TABLE products_new (…);\nINSERT INTO products_new SELECT id, sku, price_cents FROM products;\n-- fails: NOT NULL constraint failed\nDROP TABLE products;\nALTER TABLE products_new RENAME TO products;',
+    reasoning:
+      'Without a transaction each statement commits on its own. Here the copy fails because one price is NULL, but if the script keeps going, DROP TABLE removes the old rows and the rename installs an empty table. Inside BEGIN … COMMIT, the failed copy stops the script and ROLLBACK leaves the original table untouched.',
+    challenge:
+      'Predict what the database holds after the script above runs statement by statement and ignores errors. Then write the two changes that make it safe. Discuss before revealing.',
+    answer:
+      'The original products table is gone and products is an empty new table: every row is lost. Wrapping the steps in BEGIN … COMMIT, and fixing the NULL prices in the copy with COALESCE(price_cents, 0), makes the rebuild either complete or a no-op. This discussion is self-reviewed; the rebuild rep checks the finished result.',
   },
 }

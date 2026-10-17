@@ -302,6 +302,11 @@ const repRows: [string, string, number, Rep['format'] | 0, string, number, numbe
   ["sql-covering-index","Answer a query from the index alone",38,"sql","45217d1b5bf3be28",3,89,3,34],
   ["sql-composite-index","Index two conditions at once",38,"sql","521645a6be88b785",3,92,3,34],
   ["sql-index-join","Index both sides of a join",38,"sql","b89ac1d473401269",3,105,3,34],
+  ["sql-add-column","Add a column and fill it in",38,"sql","280493c918f40ad0",3,96,3,34],
+  ["sql-rename-column","Rename a column and keep its data",38,"sql","12b35eaecbb89ab0",3,77,3,34],
+  ["sql-split-name","Fill new columns from existing text",38,"sql","44195a60ec89ea29",3,96,3,34],
+  ["sql-rebuild-table","Add a rule to an existing table",38,"sql","9bd1af30f2ca41dd",3,117,3,34],
+  ["sql-migrate-status-codes","Replace codes with readable values",38,"sql","31d88f1ef675d29d",3,89,3,34],
 ]
 
 export const repIndex: RepSummary[] = repRows.map(([id, title, category, format, starterHash, hintTotal, briefWords, checkTotal, source]) => ({
@@ -374,4 +379,5 @@ export const skillIndex: SkillSummary[] = [
   {"id":"sql-changing-data","title":"Change data safely: UPDATE, DELETE, upserts, and transactions","summary":"Scope every change with WHERE, insert from queries and upsert on conflicts, group related changes, and bind values from code.","prerequisites":["sql-filtering","sql-schema-design"],"related":["sql-schema-design","databases"],"repIds":["sql-update-scope","sql-delete-scope","sql-upsert-stock","sqlite-customer-totals","sqlite-stock-transfer","sqlite-restock-upsert","sql-archive-orders"],"questions":[{"id":"update-scope-v1","optionCount":3,"answer":1},{"id":"excluded-v1","optionCount":3,"answer":1},{"id":"binding-v1","optionCount":3,"answer":1}]},
   {"id":"sql-window-functions","title":"Rank and run totals with window functions","summary":"Compute ranks, running totals, and neighbouring values for every row without collapsing rows into groups.","prerequisites":["sql-summarizing","sql-subqueries"],"related":["sql-summarizing","sql-subqueries"],"repIds":["sql-rank-scores","sql-competition-rank","sql-day-over-day","sql-running-balance","sql-top-two-per-region"],"questions":[{"id":"rank-kinds-v1","optionCount":3,"answer":2},{"id":"peers-v1","optionCount":3,"answer":1},{"id":"window-where-v1","optionCount":3,"answer":1}]},
   {"id":"sql-indexes","title":"Make it fast: indexes and query plans","summary":"Create indexes that match a query's filters and order, and read SQLite's query plan to see whether it uses them.","prerequisites":["sql-reading","sql-joining"],"related":["sql-joining","sql-schema-design"],"repIds":["sql-index-lookup","sql-index-sort","sql-covering-index","sql-composite-index","sql-index-join"],"questions":[{"id":"scan-search-v1","optionCount":3,"answer":1},{"id":"composite-order-v1","optionCount":3,"answer":1},{"id":"plan-meaning-v1","optionCount":3,"answer":1}]},
+  {"id":"sql-migrations","title":"Evolve a schema without losing rows","summary":"Add, rename, and remove columns, backfill existing rows, and rebuild a table when SQLite cannot alter it in place.","prerequisites":["sql-schema-design","sql-changing-data"],"related":["sql-schema-design","sql-changing-data"],"repIds":["sql-add-column","sql-rename-column","sql-split-name","sql-rebuild-table","sql-migrate-status-codes"],"questions":[{"id":"add-not-null-v1","optionCount":3,"answer":1},{"id":"add-check-v1","optionCount":3,"answer":1},{"id":"drop-order-v1","optionCount":3,"answer":1}]},
 ]
