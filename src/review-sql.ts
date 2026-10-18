@@ -603,6 +603,30 @@ export const sqlDepth: Record<string, RepDepth> = {
     transfer:
       'A fourth code, 4 for returned, appears in old backups that may be restored later. Decide whether the migration should map it, refuse it, or keep the number, and how the CHECK on status changes. This changed contract is self-reviewed; the original checks do not cover it.',
   },
+  'sql-capstone-report': {
+    reasoning:
+      "The report is built in steps. First every qualifying line, from a March 2026 order that is not cancelled, joined to its region and category, with its revenue. Then one row per region and category with SUM(revenue) and COUNT(DISTINCT order_id), so an order with several lines in a category counts once. Finally a window over each region numbers the categories by revenue and name, and totals the region's revenue for the share; keeping row 1 picks the best category.",
+    trace:
+      'In North, order 10 earns tea 3000 and ware 4000, and order 11 earns tea 2400 and ware 1800 plus 900 from a second ware line; cancelled order 12 and April order 15 are filtered out. Ware totals 6700 across orders 10 and 11, which COUNT(DISTINCT order_id) counts as 2, and tea 5400. The region total is 12100, so ware is first with a share of 100 × 6700 / 12100 = 55.37…, rounded to 55.4.',
+    alternative:
+      'Correlated subqueries can compute the region total and the best category without windows, but they repeat the same joins several times. Doing the last step in application code is common for reports, at the cost of sending every category row out of the database.',
+    counterexample:
+      'Leaving the cancelled order in makes North ware 26700. COUNT(*) counts order 11’s two ware lines as two orders. Integer division, 100 * 6700 / 12100, gives 55 rather than 55.4. RANK keeps both tied categories in East.',
+    transfer:
+      'The team now wants the top two categories per region and the change in revenue from February. Decide which steps change and where a second month enters the query. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
+  'sql-interview-repeat-customers': {
+    reasoning:
+      'The question is about months, so the month of each counted order, its first seven characters, is the value that must differ. WHERE keeps 2026 orders that are not cancelled, GROUP BY the customer id keeps two customers with the same name apart, and HAVING COUNT(DISTINCT substr(placed_on, 1, 7)) >= 2 keeps customers with at least two months. MIN and MAX of the same counted orders give the first and last order.',
+    trace:
+      'For Di, the 2025-12-30 order is outside 2026 and is filtered out. The rest fall in 2026-01, 2026-06, and 2026-12: three months, first 2026-01-02, last 2026-12-31. For Cy, the May order is cancelled, so only February remains: one month, and Cy is left out.',
+    alternative:
+      "strftime('%Y-%m', placed_on) names the month just as well for valid dates. A self-join of orders to an order in a different month answers whether a second month exists but makes the count and the first and last dates harder.",
+    counterexample:
+      'COUNT(DISTINCT placed_on) counts Ed’s two April orders as two. Forgetting the status filter lets Cy qualify through a cancelled order. Grouping by name merges the two Kims into one row with four orders.',
+    transfer:
+      'Marketing now asks for customers who ordered in two consecutive months. Decide how to compare a month with the next one, for example with LAG over each customer’s months. This changed contract is self-reviewed; the original checks do not cover it.',
+  },
 }
 
 export const sqlGuides: Record<string, ReflectionGuide> = {
@@ -918,6 +942,22 @@ export const sqlGuides: Record<string, ReflectionGuide> = {
     plan: ['Write the steps in order.', 'Say what would be lost if the drop ran first.'],
     explanation: ['Explain why the old column is still needed during the UPDATE.', 'Explain the final column order.'],
     example: "I add status TEXT NOT NULL DEFAULT 'new', fill it with a CASE over status_code, then drop status_code.",
+  },
+  'sql-capstone-report': {
+    plan: ['Write the North row you expect.', 'Name the steps: which rows qualify, what is grouped, and how one category is chosen.'],
+    explanation: [
+      'Explain why orders uses COUNT(DISTINCT …).',
+      'Explain how the share is computed and rounded.',
+      'Explain how a tie is settled.',
+    ],
+    example:
+      'WITH lines AS (join order_lines to orders, customers, and products, keeping March 2026 orders that are not cancelled), totals AS (GROUP BY region, category with SUM(quantity * unit_cents) and COUNT(DISTINCT order_id)), ranked AS (add ROW_NUMBER() and SUM(revenue) OVER (PARTITION BY region)) SELECT the first row per region with ROUND(100.0 * revenue / region_total, 1).',
+  },
+  'sql-interview-repeat-customers': {
+    plan: ['Restate the question.', 'List two clarifying questions.', 'Outline the query.'],
+    explanation: ['Explain what makes two orders different months.', 'Explain one boundary you tested and its result.'],
+    example:
+      'I join customers to orders, keep 2026 orders that are not cancelled, group by customer id, keep groups with COUNT(DISTINCT substr(placed_on, 1, 7)) >= 2, and return MIN and MAX of placed_on, ordered by months descending, name, id.',
   },
 }
 

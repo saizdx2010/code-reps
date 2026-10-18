@@ -150,6 +150,11 @@ const statusColumns = [
   ['status', 'TEXT', 1],
 ]
 
+const reportTables =
+  'CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT NOT NULL, region TEXT NOT NULL); CREATE TABLE products (id INTEGER PRIMARY KEY, name TEXT NOT NULL, category TEXT NOT NULL); CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, placed_on TEXT NOT NULL, status TEXT NOT NULL); CREATE TABLE order_lines (id INTEGER PRIMARY KEY, order_id INTEGER NOT NULL, product_id INTEGER NOT NULL, quantity INTEGER NOT NULL, unit_cents INTEGER NOT NULL);'
+const interviewTables =
+  'CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT NOT NULL); CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, placed_on TEXT NOT NULL, status TEXT NOT NULL);'
+
 export const sqlReps: Rep[] = [
   {
     id: 'sql-select-columns',
@@ -4320,6 +4325,157 @@ export const sqlReps: Rep[] = [
         sql: { seed: 'empty', probes: ['INSERT INTO orders (cents) VALUES (750)'], labels: ['an order with only cents'] },
         expected: { probes: ['accepted'], orders: [[1, 750, 'new']], columns: statusColumns },
       },
+    ],
+  },
+  {
+    id: 'sql-capstone-report',
+    title: 'Build a monthly category report',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: reportTables,
+      seeds: {
+        march: {
+          about: 'four customers in three regions, seven orders around March 2026 (one cancelled), and eleven order lines',
+          sql: "INSERT INTO customers VALUES (1,'Ada','North'),(2,'Bo','North'),(3,'Cy','South'),(4,'Di','West'); INSERT INTO products VALUES (1,'Tea Sampler','tea'),(2,'Kettle','ware'),(3,'Green Tea','tea'),(4,'Mug','ware'),(5,'Beans','coffee'); INSERT INTO orders VALUES (10,1,'2026-03-02','paid'),(11,2,'2026-03-15','shipped'),(12,1,'2026-03-20','cancelled'),(13,3,'2026-03-05','paid'),(14,3,'2026-02-27','paid'),(15,2,'2026-04-01','paid'),(16,4,'2026-03-31','paid'); INSERT INTO order_lines VALUES (1,10,1,2,1500),(2,10,2,1,4000),(3,11,3,3,800),(4,11,4,2,900),(5,12,2,5,4000),(6,13,5,4,1200),(7,13,1,1,1500),(8,14,3,10,800),(9,15,2,3,4000),(10,16,4,1,900),(11,11,2,1,900);",
+        },
+        'tied-categories': {
+          about: 'one region whose two categories earn the same in March',
+          sql: "INSERT INTO customers VALUES (1,'Eve','East'); INSERT INTO products VALUES (1,'Beans','coffee'),(2,'Sencha','tea'); INSERT INTO orders VALUES (1,1,'2026-03-10','paid'),(2,1,'2026-03-11','paid'); INSERT INTO order_lines VALUES (1,1,2,2,500),(2,2,1,1,1000);",
+        },
+        'no-march-sales': {
+          about: 'only a cancelled March order and orders in other months',
+          sql: "INSERT INTO customers VALUES (1,'Fay','North'); INSERT INTO products VALUES (1,'Mug','ware'); INSERT INTO orders VALUES (1,1,'2026-03-05','cancelled'),(2,1,'2026-02-28','paid'),(3,1,'2026-04-01','shipped'); INSERT INTO order_lines VALUES (1,1,1,1,900),(2,2,1,1,900),(3,3,1,1,900);",
+        },
+      },
+      compare: 'ordered',
+      columns: ['region', 'category', 'revenue_cents', 'orders', 'share'],
+    },
+    context:
+      "A retail team reviews March 2026 region by region. For each region it wants the product category that earned the most, how many orders it appeared in, and how much of the region's March revenue it made up.",
+    prompt:
+      "Write one SELECT statement that returns region, category, revenue_cents, orders, and share, in that column order, with one row per region: its best-earning product category in March 2026, defined as follows. Count only order lines of orders placed from 2026-03-01 to 2026-03-31 inclusive whose status is not 'cancelled'; a line earns quantity multiplied by unit_cents. revenue_cents is the category's March revenue in that region, orders is the number of different qualifying orders with at least one line in that category, and share is that revenue as a percentage of the region's whole March revenue, rounded to 1 decimal place. The best category has the most revenue; on a tie, the category that comes first in SQLite's default text order. A region with no qualifying revenue is left out. Order by region. Tables: customers(id INTEGER PRIMARY KEY, name TEXT NOT NULL, region TEXT NOT NULL), products(id INTEGER PRIMARY KEY, name TEXT NOT NULL, category TEXT NOT NULL), orders(id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, placed_on TEXT NOT NULL written as 'YYYY-MM-DD', status TEXT NOT NULL: 'paid', 'shipped', or 'cancelled'), and order_lines(id INTEGER PRIMARY KEY, order_id INTEGER NOT NULL, product_id INTEGER NOT NULL, quantity INTEGER NOT NULL, unit_cents INTEGER NOT NULL). Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary:
+        "For each region, report March 2026's best-earning category with its revenue, order count, and share of the region's revenue.",
+      rules: [
+        "Tables: `customers(id, name, region)`, `products(id, name, category)`, `orders(id, customer_id, placed_on, status)`, `order_lines(id, order_id, product_id, quantity, unit_cents)`. placed_on is 'YYYY-MM-DD'; status is 'paid', 'shipped', or 'cancelled'.",
+        "Count only lines of orders placed from 2026-03-01 to 2026-03-31 inclusive whose status is not 'cancelled'. A line earns quantity × unit_cents.",
+        "Per region, the best category has the most revenue; on a tie, the category first in SQLite's default text order. orders counts different qualifying orders with a line in that category.",
+        "share is the category's revenue as a percentage of the region's March revenue, rounded to 1 decimal place. Return `region`, `category`, `revenue_cents`, `orders`, `share`, ordered by region; leave out regions with no March revenue.",
+      ],
+      edgeCases: ['A cancelled March order earns nothing.', 'An order with lines in two categories counts once for each of them.'],
+    },
+    example: { input: 'North earned 6700 from ware in two orders and 5400 from tea in March', output: "('North', 'ware', 6700, 2, 55.4)" },
+    note: 'This capstone combines joins, filters, grouping, windows, and steps. Checks compare rows and their order on fresh databases; they do not establish that the report would stay correct as the data grows, which is part of your self-review.',
+    vocabulary: [{ term: 'Share', meaning: 'a part of a whole, written as a percentage of it' }],
+    planPrompt:
+      'Write the North row you expect and the steps that produce it: which rows qualify, what is grouped, and how the best category is chosen.',
+    starter:
+      '-- March 2026, one row per region:\n-- region, category, revenue_cents, orders, share\nSELECT c.region\nFROM orders AS o\nJOIN customers AS c ON c.id = o.customer_id;\n',
+    hints: [
+      'Work in steps. First, every qualifying order line with its region, category, order, and revenue. Then, revenue and orders per region and category. Last, pick one category per region.',
+      "Count orders with COUNT(DISTINCT …), because one order can have several lines in a category. A window over each region can both number the categories and total the region's revenue.",
+      'In WITH steps: join lines to orders, customers, and products with the date and status filter; group by region and category; add ROW_NUMBER() and SUM() OVER (PARTITION BY region); keep row 1 with ROUND(100.0 * revenue / region total, 1).',
+    ],
+    checks: [
+      {
+        name: "Each region's best March category",
+        input: [],
+        sql: { seed: 'march' },
+        expected: {
+          rows: [
+            ['North', 'ware', 6700, 2, 55.4],
+            ['South', 'coffee', 4800, 1, 76.2],
+            ['West', 'ware', 900, 1, 100],
+          ],
+        },
+      },
+      {
+        name: 'Tied categories by name',
+        input: [],
+        sql: { seed: 'tied-categories' },
+        expected: { rows: [['East', 'coffee', 1000, 1, 50]] },
+      },
+      { name: 'No qualifying March revenue', input: [], sql: { seed: 'no-march-sales' }, expected: { rows: [] } },
+    ],
+  },
+  {
+    id: 'sql-interview-repeat-customers',
+    title: 'SQL interview: find repeat customers',
+    category: 'SQL',
+    format: 'sql',
+    functionName: '',
+    sql: {
+      schema: interviewTables,
+      seeds: {
+        year: {
+          about: 'five customers with orders across 2025 and 2026, one cancelled',
+          sql: "INSERT INTO customers VALUES (1,'Ada'),(2,'Bo'),(3,'Cy'),(4,'Di'),(5,'Ed'); INSERT INTO orders VALUES (1,1,'2026-01-05','paid'),(2,1,'2026-01-20','paid'),(3,1,'2026-03-02','shipped'),(4,2,'2026-02-10','paid'),(5,3,'2026-02-01','paid'),(6,3,'2026-02-28','paid'),(7,3,'2026-05-15','cancelled'),(8,4,'2025-12-30','paid'),(9,4,'2026-01-02','paid'),(10,4,'2026-06-30','paid'),(11,4,'2026-12-31','shipped'),(12,5,'2026-04-01','paid'),(13,5,'2026-04-30','paid');",
+        },
+        'same-name': {
+          about: 'two customers both named Kim, each ordering in two months',
+          sql: "INSERT INTO customers VALUES (2,'Kim'),(1,'Kim'); INSERT INTO orders VALUES (1,2,'2026-03-03','paid'),(2,2,'2026-04-04','paid'),(3,1,'2026-01-01','paid'),(4,1,'2026-02-02','paid');",
+        },
+        empty: { about: 'no customers and no orders', sql: '' },
+      },
+      compare: 'ordered',
+      columns: ['name', 'months', 'first_order', 'last_order'],
+    },
+    context:
+      'Interview task. A marketing lead asks which customers came back in different months of 2026. Before writing SQL, restate the question, ask what counts as an order, and say how you would check your answer.',
+    prompt:
+      "Write one SELECT statement that returns name, months, first_order, and last_order, in that column order, for every customer whose orders that are not 'cancelled' and are placed in 2026 fall in at least two different calendar months. months is the number of different months of 2026 with such an order, and first_order and last_order are the earliest and latest placed_on among those orders. Orders in other years and cancelled orders do not count. Order by months from most to fewest, then name ascending in SQLite's default text order, then customer id ascending. customers has id INTEGER PRIMARY KEY and name TEXT NOT NULL (names can repeat). orders has id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, placed_on TEXT NOT NULL written as 'YYYY-MM-DD', and status TEXT NOT NULL ('paid', 'shipped', or 'cancelled'). Submit a single statement that only reads data; the checks use SQLite and compare row order.",
+    brief: {
+      summary:
+        'List the customers who ordered in at least two different months of 2026, with how many months and their first and last order.',
+      rules: [
+        "`customers(id INTEGER PRIMARY KEY, name TEXT NOT NULL)`; names can repeat. `orders(id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, placed_on TEXT NOT NULL, status TEXT NOT NULL)`; placed_on is 'YYYY-MM-DD'; status is 'paid', 'shipped', or 'cancelled'.",
+        "Only 2026 orders that are not 'cancelled' count. A customer qualifies with such orders in at least two different calendar months.",
+        'Return `name`, `months` (different months), `first_order`, `last_order` (earliest and latest placed_on of the counted orders).',
+        "Order by months descending, then name ascending in SQLite's default text order, then customer id. Submit a single statement that only reads data.",
+      ],
+      edgeCases: [
+        'Two orders in one month count as one month.',
+        'A cancelled order cannot make a second month.',
+        'December 2025 is not part of 2026.',
+      ],
+    },
+    example: { input: 'Ada ordered on 2026-01-05, 2026-01-20, and 2026-03-02', output: "('Ada', 2, '2026-01-05', '2026-03-02')" },
+    note: 'This is an interview round: clarify the question, plan aloud, write the query, then explain one boundary you tested. It is untimed here. Checks compare rows and their order; how you clarified and explained is self-reviewed.',
+    vocabulary: [{ term: 'Calendar month', meaning: 'a month of a particular year, such as 2026-03, regardless of the day' }],
+    planPrompt: 'Restate the question in one sentence, list two questions you would ask the marketing lead, and outline the query.',
+    starter: '-- Clarify, plan, then write one SELECT.\n',
+    hints: [
+      'Settle what counts first: which years, which statuses, and what makes two orders different months.',
+      'The first seven characters of placed_on name the month. Counting different values of that per customer gives the number of months.',
+      'Join customers to orders, keep 2026 orders that are not cancelled, GROUP BY customer id, HAVING COUNT(DISTINCT substr(placed_on, 1, 7)) >= 2, with MIN and MAX of placed_on.',
+    ],
+    checks: [
+      {
+        name: 'Customers with orders in two or more months',
+        input: [],
+        sql: { seed: 'year' },
+        expected: {
+          rows: [
+            ['Di', 3, '2026-01-02', '2026-12-31'],
+            ['Ada', 2, '2026-01-05', '2026-03-02'],
+          ],
+        },
+      },
+      {
+        name: 'Two customers with the same name',
+        input: [],
+        sql: { seed: 'same-name' },
+        expected: {
+          rows: [
+            ['Kim', 2, '2026-01-01', '2026-02-02'],
+            ['Kim', 2, '2026-03-03', '2026-04-04'],
+          ],
+        },
+      },
+      { name: 'No orders', input: [], sql: { seed: 'empty' }, expected: { rows: [] } },
     ],
   },
 ]

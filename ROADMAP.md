@@ -130,7 +130,7 @@ Every check is honest about what it establishes: SQL reps run SQLite's dialect o
 - [x] S8 · Rank and run totals: window functions and top-N per group, with a lesson (`sql-window-functions`) and the `sql-window-functions` journey: places per level, a running balance, then a delayed top two per region; shared ranks and day-over-day changes are practice.
 - [x] S9 · Make it fast: indexes, checked through SQLite's `EXPLAIN QUERY PLAN` (the plan SQLite chose, not speed), with a lesson (`sql-indexes`) and the `sql-indexes` journey: a lookup index, a two-column index whose order matters, then a delayed join that needs both sides indexed; sort-ready and covering indexes are practice.
 - [x] S10 · Evolve a schema: migrations and backfills that preserve rows, with a lesson (`sql-migrations`) and the `sql-migrations` journey: add and backfill a column, rebuild a table to add rules, then a delayed code-to-text migration; renaming and splitting a column are practice. Checks read rows, `pragma_table_info`, and probe inserts.
-- [ ] S11 · Hero: a reporting capstone and a SQL interview round.
+- [x] S11 · Hero: a reporting capstone (best category per region with order counts and shares) and an untimed SQL interview round. The timed interview page still offers only Frontend and Backend rounds.
 
 **Phase 2: Backend** (extends the `backend` track; existing stages and rep IDs stay)
 

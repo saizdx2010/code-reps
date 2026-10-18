@@ -219,4 +219,37 @@ COMMIT;`,
   'sql-migrate-status-codes': `ALTER TABLE orders ADD COLUMN status TEXT NOT NULL DEFAULT 'new';
 UPDATE orders SET status = CASE status_code WHEN 1 THEN 'new' WHEN 2 THEN 'paid' WHEN 3 THEN 'shipped' END;
 ALTER TABLE orders DROP COLUMN status_code;`,
+  'sql-capstone-report': `WITH lines AS (
+  SELECT c.region, p.category, l.order_id, l.quantity * l.unit_cents AS revenue
+  FROM order_lines AS l
+  JOIN orders AS o ON o.id = l.order_id
+  JOIN customers AS c ON c.id = o.customer_id
+  JOIN products AS p ON p.id = l.product_id
+  WHERE o.placed_on BETWEEN '2026-03-01' AND '2026-03-31' AND o.status <> 'cancelled'
+),
+totals AS (
+  SELECT region, category, SUM(revenue) AS revenue_cents, COUNT(DISTINCT order_id) AS orders
+  FROM lines
+  GROUP BY region, category
+),
+ranked AS (
+  SELECT *,
+    ROW_NUMBER() OVER (PARTITION BY region ORDER BY revenue_cents DESC, category) AS n,
+    SUM(revenue_cents) OVER (PARTITION BY region) AS region_total
+  FROM totals
+)
+SELECT region, category, revenue_cents, orders, ROUND(100.0 * revenue_cents / region_total, 1) AS share
+FROM ranked
+WHERE n = 1
+ORDER BY region;`,
+  'sql-interview-repeat-customers': `SELECT c.name,
+  COUNT(DISTINCT substr(o.placed_on, 1, 7)) AS months,
+  MIN(o.placed_on) AS first_order,
+  MAX(o.placed_on) AS last_order
+FROM customers AS c
+JOIN orders AS o ON o.customer_id = c.id
+WHERE o.placed_on BETWEEN '2026-01-01' AND '2026-12-31' AND o.status <> 'cancelled'
+GROUP BY c.id
+HAVING COUNT(DISTINCT substr(o.placed_on, 1, 7)) >= 2
+ORDER BY months DESC, c.name, c.id;`,
 }

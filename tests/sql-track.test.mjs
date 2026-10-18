@@ -654,6 +654,24 @@ test('S10 rebuild checks catch an update without a rebuild, a leftover table, an
   ])
 })
 
+test('S11 capstone checks catch cancelled orders, counted lines, integer shares, and shared ranks', () => {
+  const base = solution('sql-capstone-report')
+  assertCaught('sql-capstone-report', [
+    [base.replace(" AND o.status <> 'cancelled'", ''), "Each region's best March category"],
+    [base.replace('COUNT(DISTINCT order_id)', 'COUNT(*)'), "Each region's best March category"],
+    [base.replace('100.0 * revenue_cents', '100 * revenue_cents'), "Each region's best March category"],
+    [base.replace('ROW_NUMBER()', 'RANK()').replace('revenue_cents DESC, category)', 'revenue_cents DESC)'), 'Tied categories by name'],
+    [base.replace("'2026-03-31'", "'2026-03-30'"), "Each region's best March category"],
+  ])
+  const interview = solution('sql-interview-repeat-customers')
+  assertCaught('sql-interview-repeat-customers', [
+    [interview.replaceAll('substr(o.placed_on, 1, 7)', 'o.placed_on'), 'Customers with orders in two or more months'],
+    [interview.replace(" AND o.status <> 'cancelled'", ''), 'Customers with orders in two or more months'],
+    [interview.replace('GROUP BY c.id', 'GROUP BY c.name'), 'Two customers with the same name'],
+    [interview.replace("o.placed_on BETWEEN '2026-01-01' AND '2026-12-31' AND ", ''), 'Customers with orders in two or more months'],
+  ])
+})
+
 test('the S1 journey keeps recall distinct from its guided and independent reps', () => {
   const journey = journeys.find(item => item.id === 'sql-reading')
   assert.deepEqual(

@@ -495,6 +495,13 @@ export const paths = [
         recap: 'You can now migrate a schema step by step without losing rows.',
         repIds: ['sql-add-column', 'sql-rename-column', 'sql-split-name', 'sql-rebuild-table', 'sql-migrate-status-codes'],
       },
+      {
+        title: 'Bring it together',
+        description:
+          'Build a multi-table report with steps and windows, then answer an interview question from clarification to explanation.',
+        recap: 'You can now combine joins, grouping, windows, and steps in one report, and work through a SQL interview question.',
+        repIds: ['sql-capstone-report', 'sql-interview-repeat-customers'],
+      },
     ] satisfies readonly PathStage[],
   },
   {

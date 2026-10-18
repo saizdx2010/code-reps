@@ -371,6 +371,8 @@ export const indonesianGlossary: Record<string, string> = {
   OFFSET: 'klausa yang melewati sejumlah baris hasil terurut sebelum LIMIT mengambil sebagian',
   Page: 'satu potongan berukuran tetap dari daftar terurut',
   'Calculated column': 'kolom hasil yang dihitung dari kolom lain pada baris yang sama',
+  Share: 'bagian dari keseluruhan, ditulis sebagai persentase dari keseluruhan itu',
+  'Calendar month': 'bulan pada tahun tertentu, seperti 2026-03, tanpa memandang tanggalnya',
   Migration: 'skrip yang mengubah skema database dari satu versi ke versi berikutnya',
   Backfill: 'mengisi kolom baru untuk baris yang sudah ada',
   'ALTER TABLE': 'pernyataan yang mengubah tabel yang sudah ada, misalnya menambah atau mengganti nama kolom',

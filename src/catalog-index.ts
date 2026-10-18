@@ -307,6 +307,8 @@ const repRows: [string, string, number, Rep['format'] | 0, string, number, numbe
   ["sql-split-name","Fill new columns from existing text",38,"sql","44195a60ec89ea29",3,96,3,34],
   ["sql-rebuild-table","Add a rule to an existing table",38,"sql","9bd1af30f2ca41dd",3,117,3,34],
   ["sql-migrate-status-codes","Replace codes with readable values",38,"sql","31d88f1ef675d29d",3,89,3,34],
+  ["sql-capstone-report","Build a monthly category report",38,"sql","1fcc90695aad4f90",3,150,3,34],
+  ["sql-interview-repeat-customers","SQL interview: find repeat customers",38,"sql","9582566b39bfa91f",3,142,3,34],
 ]
 
 export const repIndex: RepSummary[] = repRows.map(([id, title, category, format, starterHash, hintTotal, briefWords, checkTotal, source]) => ({

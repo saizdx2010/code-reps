@@ -315,6 +315,8 @@ export const repLevels: Record<string, RepLevel> = {
   'sql-split-name': 2,
   'sql-rebuild-table': 3,
   'sql-migrate-status-codes': 2,
+  'sql-capstone-report': 3,
+  'sql-interview-repeat-customers': 3,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */
