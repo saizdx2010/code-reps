@@ -1,5 +1,8 @@
 // Difficulty is kept beside the rep catalog rather than inside each rep, so content branches never edit this map.
 // Every rep in the registry needs an entry; tests/rep-levels.test.mjs names any missing or unknown IDs.
+// `yarn content:index` copies each level into the generated startup catalog, and repLevel reads it from there, so the
+// app does not ship this map at startup. tests/catalog-index.test.mjs fails when the catalog is stale.
+import { repSummaryById } from './rep-index.ts'
 
 export type RepLevel = 1 | 2 | 3
 type RepLevelLabel = 'Beginner' | 'Intermediate' | 'Advanced'
@@ -322,11 +325,15 @@ export const repLevels: Record<string, RepLevel> = {
   'backend-request-line': 2,
   'backend-header-value': 2,
   'backend-read-json-body': 2,
+  'next-warmer-day': 3,
+  'top-k-frequent-tags': 3,
+  'course-order': 3,
+  'longest-shared-sequence': 3,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */
 export function repLevel(id: string): RepLevel | undefined {
-  return Object.hasOwn(repLevels, id) ? repLevels[id] : undefined
+  return repSummaryById.get(id)?.level
 }
 
 /** The visible label for a rep, or undefined when it has no level yet. */
@@ -343,10 +350,3 @@ export function stageLevelRange(repIds: readonly string[]): string | undefined {
   const high = Math.max(...levels) as RepLevel
   return low === high ? repLevelLabels[low] : `${repLevelLabels[low]}–${repLevelLabels[high]}`
 }
-
-Object.assign(repLevels, {
-  'next-warmer-day': 3,
-  'top-k-frequent-tags': 3,
-  'course-order': 3,
-  'longest-shared-sequence': 3,
-})
