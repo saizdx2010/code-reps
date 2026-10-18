@@ -59,6 +59,9 @@ const practicalTopics: Record<string, string> = {
 }
 const problemStages = paths.find(path => path.id === 'algorithms-data-structures')!.stages
 const sqlStages = paths.find(path => path.id === 'sql')!.stages
+const backendStages = paths.find(path => path.id === 'backend')!.stages
+// Backend stages whose reps use the 'Backend services' category; each stage title is its Library topic.
+const backendServiceTopics = ['What a request is']
 const lookupReps = new Set([
   'most-frequent-number',
   'first-unique-character',
@@ -72,6 +75,8 @@ export function catalogTopic(rep: Pick<RepSummary, 'id' | 'category'>): string {
   if (rep.id === 'simplify-file-path') return 'Stacks and queues'
   if (rep.category === 'SQL' || rep.id.startsWith('sqlite-'))
     return sqlStages.find(stage => (stage.repIds as readonly string[]).includes(rep.id))?.title ?? 'SQL'
+  if (rep.category === 'Backend services')
+    return backendStages.find(stage => (stage.repIds as readonly string[]).includes(rep.id))?.title ?? 'Requests and validation'
   if (rep.category.startsWith('Algorithm ') || rep.category === 'Problem-solving patterns') {
     return problemStages.find(stage => (stage.repIds as readonly string[]).includes(rep.id))?.title ?? 'Problem solving'
   }
@@ -118,7 +123,7 @@ export const catalogAreas: { title: string; topics: string[] }[] = [
     ],
   },
   { title: 'Frontend', topics: ['Interface logic', 'Accessible interactions', 'Building a browser feature', 'Frontend projects'] },
-  { title: 'Backend & data', topics: ['Requests and validation', 'Backend projects'] },
+  { title: 'Backend & data', topics: ['Requests and validation', ...backendServiceTopics, 'Backend projects'] },
   { title: 'Databases & SQL', topics: sqlStages.map(stage => stage.title) },
   { title: 'Async & runtime', topics: ['Async and timing'] },
   { title: 'Patterns & resources', topics: ['Shared resources and events'] },

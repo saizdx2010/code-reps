@@ -510,6 +510,13 @@ export const paths = [
     description: 'Check input, return predictable results, and keep retries, caches, and shared resources safe.',
     stages: [
       {
+        title: 'What a request is',
+        description:
+          'Split a target into path and query, decode a query, read the request line and headers, and accept a JSON body only when the request declares it.',
+        recap: 'You can now read the parts of a request: method, path, query, headers, and body.',
+        repIds: ['backend-split-target', 'backend-decode-query', 'backend-request-line', 'backend-header-value', 'backend-read-json-body'],
+      },
+      {
         title: 'Check one value',
         description: 'Accept a value only when it is the right type and in range, using the conditions from Foundations.',
         recap: 'You can now check one value against a rule and reject the rest.',

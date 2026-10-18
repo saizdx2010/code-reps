@@ -27,6 +27,7 @@ import { reactDepth, reactGuides } from './review-react.ts'
 import { richDepth, richGuides } from './review-rich.ts'
 import { sqliteDepth, sqliteGuides } from './review-sqlite.ts'
 import { sqlDepth, sqlGuides } from './review-sql.ts'
+import { backendDepth, backendGuides } from './review-backend.ts'
 import { testingJourneyDepth, testingJourneyGuides } from './review-testing-journey.ts'
 import { typescriptDepth, typescriptGuides } from './review-typescript-depth.ts'
 import { validationDepth, validationGuides } from './review-validation.ts'
@@ -37,6 +38,7 @@ export const reviews: Review[] = [
   { depth: asyncRuntimeDepth, guides: asyncRuntimeGuides },
   { depth: sqliteDepth, guides: sqliteGuides },
   { depth: sqlDepth, guides: sqlGuides },
+  { depth: backendDepth, guides: backendGuides },
   { depth: journeyPracticeDepth, guides: journeyPracticeGuides },
   { depth: connectedFeatureDepth, guides: connectedFeatureGuides },
   { depth: testingJourneyDepth, guides: testingJourneyGuides },

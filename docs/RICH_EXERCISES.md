@@ -32,6 +32,8 @@ These checks establish the stated ARIA, focus, and behavior contract only. They 
 
 The ticket exercise tests a pure request handler with parsed request objects in the existing worker. It does not start an HTTP service, parse URL query strings, or create a database. This makes the stated handler contract playable offline while keeping network/service setup outside this rep's scope.
 
+`src/backend-service-reps.ts` holds the Backend track's service stages, with reviews in `src/review-backend.ts`, lessons in `src/backend-knowledge.ts`, references in `tests/fixtures/backend-solutions.mjs`, and `tests/backend-track.test.mjs`, which names the check that catches each common mistake. Each rep is a pure function over request-shaped values: target and query strings, a request line, `[name, value]` header pairs, and request objects with a string body. The first stage reads the parts of a request. Checks call the function directly, so they establish the stated parsing and status rules on authored values, not a real HTTP parser, socket reads, body streaming, or Content-Length handling.
+
 ## Verification
 
 Lint, build/typecheck, and all 65 tests pass. DOM tests use jsdom to exercise the same generated frame script; transport tests cover source/token matching, cleanup, cancellation, timeout, and malformed feedback.

@@ -317,7 +317,6 @@ test('S5 correlated checks catch an uncorrelated average and correlating on the 
 })
 
 test('S5 missing-work checks catch NOT IN over a NULL and an inner join', () => {
-  const base = solution('sql-students-without-work')
   assertCaught('sql-students-without-work', [
     [reps.find(rep => rep.id === 'sql-students-without-work').starter, 'A guest submission does not hide anyone'],
     [

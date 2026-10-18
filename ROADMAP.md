@@ -134,7 +134,7 @@ Every check is honest about what it establishes: SQL reps run SQLite's dialect o
 
 **Phase 2: Backend** (extends the `backend` track; existing stages and rep IDs stay)
 
-- [ ] B1 · What a request is: method, path, query, headers, and body.
+- [x] B1 · What a request is: method, path, query, headers, and body, as the Backend track's new first stage, with a lesson (`http-request-anatomy`) and the `request-anatomy` journey: split a target, decode a query string, then a delayed JSON-body reader; the request line and case-insensitive headers are practice. Handlers are functions over strings, header pairs, and request objects, not a live server.
 - [ ] B2 · Routing: path parameters, and 404 versus 405.
 - [ ] B3 · Authorization: session expiry, roles, and ownership checks.
 - [ ] B4 · Concurrent writes: version numbers and lost updates.

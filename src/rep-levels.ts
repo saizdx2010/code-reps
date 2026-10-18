@@ -317,6 +317,11 @@ export const repLevels: Record<string, RepLevel> = {
   'sql-migrate-status-codes': 2,
   'sql-capstone-report': 3,
   'sql-interview-repeat-customers': 3,
+  'backend-split-target': 1,
+  'backend-decode-query': 2,
+  'backend-request-line': 2,
+  'backend-header-value': 2,
+  'backend-read-json-body': 2,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

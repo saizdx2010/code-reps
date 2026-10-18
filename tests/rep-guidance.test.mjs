@@ -97,7 +97,7 @@ test('a track opens with a Beginner bridge rep', () => {
 test('an Intermediate track rep raises a non-blocking checkpoint until a Beginner rep of that track is done', () => {
   for (const [trackId, bridge] of [
     ['frontend', 'frontend-screen-message'],
-    ['backend', 'backend-check-quantity'],
+    ['backend', 'backend-split-target'],
   ]) {
     const target = trackReps(trackOf(trackId)).find(id => repLevel(id) === 2)
     const beginnerElsewhere = reps.map(rep => rep.id).find(id => repLevel(id) === 1 && !trackReps(trackOf(trackId)).includes(id))
@@ -115,4 +115,5 @@ test('the track rule skips Foundations, Beginner reps and reps the learner has a
   assert.equal(getRepGuidance(foundationsIntermediate, ['write-functions']).checkpoint, undefined)
   assert.equal(getRepGuidance('frontend-screen-message', []).checkpoint, undefined)
   assert.equal(getRepGuidance('backend-check-quantity', []).checkpoint, undefined)
+  assert.equal(getRepGuidance('backend-split-target', []).checkpoint, undefined)
 })

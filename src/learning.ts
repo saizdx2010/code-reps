@@ -389,6 +389,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'request-anatomy',
+    title: 'Read the parts of a request',
+    guided: 'backend-split-target',
+    independent: 'backend-decode-query',
+    recall: 'backend-read-json-body',
+    practice: ['backend-request-line', 'backend-header-value'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

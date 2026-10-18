@@ -3,6 +3,7 @@ import { browserStateSkill } from './browser-state-knowledge.ts'
 import { dsaSkills } from './dsa-knowledge.ts'
 import { practicalSkills } from './practical-knowledge.ts'
 import { sqlSkills } from './sql-knowledge.ts'
+import { backendSkills } from './backend-knowledge.ts'
 import { q } from './knowledge-question.ts'
 export type Question = {
   completion?: boolean
@@ -956,6 +957,7 @@ export const skills: Skill[] = [
   browserStateSkill,
   ...dsaSkills,
   ...sqlSkills,
+  ...backendSkills,
 ]
 export const skillById = (id: string) => skills.find(skill => skill.id === id)
 export const contentVersion = 7
@@ -986,7 +988,7 @@ export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[
     ],
   },
   { id: 'frontend', title: 'Frontend', skillIds: ['frontend', 'react'] },
-  { id: 'backend', title: 'Backend & data', skillIds: ['validation', 'http'] },
+  { id: 'backend', title: 'Backend & data', skillIds: ['http-request-anatomy', 'validation', 'http'] },
   {
     id: 'sql',
     title: 'Databases & SQL',

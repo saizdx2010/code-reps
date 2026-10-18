@@ -39,4 +39,5 @@ export const repSourceLoaders: Record<RepSourceName, RepSourceLoader> = {
   'ai-review-reps': source(() => import('./ai-review-reps.ts'), module => ({ reps: module.aiReviewReps })),
   'practical-journey-reps': source(() => import('./practical-journey-reps.ts'), module => ({ reps: module.practicalJourneyReps })),
   'sql-reps': source(() => import('./sql-reps.ts'), module => ({ reps: module.sqlReps })),
+  'backend-service-reps': source(() => import('./backend-service-reps.ts'), module => ({ reps: module.backendServiceReps })),
 }
