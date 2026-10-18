@@ -10,8 +10,8 @@ export type TrailNode =
   | { kind: 'project'; id: string; repId: string; title: string; reason: string; state: 'done' | 'open' }
 export type TrailStage = {
   title: string
-  description: string
-  recap?: string
+  /** Fixed text for a stage the trail adds itself, such as projects; authored stages take theirs from src/path-text.ts. */
+  description?: string
   nodes: TrailNode[]
   covered: boolean
   /** The track that owns this stage's reps, when the stage is a link to it. */
@@ -74,8 +74,6 @@ export function buildTrail(pathId: string, input: TrailInput): { stages: TrailSt
     const repNodes = nodes.filter(node => node.kind === 'rep')
     return {
       title: stage.title,
-      description: stage.description,
-      recap: stage.recap,
       nodes,
       covered,
       ...(home ? { coveredBy: { id: home, title: paths.find(item => item.id === home)!.title } } : {}),

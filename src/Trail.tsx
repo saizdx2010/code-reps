@@ -3,6 +3,7 @@ import { StatusChip } from './Layout'
 import { preloadEditor } from './editor-loader'
 import { stageLabels } from './learning.ts'
 import { repLevelLabel, stageLevelRange } from './rep-levels.ts'
+import type { StageText } from './path-text'
 import type { TrailNode, TrailStage } from './trail-map'
 
 type Props = {
@@ -12,6 +13,8 @@ type Props = {
   onOpenLesson: (skillId: string) => void
   /** Opens the track that owns a linked stage, such as Foundations. */
   onOpenTrack?: (pathId: string) => void
+  /** Each stage's description and recap by title. They load after the trail, so a stage may have none yet. */
+  text?: Readonly<Record<string, StageText>>
 }
 
 const stateLabels: Record<string, string> = {
@@ -35,16 +38,16 @@ const markerIcon = (node: TrailNode) =>
           : 'circle'
 type Stage = Props['stages'][number]
 const stageDone = (stage: Stage) => stage.total > 0 && stage.done === stage.total
-const stageSummary = (stage: Stage) =>
-  stageDone(stage) && stage.recap
-    ? stage.recap
+const stageSummary = (stage: Stage, text?: StageText) =>
+  stageDone(stage) && text?.recap
+    ? text.recap
     : stage.coveredBy
       ? `Covered in ${stage.coveredBy.title}. Open it to revisit these reps here.`
-      : stage.description
+      : (text?.description ?? stage.description)
 const levelRange = (stage: TrailStage) => stageLevelRange(stage.nodes.flatMap(node => (node.kind === 'lesson' ? [] : [node.repId])))
 
 /** A path drawn as stages of connected nodes: lessons before the reps that use them, then recall and projects. */
-export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenTrack }: Props) {
+export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenTrack, text }: Props) {
   return (
     <ol className="trail path-stages">
       {stages.map((stage, index) => (
@@ -63,7 +66,7 @@ export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenTrack }
               </span>
               <div>
                 <h3>{stage.title}</h3>
-                <p>{stageSummary(stage)}</p>
+                {stageSummary(stage, text?.[stage.title]) && <p>{stageSummary(stage, text?.[stage.title])}</p>}
                 {levelRange(stage) && <StatusChip>{levelRange(stage)}</StatusChip>}
               </div>
               <span className="trail-stage-count">

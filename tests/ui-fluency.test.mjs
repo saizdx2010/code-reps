@@ -80,22 +80,29 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
     const { createElement } = await import('react')
     const stage = {
       title: 'A stage',
-      description: 'Work with values.',
-      recap: 'You can now declare values.',
       nodes: [],
       covered: false,
       done: 0,
       total: 2,
       current: false,
     }
-    const renderTrail = stage =>
-      renderToStaticMarkup(createElement(Trail, { stages: [stage], evidence: () => '', onOpenRep() {}, onOpenLesson() {} }))
-    assert.ok(!renderTrail(stage).includes(stage.recap))
-    assert.ok(!renderTrail({ ...stage, done: 1 }).includes(stage.recap))
-    const completedTrail = new JSDOM(renderTrail({ ...stage, done: 2 }))
-    assert.ok(completedTrail.window.document.querySelector('summary').textContent.includes(stage.recap))
-    assert.ok(!completedTrail.window.document.querySelector('summary').textContent.includes(stage.description))
-    assert.ok(!renderTrail({ ...stage, done: 2, recap: undefined }).includes('You can now'))
+    const text = { 'A stage': { description: 'Work with values.', recap: 'You can now declare values.' } }
+    const renderTrail = (stage, stageText) =>
+      renderToStaticMarkup(
+        createElement(Trail, { stages: [stage], text: stageText, evidence: () => '', onOpenRep() {}, onOpenLesson() {} }),
+      )
+    const { recap, description } = text['A stage']
+    assert.ok(!renderTrail(stage, text).includes(recap))
+    assert.ok(renderTrail(stage, text).includes(description))
+    assert.ok(!renderTrail({ ...stage, done: 1 }, text).includes(recap))
+    const completedTrail = new JSDOM(renderTrail({ ...stage, done: 2 }, text))
+    assert.ok(completedTrail.window.document.querySelector('summary').textContent.includes(recap))
+    assert.ok(!completedTrail.window.document.querySelector('summary').textContent.includes(description))
+    // Before the text loads, or if it cannot, a stage keeps its title and progress and shows no summary.
+    const untexted = new JSDOM(renderTrail({ ...stage, done: 2 }, undefined))
+    assert.ok(untexted.window.document.querySelector('summary').textContent.includes('A stage'))
+    assert.equal(untexted.window.document.querySelector('summary p'), null)
+    untexted.window.close()
     completedTrail.window.close()
     const { act } = await import('react')
     const { createRoot } = await import('react-dom/client')

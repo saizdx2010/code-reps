@@ -9,6 +9,7 @@ import { Trail } from './Trail'
 import type { buildTrail } from './trail-map'
 import { paths } from './path'
 import { pathIntroductions } from './path-introductions'
+import { stageTexts, trackDescriptions } from './path-text'
 import type { LearnerStart } from './learning'
 
 type PathId = (typeof paths)[number]['id']
@@ -69,7 +70,7 @@ export function PathsPage(props: Props) {
     return (
       <button key={id} type="button" className={wide ? 'track-root' : undefined} aria-pressed={pathId === id} onClick={() => choose(id)}>
         <strong>{path.title}</strong>
-        <span>{path.description}</span>
+        <span>{trackDescriptions[path.id]}</span>
         <small>
           {count(id)}
           {goalPathId === id ? ' · Your goal' : ''}
@@ -139,7 +140,11 @@ export function PathsPage(props: Props) {
           <h2 id="path-title" tabIndex={-1}>
             {refresher ? 'Return to problem solving' : selectedPath.title}
           </h2>
-          <p>{refresher ? 'Start with guided problems, then revisit skills without hints after a break.' : selectedPath.description}</p>
+          <p>
+            {refresher
+              ? 'Start with guided problems, then revisit skills without hints after a break.'
+              : trackDescriptions[selectedPath.id]}
+          </p>
           <div className="path-goal">
             <p ref={goalLine} tabIndex={-1} role="status">
               {goalPathId === selectedPath.id ? 'Your current learning goal.' : 'Browsing this track does not change your learning goal.'}
@@ -196,6 +201,7 @@ export function PathsPage(props: Props) {
       </details>
       <Trail
         stages={trail.stages}
+        text={stageTexts[selectedPath.id]}
         evidence={evidence}
         onOpenRep={openRep}
         onOpenLesson={openLesson}

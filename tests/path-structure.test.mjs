@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { firstPath, migratePathId, paths, retiredPathIds } from '../src/path.ts'
 import { pathIntroductions } from '../src/path-introductions.ts'
+import { stageTexts } from '../src/path-text.ts'
 import { foundationsPathId, pathApplications, stageHomeTrack, trackGroups } from '../src/curriculum.ts'
 import { emptyFluency, parseFluency } from '../src/fluency.ts'
 import { journeys } from '../src/learning.ts'
@@ -190,11 +191,11 @@ test('recognition practice reuses valid tasks with mixed journeys and unlabeled 
   const grids = path.stages.find(stage => stage.title === 'Find your way across a floor plan')
   assert.equal(grids.title, 'Find your way across a floor plan')
   assert.deepEqual(grids.repIds, ['grid-open-neighbours', 'grid-count-rooms', 'grid-fewest-steps'])
-  assert.ok(grids.description && grids.recap)
+  assert.ok(stageTexts[path.id][grids.title].description && stageTexts[path.id][grids.title].recap)
   const puzzle = path.stages.find(stage => stage.title === 'Solve a two-part puzzle')
   assert.equal(puzzle.title, 'Solve a two-part puzzle')
   assert.deepEqual(puzzle.repIds, ['puzzle-parse-part-one', 'puzzle-adapt-part-two'])
-  assert.ok(puzzle.description && puzzle.recap)
+  assert.ok(stageTexts[path.id][puzzle.title].description && stageTexts[path.id][puzzle.title].recap)
   const lesson = skills.find(skill => skill.id === 'recognize-the-pattern')
   assert.ok(pathIntroductions[path.id].body.includes(lesson.title))
   assert.ok(lesson.questions.length >= 6)

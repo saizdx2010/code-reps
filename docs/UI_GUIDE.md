@@ -14,7 +14,7 @@ Use US English: **practice** is both a noun and a verb. Write directly to the le
 - **Lesson:** an explanation with examples and knowledge checks.
 - **Due recall:** a scheduled chance to apply a previously practiced skill after a gap. It comes first in recommendations. Avoid “overdue assignment” or “mastery test”.
 
-A completed stage replaces its description with a short recap of the work practiced. It does not establish independent fluency or retention. The editor header follows the active project file.
+A completed stage replaces its description with a short recap of the work practiced. Descriptions and recaps load just after the trail; until they arrive, or if they cannot load, a stage shows its title, level, and progress. It does not establish independent fluency or retention. The editor header follows the active project file.
 
 Progress and Journal share readable local dates and singular/plural labels. A zero Progress stat explains which practice unlocks it. Library topics are presentation labels shared by filtering and grouping; authored categories, rep IDs, and checked answers stay unchanged.
 
