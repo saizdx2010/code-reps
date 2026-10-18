@@ -523,6 +523,19 @@ export const paths = [
         repIds: ['backend-check-quantity'],
       },
       {
+        title: 'Route a request',
+        description:
+          'Match path patterns and read their parameters, choose between 404 and 405, clean and build paths safely, and pick the most specific route.',
+        recap: 'You can now route a request to its handler and answer precisely when no route fits.',
+        repIds: [
+          'backend-match-route',
+          'backend-route-request',
+          'backend-normalize-path',
+          'backend-build-path',
+          'backend-route-specificity',
+        ],
+      },
+      {
         title: 'Handle untrusted input',
         description: 'Validate values at runtime, from a guided rep to a fresh recall task.',
         recap: 'You can now validate untrusted values before using them.',

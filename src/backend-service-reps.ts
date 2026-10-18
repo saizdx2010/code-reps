@@ -5,6 +5,15 @@ import type { Rep } from './rep-types.ts'
 
 const jsonPadding = (length: number) => '{"a":1}' + ' '.repeat(length - 7)
 
+const orderRoutes = [
+  { method: 'GET', pattern: '/orders', name: 'list' },
+  { method: 'POST', pattern: '/orders', name: 'create' },
+  { method: 'GET', pattern: '/orders/new', name: 'new-form' },
+  { method: 'GET', pattern: '/orders/:id', name: 'show' },
+  { method: 'DELETE', pattern: '/orders/:id', name: 'remove' },
+  { method: 'POST', pattern: '/orders/:id/cancel', name: 'cancel' },
+]
+
 export const backendServiceReps: Rep[] = [
   {
     id: 'backend-split-target',
@@ -528,6 +537,373 @@ export const backendServiceReps: Rep[] = [
         input: [{ method: 'POST', headers: [['Content-Type', 'application/json']], body: '"hi"' }],
         expected: { ok: false, status: 400, error: 'NOT_AN_OBJECT' },
       },
+    ],
+  },
+  {
+    id: 'backend-match-route',
+    title: 'Match a path pattern',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'A router compares each request path with route patterns such as /orders/:id. A segment that starts with ":" is a path parameter: it matches any one segment and hands its text to the handler.',
+    prompt:
+      'Implement matchRoute(pattern, path). Split both at every "/". They match when they have the same number of segments and, at each position, the pattern segment either equals the path segment exactly or is a parameter: a segment that starts with ":", which matches any non-empty path segment. Return an object that maps each parameter name, without the ":", to its path segment ({} when the pattern has no parameters), or null when they do not match. Do not decode segments.',
+    brief: {
+      summary: 'Implement matchRoute(pattern, path) and return the parameters or null.',
+      rules: [
+        'Split both at every "/"; they need the same number of segments.',
+        'At each position the pattern segment equals the path segment exactly, or is a parameter: a segment that starts with ":", which matches any non-empty path segment.',
+        'Return an object that maps each parameter name, without the ":", to its path segment ({} when the pattern has no parameters), or null when they do not match.',
+      ],
+      edgeCases: ['A trailing "/" makes an extra, empty segment.', 'Do not decode segments.'],
+    },
+    example: { input: 'matchRoute("/orders/:id", "/orders/42")', output: '{id: "42"}' },
+    note: 'pattern and path both start with "/" and have at most 200 characters. Parameter names are letters and digits, unique within a pattern. Literal segments compare exactly, including letter case. These are strings passed to your function, not a live router.',
+    vocabulary: [
+      { term: 'Route pattern', meaning: 'a path with placeholders, such as /orders/:id, that many concrete paths can match' },
+      { term: 'Path parameter', meaning: 'a placeholder segment such as :id that captures the matching part of the path' },
+    ],
+    planPrompt:
+      'Split /users/:id/orders and /users/7/orders into segments side by side. Which pairs must be equal, and what does :id capture? What happens with /users/7/orders/?',
+    starter:
+      'function matchRoute(pattern: string, path: string): Record<string, string> | null {\n  // Compare the segments position by position.\n  return null\n}\n',
+    functionName: 'matchRoute',
+    preserveInput: true,
+    hints: [
+      'Splitting "/orders/42" at "/" gives ["", "orders", "42"]; compare the two lists position by position.',
+      'Different segment counts can never match, so check the lengths before anything else.',
+      'For a ":" segment, reject an empty path segment and otherwise record it under the name; any other segment must be equal.',
+    ],
+    checks: [
+      { name: 'Matches the example', input: ['/orders/:id', '/orders/42'], expected: { id: '42' } },
+      { name: 'Matches a literal pattern with no parameters', input: ['/health', '/health'], expected: {} },
+      {
+        name: 'Captures two parameters',
+        input: ['/users/:userId/orders/:orderId', '/users/7/orders/42'],
+        expected: { userId: '7', orderId: '42' },
+      },
+      { name: 'Compares literal segments exactly', input: ['/orders/:id', '/Orders/42'], expected: null },
+      { name: 'Rejects a longer path', input: ['/orders/:id', '/orders/42/items'], expected: null },
+      { name: 'Rejects a shorter path', input: ['/orders/:id', '/orders'], expected: null },
+      { name: 'Treats a trailing slash as an extra segment', input: ['/orders', '/orders/'], expected: null },
+      { name: 'Does not fill a parameter with an empty segment', input: ['/orders/:id', '/orders/'], expected: null },
+      { name: 'Rejects a different literal after a parameter', input: ['/users/:id/orders', '/users/7/invoices'], expected: null },
+      { name: 'Matches the root path', input: ['/', '/'], expected: {} },
+      { name: 'Keeps encoded text in a parameter', input: ['/files/:name', '/files/a%20b'], expected: { name: 'a%20b' } },
+    ],
+  },
+  {
+    id: 'backend-route-request',
+    title: 'Choose 404 or 405',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'A router holds a list of routes, each a method, a pattern, and a handler name. For a request it must pick the handler, or say whether the path does not exist at all (404) or exists but not for this method (405).',
+    prompt:
+      'Implement routeRequest(routes, method, path). Each route has method, pattern, and name. A pattern matches a path when both split at "/" into the same number of segments and each pattern segment equals the path segment exactly or starts with ":", a parameter that matches any non-empty segment. Return {status: 200, route: name, params} for the first route in list order whose method equals method and whose pattern matches path; params maps each parameter name without ":" to its segment. A HEAD request with no matching HEAD route uses the first matching GET route instead. When no route answers but some patterns match the path, return {status: 405, allow}, where allow lists the methods of those routes once each, plus "HEAD" when "GET" is among them, sorted alphabetically. Otherwise return {status: 404}. Do not change routes.',
+    brief: {
+      summary: 'Implement routeRequest(routes, method, path) and return 200 with the handler, 405 with the allowed methods, or 404.',
+      rules: [
+        'A pattern matches a path when both split at "/" into the same number of segments and each pattern segment equals the path segment exactly or starts with ":", a parameter that matches any non-empty segment.',
+        'Return {status: 200, route: name, params} for the first route in list order whose method equals method and whose pattern matches path; params maps each parameter name without ":" to its segment.',
+        'A HEAD request with no matching HEAD route uses the first matching GET route instead.',
+        'When no route answers but some patterns match the path, return {status: 405, allow}: the methods of those routes once each, plus "HEAD" when "GET" is among them, sorted alphabetically.',
+        'Otherwise return {status: 404}.',
+      ],
+      edgeCases: ['Methods compare exactly, including letter case.', 'Do not change routes.'],
+    },
+    example: {
+      input:
+        'routeRequest([{method: "GET", pattern: "/orders/:id", name: "show"}, {method: "DELETE", pattern: "/orders/:id", name: "remove"}], "PUT", "/orders/42")',
+      output: '{status: 405, allow: ["DELETE", "GET", "HEAD"]}',
+    },
+    note: 'routes has at most 50 entries. Patterns and paths start with "/" and have at most 200 characters, and segments are not decoded. A real 405 response sends allow as an Allow header; here it is a field. These are values passed to your function, not a live router.',
+    vocabulary: [
+      { term: 'Not Found (404)', meaning: 'the response when no resource exists at the requested path' },
+      {
+        term: 'Method Not Allowed (405)',
+        meaning: 'the response when the path exists but not for this method; it lists the methods that would work',
+      },
+    ],
+    planPrompt:
+      'With GET /orders and POST /orders registered, predict the result for PUT /orders, HEAD /orders, and GET /customers, and say which question decides each one.',
+    starter:
+      'type Route = { method: string; pattern: string; name: string }\ntype Routed =\n  | { status: 200; route: string; params: Record<string, string> }\n  | { status: 405; allow: string[] }\n  | { status: 404 }\n\nfunction routeRequest(routes: Route[], method: string, path: string): Routed {\n  // Match the path first, then the method.\n  return { status: 404 }\n}\n',
+    functionName: 'routeRequest',
+    preserveInput: true,
+    hints: [
+      'First collect the routes whose patterns match the path, in list order; the method only chooses among those.',
+      'Look for the request method first; only a HEAD request falls back to GET, and only after no HEAD route matched.',
+      'No answer but some matching patterns means 405. A Set removes repeated methods; add HEAD when GET is in it, then sort.',
+    ],
+    checks: [
+      {
+        name: 'Routes the request to the matching handler',
+        input: [orderRoutes, 'GET', '/orders/42'],
+        expected: { status: 200, route: 'show', params: { id: '42' } },
+      },
+      {
+        name: 'Returns empty params for a literal route',
+        input: [orderRoutes, 'POST', '/orders'],
+        expected: { status: 200, route: 'create', params: {} },
+      },
+      {
+        name: 'An earlier literal route wins',
+        input: [orderRoutes, 'GET', '/orders/new'],
+        expected: { status: 200, route: 'new-form', params: {} },
+      },
+      {
+        name: 'An earlier parameter route wins',
+        input: [
+          [
+            { method: 'GET', pattern: '/orders/:id', name: 'show' },
+            { method: 'GET', pattern: '/orders/new', name: 'new-form' },
+          ],
+          'GET',
+          '/orders/new',
+        ],
+        expected: { status: 200, route: 'show', params: { id: 'new' } },
+      },
+      {
+        name: 'Answers 405 with the allowed methods',
+        input: [orderRoutes, 'PUT', '/orders/42'],
+        expected: { status: 405, allow: ['DELETE', 'GET', 'HEAD'] },
+      },
+      {
+        name: 'Lists each method once',
+        input: [orderRoutes, 'PATCH', '/orders/new'],
+        expected: { status: 405, allow: ['DELETE', 'GET', 'HEAD'] },
+      },
+      {
+        name: 'Does not add HEAD without GET',
+        input: [orderRoutes, 'GET', '/orders/42/cancel'],
+        expected: { status: 405, allow: ['POST'] },
+      },
+      {
+        name: 'Answers HEAD with a GET route',
+        input: [orderRoutes, 'HEAD', '/orders'],
+        expected: { status: 200, route: 'list', params: {} },
+      },
+      {
+        name: 'Prefers a HEAD route over GET',
+        input: [
+          [
+            { method: 'GET', pattern: '/status', name: 'status' },
+            { method: 'HEAD', pattern: '/status', name: 'status-head' },
+          ],
+          'HEAD',
+          '/status',
+        ],
+        expected: { status: 200, route: 'status-head', params: {} },
+      },
+      {
+        name: 'Matches methods exactly',
+        input: [orderRoutes, 'get', '/orders'],
+        expected: { status: 405, allow: ['GET', 'HEAD', 'POST'] },
+      },
+      { name: 'Answers 404 when no pattern matches', input: [orderRoutes, 'GET', '/customers'], expected: { status: 404 } },
+      { name: 'Treats a trailing slash as a different path', input: [orderRoutes, 'GET', '/orders/'], expected: { status: 404 } },
+      { name: 'Answers 404 with no routes', input: [[], 'GET', '/'], expected: { status: 404 } },
+    ],
+  },
+  {
+    id: 'backend-normalize-path',
+    title: 'Clean a path before routing',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'Before matching routes, a server cleans the request path so that /orders//42/ and /orders/./42 reach the same handler, and so that ".." can never climb above the root to reach files or routes it should not.',
+    prompt:
+      'Implement normalizePath(path). Split path at every "/" and walk the segments in order: skip empty segments and ".", let ".." remove the last kept segment, and keep every other segment. If a ".." has no kept segment to remove, return null. Otherwise return "/" followed by the kept segments joined with "/", which is "/" when none are kept. Do not decode segments, so "%2e%2e" is an ordinary segment.',
+    brief: {
+      summary: 'Implement normalizePath(path) and return the cleaned path or null.',
+      rules: [
+        'Split path at every "/" and walk the segments in order.',
+        'Skip empty segments and ".", let ".." remove the last kept segment, and keep every other segment.',
+        'Return "/" followed by the kept segments joined with "/", which is "/" when none are kept.',
+      ],
+      edgeCases: ['If a ".." has no kept segment to remove, return null.', 'Do not decode segments, so "%2e%2e" is an ordinary segment.'],
+    },
+    example: { input: 'normalizePath("/orders//42/./items/../")', output: '"/orders/42"' },
+    note: 'path starts with "/" and has at most 200 printable ASCII characters. Only "." and ".." are special; "..." and "..b" are ordinary segments. Real servers also decide whether to decode before cleaning; this contract cleans the raw text. These are strings passed to your function, not a live server.',
+    vocabulary: [
+      { term: 'Dot segment', meaning: 'a path segment that is exactly "." (this level) or ".." (one level up)' },
+      { term: 'Path traversal', meaning: 'using ".." in a path to reach something outside the place a server meant to serve' },
+    ],
+    planPrompt: 'Walk /a/b/../../.. one segment at a time and write the kept list after each step. Where do you return null?',
+    starter: 'function normalizePath(path: string): string | null {\n  // Walk the segments and keep a list.\n  return path\n}\n',
+    functionName: 'normalizePath',
+    preserveInput: true,
+    hints: [
+      'Keep the cleaned segments in a list that grows and shrinks as you walk, like a stack.',
+      'An empty segment comes from a doubled or trailing "/"; it and "." add nothing.',
+      'Before removing for "..", check the list is not empty; an empty list means the path tried to climb above the root.',
+    ],
+    checks: [
+      { name: 'Cleans the example', input: ['/orders//42/./items/../'], expected: '/orders/42' },
+      { name: 'Keeps a clean path unchanged', input: ['/orders/42'], expected: '/orders/42' },
+      { name: 'Drops repeated and trailing slashes', input: ['/orders//42/'], expected: '/orders/42' },
+      { name: 'Drops "." segments', input: ['/a/./b/.'], expected: '/a/b' },
+      { name: 'Removes the segment before ".."', input: ['/a/b/../c'], expected: '/a/c' },
+      { name: 'Climbs more than one level', input: ['/a/b/c/../../d'], expected: '/a/d' },
+      { name: 'Returns the root when everything is removed', input: ['/a/..'], expected: '/' },
+      { name: 'Keeps the root', input: ['/'], expected: '/' },
+      { name: 'Turns a run of slashes into the root', input: ['////'], expected: '/' },
+      { name: 'Rejects climbing above the root', input: ['/..'], expected: null },
+      { name: 'Rejects climbing above the root later in the path', input: ['/a/../../b'], expected: null },
+      { name: 'Treats longer dot runs as ordinary segments', input: ['/.../..b/x'], expected: '/.../..b/x' },
+      { name: 'Does not decode escaped dots', input: ['/files/%2e%2e/secret'], expected: '/files/%2e%2e/secret' },
+    ],
+  },
+  {
+    id: 'backend-build-path',
+    title: 'Fill in a path pattern',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'A server builds links to its own routes, such as /files/:name, from values that users typed. A value like "a/b" or ".." must not change which resource the link names.',
+    prompt:
+      'Implement buildPath(pattern, params). Split pattern at every "/". Replace each segment that starts with ":" with the value params has under that name (without the ":"), encoded with encodeURIComponent; keep every other segment. Join the segments with "/". Return null if a parameter value is missing or is not a non-empty string, or if it is "." or "..". Ignore params the pattern does not use. Do not change params.',
+    brief: {
+      summary: 'Implement buildPath(pattern, params) and return the path or null.',
+      rules: [
+        'Replace each segment that starts with ":" with the value params has under that name (without the ":"), encoded with encodeURIComponent.',
+        'Keep every other segment, and join the segments with "/".',
+        'Ignore params the pattern does not use.',
+      ],
+      edgeCases: [
+        'Return null if a parameter value is missing or is not a non-empty string.',
+        'Return null if a value is "." or "..": encoding leaves dots unchanged.',
+        'Do not change params.',
+      ],
+    },
+    example: { input: 'buildPath("/files/:name", {name: "a/b"})', output: '"/files/a%2Fb"' },
+    note: 'pattern starts with "/" and has at most 200 characters, with parameter names of letters and digits. params is a plain object whose values may be of any JSON type. encodeURIComponent leaves letters, digits, and - _ . ! ~ * \' ( ) unchanged and escapes everything else. These are values passed to your function, not a live router.',
+    vocabulary: [
+      { term: 'Reverse routing', meaning: 'building a path from a route pattern and values, the opposite of matching' },
+      {
+        term: 'encodeURIComponent',
+        meaning: 'a function that escapes every character with special meaning in a URL part, including / ? # and &',
+      },
+    ],
+    planPrompt:
+      'Build /files/:name for the names "report.pdf", "a/b", "..", and "". Which ones change shape, and what do you return for each?',
+    starter:
+      'function buildPath(pattern: string, params: Record<string, unknown>): string | null {\n  // Replace each parameter segment with its encoded value.\n  return pattern\n}\n',
+    functionName: 'buildPath',
+    preserveInput: true,
+    hints: [
+      'Work segment by segment so that a value can only ever fill the one segment its parameter names.',
+      'Before encoding, check the value is a string, is not empty, and is not "." or "..".',
+      'encodeURIComponent turns "/" into "%2F", which keeps "a/b" inside one segment.',
+    ],
+    checks: [
+      { name: 'Encodes a slash so it stays in one segment', input: ['/files/:name', { name: 'a/b' }], expected: '/files/a%2Fb' },
+      { name: 'Fills a plain value', input: ['/orders/:id', { id: '42' }], expected: '/orders/42' },
+      {
+        name: 'Fills several parameters',
+        input: ['/users/:userId/orders/:orderId', { userId: '7', orderId: '42' }],
+        expected: '/users/7/orders/42',
+      },
+      { name: 'Encodes spaces and question marks', input: ['/search/:term', { term: 'red wine?' }], expected: '/search/red%20wine%3F' },
+      { name: 'Encodes text outside ASCII', input: ['/tags/:tag', { tag: 'café' }], expected: '/tags/caf%C3%A9' },
+      { name: 'Ignores extra params', input: ['/orders/:id', { id: '1', page: '2' }], expected: '/orders/1' },
+      { name: 'Leaves a pattern without parameters unchanged', input: ['/health', {}], expected: '/health' },
+      { name: 'Keeps a dot inside a longer value', input: ['/files/:name', { name: 'v1.2' }], expected: '/files/v1.2' },
+      { name: 'Returns null for a missing value', input: ['/orders/:id', {}], expected: null },
+      { name: 'Returns null for an empty value', input: ['/orders/:id', { id: '' }], expected: null },
+      { name: 'Returns null for a number', input: ['/orders/:id', { id: 42 }], expected: null },
+      { name: 'Returns null for "."', input: ['/files/:name', { name: '.' }], expected: null },
+      { name: 'Returns null for ".."', input: ['/files/:name', { name: '..' }], expected: null },
+      { name: 'Does not treat inherited names as values', input: ['/x/:constructor', {}], expected: null },
+    ],
+  },
+  {
+    id: 'backend-route-specificity',
+    title: 'Pick the most specific route',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'Some routers do not care about the order routes were added in. When several patterns match a path, they pick the most specific one, so /orders/new wins over /orders/:id and both win over a catch-all such as /files/*.',
+    prompt:
+      'Implement pickRoute(patterns, path). Split patterns and path at every "/". A segment is a literal, a parameter (it starts with ":"), or a wildcard (exactly "*", only ever the last segment of a pattern). A pattern without a wildcard matches when it has as many segments as the path and each literal equals its path segment exactly and each parameter gets a non-empty segment. A pattern ending in "*" matches when its segments before "*" match the start of the path by the same rules and the rest of the path, joined with "/", is not empty. When several patterns match, choose the most specific: compare them segment by segment from the left, and at the first position where their kinds differ, a literal beats a parameter and a parameter beats a wildcard. When their kinds never differ, the pattern listed first wins. Return {pattern, params}, where params maps each parameter name without ":" to its segment and "*" to the rest of the path, or null when no pattern matches.',
+    brief: {
+      summary: 'Implement pickRoute(patterns, path) and return the most specific matching pattern with its params, or null.',
+      rules: [
+        'A segment is a literal, a parameter (it starts with ":"), or a wildcard (exactly "*", only ever the last segment of a pattern).',
+        'Without a wildcard, a pattern matches when it has as many segments as the path, each literal equals its segment exactly, and each parameter gets a non-empty segment.',
+        'A pattern ending in "*" matches when its segments before "*" match the start of the path by the same rules and the rest of the path, joined with "/", is not empty.',
+        'Of several matches, compare segment by segment from the left: at the first position where their kinds differ, a literal beats a parameter and a parameter beats a wildcard. When their kinds never differ, the pattern listed first wins.',
+        'Return {pattern, params}, where params maps each parameter name without ":" to its segment and "*" to the rest of the path, or null when no pattern matches.',
+      ],
+      edgeCases: ['Do not decode segments.', 'Do not change patterns.'],
+    },
+    example: { input: 'pickRoute(["/orders/:id", "/orders/new"], "/orders/new")', output: '{pattern: "/orders/new", params: {}}' },
+    note: 'patterns has at most 50 entries; every pattern and path starts with "/" and has at most 200 characters. Parameter names are letters and digits, unique within a pattern. These are strings passed to your function, not a live router.',
+    vocabulary: [
+      { term: 'Wildcard segment', meaning: 'a final * in a route pattern that matches the whole rest of a path' },
+      { term: 'Specificity', meaning: 'how narrowly a route pattern describes paths; a more specific pattern wins when several match' },
+    ],
+    planPrompt: 'For /users/me/profile, which of /users/:id/profile and /users/me/:tab wins, and at which segment is it decided?',
+    starter:
+      'function pickRoute(patterns: string[], path: string): { pattern: string; params: Record<string, string> } | null {\n  // Find every match, then keep the most specific.\n  return null\n}\n',
+    functionName: 'pickRoute',
+    preserveInput: true,
+    hints: [
+      'Split the job in two: decide whether one pattern matches and what it captures, then decide which of two matching patterns is more specific.',
+      'Give each segment kind a rank so that comparing two patterns is a walk from the left until the ranks differ.',
+      'Replace the current best only when the new match is strictly more specific; that keeps the first-listed pattern on a tie.',
+    ],
+    checks: [
+      {
+        name: 'Prefers a literal over a parameter',
+        input: [['/orders/:id', '/orders/new'], '/orders/new'],
+        expected: { pattern: '/orders/new', params: {} },
+      },
+      {
+        name: 'Uses the parameter when the literal does not match',
+        input: [['/orders/:id', '/orders/new'], '/orders/42'],
+        expected: { pattern: '/orders/:id', params: { id: '42' } },
+      },
+      {
+        name: 'Prefers a parameter over a wildcard',
+        input: [['/files/*', '/files/:name'], '/files/a.txt'],
+        expected: { pattern: '/files/:name', params: { name: 'a.txt' } },
+      },
+      {
+        name: 'Uses the wildcard for deeper paths',
+        input: [['/files/*', '/files/:name'], '/files/docs/a.txt'],
+        expected: { pattern: '/files/*', params: { '*': 'docs/a.txt' } },
+      },
+      {
+        name: 'Prefers a literal over a wildcard',
+        input: [['/static/*', '/static/app.js'], '/static/app.js'],
+        expected: { pattern: '/static/app.js', params: {} },
+      },
+      {
+        name: 'Decides at the first difference from the left',
+        input: [['/users/:id/profile', '/users/me/:tab'], '/users/me/profile'],
+        expected: { pattern: '/users/me/:tab', params: { tab: 'profile' } },
+      },
+      {
+        name: 'An earlier literal outweighs later literals',
+        input: [['/a/:x/c/d', '/a/b/:y/:z'], '/a/b/c/d'],
+        expected: { pattern: '/a/b/:y/:z', params: { y: 'c', z: 'd' } },
+      },
+      {
+        name: 'A wildcard after a parameter beats an earlier wildcard',
+        input: [['/a/*', '/a/:x/*'], '/a/b/c'],
+        expected: { pattern: '/a/:x/*', params: { x: 'b', '*': 'c' } },
+      },
+      {
+        name: 'Keeps list order for equally specific patterns',
+        input: [['/items/:id', '/items/:sku'], '/items/9'],
+        expected: { pattern: '/items/:id', params: { id: '9' } },
+      },
+      { name: 'Does not let a wildcard match nothing', input: [['/files/*'], '/files/'], expected: null },
+      { name: 'Does not let a wildcard match a missing segment', input: [['/files/*'], '/files'], expected: null },
+      { name: 'Prefers the root over a catch-all', input: [['/*', '/'], '/'], expected: { pattern: '/', params: {} } },
+      { name: 'Returns null when nothing matches', input: [['/orders/:id'], '/customers/1'], expected: null },
     ],
   },
 ]

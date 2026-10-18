@@ -329,6 +329,11 @@ export const repLevels: Record<string, RepLevel> = {
   'top-k-frequent-tags': 3,
   'course-order': 3,
   'longest-shared-sequence': 3,
+  'backend-match-route': 2,
+  'backend-route-request': 2,
+  'backend-normalize-path': 2,
+  'backend-build-path': 2,
+  'backend-route-specificity': 3,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

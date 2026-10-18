@@ -64,6 +64,66 @@ export const backendDepth: Record<string, RepDepth> = {
     transfer:
       'The endpoint must also accept application/x-www-form-urlencoded bodies and give handlers the same data shape. Decide how a form value such as quantity=2 becomes data, what happens to repeated names, and whether numbers stay text. This changed contract is self-reviewed, not checked by the original cases.',
   },
+  'backend-match-route': {
+    reasoning:
+      'A pattern and a path line up segment by segment, so a match is a statement about every position: the counts agree, every literal is equal, and every parameter has text to capture. Checking the count first rules out longer and shorter paths before any position is read, and requiring a non-empty segment stops a trailing slash from filling a parameter with nothing.',
+    trace:
+      'For "/users/:id/orders" and "/users/7/orders", both split into four segments. Position 0 is "" against "", position 1 "users" against "users", position 2 ":id" captures "7", and position 3 "orders" equals "orders", so the result is {id: "7"}. For "/orders/:id" and "/orders/", the counts agree at three, but position 2 of the path is "", so the parameter cannot match and the result is null.',
+    alternative:
+      'Compiling each pattern into a regular expression, such as ^/orders/([^/]+)$, is how many routers match quickly, with capture groups holding the parameters. It needs care to escape literal characters such as "." and to name the groups. The segment loop is easier to read and to extend with one rule per segment kind.',
+    counterexample:
+      'Testing "/orders/:id" with path.startsWith("/orders/") also accepts "/orders/42/items" and "/orders/". Skipping the empty-segment check returns {id: ""} for "/orders/", so a handler looks up an order with no ID.',
+    transfer:
+      'Some routers accept an optional parameter such as /archive/:year? that matches both /archive and /archive/2026. Decide how the segment counts compare and what params holds when the segment is absent. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-route-request': {
+    reasoning:
+      'Routing asks two questions in order: which patterns match the path, and which of those routes accepts the method. Answering the first once, in list order, makes the rest simple: the first route with the method wins, HEAD may borrow a GET route, and when nothing answers, the presence or absence of matching patterns separates 405 from 404. Allow comes from the same matching routes, so it never names a method that would not work.',
+    trace:
+      'For PATCH /orders/new the matching routes are new-form (GET /orders/new), show (GET /orders/:id), and remove (DELETE /orders/:id); cancel has four segments and list has two. None is PATCH and the request is not HEAD, so the answer is 405. The methods GET, GET, DELETE become the set GET and DELETE, HEAD joins because GET is present, and sorting gives ["DELETE", "GET", "HEAD"].',
+    alternative:
+      'A router can index routes by method first and look up the path second, which is fast with many routes, but a 405 then needs a second pass over the other methods. Building the matching list once answers both questions. Ranking routes by specificity instead of list order is the other common design, and it removes the need to list literal routes first.',
+    counterexample:
+      'Looking only for a route with the same method and otherwise answering 404 turns PUT /orders/42 into 404, which tells the client that order 42 does not exist. Adding HEAD to Allow every time lists HEAD for /orders/42/cancel, where only POST exists.',
+    transfer:
+      'An OPTIONS request with no OPTIONS route should get 204 and the Allow list instead of 405. Decide where that rule fits in the order of checks and whether OPTIONS itself appears in Allow. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-normalize-path': {
+    reasoning:
+      'The kept segments behave like a stack: a normal segment is pushed, ".." pops, and empty and "." segments do nothing. Each ".." can only remove what an earlier segment added, so the result never names anything above the root, and an attempt to climb higher is refused instead of quietly clamped, so a hostile path cannot pass for a harmless one.',
+    trace:
+      'For "/orders//42/./items/../", the segments are "", "orders", "", "42", ".", "items", "..", "". The kept list becomes [orders], stays the same for the empty segment, becomes [orders, 42], stays for ".", grows to [orders, 42, items], loses items at "..", and ignores the final empty segment, giving "/orders/42". For "/a/../../b", "a" is kept, the first ".." removes it, and the second finds the list empty, so the result is null.',
+    alternative:
+      'new URL(path, "http://x").pathname also resolves dot segments, but it clamps at the root instead of refusing, so "/../etc" becomes "/etc", and it keeps empty segments. That is the rule browsers use for links; a server that serves files usually wants the refusal. Rejecting every path that contains ".." is stricter and simpler, but it also refuses paths that clean up harmlessly.',
+    counterexample:
+      'Ignoring a ".." when the list is empty turns "/../secret" into "/secret", which hides the attempt and may serve something meant to be unreachable. Decoding first turns "%2e%2e" into "..", a different contract and a classic source of traversal bugs when one layer decodes and another cleans.',
+    transfer:
+      'A static file server maps the cleaned path onto a folder. Decide whether to clean before or after decoding, and what to do with a segment that decodes to "/" or "..". This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-build-path': {
+    reasoning:
+      'Each parameter fills only the one segment it names, and encodeURIComponent keeps its value inside that segment: "/" becomes %2F, "?" becomes %3F, and "#" becomes %23. Dots are the exception, because the encoding leaves them alone and a whole segment of "." or ".." is a path step, so those two values are refused. Checking the type first means inherited properties and non-string values never reach the encoder.',
+    trace:
+      'For "/files/:name" with {name: "a/b"}, the segments are "", "files", and ":name". ":name" looks up "a/b", a non-empty string that is not a dot segment, and encodes it as "a%2Fb", so the result "/files/a%2Fb" still has three segments. With {name: ".."} the value passes the type check but is a dot segment, so the result is null. With {} and ":constructor", the inherited value is a function, not a string, so the result is null.',
+    alternative:
+      'A template string such as `/files/${encodeURIComponent(name)}` is fine for one known route, but a general builder has to find parameters segment by segment. encodeURI instead of encodeURIComponent leaves "/" and "?" unescaped: it is meant for whole URLs, not single values.',
+    counterexample:
+      'Replacing ":name" with the raw value builds "/files/a/b", which names a different, deeper resource. Testing `name in params` instead of the value type accepts {} for ":constructor" and builds a path from the text of a function.',
+    transfer:
+      'The builder should also accept a query object and append ?key=value pairs. Decide how keys and values are encoded, which order the pairs use, and what an empty object adds. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-route-specificity': {
+    reasoning:
+      'Specificity compares segment kinds from the left, because the leftmost segments decide which part of an API a path belongs to. Ranking wildcard below parameter below literal turns the rule into a walk that stops at the first different rank. Two patterns that both match a path cannot differ in literal text at the same position, only in kind, so the walk is always meaningful, and identical kind sequences fall back to list order.',
+    trace:
+      'For "/a/b/c/d", both "/a/:x/c/d" and "/a/b/:y/:z" match. Position 2 compares ":x", a parameter, with "b", a literal, so "/a/b/:y/:z" wins there, although the other pattern has more literals in total; its params are {y: "c", z: "d"}. For "/a/b/c", "/a/*" and "/a/:x/*" both match; at position 2 a wildcard meets a parameter, so "/a/:x/*" wins with {x: "b", "*": "c"}.',
+    alternative:
+      'Counting literals and taking the pattern with the most is simpler, but it prefers "/a/:x/c/d" above, against the left-to-right rule routers document. A tree of segments (a trie) that tries literals, then parameters, then wildcards at each level finds the same answer without comparing pairs, and is how fast routers work.',
+    counterexample:
+      'Replacing the best match on a tie as well returns "/items/:sku" for two equally specific patterns instead of the one listed first. Letting a wildcard match an empty rest returns "/files/*" for "/files/", where the contract says nothing matches.',
+    transfer:
+      'Add typed parameters such as /orders/:id(number) that match only digits. Decide where a typed parameter ranks between a plain parameter and a literal, and how /orders/new routes. This changed contract is self-reviewed, not checked by the original cases.',
+  },
 }
 
 export const backendGuides: Record<string, ReflectionGuide> = {
@@ -137,6 +197,76 @@ export const backendGuides: Record<string, ReflectionGuide> = {
     example:
       'GET and HEAD return data null when the body is empty and 400 otherwise. For other methods I collect the Content-Type headers by lowercase name and require exactly one whose media type, trimmed and lowercased, is application/json (415). A body over 1000 characters is 413. JSON.parse runs inside try/catch (400), and the result must be a non-null, non-array object (400). The work is linear in the body. The checks call the function directly; real body streaming and Content-Length are not tested.',
   },
+  'backend-match-route': {
+    plan: [
+      'Split both strings at "/" and compare the counts.',
+      'Walk the positions: equal literals, non-empty parameters.',
+      'Return the captured names, {}, or null.',
+    ],
+    explanation: [
+      'Trace a path with a trailing slash.',
+      'Explain why a parameter cannot capture an empty segment.',
+      'Say what the matcher does not do, such as decoding.',
+    ],
+    example:
+      'I split both strings at "/" and return null unless they have the same number of segments. At each position a ":" segment captures a non-empty path segment under its name, and any other segment must be equal. A full walk returns the captures, which is {} for a literal pattern. The work is linear in the path length. The checks call the function directly; they do not run a router or decode segments.',
+  },
+  'backend-route-request': {
+    plan: [
+      'Collect the routes whose patterns match the path, in list order.',
+      'Pick the first with the method; let HEAD fall back to GET.',
+      'Return 405 with a sorted Allow list, or 404.',
+    ],
+    explanation: [
+      'Trace a request whose path matches two patterns but whose method matches neither.',
+      'Explain why HEAD appears in Allow only with GET.',
+      'Say why list order decides between /orders/new and /orders/:id.',
+    ],
+    example:
+      'I match every route pattern against the path and keep the matching routes in list order. The first whose method equals the request method answers with 200 and its params; a HEAD request without a HEAD route takes the first GET route. If none answers, matching routes mean 405 with their methods deduplicated, HEAD added when GET is present, and sorted; no matching route means 404. The work is the number of routes times the path length. The checks pass values directly, not real requests.',
+  },
+  'backend-normalize-path': {
+    plan: [
+      'Walk the segments and keep a list.',
+      'Skip "" and "."; remove one for "..", refusing an empty list.',
+      'Join the list behind a single "/".',
+    ],
+    explanation: [
+      'Trace a path that climbs back to the root.',
+      'Explain why climbing above the root returns null rather than "/".',
+      'Say why escaped dots are not special here.',
+    ],
+    example:
+      'I split the path at "/", skip empty segments and ".", remove the last kept segment for "..", returning null when there is none, and keep every other segment. The result is "/" plus the kept segments joined with "/". The work is linear in the path. The checks pass strings directly; they do not open files or decode escapes.',
+  },
+  'backend-build-path': {
+    plan: [
+      'Work segment by segment.',
+      'Check each value: a non-empty string that is not "." or "..".',
+      'Encode with encodeURIComponent and join.',
+    ],
+    explanation: [
+      'Trace a value that contains "/".',
+      'Explain why dots need their own rule.',
+      'Say why the value type is checked before the value is used.',
+    ],
+    example:
+      'I split the pattern at "/". Each ":" segment looks up its name in params, and the value must be a non-empty string other than "." or "..", or I return null. Valid values are encoded with encodeURIComponent so they stay one segment, other segments stay as written, and the parts are joined with "/". The work is linear in the pattern and values. The checks pass values directly, not real links.',
+  },
+  'backend-route-specificity': {
+    plan: [
+      'Write a matcher for literals, parameters, and a final wildcard.',
+      'Rank the kinds: wildcard, then parameter, then literal.',
+      'Keep the best match, replacing it only when strictly more specific.',
+    ],
+    explanation: [
+      'Trace two matches that differ at the second segment.',
+      'Explain why counting literals is a different rule.',
+      'Say what the wildcard captures and when it would capture nothing.',
+    ],
+    example:
+      'For each pattern I match the segments before an optional final "*", requiring equal counts without a wildcard and a non-empty rest with one, and capture the parameters and the rest. I keep the best match so far and replace it only when a left-to-right walk finds a position where the new pattern has the higher kind rank. The work is the number of patterns times the path length. The checks pass strings directly, not a live router.',
+  },
 }
 
 export const backendLessonDepth: Record<string, LessonDepth> = {
@@ -149,5 +279,15 @@ export const backendLessonDepth: Record<string, LessonDepth> = {
       'A client sends total=1%2B1. Predict the decoded value when + is replaced with a space before decoding, then when it is replaced after decoding. Which order matches what the client meant?',
     answer:
       'Replacing + first finds no + in "1%2B1", and decoding then gives "1+1", which is what the client meant: %2B is how a literal plus is sent. Replacing after decoding turns that literal plus into a space and gives "1 1". The rule is the same as for &: undo the syntax (+ for space) before decoding the escapes that protect literal characters.',
+  },
+  'http-routing': {
+    title: 'A matching pattern decides 404 versus 405',
+    code: 'routes: GET /orders/:id, DELETE /orders/:id\n\nGET    /orders/42  → 200 (pattern and method match)\nPATCH  /orders/42  → 405, Allow: DELETE, GET, HEAD\nGET    /order/42   → 404 (no pattern matches)',
+    reasoning:
+      'The router asks two questions in order: does any pattern match the path, and does any of those routes accept the method? The first is about the resource and the second about the action, so each failure gets its own status. Answering 404 for an unsupported method claims the resource does not exist, and a client may then try other paths instead of another method; the Allow list turns a 405 into instructions.',
+    challenge:
+      'A team adds GET /orders/:id/items. Predict the response to POST /orders/42/items, then to GET /orders/42/items/ with a trailing slash, using the segment rules in this lesson.',
+    answer:
+      'POST /orders/42/items matches the new pattern, but only GET is registered for it, so the answer is 405 with Allow: GET, HEAD. With a trailing slash the path has one more, empty segment, so no pattern matches and the answer is 404, unless the server cleans the path first by dropping empty segments, in which case the GET route answers.',
   },
 }

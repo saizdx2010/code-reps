@@ -162,3 +162,97 @@ test('B1 request line, header, and body checks catch order, case, and boundary m
     ],
   ])
 })
+
+test('B2 routing checks catch segment-count, empty-parameter, 404/405, HEAD, and specificity mistakes', async () => {
+  const match = solution('backend-match-route')
+  await assertCaught('backend-match-route', [
+    [match.replace('if (want.length !== got.length) return null', 'if (want.length > got.length) return null'), 'Rejects a longer path'],
+    [match.replace('      if (!got[i]) return null\n', ''), 'Does not fill a parameter with an empty segment'],
+    [match.replace('want[i] !== got[i]', 'want[i].toLowerCase() !== got[i].toLowerCase()'), 'Compares literal segments exactly'],
+    [
+      match.replace('params[want[i].slice(1)] = got[i]', 'params[want[i].slice(1)] = decodeURIComponent(got[i])'),
+      'Keeps encoded text in a parameter',
+    ],
+    [
+      match
+        .replace("pattern.split('/')", "pattern.split('/').filter(Boolean)")
+        .replace("path.split('/')", "path.split('/').filter(Boolean)"),
+      'Treats a trailing slash as an extra segment',
+    ],
+  ])
+  const route = solution('backend-route-request')
+  await assertCaught('backend-route-request', [
+    [route.replace("(method === 'HEAD' ? pick('GET') : undefined)", 'undefined'), 'Answers HEAD with a GET route'],
+    [
+      route.replace(
+        "pick(method) ?? (method === 'HEAD' ? pick('GET') : undefined)",
+        "(method === 'HEAD' ? pick('GET') ?? pick('HEAD') : pick(method))",
+      ),
+      'Prefers a HEAD route over GET',
+    ],
+    [
+      route.replace(
+        "const allow = new Set(matching.map(item => item.route.method))\n  if (allow.has('GET')) allow.add('HEAD')\n  return { status: 405, allow: [...allow].sort() }",
+        "const allow = matching.map(item => item.route.method)\n  if (allow.includes('GET')) allow.push('HEAD')\n  return { status: 405, allow: allow.sort() }",
+      ),
+      'Lists each method once',
+    ],
+    [route.replace("if (allow.has('GET')) allow.add('HEAD')", "allow.add('HEAD')"), 'Does not add HEAD without GET'],
+    [route.replace('if (!matching.length) return { status: 404 }', 'return { status: 404 }'), 'Answers 405 with the allowed methods'],
+    [route.replace('allow: [...allow].sort()', 'allow: [...allow]'), 'Answers 405 with the allowed methods'],
+    [route.replace('item.route.method === wanted', 'item.route.method.toUpperCase() === wanted.toUpperCase()'), 'Matches methods exactly'],
+    [route.replace('matching.find(item', 'matching.findLast(item'), 'An earlier literal route wins'],
+    [route.replace('        if (!got[i]) return null\n', ''), 'Treats a trailing slash as a different path'],
+  ])
+  const clean = solution('backend-normalize-path')
+  await assertCaught('backend-normalize-path', [
+    [clean.replace('if (!kept.length) return null', 'if (!kept.length) continue'), 'Rejects climbing above the root'],
+    [clean.replace("path.split('/')", "decodeURIComponent(path).split('/')"), 'Does not decode escaped dots'],
+    [clean.replace("segment === '' || segment === '.'", "segment === ''"), 'Drops "." segments'],
+    [clean.replace("if (segment === '..') {", "if (segment.startsWith('..')) {"), 'Treats longer dot runs as ordinary segments'],
+    [clean.replace("segment === '' || segment === '.'", "segment === '.'"), 'Drops repeated and trailing slashes'],
+  ])
+  const build = solution('backend-build-path')
+  await assertCaught('backend-build-path', [
+    [build.replace('parts.push(encodeURIComponent(value))', 'parts.push(value)'), 'Encodes a slash so it stays in one segment'],
+    [build.replace('parts.push(encodeURIComponent(value))', 'parts.push(encodeURI(value))'), 'Encodes a slash so it stays in one segment'],
+    [build.replace(" || value === '.' || value === '..'", ''), 'Returns null for ".."'],
+    [build.replace(" || value === '.' || value === '..'", " || value === '..'"), 'Returns null for "."'],
+    [
+      build
+        .replace("typeof value !== 'string' || value === ''", "value === undefined || value === ''")
+        .replace('encodeURIComponent(value)', 'encodeURIComponent(String(value))'),
+      'Returns null for a number',
+    ],
+    [
+      build
+        .replace("typeof value !== 'string' || value === ''", "value === undefined || value === ''")
+        .replace('encodeURIComponent(value)', 'encodeURIComponent(String(value))'),
+      'Does not treat inherited names as values',
+    ],
+    [build.replace(" || value === '.' || value === '..'", " || value.includes('.')"), 'Keeps a dot inside a longer value'],
+  ])
+  const pick = solution('backend-route-specificity')
+  await assertCaught('backend-route-specificity', [
+    [
+      pick.replace('    return false\n  }\n  let best', '    return true\n  }\n  let best'),
+      'Keeps list order for equally specific patterns',
+    ],
+    [pick.replace('      if (!rest) return null\n', ''), 'Does not let a wildcard match nothing'],
+    [
+      pick.replace("(segment === '*' ? 0 : segment.startsWith(':') ? 1 : 2)", "(segment === '*' ? 1 : segment.startsWith(':') ? 0 : 2)"),
+      'Prefers a parameter over a wildcard',
+    ],
+    [
+      pick.replace('got.length <= fixed.length', 'got.length < fixed.length').replace('      if (!rest) return null\n', ''),
+      'Does not let a wildcard match a missing segment',
+    ],
+    [
+      pick.replace(
+        '    for (let i = 0; i < Math.min(x.length, y.length); i++)\n      if (rank(x[i]) !== rank(y[i])) return rank(x[i]) > rank(y[i])\n    return false',
+        '    const literals = (list: string[]) => list.filter(segment => rank(segment) === 2).length\n    return literals(x) > literals(y)',
+      ),
+      'An earlier literal outweighs later literals',
+    ],
+  ])
+})

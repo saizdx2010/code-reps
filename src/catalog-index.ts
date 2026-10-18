@@ -314,6 +314,11 @@ const repRows: [string, string, number, Rep['format'] | 0, string, number, numbe
   ["backend-request-line","Parse a request line",39,"backend","872b7ad5",3,113,16,35,2],
   ["backend-header-value","Read a header in any letter case",39,"backend","c7b7c292",3,73,10,35,2],
   ["backend-read-json-body","Accept a JSON body only when declared",39,"backend","b95352af",3,114,18,35,2],
+  ["backend-match-route","Match a path pattern",39,"backend","3d440101",3,89,11,35,2],
+  ["backend-route-request","Choose 404 or 405",39,"backend","fe5cc27e",3,144,13,35,2],
+  ["backend-normalize-path","Clean a path before routing",39,"backend","6b6ccd91",3,75,13,35,2],
+  ["backend-build-path","Fill in a path pattern",39,"backend","5b120242",3,78,14,35,2],
+  ["backend-route-specificity","Pick the most specific route",39,"backend","805c65ea",3,175,13,35,3],
 ]
 
 export const repIndex: RepSummary[] = repRows.map(([id, title, category, format, starterHash, hintTotal, briefWords, checkTotal, source, level]) => ({
@@ -389,4 +394,5 @@ export const skillIndex: SkillSummary[] = [
   {"id":"sql-indexes","title":"Make it fast: indexes and query plans","summary":"Create indexes that match a query's filters and order, and read SQLite's query plan to see whether it uses them.","prerequisites":["sql-reading","sql-joining"],"related":["sql-joining","sql-schema-design"],"repIds":["sql-index-lookup","sql-index-sort","sql-covering-index","sql-composite-index","sql-index-join"],"questions":[{"id":"scan-search-v1","optionCount":3,"answer":1},{"id":"composite-order-v1","optionCount":3,"answer":1},{"id":"plan-meaning-v1","optionCount":3,"answer":1}]},
   {"id":"sql-migrations","title":"Evolve a schema without losing rows","summary":"Add, rename, and remove columns, backfill existing rows, and rebuild a table when SQLite cannot alter it in place.","prerequisites":["sql-schema-design","sql-changing-data"],"related":["sql-schema-design","sql-changing-data"],"repIds":["sql-add-column","sql-rename-column","sql-split-name","sql-rebuild-table","sql-migrate-status-codes"],"questions":[{"id":"add-not-null-v1","optionCount":3,"answer":1},{"id":"add-check-v1","optionCount":3,"answer":1},{"id":"drop-order-v1","optionCount":3,"answer":1}]},
   {"id":"http-request-anatomy","title":"What a request is: method, target, headers, and body","summary":"Read the parts of an HTTP request a server receives, and turn each one from raw text into a value you can check.","prerequisites":[],"related":["http","validation"],"repIds":["backend-split-target","backend-decode-query","backend-request-line","backend-header-value","backend-read-json-body"],"questions":[{"id":"first-question-mark-v1","optionCount":3,"answer":1},{"id":"plus-means-space-v1","optionCount":3,"answer":1},{"id":"header-name-case-v1","optionCount":3,"answer":0},{"id":"unsupported-json-415-v1","optionCount":3,"answer":1}]},
+  {"id":"http-routing","title":"Route a request: patterns, parameters, 404, and 405","summary":"Match a request path against route patterns, read its path parameters, and answer precisely when no route fits.","prerequisites":["http-request-anatomy"],"related":["http-request-anatomy","http"],"repIds":["backend-match-route","backend-route-request","backend-normalize-path","backend-build-path","backend-route-specificity"],"questions":[{"id":"route-404-405-v1","optionCount":3,"answer":1},{"id":"route-segment-count-v1","optionCount":3,"answer":2},{"id":"route-first-match-v1","optionCount":3,"answer":1},{"id":"route-encode-slash-v1","optionCount":3,"answer":1}]},
 ]

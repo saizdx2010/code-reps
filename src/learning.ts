@@ -398,6 +398,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'routing',
+    title: 'Route requests to handlers',
+    guided: 'backend-match-route',
+    independent: 'backend-route-request',
+    recall: 'backend-route-specificity',
+    practice: ['backend-normalize-path', 'backend-build-path'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',
