@@ -259,6 +259,7 @@ export const recallVariants: Record<string, string[]> = {
   'service-health': ['devops-graceful-drain', 'devops-probe-thresholds', 'devops-health-endpoints'],
   'cron-schedules': ['devops-cron-next-zone', 'devops-cron-matches', 'devops-cron-field'],
   observability: ['devops-alert-hysteresis', 'devops-error-budget', 'devops-percentile'],
+  'incident-response': ['devops-postmortem-draft', 'devops-incident-durations', 'devops-incident-timeline'],
 }
 export function recurringReviews(history: PortableRecord[], now = Date.now()) {
   return getAllJourneys(history, now).flatMap(state => {

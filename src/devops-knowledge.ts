@@ -738,4 +738,90 @@ export const devopsSkills: Skill[] = [
     repIds: ['devops-percentile', 'devops-error-budget', 'devops-route-latency', 'devops-burn-alert', 'devops-alert-hysteresis'],
     related: ['service-health', 'deploy-strategies'],
   },
+  {
+    id: 'incident-response',
+    title: 'Incidents: timelines, durations, and blameless postmortems',
+    summary:
+      "Put an incident's events on one clock, measure how long detection and mitigation took, find what changed just before, and write a postmortem that explains without blaming.",
+    prerequisites: ['observability'],
+    objectives: [
+      'Merge events from sources in different time offsets into one ordered timeline, dropping repeats.',
+      'Measure time to detect, mitigate, and resolve, and find impact windows and recent changes.',
+      'Assemble a postmortem skeleton from records and write its explanation blamelessly yourself.',
+    ],
+    sections: [
+      {
+        title: 'One clock, one order',
+        body: 'During an incident, evidence comes from application logs, load balancers, alerts, deploy records, and chat, each with its own clock and often its own time offset. Before anyone argues about causes, every event goes onto one clock, usually UTC, in one order. Comparing instants rather than the text of times is what makes 15:01+07:00 come before 08:02Z.',
+      },
+      {
+        title: 'Durations and changes',
+        body: 'Three durations summarise an incident: from the start of user impact to the first alert (time to detect), to the moment harm stopped (time to mitigate, often by rolling back), and to the fix of the cause (time to resolve). Most incidents follow a change, so listing the deploys, config edits, and flag changes shortly before the impact gives the first leads, newest first. A change shortly before is a lead to check, not proof.',
+      },
+      {
+        title: 'Blameless postmortems',
+        body: 'A postmortem records what happened, why it was possible, and what will change. It is blameless: it asks how the system and the process let a reasonable action cause harm, because people will hide mistakes if mistakes are punished, and the same gap will catch the next person. Facts such as the duration, the timeline, and the action items can be assembled from records; the explanation must be written by the people involved.',
+      },
+      {
+        title: 'What these reps check',
+        body: "These reps work from event records passed to your functions. The checks show that timelines, durations, windows, and the postmortem skeleton follow the stated rules. The postmortem writing itself, in the last rep's Explain step, is self-reviewed against the guide and never graded; no check can tell whether an explanation is true or blameless.",
+      },
+    ],
+    example:
+      'chat  15:01+07:00  "Ada: checkout is failing"   → 08:01Z\napp   08:02Z       "errors rise"                → 08:02Z\nlb    03:00:30-05:00 "502 responses"            → 08:00:30Z\n\ntimeline: 08:00:30 lb, 08:01 chat, 08:02 app',
+    walkthrough: [
+      'Each time is read as an instant, whatever its offset.',
+      "The load balancer's 03:00:30 at −05:00 is 08:00:30 UTC, the earliest event.",
+      'The chat message at 15:01 at +07:00 is 08:01 UTC, a minute before the application logged rising errors.',
+      "In one order, the timeline shows users noticed the problem before the application's own error log did.",
+    ],
+    mistakes: [
+      'Sorting events by the text of their times, so offsets put them in the wrong order.',
+      'Counting the same log line twice because it was shipped twice.',
+      'Treating the last change before an incident as its proven cause.',
+      'Writing a postmortem that names who made a mistake instead of what let the mistake cause harm.',
+    ],
+    questions: [
+      q(
+        'timeline-offsets-v1',
+        'Which happened first: 15:01 at +07:00 or 08:02 at Z (UTC)?',
+        '',
+        ['08:02 UTC', '15:01 at +07:00, which is 08:01 UTC', 'They are the same moment'],
+        1,
+        '15:01 − 7 hours is 08:01 UTC, one minute before 08:02 UTC.',
+      ),
+      q(
+        'time-to-detect-v1',
+        'Users were affected from 08:00, the alert fired at 08:12, and a rollback stopped the errors at 08:20. What was the time to detect?',
+        '',
+        ['20 minutes', '12 minutes', '8 minutes'],
+        1,
+        'Time to detect runs from the start of impact to the first alert: 08:00 to 08:12.',
+      ),
+      q(
+        'change-before-incident-v1',
+        'A deploy finished five minutes before the errors began. What does that establish?',
+        '',
+        ['The deploy caused the incident', 'The deploy is a lead worth checking first', 'Nothing at all'],
+        1,
+        'A change shortly before impact is the most likely place to start looking, but it has to be confirmed, for example by rolling it back.',
+      ),
+      q(
+        'blameless-postmortem-v1',
+        'Which sentence fits a blameless postmortem?',
+        '',
+        ['Sam ran the wrong command', 'The script accepted a production database name without a confirmation step', 'Someone was careless'],
+        1,
+        'It describes what allowed the action to cause harm, which is what the action items can change.',
+      ),
+    ],
+    repIds: [
+      'devops-incident-timeline',
+      'devops-incident-durations',
+      'devops-impact-windows',
+      'devops-changes-before',
+      'devops-postmortem-draft',
+    ],
+    related: ['observability', 'deploy-strategies'],
+  },
 ]

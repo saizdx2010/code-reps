@@ -524,6 +524,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'incident-response',
+    title: 'Reconstruct an incident',
+    guided: 'devops-incident-timeline',
+    independent: 'devops-incident-durations',
+    recall: 'devops-postmortem-draft',
+    practice: ['devops-impact-windows', 'devops-changes-before'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

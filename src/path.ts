@@ -559,6 +559,16 @@ export const paths = [
         title: 'Watch a service',
         repIds: ['devops-percentile', 'devops-error-budget', 'devops-route-latency', 'devops-burn-alert', 'devops-alert-hysteresis'],
       },
+      {
+        title: 'Learn from incidents',
+        repIds: [
+          'devops-incident-timeline',
+          'devops-incident-durations',
+          'devops-impact-windows',
+          'devops-changes-before',
+          'devops-postmortem-draft',
+        ],
+      },
     ] satisfies readonly PathStage[],
   },
 ] as const

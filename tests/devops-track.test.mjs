@@ -1109,3 +1109,98 @@ test('D9 observability checks catch rank, sort, arithmetic, window, and flapping
     ],
   ])
 })
+
+test('D10 incident checks catch clock, repeat, earliest, window, and skeleton mistakes', async () => {
+  const timeline = solution('devops-incident-timeline')
+  await assertCaught('devops-incident-timeline', [
+    [
+      timeline
+        .replace('all.sort((a, b) => a.ms - b.ms ||', 'all.sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0) ||')
+        .replace('at: new Date(ms).toISOString()', 'at: event.at'),
+      'Orders the example across offsets',
+    ],
+    [timeline.replace('      if (seen.has(key)) continue\n', ''), 'Drops an event shipped twice'],
+    [
+      timeline.replace('const key = JSON.stringify([ms, source, event.message])', 'const key = JSON.stringify([ms, event.message])'),
+      'Keeps the same message from two sources',
+    ],
+    [
+      timeline.replace('const key = JSON.stringify([ms, source, event.message])', 'const key = JSON.stringify([source, event.message])'),
+      'Keeps the same message at two times',
+    ],
+    [timeline.replace(' || (a.source < b.source ? -1 : a.source > b.source ? 1 : 0)', ''), 'Breaks a tie by source name'],
+    [
+      timeline.replace(' || (a.source < b.source ? -1 : a.source > b.source ? 1 : 0)', ' || (a.message < b.message ? -1 : 1)'),
+      'Keeps input order for a full tie',
+    ],
+  ])
+  const durations = solution('devops-incident-durations')
+  await assertCaught('devops-incident-durations', [
+    [
+      durations.replace('if (!earliest.has(event.kind) || ms < earliest.get(event.kind)!)', 'if (!earliest.has(event.kind))'),
+      'Uses the earliest event of each kind',
+    ],
+    [
+      durations.replace('Math.max(0, Math.floor((at - start) / 60000))', 'Math.max(0, Math.round((at - start) / 60000))'),
+      'Measures the example',
+    ],
+    [
+      durations.replace('Math.max(0, Math.floor((at - start) / 60000))', 'Math.floor((at - start) / 60000)'),
+      'Gives 0 for an alert before the impact',
+    ],
+    [
+      durations.replace('    if (start === undefined || at === undefined) return null\n', '    if (at === undefined) return null\n'),
+      'Returns nulls without an impact start',
+    ],
+    [
+      durations.replace('const ms = Date.parse(event.at)', "const ms = Date.parse(event.at.slice(0, 19) + 'Z')"),
+      'Compares times with different offsets',
+    ],
+    [durations.replace("timeToMitigate: since('mitigated')", "timeToMitigate: since('note')"), 'Measures the example'],
+  ])
+  const windows = solution('devops-impact-windows')
+  await assertCaught('devops-impact-windows', [
+    [windows.replace('if (rate <= threshold) return', 'if (rate < threshold) return'), 'Does not count a rate equal to the threshold'],
+    [windows.replace('minute - last.end - 1 <= mergeGap', 'minute - last.end - 1 < mergeGap'), 'Joins a gap exactly mergeGap long'],
+    [windows.replace('minute - last.end - 1 <= mergeGap', 'minute - last.end <= mergeGap'), 'Joins a short dip in the example'],
+    [
+      windows.replace('minute - last.end - 1 <= mergeGap', 'minute - last.end - 1 <= mergeGap + 1'),
+      'Splits a gap one longer than mergeGap',
+    ],
+    [windows.replace('      last.minutes = last.end - last.start + 1\n', ''), 'Covers every minute when all are bad'],
+  ])
+  const changes = solution('devops-changes-before')
+  await assertCaught('devops-changes-before', [
+    [changes.replace('change.ms > begin', 'change.ms >= begin'), 'Leaves out a change exactly at the window start'],
+    [changes.replace('change.ms <= end', 'change.ms < end'), 'Keeps a change at the impact start'],
+    [changes.replace(' && change.ms <= end', ''), 'Leaves out changes after the impact start'],
+    [changes.replace('.sort((a, b) => b.ms - a.ms)', '.sort((a, b) => a.ms - b.ms)'), 'Lists the example newest first'],
+    [
+      changes.replace('.sort((a, b) => b.ms - a.ms)', '.sort((a, b) => a.ms - b.ms)\n    .reverse()'),
+      'Keeps input order for the same instant',
+    ],
+    [
+      changes.replace('const end = Date.parse(impactStart)', "const end = Date.parse(impactStart.slice(0, 19) + 'Z')"),
+      'Reads offsets on the impact start too',
+    ],
+    [changes.replace('const begin = end - lookbackMinutes * 60000', 'const begin = end - 60 * 60000'), 'Uses the supplied lookback'],
+  ])
+  const draft = solution('devops-postmortem-draft')
+  await assertCaught('devops-postmortem-draft', [
+    [draft.replace('Math.floor((end - start) / 60000)', 'Math.round((end - start) / 60000)'), 'Drafts the example'],
+    [draft.replace(' || (a.source < b.source ? -1 : a.source > b.source ? 1 : 0)', ''), 'Orders events from several offsets'],
+    [draft.replace(": ['- None recorded']", ': []'), 'Orders events from several offsets'],
+    [draft.replace('new Date(event.ms).toISOString().slice(11, 16)', 'event.at.slice(11, 16)'), 'Orders events from several offsets'],
+    [
+      draft.replace(
+        "incident.actions.map(action => '- [ ] ' + action.task",
+        "[...incident.actions].reverse().map(action => '- [ ] ' + action.task",
+      ),
+      'Keeps actions in the given order',
+    ],
+    [
+      draft.replace(' || (a.source < b.source ? -1 : a.source > b.source ? 1 : 0)', ' || (a.message < b.message ? -1 : 1)'),
+      'Keeps input order for identical times and sources',
+    ],
+  ])
+})

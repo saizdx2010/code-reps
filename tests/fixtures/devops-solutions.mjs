@@ -760,4 +760,95 @@ function alertEvents(values: number[], policy: { fireAt: number; resolveBelow: n
   })
   return events
 }`,
+  'devops-incident-timeline': `
+function incidentTimeline(sources: { source: string; events: { at: string; message: string }[] }[]) {
+  const seen = new Set<string>()
+  const all: { ms: number; at: string; source: string; message: string }[] = []
+  for (const { source, events } of sources)
+    for (const event of events) {
+      const ms = Date.parse(event.at)
+      const key = JSON.stringify([ms, source, event.message])
+      if (seen.has(key)) continue
+      seen.add(key)
+      all.push({ ms, at: new Date(ms).toISOString(), source, message: event.message })
+    }
+  all.sort((a, b) => a.ms - b.ms || (a.source < b.source ? -1 : a.source > b.source ? 1 : 0))
+  return all.map(({ at, source, message }) => ({ at, source, message }))
+}`,
+  'devops-incident-durations': `
+function incidentDurations(events: { at: string; kind: string }[]) {
+  const earliest = new Map<string, number>()
+  for (const event of events) {
+    const ms = Date.parse(event.at)
+    if (!earliest.has(event.kind) || ms < earliest.get(event.kind)!) earliest.set(event.kind, ms)
+  }
+  const start = earliest.get('impact-start')
+  const since = (kind: string) => {
+    const at = earliest.get(kind)
+    if (start === undefined || at === undefined) return null
+    return Math.max(0, Math.floor((at - start) / 60000))
+  }
+  return { timeToDetect: since('alert'), timeToMitigate: since('mitigated'), timeToResolve: since('resolved') }
+}`,
+  'devops-impact-windows': `
+function impactWindows(rates: number[], threshold: number, mergeGap: number) {
+  const windows: { start: number; end: number; minutes: number }[] = []
+  rates.forEach((rate, minute) => {
+    if (rate <= threshold) return
+    const last = windows[windows.length - 1]
+    if (last && minute - last.end - 1 <= mergeGap) {
+      last.end = minute
+      last.minutes = last.end - last.start + 1
+    } else windows.push({ start: minute, end: minute, minutes: 1 })
+  })
+  return windows
+}`,
+  'devops-changes-before': `
+function changesBefore(changes: { at: string; service: string; description: string }[], impactStart: string, lookbackMinutes: number, service: string) {
+  const end = Date.parse(impactStart)
+  const begin = end - lookbackMinutes * 60000
+  return changes
+    .map(change => ({ ...change, ms: Date.parse(change.at) }))
+    .filter(change => change.ms > begin && change.ms <= end)
+    .sort((a, b) => b.ms - a.ms)
+    .map(change => ({
+      at: new Date(change.ms).toISOString(),
+      service: change.service,
+      description: change.description,
+      sameService: change.service === service,
+    }))
+}`,
+  'devops-postmortem-draft': `
+type Incident = {
+  title: string
+  impactStart: string
+  resolvedAt: string
+  events: { at: string; source: string; message: string }[]
+  actions: { task: string; owner: string }[]
+}
+function postmortemDraft(incident: Incident): string {
+  const start = Date.parse(incident.impactStart)
+  const end = Date.parse(incident.resolvedAt)
+  const events = incident.events
+    .map(event => ({ ...event, ms: Date.parse(event.at) }))
+    .sort((a, b) => a.ms - b.ms || (a.source < b.source ? -1 : a.source > b.source ? 1 : 0))
+  const lines = [
+    '# Postmortem: ' + incident.title,
+    '',
+    'Duration: ' + Math.floor((end - start) / 60000) + ' minutes (' + new Date(start).toISOString() + ' to ' + new Date(end).toISOString() + ')',
+    '',
+    '## Timeline (UTC)',
+    ...events.map(event => '- ' + new Date(event.ms).toISOString().slice(11, 16) + ' ' + event.source + ': ' + event.message),
+    '',
+    '## Action items',
+    ...(incident.actions.length ? incident.actions.map(action => '- [ ] ' + action.task + ' (owner: ' + action.owner + ')') : ['- None recorded']),
+    '',
+    '## What happened',
+    '_Write this section yourself._',
+    '',
+    '## Why it happened',
+    '_Write this section yourself._',
+  ]
+  return lines.join('\\n')
+}`,
 }

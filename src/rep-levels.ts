@@ -399,6 +399,11 @@ export const repLevels: Record<string, RepLevel> = {
   'devops-route-latency': 2,
   'devops-burn-alert': 2,
   'devops-alert-hysteresis': 2,
+  'devops-incident-timeline': 2,
+  'devops-incident-durations': 2,
+  'devops-impact-windows': 2,
+  'devops-changes-before': 2,
+  'devops-postmortem-draft': 2,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

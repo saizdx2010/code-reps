@@ -1034,6 +1034,7 @@ export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[
       'service-health',
       'cron-schedules',
       'observability',
+      'incident-response',
     ],
   },
   {

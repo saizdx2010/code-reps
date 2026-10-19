@@ -4508,4 +4508,548 @@ export const devopsReps: Rep[] = [
       { name: 'Handles no values', input: [[], { fireAt: 90, resolveBelow: 80, fireAfter: 1, resolveAfter: 1 }], expected: [] },
     ],
   },
+  {
+    id: 'devops-incident-timeline',
+    title: 'Build an incident timeline',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      "After an incident, events come from many places: application logs in UTC, a load balancer in another offset, and the team's chat in local time. Some log lines were shipped twice. Before anyone can say what happened, the events have to be put on one clock and in one order.",
+    prompt:
+      'Implement incidentTimeline(sources). sources lists {source, events}, where events lists {at, message} and at is an ISO 8601 time ending in "Z" or a ±HH:MM offset. Combine every event into {at, source, message}, with at rewritten as Date.prototype.toISOString does. Drop an event if an earlier one in the input has the same instant, source, and message. Sort by instant; break ties by source name with the default sort, then by the order the events had in the input. Return the list. Do not change sources.',
+    brief: {
+      summary: 'Implement incidentTimeline(sources) and return every event as {at, source, message} in order.',
+      rules: [
+        'Read each at, an ISO 8601 time with "Z" or a ±HH:MM offset, as an instant, and write it back with toISOString.',
+        "Drop an event that repeats an earlier one's instant, source, and message.",
+        'Sort by instant, then by source name with the default sort, then by input order.',
+      ],
+      edgeCases: ['The same message from two sources is kept twice.', 'Do not change sources.'],
+    },
+    example: {
+      input:
+        'incidentTimeline([{source: "app", events: [{at: "2026-10-19T08:02:00Z", message: "errors rise"}]}, {source: "chat", events: [{at: "2026-10-19T15:01:00+07:00", message: "Ada: checkout is failing"}]}])',
+      output:
+        '[{at: "2026-10-19T08:01:00.000Z", source: "chat", message: "Ada: checkout is failing"}, {at: "2026-10-19T08:02:00.000Z", source: "app", message: "errors rise"}]',
+    },
+    note: `There are at most 5,000 events. Clocks on different machines can disagree by a few seconds; this rep trusts the times it is given. ${notRun}`,
+    vocabulary: [
+      { term: 'Incident', meaning: "an unplanned event that hurts a service's users and needs a response" },
+      { term: 'Timeline', meaning: 'the events of an incident in the order they happened, on one clock' },
+    ],
+    planPrompt:
+      'Two events read "15:01+07:00" and "08:02Z". Which happened first, and how do you compare them without converting anything by hand?',
+    starter:
+      'type Source = { source: string; events: { at: string; message: string }[] }\n\nfunction incidentTimeline(sources: Source[]): { at: string; source: string; message: string }[] {\n  return []\n}\n',
+    functionName: 'incidentTimeline',
+    preserveInput: true,
+    hints: [
+      'Date.parse reads an ISO time with any offset as milliseconds since 1970.',
+      'A Set of keys built from instant, source, and message finds repeats.',
+      'Array.prototype.sort is stable, so events that tie on instant and source keep their input order.',
+    ],
+    checks: [
+      {
+        name: 'Orders the example across offsets',
+        input: [
+          [
+            { source: 'app', events: [{ at: '2026-10-19T08:02:00Z', message: 'errors rise' }] },
+            { source: 'chat', events: [{ at: '2026-10-19T15:01:00+07:00', message: 'Ada: checkout is failing' }] },
+          ],
+        ],
+        expected: [
+          { at: '2026-10-19T08:01:00.000Z', source: 'chat', message: 'Ada: checkout is failing' },
+          { at: '2026-10-19T08:02:00.000Z', source: 'app', message: 'errors rise' },
+        ],
+      },
+      {
+        name: 'Reads a negative offset',
+        input: [
+          [
+            { source: 'lb', events: [{ at: '2026-10-19T03:00:30-05:00', message: '502 responses' }] },
+            { source: 'app', events: [{ at: '2026-10-19T08:00:10Z', message: 'pool exhausted' }] },
+          ],
+        ],
+        expected: [
+          { at: '2026-10-19T08:00:10.000Z', source: 'app', message: 'pool exhausted' },
+          { at: '2026-10-19T08:00:30.000Z', source: 'lb', message: '502 responses' },
+        ],
+      },
+      {
+        name: 'Breaks a tie by source name',
+        input: [
+          [
+            { source: 'web', events: [{ at: '2026-10-19T08:00:00Z', message: 'w' }] },
+            { source: 'api', events: [{ at: '2026-10-19T08:00:00Z', message: 'a' }] },
+          ],
+        ],
+        expected: [
+          { at: '2026-10-19T08:00:00.000Z', source: 'api', message: 'a' },
+          { at: '2026-10-19T08:00:00.000Z', source: 'web', message: 'w' },
+        ],
+      },
+      {
+        name: 'Keeps input order for a full tie',
+        input: [
+          [
+            {
+              source: 'app',
+              events: [
+                { at: '2026-10-19T08:00:00Z', message: 'second line' },
+                { at: '2026-10-19T08:00:00Z', message: 'first line' },
+              ],
+            },
+          ],
+        ],
+        expected: [
+          { at: '2026-10-19T08:00:00.000Z', source: 'app', message: 'second line' },
+          { at: '2026-10-19T08:00:00.000Z', source: 'app', message: 'first line' },
+        ],
+      },
+      {
+        name: 'Drops an event shipped twice',
+        input: [
+          [
+            {
+              source: 'app',
+              events: [
+                { at: '2026-10-19T08:00:00Z', message: 'restart' },
+                { at: '2026-10-19T15:00:00+07:00', message: 'restart' },
+              ],
+            },
+          ],
+        ],
+        expected: [{ at: '2026-10-19T08:00:00.000Z', source: 'app', message: 'restart' }],
+      },
+      {
+        name: 'Keeps the same message from two sources',
+        input: [
+          [
+            { source: 'a', events: [{ at: '2026-10-19T08:00:00Z', message: 'restart' }] },
+            { source: 'b', events: [{ at: '2026-10-19T08:00:00Z', message: 'restart' }] },
+          ],
+        ],
+        expected: [
+          { at: '2026-10-19T08:00:00.000Z', source: 'a', message: 'restart' },
+          { at: '2026-10-19T08:00:00.000Z', source: 'b', message: 'restart' },
+        ],
+      },
+      {
+        name: 'Keeps the same message at two times',
+        input: [
+          [
+            {
+              source: 'app',
+              events: [
+                { at: '2026-10-19T08:05:00Z', message: 'restart' },
+                { at: '2026-10-19T08:00:00Z', message: 'restart' },
+              ],
+            },
+          ],
+        ],
+        expected: [
+          { at: '2026-10-19T08:00:00.000Z', source: 'app', message: 'restart' },
+          { at: '2026-10-19T08:05:00.000Z', source: 'app', message: 'restart' },
+        ],
+      },
+      { name: 'Handles no sources', input: [[]], expected: [] },
+    ],
+  },
+  {
+    id: 'devops-incident-durations',
+    title: 'Measure how long an incident took',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'Teams track a few durations for every incident: how long users were affected before anyone was alerted, before the harm was stopped, and before the cause was fixed. Shrinking the first one, the time to detect, is often the cheapest improvement.',
+    prompt:
+      'Implement incidentDurations(events). events lists {at, kind} in any order; at is an ISO 8601 time ending in "Z" or a ±HH:MM offset, and kind is "impact-start", "alert", "mitigated", "resolved", or "note". Use the earliest event of each kind. Return {timeToDetect, timeToMitigate, timeToResolve}: the whole minutes, rounded down, from the earliest impact-start to the earliest alert, mitigated, and resolved event respectively. A duration is null if there is no impact-start or no event of its kind, and 0 if its event is earlier than the impact start. Do not change events.',
+    brief: {
+      summary: 'Implement incidentDurations(events) and return {timeToDetect, timeToMitigate, timeToResolve} in whole minutes.',
+      rules: [
+        'Use the earliest event of each kind; events are in any order, and times are ISO 8601 with "Z" or a ±HH:MM offset.',
+        'Each duration is the whole minutes, rounded down, from the earliest impact-start to the earliest alert, mitigated, or resolved event.',
+        'A duration is null with no impact-start or no event of its kind, and 0 if its event is earlier than the impact start.',
+      ],
+      edgeCases: ['"note" events never change a duration.', 'Do not change events.'],
+    },
+    example: {
+      input:
+        'incidentDurations([{at: "2026-10-19T08:30:00Z", kind: "resolved"}, {at: "2026-10-19T08:00:00Z", kind: "impact-start"}, {at: "2026-10-19T15:12:30+07:00", kind: "alert"}, {at: "2026-10-19T08:20:00Z", kind: "mitigated"}])',
+      output: '{timeToDetect: 12, timeToMitigate: 20, timeToResolve: 30}',
+    },
+    note: `Some teams measure from the alert instead of the impact start; this contract measures from the impact start. ${notRun}`,
+    vocabulary: [
+      { term: 'Time to detect', meaning: 'how long users were affected before the team was alerted' },
+      { term: 'Mitigation', meaning: 'stopping the harm to users, for example by rolling back, before the cause is fixed' },
+    ],
+    planPrompt: 'Why might mitigation come long before resolution? What should a duration be if an alert fired before users were affected?',
+    starter:
+      'function incidentDurations(events: { at: string; kind: string }[]) {\n  return { timeToDetect: null as number | null, timeToMitigate: null as number | null, timeToResolve: null as number | null }\n}\n',
+    functionName: 'incidentDurations',
+    preserveInput: true,
+    hints: [
+      'Find the earliest instant of each kind in one pass, keeping a Map from kind to milliseconds.',
+      'Divide a difference in milliseconds by 60,000 and round down with Math.floor.',
+      'Math.max(0, ...) turns an early event into 0.',
+    ],
+    checks: [
+      {
+        name: 'Measures the example',
+        input: [
+          [
+            { at: '2026-10-19T08:30:00Z', kind: 'resolved' },
+            { at: '2026-10-19T08:00:00Z', kind: 'impact-start' },
+            { at: '2026-10-19T15:12:30+07:00', kind: 'alert' },
+            { at: '2026-10-19T08:20:00Z', kind: 'mitigated' },
+          ],
+        ],
+        expected: { timeToDetect: 12, timeToMitigate: 20, timeToResolve: 30 },
+      },
+      {
+        name: 'Uses the earliest event of each kind',
+        input: [
+          [
+            { at: '2026-10-19T08:00:00Z', kind: 'impact-start' },
+            { at: '2026-10-19T08:40:00Z', kind: 'alert' },
+            { at: '2026-10-19T08:09:00Z', kind: 'alert' },
+            { at: '2026-10-19T07:55:00Z', kind: 'impact-start' },
+          ],
+        ],
+        expected: { timeToDetect: 14, timeToMitigate: null, timeToResolve: null },
+      },
+      {
+        name: 'Rounds partial minutes down',
+        input: [
+          [
+            { at: '2026-10-19T08:00:00Z', kind: 'impact-start' },
+            { at: '2026-10-19T08:04:59Z', kind: 'alert' },
+          ],
+        ],
+        expected: { timeToDetect: 4, timeToMitigate: null, timeToResolve: null },
+      },
+      {
+        name: 'Gives 0 for an alert before the impact',
+        input: [
+          [
+            { at: '2026-10-19T08:00:00Z', kind: 'impact-start' },
+            { at: '2026-10-19T07:58:00Z', kind: 'alert' },
+          ],
+        ],
+        expected: { timeToDetect: 0, timeToMitigate: null, timeToResolve: null },
+      },
+      {
+        name: 'Returns nulls without an impact start',
+        input: [[{ at: '2026-10-19T08:10:00Z', kind: 'alert' }]],
+        expected: { timeToDetect: null, timeToMitigate: null, timeToResolve: null },
+      },
+      {
+        name: 'Ignores notes',
+        input: [
+          [
+            { at: '2026-10-19T08:00:00Z', kind: 'impact-start' },
+            { at: '2026-10-19T08:01:00Z', kind: 'note' },
+            { at: '2026-10-19T09:00:00Z', kind: 'resolved' },
+          ],
+        ],
+        expected: { timeToDetect: null, timeToMitigate: null, timeToResolve: 60 },
+      },
+      {
+        name: 'Compares times with different offsets',
+        input: [
+          [
+            { at: '2026-10-19T03:00:00-05:00', kind: 'impact-start' },
+            { at: '2026-10-19T08:45:00Z', kind: 'mitigated' },
+          ],
+        ],
+        expected: { timeToDetect: null, timeToMitigate: 45, timeToResolve: null },
+      },
+    ],
+  },
+  {
+    id: 'devops-impact-windows',
+    title: 'Find when users were affected',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A graph of the error rate during an incident shows bad minutes, a short dip, and more bad minutes. For the report, the team wants the windows of impact, treating a short dip as part of the same window rather than two separate problems.',
+    prompt:
+      'Implement impactWindows(rates, threshold, mergeGap). rates lists an error percentage for each minute, starting at minute 0. A minute is bad when its rate is greater than threshold. Group bad minutes into windows of consecutive bad minutes, then join two windows when at most mergeGap good minutes separate them. Return each window as {start, end, minutes}, where start and end are the positions of its first and last bad minute and minutes is end - start + 1, in order. Do not change rates.',
+    brief: {
+      summary: 'Implement impactWindows(rates, threshold, mergeGap) and return the windows of bad minutes.',
+      rules: [
+        'rates has one error percentage per minute, starting at minute 0. A minute is bad when its rate is greater than threshold.',
+        'Consecutive bad minutes form a window; join two windows when at most mergeGap good minutes separate them.',
+        'Return {start, end, minutes} for each window in order, with minutes = end - start + 1.',
+      ],
+      edgeCases: ['A rate equal to threshold is not bad.', 'A window always starts and ends on a bad minute.', 'Do not change rates.'],
+    },
+    example: {
+      input: 'impactWindows([0, 8, 9, 1, 7, 0, 0, 0, 6], 5, 1)',
+      output: '[{start: 1, end: 4, minutes: 4}, {start: 8, end: 8, minutes: 1}]',
+    },
+    note: `Rates are whole numbers; threshold and mergeGap are whole numbers of at least 0. ${notRun}`,
+    vocabulary: [
+      { term: 'Impact window', meaning: 'a period during which users were affected by an incident' },
+      {
+        term: 'Error rate graph',
+        meaning: 'a chart of the share of failed requests over time, used to see when a problem started and ended',
+      },
+    ],
+    planPrompt: 'In the example, why are minutes 1 to 4 one window, and why is minute 8 separate?',
+    starter:
+      'function impactWindows(rates: number[], threshold: number, mergeGap: number): { start: number; end: number; minutes: number }[] {\n  return []\n}\n',
+    functionName: 'impactWindows',
+    preserveInput: true,
+    hints: [
+      'Walk the minutes once, remembering the current window and the last bad minute.',
+      'A new bad minute joins the current window if it is at most mergeGap + 1 positions after the last bad minute.',
+      'Close the last window after the loop.',
+    ],
+    checks: [
+      {
+        name: 'Joins a short dip in the example',
+        input: [[0, 8, 9, 1, 7, 0, 0, 0, 6], 5, 1],
+        expected: [
+          { start: 1, end: 4, minutes: 4 },
+          { start: 8, end: 8, minutes: 1 },
+        ],
+      },
+      {
+        name: 'Keeps windows apart with a gap of 0',
+        input: [[8, 0, 8], 5, 0],
+        expected: [
+          { start: 0, end: 0, minutes: 1 },
+          { start: 2, end: 2, minutes: 1 },
+        ],
+      },
+      { name: 'Joins a gap exactly mergeGap long', input: [[8, 0, 0, 8], 5, 2], expected: [{ start: 0, end: 3, minutes: 4 }] },
+      {
+        name: 'Splits a gap one longer than mergeGap',
+        input: [[8, 0, 0, 0, 8], 5, 2],
+        expected: [
+          { start: 0, end: 0, minutes: 1 },
+          { start: 4, end: 4, minutes: 1 },
+        ],
+      },
+      { name: 'Does not count a rate equal to the threshold', input: [[5, 6, 5], 5, 0], expected: [{ start: 1, end: 1, minutes: 1 }] },
+      { name: 'Ends a window on its last bad minute', input: [[0, 9, 9, 0, 0], 5, 3], expected: [{ start: 1, end: 2, minutes: 2 }] },
+      { name: 'Covers every minute when all are bad', input: [[9, 9, 9], 5, 0], expected: [{ start: 0, end: 2, minutes: 3 }] },
+      { name: 'Returns nothing when all are good', input: [[0, 1, 2], 5, 4], expected: [] },
+    ],
+  },
+  {
+    id: 'devops-changes-before',
+    title: 'List the changes just before an incident',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'Most incidents start soon after something changed: a deploy, a config edit, a feature flag. One of the first questions in an incident is what changed shortly before users were affected, starting with the most recent change and the changes to the affected service.',
+    prompt:
+      'Implement changesBefore(changes, impactStart, lookbackMinutes, service). changes lists {at, service, description}; at and impactStart are ISO 8601 times ending in "Z" or a ±HH:MM offset. Keep the changes that happened after impactStart minus lookbackMinutes and no later than impactStart. Return them newest first, keeping input order for changes at the same instant, as {at, service, description, sameService}, where at is rewritten as Date.prototype.toISOString does and sameService is true when the change\'s service equals service. Do not change the inputs.',
+    brief: {
+      summary: 'Implement changesBefore(changes, impactStart, lookbackMinutes, service) and return the recent changes, newest first.',
+      rules: [
+        'Keep changes after impactStart minus lookbackMinutes and no later than impactStart; times are ISO 8601 with "Z" or an offset.',
+        'Return them newest first, keeping input order for the same instant.',
+        'Return {at, service, description, sameService}, with at written by toISOString and sameService true when the service matches.',
+      ],
+      edgeCases: [
+        'A change exactly lookbackMinutes before the start is left out.',
+        'A change at the impact start itself is kept.',
+        'Do not change the inputs.',
+      ],
+    },
+    example: {
+      input:
+        'changesBefore([{at: "2026-10-19T07:40:00Z", service: "checkout", description: "deploy v42"}, {at: "2026-10-19T14:55:00+07:00", service: "search", description: "flag on"}], "2026-10-19T08:00:00Z", 60, "checkout")',
+      output:
+        '[{at: "2026-10-19T07:55:00.000Z", service: "search", description: "flag on", sameService: false}, {at: "2026-10-19T07:40:00.000Z", service: "checkout", description: "deploy v42", sameService: true}]',
+    },
+    note: `A change before an incident is a lead, not proof of its cause. There are at most 1,000 changes. ${notRun}`,
+    vocabulary: [
+      { term: 'Change event', meaning: 'a record of something altered in production, such as a deploy or a config edit' },
+      { term: 'Lookback window', meaning: 'how far back before an event to search for possible causes' },
+    ],
+    planPrompt:
+      'A deploy happened exactly 60 minutes before the impact and the lookback is 60 minutes. Is it in the list? What about a change one second after the impact started?',
+    starter:
+      'type Change = { at: string; service: string; description: string }\n\nfunction changesBefore(changes: Change[], impactStart: string, lookbackMinutes: number, service: string) {\n  return [] as (Change & { sameService: boolean })[]\n}\n',
+    functionName: 'changesBefore',
+    preserveInput: true,
+    hints: [
+      "Turn impactStart into milliseconds once, and the window's start is that minus lookbackMinutes × 60,000.",
+      'The window excludes its start and includes its end.',
+      'A stable sort by instant, newest first, keeps ties in input order.',
+    ],
+    checks: [
+      {
+        name: 'Lists the example newest first',
+        input: [
+          [
+            { at: '2026-10-19T07:40:00Z', service: 'checkout', description: 'deploy v42' },
+            { at: '2026-10-19T14:55:00+07:00', service: 'search', description: 'flag on' },
+          ],
+          '2026-10-19T08:00:00Z',
+          60,
+          'checkout',
+        ],
+        expected: [
+          { at: '2026-10-19T07:55:00.000Z', service: 'search', description: 'flag on', sameService: false },
+          { at: '2026-10-19T07:40:00.000Z', service: 'checkout', description: 'deploy v42', sameService: true },
+        ],
+      },
+      {
+        name: 'Leaves out a change exactly at the window start',
+        input: [[{ at: '2026-10-19T07:00:00Z', service: 'checkout', description: 'deploy v41' }], '2026-10-19T08:00:00Z', 60, 'checkout'],
+        expected: [],
+      },
+      {
+        name: 'Keeps a change at the impact start',
+        input: [[{ at: '2026-10-19T08:00:00Z', service: 'db', description: 'failover' }], '2026-10-19T08:00:00Z', 60, 'checkout'],
+        expected: [{ at: '2026-10-19T08:00:00.000Z', service: 'db', description: 'failover', sameService: false }],
+      },
+      {
+        name: 'Leaves out changes after the impact start',
+        input: [[{ at: '2026-10-19T08:00:01Z', service: 'checkout', description: 'rollback' }], '2026-10-19T08:00:00Z', 60, 'checkout'],
+        expected: [],
+      },
+      {
+        name: 'Reads offsets on the impact start too',
+        input: [[{ at: '2026-10-19T07:30:00Z', service: 'checkout', description: 'config' }], '2026-10-19T03:00:00-05:00', 45, 'checkout'],
+        expected: [{ at: '2026-10-19T07:30:00.000Z', service: 'checkout', description: 'config', sameService: true }],
+      },
+      {
+        name: 'Keeps input order for the same instant',
+        input: [
+          [
+            { at: '2026-10-19T07:50:00Z', service: 'a', description: 'first' },
+            { at: '2026-10-19T14:50:00+07:00', service: 'b', description: 'second' },
+          ],
+          '2026-10-19T08:00:00Z',
+          30,
+          'a',
+        ],
+        expected: [
+          { at: '2026-10-19T07:50:00.000Z', service: 'a', description: 'first', sameService: true },
+          { at: '2026-10-19T07:50:00.000Z', service: 'b', description: 'second', sameService: false },
+        ],
+      },
+      {
+        name: 'Uses the supplied lookback',
+        input: [[{ at: '2026-10-19T07:00:00Z', service: 'checkout', description: 'deploy v41' }], '2026-10-19T08:00:00Z', 120, 'checkout'],
+        expected: [{ at: '2026-10-19T07:00:00.000Z', service: 'checkout', description: 'deploy v41', sameService: true }],
+      },
+    ],
+  },
+  {
+    id: 'devops-postmortem-draft',
+    title: 'Draft a postmortem from the timeline',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A blameless postmortem explains what happened and how to prevent it, without blaming a person. Its facts, the duration, the timeline, and the agreed actions, can be assembled automatically; the explanation of what happened and why has to be written by the people who were there. Here your function builds the factual skeleton, and you write the explanation yourself in Explain.',
+    prompt:
+      'Implement postmortemDraft(incident). incident is {title, impactStart, resolvedAt, events, actions}; events lists {at, source, message} in any order, actions lists {task, owner}, and every time is an ISO 8601 time ending in "Z" or a ±HH:MM offset. Return one text whose lines are joined with "\\n": "# Postmortem: TITLE", an empty line, "Duration: N minutes (START to END)", an empty line, "## Timeline (UTC)", then one line "- HH:MM SOURCE: MESSAGE" per event, an empty line, "## Action items", then one line "- [ ] TASK (owner: OWNER)" per action in the given order, or "- None recorded" if there are none, an empty line, "## What happened", "_Write this section yourself._", an empty line, "## Why it happened", and "_Write this section yourself._". N is the whole minutes, rounded down, from impactStart to resolvedAt; START and END are those times written as Date.prototype.toISOString does. Events are sorted by instant, then by source name with the default sort, then by input order, and HH:MM is the event\'s hour and minute in UTC. Do not change incident.',
+    brief: {
+      summary: 'Implement postmortemDraft(incident) and return the postmortem skeleton as one text with lines joined by "\\n".',
+      rules: [
+        'Header: "# Postmortem: TITLE", "", "Duration: N minutes (START to END)", with N the whole minutes, rounded down, and START and END written by toISOString.',
+        'Timeline: "## Timeline (UTC)", then "- HH:MM SOURCE: MESSAGE" per event, sorted by instant, then source name, then input order, with HH:MM in UTC.',
+        'Actions: "## Action items", then "- [ ] TASK (owner: OWNER)" per action in order, or "- None recorded".',
+        'End: "## What happened", "_Write this section yourself._", "", "## Why it happened", "_Write this section yourself._", with one empty line between sections.',
+      ],
+      edgeCases: ['Times may use different offsets; read every ISO 8601 time as an instant.', 'Do not change incident.'],
+    },
+    example: {
+      input:
+        'postmortemDraft({title: "Checkout errors", impactStart: "2026-10-19T08:00:00Z", resolvedAt: "2026-10-19T15:42:30+07:00", events: [{at: "2026-10-19T08:12:00Z", source: "pager", message: "alert fired"}], actions: [{task: "Alert on pool usage", owner: "Ada"}]})',
+      output:
+        '"# Postmortem: Checkout errors\\n\\nDuration: 42 minutes (2026-10-19T08:00:00.000Z to 2026-10-19T08:42:30.000Z)\\n\\n## Timeline (UTC)\\n- 08:12 pager: alert fired\\n\\n## Action items\\n- [ ] Alert on pool usage (owner: Ada)\\n\\n## What happened\\n_Write this section yourself._\\n\\n## Why it happened\\n_Write this section yourself._"',
+    },
+    note: `The checks compare only the skeleton your function returns. The postmortem itself, what happened and why, written blamelessly in Explain, is self-reviewed against the guide and never graded. ${notRun}`,
+    vocabulary: [
+      { term: 'Postmortem', meaning: 'a written review after an incident: what happened, why, and what will change' },
+      { term: 'Blameless', meaning: 'focusing on how the system and process allowed a failure, not on who made a mistake' },
+    ],
+    planPrompt:
+      'Which parts of a postmortem can a program assemble from records, and which must people write? In Explain, write the "What happened" and "Why it happened" sections for an incident you know, without naming who was at fault.',
+    starter:
+      "type Incident = {\n  title: string\n  impactStart: string\n  resolvedAt: string\n  events: { at: string; source: string; message: string }[]\n  actions: { task: string; owner: string }[]\n}\n\nfunction postmortemDraft(incident: Incident): string {\n  return ''\n}\n",
+    functionName: 'postmortemDraft',
+    preserveInput: true,
+    hints: [
+      'Build an array of lines and join it with "\\n" at the end; empty strings become the empty lines.',
+      'toISOString().slice(11, 16) gives HH:MM in UTC.',
+      'Sort a copy of the events with a stable sort on instant, then source name.',
+    ],
+    checks: [
+      {
+        name: 'Drafts the example',
+        input: [
+          {
+            title: 'Checkout errors',
+            impactStart: '2026-10-19T08:00:00Z',
+            resolvedAt: '2026-10-19T15:42:30+07:00',
+            events: [{ at: '2026-10-19T08:12:00Z', source: 'pager', message: 'alert fired' }],
+            actions: [{ task: 'Alert on pool usage', owner: 'Ada' }],
+          },
+        ],
+        expected:
+          '# Postmortem: Checkout errors\n\nDuration: 42 minutes (2026-10-19T08:00:00.000Z to 2026-10-19T08:42:30.000Z)\n\n## Timeline (UTC)\n- 08:12 pager: alert fired\n\n## Action items\n- [ ] Alert on pool usage (owner: Ada)\n\n## What happened\n_Write this section yourself._\n\n## Why it happened\n_Write this section yourself._',
+      },
+      {
+        name: 'Orders events from several offsets',
+        input: [
+          {
+            title: 'Search outage',
+            impactStart: '2026-10-19T08:00:00Z',
+            resolvedAt: '2026-10-19T09:00:00Z',
+            events: [
+              { at: '2026-10-19T08:30:00Z', source: 'app', message: 'rollback done' },
+              { at: '2026-10-19T15:05:00+07:00', source: 'chat', message: 'Grace: search is empty' },
+              { at: '2026-10-19T03:05:00-05:00', source: 'app', message: 'index missing' },
+            ],
+            actions: [],
+          },
+        ],
+        expected:
+          '# Postmortem: Search outage\n\nDuration: 60 minutes (2026-10-19T08:00:00.000Z to 2026-10-19T09:00:00.000Z)\n\n## Timeline (UTC)\n- 08:05 app: index missing\n- 08:05 chat: Grace: search is empty\n- 08:30 app: rollback done\n\n## Action items\n- None recorded\n\n## What happened\n_Write this section yourself._\n\n## Why it happened\n_Write this section yourself._',
+      },
+      {
+        name: 'Keeps actions in the given order',
+        input: [
+          {
+            title: 'Disk full',
+            impactStart: '2026-10-19T08:00:00Z',
+            resolvedAt: '2026-10-19T08:10:59Z',
+            events: [],
+            actions: [
+              { task: 'Rotate logs daily', owner: 'Lin' },
+              { task: 'Alert at 80% disk', owner: 'Sam' },
+            ],
+          },
+        ],
+        expected:
+          '# Postmortem: Disk full\n\nDuration: 10 minutes (2026-10-19T08:00:00.000Z to 2026-10-19T08:10:59.000Z)\n\n## Timeline (UTC)\n\n## Action items\n- [ ] Rotate logs daily (owner: Lin)\n- [ ] Alert at 80% disk (owner: Sam)\n\n## What happened\n_Write this section yourself._\n\n## Why it happened\n_Write this section yourself._',
+      },
+      {
+        name: 'Keeps input order for identical times and sources',
+        input: [
+          {
+            title: 'Queue stall',
+            impactStart: '2026-10-19T23:50:00Z',
+            resolvedAt: '2026-10-20T00:20:00Z',
+            events: [
+              { at: '2026-10-20T00:05:00Z', source: 'worker', message: 'stuck job' },
+              { at: '2026-10-20T00:05:00Z', source: 'worker', message: 'lease expired' },
+            ],
+            actions: [{ task: 'Shorten the lease', owner: 'Kai' }],
+          },
+        ],
+        expected:
+          '# Postmortem: Queue stall\n\nDuration: 30 minutes (2026-10-19T23:50:00.000Z to 2026-10-20T00:20:00.000Z)\n\n## Timeline (UTC)\n- 00:05 worker: stuck job\n- 00:05 worker: lease expired\n\n## Action items\n- [ ] Shorten the lease (owner: Kai)\n\n## What happened\n_Write this section yourself._\n\n## Why it happened\n_Write this section yourself._',
+      },
+    ],
+  },
 ]

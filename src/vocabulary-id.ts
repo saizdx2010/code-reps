@@ -603,6 +603,15 @@ export const indonesianGlossary: Record<string, string> = {
   Hysteresis: 'memakai batas yang lebih rendah untuk mematikan daripada untuk menyalakan, sehingga tidak bolak-balik',
   'API route': 'satu jenis request yang dijawab API, seperti GET /search',
   'On-call page': 'peringatan yang membangunkan seseorang karena perlu tindakan segera',
+  Incident: 'kejadian tak terencana yang merugikan pengguna layanan dan perlu ditangani',
+  'Time to detect': 'berapa lama pengguna terdampak sebelum tim mendapat peringatan',
+  Mitigation: 'menghentikan kerugian bagi pengguna, misalnya dengan rollback, sebelum penyebabnya diperbaiki',
+  'Impact window': 'periode ketika pengguna terdampak oleh sebuah insiden',
+  'Error rate graph': 'grafik bagian request yang gagal dari waktu ke waktu, dipakai untuk melihat kapan masalah mulai dan berakhir',
+  'Change event': 'catatan tentang sesuatu yang diubah di produksi, seperti deploy atau perubahan konfigurasi',
+  'Lookback window': 'seberapa jauh ke belakang sebelum sebuah kejadian untuk mencari kemungkinan penyebab',
+  Postmortem: 'tinjauan tertulis setelah insiden: apa yang terjadi, mengapa, dan apa yang akan diubah',
+  Blameless: 'berfokus pada bagaimana sistem dan proses membiarkan kegagalan terjadi, bukan pada siapa yang salah',
 }
 
 /** Shown with the glossary when Indonesian help is on. */

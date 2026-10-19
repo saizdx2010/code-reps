@@ -544,6 +544,66 @@ export const devopsDepth: Record<string, RepDepth> = {
     transfer:
       'Add a third state, "pending", reported when the first bad value arrives and before the alert fires. Decide what happens when a pending alert sees a good value. This changed contract is self-reviewed, not checked by the original cases.',
   },
+  'devops-incident-timeline': {
+    reasoning:
+      'Parsing every time into an instant puts all sources on one clock, and writing it back with toISOString shows them all in UTC. A key made of the instant, the source, and the message identifies a repeated log line exactly, so only true repeats are dropped. Sorting by instant, then by source name, with a stable sort, gives one order that does not depend on how the sources were listed.',
+    trace:
+      'For an app source with "restart" at 08:00Z and again at 15:00+07:00, both times parse to the same instant, so the second has the same key and is dropped. For sources web and api with events at the same instant, the tie is broken by name, so api comes first; two app events at one instant keep their input order because the sort is stable.',
+    alternative:
+      'Logging every event in UTC at the source removes the conversion step, and many teams require it; incidents still mix in chat and third-party times. Merging already-sorted sources with a k-way merge is faster than sorting everything, which matters only for very large logs.',
+    counterexample:
+      'Sorting by the at text puts "2026-10-19T15:01:00+07:00" after "2026-10-19T08:02:00Z", although it happened first. A key without the source drops "restart" from source b in "Keeps the same message from two sources".',
+    transfer:
+      'Some sources report times without an offset but are known to be in a given zone, such as "Asia/Jakarta". Decide how sources declare their zone and how to convert their times. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-incident-durations': {
+    reasoning:
+      'Each duration is a difference between two facts that may be recorded several times or out of order, so the earliest event of each kind is the fact that counts. Measuring every duration from the same start makes them comparable, rounding down keeps a minute from being claimed before it has passed, and clamping at 0 records an early alert as instant detection rather than negative time.',
+    trace:
+      'For the example, the impact started at 08:00Z. The alert at 15:12:30+07:00 is 08:12:30Z, which is 12.5 minutes later, rounded down to 12. Mitigation at 08:20Z is 20 minutes, and resolution at 08:30Z is 30 minutes.',
+    alternative:
+      'Measuring time to mitigate from the alert instead of the start separates how fast the team reacted from how fast the problem was noticed. Averages of these durations over many incidents are common, but medians resist one very long incident better.',
+    counterexample:
+      'Using the first event of each kind in the list rather than the earliest gives 40 minutes in "Uses the earliest event of each kind". Rounding to the nearest minute gives 5 instead of 4 in "Rounds partial minutes down".',
+    transfer:
+      'Add "time to acknowledge": from the first alert to the first event of kind "ack". Decide what it is when there is an ack but no alert. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-impact-windows': {
+    reasoning:
+      "Each bad minute either extends the current window or starts a new one, and the decision depends only on how many good minutes lie between it and the window's last bad minute. Keeping windows anchored on bad minutes means a merged gap is inside a window, but trailing good minutes never are.",
+    trace:
+      'For [0, 8, 9, 1, 7, 0, 0, 0, 6] with threshold 5 and mergeGap 1, minutes 1 and 2 start a window. Minute 4 is bad, and only minute 3 lies between it and minute 2, so it extends the window to end at 4. Minute 8 is bad, but minutes 5, 6, and 7 lie between, more than 1, so it starts a new window.',
+    alternative:
+      'Smoothing the rates first, for example with a moving average, also removes short dips, but changes where windows start and end. Reporting raw windows and leaving the merging to a person avoids hiding a real recovery.',
+    counterexample:
+      'Counting a rate equal to the threshold as bad adds minutes 0 and 2 in "Does not count a rate equal to the threshold". Comparing the gap with < instead of <= splits "Joins a gap exactly mergeGap long" into two windows.',
+    transfer:
+      'Report the peak rate and the total of bad minutes for each window as well. Decide whether merged good minutes count toward the total. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-changes-before': {
+    reasoning:
+      'The window is half-open, after its start and up to the impact itself, so a change exactly one lookback earlier belongs to the previous window and a change at the moment of impact is still a candidate. Sorting newest first puts the most likely leads at the top, and the sameService flag points at changes to the affected service without hiding the others, since a change elsewhere can cause harm too.',
+    trace:
+      'For the example, the impact is at 08:00Z and the lookback is 60 minutes, so the window is after 07:00Z and up to 08:00Z. The search flag at 14:55+07:00 is 07:55Z, and the checkout deploy is 07:40Z; both are inside. Newest first, the flag comes before the deploy, and only the deploy has sameService true.',
+    alternative:
+      'Weighting changes by a risk score, such as database migrations above copy changes, ranks leads better but needs a score for every kind of change. Searching a fixed number of recent changes rather than a time window works poorly when changes are rare or very frequent.',
+    counterexample:
+      'Including the window\'s start keeps the deploy in "Leaves out a change exactly at the window start". Comparing the at text with the impact start text ignores offsets and drops the change in "Reads offsets on the impact start too".',
+    transfer:
+      'Include changes that started before the window but were still rolling out at its start, given a finishedAt time for each change. Decide which time places a change in the window. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-postmortem-draft': {
+    reasoning:
+      'The skeleton is built from facts that records already hold, so a function can assemble it the same way every time: duration from two instants, events in one order on one clock, and the agreed actions. The explanation sections are left as prompts, because only the people involved can say what happened and why, and that writing is reviewed by people, not by checks.',
+    trace:
+      'For "Search outage", the duration from 08:00Z to 09:00Z is 60 minutes. The events at 03:05−05:00 and 15:05+07:00 are both 08:05Z, so the tie is broken by source name: app, then chat. With no actions, the action list is "- None recorded", and each section is separated by one empty line.',
+    alternative:
+      'Many teams fill a postmortem template by hand, which allows judgment about which events matter but drifts from the records. Generating the whole document, including the explanation, from data would be faster but cannot explain why the system allowed the failure.',
+    counterexample:
+      'Formatting the timeline times in the machine\'s time zone gives a different document on every computer. Sorting events only by time without the source tie-break makes "Orders events from several offsets" depend on input order.',
+    transfer:
+      'Group the timeline into "Detection", "Mitigation", and "Resolution" sections using event kinds. Decide where events before the impact start belong. This changed contract is self-reviewed, not checked by the original cases.',
+  },
 }
 
 export const devopsGuides: Record<string, ReflectionGuide> = {
@@ -1141,6 +1201,68 @@ export const devopsGuides: Record<string, ReflectionGuide> = {
     example:
       'For each value, the condition is value < resolveBelow while firing and value >= fireAt while resolved; the count grows on a match and resets otherwise. Reaching resolveAfter or fireAfter flips the state, resets the count, and records {at, state}. The work is linear in the values. The checks pass values in directly; no alert is sent.',
   },
+  'devops-incident-timeline': {
+    plan: [
+      'Parse every event time into an instant.',
+      'Drop repeats of instant, source, and message.',
+      'Sort by instant, then source name, keeping input order for ties, and write times in UTC.',
+    ],
+    explanation: ['Trace two events in different offsets.', 'Explain what counts as a repeat.', 'Say why a stable sort matters here.'],
+    example:
+      'I go through every source and event, parse at with Date.parse, and skip a key [ms, source, message] already in a Set. I sort by ms and then source name, which keeps input order for full ties, and return {at: toISOString, source, message}. The work is O(n log n). The checks pass events in directly; no logs are read.',
+  },
+  'devops-incident-durations': {
+    plan: [
+      'Find the earliest instant of each kind.',
+      'Measure each kind from the earliest impact start, in whole minutes rounded down.',
+      'Return null for a missing start or kind, and 0 for an early event.',
+    ],
+    explanation: [
+      'Trace an alert written in another offset.',
+      'Explain why the earliest event of a kind counts.',
+      'Say what time to detect tells a team.',
+    ],
+    example:
+      'I keep a Map from kind to its smallest parsed time. Each duration is null without an impact start or an event of its kind, and otherwise Math.max(0, Math.floor((at − start) / 60000)). The work is linear in the events. The checks pass events in directly.',
+  },
+  'devops-impact-windows': {
+    plan: [
+      'Mark minutes above the threshold as bad.',
+      'Extend the last window when the gap since its end is at most mergeGap.',
+      'Otherwise start a new window.',
+    ],
+    explanation: ['Trace a short dip inside an incident.', 'Explain why windows end on a bad minute.', 'Say what mergeGap trades off.'],
+    example:
+      'For each minute with a rate above the threshold, I extend the last window if minute − end − 1 <= mergeGap, updating end and minutes, or push a new window of one minute. The work is linear in the minutes. The checks pass rates in directly; no graph is read.',
+  },
+  'devops-changes-before': {
+    plan: [
+      'Parse the impact start and each change time.',
+      'Keep changes after start − lookback and up to the start.',
+      'Sort newest first and add sameService.',
+    ],
+    explanation: [
+      'Trace a change exactly one lookback before the impact.',
+      'Explain why changes to other services stay in the list.',
+      'Say why this list gives leads, not causes.',
+    ],
+    example:
+      'end is Date.parse(impactStart) and begin is end − lookback × 60,000. I keep changes with begin < ms <= end, sort by ms descending with a stable sort, and map to {at: toISOString, service, description, sameService}. The work is O(n log n). The checks pass changes in directly; no deploy history is read.',
+  },
+  'devops-postmortem-draft': {
+    plan: [
+      'Build the header with the duration in whole minutes.',
+      'Add the timeline in one order on one clock, then the action items.',
+      'Leave the explanation sections as prompts, then write them yourself in Explain.',
+    ],
+    explanation: [
+      'Write "What happened" for an incident you know: the impact on users, when it started, and how it was noticed, in plain words.',
+      'Write "Why it happened" blamelessly: what in the system or the process let a reasonable action cause harm, with no names.',
+      'Check that every action item is specific, has an owner, and closes a gap you described, and say what went well.',
+    ],
+    example:
+      'The function builds lines: the title, the duration from floor((end − start) / 60000) with both times from toISOString, the sorted timeline with toISOString().slice(11, 16), the actions or "- None recorded", and the two prompts, joined with "\\n". In Explain, I wrote that checkout failed for 42 minutes because a connection pool limit was lowered in a config change that no test exercised, and that the alert fired 12 minutes in because it watched errors, not pool usage. The checks cover the skeleton only; this writing is self-reviewed.',
+  },
 }
 
 export const devopsLessonDepth: Record<string, LessonDepth> = {
@@ -1233,5 +1355,15 @@ export const devopsLessonDepth: Record<string, LessonDepth> = {
       'A team pages when the error rate over the last 5 minutes is above 1%. Their service gets 20 requests a minute at night. Predict how often they are paged at night and propose a better rule using what you know about error budgets.',
     answer:
       '5 minutes at night is about 100 requests, so 2 failed requests already make 2%, and ordinary chance failures page them most nights. A burn-rate rule over a long and a short window, with a minimum number of requests before a window counts, pages only when the budget is really being spent fast, and stays quiet when a handful of requests fail.',
+  },
+  'incident-response': {
+    title: 'Ask what let it happen, not who did it',
+    code: 'blaming:    "Sam ran the cleanup script against production."\nblameless:  "The cleanup script accepted any database name, and\n             production and staging names differ by one letter."\naction:     "Require typing the database name to confirm a delete."',
+    reasoning:
+      'The blaming sentence is true but leads nowhere: Sam will be careful, and the next person will make the same mistake because nothing changed. The blameless sentence describes the gap that turned an ordinary slip into an incident, and that gap is something the team can close. People also report problems sooner when they know the review will look at the system, which shortens the time to detect the next incident.',
+    challenge:
+      'A postmortem says: "The on-call engineer did not notice the alert for 40 minutes." Rewrite it blamelessly and propose two action items.',
+    answer:
+      'For example: "The alert was delivered only by email, which is not watched at night, and nothing escalated it when unacknowledged for 10 minutes." Action items could be to page the on-call phone for this alert, and to escalate to a second person when a page is not acknowledged within 10 minutes. Both change the system, so they help whoever is on call next.',
   },
 }

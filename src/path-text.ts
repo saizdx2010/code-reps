@@ -410,5 +410,10 @@ export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
         'Find p95 by the nearest-rank method, measure an error budget and its burn rate in whole numbers, find routes over their latency target, page on a fast burn over two windows, and keep an alert from flapping.',
       recap: 'You can now turn measurements into numbers people trust and alerts they do not ignore.',
     },
+    'Learn from incidents': {
+      description:
+        "Put an incident's events from several clocks into one timeline, measure time to detect, mitigate, and resolve, find the windows of impact and the changes just before, and draft a postmortem whose explanation you write yourself.",
+      recap: 'You can now reconstruct what happened in an incident and write it up so the team can learn from it.',
+    },
   },
 }
