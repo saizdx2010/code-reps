@@ -240,4 +240,88 @@ function replayWrites(initial: { value: string; version: number }, events: Event
   })
   return { value, version, refused }
 }`,
+  'backend-job-failure': `
+function afterFailure(job: { id: string; attempts: number }, error: { retryable: boolean }, now: number, policy: { maxAttempts: number; baseDelayMs: number; maxDelayMs: number }) {
+  if (!error.retryable) return { action: 'dead-letter', reason: 'PERMANENT_ERROR' }
+  if (job.attempts >= policy.maxAttempts) return { action: 'dead-letter', reason: 'TOO_MANY_ATTEMPTS' }
+  const wait = Math.min(policy.maxDelayMs, policy.baseDelayMs * 2 ** (job.attempts - 1))
+  return { action: 'retry', runAt: now + wait }
+}`,
+  'backend-claim-job': `
+type Job = { id: string; runAt: number; attempts: number; lease: { worker: string; until: number } | null }
+function claimJob(jobs: Job[], worker: string, now: number, leaseMs: number) {
+  const available = (job: Job) => job.runAt <= now && (job.lease === null || job.lease.until <= now)
+  let chosen = -1
+  jobs.forEach((job, index) => {
+    if (available(job) && (chosen === -1 || job.runAt < jobs[chosen].runAt)) chosen = index
+  })
+  if (chosen === -1) return { jobId: null, jobs }
+  return {
+    jobId: jobs[chosen].id,
+    jobs: jobs.map((job, index) =>
+      index === chosen ? { ...job, attempts: job.attempts + 1, lease: { worker, until: now + leaseMs } } : job,
+    ),
+  }
+}`,
+  'backend-dedupe-deliveries': `
+function applyMessages(messages: { id: string; account: string; amount: number }[], processedIds: string[]) {
+  const seen = new Set(processedIds)
+  const balances: Record<string, number> = {}
+  const skipped: string[] = []
+  const applied: string[] = []
+  for (const message of messages) {
+    if (seen.has(message.id)) {
+      skipped.push(message.id)
+      continue
+    }
+    seen.add(message.id)
+    applied.push(message.id)
+    balances[message.account] = (balances[message.account] ?? 0) + message.amount
+  }
+  return { balances, skipped, processedIds: [...processedIds, ...applied] }
+}`,
+  'backend-outbox-relay': `
+type Row = { id: number; event: string; publishedAt: number | null }
+function relayOutbox(rows: Row[], results: boolean[], now: number, batchSize: number) {
+  const batch = rows.filter(row => row.publishedAt === null).sort((a, b) => a.id - b.id).slice(0, batchSize)
+  const published: number[] = []
+  for (const [index, row] of batch.entries()) {
+    if (results[index] !== true) break
+    published.push(row.id)
+  }
+  const done = new Set(published)
+  return { published, rows: rows.map(row => (done.has(row.id) ? { ...row, publishedAt: now } : row)) }
+}`,
+  'backend-queue-simulation': `
+type Outcome = 'ok' | 'retryable' | 'permanent'
+function runQueue(jobIds: string[], outcomes: Record<string, Outcome[]>, policy: { maxAttempts: number; baseDelayMs: number; maxDelayMs: number }) {
+  let order = 0
+  const queue = jobIds.map(id => ({ id, runAt: 0, attempts: 0, order: order++ }))
+  const completed: string[] = []
+  const deadLetters: { id: string; reason: string; attempts: number }[] = []
+  let clock = 0
+  while (queue.length) {
+    let next = 0
+    for (let i = 1; i < queue.length; i++) {
+      const a = queue[i]
+      const b = queue[next]
+      if (a.runAt < b.runAt || (a.runAt === b.runAt && a.order < b.order)) next = i
+    }
+    const entry = queue.splice(next, 1)[0]
+    clock = Math.max(clock, entry.runAt)
+    const attempts = entry.attempts + 1
+    const outcome = outcomes[entry.id]?.[attempts - 1] ?? 'ok'
+    if (outcome === 'ok') completed.push(entry.id)
+    else if (outcome === 'permanent') deadLetters.push({ id: entry.id, reason: 'PERMANENT_ERROR', attempts })
+    else if (attempts >= policy.maxAttempts) deadLetters.push({ id: entry.id, reason: 'TOO_MANY_ATTEMPTS', attempts })
+    else
+      queue.push({
+        id: entry.id,
+        runAt: clock + Math.min(policy.maxDelayMs, policy.baseDelayMs * 2 ** (attempts - 1)),
+        attempts,
+        order: order++,
+      })
+  }
+  return { completed, deadLetters, finishedAt: clock }
+}`,
 }

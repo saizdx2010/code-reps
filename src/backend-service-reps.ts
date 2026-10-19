@@ -1447,4 +1447,649 @@ export const backendServiceReps: Rep[] = [
       },
     ],
   },
+  {
+    id: 'backend-job-failure',
+    title: 'Decide what happens to a failed job',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'A background worker sends emails and builds reports outside the request that asked for them. When a job fails, the worker either schedules another attempt later or moves the job to a dead-letter list for a person to look at.',
+    prompt:
+      'Implement afterFailure(job, error, now, policy). job.attempts counts the attempts made so far, including the one that just failed. If error.retryable is false, return {action: "dead-letter", reason: "PERMANENT_ERROR"}. Otherwise, if job.attempts is at least policy.maxAttempts, return {action: "dead-letter", reason: "TOO_MANY_ATTEMPTS"}. Otherwise return {action: "retry", runAt}, where runAt is now plus the smaller of policy.maxDelayMs and policy.baseDelayMs times 2 to the power (job.attempts - 1). Do not change the inputs.',
+    brief: {
+      summary: 'Implement afterFailure(job, error, now, policy) and return a retry time or a dead letter.',
+      rules: [
+        'If error.retryable is false, return {action: "dead-letter", reason: "PERMANENT_ERROR"}.',
+        'Otherwise, if job.attempts is at least policy.maxAttempts, return {action: "dead-letter", reason: "TOO_MANY_ATTEMPTS"}.',
+        'Otherwise return {action: "retry", runAt}, where runAt is now plus the smaller of policy.maxDelayMs and policy.baseDelayMs times 2 to the power (job.attempts - 1).',
+      ],
+      edgeCases: ['job.attempts includes the attempt that just failed.', 'Do not change the inputs.'],
+    },
+    example: {
+      input:
+        'afterFailure({id: "j1", attempts: 2}, {retryable: true, message: "timeout"}, 5000, {maxAttempts: 5, baseDelayMs: 1000, maxDelayMs: 60000})',
+      output: '{action: "retry", runAt: 7000}',
+    },
+    note: 'attempts is at least 1; maxAttempts, baseDelayMs, and maxDelayMs are positive whole numbers; now is in milliseconds. Real queues often add a random amount to each delay so retries spread out; this contract adds none so the checks can be exact. These are values passed to your function, not a live queue or clock.',
+    vocabulary: [
+      { term: 'Dead-letter list', meaning: 'a place for jobs that will not be retried, kept for a person to inspect' },
+      { term: 'Exponential backoff', meaning: 'waiting twice as long after each failure, up to a limit' },
+    ],
+    planPrompt:
+      'With a base of 1000 and a cap of 60000, list the wait after attempts 1 to 8. At which attempt does the cap start to matter?',
+    starter:
+      'type Job = { id: string; attempts: number }\ntype Policy = { maxAttempts: number; baseDelayMs: number; maxDelayMs: number }\ntype Decision = { action: "retry"; runAt: number } | { action: "dead-letter"; reason: string }\n\nfunction afterFailure(job: Job, error: { retryable: boolean; message: string }, now: number, policy: Policy): Decision {\n  // Choose between retry and dead letter, in the stated order.\n  return { action: "retry", runAt: now }\n}\n',
+    functionName: 'afterFailure',
+    preserveInput: true,
+    hints: [
+      'Decide between retry and dead letter first, in the stated order; only a retry needs a time.',
+      'The first failure waits exactly the base delay, so the power is attempts minus 1.',
+      'Cap the delay with Math.min before adding it to now.',
+    ],
+    checks: [
+      {
+        name: 'Doubles the wait after the second attempt',
+        input: [
+          { id: 'j1', attempts: 2 },
+          { retryable: true, message: 'timeout' },
+          5000,
+          { maxAttempts: 5, baseDelayMs: 1000, maxDelayMs: 60000 },
+        ],
+        expected: { action: 'retry', runAt: 7000 },
+      },
+      {
+        name: 'Waits the base delay after the first attempt',
+        input: [
+          { id: 'j1', attempts: 1 },
+          { retryable: true, message: 'timeout' },
+          5000,
+          { maxAttempts: 5, baseDelayMs: 1000, maxDelayMs: 60000 },
+        ],
+        expected: { action: 'retry', runAt: 6000 },
+      },
+      {
+        name: 'Caps a long wait',
+        input: [
+          { id: 'j1', attempts: 8 },
+          { retryable: true, message: 'busy' },
+          0,
+          { maxAttempts: 10, baseDelayMs: 1000, maxDelayMs: 60000 },
+        ],
+        expected: { action: 'retry', runAt: 60000 },
+      },
+      {
+        name: 'Keeps a wait equal to the cap',
+        input: [
+          { id: 'j1', attempts: 3 },
+          { retryable: true, message: 'busy' },
+          100,
+          { maxAttempts: 10, baseDelayMs: 1000, maxDelayMs: 4000 },
+        ],
+        expected: { action: 'retry', runAt: 4100 },
+      },
+      {
+        name: 'Retries one attempt before the limit',
+        input: [
+          { id: 'j1', attempts: 4 },
+          { retryable: true, message: 'timeout' },
+          0,
+          { maxAttempts: 5, baseDelayMs: 1000, maxDelayMs: 60000 },
+        ],
+        expected: { action: 'retry', runAt: 8000 },
+      },
+      {
+        name: 'Gives up at the last allowed attempt',
+        input: [
+          { id: 'j1', attempts: 5 },
+          { retryable: true, message: 'timeout' },
+          0,
+          { maxAttempts: 5, baseDelayMs: 1000, maxDelayMs: 60000 },
+        ],
+        expected: { action: 'dead-letter', reason: 'TOO_MANY_ATTEMPTS' },
+      },
+      {
+        name: 'Gives up after one attempt when only one is allowed',
+        input: [
+          { id: 'j1', attempts: 1 },
+          { retryable: true, message: 'timeout' },
+          0,
+          { maxAttempts: 1, baseDelayMs: 1000, maxDelayMs: 60000 },
+        ],
+        expected: { action: 'dead-letter', reason: 'TOO_MANY_ATTEMPTS' },
+      },
+      {
+        name: 'Stops at once for a permanent error',
+        input: [
+          { id: 'j1', attempts: 1 },
+          { retryable: false, message: 'record deleted' },
+          0,
+          { maxAttempts: 5, baseDelayMs: 1000, maxDelayMs: 60000 },
+        ],
+        expected: { action: 'dead-letter', reason: 'PERMANENT_ERROR' },
+      },
+      {
+        name: 'Reports a permanent error before the attempt limit',
+        input: [
+          { id: 'j1', attempts: 5 },
+          { retryable: false, message: 'record deleted' },
+          0,
+          { maxAttempts: 5, baseDelayMs: 1000, maxDelayMs: 60000 },
+        ],
+        expected: { action: 'dead-letter', reason: 'PERMANENT_ERROR' },
+      },
+    ],
+  },
+  {
+    id: 'backend-claim-job',
+    title: 'Claim the next job with a lease',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'Several workers share one job table. A worker claims a job by taking a lease on it for a while. If that worker stops before finishing, its lease runs out and another worker can claim the same job, so every job runs at least once and sometimes more than once.',
+    prompt:
+      'Implement claimJob(jobs, worker, now, leaseMs). Each job has id, runAt, attempts, and lease, which is null or {worker, until}. A job is available when runAt is at or before now and it has no lease or its lease.until is at or before now. Choose the available job with the smallest runAt, breaking ties by the earlier position in jobs. Return {jobId, jobs}, where jobs is a new array in which the chosen job has lease {worker, until: now + leaseMs} and attempts increased by 1, and every other job is unchanged. When no job is available, return {jobId: null, jobs} with the jobs unchanged. Do not change the inputs.',
+    brief: {
+      summary: 'Implement claimJob(jobs, worker, now, leaseMs) and return the claimed job ID with the updated jobs.',
+      rules: [
+        'A job is available when runAt is at or before now and it has no lease or its lease.until is at or before now.',
+        'Choose the available job with the smallest runAt, breaking ties by the earlier position in jobs.',
+        'Return {jobId, jobs}, where the chosen job has lease {worker, until: now + leaseMs} and attempts increased by 1, and every other job is unchanged.',
+        'When no job is available, return {jobId: null, jobs} with the jobs unchanged.',
+      ],
+      edgeCases: ['A live lease blocks every worker, including the one that holds it.', 'Do not change the inputs.'],
+    },
+    example: {
+      input: 'claimJob([{id: "a", runAt: 0, attempts: 0, lease: null}], "w1", 100, 30000)',
+      output: '{jobId: "a", jobs: [{id: "a", runAt: 0, attempts: 1, lease: {worker: "w1", until: 30100}}]}',
+    },
+    note: 'Times are whole milliseconds; leaseMs is positive; jobs has at most 100 entries. A real job table does this with one atomic database update so two workers cannot claim the same job at once; here one call stands for that update. These are values passed to your function, not a live queue.',
+    vocabulary: [
+      { term: 'Lease', meaning: 'a claim on a job that lasts until a set time, after which others may take it' },
+      {
+        term: 'At-least-once delivery',
+        meaning: 'a promise that each job or message is handed out until it is done, so it may arrive more than once',
+      },
+    ],
+    planPrompt:
+      'At now = 100, which of these is available: a job due at 200; one leased until 500; one leased until 100; one due at 50 with no lease? Which one is claimed?',
+    starter:
+      'type Lease = { worker: string; until: number }\ntype Job = { id: string; runAt: number; attempts: number; lease: Lease | null }\n\nfunction claimJob(jobs: Job[], worker: string, now: number, leaseMs: number): { jobId: string | null; jobs: Job[] } {\n  // Find the earliest available job and lease it.\n  return { jobId: null, jobs }\n}\n',
+    functionName: 'claimJob',
+    preserveInput: true,
+    hints: [
+      'Write the availability test on its own: due by now, and either no lease or an expired one.',
+      'Scan once, keeping the best available job so far; a later job replaces it only with a strictly smaller runAt.',
+      'Build the result with map, replacing only the chosen job with a copy that has the new lease and attempts.',
+    ],
+    checks: [
+      {
+        name: 'Claims a waiting job',
+        input: [[{ id: 'a', runAt: 0, attempts: 0, lease: null }], 'w1', 100, 30000],
+        expected: { jobId: 'a', jobs: [{ id: 'a', runAt: 0, attempts: 1, lease: { worker: 'w1', until: 30100 } }] },
+      },
+      {
+        name: 'Skips a job that is not due yet',
+        input: [[{ id: 'a', runAt: 200, attempts: 0, lease: null }], 'w1', 100, 1000],
+        expected: { jobId: null, jobs: [{ id: 'a', runAt: 200, attempts: 0, lease: null }] },
+      },
+      {
+        name: 'Takes a job due exactly now',
+        input: [[{ id: 'a', runAt: 100, attempts: 2, lease: null }], 'w1', 100, 1000],
+        expected: { jobId: 'a', jobs: [{ id: 'a', runAt: 100, attempts: 3, lease: { worker: 'w1', until: 1100 } }] },
+      },
+      {
+        name: 'Skips a job with a live lease',
+        input: [[{ id: 'a', runAt: 0, attempts: 1, lease: { worker: 'w2', until: 500 } }], 'w1', 100, 1000],
+        expected: { jobId: null, jobs: [{ id: 'a', runAt: 0, attempts: 1, lease: { worker: 'w2', until: 500 } }] },
+      },
+      {
+        name: 'Reclaims a job whose lease ran out',
+        input: [[{ id: 'a', runAt: 0, attempts: 1, lease: { worker: 'w2', until: 100 } }], 'w1', 100, 1000],
+        expected: { jobId: 'a', jobs: [{ id: 'a', runAt: 0, attempts: 2, lease: { worker: 'w1', until: 1100 } }] },
+      },
+      {
+        name: 'Does not let a worker reclaim its own live lease',
+        input: [[{ id: 'a', runAt: 0, attempts: 1, lease: { worker: 'w1', until: 500 } }], 'w1', 100, 1000],
+        expected: { jobId: null, jobs: [{ id: 'a', runAt: 0, attempts: 1, lease: { worker: 'w1', until: 500 } }] },
+      },
+      {
+        name: 'Picks the earliest runAt, not the first in the list',
+        input: [
+          [
+            { id: 'b', runAt: 50, attempts: 0, lease: null },
+            { id: 'a', runAt: 10, attempts: 0, lease: null },
+          ],
+          'w1',
+          100,
+          1000,
+        ],
+        expected: {
+          jobId: 'a',
+          jobs: [
+            { id: 'b', runAt: 50, attempts: 0, lease: null },
+            { id: 'a', runAt: 10, attempts: 1, lease: { worker: 'w1', until: 1100 } },
+          ],
+        },
+      },
+      {
+        name: 'Breaks a tie by position in the list',
+        input: [
+          [
+            { id: 'z', runAt: 10, attempts: 0, lease: null },
+            { id: 'a', runAt: 10, attempts: 0, lease: null },
+          ],
+          'w1',
+          100,
+          1000,
+        ],
+        expected: {
+          jobId: 'z',
+          jobs: [
+            { id: 'z', runAt: 10, attempts: 1, lease: { worker: 'w1', until: 1100 } },
+            { id: 'a', runAt: 10, attempts: 0, lease: null },
+          ],
+        },
+      },
+      { name: 'Returns null for an empty table', input: [[], 'w1', 100, 1000], expected: { jobId: null, jobs: [] } },
+    ],
+  },
+  {
+    id: 'backend-dedupe-deliveries',
+    title: 'Skip a message delivered twice',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'A queue delivers balance changes at least once, so the same message can arrive again after a retry or a worker restart. The handler keeps the IDs it has applied and skips any message it has already seen.',
+    prompt:
+      "Implement applyMessages(messages, processedIds). Each message has id, account, and amount. Apply a message when its id is not in processedIds and has not appeared earlier in messages: add its amount to its account's balance. Skip every other message, even if its account or amount differs, and list its id in skipped. Return {balances, skipped, processedIds}, where balances maps each account that received an applied message to its total, skipped lists skipped ids in arrival order, and processedIds is a new array: the given ids followed by the newly applied ids in order. Do not change the inputs.",
+    brief: {
+      summary: 'Implement applyMessages(messages, processedIds) and return {balances, skipped, processedIds}.',
+      rules: [
+        "Apply a message when its id is not in processedIds and has not appeared earlier in messages: add its amount to its account's balance.",
+        'Skip every other message, even if its account or amount differs, and list its id in skipped, in arrival order.',
+        'balances maps each account that received an applied message to its total.',
+        'processedIds is a new array: the given ids followed by the newly applied ids in order.',
+      ],
+      edgeCases: ['A message with amount 0 still counts as applied.', 'Do not change the inputs.'],
+    },
+    example: {
+      input: 'applyMessages([{id: "m1", account: "a1", amount: 500}, {id: "m1", account: "a1", amount: 500}], [])',
+      output: '{balances: {a1: 500}, skipped: ["m1"], processedIds: ["m1"]}',
+    },
+    note: 'Amounts are whole numbers and may be negative; IDs and accounts are non-empty text compared exactly. messages has at most 200 entries. These are values passed to your function, not a live queue.',
+    vocabulary: [
+      { term: 'Idempotent consumer', meaning: 'a message handler that gives the same result when a message is delivered more than once' },
+      { term: 'Message ID', meaning: 'a unique name given to a message when it is sent, used to recognize repeats' },
+    ],
+    planPrompt:
+      'For messages m1, m2, m1 (with a different amount), and m3, with m3 already processed, write what happens to each and the final processedIds.',
+    starter:
+      'type Message = { id: string; account: string; amount: number }\n\nfunction applyMessages(messages: Message[], processedIds: string[]) {\n  // Apply each message once.\n  return { balances: {}, skipped: [] as string[], processedIds }\n}\n',
+    functionName: 'applyMessages',
+    preserveInput: true,
+    hints: [
+      'Put the processed IDs in a Set so each check is quick.',
+      'Add an ID to the Set as soon as you apply its message, so a repeat later in the same batch is caught.',
+      'Copy processedIds and append the new IDs in order, instead of pushing onto the array you were given.',
+    ],
+    checks: [
+      {
+        name: 'Applies a message once and skips its repeat',
+        input: [
+          [
+            { id: 'm1', account: 'a1', amount: 500 },
+            { id: 'm1', account: 'a1', amount: 500 },
+          ],
+          [],
+        ],
+        expected: { balances: { a1: 500 }, skipped: ['m1'], processedIds: ['m1'] },
+      },
+      {
+        name: 'Skips a message processed before',
+        input: [[{ id: 'm9', account: 'a1', amount: 100 }], ['m9']],
+        expected: { balances: {}, skipped: ['m9'], processedIds: ['m9'] },
+      },
+      {
+        name: 'Skips a repeat even when its content differs',
+        input: [
+          [
+            { id: 'm1', account: 'a1', amount: 500 },
+            { id: 'm1', account: 'a2', amount: 900 },
+          ],
+          [],
+        ],
+        expected: { balances: { a1: 500 }, skipped: ['m1'], processedIds: ['m1'] },
+      },
+      {
+        name: 'Totals several accounts',
+        input: [
+          [
+            { id: 'm1', account: 'a1', amount: 500 },
+            { id: 'm2', account: 'a2', amount: 300 },
+            { id: 'm3', account: 'a1', amount: -200 },
+          ],
+          ['m0'],
+        ],
+        expected: { balances: { a1: 300, a2: 300 }, skipped: [], processedIds: ['m0', 'm1', 'm2', 'm3'] },
+      },
+      {
+        name: 'Counts a zero amount as applied',
+        input: [[{ id: 'm1', account: 'a1', amount: 0 }], []],
+        expected: { balances: { a1: 0 }, skipped: [], processedIds: ['m1'] },
+      },
+      {
+        name: 'Lists skipped messages in arrival order',
+        input: [
+          [
+            { id: 'm2', account: 'a1', amount: 1 },
+            { id: 'm1', account: 'a1', amount: 1 },
+            { id: 'm2', account: 'a1', amount: 1 },
+            { id: 'm1', account: 'a1', amount: 1 },
+          ],
+          ['m1'],
+        ],
+        expected: { balances: { a1: 1 }, skipped: ['m1', 'm2', 'm1'], processedIds: ['m1', 'm2'] },
+      },
+      { name: 'Handles an empty batch', input: [[], ['m1']], expected: { balances: {}, skipped: [], processedIds: ['m1'] } },
+      {
+        name: 'Compares IDs exactly',
+        input: [
+          [
+            { id: 'm1', account: 'a1', amount: 5 },
+            { id: 'M1', account: 'a1', amount: 5 },
+          ],
+          [],
+        ],
+        expected: { balances: { a1: 10 }, skipped: [], processedIds: ['m1', 'M1'] },
+      },
+    ],
+  },
+  {
+    id: 'backend-outbox-relay',
+    title: 'Publish events from an outbox',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'A service saves an order and, in the same database transaction, an "order placed" event in an outbox table. A relay later publishes the unpublished events to other services in order. If publishing fails, it stops and tries again on its next run, so an event can be published more than once but is never skipped.',
+    prompt:
+      "Implement relayOutbox(rows, results, now, batchSize). Each row has id (a whole number), event, and publishedAt (null, or the time it was published). Take the unpublished rows in increasing id order, at most batchSize of them, and publish them one at a time: the n-th publish attempt succeeds when results[n - 1] is true, and fails when it is false or missing. On success set that row's publishedAt to now; stop at the first failure. Return {published, rows}, where published lists the published ids in order and rows is a new array, in the original order, with the updated rows. Do not change the inputs.",
+    brief: {
+      summary: 'Implement relayOutbox(rows, results, now, batchSize) and return {published, rows}.',
+      rules: [
+        'Take the unpublished rows (publishedAt null) in increasing id order, at most batchSize of them.',
+        'Publish them one at a time: the n-th attempt succeeds when results[n - 1] is true, and fails when it is false or missing.',
+        "On success set that row's publishedAt to now; stop at the first failure.",
+        'Return {published, rows}: the published ids in order, and a new array of rows in the original order.',
+      ],
+      edgeCases: ['Rows after a failure are not attempted, even if a later result is true.', 'Do not change the inputs.'],
+    },
+    example: {
+      input:
+        'relayOutbox([{id: 2, event: "placed", publishedAt: null}, {id: 1, event: "placed", publishedAt: null}], [true, false], 900, 10)',
+      output: '{published: [1], rows: [{id: 2, event: "placed", publishedAt: null}, {id: 1, event: "placed", publishedAt: 900}]}',
+    },
+    note: 'ids are unique whole numbers; batchSize is at least 1; rows has at most 100 entries. A real relay that publishes an event and then fails to save publishedAt publishes it again on its next run, which is why consumers skip repeats. These are values passed to your function, not a live broker.',
+    vocabulary: [
+      { term: 'Outbox', meaning: 'a table where a service saves events in the same transaction as its data, to publish them afterwards' },
+      { term: 'Relay', meaning: 'a process that reads saved events and passes them on to other services' },
+    ],
+    planPrompt:
+      'Rows 3, 1, and 2 are unpublished and row 4 is published. With batchSize 2 and results [true, true, true], which rows are published, and in what order?',
+    starter:
+      'type Row = { id: number; event: string; publishedAt: number | null }\n\nfunction relayOutbox(rows: Row[], results: boolean[], now: number, batchSize: number) {\n  // Publish the oldest unpublished rows in order.\n  return { published: [] as number[], rows }\n}\n',
+    functionName: 'relayOutbox',
+    preserveInput: true,
+    hints: [
+      'Select the unpublished rows, sort a copy of them by id, and keep the first batchSize.',
+      'Walk that list with a counter for the attempt number; a false or missing result ends the walk.',
+      'Collect the published ids in a Set, then map the original rows, copying those with a new publishedAt.',
+    ],
+    checks: [
+      {
+        name: 'Publishes in id order and stops at a failure',
+        input: [
+          [
+            { id: 2, event: 'placed', publishedAt: null },
+            { id: 1, event: 'placed', publishedAt: null },
+          ],
+          [true, false],
+          900,
+          10,
+        ],
+        expected: {
+          published: [1],
+          rows: [
+            { id: 2, event: 'placed', publishedAt: null },
+            { id: 1, event: 'placed', publishedAt: 900 },
+          ],
+        },
+      },
+      {
+        name: 'Publishes everything when every attempt succeeds',
+        input: [
+          [
+            { id: 1, event: 'placed', publishedAt: null },
+            { id: 2, event: 'paid', publishedAt: null },
+          ],
+          [true, true],
+          5,
+          10,
+        ],
+        expected: {
+          published: [1, 2],
+          rows: [
+            { id: 1, event: 'placed', publishedAt: 5 },
+            { id: 2, event: 'paid', publishedAt: 5 },
+          ],
+        },
+      },
+      {
+        name: 'Does not try rows after a failure',
+        input: [
+          [
+            { id: 1, event: 'placed', publishedAt: null },
+            { id: 2, event: 'paid', publishedAt: null },
+            { id: 3, event: 'shipped', publishedAt: null },
+          ],
+          [false, true, true],
+          5,
+          10,
+        ],
+        expected: {
+          published: [],
+          rows: [
+            { id: 1, event: 'placed', publishedAt: null },
+            { id: 2, event: 'paid', publishedAt: null },
+            { id: 3, event: 'shipped', publishedAt: null },
+          ],
+        },
+      },
+      {
+        name: 'Publishes at most batchSize rows',
+        input: [
+          [
+            { id: 3, event: 'shipped', publishedAt: null },
+            { id: 1, event: 'placed', publishedAt: null },
+            { id: 2, event: 'paid', publishedAt: null },
+          ],
+          [true, true, true],
+          7,
+          2,
+        ],
+        expected: {
+          published: [1, 2],
+          rows: [
+            { id: 3, event: 'shipped', publishedAt: null },
+            { id: 1, event: 'placed', publishedAt: 7 },
+            { id: 2, event: 'paid', publishedAt: 7 },
+          ],
+        },
+      },
+      {
+        name: 'Skips rows that are already published',
+        input: [
+          [
+            { id: 1, event: 'placed', publishedAt: 3 },
+            { id: 2, event: 'paid', publishedAt: null },
+          ],
+          [true],
+          9,
+          1,
+        ],
+        expected: {
+          published: [2],
+          rows: [
+            { id: 1, event: 'placed', publishedAt: 3 },
+            { id: 2, event: 'paid', publishedAt: 9 },
+          ],
+        },
+      },
+      {
+        name: 'Treats a missing result as a failure',
+        input: [
+          [
+            { id: 1, event: 'placed', publishedAt: null },
+            { id: 2, event: 'paid', publishedAt: null },
+          ],
+          [true],
+          4,
+          10,
+        ],
+        expected: {
+          published: [1],
+          rows: [
+            { id: 1, event: 'placed', publishedAt: 4 },
+            { id: 2, event: 'paid', publishedAt: null },
+          ],
+        },
+      },
+      {
+        name: 'Sorts ids as numbers',
+        input: [
+          [
+            { id: 10, event: 'paid', publishedAt: null },
+            { id: 9, event: 'placed', publishedAt: null },
+          ],
+          [true, false],
+          1,
+          10,
+        ],
+        expected: {
+          published: [9],
+          rows: [
+            { id: 10, event: 'paid', publishedAt: null },
+            { id: 9, event: 'placed', publishedAt: 1 },
+          ],
+        },
+      },
+      { name: 'Handles an empty outbox', input: [[], [true], 1, 10], expected: { published: [], rows: [] } },
+    ],
+  },
+  {
+    id: 'backend-queue-simulation',
+    title: 'Replay a job queue with retries',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'Before changing a retry policy, a team replays a day of job outcomes through it to see which jobs finish, which end in the dead letters, and how long the queue takes to drain.',
+    prompt:
+      'Implement runQueue(jobIds, outcomes, policy). All jobs are queued at time 0 in the order of jobIds. One worker repeatedly runs the queued job with the smallest run time; ties go to the job that was queued earlier, and a retried job counts as queued when its retry is scheduled. The clock moves forward to a job\'s run time when that is later, and running takes no time. Attempt n of a job has the outcome outcomes[id][n - 1], or "ok" when that entry or the whole list is missing. "ok" completes the job. "permanent" moves it to the dead letters with reason "PERMANENT_ERROR". "retryable" moves it to the dead letters with reason "TOO_MANY_ATTEMPTS" once it has had policy.maxAttempts attempts, and otherwise queues it again for the current time plus the smaller of policy.maxDelayMs and policy.baseDelayMs times 2 to the power (attempts - 1). Return {completed, deadLetters, finishedAt}: the completed job IDs in completion order, the dead letters as {id, reason, attempts} in the order they were added, and the clock after the last attempt (0 when there are no jobs). Do not change the inputs.',
+    brief: {
+      summary: 'Implement runQueue(jobIds, outcomes, policy) and return {completed, deadLetters, finishedAt}.',
+      rules: [
+        'All jobs are queued at time 0 in the order of jobIds. One worker repeatedly runs the queued job with the smallest run time; ties go to the job queued earlier, and a retry counts as queued when it is scheduled.',
+        "The clock moves forward to a job's run time when that is later, and running takes no time.",
+        'Attempt n of a job has the outcome outcomes[id][n - 1], or "ok" when that entry or the whole list is missing.',
+        '"ok" completes the job. "permanent" moves it to the dead letters with reason "PERMANENT_ERROR".',
+        '"retryable" moves it to the dead letters with reason "TOO_MANY_ATTEMPTS" once it has had policy.maxAttempts attempts, and otherwise queues it again for the current time plus the smaller of policy.maxDelayMs and policy.baseDelayMs times 2 to the power (attempts - 1).',
+        'Return the completed job IDs in completion order, the dead letters as {id, reason, attempts} in the order they were added, and finishedAt, the clock after the last attempt (0 when there are no jobs).',
+      ],
+      edgeCases: ['Do not change the inputs.'],
+    },
+    example: {
+      input: 'runQueue(["a", "b"], {a: ["retryable", "ok"]}, {maxAttempts: 3, baseDelayMs: 100, maxDelayMs: 1000})',
+      output: '{completed: ["b", "a"], deadLetters: [], finishedAt: 100}',
+    },
+    note: 'Job IDs are unique non-empty text; each outcomes list has at most 10 entries; policy values are positive whole numbers. jobIds has at most 50 entries. These are values passed to your function, not a live queue or clock.',
+    vocabulary: [
+      { term: 'Job queue', meaning: 'a list of work waiting to run, taken in a set order by workers' },
+      { term: 'Retry policy', meaning: 'the rules for how many times and how long after a failure a job runs again' },
+    ],
+    planPrompt:
+      'Trace the example as a table with one row per attempt: the time, the job, its outcome, and what is queued afterwards. Why does b finish before a?',
+    starter:
+      'type Outcome = "ok" | "retryable" | "permanent"\ntype Policy = { maxAttempts: number; baseDelayMs: number; maxDelayMs: number }\n\nfunction runQueue(jobIds: string[], outcomes: Record<string, Outcome[]>, policy: Policy) {\n  // Keep a list of queued entries and run the earliest one until none are left.\n  return { completed: [] as string[], deadLetters: [] as { id: string; reason: string; attempts: number }[], finishedAt: 0 }\n}\n',
+    functionName: 'runQueue',
+    preserveInput: true,
+    hints: [
+      'Keep each queued entry as {id, runAt, attempts, order}, where order is a counter that grows each time something is queued.',
+      'To choose the next entry, compare runAt first and order second; remove it from the list before running it.',
+      'After a retryable failure, either add a dead letter or queue a new entry with the next order number and the backed-off run time.',
+    ],
+    checks: [
+      {
+        name: 'Runs other work while a retry waits',
+        input: [['a', 'b'], { a: ['retryable', 'ok'] }, { maxAttempts: 3, baseDelayMs: 100, maxDelayMs: 1000 }],
+        expected: { completed: ['b', 'a'], deadLetters: [], finishedAt: 100 },
+      },
+      {
+        name: 'Runs jobs in queue order when all succeed',
+        input: [['x', 'y', 'z'], {}, { maxAttempts: 3, baseDelayMs: 100, maxDelayMs: 1000 }],
+        expected: { completed: ['x', 'y', 'z'], deadLetters: [], finishedAt: 0 },
+      },
+      {
+        name: 'Gives up after the last attempt',
+        input: [['a'], { a: ['retryable', 'retryable', 'retryable'] }, { maxAttempts: 3, baseDelayMs: 100, maxDelayMs: 1000 }],
+        expected: { completed: [], deadLetters: [{ id: 'a', reason: 'TOO_MANY_ATTEMPTS', attempts: 3 }], finishedAt: 300 },
+      },
+      {
+        name: 'Stops at once for a permanent error',
+        input: [['a'], { a: ['permanent'] }, { maxAttempts: 3, baseDelayMs: 100, maxDelayMs: 1000 }],
+        expected: { completed: [], deadLetters: [{ id: 'a', reason: 'PERMANENT_ERROR', attempts: 1 }], finishedAt: 0 },
+      },
+      {
+        name: 'Waits for the earliest retry',
+        input: [
+          ['a', 'b'],
+          { a: ['retryable', 'ok'], b: ['retryable', 'retryable', 'ok'] },
+          { maxAttempts: 5, baseDelayMs: 100, maxDelayMs: 1000 },
+        ],
+        expected: { completed: ['a', 'b'], deadLetters: [], finishedAt: 300 },
+      },
+      {
+        name: 'Breaks a time tie by the order jobs were queued',
+        input: [['b', 'a'], { a: ['retryable', 'ok'], b: ['retryable', 'ok'] }, { maxAttempts: 5, baseDelayMs: 100, maxDelayMs: 1000 }],
+        expected: { completed: ['b', 'a'], deadLetters: [], finishedAt: 100 },
+      },
+      {
+        name: 'Caps a long wait',
+        input: [['a'], { a: ['retryable', 'retryable', 'retryable', 'ok'] }, { maxAttempts: 5, baseDelayMs: 400, maxDelayMs: 1000 }],
+        expected: { completed: ['a'], deadLetters: [], finishedAt: 2200 },
+      },
+      {
+        name: 'Mixes completions and dead letters',
+        input: [
+          ['a', 'b', 'c'],
+          { a: ['permanent'], b: ['retryable', 'ok'], c: ['ok'] },
+          { maxAttempts: 3, baseDelayMs: 100, maxDelayMs: 1000 },
+        ],
+        expected: { completed: ['c', 'b'], deadLetters: [{ id: 'a', reason: 'PERMANENT_ERROR', attempts: 1 }], finishedAt: 100 },
+      },
+      {
+        name: 'Gives up after one attempt when only one is allowed',
+        input: [['a'], { a: ['retryable'] }, { maxAttempts: 1, baseDelayMs: 100, maxDelayMs: 1000 }],
+        expected: { completed: [], deadLetters: [{ id: 'a', reason: 'TOO_MANY_ATTEMPTS', attempts: 1 }], finishedAt: 0 },
+      },
+      {
+        name: 'Treats a missing outcome as ok',
+        input: [['a'], { a: [] }, { maxAttempts: 3, baseDelayMs: 100, maxDelayMs: 1000 }],
+        expected: { completed: ['a'], deadLetters: [], finishedAt: 0 },
+      },
+      {
+        name: 'Handles an empty queue',
+        input: [[], {}, { maxAttempts: 3, baseDelayMs: 100, maxDelayMs: 1000 }],
+        expected: { completed: [], deadLetters: [], finishedAt: 0 },
+      },
+    ],
+  },
 ]

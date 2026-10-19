@@ -393,3 +393,127 @@ test('B4 concurrent-write checks catch stale writes, falsy fields, weak tags, un
     ],
   ])
 })
+
+test('B5 background-job checks catch backoff, lease, duplicate, ordering, and tie-break mistakes', async () => {
+  const fail = solution('backend-job-failure')
+  await assertCaught('backend-job-failure', [
+    [fail.replace('2 ** (job.attempts - 1)', '2 ** job.attempts'), 'Waits the base delay after the first attempt'],
+    [fail.replace('job.attempts >= policy.maxAttempts', 'job.attempts > policy.maxAttempts'), 'Gives up at the last allowed attempt'],
+    [
+      fail
+        .replace("  if (!error.retryable) return { action: 'dead-letter', reason: 'PERMANENT_ERROR' }\n", '')
+        .replace(
+          "return { action: 'dead-letter', reason: 'TOO_MANY_ATTEMPTS' }",
+          "return { action: 'dead-letter', reason: 'TOO_MANY_ATTEMPTS' }\n  if (!error.retryable) return { action: 'dead-letter', reason: 'PERMANENT_ERROR' }",
+        ),
+      'Reports a permanent error before the attempt limit',
+    ],
+    [
+      fail.replace('Math.min(policy.maxDelayMs, ', '(').replace(' * 2 ** (job.attempts - 1))', ' * 2 ** (job.attempts - 1))'),
+      'Caps a long wait',
+    ],
+    [
+      fail.replace("  if (!error.retryable) return { action: 'dead-letter', reason: 'PERMANENT_ERROR' }\n", ''),
+      'Stops at once for a permanent error',
+    ],
+  ])
+  const claim = solution('backend-claim-job')
+  await assertCaught('backend-claim-job', [
+    [claim.replace('job.lease.until <= now', 'job.lease.until < now'), 'Reclaims a job whose lease ran out'],
+    [
+      claim.replace(
+        'job.lease === null || job.lease.until <= now',
+        'job.lease === null || job.lease.until <= now || job.lease.worker === worker',
+      ),
+      'Does not let a worker reclaim its own live lease',
+    ],
+    [claim.replace('job.runAt <= now &&', ''), 'Skips a job that is not due yet'],
+    [claim.replace('job.runAt <= now', 'job.runAt < now'), 'Takes a job due exactly now'],
+    [claim.replace('job.runAt < jobs[chosen].runAt', 'job.runAt <= jobs[chosen].runAt'), 'Breaks a tie by position in the list'],
+    [
+      claim.replace('(chosen === -1 || job.runAt < jobs[chosen].runAt)', 'chosen === -1'),
+      'Picks the earliest runAt, not the first in the list',
+    ],
+    [claim.replace('attempts: job.attempts + 1, ', ''), 'Claims a waiting job'],
+  ])
+  const dedupe = solution('backend-dedupe-deliveries')
+  await assertCaught('backend-dedupe-deliveries', [
+    [dedupe.replace('    seen.add(message.id)\n', ''), 'Applies a message once and skips its repeat'],
+    [dedupe.replace('const seen = new Set(processedIds)', 'const seen = new Set<string>()'), 'Skips a message processed before'],
+    [dedupe.replace('processedIds: [...processedIds, ...applied]', 'processedIds: applied'), 'Totals several accounts'],
+    [
+      dedupe
+        .replace('const seen = new Set(processedIds)', 'const seen = new Set(processedIds)\n  const keys = new Set<string>()')
+        .replace(
+          'if (seen.has(message.id)) {',
+          'const key = message.id + message.account + message.amount\n    if (seen.has(message.id) && keys.has(key)) {',
+        )
+        .replace('    seen.add(message.id)\n', '    seen.add(message.id)\n    keys.add(key)\n'),
+      'Skips a repeat even when its content differs',
+    ],
+    [
+      dedupe
+        .replace('seen.has(message.id)', 'seen.has(message.id.toLowerCase())')
+        .replace('seen.add(message.id)', 'seen.add(message.id.toLowerCase())'),
+      'Compares IDs exactly',
+    ],
+    [
+      dedupe.replace(
+        'balances[message.account] = (balances[message.account] ?? 0) + message.amount',
+        'if (message.amount) balances[message.account] = (balances[message.account] ?? 0) + message.amount',
+      ),
+      'Counts a zero amount as applied',
+    ],
+  ])
+  const relay = solution('backend-outbox-relay')
+  await assertCaught('backend-outbox-relay', [
+    [
+      relay.replace(
+        '    if (results[index] !== true) break\n    published.push(row.id)',
+        '    if (results[index] === true) published.push(row.id)',
+      ),
+      'Does not try rows after a failure',
+    ],
+    [relay.replace('.sort((a, b) => a.id - b.id)', '.sort((a, b) => String(a.id).localeCompare(String(b.id)))'), 'Sorts ids as numbers'],
+    [relay.replace('.slice(0, batchSize)', ''), 'Publishes at most batchSize rows'],
+    [relay.replace('results[index] !== true', 'results[index] === false'), 'Treats a missing result as a failure'],
+    [relay.replace('.filter(row => row.publishedAt === null)', ''), 'Skips rows that are already published'],
+    [relay.replace('.sort((a, b) => a.id - b.id)', ''), 'Publishes in id order and stops at a failure'],
+  ])
+  const queue = solution('backend-queue-simulation')
+  await assertCaught('backend-queue-simulation', [
+    [
+      queue.replace('(a.runAt === b.runAt && a.order < b.order)', '(a.runAt === b.runAt && a.id < b.id)'),
+      'Breaks a time tie by the order jobs were queued',
+    ],
+    [queue.replace('runAt: clock + Math.min', 'runAt: Math.min'), 'Waits for the earliest retry'],
+    [queue.replace('attempts >= policy.maxAttempts', 'attempts > policy.maxAttempts'), 'Gives up after the last attempt'],
+    [
+      queue.replace('Math.min(policy.maxDelayMs, policy.baseDelayMs * 2 ** (attempts - 1))', 'policy.baseDelayMs * 2 ** (attempts - 1)'),
+      'Caps a long wait',
+    ],
+    [queue.replace('2 ** (attempts - 1)', '2 ** attempts'), 'Runs other work while a retry waits'],
+    [
+      queue.replace("outcomes[entry.id]?.[attempts - 1] ?? 'ok'", "outcomes[entry.id]?.[attempts - 1] ?? 'retryable'"),
+      'Treats a missing outcome as ok',
+    ],
+    [
+      `function runQueue(jobIds: string[], outcomes: Record<string, string[]>, policy: { maxAttempts: number; baseDelayMs: number; maxDelayMs: number }) {
+  const completed: string[] = []
+  const deadLetters: { id: string; reason: string; attempts: number }[] = []
+  let clock = 0
+  for (const id of jobIds) {
+    for (let attempts = 1; ; attempts++) {
+      const outcome = outcomes[id]?.[attempts - 1] ?? 'ok'
+      if (outcome === 'ok') { completed.push(id); break }
+      if (outcome === 'permanent') { deadLetters.push({ id, reason: 'PERMANENT_ERROR', attempts }); break }
+      if (attempts >= policy.maxAttempts) { deadLetters.push({ id, reason: 'TOO_MANY_ATTEMPTS', attempts }); break }
+      clock += Math.min(policy.maxDelayMs, policy.baseDelayMs * 2 ** (attempts - 1))
+    }
+  }
+  return { completed, deadLetters, finishedAt: clock }
+}`,
+      'Runs other work while a retry waits',
+    ],
+  ])
+})

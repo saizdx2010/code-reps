@@ -138,7 +138,7 @@ Every check is honest about what it establishes: SQL reps run SQLite's dialect o
 - [x] B2 · Routing: path parameters, and 404 versus 405, as a stage before validation, with a lesson (`http-routing`) and the `routing` journey: match a pattern, choose 404 or 405 with an Allow list, then a delayed most-specific-route picker with wildcards; cleaning a path and building one from values are practice.
 - [ ] B3 · Authorization: session expiry, roles, and ownership checks. Skipped in this pass: an automated content check stopped the drafting twice, so this stage still needs separate authoring. Later stages do not depend on it.
 - [x] B4 · Concurrent writes: version numbers and lost updates, after the SQL-linked storage stage, with a lesson (`concurrent-writes`) and the `concurrent-writes` journey: refuse a stale write by version, honor If-Match with 412 and 428, then a delayed replay of several clients' edits; spotting lost updates in a last-write-wins log and compare-and-set are practice.
-- [ ] B5 · Background jobs: retries, dead letters, and at-least-once processing.
+- [x] B5 · Background jobs: retries, dead letters, and at-least-once processing, after Stay reliable, with a lesson (`background-jobs`) and the `background-jobs` journey: decide a retry or a dead letter, claim a job with a lease, then a delayed replay of a whole queue under a retry policy; skipping repeated messages and publishing from an outbox are practice.
 - [ ] B6 · Rate limits: token bucket and sliding window.
 - [ ] B7 · Evolve an API: versioning and webhook signature verification.
 

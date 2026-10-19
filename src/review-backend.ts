@@ -184,6 +184,66 @@ export const backendDepth: Record<string, RepDepth> = {
     transfer:
       'Make a refused client retry automatically: read again, then write again, at most twice. Decide whether the retry should resend the same value or ask the client, and what the log shows. This changed contract is self-reviewed, not checked by the original cases.',
   },
+  'backend-job-failure': {
+    reasoning:
+      'The decision has two parts that must stay in order: whether to try again at all, then when. A permanent error ends the job whatever the attempt count, because no retry can fix it; a temporary one is retried until the attempt limit. Doubling the wait from the base delay gives a struggling service room to recover, and the cap keeps a job from waiting so long that nobody notices it is still pending.',
+    trace:
+      'With base 1000, cap 60000, and now 5000, the job that just made its second attempt waits 1000 × 2^(2 - 1) = 2000, so runAt is 7000. After attempt 8 the doubled wait would be 128000, so the cap of 60000 applies. With maxAttempts 5, attempt 4 still retries after 8000, and attempt 5 goes to the dead letters with TOO_MANY_ATTEMPTS; a retryable flag of false at attempt 5 reports PERMANENT_ERROR instead.',
+    alternative:
+      'A fixed delay between attempts is simpler and fine for a single slow job, but when many jobs fail at once they all retry together. Adding a random part to each delay ("jitter") spreads those retries out and is common in production; this contract leaves it out so the checks can be exact.',
+    counterexample:
+      'Using 2 ** attempts makes the first wait twice the base: attempts 1 gives 2000 instead of 1000. Checking the attempt limit before the error type reports TOO_MANY_ATTEMPTS for a permanent error at the last attempt, which hides that retrying could never have helped.',
+    transfer:
+      'Some errors say how long to wait, as a Retry-After value from another service. Decide how that value combines with the backoff and the cap, and what happens when it is longer than the cap. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-claim-job': {
+    reasoning:
+      "A job is safe to hand out when it is due and nobody holds a live lease on it. An expired lease means its worker stopped without finishing, so the job becomes available again, which is how work survives a crash, and also why the same job can run twice. Choosing the smallest runAt with the list position as tie-breaker gives every worker the same answer for the same table, and copying only the chosen job leaves the caller's table unchanged.",
+    trace:
+      'At now 100 with jobs a (runAt 200, no lease) and b (runAt 50, no lease), a is not due, b is, so b is chosen: its lease becomes {worker: "w1", until: 1100} and its attempts go from 0 to 1, while a is copied unchanged. A job leased by w2 until 100 is available at now 100, because the lease ends at or before now, so w1 takes it and its attempts go up again.',
+    alternative:
+      'In a database the claim is one statement that updates the earliest available row and returns it, often with row locking that skips rows another worker is updating, so two workers never claim the same job at once. A message broker does the same with a visibility timeout: a received message is hidden for a while and reappears if it is not acknowledged.',
+    counterexample:
+      'Treating a lease as expired only when until is before now (until < now) keeps a job leased until 100 blocked at now 100. Letting the lease holder claim its own live lease again hands the same job to the same worker twice while the first attempt may still be running.',
+    transfer:
+      'Let a worker extend its lease while a long job is still running ("heartbeat"). Decide which checks the extension needs so a worker whose lease already ran out cannot take the job back from its new holder. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-dedupe-deliveries': {
+    reasoning:
+      'With at-least-once delivery the message ID, not its content, is what identifies a message: a repeat is the same message sent again, even if a bug or a retry changed its body. Adding each ID to the set as soon as its message is applied catches repeats inside the batch as well as ones from before, so every message changes a balance at most once.',
+    trace:
+      'For m2, m1, m2, m1 with m1 already processed: m2 is new, so a1 becomes 1 and m2 joins the set. m1 is in the set, so it is skipped. The second m2 was just added, so it is skipped too, as is the second m1. Skipped is [m1, m2, m1] and processedIds is [m1, m2].',
+    alternative:
+      'Keying on the content (account and amount) instead of the ID wrongly merges two different deposits of the same amount and lets a changed repeat through. In a database the processed IDs live in a table with a unique key, written in the same transaction as the balance change, so a crash cannot apply the change without recording the ID.',
+    counterexample:
+      'Checking only the given processedIds, without adding new IDs as you go, applies the second m1 in "Applies a message once and skips its repeat" and doubles the balance. Pushing new IDs onto the processedIds argument changes the caller\'s array.',
+    transfer:
+      'The processed-ID list cannot grow forever. Decide how long an ID must be kept, given how late a redelivery can arrive, and what happens to a message whose ID was already removed. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-outbox-relay': {
+    reasoning:
+      'Events are published in id order, the order they were saved, so consumers see "placed" before "paid". Stopping at the first failure keeps that order: publishing row 3 after row 2 failed would deliver events out of order. A failed event stays unpublished and is tried again on the next run, so nothing is skipped, and the price is that an event can be published twice if the relay stops between publishing and saving publishedAt.',
+    trace:
+      'Rows 3, 1, and 2 are unpublished. Sorted by id they are 1, 2, 3, and batchSize 2 keeps 1 and 2. Attempt 1 uses results[0], true, so row 1 gets publishedAt 7; attempt 2 uses results[1], true, so row 2 does too. Row 3 waits for the next run. The rows come back in their original order: 3 unchanged, then 1 and 2 published.',
+    alternative:
+      'Publishing every unpublished row and skipping only the failures delivers more per run but breaks the order consumers rely on. Publishing directly from the request handler, without an outbox, can lose the event when the service stops after saving the order but before publishing, or announce an order whose transaction then rolled back.',
+    counterexample:
+      'Sorting ids as text puts 10 before 9, so "Sorts ids as numbers" publishes row 10 first. Continuing after a failure publishes rows 2 and 3 in "Does not try rows after a failure" while row 1 is still waiting.',
+    transfer:
+      'Let events for different orders be published independently, so one stuck order does not hold up the others, while events for the same order stay in order. Decide what the relay needs to know about each row and where it stops. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-queue-simulation': {
+    reasoning:
+      'The worker always runs the entry with the smallest run time, so the clock only moves forward, and the queue order breaks ties so the same input always gives the same history. Each failure is decided exactly as in the retry policy: permanent ends it, too many attempts ends it, anything else schedules a later entry. Because a waiting retry does not block the worker, other jobs finish in the meantime.',
+    trace:
+      'In "Breaks a time tie by the order jobs were queued", b and a both fail at time 0. b\'s retry is queued first, for 100, then a\'s, also for 100. At 100 the tie goes to b, which was queued earlier, so b completes, then a. The result is completed [b, a], finishedAt 100, even though a comes first alphabetically.',
+    alternative:
+      'A priority queue (heap) ordered by run time and queue order finds the next entry in O(log n) instead of scanning; with at most 50 jobs and a few attempts each, a scan is clear and fast enough. Advancing the clock in fixed steps, such as every 100 ms, would also work but wastes steps and can misplace runs between ticks.',
+    counterexample:
+      'Breaking ties by job ID completes a before b in the tie case. Running jobs strictly in their original order, waiting for each retry before moving on, finishes "Runs other work while a retry waits" as [a, b] at time 100 instead of [b, a].',
+    transfer:
+      'Add a second worker, so two entries can run at the same time. Decide how the clock and the tie-break work when both workers are free, and whether the history can still be reproduced exactly. This changed contract is self-reviewed, not checked by the original cases.',
+  },
 }
 
 export const backendGuides: Record<string, ReflectionGuide> = {
@@ -397,6 +457,76 @@ export const backendGuides: Record<string, ReflectionGuide> = {
     example:
       "I keep the stored value, the current version, and a map from client to the version it last saw. A read stores the current version for that client. A write is accepted only when the client has a known version equal to the current one; then I store the value, add 1 to the version, and update the writer's known version. Otherwise I record its position as refused. The work is linear in the log. The checks call the function directly, not a live server.",
   },
+  'backend-job-failure': {
+    plan: [
+      'Check the error type first, then the attempt limit.',
+      'Work out the wait: base times 2 to the power attempts minus 1.',
+      'Cap the wait and add it to now.',
+    ],
+    explanation: [
+      'Trace the first, second, and capped retry times.',
+      'Explain why a permanent error ignores the attempt count.',
+      'Say what the contract leaves out, such as random jitter.',
+    ],
+    example:
+      'A false retryable flag returns PERMANENT_ERROR. Otherwise, attempts at or above maxAttempts returns TOO_MANY_ATTEMPTS. Otherwise the wait is baseDelayMs × 2^(attempts - 1), capped by maxDelayMs, and runAt is now plus that wait. The work is constant. The checks call the function with fixed times; they do not run a queue.',
+  },
+  'backend-claim-job': {
+    plan: [
+      'Define availability: due by now, and no lease or an expired one.',
+      'Find the available job with the smallest runAt, earliest in the list on a tie.',
+      'Return a new array with only that job leased and counted.',
+    ],
+    explanation: [
+      'Trace a job whose lease ends exactly now.',
+      'Explain why an expired lease can make a job run twice.',
+      'Say what a real database adds so two workers cannot claim at once.',
+    ],
+    example:
+      'I scan the jobs once, keeping the first available job with the smallest runAt, where available means runAt <= now and the lease is null or ends at or before now. With none, I return null and the jobs unchanged. Otherwise I map the jobs, copying the chosen one with attempts + 1 and a lease until now + leaseMs. The work is linear in the jobs. The checks call the function directly; they do not run workers at the same time.',
+  },
+  'backend-dedupe-deliveries': {
+    plan: [
+      'Load the processed IDs into a Set.',
+      'Apply a new ID and add it at once; skip anything already in the Set.',
+      'Return a copied, extended ID list.',
+    ],
+    explanation: [
+      'Trace a batch with a repeat inside it and one from before.',
+      'Explain why the ID, not the content, decides a repeat.',
+      'Say where the processed IDs must be saved in a real handler.',
+    ],
+    example:
+      "I put processedIds in a Set. For each message, an ID already in the Set is skipped; otherwise I add the amount to its account's balance, add the ID to the Set, and remember it for the result. processedIds in the result is a copy of the given list followed by the new IDs. The work is linear in the messages. The checks call the function directly, not a queue.",
+  },
+  'backend-outbox-relay': {
+    plan: [
+      'Pick the unpublished rows, sorted by id, up to batchSize.',
+      'Publish in order, using one result per attempt, and stop at the first failure.',
+      'Copy the rows in their original order with the new times.',
+    ],
+    explanation: [
+      'Trace a run that stops in the middle of a batch.',
+      'Explain why the relay stops instead of skipping a failed row.',
+      'Explain how an event can be published twice.',
+    ],
+    example:
+      'I filter rows with publishedAt null, sort a copy by numeric id, and keep the first batchSize. For attempt n I read results[n - 1]: true publishes the row at now, anything else stops the loop. Then I map the original rows, copying the published ones with publishedAt set. The work is O(n log n) for the sort. The checks call the function directly; they do not use a real broker.',
+  },
+  'backend-queue-simulation': {
+    plan: [
+      'Queue every job at time 0 with an increasing order number.',
+      'Repeatedly run the entry with the smallest run time, then order number.',
+      'Apply the retry policy to each failure and record the result.',
+    ],
+    explanation: [
+      'Trace a tie between two retries at the same time.',
+      'Explain why other jobs finish while a retry waits.',
+      'Explain how finishedAt is decided.',
+    ],
+    example:
+      'I keep a list of entries {id, runAt, attempts, order}, starting with every job at time 0. Each step removes the entry with the smallest runAt, then order, moves the clock to its runAt if later, and reads its outcome. ok completes it; permanent or the last allowed attempt adds a dead letter; otherwise I queue a new entry with the next order and the backed-off time. finishedAt is the clock after the last attempt. The checks call the function directly, not a real queue.',
+  },
 }
 
 export const backendLessonDepth: Record<string, LessonDepth> = {
@@ -429,5 +559,15 @@ export const backendLessonDepth: Record<string, LessonDepth> = {
       'Two requests run the two-step version at the same time against version 3. Describe an order of their four statements that loses an update, then say what each request sees with the one-step version.',
     answer:
       'If both SELECT statements run first, both see version 3 and both pass the check; both UPDATE statements then run, and the second replaces the first. With the one-step UPDATE, the first request changes one row and moves the record to version 4; the second finds no row with version 3, changes zero rows, and reports a conflict instead.',
+  },
+  'background-jobs': {
+    title: 'Record the work and the message ID together',
+    code: "BEGIN;\n  INSERT INTO processed (message_id) VALUES ('m-17');  -- fails if seen before\n  UPDATE accounts SET balance = balance + 500 WHERE id = 'a1';\nCOMMIT;",
+    reasoning:
+      'A handler that applies a message and then records its ID in a separate step can stop between the two; the message is delivered again, the ID is missing, and the work happens twice. Recording the ID in the same transaction as the work makes them succeed or fail together: either both are saved, and a repeat hits the unique ID and is skipped, or neither is, and the repeat does the work for the first time.',
+    challenge:
+      'A teammate moves the INSERT after COMMIT, as its own statement. Describe where the worker could stop so that 500 is added twice, then where it could stop without any harm.',
+    answer:
+      'If the worker stops after COMMIT but before the separate INSERT, the balance has changed but no ID was recorded, so the redelivered message passes the check and adds 500 again. Stopping before COMMIT is harmless: the transaction rolls back, nothing was applied, and the redelivery applies it once.',
   },
 }

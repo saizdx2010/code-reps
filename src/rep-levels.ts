@@ -339,6 +339,11 @@ export const repLevels: Record<string, RepLevel> = {
   'backend-lost-updates': 2,
   'backend-compare-and-set': 2,
   'backend-replay-writes': 3,
+  'backend-job-failure': 2,
+  'backend-claim-job': 2,
+  'backend-dedupe-deliveries': 2,
+  'backend-outbox-relay': 2,
+  'backend-queue-simulation': 3,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

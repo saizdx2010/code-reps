@@ -320,6 +320,11 @@ export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
         'Check cache freshness, back off retries, limit request rates, avoid double effects, resubmit payments safely, roll back optimistic updates, and share resources safely.',
       recap: 'You can now trace caches, retries, rate limits, duplicate requests, and shared-resource ownership.',
     },
+    'Run background jobs': {
+      description:
+        'Retry failed jobs with growing waits and dead letters, claim jobs with leases, skip repeated messages, publish events from an outbox, and replay a queue under a retry policy.',
+      recap: 'You can now run work outside the request, retry it safely, and handle jobs and messages that arrive more than once.',
+    },
     'Read and improve code': {
       description: 'Trace an existing importer, then refactor a working report without changing its behavior.',
       recap: 'You can now trace an importer and refactor a report while preserving its behavior.',

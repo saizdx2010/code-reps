@@ -416,6 +416,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'background-jobs',
+    title: 'Run background work reliably',
+    guided: 'backend-job-failure',
+    independent: 'backend-claim-job',
+    recall: 'backend-queue-simulation',
+    practice: ['backend-dedupe-deliveries', 'backend-outbox-relay'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

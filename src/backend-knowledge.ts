@@ -242,4 +242,84 @@ export const backendSkills: Skill[] = [
     repIds: ['backend-versioned-update', 'backend-if-match', 'backend-lost-updates', 'backend-compare-and-set', 'backend-replay-writes'],
     related: ['databases', 'optimistic-updates'],
   },
+  {
+    id: 'background-jobs',
+    title: 'Background jobs: queues, retries, and dead letters',
+    summary:
+      'Move slow work out of the request, retry failures with growing waits, give up into a dead-letter list, and make handlers safe to run twice.',
+    prerequisites: ['retries', 'idempotency'],
+    objectives: [
+      'Decide when work belongs in a background job and what the request returns meanwhile.',
+      'Retry a failed job with exponential backoff up to a limit, and send permanent failures and exhausted jobs to a dead-letter list.',
+      'Explain at-least-once delivery and make a handler safe when the same job or message arrives twice.',
+    ],
+    sections: [
+      {
+        title: 'Move slow work out of the request',
+        body: 'Some work is too slow or too unreliable to finish while a client waits: sending email, building a report, calling another service. The request records a job and answers at once, often with 202 Accepted and a way to check progress, and a worker process runs the job later. The job table or queue is the hand-off between them, so a job survives a restart.',
+      },
+      {
+        title: 'Retry with growing waits, then give up',
+        body: 'Failures are temporary (a timeout, a busy service) or permanent (invalid data, a deleted record). Retry only temporary ones, waiting longer each time, such as 1, 2, 4, then 8 seconds up to a cap, so a struggling service has room to recover. After a set number of attempts, or at once for a permanent error, move the job to a dead-letter list, where a person can inspect it, fix the cause, and queue it again. A job that retries forever hides the problem and wastes work.',
+      },
+      {
+        title: 'Leases make a stopped worker recoverable',
+        body: 'A worker claims a job with a lease: it is "mine until 12:00:30". If the worker stops, the lease runs out and another worker claims the job. The cost is that a job can run twice: the first worker may have finished the work and stopped just before marking it done. Queues that work this way promise at-least-once delivery; exactly-once is something the handler has to build.',
+      },
+      {
+        title: 'Make the handler safe to repeat',
+        body: 'Give each job or message an ID and record which IDs have been applied, in the same transaction as the work where possible, so a repeat is recognized and skipped. Prefer effects that are naturally repeatable, such as "set status to shipped" rather than "add one shipment". The outbox pattern does the same for events: save the event with the data change, publish it afterwards in order, and let consumers skip events they have already seen.',
+      },
+    ],
+    example:
+      'policy: 4 attempts, base 1 s, cap 10 s\n\nattempt 1 at 0 s → timeout → retry at 1 s\nattempt 2 at 1 s → timeout → retry at 3 s\nattempt 3 at 3 s → timeout → retry at 7 s\nattempt 4 at 7 s → timeout → dead letter after 4 attempts',
+    walkthrough: [
+      'Attempt 1 fails with a temporary error, so the job waits the base delay of 1 second.',
+      'Each later failure doubles the wait: 2 seconds, then 4.',
+      'Attempt 4 is the last one the policy allows, so its failure sends the job to the dead letters.',
+      'A permanent error at any attempt would have gone there at once.',
+    ],
+    mistakes: [
+      'Retrying permanent errors, which only repeats the failure and delays the alert.',
+      'Retrying at once without a wait, so every worker keeps calling a service that is already struggling.',
+      'Assuming a job runs exactly once, so a repeat sends the email or adds the amount twice.',
+      'Dropping failed jobs silently instead of keeping them where a person can see them.',
+    ],
+    questions: [
+      q(
+        'job-permanent-error-v1',
+        'A job fails because the customer record it needs was deleted. What should the worker do?',
+        '',
+        ['Retry with backoff', 'Move it to the dead letters now', 'Retry at once'],
+        1,
+        'The error is permanent: no retry can bring the record back. A dead letter lets a person decide what to do.',
+      ),
+      q(
+        'job-backoff-third-v1',
+        'With a base wait of 2 seconds that doubles after each failure, how long does the worker wait after the third failure?',
+        '',
+        ['6 seconds', '8 seconds', '16 seconds'],
+        1,
+        'The waits are 2, 4, then 8 seconds: the base times 2 to the power (failures - 1).',
+      ),
+      q(
+        'job-lease-expired-v1',
+        'A worker takes a lease on a job and then stops. What happens when the lease runs out?',
+        '',
+        ['The job is lost', 'Another worker can claim and run it again', 'The job is marked done'],
+        1,
+        'An expired lease makes the job available again, which is how a stopped worker is recovered, and why a job can run more than once.',
+      ),
+      q(
+        'job-at-least-once-v1',
+        'A queue promises at-least-once delivery. What must a message handler assume?',
+        '',
+        ['Each message arrives exactly once', 'A message may arrive more than once', 'Messages may be skipped'],
+        1,
+        'At-least-once means no message is lost, but repeats happen. The handler must recognize and skip a message it has already applied.',
+      ),
+    ],
+    repIds: ['backend-job-failure', 'backend-claim-job', 'backend-dedupe-deliveries', 'backend-outbox-relay', 'backend-queue-simulation'],
+    related: ['retries', 'idempotency', 'concurrent-writes'],
+  },
 ]

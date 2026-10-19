@@ -439,6 +439,16 @@ export const paths = [
         ],
       },
       {
+        title: 'Run background jobs',
+        repIds: [
+          'backend-job-failure',
+          'backend-claim-job',
+          'backend-dedupe-deliveries',
+          'backend-outbox-relay',
+          'backend-queue-simulation',
+        ],
+      },
+      {
         title: 'Read and improve code',
         repIds: ['read-batch-labels', 'refactor-stock-summary'],
       },
