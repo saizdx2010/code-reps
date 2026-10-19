@@ -390,5 +390,10 @@ export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
         'Predict which image layers a change rebuilds, tag images from branches and releases, leave ignored files out of the build, clean up old tags safely, and follow a change through a multi-stage build.',
       recap: 'You can now predict what an image build reuses and rebuilds, and tag and clean up images safely.',
     },
+    'Deploy safely': {
+      description:
+        'Plan a rolling update in whole batches, roll a feature out to a stable share of users, switch between blue and green, find where a paused canary stands, and decide from error rates whether to promote or roll back.',
+      recap: 'You can now plan a gradual deploy and decide from evidence whether to go on or roll back.',
+    },
   },
 }

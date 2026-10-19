@@ -304,6 +304,66 @@ export const devopsDepth: Record<string, RepDepth> = {
     transfer:
       'Let a stage start from an image whose digest can change, passed in as a list of updated images. Decide which stages and steps that rebuilds. This changed contract is self-reviewed, not checked by the original cases.',
   },
+  'devops-rolling-batches': {
+    reasoning:
+      'The allowed share must become a whole number of instances, and rounding down keeps at least the promised number serving. A floor of one batch instance keeps the update moving even when the share rounds to nothing. Slicing in order gives consecutive batches whose sizes add up to every instance exactly once.',
+    trace:
+      'For 9 instances at 33%, 9 × 33 / 100 is 2.97, which rounds down to 2, so 7 are always serving. The batches are a–b, c–d, e–f, g–h, and the last batch is just i. For 5 instances at 10%, 0.5 rounds down to 0, and the minimum makes it 1.',
+    alternative:
+      'Some orchestrators also allow a surge: extra new instances started before old ones stop, rounded up, which keeps full capacity during the update at the cost of extra machines. A fixed batch size is simpler to reason about but does not scale with the service.',
+    counterexample:
+      'Math.round gives 3 for 2.97, so only 6 instances stay serving instead of the promised 7. Without the minimum of 1, 5 instances at 10% give a batch size of 0 and a loop that never advances.',
+    transfer:
+      'Add maxSurgePercent, rounded up: that many new instances may start before old ones stop. Decide how batches change and what the minimum available becomes. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-percent-rollout': {
+    reasoning:
+      'The hash depends only on the flag and the user ID, so the same user always lands in the same bucket, and the rule bucket < percent turns a growing percentage into a growing set of buckets. Because buckets never move, raising the percentage only adds users. Hashing the flag name too gives every feature an independent order of users.',
+    trace:
+      'For u-1004 and new-checkout, the hashed text is "new-checkout:u-1004", whose FNV-1a value modulo 100 is 9. At 9%, 9 < 9 is false, so the user is off; at 10%, 9 < 10 is true; at 50% it is still true. For u-1002, new-checkout gives bucket 47 but dark-mode gives 18, so the user can get one feature early and the other late.',
+    alternative:
+      'Storing a random number per user when they sign up gives the same stability, but needs storage and a migration for existing users. Choosing by user ID ranges, such as IDs ending in 0, is simple but follows patterns in how IDs are assigned.',
+    counterexample:
+      'Hashing only the user ID gives u-1002 bucket 44 for every flag, so the same users get every new feature first. Without >>> 0 the hash can be negative, and a negative bucket is enabled even at 0%.',
+    transfer:
+      'Support a list of always-on user IDs for testers. Decide whether they count toward the percentage and what their bucket is. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-blue-green': {
+    reasoning:
+      'The state has four parts: which color is live, the version on each color, whether the idle color is checked, and whether there is a previous version to return to. Every event first checks its condition against that state and changes nothing if refused. A switch keeps the old live color as the rollback target because it is still running a known-good version; a new deploy overwrites that color, so the target is cleared.',
+    trace:
+      'After deploy v2, check passed, switch, rollback, switch: v2 goes on green and is checked healthy; switch makes green live with blue as the target; rollback makes blue live and marks green failed; the final switch is refused because the idle color, green, is failed. So blue is live with blue v1 and green v2, and event 4 is refused.',
+    alternative:
+      'A canary gives real traffic to the new version earlier and in smaller amounts; blue/green moves all traffic at once but switches back instantly. Keeping three environments allows a new deploy while still holding a rollback target, at the cost of more machines.',
+    counterexample:
+      'Allowing a switch after a deploy without a check refuses nothing in "Refuses to switch before a check". Keeping the rollback target after a new deploy lets rollback in "Clears the rollback target on a new deploy" return to blue, which now runs v3, not the version that was live.',
+    transfer:
+      'Add a "drain" event that must come before a switch, and refuse a switch until the live color has drained. Decide what a rollback needs. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-canary-schedule': {
+    reasoning:
+      "Only active time moves a rollout forward, so each pause is cut down to the part that lies between the start and now, and that total is subtracted. Each step's start is the sum of the earlier holds, so the current step is the last whose start is not after the active time. A step with no hold starts and ends at the same moment, so the next step takes over at once.",
+    trace:
+      'For the example, the steps start at 0, 10, 20, and 40 minutes of active time. At minute 25 with a pause from 12 to 18, the pause takes away 6 minutes, so the active time is 19. The last start at or before 19 is 10, so the rollout is on step 1 at 25%. Without the pause it would be on step 2 at 50%.',
+    alternative:
+      'Recording the start time of each step as it happens avoids recomputing from the start, but makes the result depend on stored state. Treating a pause as a fixed delay added to every later step gives the same answer for pauses that have ended.',
+    counterexample:
+      'Ignoring pauses moves the example to 50% while someone is still investigating. Counting the whole of a pause that has not ended, 20 to 40 at minute 25, subtracts 20 minutes instead of 5 and holds the rollout back two steps.',
+    transfer:
+      'Allow a step to require a manual approval before the next one starts. Decide how approvals are passed in and how they combine with pauses. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-canary-verdict': {
+    reasoning:
+      'A decision needs repeated evidence, so it is taken from runs, not single samples: a run of unhealthy minutes for rollback, a run of healthy ones for promotion, each reset by the other kind. Skipping quiet minutes keeps chance results out of both runs. Multiplying instead of dividing keeps the boundary exact, and returning at the first completed run reports when the decision could first be made.',
+    trace:
+      'For 300 requests with 40 errors, then 20 requests, then 310 with 35, under 2% and at least 100 requests: the first minute is unhealthy because 4000 > 600, so the unhealthy run is 1. The quiet minute is skipped and the run stays 1. The third is unhealthy, 3500 > 620, so the run reaches 2 and the result is rollback at 2.',
+    alternative:
+      'Comparing the canary with the current version, rather than with a fixed limit, ignores problems both share, such as a broken dependency, and catches a canary that is worse even when under the limit. Statistical tests weigh how much traffic each minute had instead of skipping quiet ones.',
+    counterexample:
+      'Computing (errors / requests) × 100 > maxErrorPercent calls 7 errors in 100 requests unhealthy at a 7% limit, because the division gives 7.000000000000001. Letting a quiet minute reset the run delays the rollback in "Skips quiet minutes without breaking a run".',
+    transfer:
+      'Add a limit on total time: if no decision is reached within 30 counted samples, roll back. Decide whether skipped samples count toward the limit. This changed contract is self-reviewed, not checked by the original cases.',
+  },
 }
 
 export const devopsGuides: Record<string, ReflectionGuide> = {
@@ -633,6 +693,76 @@ export const devopsGuides: Record<string, ReflectionGuide> = {
     example:
       'I keep a Set of changed stages. Each stage starts with rebuilding set if its from is in the Set. Each step, while not rebuilding, checks its fromStage in the Set, or its sources against changed files. Statuses follow the flag, and a stage whose flag ends on joins the Set. The work is steps times sources times changed files. The checks pass stages in directly; no Docker build runs.',
   },
+  'devops-rolling-batches': {
+    plan: [
+      'Work out the batch size, rounding down but at least 1.',
+      'Slice the instances in order into batches.',
+      'Report the minimum number still serving.',
+    ],
+    explanation: [
+      'Trace a share that rounds down to 0.',
+      'Explain why the batch size rounds down.',
+      'Say what the last batch can look like.',
+    ],
+    example:
+      'batchSize is Math.max(1, Math.floor(n × percent / 100)). I push instances.slice(start, start + batchSize) for start = 0, batchSize, 2 × batchSize, and so on. minAvailable is n − batchSize. The work is linear in the instances. The checks pass names in directly; no instance is restarted.',
+  },
+  'devops-percent-rollout': {
+    plan: [
+      'Join the flag, ":", and the user ID.',
+      'Hash the text with 32-bit FNV-1a.',
+      'Take the hash modulo 100 and compare it with the percent.',
+    ],
+    explanation: [
+      'Trace one user across 5%, 10%, and 50%.',
+      'Explain why the flag is part of the text.',
+      'Say why the comparison is strict.',
+    ],
+    example:
+      'I hash flag + ":" + userId: hash starts at 2166136261 and each code unit c updates it with Math.imul(hash ^ c, 16777619) >>> 0. bucket is hash % 100, and enabled is bucket < percent. The work is linear in the text. The checks pass IDs in directly; no flag service runs.',
+  },
+  'devops-blue-green': {
+    plan: [
+      'Keep live, both versions, the idle health, and the rollback target.',
+      'For each event, check its condition before changing anything.',
+      'Record refused positions and return the final state.',
+    ],
+    explanation: [
+      'Trace a deploy, check, switch, and rollback.',
+      'Explain why a deploy clears the rollback target.',
+      'Say why a rolled-back color cannot be switched to.',
+    ],
+    example:
+      "deploy sets the idle color's version, marks it unchecked, and clears the target. check needs an idle version and sets healthy or failed. switch needs a healthy idle color; the old live color becomes the target and the idle one goes live. rollback needs a target, makes it live, and marks the other failed. Refused events add their index. The work is linear in the events. The checks pass events in directly; no traffic moves.",
+  },
+  'devops-canary-schedule': {
+    plan: [
+      'Add up the part of each pause between the start and now.',
+      'Subtract it to get the active time.',
+      'Walk the steps, adding holds, until a step starts after the active time.',
+    ],
+    explanation: [
+      'Trace the example with and without its pause.',
+      'Explain how an unfinished pause is counted.',
+      'Say what a step with no hold does.',
+    ],
+    example:
+      'Each pause contributes Math.max(0, Math.min(to, now) − Math.max(from, 0)). The active time is now minus their sum. I keep a running start, set current to each step whose start is not after the active time, and add its hold. The work is linear in the steps and pauses. The checks pass minutes in directly; no clock is read.',
+  },
+  'devops-canary-verdict': {
+    plan: [
+      'Skip samples with too few requests.',
+      'Judge each counted sample with whole-number arithmetic.',
+      'Keep runs of each kind and stop when one reaches its target.',
+    ],
+    explanation: [
+      'Trace a run interrupted by a quiet minute.',
+      'Explain why the comparison multiplies instead of dividing.',
+      'Say why one bad minute is not enough.',
+    ],
+    example:
+      'For each sample with at least minRequests requests, it is unhealthy when errors × 100 > maxErrorPercent × requests. An unhealthy sample adds to its run and resets the healthy run, and the reverse; reaching unhealthyNeeded returns rollback and healthyNeeded returns promote, with the index. Otherwise the result is continue. The work is linear in the samples. The checks pass counts in directly; no metrics are read.',
+  },
 }
 
 export const devopsLessonDepth: Record<string, LessonDepth> = {
@@ -685,5 +815,15 @@ export const devopsLessonDepth: Record<string, LessonDepth> = {
       'A Dockerfile has COPY . ., RUN npm ci (3 minutes), RUN npm run build (1 minute). A team pushes 20 changes a day: 18 change only src/ and 2 change package-lock.json. Estimate the daily build minutes before and after reordering it as package files, install, source, build.',
     answer:
       'Before, every change rebuilds from COPY . ., so each build takes about 4 minutes: 20 × 4 = 80 minutes. After, the 18 source changes reuse the install and take about 1 minute, and the 2 dependency changes take about 4: 18 + 8 = 26 minutes. A README change, which used to cost 4 minutes, now costs nothing if README.md is not copied.',
+  },
+  'deploy-strategies': {
+    title: 'A percentage rollout only ever adds users',
+    code: 'bucket = hash(flag + ":" + userId) % 100\non = bucket < percent\n\n10%: buckets 0–9 on\n50%: buckets 0–49 on   ← includes every bucket from 10%\nrandom per request: a user is on, then off, then on',
+    reasoning:
+      'Because the bucket is a fixed function of the flag and the user, the set of users who are on at 10% is contained in the set at 50%. Raising the percentage adds users and never takes the feature away from anyone. A random choice per request has the same average but treats one user differently on every request, which looks like a bug to that user and makes support reports impossible to reproduce.',
+    challenge:
+      'A team decides buckets with hash(userId) % 100 and runs two experiments at 10% each, on different flags. Predict who gets which feature, and repair the bucket rule.',
+    answer:
+      'Without the flag in the hashed text, both flags give every user the same bucket, so the same 10% of users get both features and the other 90% get neither. The two experiments cannot be told apart. Hashing flag + ":" + userId gives each flag an independent order, so the two groups overlap only by chance.',
   },
 }

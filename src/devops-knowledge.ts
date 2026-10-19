@@ -408,4 +408,84 @@ export const devopsSkills: Skill[] = [
     repIds: ['devops-layer-rebuild', 'devops-image-tags', 'devops-dockerignore', 'devops-tag-cleanup', 'devops-multistage-rebuild'],
     related: ['ci-pipelines', 'semver'],
   },
+  {
+    id: 'deploy-strategies',
+    title: 'Deploys: rolling, blue/green, canary, and rollback',
+    summary:
+      'Plan a rolling update, switch safely between blue and green, roll a feature out to a stable share of users, and decide from error rates whether a canary is promoted or rolled back.',
+    prerequisites: ['container-images'],
+    objectives: [
+      'Turn a share of unavailable instances into whole batches, and keep a minimum number serving.',
+      'Give each user a stable bucket with a hash, so a percentage rollout only ever adds users.',
+      'Follow a blue/green switch and a canary schedule, and decide to promote or roll back from runs of healthy and unhealthy minutes.',
+    ],
+    sections: [
+      {
+        title: 'Change a running service gradually',
+        body: 'A deploy replaces the version that is serving users, so the safest deploys change a little at a time and can stop. A rolling update replaces a few instances at a time; the share allowed to be out of service at once is rounded down to whole instances, but never below one, so the update always moves. Blue/green keeps two complete environments and switches all traffic at once, but only to an environment that has passed its checks, which makes switching back instant.',
+      },
+      {
+        title: 'Canaries and percentage rollouts',
+        body: 'A canary sends a small share of traffic to the new version, holds, then moves to larger shares; pausing stops the hold timer so a paused step is not rushed. A percentage rollout does the same for a feature flag, by user. Each user must get the same answer on every request, and a user who has the feature at 10% must keep it at 50%, so the choice comes from a stable hash of the user ID: users whose bucket is below the percentage are in, and raising the percentage only adds users.',
+      },
+      {
+        title: 'Decide from evidence, not one bad minute',
+        body: 'Error rates are noisy. One bad minute may be chance, so rollback waits for a run of unhealthy minutes, and promotion for a run of healthy ones. A minute with too little traffic says almost nothing and is skipped. Comparing errors × 100 with the allowed percent × requests keeps the decision in whole numbers, so a rate exactly at the limit is judged the same way every time.',
+      },
+      {
+        title: 'What these reps check',
+        body: 'These reps plan and judge deploys from data passed to your functions: instance names, events, minutes, and request counts. They do not start instances, move traffic, or read live metrics. The hash used for buckets is FNV-1a, chosen because it is short and easy to follow; it is fine for spreading users evenly but not for anything secret.',
+      },
+    ],
+    example:
+      'flag new-checkout, user u-1004\nFNV-1a("new-checkout:u-1004") % 100 = 9\n\nat 5%  → 9 < 5 is false  → off\nat 10% → 9 < 10 is true  → on\nat 50% → 9 < 50 is true  → still on',
+    walkthrough: [
+      'The flag name and the user ID are joined with ":" and hashed, so every request for this user gets the same bucket, 9.',
+      'At 5% only buckets 0 to 4 are on, so this user does not have the feature yet.',
+      'At 10% buckets 0 to 9 are on, so the user is added.',
+      'Raising the percentage never removes a user, because their bucket does not change.',
+    ],
+    mistakes: [
+      'Rounding a rolling batch down to 0, so the update never moves.',
+      'Choosing rollout users at random per request, so the feature flickers on and off for one person.',
+      'Switching traffic to an environment before it has passed its checks.',
+      'Rolling back on a single bad minute, or judging a minute with almost no traffic.',
+    ],
+    questions: [
+      q(
+        'rolling-batch-floor-v1',
+        'A service has 5 instances and allows 10% unavailable. How many instances does each batch update?',
+        '',
+        ['0, so the update waits', '1', '5'],
+        1,
+        '5 × 10% is 0.5, which rounds down to 0, but a batch is never smaller than 1, or the update would never move.',
+      ),
+      q(
+        'rollout-stable-hash-v1',
+        'Why hash the user ID instead of choosing randomly on each request?',
+        '',
+        ['Hashing is faster', 'So each user always gets the same answer', 'So more users get the feature'],
+        1,
+        'A hash gives the same bucket every time, so a user does not see the feature appear and disappear between requests.',
+      ),
+      q(
+        'blue-green-switch-v1',
+        'Green has the new version but its health check failed. What should a switch do?',
+        '',
+        ['Switch anyway and watch the errors', 'Refuse, and keep blue live', 'Switch half the traffic'],
+        1,
+        'Blue/green only switches to an environment that passed its checks; blue keeps serving until green is healthy.',
+      ),
+      q(
+        'canary-quiet-minute-v1',
+        'A canary minute had 8 requests and 2 errors. The policy needs at least 100 requests to judge a minute. What does that minute count as?',
+        '',
+        ['Unhealthy, 25% errors', 'Nothing; it is skipped', 'Healthy, too small to matter'],
+        1,
+        'With so few requests the rate is mostly chance, so the minute is skipped: it neither counts nor breaks a run.',
+      ),
+    ],
+    repIds: ['devops-rolling-batches', 'devops-percent-rollout', 'devops-blue-green', 'devops-canary-schedule', 'devops-canary-verdict'],
+    related: ['container-images', 'ci-pipelines'],
+  },
 ]

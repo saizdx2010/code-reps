@@ -405,4 +405,88 @@ function stageRebuilds(stages: { name: string; from: string; steps: Step[] }[], 
   }
   return result
 }`,
+  'devops-rolling-batches': `
+function rollingBatches(instances: string[], maxUnavailablePercent: number) {
+  const batchSize = Math.max(1, Math.floor((instances.length * maxUnavailablePercent) / 100))
+  const batches: string[][] = []
+  for (let start = 0; start < instances.length; start += batchSize) batches.push(instances.slice(start, start + batchSize))
+  return { batchSize, minAvailable: instances.length - batchSize, batches }
+}`,
+  'devops-percent-rollout': `
+function inRollout(userId: string, percent: number, flag: string) {
+  const text = flag + ':' + userId
+  let hash = 2166136261
+  for (let index = 0; index < text.length; index++) hash = Math.imul(hash ^ text.charCodeAt(index), 16777619) >>> 0
+  const bucket = hash % 100
+  return { bucket, enabled: bucket < percent }
+}`,
+  'devops-blue-green': `
+type Color = 'blue' | 'green'
+type Event = { type: 'deploy'; version: string } | { type: 'check'; passed: boolean } | { type: 'switch' } | { type: 'rollback' }
+function blueGreen(events: Event[]) {
+  let live: Color = 'blue'
+  const versions: Record<Color, string | null> = { blue: 'v1', green: null }
+  let idleHealth: 'unchecked' | 'healthy' | 'failed' = 'unchecked'
+  let target: Color | null = null
+  const refused: number[] = []
+  const idle = (): Color => (live === 'blue' ? 'green' : 'blue')
+  events.forEach((event, index) => {
+    if (event.type === 'deploy') {
+      versions[idle()] = event.version
+      idleHealth = 'unchecked'
+      target = null
+    } else if (event.type === 'check') {
+      if (versions[idle()] === null) refused.push(index)
+      else idleHealth = event.passed ? 'healthy' : 'failed'
+    } else if (event.type === 'switch') {
+      if (idleHealth !== 'healthy' || versions[idle()] === null) refused.push(index)
+      else {
+        target = live
+        live = idle()
+        idleHealth = 'healthy'
+      }
+    } else if (target === null) refused.push(index)
+    else {
+      live = target
+      idleHealth = 'failed'
+      target = null
+    }
+  })
+  return { live, versions: { blue: versions.blue, green: versions.green }, refused }
+}`,
+  'devops-canary-schedule': `
+function canaryStep(steps: { percent: number; holdMinutes: number }[], minutesSinceStart: number, pauses: { from: number; to: number }[]) {
+  const paused = pauses.reduce((total, pause) => total + Math.max(0, Math.min(pause.to, minutesSinceStart) - Math.max(pause.from, 0)), 0)
+  const active = minutesSinceStart - paused
+  let current = 0
+  let start = 0
+  for (let index = 0; index < steps.length; index++) {
+    if (start > active) break
+    current = index
+    start += steps[index].holdMinutes
+  }
+  return { step: current, percent: steps[current].percent }
+}`,
+  'devops-canary-verdict': `
+function canaryVerdict(
+  samples: { requests: number; errors: number }[],
+  policy: { maxErrorPercent: number; minRequests: number; healthyNeeded: number; unhealthyNeeded: number },
+) {
+  let healthy = 0
+  let unhealthy = 0
+  for (let index = 0; index < samples.length; index++) {
+    const { requests, errors } = samples[index]
+    if (requests < policy.minRequests) continue
+    if (errors * 100 > policy.maxErrorPercent * requests) {
+      unhealthy++
+      healthy = 0
+      if (unhealthy >= policy.unhealthyNeeded) return { decision: 'rollback', at: index }
+    } else {
+      healthy++
+      unhealthy = 0
+      if (healthy >= policy.healthyNeeded) return { decision: 'promote', at: index }
+    }
+  }
+  return { decision: 'continue', at: null }
+}`,
 }

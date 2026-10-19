@@ -563,6 +563,16 @@ export const indonesianGlossary: Record<string, string> = {
   'Retention policy': 'aturan berapa lama atau berapa banyak item lama disimpan sebelum dihapus',
   'Multi-stage build': 'build image dengan beberapa tahap, di mana tahap selanjutnya hanya menyalin yang diperlukan dari tahap sebelumnya',
   'Build stage': 'satu bagian bernama dalam build multi-tahap, dimulai dari sebuah image atau tahap sebelumnya',
+  'Rolling update': 'deploy yang mengganti instance sedikit demi sedikit, sehingga layanan tetap berjalan',
+  Instance: 'satu salinan layanan yang sedang berjalan',
+  'Feature flag': 'pengaturan yang menyalakan atau mematikan fitur untuk sebagian pengguna tanpa deploy baru',
+  'Percentage rollout': 'menyalakan fitur untuk bagian pengguna yang makin besar, dipilih dengan cara yang sama setiap kali',
+  'Blue/green deploy': 'deploy dengan dua lingkungan lengkap, di mana lalu lintas pindah ke yang baru hanya setelah diperiksa',
+  'Canary release': 'mengirim sebagian kecil lalu lintas ke versi baru lebih dulu, untuk menangkap masalah sebelum semua orang melihatnya',
+  'Hold time': 'berapa lama rollout tetap di satu langkah sebelum lanjut',
+  'Error rate': 'bagian request yang gagal dalam suatu periode',
+  Promote: 'memindahkan canary ke seluruh lalu lintas setelah terbukti sehat',
+  'Deploy rollback': 'mengembalikan layanan ke versi yang dijalankannya sebelum perubahan yang buruk',
 }
 
 /** Shown with the glossary when Indonesian help is on. */

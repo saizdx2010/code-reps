@@ -531,6 +531,16 @@ export const paths = [
         title: 'Build container images',
         repIds: ['devops-layer-rebuild', 'devops-image-tags', 'devops-dockerignore', 'devops-tag-cleanup', 'devops-multistage-rebuild'],
       },
+      {
+        title: 'Deploy safely',
+        repIds: [
+          'devops-rolling-batches',
+          'devops-percent-rollout',
+          'devops-blue-green',
+          'devops-canary-schedule',
+          'devops-canary-verdict',
+        ],
+      },
     ] satisfies readonly PathStage[],
   },
 ] as const

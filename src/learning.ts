@@ -488,6 +488,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'deploy-strategies',
+    title: 'Roll out a change gradually',
+    guided: 'devops-rolling-batches',
+    independent: 'devops-percent-rollout',
+    recall: 'devops-canary-verdict',
+    practice: ['devops-blue-green', 'devops-canary-schedule'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

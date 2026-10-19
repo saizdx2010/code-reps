@@ -379,6 +379,11 @@ export const repLevels: Record<string, RepLevel> = {
   'devops-dockerignore': 2,
   'devops-tag-cleanup': 2,
   'devops-multistage-rebuild': 3,
+  'devops-rolling-batches': 2,
+  'devops-percent-rollout': 2,
+  'devops-blue-green': 2,
+  'devops-canary-schedule': 2,
+  'devops-canary-verdict': 3,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

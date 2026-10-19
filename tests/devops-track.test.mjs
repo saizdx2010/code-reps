@@ -652,3 +652,121 @@ test('D5 container checks catch propagation, matching, tag, ignore-order, retent
     ],
   ])
 })
+
+test('D6 deploy checks catch rounding, hashing, switch, pause, and verdict mistakes', async () => {
+  const rolling = solution('devops-rolling-batches')
+  await assertCaught('devops-rolling-batches', [
+    [rolling.replace('Math.max(1, Math.floor(', 'Math.max(1, Math.round('), 'Rounds the batch down'],
+    [
+      rolling.replace(
+        'Math.max(1, Math.floor((instances.length * maxUnavailablePercent) / 100))',
+        'Math.floor((instances.length * maxUnavailablePercent) / 100) || instances.length',
+      ),
+      'Updates at least one at a time',
+    ],
+    [rolling.replace('minAvailable: instances.length - batchSize', 'minAvailable: instances.length - batches.length'), 'Plans the example'],
+    [
+      rolling.replace('instances.slice(start, start + batchSize)', '[...instances].sort().slice(start, start + batchSize)'),
+      'Keeps the given order',
+    ],
+    [
+      rolling.replace(
+        'Math.max(1, Math.floor((instances.length * maxUnavailablePercent) / 100))',
+        'Math.max(1, Math.ceil((instances.length * maxUnavailablePercent) / 100))',
+      ),
+      'Plans the example',
+    ],
+  ])
+  const rollout = solution('devops-percent-rollout')
+  await assertCaught('devops-percent-rollout', [
+    [rollout.replace("const text = flag + ':' + userId", 'const text = userId'), 'Gives each flag its own buckets'],
+    [rollout.replace("const text = flag + ':' + userId", 'const text = flag + userId'), 'Joins the flag and user with ":"'],
+    [rollout.replace('enabled: bucket < percent', 'enabled: bucket <= percent'), 'Leaves out a bucket equal to the percent'],
+    [rollout.replace(' >>> 0\n', ' | 0\n'), 'Enables the user in the example'],
+    [rollout.replace("const text = flag + ':' + userId", "const text = flag + ':' + userId.toLowerCase()"), 'Compares user IDs exactly'],
+    [rollout.replace('const bucket = hash % 100', 'const bucket = hash % 101'), 'Leaves out a user above the percent'],
+  ])
+  const blueGreen = solution('devops-blue-green')
+  await assertCaught('devops-blue-green', [
+    [
+      blueGreen.replace(
+        "if (idleHealth !== 'healthy' || versions[idle()] === null) refused.push(index)",
+        'if (versions[idle()] === null) refused.push(index)',
+      ),
+      'Refuses to switch before a check',
+    ],
+    [
+      blueGreen.replace("      idleHealth = 'unchecked'\n      target = null\n", "      idleHealth = 'unchecked'\n"),
+      'Clears the rollback target on a new deploy',
+    ],
+    [
+      blueGreen.replace("      idleHealth = 'failed'\n      target = null\n", "      idleHealth = 'healthy'\n      target = null\n"),
+      'Refuses to switch back to a rolled-back color',
+    ],
+    [
+      blueGreen.replace('      if (versions[idle()] === null) refused.push(index)\n      else idleHealth', '      idleHealth'),
+      'Refuses a check with nothing deployed',
+    ],
+    [
+      blueGreen.replace(
+        '    } else if (target === null) refused.push(index)\n    else {\n      live = target',
+        '    } else {\n      live = target ?? idle()',
+      ),
+      'Refuses a rollback with no target',
+    ],
+    [
+      blueGreen.replace('        target = live\n        live = idle()\n', '        live = idle()\n        target = live\n'),
+      'Rolls back to the previous live color',
+    ],
+  ])
+  const schedule = solution('devops-canary-schedule')
+  await assertCaught('devops-canary-schedule', [
+    [
+      schedule.replace('const active = minutesSinceStart - paused', 'const active = minutesSinceStart'),
+      'Places the example after its pause',
+    ],
+    [schedule.replace('Math.min(pause.to, minutesSinceStart)', 'pause.to'), 'Counts an unfinished pause only up to now'],
+    [
+      schedule.replace('Math.max(0, Math.min(pause.to, minutesSinceStart) - Math.max(pause.from, 0))', '(pause.to - pause.from)'),
+      'Ignores a pause that has not started',
+    ],
+    [schedule.replace('if (start > active) break', 'if (start >= active) break'), 'Starts a step exactly when the holds are over'],
+    [
+      schedule.replace('if (start > active) break', 'if (start + steps[index].holdMinutes > active) break'),
+      'Places the example after its pause',
+    ],
+    [schedule.replace('index < steps.length', 'index < steps.length - 1'), 'Stays on the last step'],
+    [
+      schedule.replace(
+        'if (start > active) break\n    current = index\n    start += steps[index].holdMinutes',
+        'start += steps[index].holdMinutes\n    if (start > active) break\n    current = index',
+      ),
+      'Starts a step exactly when the holds are over',
+    ],
+  ])
+  const verdict = solution('devops-canary-verdict')
+  await assertCaught('devops-canary-verdict', [
+    [
+      verdict.replace('if (errors * 100 > policy.maxErrorPercent * requests)', 'if ((errors / requests) * 100 > policy.maxErrorPercent)'),
+      'Uses whole-number arithmetic at the boundary',
+    ],
+    [
+      verdict.replace('if (errors * 100 > policy.maxErrorPercent * requests)', 'if (errors * 100 >= policy.maxErrorPercent * requests)'),
+      'Counts a rate at the limit as healthy',
+    ],
+    [verdict.replace('    if (requests < policy.minRequests) continue\n', ''), 'Does not judge a quiet minute full of errors'],
+    [
+      verdict.replace(
+        '    if (requests < policy.minRequests) continue\n',
+        '    if (requests < policy.minRequests) {\n      healthy = 0\n      unhealthy = 0\n      continue\n    }\n',
+      ),
+      'Skips quiet minutes without breaking a run',
+    ],
+    [
+      verdict.replace('      unhealthy++\n      healthy = 0\n', '      unhealthy++\n'),
+      'Restarts the healthy run after an unhealthy minute',
+    ],
+    [verdict.replace('      healthy++\n      unhealthy = 0\n', '      healthy++\n'), 'Resets a run when the other kind appears'],
+    [verdict.replace('policy.maxErrorPercent * requests', '2 * requests'), 'Uses the supplied limits'],
+  ])
+})

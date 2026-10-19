@@ -2651,4 +2651,568 @@ export const devopsReps: Rep[] = [
       },
     ],
   },
+  {
+    id: 'devops-rolling-batches',
+    title: 'Plan a rolling update',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      "A rolling update replaces a service's instances a few at a time, so most of them keep serving while the new version starts. The deploy setting says what share of instances may be out of service at once; that share has to become a whole number of instances.",
+    prompt:
+      'Implement rollingBatches(instances, maxUnavailablePercent). instances lists instance names in update order, with at least one. maxUnavailablePercent is a whole number from 0 to 100. The batch size is the number of instances times maxUnavailablePercent divided by 100, rounded down, but at least 1. Split instances, in order, into batches of that size; the last batch may be smaller. Return {batchSize, minAvailable, batches}, where minAvailable is the number of instances minus batchSize. Do not change instances.',
+    brief: {
+      summary: 'Implement rollingBatches(instances, maxUnavailablePercent), where the percent is a whole number from 0 to 100.',
+      rules: [
+        'batchSize is instances × maxUnavailablePercent / 100, rounded down, but at least 1.',
+        'Split instances in order into batches of batchSize; the last batch may be smaller.',
+        'minAvailable is the number of instances minus batchSize.',
+      ],
+      edgeCases: [
+        'A percent that rounds down to 0 still updates one instance at a time.',
+        '100 percent updates every instance at once.',
+        'Do not change instances.',
+      ],
+    },
+    example: {
+      input: 'rollingBatches(["web-1", "web-2", "web-3", "web-4", "web-5", "web-6", "web-7"], 30)',
+      output: '{batchSize: 2, minAvailable: 5, batches: [["web-1", "web-2"], ["web-3", "web-4"], ["web-5", "web-6"], ["web-7"]]}',
+    },
+    note: `instances has at most 200 names. Real orchestrators also start extra instances during an update and wait for each one to report ready; this rep plans only the batches. ${notRun}`,
+    vocabulary: [
+      { term: 'Rolling update', meaning: 'a deploy that replaces instances a few at a time, so the service keeps running' },
+      { term: 'Instance', meaning: 'one running copy of a service' },
+    ],
+    planPrompt:
+      'What batch size do 7 instances at 30%, 5 instances at 10%, and 3 instances at 100% give, and how many instances are always serving?',
+    starter:
+      'function rollingBatches(instances: string[], maxUnavailablePercent: number) {\n  return { batchSize: 1, minAvailable: instances.length - 1, batches: [instances] }\n}\n',
+    functionName: 'rollingBatches',
+    preserveInput: true,
+    hints: [
+      'Math.floor rounds down and Math.max(1, ...) keeps the size at least 1.',
+      'slice(start, start + batchSize) takes one batch without changing the input.',
+      'Step start forward by batchSize until it passes the end.',
+    ],
+    checks: [
+      {
+        name: 'Plans the example',
+        input: [['web-1', 'web-2', 'web-3', 'web-4', 'web-5', 'web-6', 'web-7'], 30],
+        expected: { batchSize: 2, minAvailable: 5, batches: [['web-1', 'web-2'], ['web-3', 'web-4'], ['web-5', 'web-6'], ['web-7']] },
+      },
+      {
+        name: 'Rounds the batch down',
+        input: [['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'], 33],
+        expected: { batchSize: 2, minAvailable: 7, batches: [['a', 'b'], ['c', 'd'], ['e', 'f'], ['g', 'h'], ['i']] },
+      },
+      {
+        name: 'Updates at least one at a time',
+        input: [['a', 'b', 'c', 'd', 'e'], 10],
+        expected: { batchSize: 1, minAvailable: 4, batches: [['a'], ['b'], ['c'], ['d'], ['e']] },
+      },
+      {
+        name: 'Treats 0 percent as one at a time',
+        input: [['a', 'b'], 0],
+        expected: { batchSize: 1, minAvailable: 1, batches: [['a'], ['b']] },
+      },
+      {
+        name: 'Updates everything at 100 percent',
+        input: [['a', 'b', 'c'], 100],
+        expected: { batchSize: 3, minAvailable: 0, batches: [['a', 'b', 'c']] },
+      },
+      {
+        name: 'Splits evenly when it can',
+        input: [['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'], 25],
+        expected: {
+          batchSize: 2,
+          minAvailable: 6,
+          batches: [
+            ['a', 'b'],
+            ['c', 'd'],
+            ['e', 'f'],
+            ['g', 'h'],
+          ],
+        },
+      },
+      { name: 'Handles one instance', input: [['solo'], 50], expected: { batchSize: 1, minAvailable: 0, batches: [['solo']] } },
+      {
+        name: 'Keeps the given order',
+        input: [['z-3', 'a-1', 'm-2'], 67],
+        expected: { batchSize: 2, minAvailable: 1, batches: [['z-3', 'a-1'], ['m-2']] },
+      },
+    ],
+  },
+  {
+    id: 'devops-percent-rollout',
+    title: 'Roll out a feature to a stable share of users',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A new feature is turned on for 10% of users first, then more. Each user must get the same answer on every request, and someone who has the feature at 10% must keep it at 50%, so the choice cannot be random per request. Hashing the user ID gives every user a fixed bucket from 0 to 99.',
+    prompt:
+      'Implement inRollout(userId, percent, flag). Hash the text flag + ":" + userId with 32-bit FNV-1a: start with hash = 2166136261; for each UTF-16 code unit c of the text (charCodeAt), set hash to Math.imul(hash ^ c, 16777619) >>> 0. The bucket is hash modulo 100, a whole number from 0 to 99. The user is enabled when bucket is less than percent, a whole number from 0 to 100. Return {bucket, enabled}.',
+    brief: {
+      summary: 'Implement inRollout(userId, percent, flag) and return {bucket, enabled}.',
+      rules: [
+        'Hash flag + ":" + userId with 32-bit FNV-1a: hash = 2166136261, then for each code unit c, hash = Math.imul(hash ^ c, 16777619) >>> 0.',
+        'bucket is hash modulo 100, a whole number from 0 to 99.',
+        'enabled is bucket < percent, where percent is a whole number from 0 to 100.',
+      ],
+      edgeCases: ['A bucket equal to percent is not enabled.', 'User IDs are compared exactly, including letter case.'],
+    },
+    example: { input: 'inRollout("u-1004", 10, "new-checkout")', output: '{bucket: 9, enabled: true}' },
+    note: `Including the flag name in the hash gives each feature its own order of users, so the same 10% do not get every new feature first. FNV-1a is used because it is short and easy to check; it is not suitable for anything secret. ${notRun}`,
+    vocabulary: [
+      { term: 'Feature flag', meaning: 'a setting that turns a feature on or off for some users without a new deploy' },
+      { term: 'Percentage rollout', meaning: 'turning a feature on for a growing share of users, chosen the same way every time' },
+    ],
+    planPrompt: 'Why must a user enabled at 10% still be enabled at 50%, and why does the flag name belong in the hashed text?',
+    starter:
+      'function inRollout(userId: string, percent: number, flag: string): { bucket: number; enabled: boolean } {\n  return { bucket: 0, enabled: false }\n}\n',
+    functionName: 'inRollout',
+    hints: [
+      'Build the text once: flag, then ":", then the user ID.',
+      'Math.imul keeps the multiplication in 32 bits, and >>> 0 keeps the result as a positive whole number.',
+      'The comparison is strict: bucket < percent.',
+    ],
+    checks: [
+      { name: 'Enables the user in the example', input: ['u-1004', 10, 'new-checkout'], expected: { bucket: 9, enabled: true } },
+      { name: 'Leaves out a user above the percent', input: ['u-1001', 50, 'new-checkout'], expected: { bucket: 66, enabled: false } },
+      { name: 'Leaves out a bucket equal to the percent', input: ['u-1004', 9, 'new-checkout'], expected: { bucket: 9, enabled: false } },
+      { name: 'Keeps a user enabled as the percent grows', input: ['u-1004', 50, 'new-checkout'], expected: { bucket: 9, enabled: true } },
+      { name: 'Gives each flag its own buckets', input: ['u-1002', 20, 'dark-mode'], expected: { bucket: 18, enabled: true } },
+      { name: 'Joins the flag and user with ":"', input: ['u-1005', 50, 'new-checkout'], expected: { bucket: 90, enabled: false } },
+      { name: 'Compares user IDs exactly', input: ['U-1001', 60, 'new-checkout'], expected: { bucket: 58, enabled: true } },
+      { name: 'Enables nobody at 0', input: ['grace', 0, 'new-checkout'], expected: { bucket: 14, enabled: false } },
+      { name: 'Enables everybody at 100', input: ['u-1005', 100, 'new-checkout'], expected: { bucket: 90, enabled: true } },
+    ],
+  },
+  {
+    id: 'devops-blue-green',
+    title: 'Switch between blue and green',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A blue/green deploy keeps two complete environments. One, the live one, serves all traffic; the new version goes to the other, idle one, is checked there, and only then does traffic switch over. Switching back is instant, because the previous version is still running.',
+    prompt:
+      'Implement blueGreen(events). Start with blue live on "v1", green empty, and no rollback target. Process events in order. {type: "deploy", version}: put version on the idle color, mark it unchecked, and clear the rollback target. {type: "check", passed}: refused if the idle color is empty; otherwise mark it healthy if passed, or failed if not. {type: "switch"}: refused unless the idle color is healthy; otherwise the idle color becomes live, the previous live color becomes idle and healthy, and it becomes the rollback target. {type: "rollback"}: refused unless there is a rollback target; otherwise the target becomes live, the color that was live becomes idle and failed, and the target is cleared. Return {live, versions: {blue, green}, refused}, where refused lists the positions (from 0) of refused events. Do not change events.',
+    brief: {
+      summary: 'Implement blueGreen(events) and return {live, versions, refused}, with refused positions counted from 0.',
+      rules: [
+        'Start: blue live on "v1", green empty, no rollback target.',
+        'deploy puts the version on the idle color, marks it unchecked, and clears the rollback target; check marks a non-empty idle color healthy or failed.',
+        'switch needs a healthy idle color: it goes live, and the old live color becomes idle, healthy, and the rollback target.',
+        'rollback needs a rollback target: it goes live, the color that was live becomes idle and failed, and the target is cleared.',
+      ],
+      edgeCases: ['A refused event changes nothing.', 'Empty colors are null in versions.', 'Do not change events.'],
+    },
+    example: {
+      input: 'blueGreen([{type: "deploy", version: "v2"}, {type: "check", passed: true}, {type: "switch"}])',
+      output: '{live: "green", versions: {blue: "v1", green: "v2"}, refused: []}',
+    },
+    note: `Real blue/green deploys also drain connections and switch DNS or a load balancer; here the switch is a state change. ${notRun}`,
+    vocabulary: [
+      {
+        term: 'Blue/green deploy',
+        meaning: 'a deploy with two full environments, where traffic switches to the new one only after it is checked',
+      },
+      { term: 'Deploy rollback', meaning: 'returning a service to the version it ran before a bad change' },
+    ],
+    planPrompt: 'Why is switch refused right after a deploy, and why does a deploy clear the rollback target?',
+    starter:
+      "type Event = { type: 'deploy'; version: string } | { type: 'check'; passed: boolean } | { type: 'switch' } | { type: 'rollback' }\n\nfunction blueGreen(events: Event[]) {\n  return { live: 'blue', versions: { blue: 'v1' as string | null, green: null as string | null }, refused: [] as number[] }\n}\n",
+    functionName: 'blueGreen',
+    preserveInput: true,
+    hints: [
+      "Keep live, versions, the idle color's health, and the rollback target as variables.",
+      'The idle color is always the one that is not live.',
+      'Check whether an event is allowed before changing anything, and record its position if not.',
+    ],
+    checks: [
+      {
+        name: 'Switches after a passing check',
+        input: [[{ type: 'deploy', version: 'v2' }, { type: 'check', passed: true }, { type: 'switch' }]],
+        expected: { live: 'green', versions: { blue: 'v1', green: 'v2' }, refused: [] },
+      },
+      {
+        name: 'Refuses to switch before a check',
+        input: [[{ type: 'deploy', version: 'v2' }, { type: 'switch' }]],
+        expected: { live: 'blue', versions: { blue: 'v1', green: 'v2' }, refused: [1] },
+      },
+      {
+        name: 'Refuses to switch after a failing check',
+        input: [[{ type: 'deploy', version: 'v2' }, { type: 'check', passed: false }, { type: 'switch' }]],
+        expected: { live: 'blue', versions: { blue: 'v1', green: 'v2' }, refused: [2] },
+      },
+      {
+        name: 'Rolls back to the previous live color',
+        input: [[{ type: 'deploy', version: 'v2' }, { type: 'check', passed: true }, { type: 'switch' }, { type: 'rollback' }]],
+        expected: { live: 'blue', versions: { blue: 'v1', green: 'v2' }, refused: [] },
+      },
+      {
+        name: 'Refuses to switch back to a rolled-back color',
+        input: [
+          [
+            { type: 'deploy', version: 'v2' },
+            { type: 'check', passed: true },
+            { type: 'switch' },
+            { type: 'rollback' },
+            { type: 'switch' },
+          ],
+        ],
+        expected: { live: 'blue', versions: { blue: 'v1', green: 'v2' }, refused: [4] },
+      },
+      {
+        name: 'Refuses a rollback with no target',
+        input: [[{ type: 'rollback' }]],
+        expected: { live: 'blue', versions: { blue: 'v1', green: null }, refused: [0] },
+      },
+      {
+        name: 'Clears the rollback target on a new deploy',
+        input: [
+          [
+            { type: 'deploy', version: 'v2' },
+            { type: 'check', passed: true },
+            { type: 'switch' },
+            { type: 'deploy', version: 'v3' },
+            { type: 'rollback' },
+          ],
+        ],
+        expected: { live: 'green', versions: { blue: 'v3', green: 'v2' }, refused: [4] },
+      },
+      {
+        name: 'Refuses a check with nothing deployed',
+        input: [[{ type: 'check', passed: true }, { type: 'switch' }]],
+        expected: { live: 'blue', versions: { blue: 'v1', green: null }, refused: [0, 1] },
+      },
+      {
+        name: 'Deploys to whichever color is idle',
+        input: [
+          [
+            { type: 'deploy', version: 'v2' },
+            { type: 'check', passed: true },
+            { type: 'switch' },
+            { type: 'deploy', version: 'v3' },
+            { type: 'check', passed: true },
+            { type: 'switch' },
+          ],
+        ],
+        expected: { live: 'blue', versions: { blue: 'v3', green: 'v2' }, refused: [] },
+      },
+      { name: 'Starts with blue live', input: [[]], expected: { live: 'blue', versions: { blue: 'v1', green: null }, refused: [] } },
+    ],
+  },
+  {
+    id: 'devops-canary-schedule',
+    title: 'Find where a canary rollout stands',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A canary rollout sends a small share of traffic to the new version, holds it there for a while, then moves to the next share. When someone pauses the rollout to investigate, the hold timer stops, so paused time does not count toward a step.',
+    prompt:
+      'Implement canaryStep(steps, minutesSinceStart, pauses). steps lists {percent, holdMinutes} in order; the rollout starts the first step at minute 0, and each later step starts once the hold times of all earlier steps have passed. pauses lists {from, to} minute ranges, which do not overlap, during which the rollout was paused. Count only active time: minutesSinceStart minus the part of each pause between minute 0 and minutesSinceStart. The current step is the last one whose start is at or before that active time. Return {step, percent}, where step counts from 0. Do not change the inputs.',
+    brief: {
+      summary: 'Implement canaryStep(steps, minutesSinceStart, pauses) and return {step, percent}.',
+      rules: [
+        'Step 0 starts at minute 0; each later step starts once the hold times of all earlier steps have passed.',
+        'Active time is minutesSinceStart minus the part of each pause between minute 0 and minutesSinceStart.',
+        'The current step is the last one whose start is at or before the active time; step counts from 0.',
+      ],
+      edgeCases: [
+        'A step starts exactly when the earlier holds add up to the active time.',
+        'A pause that has not ended yet counts only up to minutesSinceStart.',
+        'Do not change the inputs.',
+      ],
+    },
+    example: {
+      input:
+        'canaryStep([{percent: 5, holdMinutes: 10}, {percent: 25, holdMinutes: 10}, {percent: 50, holdMinutes: 20}, {percent: 100, holdMinutes: 0}], 25, [{from: 12, to: 18}])',
+      output: '{step: 1, percent: 25}',
+    },
+    note: `Minutes are whole numbers; minutesSinceStart is passed in, so your function never reads a clock. steps has at least one entry. ${notRun}`,
+    vocabulary: [
+      {
+        term: 'Canary release',
+        meaning: 'sending a small share of traffic to a new version first, to catch problems before everyone sees them',
+      },
+      { term: 'Hold time', meaning: 'how long a rollout stays at one step before moving on' },
+    ],
+    planPrompt:
+      'In the example, when does each step start without pauses? How many minutes does the pause from 12 to 18 take away by minute 25?',
+    starter:
+      'type Step = { percent: number; holdMinutes: number }\n\nfunction canaryStep(steps: Step[], minutesSinceStart: number, pauses: { from: number; to: number }[]) {\n  return { step: 0, percent: steps[0].percent }\n}\n',
+    functionName: 'canaryStep',
+    preserveInput: true,
+    hints: [
+      'The paused part of one pause is the overlap of {from, to} with {0, minutesSinceStart}: Math.max(0, Math.min(to, now) - Math.max(from, 0)).',
+      "Keep a running start time, adding each step's hold as you go.",
+      'Stop at the first step that starts after the active time; the one before it is current.',
+    ],
+    checks: [
+      {
+        name: 'Places the example after its pause',
+        input: [
+          [
+            { percent: 5, holdMinutes: 10 },
+            { percent: 25, holdMinutes: 10 },
+            { percent: 50, holdMinutes: 20 },
+            { percent: 100, holdMinutes: 0 },
+          ],
+          25,
+          [{ from: 12, to: 18 }],
+        ],
+        expected: { step: 1, percent: 25 },
+      },
+      {
+        name: 'Moves on without pauses',
+        input: [
+          [
+            { percent: 5, holdMinutes: 10 },
+            { percent: 25, holdMinutes: 10 },
+            { percent: 50, holdMinutes: 20 },
+            { percent: 100, holdMinutes: 0 },
+          ],
+          25,
+          [],
+        ],
+        expected: { step: 2, percent: 50 },
+      },
+      {
+        name: 'Starts a step exactly when the holds are over',
+        input: [
+          [
+            { percent: 5, holdMinutes: 10 },
+            { percent: 25, holdMinutes: 10 },
+          ],
+          10,
+          [],
+        ],
+        expected: { step: 1, percent: 25 },
+      },
+      {
+        name: 'Stays on a step one minute before it ends',
+        input: [
+          [
+            { percent: 5, holdMinutes: 10 },
+            { percent: 25, holdMinutes: 10 },
+          ],
+          9,
+          [],
+        ],
+        expected: { step: 0, percent: 5 },
+      },
+      {
+        name: 'Counts an unfinished pause only up to now',
+        input: [
+          [
+            { percent: 5, holdMinutes: 10 },
+            { percent: 25, holdMinutes: 10 },
+            { percent: 50, holdMinutes: 10 },
+          ],
+          25,
+          [{ from: 20, to: 40 }],
+        ],
+        expected: { step: 2, percent: 50 },
+      },
+      {
+        name: 'Ignores a pause that has not started',
+        input: [
+          [
+            { percent: 5, holdMinutes: 10 },
+            { percent: 25, holdMinutes: 10 },
+          ],
+          12,
+          [{ from: 30, to: 45 }],
+        ],
+        expected: { step: 1, percent: 25 },
+      },
+      {
+        name: 'Adds up several pauses',
+        input: [
+          [
+            { percent: 10, holdMinutes: 5 },
+            { percent: 50, holdMinutes: 5 },
+            { percent: 100, holdMinutes: 0 },
+          ],
+          16,
+          [
+            { from: 2, to: 4 },
+            { from: 6, to: 9 },
+          ],
+        ],
+        expected: { step: 2, percent: 100 },
+      },
+      {
+        name: 'Stays on the last step',
+        input: [
+          [
+            { percent: 20, holdMinutes: 5 },
+            { percent: 100, holdMinutes: 0 },
+          ],
+          500,
+          [],
+        ],
+        expected: { step: 1, percent: 100 },
+      },
+      {
+        name: 'Skips a step with no hold time',
+        input: [
+          [
+            { percent: 1, holdMinutes: 0 },
+            { percent: 10, holdMinutes: 30 },
+          ],
+          0,
+          [],
+        ],
+        expected: { step: 1, percent: 10 },
+      },
+    ],
+  },
+  {
+    id: 'devops-canary-verdict',
+    title: 'Decide whether to promote or roll back a canary',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'While a canary runs, its error rate is checked every minute. One bad minute can be noise, so the decision waits for a run of bad minutes before rolling back, and for a run of good ones before promoting. A minute with very little traffic says almost nothing, so it is not counted at all.',
+    prompt:
+      'Implement canaryVerdict(samples, policy). samples lists {requests, errors} for the canary, one per minute, in order. policy is {maxErrorPercent, minRequests, healthyNeeded, unhealthyNeeded}, all whole numbers. Go through the samples in order. A sample with fewer than minRequests requests is skipped: it neither counts nor breaks a run. Otherwise the sample is unhealthy when errors × 100 is greater than maxErrorPercent × requests, and healthy otherwise. Keep the number of healthy samples in a row and unhealthy samples in a row; each kind resets the other. At the first sample where the unhealthy run reaches unhealthyNeeded, return {decision: "rollback", at} with that sample\'s position (from 0); at the first where the healthy run reaches healthyNeeded, return {decision: "promote", at}. If neither happens, return {decision: "continue", at: null}. Do not change the inputs.',
+    brief: {
+      summary: 'Implement canaryVerdict(samples, policy) and return {decision, at}.',
+      rules: [
+        'Skip a sample with fewer than minRequests requests; it neither counts nor breaks a run.',
+        'A counted sample is unhealthy when errors × 100 > maxErrorPercent × requests, and healthy otherwise.',
+        'Count healthy and unhealthy samples in a row; each kind resets the other.',
+        'Return "rollback" or "promote" with the position (from 0) of the first sample that completes a run, or {decision: "continue", at: null}.',
+      ],
+      edgeCases: ['An error rate exactly at maxErrorPercent is healthy.', 'Do not change the inputs.'],
+    },
+    example: {
+      input:
+        'canaryVerdict([{requests: 400, errors: 2}, {requests: 380, errors: 30}, {requests: 410, errors: 25}], {maxErrorPercent: 2, minRequests: 100, healthyNeeded: 3, unhealthyNeeded: 2})',
+      output: '{decision: "rollback", at: 2}',
+    },
+    note: `Comparing errors × 100 with maxErrorPercent × requests keeps the arithmetic in whole numbers, so no rounding decides a boundary. The samples are passed in, not measured. ${notRun}`,
+    vocabulary: [
+      { term: 'Error rate', meaning: 'the share of requests that failed in a period' },
+      { term: 'Promote', meaning: 'move a canary to full traffic after it has proved healthy' },
+    ],
+    planPrompt:
+      'With healthyNeeded 3 and unhealthyNeeded 2, trace good, bad, quiet (too few requests), bad. What is decided, and at which sample?',
+    starter:
+      "type Sample = { requests: number; errors: number }\ntype Policy = { maxErrorPercent: number; minRequests: number; healthyNeeded: number; unhealthyNeeded: number }\n\nfunction canaryVerdict(samples: Sample[], policy: Policy): { decision: string; at: number | null } {\n  return { decision: 'continue', at: null }\n}\n",
+    functionName: 'canaryVerdict',
+    preserveInput: true,
+    hints: [
+      'Keep two counters and reset one whenever the other grows.',
+      'Use continue for a skipped sample, so it changes neither counter.',
+      'Return as soon as a counter reaches its target.',
+    ],
+    checks: [
+      {
+        name: 'Rolls back in the example',
+        input: [
+          [
+            { requests: 400, errors: 2 },
+            { requests: 380, errors: 30 },
+            { requests: 410, errors: 25 },
+          ],
+          { maxErrorPercent: 2, minRequests: 100, healthyNeeded: 3, unhealthyNeeded: 2 },
+        ],
+        expected: { decision: 'rollback', at: 2 },
+      },
+      {
+        name: 'Promotes after enough healthy minutes',
+        input: [
+          [
+            { requests: 200, errors: 1 },
+            { requests: 220, errors: 0 },
+            { requests: 210, errors: 3 },
+            { requests: 230, errors: 90 },
+          ],
+          { maxErrorPercent: 2, minRequests: 100, healthyNeeded: 3, unhealthyNeeded: 2 },
+        ],
+        expected: { decision: 'promote', at: 2 },
+      },
+      {
+        name: 'Counts a rate at the limit as healthy',
+        input: [[{ requests: 100, errors: 2 }], { maxErrorPercent: 2, minRequests: 100, healthyNeeded: 1, unhealthyNeeded: 1 }],
+        expected: { decision: 'promote', at: 0 },
+      },
+      {
+        name: 'Counts one error over the limit as unhealthy',
+        input: [[{ requests: 100, errors: 3 }], { maxErrorPercent: 2, minRequests: 100, healthyNeeded: 1, unhealthyNeeded: 1 }],
+        expected: { decision: 'rollback', at: 0 },
+      },
+      {
+        name: 'Skips quiet minutes without breaking a run',
+        input: [
+          [
+            { requests: 300, errors: 40 },
+            { requests: 20, errors: 0 },
+            { requests: 310, errors: 35 },
+          ],
+          { maxErrorPercent: 2, minRequests: 100, healthyNeeded: 3, unhealthyNeeded: 2 },
+        ],
+        expected: { decision: 'rollback', at: 2 },
+      },
+      {
+        name: 'Does not judge a quiet minute full of errors',
+        input: [
+          [
+            { requests: 10, errors: 9 },
+            { requests: 12, errors: 12 },
+          ],
+          { maxErrorPercent: 2, minRequests: 100, healthyNeeded: 3, unhealthyNeeded: 1 },
+        ],
+        expected: { decision: 'continue', at: null },
+      },
+      {
+        name: 'Resets a run when the other kind appears',
+        input: [
+          [
+            { requests: 300, errors: 40 },
+            { requests: 300, errors: 1 },
+            { requests: 300, errors: 40 },
+            { requests: 300, errors: 1 },
+          ],
+          { maxErrorPercent: 2, minRequests: 100, healthyNeeded: 3, unhealthyNeeded: 2 },
+        ],
+        expected: { decision: 'continue', at: null },
+      },
+      {
+        name: 'Restarts the healthy run after an unhealthy minute',
+        input: [
+          [
+            { requests: 300, errors: 1 },
+            { requests: 300, errors: 40 },
+            { requests: 300, errors: 1 },
+            { requests: 300, errors: 1 },
+          ],
+          { maxErrorPercent: 2, minRequests: 100, healthyNeeded: 3, unhealthyNeeded: 2 },
+        ],
+        expected: { decision: 'continue', at: null },
+      },
+      {
+        name: 'Uses whole-number arithmetic at the boundary',
+        input: [[{ requests: 100, errors: 7 }], { maxErrorPercent: 7, minRequests: 1, healthyNeeded: 1, unhealthyNeeded: 1 }],
+        expected: { decision: 'promote', at: 0 },
+      },
+      {
+        name: 'Uses the supplied limits',
+        input: [
+          [
+            { requests: 150, errors: 6 },
+            { requests: 150, errors: 7 },
+          ],
+          { maxErrorPercent: 5, minRequests: 150, healthyNeeded: 2, unhealthyNeeded: 2 },
+        ],
+        expected: { decision: 'promote', at: 1 },
+      },
+      {
+        name: 'Continues with no samples',
+        input: [[], { maxErrorPercent: 2, minRequests: 100, healthyNeeded: 3, unhealthyNeeded: 2 }],
+        expected: { decision: 'continue', at: null },
+      },
+    ],
+  },
 ]
