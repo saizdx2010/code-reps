@@ -248,4 +248,84 @@ export const devopsSkills: Skill[] = [
     repIds: ['devops-compare-versions', 'devops-next-version', 'devops-sort-versions', 'devops-lockfile-diff', 'devops-satisfies-range'],
     related: ['ci-output', 'api-evolution'],
   },
+  {
+    id: 'ci-pipelines',
+    title: 'Pipelines: job order, caches, and skipped work',
+    summary:
+      'Order jobs by what they need and catch loops, build cache keys from the inputs that matter, and skip jobs whose inputs did not change.',
+    prerequisites: ['ci-output'],
+    objectives: [
+      'Group jobs into waves that can run side by side, and report unknown needs and loops before anything runs.',
+      "Build a cache key from the files that decide a cache's contents, and choose a fallback cache when the exact one is missing.",
+      'Find the critical path of a pipeline and decide which jobs a change lets you skip.',
+    ],
+    sections: [
+      {
+        title: 'Jobs wait for the jobs they need',
+        body: 'A pipeline lists jobs, and each job can name the jobs it needs. Jobs whose needs are all finished run side by side, so the pipeline runs in waves: first everything that needs nothing, then everything that needed only those, and so on. A job that needs a missing job, or jobs that need each other in a loop, can never run, so a pipeline checks for both before starting. The longest chain of jobs waiting on each other, the critical path, sets how long the whole pipeline takes.',
+      },
+      {
+        title: 'Cache keys come from inputs',
+        body: 'A cache saves the result of slow work, such as installed packages, and restores it next time. It is only safe to reuse when the inputs that decided it are the same, so the cache key is built from those inputs: the job, the operating system, and a hash of files such as the lockfile. Files that do not affect the result stay out of the key, or every unrelated change would miss the cache. When the exact key is missing, a list of key prefixes finds an older, similar cache to start from.',
+      },
+      {
+        title: 'Skip what a change cannot affect',
+        body: "In a repository with several parts, each job can name the paths it reads. A change that touches none of them cannot change the job's result, so the job can be skipped. A job that uses another job's output must still run whenever that job runs, so the decision passes along the needs. Skipping saves time only when the paths are complete: a job that reads a file it does not list will be skipped when it should not be.",
+      },
+      {
+        title: 'What these reps check',
+        body: 'These reps describe pipelines as plain data: names, needs, minutes, paths, and file contents passed to your function. The checks show that the function applies the stated rules to those inputs. They do not run a CI service, read a YAML file, or measure real job times, and the simple FNV-1a hash used for cache keys here is chosen for being easy to follow, not for strength.',
+      },
+    ],
+    example:
+      'lint    needs nothing\nbuild   needs nothing\ntest    needs build\ndeploy  needs lint, test\n\nwave 1: lint, build\nwave 2: test\nwave 3: deploy',
+    walkthrough: [
+      'lint and build need nothing, so they form the first wave and run side by side.',
+      'test needs only build, which is in wave 1, so test is in wave 2.',
+      'deploy needs lint and test; test is in wave 2, so deploy waits until wave 3.',
+      'If test also needed deploy, neither could ever start: that loop is reported instead of waves.',
+    ],
+    mistakes: [
+      'Placing a job in the same wave as a job it needs because both became ready in one pass.',
+      'Building a cache key from every file, so any change misses the cache, or from too few, so a stale cache is reused.',
+      'Speeding up a job that is not on the critical path and expecting the pipeline to finish sooner.',
+      'Skipping a deploy job because its own files did not change, although the build it uses ran again.',
+    ],
+    questions: [
+      q(
+        'pipeline-wave-v1',
+        'test needs build, and deploy needs test. build needs nothing. In which wave does deploy run?',
+        '',
+        ['Wave 2', 'Wave 3', 'Wave 1, with build'],
+        1,
+        'build runs in wave 1, test in wave 2 after it, and deploy in wave 3 after test.',
+      ),
+      q(
+        'cache-key-inputs-v1',
+        'A cache holds installed packages. Which file belongs in its key?',
+        '',
+        ['README.md', 'The lockfile', 'Every file in the repository'],
+        1,
+        'The lockfile decides which packages are installed. README changes cannot change the cache, and hashing every file would miss the cache on every change.',
+      ),
+      q(
+        'critical-path-v1',
+        'build (5 min) then test (8 min) run in a chain; lint (3 min) runs beside them. Which job, made faster, shortens the pipeline?',
+        '',
+        ['lint', 'test', 'Either one'],
+        1,
+        'The pipeline takes 13 minutes because of the build → test chain. lint already finishes long before, so speeding it up changes nothing.',
+      ),
+      q(
+        'skip-needs-run-v1',
+        'deploy reads only deploy/ and needs build. A change touches only src/, which build reads. Should deploy run?',
+        '',
+        ['No, none of its files changed', 'Yes, because build runs and deploy uses its output', 'Only if deploy/ is empty'],
+        1,
+        "deploy's result depends on build's output, which changes when build runs again, so deploy must run too.",
+      ),
+    ],
+    repIds: ['devops-job-waves', 'devops-cache-key', 'devops-cache-restore', 'devops-pipeline-duration', 'devops-skip-unchanged'],
+    related: ['ci-output', 'semver'],
+  },
 ]

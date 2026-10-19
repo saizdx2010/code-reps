@@ -523,6 +523,10 @@ export const paths = [
           'devops-satisfies-range',
         ],
       },
+      {
+        title: 'Run pipelines',
+        repIds: ['devops-job-waves', 'devops-cache-key', 'devops-cache-restore', 'devops-pipeline-duration', 'devops-skip-unchanged'],
+      },
     ] satisfies readonly PathStage[],
   },
 ] as const

@@ -241,4 +241,82 @@ function satisfies(version: string, range: string): boolean {
     operator === '~' ? [major, minor + 1, 0] : major > 0 ? [major + 1, 0, 0] : minor > 0 ? [0, minor + 1, 0] : [0, 0, patch + 1]
   return compare(v, limit) < 0
 }`,
+  'devops-job-waves': `
+function jobWaves(jobs: { name: string; needs: string[] }[]) {
+  const names = new Set(jobs.map(job => job.name))
+  for (const job of jobs) {
+    const need = job.needs.find(item => !names.has(item))
+    if (need !== undefined) return { ok: false, error: 'UNKNOWN_NEED', job: job.name, need }
+  }
+  const placed = new Set<string>()
+  const waves: string[][] = []
+  let left = jobs
+  while (left.length) {
+    const wave = left.filter(job => job.needs.every(need => placed.has(need))).map(job => job.name)
+    if (!wave.length) return { ok: false, error: 'CYCLE', jobs: left.map(job => job.name) }
+    for (const name of wave) placed.add(name)
+    waves.push(wave)
+    left = left.filter(job => !placed.has(job.name))
+  }
+  return { ok: true, waves }
+}`,
+  'devops-cache-key': `
+function cacheKey(job: string, os: string, keyFiles: string[], files: Record<string, string>): string {
+  const text = [...new Set(keyFiles)]
+    .sort()
+    .map(path => path + '\\n' + (Object.hasOwn(files, path) ? files[path] : '<missing>') + '\\n')
+    .join('')
+  let hash = 2166136261
+  for (let index = 0; index < text.length; index++) hash = Math.imul(hash ^ text.charCodeAt(index), 16777619) >>> 0
+  return job + '-' + os + '-' + hash.toString(16).padStart(8, '0')
+}`,
+  'devops-cache-restore': `
+function restoreCache(key: string, restoreKeys: string[], caches: { key: string; createdAt: number }[]) {
+  if (caches.some(cache => cache.key === key)) return { hit: 'exact', key }
+  for (const prefix of restoreKeys) {
+    let best: { key: string; createdAt: number } | undefined
+    for (const cache of caches) if (cache.key.startsWith(prefix) && (!best || cache.createdAt > best.createdAt)) best = cache
+    if (best) return { hit: 'partial', key: best.key }
+  }
+  return { hit: 'miss', key: null }
+}`,
+  'devops-pipeline-duration': `
+function pipelineTimes(jobs: { name: string; minutes: number; needs: string[] }[]) {
+  const byName = new Map(jobs.map(job => [job.name, job]))
+  const finish: Record<string, number> = {}
+  const finishOf = (name: string): number => {
+    if (!Object.hasOwn(finish, name)) {
+      const job = byName.get(name)!
+      finish[name] = Math.max(0, ...job.needs.map(finishOf)) + job.minutes
+    }
+    return finish[name]
+  }
+  for (const job of jobs) finishOf(job.name)
+  const latest = (names: string[]) => names.reduce((best, name) => (finish[name] > finish[best] ? name : best), names[0])
+  const criticalPath: string[] = []
+  let current = jobs.length ? latest(jobs.map(job => job.name)) : undefined
+  while (current !== undefined) {
+    criticalPath.push(current)
+    const needs = byName.get(current)!.needs
+    current = needs.length ? latest(needs) : undefined
+  }
+  return { finish, total: Math.max(0, ...Object.values(finish)), criticalPath: criticalPath.reverse() }
+}`,
+  'devops-skip-unchanged': `
+function jobsToRun(jobs: { name: string; needs: string[]; paths: string[] }[], changed: string[]) {
+  const byName = new Map(jobs.map(job => [job.name, job]))
+  const matches = (path: string, file: string) => (path.endsWith('/') ? file.startsWith(path) : file === path)
+  const decided = new Map<string, boolean>()
+  const runs = (name: string): boolean => {
+    if (!decided.has(name)) {
+      const job = byName.get(name)!
+      decided.set(name, job.paths.some(path => changed.some(file => matches(path, file))) || job.needs.some(runs))
+    }
+    return decided.get(name)!
+  }
+  return {
+    run: jobs.filter(job => runs(job.name)).map(job => job.name),
+    skip: jobs.filter(job => !runs(job.name)).map(job => job.name),
+  }
+}`,
 }

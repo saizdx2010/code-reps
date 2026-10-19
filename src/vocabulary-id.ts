@@ -543,6 +543,16 @@ export const indonesianGlossary: Record<string, string> = {
   'Package dependency': 'paket yang dipakai dan dipasang oleh proyek Anda',
   'Version range': 'aturan, seperti ^1.2.3, yang menyatakan versi paket mana yang dapat diterima',
   'Caret range': 'rentang yang ditulis dengan ^ yang mengizinkan perubahan yang seharusnya tidak merusak versi dasarnya',
+  'CI pipeline': 'kumpulan job yang dijalankan CI untuk satu perubahan, beserta urutannya',
+  'Dependency cycle': 'job yang saling menunggu dalam lingkaran, sehingga tidak ada yang bisa mulai',
+  'Cache key': 'nama yang dibuat dari masukan sebuah langkah, sehingga hasil tersimpan hanya dipakai lagi bila masukannya sama',
+  Hash: 'nilai pendek berukuran tetap yang dihitung dari data, yang berubah bila datanya berubah',
+  'Restore key': 'awalan kunci yang dipakai untuk mencari cache lama yang mirip bila cache yang tepat tidak ada',
+  'Cache hit': 'menemukan hasil tersimpan yang bisa dipakai lagi tanpa mengerjakan ulang',
+  'Critical path': 'rantai job terpanjang yang saling menunggu, yang menentukan lama seluruh pipeline',
+  'Parallel jobs': 'job yang berjalan bersamaan karena tidak saling membutuhkan',
+  'Path filter': 'daftar file atau folder yang dibaca sebuah job, dipakai untuk memutuskan apakah perubahan memengaruhinya',
+  Monorepo: 'satu repositori yang berisi beberapa proyek atau layanan',
 }
 
 /** Shown with the glossary when Indonesian help is on. */

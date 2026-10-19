@@ -380,5 +380,10 @@ export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
         "Compare versions as numbers, choose the next version from a release's changes, sort pre-releases, summarise a lockfile change, and check versions against caret and tilde ranges.",
       recap: 'You can now read, compare, and choose versions, and tell which upgrades a range allows.',
     },
+    'Run pipelines': {
+      description:
+        "Order jobs into waves by what they need and catch loops, build cache keys from the files that matter, pick a fallback cache, find a pipeline's critical path, and skip jobs a change cannot affect.",
+      recap: 'You can now plan a pipeline: what runs when, what can be reused, and what can be skipped.',
+    },
   },
 }

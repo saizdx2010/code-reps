@@ -184,6 +184,66 @@ export const devopsDepth: Record<string, RepDepth> = {
     transfer:
       'Add ranges joined by "||", such as "^1.2.0 || ^2.0.0". Decide how spaces around "||" are handled and what an empty side means. This changed contract is self-reviewed, not checked by the original cases.',
   },
+  'devops-job-waves': {
+    reasoning:
+      'A job can start only after all of its needs, so placing each wave from jobs whose needs are already placed guarantees that order. Finding the whole wave before marking any of it placed keeps a job out of the wave of a job it needs. If a round finds nothing ready while jobs remain, every remaining job waits, directly or not, on a loop, so the leftover list is exactly what can never run.',
+    trace:
+      'For deploy needs a, a needs b, b needs a, and lint needs nothing: every need exists. Round one finds only lint. Round two finds nothing ready: a waits for b, b for a, and deploy for a. So the result is CYCLE with deploy, a, and b in file order, although deploy itself is not part of the loop.',
+    alternative:
+      "A depth-first search can find the actual loop, such as a → b → a, which makes a clearer error message than the list of stuck jobs. Kahn's algorithm with a queue gives one order instead of waves; waves show what can run at the same time.",
+    counterexample:
+      'Marking each ready job as placed the moment it is found lets a job join the wave of a job listed just before it: in "Waits for the slower branch of a diamond" all four jobs land in the first wave. Checking loops before unknown needs reports CYCLE in "Checks needs before loops".',
+    transfer:
+      'Allow at most two jobs to run at once. Decide how waves split when more than two jobs are ready, and which jobs go first. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-cache-key': {
+    reasoning:
+      'The key must change exactly when the cache contents could change, so it is built only from the key files, and every one of them, missing or not, contributes something. Sorting and removing repeats makes the key independent of how the list was written, and putting each path in the hashed text means moving the same content to another file changes the key.',
+    trace:
+      'For keyFiles [".nvmrc", "package-lock.json", ".nvmrc"], the set gives two paths and sorting puts ".nvmrc" first. The text is ".nvmrc\\n24\\npackage-lock.json\\n{...}\\n", whose FNV-1a hash is 5a74218d, the same as for the example\'s order. A missing yarn.lock adds "yarn.lock\\n<missing>\\n", which hashes differently from "yarn.lock\\n\\n" for an empty one.',
+    alternative:
+      'CI services hash files with SHA-256 through a helper such as hashFiles, which is far less likely to give two different inputs the same key. Hashing each file separately and joining the hashes avoids building one long text, at the cost of a longer key.',
+    counterexample:
+      'Hashing the key files in the given order changes the key in "Ignores the order and repeats of key files". Leaving out padStart gives "4961fcd" instead of "04961fcd". Treating an empty file as missing with files[path] ?? breaks nothing, but files[path] || "<missing>" does.',
+    transfer:
+      'Add the Node.js version to the key, read from .nvmrc when present and "default" otherwise. Decide whether .nvmrc should then still be a key file. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-cache-restore': {
+    reasoning:
+      'An exact match means the inputs are the same, so it is always the best answer. Prefixes go from most to least specific, so the first prefix with any match gives the closest available cache, and within it the newest cache is the one most likely to need the least extra work. Only a strictly newer cache replaces the current choice, which keeps the earlier one on a tie.',
+    trace:
+      'For key deps-linux-9a1 with restore keys ["deps-linux-", "deps-"] and caches deps-linux-5f2 (100) and deps-macos-77c (900), no key is exact. The first prefix matches only deps-linux-5f2, so it is returned, although deps-macos-77c is newer: a macOS cache would be a worse starting point for a Linux job.',
+    alternative:
+      'Choosing the newest cache across all prefixes is simpler but can restore a cache for the wrong operating system. Restoring nothing on a miss is always safe; a partial restore is faster but means the job must check and update what it restored.',
+    counterexample:
+      'Searching all prefixes together returns deps-macos-77c in "Uses the first prefix that matches". Using >= when comparing createdAt keeps the later cache on a tie, which "Keeps the earlier cache on a tie" refuses.',
+    transfer:
+      'Caches older than seven days are deleted. Add a now input and ignore expired caches. Decide whether an expired exact match should still win. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-pipeline-duration': {
+    reasoning:
+      "A job's finish time depends only on the finish times of its needs, so working them out first, and remembering each answer, handles jobs listed in any order and works each job out once. Walking back from the last job to finish, always through the need that finished last, follows exactly the waits that made the pipeline as long as it is.",
+    trace:
+      'For the example, deploy is listed first, so its finish needs test and lint. test needs build: build finishes at 5, test at 5 + 8 = 13. lint finishes at 3. deploy starts at max(13, 3) = 13 and finishes at 15. Walking back from deploy, test (13) beats lint (3), and test leads to build, so the critical path is build, test, deploy.',
+    alternative:
+      'Processing jobs wave by wave, as in the job-order rep, avoids recursion and works for any order too. Recording, for each job, which need it waited for while computing finish times lets the critical path be read off without comparing again.',
+    counterexample:
+      'Computing jobs in list order without waiting for their needs gives deploy a start of 0 in the example. Starting the path from the last job in the list instead of the last to finish returns ["build", "test"] in "Ends at the job that finishes last".',
+    transfer:
+      'Each job also waits 1 minute for a machine before it starts. Decide whether that delay is added once per job or once per wave, and what that does to the critical path. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-skip-unchanged': {
+    reasoning:
+      "A job's result can change only if its own inputs changed or an output it uses changed, and an output changes whenever the job that makes it runs. So a job runs when one of its paths matches a changed file or any job it needs runs. Deciding a job only after its needs, and remembering each decision, makes the rule work for any order and settles each job once.",
+    trace:
+      "For release needs package, package needs build, and build reads src/, with only src/main.ts changed: release asks about package, which asks about build. build matches src/, so it runs; package runs because build runs; release runs because package runs. The result lists all three in file order, although only build's files changed.",
+    alternative:
+      'Many CI services offer path filters per workflow, which is simpler but cannot express that a job must run when an upstream job runs. Build tools for monorepos compute this from the import graph instead of hand-written paths, which avoids paths that are out of date.',
+    counterexample:
+      'Ignoring needs skips deploy-api in the example even though test-api runs. Matching folders with includes instead of startsWith runs api for "src/api/index.ts" in "Matches a folder only at the start".',
+    transfer:
+      'Add a job flag alwaysRun for jobs such as security scans. Decide whether a job that needs an alwaysRun job must then always run too. This changed contract is self-reviewed, not checked by the original cases.',
+  },
 }
 
 export const devopsGuides: Record<string, ReflectionGuide> = {
@@ -373,6 +433,76 @@ export const devopsGuides: Record<string, ReflectionGuide> = {
     example:
       'I take ">=", "^", "~", or nothing from the start and parse the rest. No operator needs equality. Otherwise the version must not be below the base; >= stops there. For ~ the limit is the next minor; for ^ it raises the first non-zero part of the base, or the patch when all are 0. The version must be below the limit. The work is constant. The checks pass ranges in directly; no package manager runs.',
   },
+  'devops-job-waves': {
+    plan: [
+      'Check every need names a job.',
+      'Find each wave from the jobs whose needs are already placed.',
+      'Report the leftover jobs if a round finds none.',
+    ],
+    explanation: [
+      'Trace a chain listed backwards.',
+      'Explain why a whole wave is found before any of it is placed.',
+      'Say why a job that needs a loop is also reported.',
+    ],
+    example:
+      'I check needs against a Set of names and return the first unknown one. Then, while jobs are left, the wave is every left job whose needs are all placed, in file order; an empty wave returns CYCLE with the left jobs. I add the wave to placed and remove it from the left jobs. The work is up to O(n²) for n jobs. The checks pass jobs in directly; no CI file is read.',
+  },
+  'devops-cache-key': {
+    plan: [
+      'Remove repeats from keyFiles and sort them.',
+      'Build the text from each path and its content or "<missing>".',
+      'Hash it with FNV-1a and join job, os, and the padded hash.',
+    ],
+    explanation: [
+      'Trace two orders of the same key files.',
+      'Explain why a missing file is marked.',
+      'Say which changes must not change the key.',
+    ],
+    example:
+      'I sort [...new Set(keyFiles)] and map each path to path + "\\n" + content or "<missing>" + "\\n", joined. The hash starts at 2166136261, and each code unit updates it with Math.imul(hash ^ c, 16777619) >>> 0. I return job-os-hash with the hash as 8 hex digits. The work is linear in the text. The checks pass contents in directly; no cache service runs.',
+  },
+  'devops-cache-restore': {
+    plan: [
+      'Return an exact match first.',
+      'Try each prefix in order, stopping at the first with any match.',
+      'Return its newest cache, the earlier one on a tie, or a miss.',
+    ],
+    explanation: [
+      'Trace a prefix match where a later prefix has a newer cache.',
+      'Explain why the exact match wins.',
+      'Say why a tie keeps the earlier cache.',
+    ],
+    example:
+      'If some cache key equals key, I return exact. Otherwise for each prefix I keep the cache with the largest createdAt among keys that start with it, replacing only on a strictly larger value; the first prefix with a match returns partial. Otherwise I return miss. The work is the number of prefixes times the number of caches. The checks pass caches in directly.',
+  },
+  'devops-pipeline-duration': {
+    plan: [
+      "Work out each job's finish from its needs, remembering answers.",
+      'Take the largest finish as the total.',
+      'Walk back from the last job through the need that finished last.',
+    ],
+    explanation: [
+      'Trace a job listed before its needs.',
+      'Explain why only the critical path matters for speed.',
+      'Say how ties are broken.',
+    ],
+    example:
+      'finishOf(name) returns the remembered value or the largest finish among its needs (0 for none) plus its minutes. total is the largest finish. From the first job with the largest finish, I keep moving to the first need with the largest finish, then reverse the list. The work is linear in jobs and needs. The checks pass planned minutes, not measured runs.',
+  },
+  'devops-skip-unchanged': {
+    plan: [
+      'Match a changed file against a folder or an exact path.',
+      'Decide each job from its paths and the jobs it needs, remembering answers.',
+      'List run and skip in the order of jobs.',
+    ],
+    explanation: [
+      'Trace a change that reaches a job through two needs.',
+      'Explain why a folder must match from the start.',
+      'Say what happens when a job forgets to list a path it reads.',
+    ],
+    example:
+      'A path ending in "/" matches files that start with it; others must be equal. runs(name) returns the remembered answer or whether any path matches any changed file or any need runs. I filter jobs into run and skip with it. The work is jobs times paths times changed files. The checks pass changed paths in directly; no repository is read.',
+  },
 }
 
 export const devopsLessonDepth: Record<string, LessonDepth> = {
@@ -405,5 +535,15 @@ export const devopsLessonDepth: Record<string, LessonDepth> = {
       'A package file asks for ^2.3.0 and the lockfile has 2.3.4. The library publishes 2.4.0, which accidentally breaks your code. Predict what a fresh clone installs with the lockfile, what it installs if the lockfile is deleted, and which one CI should use.',
     answer:
       'With the lockfile, every install gets 2.3.4, so nothing breaks until someone updates it deliberately. Without it, the installer picks the newest version in ^2.3.0, which is 2.4.0, and the build breaks for reasons unrelated to your change. CI should install from the lockfile, failing if it is out of date, so a dependency change is always a reviewed change.',
+  },
+  'ci-pipelines': {
+    title: 'A cache key is a promise that the inputs are the same',
+    code: 'key = deps-linux-<hash of package-lock.json>\n\nchange src/app.ts       → same key → restore, skip install\nchange package-lock.json → new key → install, save a new cache\nforget the lockfile     → same key forever → stale packages',
+    reasoning:
+      'Restoring a cache skips work on the promise that the work would produce the same result. That promise holds only if every input that affects the result is in the key. Too few inputs and an old cache is restored after a real change; too many and the cache misses on changes that could not matter. The same reasoning decides when a job can be skipped: its result can change only if its inputs, or the outputs it uses, change.',
+    challenge:
+      'A team caches node_modules with the key deps-<os>-<hash of package.json>. They update a package version only in the lockfile. Predict what CI restores and what goes wrong, then repair the key.',
+    answer:
+      'package.json did not change, so the key is the same and CI restores the old node_modules with the previous package version, skipping the install. Tests run against code the lockfile no longer describes. Hashing the lockfile instead, which records the exact versions, makes any version change produce a new key.',
   },
 }

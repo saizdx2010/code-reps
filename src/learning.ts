@@ -470,6 +470,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'ci-pipelines',
+    title: 'Plan what a pipeline runs',
+    guided: 'devops-job-waves',
+    independent: 'devops-cache-key',
+    recall: 'devops-skip-unchanged',
+    practice: ['devops-cache-restore', 'devops-pipeline-duration'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

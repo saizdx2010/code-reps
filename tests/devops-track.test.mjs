@@ -396,3 +396,119 @@ test('D3 version checks catch text order, reset, pre-release, kind, and range-li
     ],
   ])
 })
+
+test('D4 pipeline checks catch wave, loop, hashing, fallback, timing, and propagation mistakes', async () => {
+  const waves = solution('devops-job-waves')
+  await assertCaught('devops-job-waves', [
+    [
+      waves.replace(
+        '    const wave = left.filter(job => job.needs.every(need => placed.has(need))).map(job => job.name)\n',
+        '    const wave: string[] = []\n    for (const job of left) if (job.needs.every(need => placed.has(need))) {\n      wave.push(job.name)\n      placed.add(job.name)\n    }\n',
+      ),
+      'Waits for the slower branch of a diamond',
+    ],
+    [
+      waves.replace(
+        "if (!wave.length) return { ok: false, error: 'CYCLE', jobs: left.map(job => job.name) }",
+        "if (!wave.length) return { ok: false, error: 'CYCLE', jobs: left.filter(job => job.needs.length).map(job => job.name).slice(1) }",
+      ),
+      'Includes jobs that wait on a loop',
+    ],
+    [
+      waves.replace("    if (need !== undefined) return { ok: false, error: 'UNKNOWN_NEED', job: job.name, need }\n", ''),
+      'Checks needs before loops',
+    ],
+    [
+      waves.replace(
+        'const need = job.needs.find(item => !names.has(item))',
+        'const need = [...job.needs].reverse().find(item => !names.has(item))',
+      ),
+      'Reports the first unknown need',
+    ],
+    [
+      waves.replace('.map(job => job.name)\n    if (!wave.length)', '.map(job => job.name).sort()\n    if (!wave.length)'),
+      'Keeps file order within a wave',
+    ],
+  ])
+  const key = solution('devops-cache-key')
+  await assertCaught('devops-cache-key', [
+    [key.replace('[...new Set(keyFiles)]\n    .sort()', '[...new Set(keyFiles)]'), 'Builds the example key'],
+    [key.replace('[...new Set(keyFiles)]', 'keyFiles.slice()'), 'Ignores the order and repeats of key files'],
+    [key.replace(".padStart(8, '0')", ''), 'Pads the hash with leading zeros'],
+    [
+      key.replace("Object.hasOwn(files, path) ? files[path] : '<missing>'", "files[path] || '<missing>'"),
+      'Tells an empty file from a missing one',
+    ],
+    [
+      key.replace("path => path + '\\n' + (", 'path => (').replace("'<missing>') + '\\n')", "'<missing>'))"),
+      'Includes the path in the hash',
+    ],
+    [
+      key.replace(
+        'hash = Math.imul(hash ^ text.charCodeAt(index), 16777619) >>> 0',
+        'hash = (Math.imul(hash, 16777619) ^ text.charCodeAt(index)) >>> 0',
+      ),
+      'Builds the example key',
+    ],
+    [key.replace("return job + '-' + os + '-' +", "return job + '-' +"), 'Puts the operating system in the key'],
+  ])
+  const restore = solution('devops-cache-restore')
+  await assertCaught('devops-cache-restore', [
+    [restore.replace("  if (caches.some(cache => cache.key === key)) return { hit: 'exact', key }\n", ''), 'Prefers an exact match'],
+    [restore.replace('cache.createdAt > best.createdAt', 'cache.createdAt >= best.createdAt'), 'Keeps the earlier cache on a tie'],
+    [
+      restore
+        .replace(
+          '  for (const prefix of restoreKeys) {\n    let best',
+          '  let best: { key: string; createdAt: number } | undefined\n  for (const prefix of restoreKeys) {\n    let unused',
+        )
+        .replace(
+          "    if (best) return { hit: 'partial', key: best.key }\n  }\n",
+          "  }\n  if (best) return { hit: 'partial', key: best.key }\n",
+        ),
+      'Uses the first prefix that matches',
+    ],
+    [restore.replace('cache.key.startsWith(prefix)', 'cache.key.includes(prefix)'), 'Matches prefixes from the start only'],
+    [restore.replace('(!best || cache.createdAt > best.createdAt)', '!best'), 'Restores the newest partial match in the example'],
+  ])
+  const timing = solution('devops-pipeline-duration')
+  await assertCaught('devops-pipeline-duration', [
+    [timing.replace('Math.max(0, ...job.needs.map(finishOf)) + job.minutes', 'job.minutes'), 'Times the example'],
+    [
+      timing.replace('Math.max(0, ...job.needs.map(finishOf))', 'job.needs.map(finishOf).reduce((sum, value) => sum + value, 0)'),
+      'Waits for the slowest need',
+    ],
+    [timing.replace('latest(jobs.map(job => job.name))', 'jobs[jobs.length - 1].name'), 'Ends at the job that finishes last'],
+    [
+      timing.replace('(finish[name] > finish[best] ? name : best)', '(finish[name] >= finish[best] ? name : best)'),
+      'Breaks a tie between last jobs by list order',
+    ],
+    [
+      timing.replace('(finish[name] > finish[best] ? name : best)', '(finish[name] >= finish[best] ? name : best)'),
+      'Breaks a tie between needs by needs order',
+    ],
+    [timing.replace('criticalPath: criticalPath.reverse()', 'criticalPath'), 'Follows a long chain listed backwards'],
+    [timing.replace('total: Math.max(0, ...Object.values(finish))', 'total: Math.max(...Object.values(finish))'), 'Handles no jobs'],
+  ])
+  const skip = solution('devops-skip-unchanged')
+  await assertCaught('devops-skip-unchanged', [
+    [skip.replace(' || job.needs.some(runs)', ''), 'Runs the example'],
+    [
+      skip.replace(
+        "path.endsWith('/') ? file.startsWith(path) : file === path",
+        "path.endsWith('/') ? file.includes(path) : file === path",
+      ),
+      'Matches a folder only at the start',
+    ],
+    [skip.replace("path.endsWith('/') ? file.startsWith(path) : file === path", 'file.startsWith(path)'), 'Matches a file path exactly'],
+    [
+      skip.replace("path.endsWith('/') ? file.startsWith(path) : file === path", 'file.toLowerCase().startsWith(path.toLowerCase())'),
+      'Compares letter case exactly',
+    ],
+    [
+      skip.replace('job.needs.some(runs)', 'job.needs.some(need => job.paths.length > 0 && decided.get(need) === true)'),
+      'Passes a run through a chain listed backwards',
+    ],
+    [skip.replace('job.needs.some(runs)', 'job.needs.every(runs) && job.needs.length > 0'), 'Runs a job when any one of its needs runs'],
+  ])
+})

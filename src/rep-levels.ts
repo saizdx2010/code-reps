@@ -369,6 +369,11 @@ export const repLevels: Record<string, RepLevel> = {
   'devops-sort-versions': 3,
   'devops-lockfile-diff': 2,
   'devops-satisfies-range': 2,
+  'devops-job-waves': 2,
+  'devops-cache-key': 2,
+  'devops-cache-restore': 2,
+  'devops-pipeline-duration': 3,
+  'devops-skip-unchanged': 3,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

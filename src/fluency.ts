@@ -253,6 +253,7 @@ export const recallVariants: Record<string, string[]> = {
   'ci-output': ['devops-failing-step', 'devops-first-error', 'devops-exit-meaning'],
   'service-config': ['devops-config-drift', 'devops-validate-env', 'devops-read-port'],
   semver: ['devops-satisfies-range', 'devops-next-version', 'devops-compare-versions'],
+  'ci-pipelines': ['devops-skip-unchanged', 'devops-cache-key', 'devops-job-waves'],
 }
 export function recurringReviews(history: PortableRecord[], now = Date.now()) {
   return getAllJourneys(history, now).flatMap(state => {

@@ -1453,4 +1453,605 @@ export const devopsReps: Rep[] = [
       { name: 'Refuses a lower version for >=', input: ['1.2.2', '>=1.2.3'], expected: false },
     ],
   },
+  {
+    id: 'devops-job-waves',
+    title: 'Order jobs by what they need',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A CI pipeline lists jobs, and each job can name the jobs it needs to finish first. Jobs with nothing left to wait for run side by side, in waves. Before running anything, the pipeline has to check that every needed job exists and that no jobs wait on each other in a loop.',
+    prompt:
+      'Implement jobWaves(jobs). jobs lists {name, needs} in file order; names are unique and needs is a list of job names. First, if any job needs a name that is not a job, return {ok: false, error: "UNKNOWN_NEED", job, need} for the first such job in file order and the first unknown name in its needs. Otherwise, the first wave is every job with no needs, and each later wave is every job not yet placed whose needs are all in earlier waves. Keep file order within a wave. If some jobs can never be placed, return {ok: false, error: "CYCLE", jobs} with their names in file order. Otherwise return {ok: true, waves}, a list of waves, each a list of names. Do not change jobs.',
+    brief: {
+      summary: 'Implement jobWaves(jobs) and return {ok: true, waves} or {ok: false, error, ...}.',
+      rules: [
+        'A need that names no job gives {ok: false, error: "UNKNOWN_NEED", job, need}: the first such job in file order and its first unknown need.',
+        'The first wave is every job with no needs; each later wave is every unplaced job whose needs are all in earlier waves.',
+        'Keep file order within a wave.',
+        'Jobs that can never be placed give {ok: false, error: "CYCLE", jobs} in file order.',
+      ],
+      edgeCases: [
+        'A job is never placed in the same wave as a job it needs.',
+        'A job that needs a job in a loop can never run either.',
+        'Do not change jobs.',
+      ],
+    },
+    example: {
+      input:
+        'jobWaves([{name: "lint", needs: []}, {name: "build", needs: []}, {name: "test", needs: ["build"]}, {name: "deploy", needs: ["lint", "test"]}])',
+      output: '{ok: true, waves: [["lint", "build"], ["test"], ["deploy"]]}',
+    },
+    note: `There are at most 100 jobs. Real CI services also limit how many jobs run at once; this rep only orders them. ${notRun}`,
+    vocabulary: [
+      { term: 'CI pipeline', meaning: 'the set of jobs CI runs for one change, with the order between them' },
+      { term: 'Dependency cycle', meaning: 'jobs that wait on each other in a loop, so none of them can start' },
+    ],
+    planPrompt: 'With jobs a needs b, b needs c, and c needs nothing, what are the waves? What changes if c also needs a?',
+    starter:
+      'type Job = { name: string; needs: string[] }\n\nfunction jobWaves(jobs: Job[]) {\n  // Check every need first, then place jobs one wave at a time.\n  return { ok: true, waves: [] as string[][] }\n}\n',
+    functionName: 'jobWaves',
+    preserveInput: true,
+    hints: [
+      'Keep a Set of placed names; a job is ready when every one of its needs is in that set.',
+      'Find a whole wave before adding any of it to the set, so a job never joins the wave of a job it needs.',
+      'If a round finds no ready job but some jobs are left, those jobs can never be placed.',
+    ],
+    checks: [
+      {
+        name: 'Orders the example',
+        input: [
+          [
+            { name: 'lint', needs: [] },
+            { name: 'build', needs: [] },
+            { name: 'test', needs: ['build'] },
+            { name: 'deploy', needs: ['lint', 'test'] },
+          ],
+        ],
+        expected: { ok: true, waves: [['lint', 'build'], ['test'], ['deploy']] },
+      },
+      {
+        name: 'Gives a chain one wave per job',
+        input: [
+          [
+            { name: 'a', needs: ['b'] },
+            { name: 'b', needs: ['c'] },
+            { name: 'c', needs: [] },
+          ],
+        ],
+        expected: { ok: true, waves: [['c'], ['b'], ['a']] },
+      },
+      {
+        name: 'Keeps file order within a wave',
+        input: [
+          [
+            { name: 'setup', needs: [] },
+            { name: 'unit', needs: ['setup'] },
+            { name: 'e2e', needs: ['setup'] },
+            { name: 'docs', needs: ['setup'] },
+          ],
+        ],
+        expected: { ok: true, waves: [['setup'], ['unit', 'e2e', 'docs']] },
+      },
+      {
+        name: 'Waits for the slower branch of a diamond',
+        input: [
+          [
+            { name: 'build', needs: [] },
+            { name: 'test', needs: ['build'] },
+            { name: 'scan', needs: ['build', 'test'] },
+            { name: 'release', needs: ['test', 'scan'] },
+          ],
+        ],
+        expected: { ok: true, waves: [['build'], ['test'], ['scan'], ['release']] },
+      },
+      {
+        name: 'Reports a loop between two jobs',
+        input: [
+          [
+            { name: 'build', needs: [] },
+            { name: 'a', needs: ['b'] },
+            { name: 'b', needs: ['a'] },
+          ],
+        ],
+        expected: { ok: false, error: 'CYCLE', jobs: ['a', 'b'] },
+      },
+      {
+        name: 'Reports a job that needs itself',
+        input: [[{ name: 'x', needs: ['x'] }]],
+        expected: { ok: false, error: 'CYCLE', jobs: ['x'] },
+      },
+      {
+        name: 'Includes jobs that wait on a loop',
+        input: [
+          [
+            { name: 'deploy', needs: ['a'] },
+            { name: 'a', needs: ['b'] },
+            { name: 'b', needs: ['a'] },
+            { name: 'lint', needs: [] },
+          ],
+        ],
+        expected: { ok: false, error: 'CYCLE', jobs: ['deploy', 'a', 'b'] },
+      },
+      {
+        name: 'Reports the first unknown need',
+        input: [
+          [
+            { name: 'build', needs: [] },
+            { name: 'test', needs: ['build', 'biuld', 'setup'] },
+            { name: 'deploy', needs: ['tests'] },
+          ],
+        ],
+        expected: { ok: false, error: 'UNKNOWN_NEED', job: 'test', need: 'biuld' },
+      },
+      {
+        name: 'Checks needs before loops',
+        input: [
+          [
+            { name: 'a', needs: ['b'] },
+            { name: 'b', needs: ['a', 'c'] },
+          ],
+        ],
+        expected: { ok: false, error: 'UNKNOWN_NEED', job: 'b', need: 'c' },
+      },
+      { name: 'Handles no jobs', input: [[]], expected: { ok: true, waves: [] } },
+    ],
+  },
+  {
+    id: 'devops-cache-key',
+    title: 'Build a cache key from inputs',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'Installing packages is one of the slowest steps in CI, so pipelines save the installed folder in a cache and restore it next time. The cache is only safe to reuse when the files that decide its contents, such as the lockfile, are unchanged, so its key is built from those files.',
+    prompt:
+      'Implement cacheKey(job, os, keyFiles, files). files maps paths to their text content. Take the paths in keyFiles without repeats, sorted with the default sort. Build one text by adding, for each path, the path, "\\n", the file\'s content (or "<missing>" if files has no such path), and "\\n". Hash that text with 32-bit FNV-1a: start with hash = 2166136261; for each UTF-16 code unit c of the text (charCodeAt), set hash to hash XOR c, then multiply it by 16777619 keeping only the low 32 bits (Math.imul(hash, 16777619) >>> 0). Write the hash as 8 lowercase hexadecimal digits, padded with leading zeros. Return job + "-" + os + "-" + that hash. Do not change the inputs.',
+    brief: {
+      summary: 'Implement cacheKey(job, os, keyFiles, files) and return job-os-hash.',
+      rules: [
+        'Take keyFiles without repeats, sorted with the default sort.',
+        'For each path add path, "\\n", its content (or "<missing>"), and "\\n" to one text.',
+        'Hash it with 32-bit FNV-1a: hash = 2166136261, then for each code unit c: hash = Math.imul(hash ^ c, 16777619) >>> 0.',
+        'Return job + "-" + os + "-" + the hash as 8 lowercase hexadecimal digits, padded with leading zeros.',
+      ],
+      edgeCases: [
+        'A missing file and an empty file give different keys.',
+        'Files that are not key files never change the key.',
+        'Do not change the inputs.',
+      ],
+    },
+    example: {
+      input:
+        'cacheKey("deps", "linux", ["package-lock.json", ".nvmrc"], {"package-lock.json": "{\\"lockfileVersion\\":3}", ".nvmrc": "24", "src/app.ts": "export {}"})',
+      output: '"deps-linux-5a74218d"',
+    },
+    note: `FNV-1a is a fast, simple hash, chosen here because it is easy to write and check; CI services use stronger hashes such as SHA-256 for cache keys. Contents are ASCII text, at most 10,000 characters each. ${notRun}`,
+    vocabulary: [
+      {
+        term: 'Cache key',
+        meaning: 'a name built from the inputs of a step, so a saved result is reused only when the inputs are the same',
+      },
+      { term: 'Hash', meaning: 'a short fixed-size value computed from data, which changes when the data changes' },
+    ],
+    planPrompt: 'Which changes must give a new key, which must not, and why does sorting keyFiles matter?',
+    starter:
+      "function cacheKey(job: string, os: string, keyFiles: string[], files: Record<string, string>): string {\n  // Build the text from the key files, then hash it.\n  return job + '-' + os\n}\n",
+    functionName: 'cacheKey',
+    preserveInput: true,
+    hints: [
+      'new Set removes repeats, and [...set].sort() orders the paths.',
+      'Use Object.hasOwn(files, path) so an empty file is not treated as missing.',
+      'toString(16) gives hexadecimal, and padStart(8, "0") adds the leading zeros.',
+    ],
+    checks: [
+      {
+        name: 'Builds the example key',
+        input: [
+          'deps',
+          'linux',
+          ['package-lock.json', '.nvmrc'],
+          { 'package-lock.json': '{"lockfileVersion":3}', '.nvmrc': '24', 'src/app.ts': 'export {}' },
+        ],
+        expected: 'deps-linux-5a74218d',
+      },
+      {
+        name: 'Ignores the order and repeats of key files',
+        input: [
+          'deps',
+          'linux',
+          ['.nvmrc', 'package-lock.json', '.nvmrc'],
+          { 'package-lock.json': '{"lockfileVersion":3}', '.nvmrc': '24', 'src/app.ts': 'export {}' },
+        ],
+        expected: 'deps-linux-5a74218d',
+      },
+      {
+        name: 'Ignores changes to other files',
+        input: [
+          'deps',
+          'linux',
+          ['package-lock.json', '.nvmrc'],
+          { 'package-lock.json': '{"lockfileVersion":3}', '.nvmrc': '24', 'src/app.ts': 'changed' },
+        ],
+        expected: 'deps-linux-5a74218d',
+      },
+      {
+        name: 'Changes when a key file changes',
+        input: [
+          'deps',
+          'linux',
+          ['package-lock.json', '.nvmrc'],
+          { 'package-lock.json': '{"lockfileVersion":3}', '.nvmrc': '22', 'src/app.ts': 'export {}' },
+        ],
+        expected: 'deps-linux-eb6ffa47',
+      },
+      {
+        name: 'Puts the operating system in the key',
+        input: ['deps', 'macos', ['package-lock.json', '.nvmrc'], { 'package-lock.json': '{"lockfileVersion":3}', '.nvmrc': '24' }],
+        expected: 'deps-macos-5a74218d',
+      },
+      { name: 'Marks a missing file', input: ['deps', 'linux', ['yarn.lock'], {}], expected: 'deps-linux-f1e81e5a' },
+      {
+        name: 'Tells an empty file from a missing one',
+        input: ['deps', 'linux', ['yarn.lock'], { 'yarn.lock': '' }],
+        expected: 'deps-linux-b9fce2f4',
+      },
+      {
+        name: 'Includes the path in the hash',
+        input: ['build', 'linux', ['b.txt'], { 'a.txt': 'same', 'b.txt': 'same' }],
+        expected: 'build-linux-8f338b2d',
+      },
+      {
+        name: 'Pads the hash with leading zeros',
+        input: ['lint', 'linux', ['.eslintrc'], { '.eslintrc': 'v8' }],
+        expected: 'lint-linux-04961fcd',
+      },
+      { name: 'Hashes an empty text for no key files', input: ['build', 'linux', [], {}], expected: 'build-linux-811c9dc5' },
+    ],
+  },
+  {
+    id: 'devops-cache-restore',
+    title: 'Pick the cache to restore',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      "When no cache matches a job's exact key, an older cache for the same job is often still useful: restoring it and installing only what changed is faster than starting empty. Pipelines list fallback prefixes, from most to least specific, to find one.",
+    prompt:
+      'Implement restoreCache(key, restoreKeys, caches). caches lists saved caches as {key, createdAt}, where createdAt is a whole number of seconds. If a cache\'s key equals key exactly, return {hit: "exact", key}. Otherwise go through restoreKeys in order; for the first prefix that at least one cache key starts with, return {hit: "partial", key} for the newest of those caches (the largest createdAt, and the earlier one in caches on a tie). If no prefix matches, return {hit: "miss", key: null}. Do not change the inputs.',
+    brief: {
+      summary: 'Implement restoreCache(key, restoreKeys, caches) and return {hit, key}.',
+      rules: [
+        'An exact key match gives {hit: "exact", key}.',
+        'Otherwise use the first prefix in restoreKeys that some cache key starts with.',
+        'Return {hit: "partial", key} for the newest such cache, the earlier one in caches on a tie.',
+        'With no match, return {hit: "miss", key: null}.',
+      ],
+      edgeCases: [
+        'An exact match wins even when a newer partial match exists.',
+        'A later prefix is used only when every earlier prefix matches nothing.',
+        'Do not change the inputs.',
+      ],
+    },
+    example: {
+      input:
+        'restoreCache("deps-linux-9a1", ["deps-linux-", "deps-"], [{key: "deps-linux-5f2", createdAt: 100}, {key: "deps-linux-77c", createdAt: 250}, {key: "deps-macos-77c", createdAt: 300}])',
+      output: '{hit: "partial", key: "deps-linux-77c"}',
+    },
+    note: `Prefixes are not empty; there are at most 200 caches. Real CI services also limit caches by branch and size. ${notRun}`,
+    vocabulary: [
+      { term: 'Restore key', meaning: 'a key prefix used to find an older, similar cache when the exact one is missing' },
+      { term: 'Cache hit', meaning: 'finding a saved result that can be reused instead of doing the work again' },
+    ],
+    planPrompt:
+      'With an exact match from yesterday and a partial match from today, which do you restore? Which prefix wins when both prefixes match?',
+    starter:
+      "type Cache = { key: string; createdAt: number }\n\nfunction restoreCache(key: string, restoreKeys: string[], caches: Cache[]): { hit: 'exact' | 'partial' | 'miss'; key: string | null } {\n  return { hit: 'miss', key: null }\n}\n",
+    functionName: 'restoreCache',
+    preserveInput: true,
+    hints: [
+      'Check for an exact key before looking at any prefix.',
+      'For each prefix, filter the caches whose key startsWith it, and stop at the first prefix with a match.',
+      'Keep the newest by comparing createdAt with >, so an equal later cache does not replace the earlier one.',
+    ],
+    checks: [
+      {
+        name: 'Restores the newest partial match in the example',
+        input: [
+          'deps-linux-9a1',
+          ['deps-linux-', 'deps-'],
+          [
+            { key: 'deps-linux-5f2', createdAt: 100 },
+            { key: 'deps-linux-77c', createdAt: 250 },
+            { key: 'deps-macos-77c', createdAt: 300 },
+          ],
+        ],
+        expected: { hit: 'partial', key: 'deps-linux-77c' },
+      },
+      {
+        name: 'Prefers an exact match',
+        input: [
+          'deps-linux-9a1',
+          ['deps-linux-'],
+          [
+            { key: 'deps-linux-9a1', createdAt: 10 },
+            { key: 'deps-linux-77c', createdAt: 900 },
+          ],
+        ],
+        expected: { hit: 'exact', key: 'deps-linux-9a1' },
+      },
+      {
+        name: 'Uses the first prefix that matches',
+        input: [
+          'deps-linux-9a1',
+          ['deps-linux-', 'deps-'],
+          [
+            { key: 'deps-linux-5f2', createdAt: 100 },
+            { key: 'deps-macos-77c', createdAt: 900 },
+          ],
+        ],
+        expected: { hit: 'partial', key: 'deps-linux-5f2' },
+      },
+      {
+        name: 'Falls back to a later prefix',
+        input: ['deps-linux-9a1', ['deps-linux-', 'deps-'], [{ key: 'deps-macos-77c', createdAt: 900 }]],
+        expected: { hit: 'partial', key: 'deps-macos-77c' },
+      },
+      {
+        name: 'Keeps the earlier cache on a tie',
+        input: [
+          'deps-linux-9a1',
+          ['deps-linux-'],
+          [
+            { key: 'deps-linux-aaa', createdAt: 500 },
+            { key: 'deps-linux-bbb', createdAt: 500 },
+          ],
+        ],
+        expected: { hit: 'partial', key: 'deps-linux-aaa' },
+      },
+      {
+        name: 'Matches prefixes from the start only',
+        input: ['deps-linux-9a1', ['linux-'], [{ key: 'deps-linux-77c', createdAt: 900 }]],
+        expected: { hit: 'miss', key: null },
+      },
+      {
+        name: 'Misses with no fallback prefixes',
+        input: ['deps-linux-9a1', [], [{ key: 'deps-linux-77c', createdAt: 900 }]],
+        expected: { hit: 'miss', key: null },
+      },
+      { name: 'Misses with no caches', input: ['deps-linux-9a1', ['deps-'], []], expected: { hit: 'miss', key: null } },
+    ],
+  },
+  {
+    id: 'devops-pipeline-duration',
+    title: 'Find how long a pipeline takes',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A pipeline with parallel jobs finishes when its slowest chain of jobs finishes. Making a job on that chain faster shortens the whole pipeline; making any other job faster changes nothing. That chain is the critical path.',
+    prompt:
+      'Implement pipelineTimes(jobs). Each job is {name, minutes, needs}; jobs may be listed in any order, every need names a job, and there are no loops. A job starts when the last job it needs finishes, or at 0 if it needs nothing, and finishes minutes later. Return {finish, total, criticalPath}: finish maps each name to its finish time, total is the largest finish time (0 with no jobs), and criticalPath is built backwards: start from the job with the largest finish (the first in jobs on a tie), then repeatedly move to the job it needs with the largest finish (the first in its needs on a tie), until a job needs nothing; return those names from first to last. Do not change jobs.',
+    brief: {
+      summary: 'Implement pipelineTimes(jobs) and return {finish, total, criticalPath}.',
+      rules: [
+        'A job starts when the last job it needs finishes (0 with no needs) and finishes minutes later; jobs may be listed in any order.',
+        'total is the largest finish time, or 0 with no jobs.',
+        'Build criticalPath backwards from the job with the largest finish (first in jobs on a tie), moving each time to the needed job with the largest finish (first in needs on a tie).',
+        'Return criticalPath from first job to last.',
+      ],
+      edgeCases: ['A job listed before the jobs it needs still waits for them.', 'Do not change jobs.'],
+    },
+    example: {
+      input:
+        'pipelineTimes([{name: "deploy", minutes: 2, needs: ["test", "lint"]}, {name: "build", minutes: 5, needs: []}, {name: "test", minutes: 8, needs: ["build"]}, {name: "lint", minutes: 3, needs: []}])',
+      output: '{finish: {deploy: 15, build: 5, test: 13, lint: 3}, total: 15, criticalPath: ["build", "test", "deploy"]}',
+    },
+    note: `minutes are whole numbers of at least 1; there are at most 100 jobs. The times are planned durations passed in, not measured runs. ${notRun}`,
+    vocabulary: [
+      {
+        term: 'Critical path',
+        meaning: 'the longest chain of jobs that wait for each other, which sets how long the whole pipeline takes',
+      },
+      { term: 'Parallel jobs', meaning: 'jobs that run at the same time because neither needs the other' },
+    ],
+    planPrompt:
+      "In the example, which job could you make faster to shorten the pipeline, and which would change nothing? How do you find a job's finish time when its needs are listed after it?",
+    starter:
+      'type Job = { name: string; minutes: number; needs: string[] }\n\nfunction pipelineTimes(jobs: Job[]) {\n  return { finish: {} as Record<string, number>, total: 0, criticalPath: [] as string[] }\n}\n',
+    functionName: 'pipelineTimes',
+    preserveInput: true,
+    hints: [
+      "A job's finish time depends only on its needs, so a function that works it out and remembers the answer handles any order.",
+      'Its start time is the largest finish among its needs, or 0.',
+      'Walk the critical path backwards first, then reverse it.',
+    ],
+    checks: [
+      {
+        name: 'Times the example',
+        input: [
+          [
+            { name: 'deploy', minutes: 2, needs: ['test', 'lint'] },
+            { name: 'build', minutes: 5, needs: [] },
+            { name: 'test', minutes: 8, needs: ['build'] },
+            { name: 'lint', minutes: 3, needs: [] },
+          ],
+        ],
+        expected: { finish: { deploy: 15, build: 5, test: 13, lint: 3 }, total: 15, criticalPath: ['build', 'test', 'deploy'] },
+      },
+      {
+        name: 'Waits for the slowest need',
+        input: [
+          [
+            { name: 'a', minutes: 4, needs: [] },
+            { name: 'b', minutes: 9, needs: [] },
+            { name: 'c', minutes: 1, needs: ['a', 'b'] },
+          ],
+        ],
+        expected: { finish: { a: 4, b: 9, c: 10 }, total: 10, criticalPath: ['b', 'c'] },
+      },
+      {
+        name: 'Ends at the job that finishes last',
+        input: [
+          [
+            { name: 'build', minutes: 5, needs: [] },
+            { name: 'docs', minutes: 20, needs: [] },
+            { name: 'test', minutes: 3, needs: ['build'] },
+          ],
+        ],
+        expected: { finish: { build: 5, docs: 20, test: 8 }, total: 20, criticalPath: ['docs'] },
+      },
+      {
+        name: 'Breaks a tie between last jobs by list order',
+        input: [
+          [
+            { name: 'x', minutes: 6, needs: [] },
+            { name: 'y', minutes: 6, needs: [] },
+          ],
+        ],
+        expected: { finish: { x: 6, y: 6 }, total: 6, criticalPath: ['x'] },
+      },
+      {
+        name: 'Breaks a tie between needs by needs order',
+        input: [
+          [
+            { name: 'p', minutes: 2, needs: [] },
+            { name: 'q', minutes: 2, needs: [] },
+            { name: 'r', minutes: 1, needs: ['q', 'p'] },
+          ],
+        ],
+        expected: { finish: { p: 2, q: 2, r: 3 }, total: 3, criticalPath: ['q', 'r'] },
+      },
+      {
+        name: 'Follows a long chain listed backwards',
+        input: [
+          [
+            { name: 'd', minutes: 1, needs: ['c'] },
+            { name: 'c', minutes: 1, needs: ['b'] },
+            { name: 'b', minutes: 1, needs: ['a'] },
+            { name: 'a', minutes: 1, needs: [] },
+          ],
+        ],
+        expected: { finish: { d: 4, c: 3, b: 2, a: 1 }, total: 4, criticalPath: ['a', 'b', 'c', 'd'] },
+      },
+      { name: 'Handles no jobs', input: [[]], expected: { finish: {}, total: 0, criticalPath: [] } },
+    ],
+  },
+  {
+    id: 'devops-skip-unchanged',
+    title: 'Skip jobs whose inputs did not change',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      "In a repository with several parts, a change to the docs should not rebuild and redeploy the API. Each job names the paths it reads, and a job whose inputs did not change can be skipped. But a job that needs another job's output must run again whenever that job runs, even if its own files are untouched.",
+    prompt:
+      'Implement jobsToRun(jobs, changed). jobs lists {name, needs, paths} in any order; every need names a job and there are no loops. changed lists the paths of changed files. A path in a job\'s paths that ends with "/" matches every changed file whose path starts with it; any other path matches only that exact file. A job runs if a changed file matches one of its paths, or if any job it needs runs. Return {run, skip}, each a list of job names in the order of jobs. Do not change the inputs.',
+    brief: {
+      summary: 'Implement jobsToRun(jobs, changed) and return {run, skip}.',
+      rules: [
+        'A path ending with "/" matches every changed file that starts with it; any other path matches only that exact file.',
+        'A job runs if a changed file matches one of its paths, or if any job it needs runs.',
+        'Jobs may be listed in any order; there are no loops.',
+        'Return {run, skip}, each in the order of jobs.',
+      ],
+      edgeCases: ['"api/" matches "api/server.ts" but not "api-docs/index.md".', 'Do not change the inputs.'],
+    },
+    example: {
+      input:
+        'jobsToRun([{name: "deploy-api", needs: ["test-api"], paths: ["deploy/"]}, {name: "test-api", needs: [], paths: ["api/", "package-lock.json"]}, {name: "docs", needs: [], paths: ["docs/"]}], ["api/server.ts"])',
+      output: '{run: ["deploy-api", "test-api"], skip: ["docs"]}',
+    },
+    note: `Paths use "/" and are compared exactly, including letter case. There are at most 100 jobs and 1,000 changed files. ${notRun}`,
+    vocabulary: [
+      { term: 'Path filter', meaning: 'a list of files or folders a job reads, used to decide whether a change affects it' },
+      { term: 'Monorepo', meaning: 'one repository that holds several projects or services' },
+    ],
+    planPrompt: 'Only api/server.ts changed. Which jobs run, and why does a job with no changed files of its own sometimes still run?',
+    starter:
+      'type Job = { name: string; needs: string[]; paths: string[] }\n\nfunction jobsToRun(jobs: Job[], changed: string[]): { run: string[]; skip: string[] } {\n  return { run: [], skip: jobs.map(job => job.name) }\n}\n',
+    functionName: 'jobsToRun',
+    preserveInput: true,
+    hints: [
+      'Write the match rule for one path and one changed file first.',
+      'Whether a job runs depends on the jobs it needs, so decide those first, remembering each answer.',
+      'Build both lists in one pass over jobs once every decision is made.',
+    ],
+    checks: [
+      {
+        name: 'Runs the example',
+        input: [
+          [
+            { name: 'deploy-api', needs: ['test-api'], paths: ['deploy/'] },
+            { name: 'test-api', needs: [], paths: ['api/', 'package-lock.json'] },
+            { name: 'docs', needs: [], paths: ['docs/'] },
+          ],
+          ['api/server.ts'],
+        ],
+        expected: { run: ['deploy-api', 'test-api'], skip: ['docs'] },
+      },
+      {
+        name: 'Skips everything a docs change does not touch',
+        input: [
+          [
+            { name: 'test-api', needs: [], paths: ['api/'] },
+            { name: 'deploy-api', needs: ['test-api'], paths: ['deploy/'] },
+            { name: 'docs', needs: [], paths: ['docs/'] },
+          ],
+          ['docs/setup.md'],
+        ],
+        expected: { run: ['docs'], skip: ['test-api', 'deploy-api'] },
+      },
+      {
+        name: 'Matches a folder only at the start',
+        input: [[{ name: 'api', needs: [], paths: ['api/'] }], ['src/api/index.ts', 'api-docs/index.md']],
+        expected: { run: [], skip: ['api'] },
+      },
+      {
+        name: 'Matches a file path exactly',
+        input: [[{ name: 'deps', needs: [], paths: ['package-lock.json'] }], ['web/package-lock.json', 'package-lock.json.orig']],
+        expected: { run: [], skip: ['deps'] },
+      },
+      {
+        name: 'Runs a job for its own changed file',
+        input: [
+          [
+            { name: 'build', needs: [], paths: ['src/'] },
+            { name: 'deploy', needs: ['build'], paths: ['deploy/config.yml'] },
+          ],
+          ['deploy/config.yml'],
+        ],
+        expected: { run: ['deploy'], skip: ['build'] },
+      },
+      {
+        name: 'Passes a run through a chain listed backwards',
+        input: [
+          [
+            { name: 'release', needs: ['package'], paths: ['release/'] },
+            { name: 'package', needs: ['build'], paths: ['package/'] },
+            { name: 'build', needs: [], paths: ['src/'] },
+          ],
+          ['src/main.ts'],
+        ],
+        expected: { run: ['release', 'package', 'build'], skip: [] },
+      },
+      {
+        name: 'Runs a job when any one of its needs runs',
+        input: [
+          [
+            { name: 'web', needs: [], paths: ['web/'] },
+            { name: 'api', needs: [], paths: ['api/'] },
+            { name: 'e2e', needs: ['web', 'api'], paths: ['e2e/'] },
+          ],
+          ['api/routes.ts'],
+        ],
+        expected: { run: ['api', 'e2e'], skip: ['web'] },
+      },
+      {
+        name: 'Compares letter case exactly',
+        input: [[{ name: 'docs', needs: [], paths: ['docs/'] }], ['Docs/intro.md']],
+        expected: { run: [], skip: ['docs'] },
+      },
+      {
+        name: 'Skips every job when nothing changed',
+        input: [[{ name: 'build', needs: [], paths: ['src/'] }], []],
+        expected: { run: [], skip: ['build'] },
+      },
+    ],
+  },
 ]
