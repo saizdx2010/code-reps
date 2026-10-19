@@ -534,6 +534,15 @@ export const indonesianGlossary: Record<string, string> = {
   'Inline comment': 'catatan di akhir baris, setelah nilai, yang diabaikan loader',
   'Configuration drift': 'pengaturan yang perlahan menjadi berbeda antara lingkungan yang seharusnya sama',
   Staging: 'lingkungan yang disiapkan seperti produksi, dipakai untuk mencoba perubahan sebelum pengguna nyata melihatnya',
+  'Semantic version': 'versi yang ditulis MAYOR.MINOR.PATCH, tiap bagian menyatakan jenis perubahan dalam rilis',
+  'Release tag': 'nama, seperti v1.4.0, yang ditempelkan pada commit tempat rilis dibuat',
+  'Version bump': 'menaikkan satu bagian nomor versi untuk rilis baru',
+  'Pre-release': 'versi uji, seperti 2.0.0-rc.1, yang datang sebelum rilis yang dituju',
+  'Build metadata': 'informasi tambahan setelah "+" pada versi, yang tidak mengubah urutannya',
+  Lockfile: 'file yang mencatat versi tepat setiap paket yang dipasang, sehingga setiap instalasi sama',
+  'Package dependency': 'paket yang dipakai dan dipasang oleh proyek Anda',
+  'Version range': 'aturan, seperti ^1.2.3, yang menyatakan versi paket mana yang dapat diterima',
+  'Caret range': 'rentang yang ditulis dengan ^ yang mengizinkan perubahan yang seharusnya tidak merusak versi dasarnya',
 }
 
 /** Shown with the glossary when Indonesian help is on. */

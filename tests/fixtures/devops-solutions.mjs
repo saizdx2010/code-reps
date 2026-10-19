@@ -149,4 +149,96 @@ function configDrift(staging: Record<string, string>, production: Record<string,
   }
   return report
 }`,
+  'devops-compare-versions': `
+function compareVersions(a: string, b: string): number {
+  const parts = (version: string) => version.replace(/^v/, '').split('.').map(Number)
+  const left = parts(a)
+  const right = parts(b)
+  for (let index = 0; index < 3; index++) {
+    if (left[index] !== right[index]) return left[index] < right[index] ? -1 : 1
+  }
+  return 0
+}`,
+  'devops-next-version': `
+function nextVersion(current: string, changes: string[]) {
+  const [major, minor, patch] = current.split('.').map(Number)
+  if (changes.includes('breaking')) {
+    const version = major === 0 ? [0, minor + 1, 0] : [major + 1, 0, 0]
+    return { version: version.join('.'), release: true }
+  }
+  if (changes.includes('feature')) return { version: [major, minor + 1, 0].join('.'), release: true }
+  if (changes.includes('fix')) return { version: [major, minor, patch + 1].join('.'), release: true }
+  return { version: current, release: false }
+}`,
+  'devops-sort-versions': `
+function sortVersions(versions: string[]): string[] {
+  const parse = (version: string) => {
+    const withoutBuild = version.split('+')[0]
+    const dash = withoutBuild.indexOf('-')
+    const main = (dash === -1 ? withoutBuild : withoutBuild.slice(0, dash)).split('.').map(Number)
+    const pre = dash === -1 ? [] : withoutBuild.slice(dash + 1).split('.')
+    return { main, pre }
+  }
+  const numeric = (id: string) => /^[0-9]+$/.test(id)
+  const compareIds = (a: string, b: string) => {
+    if (numeric(a) && numeric(b)) return Number(a) - Number(b)
+    if (numeric(a)) return -1
+    if (numeric(b)) return 1
+    return a < b ? -1 : a > b ? 1 : 0
+  }
+  const compare = (x: string, y: string) => {
+    const a = parse(x)
+    const b = parse(y)
+    for (let index = 0; index < 3; index++) if (a.main[index] !== b.main[index]) return a.main[index] - b.main[index]
+    if (!a.pre.length || !b.pre.length) return b.pre.length - a.pre.length
+    for (let index = 0; index < Math.min(a.pre.length, b.pre.length); index++) {
+      const order = compareIds(a.pre[index], b.pre[index])
+      if (order !== 0) return order
+    }
+    return a.pre.length - b.pre.length
+  }
+  return [...versions].sort(compare)
+}`,
+  'devops-lockfile-diff': `
+function lockfileDiff(before: Record<string, string>, after: Record<string, string>) {
+  const parts = (version: string) => version.split('.').map(Number)
+  const added: string[] = []
+  const removed: string[] = []
+  const upgraded: { name: string; from: string; to: string; kind: string }[] = []
+  const downgraded: { name: string; from: string; to: string }[] = []
+  const names = [...new Set([...Object.keys(before), ...Object.keys(after)])].sort()
+  for (const name of names) {
+    const from = Object.hasOwn(before, name) ? before[name] : undefined
+    const to = Object.hasOwn(after, name) ? after[name] : undefined
+    if (from === undefined) added.push(name + '@' + to)
+    else if (to === undefined) removed.push(name + '@' + from)
+    else {
+      const a = parts(from)
+      const b = parts(to)
+      const index = [0, 1, 2].find(i => a[i] !== b[i])
+      if (index === undefined) continue
+      if (b[index] > a[index]) upgraded.push({ name, from, to, kind: ['major', 'minor', 'patch'][index] })
+      else downgraded.push({ name, from, to })
+    }
+  }
+  return { added, removed, upgraded, downgraded }
+}`,
+  'devops-satisfies-range': `
+function satisfies(version: string, range: string): boolean {
+  const parse = (text: string) => text.split('.').map(Number)
+  const compare = (a: number[], b: number[]) => {
+    for (let index = 0; index < 3; index++) if (a[index] !== b[index]) return a[index] < b[index] ? -1 : 1
+    return 0
+  }
+  const v = parse(version)
+  const operator = range.startsWith('>=') ? '>=' : range.startsWith('^') ? '^' : range.startsWith('~') ? '~' : ''
+  const base = parse(range.slice(operator.length))
+  if (operator === '') return compare(v, base) === 0
+  if (compare(v, base) < 0) return false
+  if (operator === '>=') return true
+  const [major, minor, patch] = base
+  const limit =
+    operator === '~' ? [major, minor + 1, 0] : major > 0 ? [major + 1, 0, 0] : minor > 0 ? [0, minor + 1, 0] : [0, 0, patch + 1]
+  return compare(v, limit) < 0
+}`,
 }

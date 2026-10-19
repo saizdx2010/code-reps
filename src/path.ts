@@ -513,6 +513,16 @@ export const paths = [
         title: 'Check configuration',
         repIds: ['devops-read-port', 'devops-validate-env', 'devops-mask-secrets', 'devops-parse-dotenv', 'devops-config-drift'],
       },
+      {
+        title: 'Work with versions',
+        repIds: [
+          'devops-compare-versions',
+          'devops-next-version',
+          'devops-sort-versions',
+          'devops-lockfile-diff',
+          'devops-satisfies-range',
+        ],
+      },
     ] satisfies readonly PathStage[],
   },
 ] as const

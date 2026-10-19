@@ -1106,4 +1106,351 @@ export const devopsReps: Rep[] = [
       { name: 'Handles two empty maps', input: [{}, {}, []], expected: [] },
     ],
   },
+  {
+    id: 'devops-compare-versions',
+    title: 'Compare two versions',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'Release tags and package versions are written as three numbers, such as 1.10.0. Deploy scripts compare them to find the newest release, and comparing them as text gets the order wrong as soon as a part reaches two digits.',
+    prompt:
+      'Implement compareVersions(a, b). Each version is written MAJOR.MINOR.PATCH, three whole numbers without leading zeros, and may start with "v", as release tags often do. Compare the major numbers, then the minor numbers, then the patch numbers, as numbers. Return -1 if a is lower, 1 if a is higher, and 0 if they are equal.',
+    brief: {
+      summary: 'Implement compareVersions(a, b) and return -1, 0, or 1.',
+      rules: [
+        'Each version is MAJOR.MINOR.PATCH, three whole numbers without leading zeros, and may start with "v".',
+        'Compare major, then minor, then patch, as numbers.',
+        'Return -1 if a is lower, 1 if a is higher, and 0 if they are equal.',
+      ],
+      edgeCases: ['"v1.2.3" and "1.2.3" are equal.', 'Return exactly -1 or 1, not the difference.'],
+    },
+    example: { input: 'compareVersions("1.10.0", "1.9.0")', output: '1' },
+    note: `Versions here have no pre-release part such as "-rc.1"; a later rep adds it. ${notRun}`,
+    vocabulary: [
+      {
+        term: 'Semantic version',
+        meaning: 'a version written MAJOR.MINOR.PATCH, where each part says what kind of change a release contains',
+      },
+      { term: 'Release tag', meaning: 'a name, such as v1.4.0, attached to the commit a release was built from' },
+    ],
+    planPrompt: 'Why does "1.10.0" < "1.9.0" come out true when compared as text? What do you compare instead, and in what order?',
+    starter: 'function compareVersions(a: string, b: string): number {\n  // Split each version into three numbers first.\n  return 0\n}\n',
+    functionName: 'compareVersions',
+    hints: [
+      'Remove a leading "v", split at ".", and turn each part into a number.',
+      'Compare the parts in order and stop at the first one that differs.',
+      'Return -1 or 1 from that comparison, and 0 only when all three are equal.',
+    ],
+    checks: [
+      { name: 'Compares the example as numbers', input: ['1.10.0', '1.9.0'], expected: 1 },
+      { name: 'Finds a lower patch', input: ['1.2.3', '1.2.4'], expected: -1 },
+      { name: 'Lets major outweigh the rest', input: ['2.0.0', '1.99.99'], expected: 1 },
+      { name: 'Lets minor outweigh patch', input: ['1.3.0', '1.2.99'], expected: 1 },
+      { name: 'Reports equal versions', input: ['3.1.4', '3.1.4'], expected: 0 },
+      { name: 'Ignores a leading v', input: ['v1.2.3', '1.2.3'], expected: 0 },
+      { name: 'Compares two tags', input: ['v2.0.0', 'v10.0.0'], expected: -1 },
+      { name: 'Returns 1, not the difference', input: ['1.2.10', '1.2.4'], expected: 1 },
+      { name: 'Returns -1, not the difference', input: ['1.0.0', '4.0.0'], expected: -1 },
+      { name: 'Handles zero versions', input: ['0.0.1', '0.0.0'], expected: 1 },
+    ],
+  },
+  {
+    id: 'devops-next-version',
+    title: 'Choose the next version',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A release tool reads the changes since the last release and picks the next version, so the number tells users what to expect: a new major version may break their code, a minor one adds features, and a patch only fixes bugs.',
+    prompt:
+      'Implement nextVersion(current, changes). current is MAJOR.MINOR.PATCH, three whole numbers. changes lists the kinds of change since that release, each "breaking", "feature", "fix", or "docs". The largest kind decides: with a breaking change, raise major and set minor and patch to 0, except while major is 0, when you raise minor and set patch to 0 instead; otherwise, with a feature, raise minor and set patch to 0; otherwise, with a fix, raise patch. Return {version, release: true} with the new version. With only docs changes, or none, return {version: current, release: false}. Do not change the inputs.',
+    brief: {
+      summary: 'Implement nextVersion(current, changes) and return {version, release}.',
+      rules: [
+        'The largest kind of change decides: breaking, then feature, then fix.',
+        'breaking: raise major and set minor and patch to 0; while major is 0, raise minor and set patch to 0 instead.',
+        'feature: raise minor and set patch to 0. fix: raise patch.',
+        'Return {version, release: true}, or {version: current, release: false} when there are only docs changes or none.',
+      ],
+      edgeCases: [
+        'The order of changes does not matter.',
+        'Parts are numbers, so 1.9.9 with a feature becomes 1.10.0.',
+        'Do not change the inputs.',
+      ],
+    },
+    example: { input: 'nextVersion("1.4.2", ["fix", "feature", "docs"])', output: '{version: "1.5.0", release: true}' },
+    note: `The 0.x rule is a common convention for projects that are not yet stable; teams set their own. ${notRun}`,
+    vocabulary: [
+      { term: 'Breaking change', meaning: 'a change that makes a client written for the old version stop working' },
+      { term: 'Version bump', meaning: 'raising one part of a version number for a new release' },
+    ],
+    planPrompt: 'What are the next versions of 1.9.9 with a feature, 0.4.1 with a breaking change, and 2.0.0 with only docs changes?',
+    starter:
+      "type Change = 'breaking' | 'feature' | 'fix' | 'docs'\n\nfunction nextVersion(current: string, changes: Change[]): { version: string; release: boolean } {\n  return { version: current, release: false }\n}\n",
+    functionName: 'nextVersion',
+    preserveInput: true,
+    hints: [
+      'Find the largest kind with includes, checking breaking first.',
+      'Turn the parts into numbers before adding 1, or "9" + 1 becomes "91".',
+      'Every part to the right of the one you raise goes back to 0.',
+    ],
+    checks: [
+      { name: 'Picks a feature over a fix', input: ['1.4.2', ['fix', 'feature', 'docs']], expected: { version: '1.5.0', release: true } },
+      { name: 'Raises patch for a fix', input: ['1.4.2', ['fix']], expected: { version: '1.4.3', release: true } },
+      { name: 'Raises major for a breaking change', input: ['1.4.2', ['fix', 'breaking']], expected: { version: '2.0.0', release: true } },
+      { name: 'Raises minor for a breaking change in 0.x', input: ['0.4.1', ['breaking']], expected: { version: '0.5.0', release: true } },
+      { name: 'Raises minor for a feature in 0.x', input: ['0.4.1', ['feature']], expected: { version: '0.5.0', release: true } },
+      { name: 'Adds as numbers', input: ['1.9.9', ['feature']], expected: { version: '1.10.0', release: true } },
+      { name: 'Adds to a two-digit patch', input: ['2.3.19', ['fix']], expected: { version: '2.3.20', release: true } },
+      { name: 'Makes no release for docs only', input: ['2.0.0', ['docs', 'docs']], expected: { version: '2.0.0', release: false } },
+      { name: 'Makes no release for no changes', input: ['2.0.0', []], expected: { version: '2.0.0', release: false } },
+      {
+        name: 'Checks every change, not only the first',
+        input: ['3.1.0', ['docs', 'fix', 'breaking']],
+        expected: { version: '4.0.0', release: true },
+      },
+      { name: 'Raises a 0.0.x patch for a fix', input: ['0.0.3', ['fix']], expected: { version: '0.0.4', release: true } },
+    ],
+  },
+  {
+    id: 'devops-sort-versions',
+    title: 'Sort versions with pre-releases',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'Before a release, teams publish test versions such as 2.0.0-beta.2 and 2.0.0-rc.1. They sort before 2.0.0 itself, and their labels have their own order, so a release page has to sort versions by the semantic versioning rules rather than as text.',
+    prompt:
+      'Implement sortVersions(versions). Each version is MAJOR.MINOR.PATCH (whole numbers), optionally followed by "-" and a pre-release of dot-separated identifiers, and optionally by "+" and build information. Return a new array sorted from lowest to highest. Compare major, minor, and patch as numbers. If they are equal, a version with a pre-release comes before one without. Compare two pre-releases identifier by identifier, from the left: two identifiers made only of digits compare as numbers; an identifier of only digits comes before one with other characters; any other two compare with the default string order (by character code). If one pre-release runs out first with every earlier identifier equal, it comes first. Ignore build information. Versions that are still equal keep their original order. Do not change versions.',
+    brief: {
+      summary: 'Implement sortVersions(versions) and return a new array sorted from lowest to highest.',
+      rules: [
+        'Compare major, minor, and patch as numbers; with those equal, a pre-release comes before the plain version.',
+        'Compare pre-releases identifier by identifier: digits-only pairs as numbers, digits-only before other identifiers, other pairs by character code.',
+        'A pre-release that runs out first, with all earlier identifiers equal, comes first.',
+        'Ignore build information after "+", and keep the original order for equal versions.',
+      ],
+      edgeCases: [
+        'beta.11 comes after beta.2.',
+        'Upper-case letters come before lower-case ones by character code.',
+        'Do not change versions.',
+      ],
+    },
+    example: {
+      input: 'sortVersions(["1.0.0", "1.0.0-rc.1", "1.0.0-beta.11", "1.0.0-beta.2", "1.0.0-alpha", "0.9.0"])',
+      output: '["0.9.0", "1.0.0-alpha", "1.0.0-beta.2", "1.0.0-beta.11", "1.0.0-rc.1", "1.0.0"]',
+    },
+    note: `Identifiers use letters, digits, and "-"; there are at most 200 versions. ${notRun}`,
+    vocabulary: [
+      { term: 'Pre-release', meaning: 'a test version, such as 2.0.0-rc.1, that comes before the release it leads to' },
+      { term: 'Build metadata', meaning: 'extra information after "+" in a version, which does not change its order' },
+    ],
+    planPrompt: 'Order 1.0.0-alpha, 1.0.0-alpha.1, 1.0.0-1, and 1.0.0-alpha.beta, and say which rule decides each pair.',
+    starter:
+      'function sortVersions(versions: string[]): string[] {\n  // Write a compare function, then sort a copy.\n  return [...versions]\n}\n',
+    functionName: 'sortVersions',
+    preserveInput: true,
+    hints: [
+      'Split off build information at "+" first, then the pre-release at the first "-".',
+      'Array.prototype.sort is stable, so a compare function that returns 0 keeps equal versions in order.',
+      'Test /^[0-9]+$/ on each identifier to decide whether it compares as a number.',
+    ],
+    checks: [
+      {
+        name: 'Sorts the example',
+        input: [['1.0.0', '1.0.0-rc.1', '1.0.0-beta.11', '1.0.0-beta.2', '1.0.0-alpha', '0.9.0']],
+        expected: ['0.9.0', '1.0.0-alpha', '1.0.0-beta.2', '1.0.0-beta.11', '1.0.0-rc.1', '1.0.0'],
+      },
+      {
+        name: 'Compares main parts as numbers',
+        input: [['1.10.0', '1.9.0', '1.2.10', '1.2.9']],
+        expected: ['1.2.9', '1.2.10', '1.9.0', '1.10.0'],
+      },
+      { name: 'Puts a shorter pre-release first', input: [['1.0.0-alpha.1', '1.0.0-alpha']], expected: ['1.0.0-alpha', '1.0.0-alpha.1'] },
+      {
+        name: 'Puts number identifiers before words',
+        input: [['1.0.0-alpha', '1.0.0-10a', '1.0.0-2']],
+        expected: ['1.0.0-2', '1.0.0-10a', '1.0.0-alpha'],
+      },
+      {
+        name: 'Compares later identifiers when earlier ones match',
+        input: [['1.0.0-alpha.beta', '1.0.0-alpha.1']],
+        expected: ['1.0.0-alpha.1', '1.0.0-alpha.beta'],
+      },
+      { name: 'Compares words by character code', input: [['1.0.0-beta', '1.0.0-Beta']], expected: ['1.0.0-Beta', '1.0.0-beta'] },
+      { name: 'Keeps hyphens inside an identifier', input: [['1.0.0-x-y', '1.0.0-x']], expected: ['1.0.0-x', '1.0.0-x-y'] },
+      {
+        name: 'Ignores build information',
+        input: [['1.0.0+b2', '1.0.0-rc.1+b9', '1.0.0+b1']],
+        expected: ['1.0.0-rc.1+b9', '1.0.0+b2', '1.0.0+b1'],
+      },
+      { name: 'Places a pre-release after older releases', input: [['2.0.0-rc.1', '1.9.9']], expected: ['1.9.9', '2.0.0-rc.1'] },
+      { name: 'Handles an empty list', input: [[]], expected: [] },
+    ],
+  },
+  {
+    id: 'devops-lockfile-diff',
+    title: 'Summarise a lockfile change',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A lockfile records the exact version of every package an install used, so every machine and CI run installs the same ones. When a pull request changes it, reviewers want a short summary: what was added, removed, upgraded, or downgraded, and which upgrades are major.',
+    prompt:
+      'Implement lockfileDiff(before, after). Each maps a package name to a version written MAJOR.MINOR.PATCH (whole numbers). Return {added, removed, upgraded, downgraded}. added lists "name@version" for packages only in after, and removed lists "name@version" for packages only in before. For a package in both whose version went up, upgraded has {name, from, to, kind}, where kind is "major" if the major number changed, else "minor" if the minor number changed, else "patch". For one whose version went down, downgraded has {name, from, to}. Compare versions as numbers, part by part. Leave out unchanged packages, and sort every list by package name with the default sort. Do not change the inputs.',
+    brief: {
+      summary: 'Implement lockfileDiff(before, after) and return {added, removed, upgraded, downgraded}.',
+      rules: [
+        'added and removed list "name@version" for packages only in after or only in before.',
+        'A version that went up gives {name, from, to, kind}: "major" if major changed, else "minor" if minor changed, else "patch".',
+        'A version that went down gives {name, from, to} in downgraded.',
+        'Compare versions as numbers, leave out unchanged packages, and sort each list by name with the default sort.',
+      ],
+      edgeCases: ['Scoped names such as @types/node keep their "@" and "/".', 'Do not change the inputs.'],
+    },
+    example: {
+      input: 'lockfileDiff({react: "18.2.0", lodash: "4.17.20"}, {react: "19.0.0", lodash: "4.17.21", zod: "3.23.8"})',
+      output:
+        '{added: ["zod@3.23.8"], removed: [], upgraded: [{name: "lodash", from: "4.17.20", to: "4.17.21", kind: "patch"}, {name: "react", from: "18.2.0", to: "19.0.0", kind: "major"}], downgraded: []}',
+    },
+    note: `Real lockfiles also record where each package came from and which packages need it; this rep compares only names and versions. There are at most 500 packages. ${notRun}`,
+    vocabulary: [
+      { term: 'Lockfile', meaning: 'a file that records the exact version of every installed package, so every install is the same' },
+      { term: 'Package dependency', meaning: 'a package your project uses and installs' },
+    ],
+    planPrompt:
+      'For lodash 4.9.0 → 4.10.0 and chalk 5.3.0 → 4.1.2, what goes in each list, and what would comparing the versions as text get wrong?',
+    starter:
+      "type Upgrade = { name: string; from: string; to: string; kind: 'major' | 'minor' | 'patch' }\n\nfunction lockfileDiff(before: Record<string, string>, after: Record<string, string>) {\n  return { added: [] as string[], removed: [] as string[], upgraded: [] as Upgrade[], downgraded: [] as { name: string; from: string; to: string }[] }\n}\n",
+    functionName: 'lockfileDiff',
+    preserveInput: true,
+    hints: [
+      "Go through the sorted union of both maps' names once, putting each package in at most one list.",
+      'Write a small function that turns a version into three numbers, and use it both to compare and to find the kind.',
+      'The kind is the leftmost part that differs.',
+    ],
+    checks: [
+      {
+        name: 'Summarises the example',
+        input: [
+          { react: '18.2.0', lodash: '4.17.20' },
+          { react: '19.0.0', lodash: '4.17.21', zod: '3.23.8' },
+        ],
+        expected: {
+          added: ['zod@3.23.8'],
+          removed: [],
+          upgraded: [
+            { name: 'lodash', from: '4.17.20', to: '4.17.21', kind: 'patch' },
+            { name: 'react', from: '18.2.0', to: '19.0.0', kind: 'major' },
+          ],
+          downgraded: [],
+        },
+      },
+      {
+        name: 'Compares versions as numbers',
+        input: [{ lodash: '4.9.0' }, { lodash: '4.10.0' }],
+        expected: { added: [], removed: [], upgraded: [{ name: 'lodash', from: '4.9.0', to: '4.10.0', kind: 'minor' }], downgraded: [] },
+      },
+      {
+        name: 'Reports a downgrade',
+        input: [{ chalk: '5.3.0' }, { chalk: '4.1.2' }],
+        expected: { added: [], removed: [], upgraded: [], downgraded: [{ name: 'chalk', from: '5.3.0', to: '4.1.2' }] },
+      },
+      {
+        name: 'Names a major change even when minor went down',
+        input: [{ vite: '5.4.9' }, { vite: '6.0.1' }],
+        expected: { added: [], removed: [], upgraded: [{ name: 'vite', from: '5.4.9', to: '6.0.1', kind: 'major' }], downgraded: [] },
+      },
+      {
+        name: 'Reports a removed package',
+        input: [{ moment: '2.30.1', dayjs: '1.11.13' }, { dayjs: '1.11.13' }],
+        expected: { added: [], removed: ['moment@2.30.1'], upgraded: [], downgraded: [] },
+      },
+      {
+        name: 'Keeps scoped names',
+        input: [{ '@types/node': '20.11.0' }, { '@types/node': '22.7.4', '@vitejs/plugin-react': '4.3.2' }],
+        expected: {
+          added: ['@vitejs/plugin-react@4.3.2'],
+          removed: [],
+          upgraded: [{ name: '@types/node', from: '20.11.0', to: '22.7.4', kind: 'major' }],
+          downgraded: [],
+        },
+      },
+      {
+        name: 'Sorts every list by name',
+        input: [
+          { b: '1.0.0', a: '1.0.0', d: '2.0.0', c: '2.0.0' },
+          { z: '1.0.0', y: '1.0.0', d: '1.0.0', c: '1.0.0' },
+        ],
+        expected: {
+          added: ['y@1.0.0', 'z@1.0.0'],
+          removed: ['a@1.0.0', 'b@1.0.0'],
+          upgraded: [],
+          downgraded: [
+            { name: 'c', from: '2.0.0', to: '1.0.0' },
+            { name: 'd', from: '2.0.0', to: '1.0.0' },
+          ],
+        },
+      },
+      {
+        name: 'Leaves unchanged packages out',
+        input: [{ react: '19.0.0' }, { react: '19.0.0' }],
+        expected: { added: [], removed: [], upgraded: [], downgraded: [] },
+      },
+      {
+        name: 'Names a patch change',
+        input: [{ zod: '3.23.8' }, { zod: '3.23.10' }],
+        expected: { added: [], removed: [], upgraded: [{ name: 'zod', from: '3.23.8', to: '3.23.10', kind: 'patch' }], downgraded: [] },
+      },
+      { name: 'Handles two empty lockfiles', input: [{}, {}], expected: { added: [], removed: [], upgraded: [], downgraded: [] } },
+    ],
+  },
+  {
+    id: 'devops-satisfies-range',
+    title: 'Check a version against a range',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A package file usually asks for a range of versions, such as ^1.2.3, rather than one exact version, so installs pick up compatible fixes. Before upgrading, a team checks whether a new version still falls inside the ranges their packages ask for.',
+    prompt:
+      'Implement satisfies(version, range). version is MAJOR.MINOR.PATCH (whole numbers). range is one of four forms, each with a MAJOR.MINOR.PATCH base: "1.2.3" allows exactly that version; ">=1.2.3" allows that version or any higher one; "~1.2.3" allows versions from the base up to, but not including, the next minor version (1.3.0); and "^1.2.3" allows versions from the base up to, but not including, the next version that raises the first part of the base that is not 0, so ^1.2.3 stops before 2.0.0, ^0.2.3 before 0.3.0, and ^0.0.3 before 0.0.4. Compare versions as numbers, part by part. Return true or false.',
+    brief: {
+      summary: 'Implement satisfies(version, range) and return true or false.',
+      rules: [
+        '"1.2.3" allows exactly that version; ">=1.2.3" allows it or any higher one.',
+        '"~1.2.3" allows the base up to, but not including, 1.3.0.',
+        'The first part of the base that is not 0 may not rise: "^1.2.3" stops before 2.0.0, "^0.2.3" before 0.3.0, and "^0.0.3" before 0.0.4.',
+        'Compare versions as numbers, part by part.',
+      ],
+      edgeCases: ['The base itself is always allowed.', 'The upper limit itself is never allowed.'],
+    },
+    example: { input: 'satisfies("1.10.0", "^1.9.0")', output: 'true' },
+    note: `Versions and bases have no pre-release part, and real package managers accept many more range forms. ${notRun}`,
+    vocabulary: [
+      { term: 'Version range', meaning: 'a rule, such as ^1.2.3, that says which versions of a package are acceptable' },
+      { term: 'Caret range', meaning: 'a range written with ^ that allows changes that should not break the base version' },
+    ],
+    planPrompt: 'Write the lowest and the first excluded version for ^1.2.3, ^0.2.3, ^0.0.3, and ~1.2.3, then check 1.10.0 against ^1.9.0.',
+    starter: 'function satisfies(version: string, range: string): boolean {\n  return false\n}\n',
+    functionName: 'satisfies',
+    hints: [
+      'Read the operator from the start of the range, then parse the base like any version.',
+      'Turn each range into a lowest allowed version and, except for >=, a first version that is not allowed.',
+      'A comparison that returns -1, 0, or 1 for two versions makes both bounds easy to test.',
+    ],
+    checks: [
+      { name: 'Compares the example as numbers', input: ['1.10.0', '^1.9.0'], expected: true },
+      { name: 'Allows the base of a caret range', input: ['1.2.3', '^1.2.3'], expected: true },
+      { name: 'Refuses the next major in a caret range', input: ['2.0.0', '^1.2.3'], expected: false },
+      { name: 'Refuses a version below the base', input: ['1.2.2', '^1.2.3'], expected: false },
+      { name: 'Stops a 0.x caret range at the next minor', input: ['0.3.0', '^0.2.3'], expected: false },
+      { name: 'Allows a patch in a 0.x caret range', input: ['0.2.9', '^0.2.3'], expected: true },
+      { name: 'Stops a 0.0.x caret range at the next patch', input: ['0.0.4', '^0.0.3'], expected: false },
+      { name: 'Allows the base of a 0.0.x caret range', input: ['0.0.3', '^0.0.3'], expected: true },
+      { name: 'Allows patches in a tilde range', input: ['1.2.10', '~1.2.9'], expected: true },
+      { name: 'Refuses the next minor in a tilde range', input: ['1.3.0', '~1.2.3'], expected: false },
+      { name: 'Keeps a tilde range on 0.x to its minor', input: ['0.2.7', '~0.2.3'], expected: true },
+      { name: 'Matches an exact version only', input: ['1.2.4', '1.2.3'], expected: false },
+      { name: 'Accepts the exact version', input: ['1.2.3', '1.2.3'], expected: true },
+      { name: 'Has no upper limit for >=', input: ['12.0.0', '>=1.2.3'], expected: true },
+      { name: 'Refuses a lower version for >=', input: ['1.2.2', '>=1.2.3'], expected: false },
+    ],
+  },
 ]

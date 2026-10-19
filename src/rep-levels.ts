@@ -364,6 +364,11 @@ export const repLevels: Record<string, RepLevel> = {
   'devops-mask-secrets': 2,
   'devops-parse-dotenv': 2,
   'devops-config-drift': 2,
+  'devops-compare-versions': 1,
+  'devops-next-version': 2,
+  'devops-sort-versions': 3,
+  'devops-lockfile-diff': 2,
+  'devops-satisfies-range': 2,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

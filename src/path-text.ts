@@ -375,5 +375,10 @@ export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
         'Read a port with a default, check every setting against a schema at startup, mask secrets in log lines, read a .env file, and compare two environments without printing secrets.',
       recap: "You can now check a service's settings before it starts and keep its secrets out of logs.",
     },
+    'Work with versions': {
+      description:
+        "Compare versions as numbers, choose the next version from a release's changes, sort pre-releases, summarise a lockfile change, and check versions against caret and tilde ranges.",
+      recap: 'You can now read, compare, and choose versions, and tell which upgrades a range allows.',
+    },
   },
 }

@@ -289,3 +289,110 @@ test('D2 configuration checks catch parsing, default, error-collection, masking,
     [drift.replace('    else if (staging[name] !== production[name]) {', '    else {'), 'Leaves equal values out'],
   ])
 })
+
+test('D3 version checks catch text order, reset, pre-release, kind, and range-limit mistakes', async () => {
+  const compare = solution('devops-compare-versions')
+  await assertCaught('devops-compare-versions', [
+    [compare.replace(".split('.').map(Number)", ".split('.')"), 'Compares the example as numbers'],
+    [compare.replace("version.replace(/^v/, '')", 'version'), 'Ignores a leading v'],
+    [compare.replace('return left[index] < right[index] ? -1 : 1', 'return left[index] - right[index]'), 'Returns 1, not the difference'],
+    [compare.replace('index < 3', 'index < 1'), 'Finds a lower patch'],
+    [compare.replace('index < 3', 'index < 2'), 'Returns 1, not the difference'],
+    [`function compareVersions(a: string, b: string) { return a.localeCompare(b) }`, 'Compares the example as numbers'],
+  ])
+  const next = solution('devops-next-version')
+  await assertCaught('devops-next-version', [
+    [next.replace("[major, minor + 1, 0].join('.')", "[major, minor + 1, patch].join('.')"), 'Picks a feature over a fix'],
+    [next.replace('major === 0 ? [0, minor + 1, 0] : [major + 1, 0, 0]', '[major + 1, 0, 0]'), 'Raises minor for a breaking change in 0.x'],
+    [next.replace("current.split('.').map(Number)", "current.split('.') as any"), 'Adds as numbers'],
+    [
+      next.replace("if (changes.includes('fix'))", "if (changes.includes('fix') || changes.includes('docs'))"),
+      'Makes no release for docs only',
+    ],
+    [next.replace("changes.includes('breaking')", "changes[0] === 'breaking'"), 'Checks every change, not only the first'],
+    [next.replace('[major + 1, 0, 0]', '[major + 1, minor, patch]'), 'Raises major for a breaking change'],
+  ])
+  const sorter = solution('devops-sort-versions')
+  await assertCaught('devops-sort-versions', [
+    [sorter.replace('return Number(a) - Number(b)', 'return a < b ? -1 : a > b ? 1 : 0'), 'Sorts the example'],
+    [sorter.replace('    if (numeric(a)) return -1\n    if (numeric(b)) return 1\n', ''), 'Puts number identifiers before words'],
+    [sorter.replace('return a < b ? -1 : a > b ? 1 : 0', 'return a.localeCompare(b)'), 'Compares words by character code'],
+    [sorter.replace('return b.pre.length - a.pre.length', 'return a.pre.length - b.pre.length'), 'Sorts the example'],
+    [sorter.replace('    return a.pre.length - b.pre.length\n  }', '    return 0\n  }'), 'Puts a shorter pre-release first'],
+    [sorter.replace("const withoutBuild = version.split('+')[0]", 'const withoutBuild = version'), 'Ignores build information'],
+    [sorter.replace("withoutBuild.slice(dash + 1).split('.')", '[withoutBuild.slice(dash + 1)]'), 'Sorts the example'],
+    [
+      sorter.replace("withoutBuild.slice(dash + 1).split('.')", "withoutBuild.split('-')[1].split('.')"),
+      'Keeps hyphens inside an identifier',
+    ],
+    [
+      sorter.replace('.map(Number)', '').replace('return a.main[index] - b.main[index]', 'return a.main[index] < b.main[index] ? -1 : 1'),
+      'Compares main parts as numbers',
+    ],
+    [sorter.replace('return [...versions].sort(compare)', 'return [...versions].sort(compare).reverse()'), 'Sorts the example'],
+  ])
+  const lock = solution('devops-lockfile-diff')
+  await assertCaught('devops-lockfile-diff', [
+    [
+      lock.replace(
+        "const parts = (version: string) => version.split('.').map(Number)",
+        "const parts = (version: string) => version.split('.')",
+      ),
+      'Compares versions as numbers',
+    ],
+    [
+      lock.replace('const index = [0, 1, 2].find(i => a[i] !== b[i])', 'const index = [2, 1, 0].find(i => a[i] !== b[i])'),
+      'Names a major change even when minor went down',
+    ],
+    [lock.replace('...Object.keys(after)])].sort()', '...Object.keys(after)])]'), 'Sorts every list by name'],
+    [
+      lock
+        .replace('    if (from === undefined) added.push(', '    if (from === undefined && to !== undefined) added.push(')
+        .replace("added.push(name + '@' + to)", 'added.push(name)'),
+      'Summarises the example',
+    ],
+    [
+      lock.replace(
+        '      if (index === undefined) continue\n',
+        "      if (index === undefined) {\n        upgraded.push({ name, from, to, kind: 'patch' })\n        continue\n      }\n",
+      ),
+      'Leaves unchanged packages out',
+    ],
+    [lock.replace('      else downgraded.push({ name, from, to })\n', ''), 'Reports a downgrade'],
+    [
+      lock
+        .replace('const to = Object.hasOwn(after, name) ? after[name] : undefined', 'const to = after[name] || undefined')
+        .replace("removed.push(name + '@' + from)", 'removed.push(name)'),
+      'Reports a removed package',
+    ],
+  ])
+  const range = solution('devops-satisfies-range')
+  await assertCaught('devops-satisfies-range', [
+    [
+      range.replace('major > 0 ? [major + 1, 0, 0] : minor > 0 ? [0, minor + 1, 0] : [0, 0, patch + 1]', '[major + 1, 0, 0]'),
+      'Stops a 0.x caret range at the next minor',
+    ],
+    [
+      range.replace('minor > 0 ? [0, minor + 1, 0] : [0, 0, patch + 1]', '[0, minor + 1, 0]'),
+      'Stops a 0.0.x caret range at the next patch',
+    ],
+    [range.replace('return compare(v, limit) < 0', 'return compare(v, limit) <= 0'), 'Refuses the next major in a caret range'],
+    [range.replace("operator === '~' ? [major, minor + 1, 0] : ", ''), 'Refuses the next minor in a tilde range'],
+    [range.replace('  if (compare(v, base) < 0) return false\n', ''), 'Refuses a version below the base'],
+    [
+      range.replace("if (operator === '>=') return true", "if (operator === '>=') return compare(v, [base[0] + 1, 0, 0]) < 0"),
+      'Has no upper limit for >=',
+    ],
+    [
+      range.replace("if (operator === '') return compare(v, base) === 0", "if (operator === '') return compare(v, base) >= 0"),
+      'Matches an exact version only',
+    ],
+    [
+      range.replace(
+        "const parse = (text: string) => text.split('.').map(Number)",
+        "const parse = (text: string) => text.split('.') as any",
+      ),
+      'Compares the example as numbers',
+    ],
+  ])
+})

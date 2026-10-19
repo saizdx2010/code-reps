@@ -461,6 +461,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'semver',
+    title: 'Read and choose version numbers',
+    guided: 'devops-compare-versions',
+    independent: 'devops-next-version',
+    recall: 'devops-satisfies-range',
+    practice: ['devops-sort-versions', 'devops-lockfile-diff'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

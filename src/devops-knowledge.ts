@@ -168,4 +168,84 @@ export const devopsSkills: Skill[] = [
     repIds: ['devops-read-port', 'devops-validate-env', 'devops-mask-secrets', 'devops-parse-dotenv', 'devops-config-drift'],
     related: ['ci-output', 'validation'],
   },
+  {
+    id: 'semver',
+    title: 'Versions: semantic versioning, ranges, and lockfiles',
+    summary:
+      'Read and compare MAJOR.MINOR.PATCH versions, choose the next one from the changes in a release, check versions against ranges, and summarise a lockfile change.',
+    prerequisites: ['ci-output'],
+    objectives: [
+      'Compare versions part by part as numbers, including pre-releases such as 2.0.0-rc.1.',
+      'Choose the next version from the kinds of change in a release, including the 0.x convention.',
+      'Check a version against exact, >=, tilde, and caret ranges, and summarise what a lockfile change did.',
+    ],
+    sections: [
+      {
+        title: 'Three numbers, three promises',
+        body: 'A semantic version such as 4.17.21 has three parts. PATCH rises for bug fixes that change nothing else, MINOR for new features that keep existing code working, and MAJOR for changes that may break code written for the old version. Raising one part resets the parts to its right to 0, so after 1.9.9 a new feature gives 1.10.0. While MAJOR is 0 a project is not yet stable, and many teams raise MINOR for breaking changes until 1.0.0.',
+      },
+      {
+        title: 'Compare as numbers, not text',
+        body: 'Compared as text, "1.10.0" comes before "1.9.0" because "1" is less than "9". Versions must be split into parts and compared as numbers, major first. A pre-release such as 2.0.0-beta.2 comes before 2.0.0, and its labels compare one by one: numbers as numbers, so beta.11 comes after beta.2, and a number before a word. Build information after "+" never changes the order.',
+      },
+      {
+        title: 'Ranges ask for compatible versions',
+        body: 'A package file usually asks for a range. ^1.2.3 accepts anything from 1.2.3 up to, but not including, 2.0.0, because a new major version may break. For 0.x versions the caret is stricter: ^0.2.3 stops before 0.3.0 and ^0.0.3 before 0.0.4. ~1.2.3 accepts only patches: from 1.2.3 up to 1.3.0. The lower bound is included and the upper bound never is.',
+      },
+      {
+        title: 'Lockfiles pin what was installed',
+        body: 'Because ranges allow many versions, two installs on different days could get different code. A lockfile records the exact version every install used, so local machines and CI install the same packages. Review a lockfile change by its summary: which packages were added or removed, which went up or down, and which upgrades are major, since those are the ones most likely to break something. These reps compare authored versions; they do not install packages or read a real lockfile.',
+      },
+    ],
+    example:
+      'range ^1.9.0 (from 1.9.0, up to but not including 2.0.0)\n\n1.8.9  → below the base     → no\n1.9.0  → the base          → yes\n1.10.0 → 1.10 is above 1.9  → yes  (as text, "1.10.0" < "1.9.0")\n2.0.0  → the upper limit   → no',
+    walkthrough: [
+      'The caret on 1.9.0 keeps the major number: the range ends just before 2.0.0.',
+      '1.8.9 is below the base, so it is refused.',
+      '1.10.0 has minor 10, which is greater than 9 as a number, so it is inside the range even though text order says otherwise.',
+      '2.0.0 is the upper limit, which is never included.',
+    ],
+    mistakes: [
+      'Comparing versions as text, so 1.10.0 sorts before 1.9.0.',
+      'Forgetting to reset the parts to the right, giving 1.5.2 instead of 1.5.0 after a feature.',
+      'Treating ^0.2.3 like ^1.2.3, which lets in 0.3.0, a version that may break.',
+      'Sorting 2.0.0-rc.1 after 2.0.0, or beta.11 before beta.2.',
+    ],
+    questions: [
+      q(
+        'semver-text-order-v1',
+        'Which is the newer version: 1.10.0 or 1.9.0?',
+        '',
+        ['1.9.0, because "9" is greater than "1"', '1.10.0, because minor 10 is greater than 9', 'They are equal'],
+        1,
+        'Each part is a number. Compared as text, "1.10.0" sorts first, which is why versions must be split and compared part by part.',
+      ),
+      q(
+        'semver-caret-zero-v1',
+        'A package asks for ^0.2.3. Which version does that range accept?',
+        '',
+        ['0.3.0', '0.2.9', '1.0.0'],
+        1,
+        'For 0.x versions the caret keeps the minor number, so the range stops before 0.3.0.',
+      ),
+      q(
+        'semver-prerelease-v1',
+        'Which comes first when versions are sorted: 2.0.0 or 2.0.0-rc.1?',
+        '',
+        ['2.0.0', '2.0.0-rc.1', 'Neither; they are equal'],
+        1,
+        'A pre-release leads up to its release, so it sorts before the plain version.',
+      ),
+      q(
+        'lockfile-purpose-v1',
+        'Why do projects commit a lockfile?',
+        '',
+        ['To make installs faster only', 'So every install gets the same exact versions', 'To stop packages from ever being upgraded'],
+        1,
+        'Ranges allow many versions. The lockfile records the exact ones, so laptops and CI install the same code until someone deliberately updates it.',
+      ),
+    ],
+    repIds: ['devops-compare-versions', 'devops-next-version', 'devops-sort-versions', 'devops-lockfile-diff', 'devops-satisfies-range'],
+    related: ['ci-output', 'api-evolution'],
+  },
 ]

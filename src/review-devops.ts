@@ -124,6 +124,66 @@ export const devopsDepth: Record<string, RepDepth> = {
     transfer:
       'Some names are expected to differ, such as DATABASE_URL. Add a list of such names and decide whether they are skipped entirely or reported only when one side is missing. This changed contract is self-reviewed, not checked by the original cases.',
   },
+  'devops-compare-versions': {
+    reasoning:
+      'A version is three numbers in order of importance, so the first part that differs decides and later parts cannot outweigh it. Turning each part into a number before comparing is what makes 10 greater than 9; returning only -1, 0, or 1 keeps the result usable as a sort comparator and as a plain answer.',
+    trace:
+      'For "1.10.0" and "1.9.0", the parts are [1, 10, 0] and [1, 9, 0]. Major is equal, minor is 10 against 9, so the result is 1 and patch is never looked at. For "v2.0.0" and "v10.0.0", removing "v" gives majors 2 and 10, so the result is -1, although "v2" sorts after "v10" as text.',
+    alternative:
+      'Padding each part to a fixed width ("0001.0010.0000") makes text comparison work, but needs a maximum width. A semver library does the same work and also handles pre-releases, which this rep leaves for later.',
+    counterexample:
+      'a.localeCompare(b) returns -1 for "1.10.0" against "1.9.0". Returning left[index] - right[index] gives 6 for "1.2.10" against "1.2.4", which "Returns 1, not the difference" refuses.',
+    transfer:
+      'Accept versions with only two parts, such as "1.4", treating the missing patch as 0. Decide whether "1.4" and "1.4.0" are equal and how a tag such as "v1" should compare. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-next-version': {
+    reasoning:
+      'The release is only as large as its largest change, so the kinds are checked from breaking down and the first one present decides. Raising a part resets every part to its right because the new number starts a fresh series; the 0.x rule moves a breaking change down one place, because before 1.0.0 the minor number carries that meaning.',
+    trace:
+      'For "0.4.1" with ["breaking"], breaking is present and major is 0, so minor rises to 5 and patch resets: "0.5.0". For "1.9.9" with ["feature"], the parts are numbers, so minor becomes 10 and patch 0: "1.10.0". For "2.0.0" with only docs, nothing applies, so the version stays and release is false.',
+    alternative:
+      'Release tools such as semantic-release read commit messages for the same information; this rep takes the kinds already classified. Some teams treat the first breaking change in 0.x as the move to 1.0.0, which this contract does not.',
+    counterexample:
+      'Raising minor without resetting patch gives "1.5.2" for the example, which "Picks a feature over a fix" refuses. Adding to the text part gives "1.91.0" for "1.9.9", which "Adds as numbers" refuses.',
+    transfer:
+      'Add pre-releases: a flag asks for the next version as "-rc.1", and a following call on "2.0.0-rc.1" should give "-rc.2". Decide what a fix does to a pre-release version. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-sort-versions': {
+    reasoning:
+      'Precedence is a chain of tie-breakers, each used only when everything before it is equal: the three numbers, then whether there is a pre-release, then the identifiers in order, then their count. Build information is dropped before any of this, and a stable sort keeps versions with equal precedence in their original order instead of inventing one.',
+    trace:
+      'For 1.0.0-alpha.beta and 1.0.0-alpha.1, the main parts are equal and both have pre-releases. The first identifiers are both "alpha". The second identifiers are "beta" and "1"; "1" is only digits and "beta" is not, so 1 comes first and alpha.1 sorts before alpha.beta. For beta.11 and beta.2, both second identifiers are numbers, so 2 comes before 11.',
+    alternative:
+      'Comparing the whole pre-release as text is shorter but puts beta.11 before beta.2. A semver library implements exactly these rules; writing them once shows why its order can surprise people reading a release list.',
+    counterexample:
+      'Comparing identifiers with localeCompare puts "beta" before "Beta", which "Compares words by character code" refuses. Splitting the whole version at every "-" breaks "1.0.0-x-y" into the wrong identifiers.',
+    transfer:
+      'Return only the latest stable version and the latest pre-release newer than it, or null. Decide what happens when every version is a pre-release. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-lockfile-diff': {
+    reasoning:
+      'Every package name falls into exactly one case: only after, only before, both and equal, or both and different. Going through the sorted union once puts each package in at most one list and keeps every list sorted. The leftmost part that differs both decides the direction and names the kind, so a major upgrade is reported as major even if its minor number went down.',
+    trace:
+      'For vite 5.4.9 → 6.0.1, the parts are [5, 4, 9] and [6, 0, 1]; the first difference is at index 0, and 6 > 5, so it is an upgrade of kind "major". For lodash 4.9.0 → 4.10.0, the first difference is the minor part, 10 > 9, so it is a minor upgrade, although "4.10.0" < "4.9.0" as text.',
+    alternative:
+      'A package manager can print this diff for you, and also shows changes deep in the dependency tree that no package file names. Grouping upgrades by kind, majors first, would make a review comment easier to scan than one name-sorted list.',
+    counterexample:
+      'Comparing versions as text reports lodash 4.9.0 → 4.10.0 as a downgrade in "Compares versions as numbers". Naming the kind from the largest difference instead of the leftmost one calls vite 5.4.9 → 6.0.1 a "minor" or "patch" change.',
+    transfer:
+      'Flag upgrades that cross a range in the package file, such as react ^18.2.0 moving to 19.0.0. Decide which inputs you need and how to report a package with no range. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-satisfies-range': {
+    reasoning:
+      "Every range form becomes a lowest allowed version and, except for >=, a first version that is not allowed, so one comparison function answers all four. The caret's limit comes from the first part of the base that is not 0, because in a 0.x or 0.0.x version that part is the one whose change may break callers.",
+    trace:
+      'For "0.3.0" against "^0.2.3", the base is [0, 2, 3]; major is 0 and minor is 2, so the limit is [0, 3, 0]. 0.3.0 is not below the limit, so it is refused. For "1.10.0" against "^1.9.0", the limit is [2, 0, 0]; 1.10.0 is at least 1.9.0 and below 2.0.0 when compared as numbers, so it is accepted.',
+    alternative:
+      'Translating each range into a pair of comparisons, such as >=1.2.3 <2.0.0, is how package managers describe them and makes it easy to add more forms later. A table of examples is clearer for people, but cannot cover every version.',
+    counterexample:
+      'Using the major-version limit for every caret range accepts 0.3.0 for ^0.2.3, which "Stops a 0.x caret range at the next minor" refuses. Allowing the upper limit itself with <= accepts 2.0.0 for ^1.2.3.',
+    transfer:
+      'Add ranges joined by "||", such as "^1.2.0 || ^2.0.0". Decide how spaces around "||" are handled and what an empty side means. This changed contract is self-reviewed, not checked by the original cases.',
+  },
 }
 
 export const devopsGuides: Record<string, ReflectionGuide> = {
@@ -251,6 +311,68 @@ export const devopsGuides: Record<string, ReflectionGuide> = {
     example:
       'I sort the union of both maps\' keys. hasOwn tells me whether each side has the name; a name on one side only is reported missing on the other. When both have it and the values differ, I report both, replaced by "***" if the name is sensitive. The work is O(n log n) for the sort. The checks pass both maps in directly.',
   },
+  'devops-compare-versions': {
+    plan: [
+      'Remove a leading "v" and split each version into three numbers.',
+      'Compare the parts in order and stop at the first difference.',
+      'Return -1, 0, or 1.',
+    ],
+    explanation: ['Trace 1.10.0 against 1.9.0.', 'Explain why text comparison fails.', 'Say why the result is never the difference.'],
+    example:
+      'I strip /^v/, split at ".", and map to Number. For each of the three positions, the first that differs returns -1 or 1; if none differs I return 0. The work is constant for three parts. The checks pass versions in directly.',
+  },
+  'devops-next-version': {
+    plan: [
+      'Find the largest kind of change.',
+      'Raise the matching part, applying the 0.x rule for breaking changes.',
+      'Reset the parts to its right, or return the current version with release false.',
+    ],
+    explanation: [
+      'Trace 0.4.1 with a breaking change.',
+      'Explain why the parts to the right reset.',
+      'Say why docs alone make no release.',
+    ],
+    example:
+      'I split the version into numbers. With "breaking" I return major + 1 with zeros, or 0.(minor + 1).0 when major is 0; with "feature" minor + 1 and patch 0; with "fix" patch + 1. Otherwise I return the current version with release false. The work is linear in the changes. The checks pass changes in directly; no commits are read.',
+  },
+  'devops-sort-versions': {
+    plan: [
+      'Drop build information and split each version into numbers and pre-release identifiers.',
+      'Compare numbers, then pre-release presence, then identifiers, then length.',
+      'Sort a copy with a stable sort.',
+    ],
+    explanation: [
+      'Trace beta.2 against beta.11.',
+      'Explain where a number identifier goes against a word.',
+      'Say why 2.0.0-rc.1 sorts before 2.0.0.',
+    ],
+    example:
+      'parse splits at "+", then at the first "-", into three numbers and a list of identifiers. The comparator checks the numbers, then puts a pre-release first, then compares identifiers: digits as numbers, digits before words, words by character code, and finally the shorter list first. I sort a copy, which keeps equal versions in order. The work is O(n log n). The checks pass versions in directly.',
+  },
+  'devops-lockfile-diff': {
+    plan: [
+      'Go through the sorted union of package names.',
+      'Put each package in added, removed, upgraded, downgraded, or nowhere.',
+      'Name the kind from the leftmost part that differs.',
+    ],
+    explanation: [
+      'Trace a package whose minor part went from 9 to 10.',
+      'Explain why vite 5.4.9 → 6.0.1 is major.',
+      'Say what is left out of the summary.',
+    ],
+    example:
+      'For each sorted name I check whether before and after have it. Only after is added and only before is removed, as "name@version". In both, I find the first index where the numbers differ; none means unchanged, a higher number is an upgrade named by that index, and a lower one is a downgrade. The work is O(n log n) for the sort. The checks pass two maps; no lockfile is read.',
+  },
+  'devops-satisfies-range': {
+    plan: [
+      'Read the operator and parse the base.',
+      'Check the version is at least the base, or exactly it for no operator.',
+      'For ~ and ^, find the first excluded version and check the version is below it.',
+    ],
+    explanation: ['Trace 0.3.0 against ^0.2.3.', 'Explain how the caret limit depends on zeros.', 'Say why the upper limit is excluded.'],
+    example:
+      'I take ">=", "^", "~", or nothing from the start and parse the rest. No operator needs equality. Otherwise the version must not be below the base; >= stops there. For ~ the limit is the next minor; for ^ it raises the first non-zero part of the base, or the patch when all are 0. The version must be below the limit. The work is constant. The checks pass ranges in directly; no package manager runs.',
+  },
 }
 
 export const devopsLessonDepth: Record<string, LessonDepth> = {
@@ -273,5 +395,15 @@ export const devopsLessonDepth: Record<string, LessonDepth> = {
       'A team sets TIMEOUT_MS="30s" in production, expecting 30 seconds. Predict what parseInt and the schema rule each do with it, and what happens to requests in each case.',
     answer:
       'parseInt reads 30, so every request times out after 30 milliseconds and the service seems broken for a reason nobody can see in the settings. The schema rule refuses "30s" as an integer at startup, so the deploy stops with "TIMEOUT_MS must be an integer" and the mistake is fixed before any request is affected.',
+  },
+  semver: {
+    title: 'A caret range trusts the promise in the version number',
+    code: '^4.17.20  → from 4.17.20 up to 5.0.0 (not included)\n^0.2.3    → from 0.2.3 up to 0.3.0 (not included)\n~4.17.20  → from 4.17.20 up to 4.18.0 (not included)',
+    reasoning:
+      "A caret range accepts every version that should not break code written for its base. For a stable package that means anything below the next major. Before 1.0.0, minor versions may break, so the caret keeps the minor number too. The range is only as safe as the package's promise: a breaking change shipped as a minor version still gets installed, which is why the lockfile pins the exact version that was tested.",
+    challenge:
+      'A package file asks for ^2.3.0 and the lockfile has 2.3.4. The library publishes 2.4.0, which accidentally breaks your code. Predict what a fresh clone installs with the lockfile, what it installs if the lockfile is deleted, and which one CI should use.',
+    answer:
+      'With the lockfile, every install gets 2.3.4, so nothing breaks until someone updates it deliberately. Without it, the installer picks the newest version in ^2.3.0, which is 2.4.0, and the build breaks for reasons unrelated to your change. CI should install from the lockfile, failing if it is out of date, so a dependency change is always a reviewed change.',
   },
 }
