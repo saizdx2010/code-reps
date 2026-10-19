@@ -2053,11 +2053,17 @@ footer {
   font: 12px/1.6 var(--font-mono);
   overflow-wrap: anywhere;
 }
+/* A table wider than its box shows a soft edge on the side that still scrolls, as the trace tables do. */
 .sql-mini-wrap {
   overflow-x: auto;
   border: 1px solid var(--border);
   border-radius: var(--radius-control);
-  background: var(--surface);
+  background:
+    linear-gradient(to right, var(--surface) 30%, transparent) left / 24px 100% no-repeat local,
+    linear-gradient(to left, var(--surface) 30%, transparent) right / 24px 100% no-repeat local,
+    linear-gradient(to right, var(--border-strong), transparent) left / 8px 100% no-repeat scroll,
+    linear-gradient(to left, var(--border-strong), transparent) right / 8px 100% no-repeat scroll,
+    var(--surface);
 }
 .sql-mini-table {
   width: 100%;
@@ -2292,11 +2298,15 @@ footer {
   color: var(--muted);
   font-size: 12px;
 }
+/* The row number column is pinned, so only the right edge needs the scroll cue. */
 .sql-table-wrap {
   min-width: 0;
   overflow-x: auto;
   border-radius: var(--radius-control);
-  background: var(--surface-2);
+  background:
+    linear-gradient(to left, var(--surface-2) 30%, transparent) right / 24px 100% no-repeat local,
+    linear-gradient(to left, var(--border-strong), transparent) right / 8px 100% no-repeat scroll,
+    var(--surface-2);
 }
 .sql-table {
   width: 100%;
@@ -2321,6 +2331,8 @@ footer {
   left: 0;
   width: 1%;
   background: var(--surface-2);
+  /* A divider marks the pinned column, so cells scrolling under it read as scrolled rather than cut off. */
+  box-shadow: inset -1px 0 var(--border);
   color: var(--muted);
   font-weight: 400;
 }
@@ -2364,6 +2376,7 @@ footer {
   position: sticky;
   right: 0;
   background: var(--surface-2);
+  box-shadow: inset 1px 0 var(--border);
   text-align: right;
 }
 .sql-pill {
