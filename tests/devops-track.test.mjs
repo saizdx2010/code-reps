@@ -988,3 +988,124 @@ function nextRun(expression: string, after: string, zone: string): string | null
 }`
   assert.deepEqual(await failed('devops-cron-next-zone', stepping), [])
 })
+
+test('D9 observability checks catch rank, sort, arithmetic, window, and flapping mistakes', async () => {
+  const pct = solution('devops-percentile')
+  await assertCaught('devops-percentile', [
+    [pct.replace('Math.ceil((p * sorted.length) / 100)', 'Math.floor((p * sorted.length) / 100)'), 'Finds p95 in the example'],
+    [pct.replace('[...values].sort((a, b) => a - b)', '[...values].sort()'), 'Sorts as numbers'],
+    [pct.replace('return sorted[rank - 1]', 'return sorted[rank]'), 'Returns the largest value for p100'],
+    [
+      pct.replace(
+        'return sorted[rank - 1]',
+        'const exact = (p / 100) * (sorted.length - 1)\n  const low = Math.floor(exact)\n  return sorted[low] + (sorted[Math.min(low + 1, sorted.length - 1)] - sorted[low]) * (exact - low)',
+      ),
+      'Picks a value rather than averaging two',
+    ],
+    [pct.replace('  if (values.length === 0) return null\n', ''), 'Returns null with no values'],
+    [pct.replace('[...values].sort(', 'values.sort('), 'Finds p95 in the example'],
+  ])
+  const budget = solution('devops-error-budget')
+  await assertCaught('devops-error-budget', [
+    [
+      budget.replace(
+        'burnRate: Math.floor((errors * 1000000) / (requests * budget)) / 100',
+        'burnRate: errors / requests / (1 - targetBasisPoints / 10000)',
+      ),
+      'Burns at exactly 1 on budget',
+    ],
+    [
+      budget.replace(
+        'burnRate: Math.floor((errors * 1000000) / (requests * budget)) / 100',
+        'burnRate: Math.round((errors * 1000000) / (requests * budget)) / 100',
+      ),
+      'Rounds the burn rate down',
+    ],
+    [
+      budget.replace(
+        'const allowedErrors = Math.floor((requests * budget) / 10000)',
+        'const allowedErrors = Math.round((requests * budget) / 10000)',
+      ),
+      'Rounds allowed errors down',
+    ],
+    [
+      budget.replace('remainingErrors: allowedErrors - errors', 'remainingErrors: Math.max(0, allowedErrors - errors)'),
+      'Measures the example',
+    ],
+    [
+      budget.replace('  if (requests === 0) return { allowedErrors: 0, remainingErrors: 0, burnRate: 0 }\n', ''),
+      'Returns zeros with no requests',
+    ],
+    [budget.replace('const budget = 10000 - targetBasisPoints', 'const budget = 10'), 'Uses the supplied target'],
+  ])
+  const routes = solution('devops-route-latency')
+  await assertCaught('devops-route-latency', [
+    [routes.replace('if (p95 > targets[route])', 'if (p95 >= targets[route])'), 'Leaves out a route exactly at its target'],
+    [routes.replace('Object.keys(targets).sort()', 'Object.keys(targets)'), 'Sorts the report by route'],
+    [
+      routes.replace('const times = byRoute.get(route)', 'const times = samples.map(sample => sample.ms)'),
+      "Keeps each route's samples apart",
+    ],
+    [
+      routes.replace('Math.ceil((95 * sorted.length) / 100) - 1', 'Math.floor((95 * sorted.length) / 100) - 1'),
+      'Uses the nearest rank for each route',
+    ],
+    [
+      routes
+        .replace('    if (!times) continue\n', '')
+        .replace('const sorted = [...times]', 'const sorted = [...(times ?? [])]')
+        .replace('if (p95 > targets[route])', 'if (!(p95 <= targets[route]))'),
+      'Ignores targets without samples',
+    ],
+  ])
+  const alert = solution('devops-burn-alert')
+  await assertCaught('devops-burn-alert', [
+    [
+      alert.replace('page: longBurn >= policy.threshold && shortBurn >= policy.threshold', 'page: longBurn >= policy.threshold'),
+      'Does not page for a problem that has ended',
+    ],
+    [
+      alert.replace('page: longBurn >= policy.threshold && shortBurn >= policy.threshold', 'page: shortBurn >= policy.threshold'),
+      'Does not page for a short blip',
+    ],
+    [
+      alert.replace(
+        'longBurn >= policy.threshold && shortBurn >= policy.threshold',
+        'longBurn > policy.threshold && shortBurn > policy.threshold',
+      ),
+      'Pages at exactly the threshold',
+    ],
+    [
+      alert.replace(
+        '  const longBurn = burn(minutes.slice(-policy.longMinutes))\n  const shortBurn = burn(minutes.slice(-policy.shortMinutes))',
+        '  const average = (window: { requests: number; errors: number }[]) => Math.floor((window.reduce((sum, minute) => sum + burn([minute]) * 100, 0) / window.length)) / 100\n  const longBurn = average(minutes.slice(-policy.longMinutes))\n  const shortBurn = average(minutes.slice(-policy.shortMinutes))',
+      ),
+      'Sums a window before dividing',
+    ],
+    [
+      alert
+        .replace('minutes.slice(-policy.longMinutes)', 'minutes.slice(0, policy.longMinutes)')
+        .replace('minutes.slice(-policy.shortMinutes)', 'minutes.slice(0, policy.shortMinutes)'),
+      'Pages in the example',
+    ],
+    [alert.replace('return requests === 0 ? 0 : ', 'return '), 'Treats a window with no requests as 0'],
+  ])
+  const flaps = solution('devops-alert-hysteresis')
+  await assertCaught('devops-alert-hysteresis', [
+    [
+      flaps.replace(
+        'firing ? value < policy.resolveBelow : value >= policy.fireAt',
+        'firing ? value < policy.fireAt : value >= policy.fireAt',
+      ),
+      'Stays firing between the limits',
+    ],
+    [flaps.replace('      count = 0\n      events.push', '      events.push'), 'Starts counting again after a change'],
+    [flaps.replace('count = counts ? count + 1 : 0', 'count = counts ? count + 1 : count'), 'Ignores a short spike'],
+    [flaps.replace('value >= policy.fireAt', 'value > policy.fireAt'), 'Counts a value exactly at fireAt'],
+    [flaps.replace('value < policy.resolveBelow', 'value <= policy.resolveBelow'), 'Does not count a value exactly at resolveBelow'],
+    [
+      flaps.replace('(firing ? policy.resolveAfter : policy.fireAfter)', 'policy.fireAfter'),
+      'Restarts the resolve count on a value between the limits',
+    ],
+  ])
+})

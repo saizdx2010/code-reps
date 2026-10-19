@@ -593,6 +593,16 @@ export const indonesianGlossary: Record<string, string> = {
   UTC: 'Coordinated Universal Time, waktu acuan tanpa selisih zona waktu dan tanpa waktu musim panas',
   'Wall-clock time': 'waktu yang ditunjukkan jam setempat, yang bisa terlewat atau terulang saat waktu musim panas berubah',
   Instant: 'satu saat yang tepat, sama di mana pun, biasanya ditulis dalam UTC',
+  Percentile: 'nilai yang menjadi batas atas bagi sebagian pengukuran, seperti p95 untuk 95%',
+  Latency: 'berapa lama sebuah request berlangsung dari awal sampai selesai',
+  'Service level objective': 'target seberapa sering layanan harus berhasil, seperti 99,9% request dalam 30 hari',
+  'Error budget': 'bagian request yang boleh gagal menurut SLO, yang dapat dipakai tim untuk mengambil risiko',
+  'Latency target': 'waktu respons yang diharapkan tidak dilampaui sebuah route, sering dinyatakan untuk p95 atau p99',
+  'Burn rate': 'seberapa cepat error budget terpakai; 1 berarti habis tepat di akhir periode SLO',
+  'Flapping alert': 'peringatan yang berulang kali menyala dan padam karena nilainya berkisar di sekitar batasnya',
+  Hysteresis: 'memakai batas yang lebih rendah untuk mematikan daripada untuk menyalakan, sehingga tidak bolak-balik',
+  'API route': 'satu jenis request yang dijawab API, seperti GET /search',
+  'On-call page': 'peringatan yang membangunkan seseorang karena perlu tindakan segera',
 }
 
 /** Shown with the glossary when Indonesian help is on. */

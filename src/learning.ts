@@ -515,6 +515,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'observability',
+    title: 'Turn measurements into signals',
+    guided: 'devops-percentile',
+    independent: 'devops-error-budget',
+    recall: 'devops-alert-hysteresis',
+    practice: ['devops-route-latency', 'devops-burn-alert'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

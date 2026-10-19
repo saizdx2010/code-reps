@@ -658,4 +658,84 @@ export const devopsSkills: Skill[] = [
     repIds: ['devops-cron-field', 'devops-cron-matches', 'devops-local-to-utc', 'devops-cron-next-utc', 'devops-cron-next-zone'],
     related: ['service-health', 'dependency-injection'],
   },
+  {
+    id: 'observability',
+    title: 'Observability: percentiles, error budgets, and alerts',
+    summary:
+      'Summarise response times with a stated percentile method, measure how fast an error budget is being spent, and write alerts that page for real problems without flapping.',
+    prerequisites: ['service-health'],
+    objectives: [
+      'Compute a percentile by the nearest-rank method and explain why percentiles beat averages for latency.',
+      'Turn an SLO target into an error budget and a burn rate with exact whole-number arithmetic.',
+      'Combine windows, delays, and two limits so an alert pages for sustained problems and does not flap.',
+    ],
+    sections: [
+      {
+        title: 'Averages hide the slow requests',
+        body: 'If 99 requests take 100 ms and one takes 10 seconds, the average is about 200 ms, which describes no request at all. A percentile answers a clearer question: p95 is the time that 95% of requests were at or under. There are several methods; the nearest-rank method sorts the values and picks the one at rank p × n / 100, rounded up, so the answer is always a real measurement. Percentiles cannot be averaged across routes or servers; each must be computed from its own samples.',
+      },
+      {
+        title: 'Error budgets turn a target into a number',
+        body: 'A service level objective of 99.9% success over 30 days allows 0.1% of requests to fail. That allowance is the error budget. The burn rate compares the current error rate with the budget: 1 spends exactly the budget over the period, and 14.4 would spend a 30-day budget in about two days. Writing the target in basis points, such as 9990 for 99.90%, keeps the arithmetic in whole numbers.',
+      },
+      {
+        title: 'Alerts that mean something',
+        body: 'An alert should page only when someone needs to act. A short window alone pages for every blip; a long window alone pages late and keeps paging after the problem has ended. Requiring a high burn rate over both a long and a short window pages fast for real problems and stops as soon as they end. For a value that hovers around a limit, waiting for several bad samples before firing and requiring the value to fall below a lower limit before resolving stops the alert from flapping.',
+      },
+      {
+        title: 'What these reps check',
+        body: 'These reps compute from lists of measurements passed to your functions. The checks show that the functions follow the stated methods exactly; they do not read a metrics system, send alerts, or show that a threshold is right for a real service.',
+      },
+    ],
+    example:
+      'response times (ms): 100, 110, 120, 130, 150, 200, 900\n\naverage ≈ 244\np95 by nearest rank: rank = ceil(95 × 7 / 100) = 7 → 900\np50 by nearest rank: rank = ceil(50 × 7 / 100) = 4 → 130',
+    walkthrough: [
+      'The values are already sorted from smallest to largest.',
+      'For p95 the rank is 95 × 7 / 100 = 6.65, rounded up to 7, so p95 is the 7th value, 900 ms.',
+      'For p50 the rank is 3.5, rounded up to 4, so the median is 130 ms.',
+      'The average, about 244 ms, matches no request and hides the one slow request entirely.',
+    ],
+    mistakes: [
+      'Reporting the average latency instead of a percentile, or a percentile without saying which method.',
+      'Averaging the p95 of several routes to get an overall p95.',
+      'Writing 99.9% as a decimal and letting rounding decide whether the budget is spent.',
+      'Paging on one short window, so every blip wakes someone, or resolving as soon as a value dips under the firing limit.',
+    ],
+    questions: [
+      q(
+        'percentile-average-v1',
+        '99 requests take 100 ms and one takes 10,000 ms. Which number shows users a slow request exists?',
+        '',
+        ['The average', 'p99 or the maximum', 'The median'],
+        1,
+        'The average is about 199 ms and the median 100 ms; only a high percentile or the maximum shows the 10-second request.',
+      ),
+      q(
+        'error-budget-share-v1',
+        'An SLO is 99.9% over 1,000,000 requests. How many errors does the budget allow?',
+        '',
+        ['100', '1,000', '10,000'],
+        1,
+        '0.1% of 1,000,000 is 1,000 requests.',
+      ),
+      q(
+        'burn-rate-meaning-v1',
+        'The burn rate over the last hour is 2. What does that mean?',
+        '',
+        ['Two errors happened', 'The budget is being spent twice as fast as the SLO allows', 'The SLO is twice as strict'],
+        1,
+        'At a burn rate of 2, a 30-day budget would run out in 15 days.',
+      ),
+      q(
+        'alert-hysteresis-v1',
+        'An alert fires at 90% CPU and resolves below 80%. CPU now moves between 85% and 89%. What does the firing alert do?',
+        '',
+        ['Resolves and fires again each minute', 'Stays firing', 'Resolves'],
+        1,
+        'Values between the two limits neither fire a resolved alert nor resolve a firing one, which is what stops flapping.',
+      ),
+    ],
+    repIds: ['devops-percentile', 'devops-error-budget', 'devops-route-latency', 'devops-burn-alert', 'devops-alert-hysteresis'],
+    related: ['service-health', 'deploy-strategies'],
+  },
 ]

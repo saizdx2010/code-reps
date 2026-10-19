@@ -4069,4 +4069,443 @@ export const devopsReps: Rep[] = [
       { name: 'Returns null beyond 8 days', input: ['0 0 1 * *', '2026-10-19T08:00:00Z', 'America/New_York'], expected: null },
     ],
   },
+  {
+    id: 'devops-percentile',
+    title: 'Find the 95th percentile of response times',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'An average hides the slow requests that users notice: 99 fast requests and one 10-second request still average under a second. Teams watch percentiles instead. The 95th percentile, p95, is the time that 95% of requests were at or under, and there are several ways to compute it, so the method has to be stated.',
+    prompt:
+      'Implement percentile(values, p) with the nearest-rank method. values is a list of response times in milliseconds and p is a whole number from 1 to 100. Sort a copy of values from smallest to largest as numbers. The rank is p × n / 100 rounded up, where n is the number of values, and the answer is the value at that rank, counting from 1. Return null when values is empty. Do not change values.',
+    brief: {
+      summary: 'Implement percentile(values, p) with the nearest-rank method, where p is a whole number from 1 to 100.',
+      rules: [
+        'Sort a copy of values from smallest to largest as numbers.',
+        'The rank is p × n / 100 rounded up, where n is the number of values.',
+        'Return the value at that rank, counting from 1.',
+        'Return null when values is empty.',
+      ],
+      edgeCases: ['The answer is always one of the values; it never falls between two.', 'Do not change values.'],
+    },
+    example: { input: 'percentile([100, 120, 130, 150, 200, 900, 110], 95)', output: '900' },
+    note: `Other tools interpolate between two values, so their p95 can differ from this one; always say which method a number uses. values has at most 100,000 entries. ${notRun}`,
+    vocabulary: [
+      { term: 'Percentile', meaning: 'the value that a given share of measurements are at or under, such as p95 for 95%' },
+      { term: 'Latency', meaning: 'how long a request takes from start to finish' },
+    ],
+    planPrompt: 'What is p50 of [10, 20, 30, 40] by nearest rank, and why is it not 25? What is p95 of seven values?',
+    starter: 'function percentile(values: number[], p: number): number | null {\n  return null\n}\n',
+    functionName: 'percentile',
+    preserveInput: true,
+    hints: [
+      'Sort a copy with a compare function, (a, b) => a - b; the default sort compares text.',
+      'Math.ceil rounds the rank up.',
+      'The rank counts from 1, so the index is rank - 1.',
+    ],
+    checks: [
+      { name: 'Finds p95 in the example', input: [[100, 120, 130, 150, 200, 900, 110], 95], expected: 900 },
+      { name: 'Picks a value rather than averaging two', input: [[10, 20, 30, 40], 50], expected: 20 },
+      {
+        name: 'Finds p95 of twenty values',
+        input: [[7, 3, 19, 1, 15, 11, 20, 2, 9, 13, 5, 17, 4, 8, 6, 10, 12, 14, 16, 18], 95],
+        expected: 19,
+      },
+      { name: 'Finds p90 of ten values', input: [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 90], expected: 9 },
+      { name: 'Returns the largest value for p100', input: [[5, 3, 9], 100], expected: 9 },
+      { name: 'Returns the smallest value for p1', input: [[5, 3, 9], 1], expected: 3 },
+      { name: 'Sorts as numbers', input: [[9, 10, 100, 2], 25], expected: 2 },
+      { name: 'Counts repeated values', input: [[5, 5, 5, 1], 50], expected: 5 },
+      { name: 'Handles one value', input: [[42], 95], expected: 42 },
+      { name: 'Returns null with no values', input: [[], 95], expected: null },
+    ],
+  },
+  {
+    id: 'devops-error-budget',
+    title: 'Measure an error budget',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A service level objective (SLO) of 99.9% success means 0.1% of requests may fail: that share is the error budget. Spending it slowly is fine; spending it fast means the budget will run out early. The burn rate says how fast: 1 spends it exactly over the SLO period, and 10 spends it ten times as fast.',
+    prompt:
+      'Implement errorBudget(requests, errors, targetBasisPoints). requests and errors are whole numbers for a period; targetBasisPoints is the SLO target in hundredths of a percent, so 9990 means 99.90%. The budget share is 10000 - targetBasisPoints basis points. allowedErrors is requests × (10000 - targetBasisPoints) / 10000, rounded down. remainingErrors is allowedErrors - errors, which can be negative. burnRate is errors × 10000 / (requests × (10000 - targetBasisPoints)), rounded down to two decimal places; compute it in whole numbers as Math.floor(errors × 1000000 / (requests × (10000 - targetBasisPoints))) / 100. With no requests, every value is 0. Return {allowedErrors, remainingErrors, burnRate}.',
+    brief: {
+      summary: 'Implement errorBudget(requests, errors, targetBasisPoints) and return {allowedErrors, remainingErrors, burnRate}.',
+      rules: [
+        'targetBasisPoints is the target in hundredths of a percent: 9990 means 99.90%, so the budget is 10000 - targetBasisPoints basis points.',
+        'allowedErrors is requests × (10000 - targetBasisPoints) / 10000, rounded down; remainingErrors is allowedErrors - errors and can be negative.',
+        'burnRate is Math.floor(errors × 1000000 / (requests × (10000 - targetBasisPoints))) / 100.',
+        'With no requests, every value is 0.',
+      ],
+      edgeCases: ['Spending the budget exactly gives a burn rate of 1.', 'targetBasisPoints is below 10000.'],
+    },
+    example: { input: 'errorBudget(1000000, 2000, 9990)', output: '{allowedErrors: 1000, remainingErrors: -1000, burnRate: 2}' },
+    note: `Basis points keep the target a whole number, so 99.9% never becomes 99.90000000000001 in the arithmetic. requests is at most 1,000,000,000. ${notRun}`,
+    vocabulary: [
+      { term: 'Service level objective', meaning: 'a target for how often a service must succeed, such as 99.9% of requests over 30 days' },
+      { term: 'Error budget', meaning: 'the share of requests an SLO allows to fail, which a team may spend on risk' },
+    ],
+    planPrompt:
+      'With a 99.9% target and 1,000,000 requests, how many errors are allowed, and what burn rate do 500, 1,000, and 2,000 errors give?',
+    starter:
+      'function errorBudget(requests: number, errors: number, targetBasisPoints: number) {\n  return { allowedErrors: 0, remainingErrors: 0, burnRate: 0 }\n}\n',
+    functionName: 'errorBudget',
+    hints: [
+      'Work out the budget share in basis points first: 10000 - targetBasisPoints.',
+      'Multiply before dividing, and round down with Math.floor.',
+      'Return early for zero requests, so you never divide by zero.',
+    ],
+    checks: [
+      {
+        name: 'Measures the example',
+        input: [1000000, 2000, 9990],
+        expected: { allowedErrors: 1000, remainingErrors: -1000, burnRate: 2 },
+      },
+      {
+        name: 'Burns slowly under budget',
+        input: [1000000, 500, 9990],
+        expected: { allowedErrors: 1000, remainingErrors: 500, burnRate: 0.5 },
+      },
+      {
+        name: 'Burns at exactly 1 on budget',
+        input: [1000000, 1000, 9990],
+        expected: { allowedErrors: 1000, remainingErrors: 0, burnRate: 1 },
+      },
+      { name: 'Rounds the burn rate down', input: [3, 2, 9900], expected: { allowedErrors: 0, remainingErrors: -2, burnRate: 66.66 } },
+      { name: 'Rounds allowed errors down', input: [1999, 0, 9990], expected: { allowedErrors: 1, remainingErrors: 1, burnRate: 0 } },
+      { name: 'Uses the supplied target', input: [20000, 300, 9950], expected: { allowedErrors: 100, remainingErrors: -200, burnRate: 3 } },
+      {
+        name: 'Keeps the target exact',
+        input: [100000, 144, 9990],
+        expected: { allowedErrors: 100, remainingErrors: -44, burnRate: 1.44 },
+      },
+      { name: 'Returns zeros with no requests', input: [0, 0, 9990], expected: { allowedErrors: 0, remainingErrors: 0, burnRate: 0 } },
+    ],
+  },
+  {
+    id: 'devops-route-latency',
+    title: 'Find routes over their latency target',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'Each API route has its own latency target: a search can be slower than a health check. A daily report lists the routes whose p95 went over their target, so the team knows where to look first.',
+    prompt:
+      'Implement slowRoutes(samples, targets). samples lists {route, ms} measurements; targets maps a route to its p95 target in milliseconds. For each route in targets that has at least one sample, compute its p95 with the nearest-rank method: sort its times from smallest to largest, take the rank 95 × n / 100 rounded up, and use the time at that rank counting from 1. Report {route, p95, target} for every route whose p95 is greater than its target, sorted by route with the default sort. Ignore samples for routes with no target, and routes with no samples. Do not change the inputs.',
+    brief: {
+      summary: 'Implement slowRoutes(samples, targets) and return the routes whose p95 is over target.',
+      rules: [
+        'For each route in targets with samples, compute p95 by nearest rank: sort, take rank 95 × n / 100 rounded up, counting from 1.',
+        'Report {route, p95, target} when p95 is greater than the target.',
+        'Sort the report by route with the default sort; ignore routes without a target or without samples.',
+      ],
+      edgeCases: ['A p95 equal to the target is not over it.', 'Do not change the inputs.'],
+    },
+    example: {
+      input:
+        'slowRoutes([{route: "/search", ms: 300}, {route: "/search", ms: 900}, {route: "/health", ms: 5}], {"/search": 500, "/health": 50})',
+      output: '[{route: "/search", p95: 900, target: 500}]',
+    },
+    note: `There are at most 100,000 samples. Percentiles from different routes cannot be combined into one overall percentile; each route is computed from its own samples. ${notRun}`,
+    vocabulary: [
+      { term: 'Latency target', meaning: 'the response time a route is expected to stay under, often stated for p95 or p99' },
+      { term: 'API route', meaning: 'one kind of request an API answers, such as GET /search' },
+    ],
+    planPrompt: "Why can you not average each route's p95 to get the whole service's p95? How will you group the samples by route?",
+    starter:
+      'function slowRoutes(samples: { route: string; ms: number }[], targets: Record<string, number>): { route: string; p95: number; target: number }[] {\n  return []\n}\n',
+    functionName: 'slowRoutes',
+    preserveInput: true,
+    hints: [
+      'Group the times in a Map from route to a list.',
+      'Go through the routes of targets in sorted order, so the report comes out sorted.',
+      'Use the same nearest-rank steps for every route.',
+    ],
+    checks: [
+      {
+        name: 'Reports the slow route in the example',
+        input: [
+          [
+            { route: '/search', ms: 300 },
+            { route: '/search', ms: 900 },
+            { route: '/health', ms: 5 },
+          ],
+          { '/search': 500, '/health': 50 },
+        ],
+        expected: [{ route: '/search', p95: 900, target: 500 }],
+      },
+      {
+        name: 'Uses the nearest rank for each route',
+        input: [
+          [
+            { route: '/a', ms: 40 },
+            { route: '/a', ms: 10 },
+            { route: '/a', ms: 500 },
+            { route: '/a', ms: 30 },
+            { route: '/a', ms: 60 },
+            { route: '/a', ms: 20 },
+            { route: '/a', ms: 50 },
+          ],
+          { '/a': 100 },
+        ],
+        expected: [{ route: '/a', p95: 500, target: 100 }],
+      },
+      {
+        name: 'Leaves out a route exactly at its target',
+        input: [[{ route: '/a', ms: 200 }], { '/a': 200 }],
+        expected: [],
+      },
+      {
+        name: 'Sorts the report by route',
+        input: [
+          [
+            { route: '/z', ms: 900 },
+            { route: '/b', ms: 900 },
+            { route: '/m', ms: 900 },
+          ],
+          { '/z': 100, '/b': 100, '/m': 100 },
+        ],
+        expected: [
+          { route: '/b', p95: 900, target: 100 },
+          { route: '/m', p95: 900, target: 100 },
+          { route: '/z', p95: 900, target: 100 },
+        ],
+      },
+      {
+        name: 'Ignores routes without a target',
+        input: [[{ route: '/admin', ms: 5000 }], { '/a': 100 }],
+        expected: [],
+      },
+      {
+        name: 'Ignores targets without samples',
+        input: [[{ route: '/a', ms: 50 }], { '/a': 100, '/b': 1 }],
+        expected: [],
+      },
+      {
+        name: "Keeps each route's samples apart",
+        input: [
+          [
+            { route: '/fast', ms: 10 },
+            { route: '/slow', ms: 800 },
+            { route: '/fast', ms: 12 },
+          ],
+          { '/fast': 20, '/slow': 1000 },
+        ],
+        expected: [],
+      },
+    ],
+  },
+  {
+    id: 'devops-burn-alert',
+    title: 'Page on a fast error-budget burn',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'An alert on the error rate of the last few minutes pages people for every blip; an alert on the last hour pages long after a problem started and keeps paging after it has ended. A common rule needs both: the budget must be burning fast over a long window and over a short one.',
+    prompt:
+      "Implement burnAlert(minutes, policy). minutes lists {requests, errors} for each minute, oldest first. policy is {targetBasisPoints, longMinutes, shortMinutes, threshold}. The long window is the last longMinutes entries (or all of them if there are fewer), and the short window the last shortMinutes. A window's burn rate is Math.floor(errors × 1000000 / (requests × (10000 - targetBasisPoints))) / 100 over its summed requests and errors, or 0 if it has no requests. Return {longBurn, shortBurn, page}, where page is true when both burn rates are at least threshold. Do not change the inputs.",
+    brief: {
+      summary: 'Implement burnAlert(minutes, policy) and return {longBurn, shortBurn, page}.',
+      rules: [
+        'The long window is the last longMinutes entries (all of them if fewer); the short window is the last shortMinutes.',
+        "A window's burn rate is Math.floor(errors × 1000000 / (requests × (10000 - targetBasisPoints))) / 100 over its sums, or 0 with no requests.",
+        'page is true when both burn rates are at least threshold.',
+      ],
+      edgeCases: ['A burn rate equal to threshold pages.', 'Do not change the inputs.'],
+    },
+    example: {
+      input:
+        'burnAlert([{requests: 1000, errors: 0}, {requests: 1000, errors: 30}, {requests: 1000, errors: 20}], {targetBasisPoints: 9990, longMinutes: 3, shortMinutes: 1, threshold: 14.4})',
+      output: '{longBurn: 16.66, shortBurn: 20, page: true}',
+    },
+    note: `The windows here count entries, one per minute, so a missing minute is simply absent. threshold may have two decimal places. ${notRun}`,
+    vocabulary: [
+      { term: 'Burn rate', meaning: 'how fast an error budget is being spent; 1 spends it exactly over the SLO period' },
+      { term: 'On-call page', meaning: 'an alert that wakes someone up because it needs action now' },
+    ],
+    planPrompt: 'A 2-minute spike of errors ended 20 minutes ago. Which window still shows it, and why should that not page anyone now?',
+    starter:
+      'type Minute = { requests: number; errors: number }\ntype Policy = { targetBasisPoints: number; longMinutes: number; shortMinutes: number; threshold: number }\n\nfunction burnAlert(minutes: Minute[], policy: Policy) {\n  return { longBurn: 0, shortBurn: 0, page: false }\n}\n',
+    functionName: 'burnAlert',
+    preserveInput: true,
+    hints: [
+      'slice(-count) takes the last entries of a list, or all of them when there are fewer.',
+      'Sum requests and errors over a window before working out its burn rate.',
+      'Both windows must be at or over the threshold.',
+    ],
+    checks: [
+      {
+        name: 'Pages in the example',
+        input: [
+          [
+            { requests: 1000, errors: 0 },
+            { requests: 1000, errors: 30 },
+            { requests: 1000, errors: 20 },
+          ],
+          { targetBasisPoints: 9990, longMinutes: 3, shortMinutes: 1, threshold: 14.4 },
+        ],
+        expected: { longBurn: 16.66, shortBurn: 20, page: true },
+      },
+      {
+        name: 'Does not page for a problem that has ended',
+        input: [
+          [
+            { requests: 1000, errors: 60 },
+            { requests: 1000, errors: 60 },
+            { requests: 1000, errors: 0 },
+          ],
+          { targetBasisPoints: 9990, longMinutes: 3, shortMinutes: 1, threshold: 14.4 },
+        ],
+        expected: { longBurn: 40, shortBurn: 0, page: false },
+      },
+      {
+        name: 'Does not page for a short blip',
+        input: [
+          [
+            { requests: 1000, errors: 0 },
+            { requests: 1000, errors: 0 },
+            { requests: 1000, errors: 0 },
+            { requests: 1000, errors: 30 },
+          ],
+          { targetBasisPoints: 9990, longMinutes: 4, shortMinutes: 1, threshold: 14.4 },
+        ],
+        expected: { longBurn: 7.5, shortBurn: 30, page: false },
+      },
+      {
+        name: 'Pages at exactly the threshold',
+        input: [[{ requests: 10000, errors: 144 }], { targetBasisPoints: 9990, longMinutes: 60, shortMinutes: 5, threshold: 14.4 }],
+        expected: { longBurn: 14.4, shortBurn: 14.4, page: true },
+      },
+      {
+        name: 'Uses every minute when there are fewer than the long window',
+        input: [
+          [
+            { requests: 500, errors: 10 },
+            { requests: 500, errors: 0 },
+          ],
+          { targetBasisPoints: 9990, longMinutes: 60, shortMinutes: 1, threshold: 1 },
+        ],
+        expected: { longBurn: 10, shortBurn: 0, page: false },
+      },
+      {
+        name: 'Sums a window before dividing',
+        input: [
+          [
+            { requests: 100, errors: 10 },
+            { requests: 9900, errors: 0 },
+          ],
+          { targetBasisPoints: 9900, longMinutes: 2, shortMinutes: 2, threshold: 2 },
+        ],
+        expected: { longBurn: 0.1, shortBurn: 0.1, page: false },
+      },
+      {
+        name: 'Treats a window with no requests as 0',
+        input: [[{ requests: 0, errors: 0 }], { targetBasisPoints: 9990, longMinutes: 5, shortMinutes: 1, threshold: 1 }],
+        expected: { longBurn: 0, shortBurn: 0, page: false },
+      },
+    ],
+  },
+  {
+    id: 'devops-alert-hysteresis',
+    title: 'Keep an alert from flapping',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A value that hovers around an alert limit makes a simple alert fire and resolve again and again, and people learn to ignore it. Two fixes work together: require the value to stay bad for several samples before firing, and require it to fall clearly below a lower limit for several samples before resolving.',
+    prompt:
+      'Implement alertEvents(values, policy). values lists one measurement per minute, in order. policy is {fireAt, resolveBelow, fireAfter, resolveAfter}, with resolveBelow less than fireAt. The alert starts resolved. While resolved, count values in a row that are at least fireAt; any other value resets the count; when the count reaches fireAfter, the alert fires at that position. While firing, count values in a row that are below resolveBelow; any other value resets the count; when the count reaches resolveAfter, the alert resolves at that position. Each change starts its count from 0 again. Return the changes as {at, state}, with at counting from 0 and state "firing" or "resolved", in order. Do not change the inputs.',
+    brief: {
+      summary: 'Implement alertEvents(values, policy) and return each change as {at, state}.',
+      rules: [
+        'Start resolved. While resolved, fire when fireAfter values in a row are at least fireAt.',
+        'While firing, resolve when resolveAfter values in a row are below resolveBelow.',
+        'A value that breaks a run resets its count, and every change starts the counts again.',
+        'Return {at, state} for each change, with at counting from 0.',
+      ],
+      edgeCases: [
+        'A value equal to resolveBelow is not below it.',
+        'A value between the two limits keeps a firing alert firing.',
+        'Do not change the inputs.',
+      ],
+    },
+    example: {
+      input: 'alertEvents([92, 95, 96, 91, 85, 70, 72, 95], {fireAt: 90, resolveBelow: 80, fireAfter: 3, resolveAfter: 2})',
+      output: '[{at: 2, state: "firing"}, {at: 6, state: "resolved"}]',
+    },
+    note: `Values are whole numbers, such as a CPU percentage; the limits and counts are whole numbers of at least 1. ${notRun}`,
+    vocabulary: [
+      { term: 'Flapping alert', meaning: 'an alert that fires and resolves over and over because a value hovers around its limit' },
+      { term: 'Hysteresis', meaning: 'using a lower limit to turn something off than to turn it on, so it does not switch back and forth' },
+    ],
+    planPrompt:
+      'With fire at 90 and resolve below 80, what does a value of 85 do to a firing alert, and what does it do to a resolved one?',
+    starter:
+      'type Policy = { fireAt: number; resolveBelow: number; fireAfter: number; resolveAfter: number }\n\nfunction alertEvents(values: number[], policy: Policy): { at: number; state: string }[] {\n  return []\n}\n',
+    functionName: 'alertEvents',
+    preserveInput: true,
+    hints: [
+      'Keep the state and one count; what the count means depends on the state.',
+      'Reset the count whenever the state changes.',
+      'Compare with >= for firing and < for resolving.',
+    ],
+    checks: [
+      {
+        name: 'Fires and resolves in the example',
+        input: [[92, 95, 96, 91, 85, 70, 72, 95], { fireAt: 90, resolveBelow: 80, fireAfter: 3, resolveAfter: 2 }],
+        expected: [
+          { at: 2, state: 'firing' },
+          { at: 6, state: 'resolved' },
+        ],
+      },
+      {
+        name: 'Ignores a short spike',
+        input: [[95, 95, 50, 95, 95], { fireAt: 90, resolveBelow: 80, fireAfter: 3, resolveAfter: 2 }],
+        expected: [],
+      },
+      {
+        name: 'Stays firing between the limits',
+        input: [[95, 95, 85, 88, 82, 89, 84], { fireAt: 90, resolveBelow: 80, fireAfter: 2, resolveAfter: 1 }],
+        expected: [{ at: 1, state: 'firing' }],
+      },
+      {
+        name: 'Restarts the resolve count on a value between the limits',
+        input: [[95, 70, 85, 70, 70], { fireAt: 90, resolveBelow: 80, fireAfter: 1, resolveAfter: 2 }],
+        expected: [
+          { at: 0, state: 'firing' },
+          { at: 4, state: 'resolved' },
+        ],
+      },
+      {
+        name: 'Counts a value exactly at fireAt',
+        input: [[90, 90], { fireAt: 90, resolveBelow: 80, fireAfter: 2, resolveAfter: 1 }],
+        expected: [{ at: 1, state: 'firing' }],
+      },
+      {
+        name: 'Does not count a value exactly at resolveBelow',
+        input: [[95, 80, 79], { fireAt: 90, resolveBelow: 80, fireAfter: 1, resolveAfter: 1 }],
+        expected: [
+          { at: 0, state: 'firing' },
+          { at: 2, state: 'resolved' },
+        ],
+      },
+      {
+        name: 'Fires again after resolving',
+        input: [[95, 50, 95], { fireAt: 90, resolveBelow: 80, fireAfter: 1, resolveAfter: 1 }],
+        expected: [
+          { at: 0, state: 'firing' },
+          { at: 1, state: 'resolved' },
+          { at: 2, state: 'firing' },
+        ],
+      },
+      {
+        name: 'Starts counting again after a change',
+        input: [[95, 95, 95, 60, 60, 95, 95], { fireAt: 90, resolveBelow: 80, fireAfter: 2, resolveAfter: 2 }],
+        expected: [
+          { at: 1, state: 'firing' },
+          { at: 4, state: 'resolved' },
+          { at: 6, state: 'firing' },
+        ],
+      },
+      { name: 'Handles no values', input: [[], { fireAt: 90, resolveBelow: 80, fireAfter: 1, resolveAfter: 1 }], expected: [] },
+    ],
+  },
 ]

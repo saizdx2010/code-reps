@@ -394,6 +394,11 @@ export const repLevels: Record<string, RepLevel> = {
   'devops-local-to-utc': 3,
   'devops-cron-next-utc': 3,
   'devops-cron-next-zone': 3,
+  'devops-percentile': 2,
+  'devops-error-budget': 2,
+  'devops-route-latency': 2,
+  'devops-burn-alert': 2,
+  'devops-alert-hysteresis': 2,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

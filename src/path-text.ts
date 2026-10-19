@@ -405,5 +405,10 @@ export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
         'Expand cron fields, check a schedule against a time with the two-day-field rule, turn local times into instants across clock changes, and find the next run in UTC and in a named time zone.',
       recap: 'You can now read a cron schedule and say exactly when it runs, even on the nights clocks change.',
     },
+    'Watch a service': {
+      description:
+        'Find p95 by the nearest-rank method, measure an error budget and its burn rate in whole numbers, find routes over their latency target, page on a fast burn over two windows, and keep an alert from flapping.',
+      recap: 'You can now turn measurements into numbers people trust and alerts they do not ignore.',
+    },
   },
 }

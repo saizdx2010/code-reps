@@ -1033,6 +1033,7 @@ export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[
       'deploy-strategies',
       'service-health',
       'cron-schedules',
+      'observability',
     ],
   },
   {

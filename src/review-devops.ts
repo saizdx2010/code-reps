@@ -484,6 +484,66 @@ export const devopsDepth: Record<string, RepDepth> = {
     transfer:
       'Change the gap rule: a job whose local time is skipped runs at the first instant after the jump instead. Decide what an hourly job does on that night. This changed contract is self-reviewed, not checked by the original cases.',
   },
+  'devops-percentile': {
+    reasoning:
+      'Nearest rank picks the smallest value that at least p percent of the values are at or under: after sorting, the first rank whose share reaches p / 100 is p × n / 100 rounded up. Because the answer is always one of the measurements, it never invents a time no request took. Sorting a copy with a numeric compare keeps both the input and the order correct.',
+    trace:
+      'For [100, 120, 130, 150, 200, 900, 110] and p95, the sorted copy is [100, 110, 120, 130, 150, 200, 900]. The rank is 95 × 7 / 100 = 6.65, rounded up to 7, so the answer is the 7th value, 900. For [10, 20, 30, 40] and p50, the rank is exactly 2, so the answer is 20, not the interpolated 25.',
+    alternative:
+      'Linear interpolation between neighbouring values, the default in many statistics libraries, gives smoother numbers for small samples but answers that no request took. Monitoring systems often estimate percentiles from histogram buckets, which uses little memory but is only as exact as the bucket edges.',
+    counterexample:
+      'Rounding the rank down gives 6 for p95 of seven values, so the 900 ms request disappears from the answer. Sorting with the default compare orders [9, 10, 100, 2] as text, so p25 returns 10 instead of 2.',
+    transfer:
+      'Return p50, p95, and p99 together from one sort, and decide what to return for p99 when there are fewer than 100 values. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-error-budget': {
+    reasoning:
+      'The budget share is everything above the target, 10000 − target basis points, so the allowed errors are that share of the requests and the burn rate is the error rate divided by that share. Doing every multiplication before the division, in whole numbers, keeps the result exact until the one final rounding, so a burn rate of exactly 1 is never reported as 0.99.',
+    trace:
+      'For 1,000,000 requests, 2,000 errors, and target 9990, the budget share is 10 basis points, so 1,000,000 × 10 / 10000 = 1,000 errors are allowed and 1,000 more than allowed were spent. The burn rate is floor(2,000 × 1,000,000 / (1,000,000 × 10)) / 100 = 200 / 100 = 2.',
+    alternative:
+      'Working with fractions such as 0.999 is shorter to write but gives 1 − 0.999 = 0.0010000000000000009, which can push a value across a boundary. Tracking the budget in time, such as 43 minutes of downtime a month, suits availability targets but not request-based ones.',
+    counterexample:
+      'Computing (errors / requests) / (1 − 0.999) gives 0.9999999999999991 instead of 1 for 1,000 errors in 1,000,000 requests, and rounding down then reports 0.99. Rounding allowedErrors to the nearest whole number allows 2 errors for 1,999 requests instead of 1.',
+    transfer:
+      'Report how many days the remaining budget lasts at the current burn rate, given the SLO period and how many days have passed. Decide what to report when the budget is already spent. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-route-latency': {
+    reasoning:
+      'A percentile only describes the samples it was computed from, so every route needs its own sorted list. Going through the target routes in sorted order produces a sorted report directly, and comparing with "greater than" leaves a route that is exactly on target out of a list of problems.',
+    trace:
+      'For /search with 300 and 900 ms and a target of 500, the sorted list is [300, 900] and the rank is 95 × 2 / 100 = 1.9, rounded up to 2, so p95 is 900, over the target. /health has one sample, 5 ms, so its p95 is 5, under 50. The report is just /search.',
+    alternative:
+      'Streaming systems keep a small sketch per route instead of every sample, trading exactness for memory. Reporting every route with its p95 and target, sorted by how far over it is, gives more context than a list of failures.',
+    counterexample:
+      'Mixing every route\'s samples into one list reports /fast as slow in "Keeps each route\'s samples apart", because /slow\'s 800 ms becomes everyone\'s p95. Using >= reports /a in "Leaves out a route exactly at its target".',
+    transfer:
+      'Report a route only when its p95 has been over target for 3 days in a row, given one report per day. Decide what a day with no samples does to the run. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-burn-alert': {
+    reasoning:
+      'Each window answers a different question: the long one whether enough budget has been spent to matter, the short one whether it is still being spent now. Requiring both pages only for problems that are both significant and current. Summing requests and errors over a window before dividing weights each minute by its traffic.',
+    trace:
+      'In "Does not page for a problem that has ended", the long window holds 120 errors in 3,000 requests: floor(120 × 1,000,000 / (3,000 × 10)) / 100 = 40. The short window is the last minute, 0 errors, so its burn rate is 0. One of the two is under 14.4, so page is false, although the last hour was bad.',
+    alternative:
+      'Real setups often run two such rules: a fast one, such as 1 hour and 5 minutes at 14.4, that pages, and a slow one, such as 6 hours and 30 minutes at 6, that opens a ticket. Alerting on raw error counts is simpler but ignores how much traffic there was.',
+    counterexample:
+      'Averaging each minute\'s burn rate instead of summing first gives 5 in "Sums a window before dividing", because a quiet minute with 10 errors counts as much as a busy one. Using > instead of >= misses "Pages at exactly the threshold".',
+    transfer:
+      'Add the slow ticket rule alongside the page rule and return which one, if any, applies. Decide what happens when both apply. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-alert-hysteresis': {
+    reasoning:
+      'Two mechanisms stop flapping. A delay, the number of bad samples in a row needed to fire, ignores short spikes. A gap between the firing and resolving limits means a value hovering near the firing limit cannot resolve the alert. One count is enough, because only one condition matters in each state, and resetting it on every change makes each change need its own fresh run.',
+    trace:
+      'For the example, 92, 95, and 96 are all at least 90, so the count reaches 3 and the alert fires at position 2. While firing, 91 and 85 are not below 80, so the count stays 0; 70 and 72 make it 2, so the alert resolves at 6. The final 95 starts a new count of 1.',
+    alternative:
+      'Averaging the value over a few minutes before comparing smooths spikes too, but delays every alert by the averaging window. Alerting systems often express the delay as a duration, such as "for 5 minutes", which matches this rule when samples arrive every minute.',
+    counterexample:
+      'Resolving as soon as a value drops under 90 makes "Stays firing between the limits" resolve at 85. Keeping the count after a change fires again one sample early in "Starts counting again after a change".',
+    transfer:
+      'Add a third state, "pending", reported when the first bad value arrives and before the alert fires. Decide what happens when a pending alert sees a good value. This changed contract is self-reviewed, not checked by the original cases.',
+  },
 }
 
 export const devopsGuides: Record<string, ReflectionGuide> = {
@@ -1019,6 +1079,68 @@ export const devopsGuides: Record<string, ReflectionGuide> = {
     example:
       "I read after's local date in the zone, then for each of the next days check month and the day rule on the local date. For each allowed hour and minute, the earliest instant showing that wall time comes from the offsets near it; a gap gives none. The first instant after after and within 8 days is returned with toISOString. The work is days times allowed times. The checks pass after and zone in directly; no clock or machine time zone is read.",
   },
+  'devops-percentile': {
+    plan: ['Return null for no values.', 'Sort a copy numerically.', 'Take the value at rank p × n / 100, rounded up.'],
+    explanation: [
+      'Trace p95 of seven values.',
+      'Explain why the answer is always a real measurement.',
+      'Say why the method must be stated with the number.',
+    ],
+    example:
+      'I return null for an empty list, sort a copy with (a, b) => a - b, and return sorted[Math.ceil(p × n / 100) - 1]. The work is O(n log n) for the sort. The checks pass measurements in directly; no metrics system is read.',
+  },
+  'devops-error-budget': {
+    plan: [
+      'Return zeros for no requests.',
+      'Work out the budget share and the allowed errors, rounded down.',
+      'Compute the burn rate in whole numbers, then divide by 100.',
+    ],
+    explanation: ['Trace the example.', 'Explain why the target is in basis points.', 'Say what a burn rate of 1 means.'],
+    example:
+      'With no requests I return zeros. The share is 10000 - target; allowedErrors is floor(requests × share / 10000), remainingErrors is allowed − errors, and burnRate is floor(errors × 1,000,000 / (requests × share)) / 100. The work is constant. The checks pass counts in directly.',
+  },
+  'devops-route-latency': {
+    plan: [
+      'Group the times by route.',
+      'For each target route with samples, in sorted order, compute p95 by nearest rank.',
+      'Report the routes over target.',
+    ],
+    explanation: [
+      'Trace a route with two samples.',
+      'Explain why routes are never mixed.',
+      'Say why a route exactly on target is left out.',
+    ],
+    example:
+      'I fill a Map from route to times. For each sorted key of targets with times, I sort a copy and take the value at ceil(95 × n / 100) − 1; if it is greater than the target I push {route, p95, target}. The work is O(n log n). The checks pass samples in directly.',
+  },
+  'devops-burn-alert': {
+    plan: [
+      'Take the last longMinutes and the last shortMinutes entries.',
+      'Sum each window and compute its burn rate in whole numbers.',
+      'Page only when both are at least the threshold.',
+    ],
+    explanation: [
+      'Trace a problem that ended a minute ago.',
+      'Explain why both windows are needed.',
+      'Say why the sums come before the division.',
+    ],
+    example:
+      'burn(window) sums requests and errors and returns 0 for no requests, or floor(errors × 1,000,000 / (requests × share)) / 100. longBurn uses minutes.slice(-longMinutes) and shortBurn minutes.slice(-shortMinutes); page needs both at least threshold. The work is linear in the minutes. The checks pass counts in directly; no alert is sent.',
+  },
+  'devops-alert-hysteresis': {
+    plan: [
+      'Start resolved with a count of 0.',
+      "Count values in a row that meet the current state's condition.",
+      'Change state when the count reaches its target, and reset the count.',
+    ],
+    explanation: [
+      'Trace a value hovering between the limits.',
+      'Explain the two mechanisms that stop flapping.',
+      'Say why the count resets on a change.',
+    ],
+    example:
+      'For each value, the condition is value < resolveBelow while firing and value >= fireAt while resolved; the count grows on a match and resets otherwise. Reaching resolveAfter or fireAfter flips the state, resets the count, and records {at, state}. The work is linear in the values. The checks pass values in directly; no alert is sent.',
+  },
 }
 
 export const devopsLessonDepth: Record<string, LessonDepth> = {
@@ -1101,5 +1223,15 @@ export const devopsLessonDepth: Record<string, LessonDepth> = {
       'An hourly job, "0 * * * *", runs in New York. Predict how many times it runs between 00:00 and 04:00 local time on 2026-03-08 and on 2026-11-01, under these reps\' rules.',
     answer:
       'On 2026-03-08 the local times 00:00, 01:00, 03:00, and 04:00 occur; 02:00 is skipped, so it runs 4 times, one fewer than usual. On 2026-11-01 the times 00:00, 01:00 (once, at the earlier instant), 02:00, 03:00, and 04:00 run, so it runs 5 times, the usual number, although the local hours from 00:00 to 04:00 took 5 real hours instead of 4.',
+  },
+  observability: {
+    title: 'An alert should change what someone does',
+    code: 'CPU: 91 89 92 88 93 87 ...   limit 90\n\none limit, no delay: fire, resolve, fire, resolve, fire ...\nfire at 90 for 3 samples, resolve below 80 for 2: no change until CPU really moves',
+    reasoning:
+      'Every page interrupts someone, so it should mean that action is needed now. A value hovering around a single limit produces a stream of fire and resolve messages that carry no new information, and people soon stop reading them, including the one that matters. A delay before firing filters out spikes, and a lower resolving limit means only a real recovery ends the alert. Burn-rate alerts apply the same idea to error budgets with a long and a short window.',
+    challenge:
+      'A team pages when the error rate over the last 5 minutes is above 1%. Their service gets 20 requests a minute at night. Predict how often they are paged at night and propose a better rule using what you know about error budgets.',
+    answer:
+      '5 minutes at night is about 100 requests, so 2 failed requests already make 2%, and ordinary chance failures page them most nights. A burn-rate rule over a long and a short window, with a minimum number of requests before a window counts, pages only when the budget is really being spent fast, and stays quiet when a handful of requests fail.',
   },
 }

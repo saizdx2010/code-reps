@@ -698,4 +698,66 @@ function nextRun(expression: string, after: string, zone: string): string | null
   }
   return null
 }`,
+  'devops-percentile': `
+function percentile(values: number[], p: number): number | null {
+  if (values.length === 0) return null
+  const sorted = [...values].sort((a, b) => a - b)
+  const rank = Math.ceil((p * sorted.length) / 100)
+  return sorted[rank - 1]
+}`,
+  'devops-error-budget': `
+function errorBudget(requests: number, errors: number, targetBasisPoints: number) {
+  if (requests === 0) return { allowedErrors: 0, remainingErrors: 0, burnRate: 0 }
+  const budget = 10000 - targetBasisPoints
+  const allowedErrors = Math.floor((requests * budget) / 10000)
+  return {
+    allowedErrors,
+    remainingErrors: allowedErrors - errors,
+    burnRate: Math.floor((errors * 1000000) / (requests * budget)) / 100,
+  }
+}`,
+  'devops-route-latency': `
+function slowRoutes(samples: { route: string; ms: number }[], targets: Record<string, number>) {
+  const byRoute = new Map<string, number[]>()
+  for (const sample of samples) byRoute.set(sample.route, [...(byRoute.get(sample.route) ?? []), sample.ms])
+  const report: { route: string; p95: number; target: number }[] = []
+  for (const route of Object.keys(targets).sort()) {
+    const times = byRoute.get(route)
+    if (!times) continue
+    const sorted = [...times].sort((a, b) => a - b)
+    const p95 = sorted[Math.ceil((95 * sorted.length) / 100) - 1]
+    if (p95 > targets[route]) report.push({ route, p95, target: targets[route] })
+  }
+  return report
+}`,
+  'devops-burn-alert': `
+function burnAlert(
+  minutes: { requests: number; errors: number }[],
+  policy: { targetBasisPoints: number; longMinutes: number; shortMinutes: number; threshold: number },
+) {
+  const burn = (window: { requests: number; errors: number }[]) => {
+    const requests = window.reduce((sum, minute) => sum + minute.requests, 0)
+    const errors = window.reduce((sum, minute) => sum + minute.errors, 0)
+    return requests === 0 ? 0 : Math.floor((errors * 1000000) / (requests * (10000 - policy.targetBasisPoints))) / 100
+  }
+  const longBurn = burn(minutes.slice(-policy.longMinutes))
+  const shortBurn = burn(minutes.slice(-policy.shortMinutes))
+  return { longBurn, shortBurn, page: longBurn >= policy.threshold && shortBurn >= policy.threshold }
+}`,
+  'devops-alert-hysteresis': `
+function alertEvents(values: number[], policy: { fireAt: number; resolveBelow: number; fireAfter: number; resolveAfter: number }) {
+  const events: { at: number; state: string }[] = []
+  let firing = false
+  let count = 0
+  values.forEach((value, at) => {
+    const counts = firing ? value < policy.resolveBelow : value >= policy.fireAt
+    count = counts ? count + 1 : 0
+    if (count >= (firing ? policy.resolveAfter : policy.fireAfter)) {
+      firing = !firing
+      count = 0
+      events.push({ at, state: firing ? 'firing' : 'resolved' })
+    }
+  })
+  return events
+}`,
 }

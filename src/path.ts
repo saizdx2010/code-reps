@@ -555,6 +555,10 @@ export const paths = [
         title: 'Schedule jobs',
         repIds: ['devops-cron-field', 'devops-cron-matches', 'devops-local-to-utc', 'devops-cron-next-utc', 'devops-cron-next-zone'],
       },
+      {
+        title: 'Watch a service',
+        repIds: ['devops-percentile', 'devops-error-budget', 'devops-route-latency', 'devops-burn-alert', 'devops-alert-hysteresis'],
+      },
     ] satisfies readonly PathStage[],
   },
 ] as const
