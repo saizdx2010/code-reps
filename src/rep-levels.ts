@@ -344,6 +344,11 @@ export const repLevels: Record<string, RepLevel> = {
   'backend-dedupe-deliveries': 2,
   'backend-outbox-relay': 2,
   'backend-queue-simulation': 3,
+  'backend-token-bucket': 2,
+  'backend-sliding-log': 2,
+  'backend-limit-response': 2,
+  'backend-sliding-counter': 2,
+  'backend-limit-callers': 3,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

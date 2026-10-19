@@ -325,6 +325,11 @@ export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
         'Retry failed jobs with growing waits and dead letters, claim jobs with leases, skip repeated messages, publish events from an outbox, and replay a queue under a retry policy.',
       recap: 'You can now run work outside the request, retry it safely, and handle jobs and messages that arrive more than once.',
     },
+    'Limit request rates': {
+      description:
+        'Refill a token bucket, count a sliding window, estimate one from two counters, answer 429 with Retry-After, and keep a bucket per caller.',
+      recap: 'You can now limit how often each caller may ask and tell refused callers when to come back.',
+    },
     'Read and improve code': {
       description: 'Trace an existing importer, then refactor a working report without changing its behavior.',
       recap: 'You can now trace an importer and refactor a report while preserving its behavior.',

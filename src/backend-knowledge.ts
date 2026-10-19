@@ -322,4 +322,84 @@ export const backendSkills: Skill[] = [
     repIds: ['backend-job-failure', 'backend-claim-job', 'backend-dedupe-deliveries', 'backend-outbox-relay', 'backend-queue-simulation'],
     related: ['retries', 'idempotency', 'concurrent-writes'],
   },
+  {
+    id: 'rate-limiting',
+    title: 'Rate limits: windows and token buckets',
+    summary:
+      'Limit how often each caller may make requests, compare fixed windows, sliding windows, and token buckets, and answer 429 with a useful Retry-After.',
+    prerequisites: ['http'],
+    objectives: [
+      'Explain what a rate limit protects and choose a key, such as an API key, to count each caller separately.',
+      'Compare fixed windows, sliding windows, and token buckets, including bursts at window boundaries.',
+      'Answer a limited request with 429 Too Many Requests and a Retry-After a client can follow.',
+    ],
+    sections: [
+      {
+        title: 'Why limit request rates',
+        body: "A rate limit caps how many requests one caller may make in a period, so one busy client cannot slow the service for everyone and a runaway loop is stopped early. Each limit needs a key that names the caller: an API key, an account, or, for anonymous traffic, the client address. Counts are kept per key, so callers never use up each other's allowance.",
+      },
+      {
+        title: 'Windows count requests',
+        body: 'A fixed window counts requests in slots that start at fixed times, such as each whole minute. It is cheap, one counter per slot, but a caller can send a full allowance at the end of one slot and another at the start of the next: twice the limit within a few seconds. A sliding window counts the requests in the last N seconds from now, which removes that boundary burst. Keeping every request time is exact; blending the previous and current fixed-window counts is a cheaper estimate.',
+      },
+      {
+        title: 'A token bucket allows controlled bursts',
+        body: 'A token bucket holds up to a capacity of tokens and gains one each refill interval. Each request spends one token, and a request that finds the bucket empty is refused. The capacity sets the largest burst and the interval sets the long-run rate. Only the token count and the time of the last refill are stored, and refilling from the elapsed time on each request means no timer is needed.',
+      },
+      {
+        title: 'Tell the caller when to come back',
+        body: 'A refused request gets 429 Too Many Requests. A Retry-After header says how many seconds to wait; round up, so a client that waits exactly that long is not refused again. Many APIs also report the limit and the remaining allowance on every response, so well-behaved clients slow down before they reach it. Times in these reps are passed in as milliseconds, so the rules can be checked exactly.',
+      },
+    ],
+    example:
+      'capacity 3, one token per 1000 ms, full at 0 ms\n\n0 ms    → allowed (2 left)\n0 ms    → allowed (1 left)\n0 ms    → allowed (0 left)\n400 ms  → refused, next token at 1000 ms, Retry-After 1\n1000 ms → allowed (0 left)',
+    walkthrough: [
+      'The bucket starts with 3 tokens, so a burst of three requests at 0 ms is allowed.',
+      'At 400 ms no new token has been added yet, so the request is refused.',
+      'The next token arrives at 1000 ms; the 600 ms wait rounds up to a Retry-After of 1 second.',
+      'At 1000 ms one token has been added, and the request spends it.',
+    ],
+    mistakes: [
+      'Using one shared counter for every caller, so one busy client blocks the rest.',
+      'Forgetting the boundary burst of a fixed window when the limit protects something fragile.',
+      'Rounding Retry-After down, so a client that follows it is refused again.',
+      'Refilling a token bucket from the last request instead of the last refill, which loses part of an interval each time.',
+    ],
+    questions: [
+      q(
+        'fixed-window-burst-v1',
+        'A fixed window allows 100 requests per minute, counted from each whole minute. What is the most a caller can send within 2 seconds around 12:01:00?',
+        '',
+        ['100', '200', '102'],
+        1,
+        'A caller can send 100 just before 12:01:00 and another 100 just after, because the count resets at the boundary.',
+      ),
+      q(
+        'token-bucket-burst-v1',
+        'A token bucket has capacity 5 and gains one token per second. It has been idle for a minute. How many requests arriving together are allowed?',
+        '',
+        ['1', '5', '60'],
+        1,
+        'Tokens stop at the capacity, so an idle bucket holds 5 and allows a burst of 5.',
+      ),
+      q(
+        'retry-after-round-v1',
+        'The next request will be allowed in 1200 ms. What Retry-After should a 429 send, in seconds?',
+        '',
+        ['1', '2', '1.2'],
+        1,
+        'Retry-After takes whole seconds. Rounding 1.2 down to 1 would send the client back too early, so round up to 2.',
+      ),
+      q(
+        'rate-limit-key-v1',
+        'Which key gives each signed-in caller their own allowance?',
+        '',
+        ['The request path', "The caller's API key", 'The current minute'],
+        1,
+        'Counting by API key keeps callers apart. A path or time key would make everyone share one allowance.',
+      ),
+    ],
+    repIds: ['backend-token-bucket', 'backend-sliding-log', 'backend-limit-response', 'backend-sliding-counter', 'backend-limit-callers'],
+    related: ['http', 'background-jobs'],
+  },
 ]

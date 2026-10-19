@@ -449,6 +449,16 @@ export const paths = [
         ],
       },
       {
+        title: 'Limit request rates',
+        repIds: [
+          'backend-token-bucket',
+          'backend-sliding-log',
+          'backend-limit-response',
+          'backend-sliding-counter',
+          'backend-limit-callers',
+        ],
+      },
+      {
         title: 'Read and improve code',
         repIds: ['read-batch-labels', 'refactor-stock-summary'],
       },

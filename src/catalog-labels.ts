@@ -61,7 +61,13 @@ const problemStages = paths.find(path => path.id === 'algorithms-data-structures
 const sqlStages = paths.find(path => path.id === 'sql')!.stages
 const backendStages = paths.find(path => path.id === 'backend')!.stages
 // Backend stages whose reps use the 'Backend services' category; each stage title is its Library topic.
-const backendServiceTopics = ['What a request is', 'Route a request', 'Handle concurrent writes', 'Run background jobs']
+const backendServiceTopics = [
+  'What a request is',
+  'Route a request',
+  'Handle concurrent writes',
+  'Run background jobs',
+  'Limit request rates',
+]
 const lookupReps = new Set([
   'most-frequent-number',
   'first-unique-character',

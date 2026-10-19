@@ -517,3 +517,116 @@ test('B5 background-job checks catch backoff, lease, duplicate, ordering, and ti
     ],
   ])
 })
+
+test('B6 rate-limit checks catch refill, window-edge, rounding, weighting, and per-key mistakes', async () => {
+  const bucket = solution('backend-token-bucket')
+  await assertCaught('backend-token-bucket', [
+    [
+      bucket.replace('tokens === capacity ? now : bucket.updatedAt + added * refillMs', 'added > 0 ? now : bucket.updatedAt'),
+      'Keeps the time toward the next token',
+    ],
+    [bucket.replace('tokens === capacity ? now : ', ''), 'Spends a token from a full bucket'],
+    [bucket.replace('Math.min(capacity, bucket.tokens + added)', 'bucket.tokens + added'), 'Stops refilling at capacity'],
+    [
+      bucket.replace('Math.floor((now - bucket.updatedAt) / refillMs)', 'Math.round((now - bucket.updatedAt) / refillMs)'),
+      'Refuses one millisecond before a token arrives',
+    ],
+    [bucket.replace('retryAfterMs: updatedAt + refillMs - now', 'retryAfterMs: refillMs'), 'Measures the wait from the last refill'],
+    [bucket.replace('tokens === capacity ? now', 'tokens === capacity && added > 0 ? now'), 'Spends a token from a full bucket'],
+    [bucket.replace('tokens === capacity ? now', 'tokens > capacity ? now'), 'Starts the refill time again when the bucket fills exactly'],
+  ])
+  const slide = solution('backend-sliding-log')
+  await assertCaught('backend-sliding-log', [
+    [slide.replace('t > now - windowMs', 't >= now - windowMs'), 'Drops a time exactly one window old'],
+    [slide.replace('counted[counted.length - limit]', 'counted[0]'), 'Waits for several times when the count is over the limit'],
+    [slide.replace('.sort((a, b) => a - b)', ''), 'Sorts times before choosing'],
+    [slide.replace(' && t <= now', ''), 'Ignores times later than now'],
+    [
+      slide.replace('t > now - windowMs && t <= now', 't >= Math.floor(now / windowMs) * windowMs && t <= now'),
+      'Counts requests across a fixed-window boundary',
+    ],
+    [
+      slide.replace('remaining: limit - counted.length - 1', 'remaining: limit - counted.length'),
+      'Allows a request and reports what remains',
+    ],
+  ])
+  const response = solution('backend-limit-response')
+  await assertCaught('backend-limit-response', [
+    [
+      response.replace('Math.ceil(decision.retryAfterMs / 1000)', 'Math.round(decision.retryAfterMs / 1000)'),
+      'Rounds the wait up to whole seconds',
+    ],
+    [
+      response.replace('Math.max(1, Math.ceil(decision.retryAfterMs / 1000))', 'Math.ceil(decision.retryAfterMs / 1000)'),
+      'Asks for at least one second',
+    ],
+    [response.replace('Math.ceil(decision.retryAfterMs / 1000)', 'Math.floor(decision.retryAfterMs / 1000) + 1'), 'Keeps an exact second'],
+    [response.replace('Math.max(0, decision.remaining)', 'decision.remaining'), 'Never reports a negative remainder'],
+    [
+      response.replace('decision.allowed ? Math.max(0, decision.remaining) : 0', 'Math.max(0, decision.remaining)'),
+      'Reports zero remaining when refused',
+    ],
+    [
+      response.replace(
+        'String(Math.max(1, Math.ceil(decision.retryAfterMs / 1000)))',
+        'Math.max(1, Math.ceil(decision.retryAfterMs / 1000)) as unknown as string',
+      ),
+      'Rounds the wait up to whole seconds',
+    ],
+  ])
+  const counter = solution('backend-sliding-counter')
+  await assertCaught('backend-sliding-counter', [
+    [
+      counter.replace('const overlap = start + windowMs - now', 'const overlap = now - start'),
+      'Counts the whole previous window at the start',
+    ],
+    [
+      counter.replace('Math.floor((previousCount * overlap) / windowMs)', 'Math.round((previousCount * overlap) / windowMs)'),
+      'Rounds the estimate down',
+    ],
+    [counter.replace('used < limit', 'used <= limit'), 'Refuses when the estimate reaches the limit'],
+    [
+      counter.replace('Math.floor((previousCount * overlap) / windowMs)', 'Math.floor(previousCount / windowMs) * overlap'),
+      'Weights the previous count',
+    ],
+    [
+      counter
+        .replace('Math.floor(now / windowMs) * windowMs', 'Math.floor(now / 1000) * 1000')
+        .replace('start + windowMs - now', 'start + 1000 - now')
+        .replace('/ windowMs)', '/ 1000)'),
+      'Uses the supplied window size',
+    ],
+  ])
+  const callers = solution('backend-limit-callers')
+  await assertCaught('backend-limit-callers', [
+    [
+      callers.replace('{ tokens: capacity, refilledAt: at }', '{ tokens: 0, refilledAt: at }'),
+      'Starts a new key full at its first request',
+    ],
+    [
+      callers.replace(
+        '    buckets.set(key, { tokens, refilledAt })\n    return { allowed: false',
+        '    buckets.set(key, { tokens, refilledAt: at })\n    return { allowed: false',
+      ),
+      'Refused requests spend nothing',
+    ],
+    [
+      callers.replace('tokens === capacity ? at : bucket.refilledAt + added * refillMs', 'added > 0 ? at : bucket.refilledAt'),
+      'Keeps the time toward the next token across requests',
+    ],
+    [
+      callers.replace('Math.min(capacity, bucket.tokens + added)', 'bucket.tokens + added'),
+      'Stops refilling at capacity after a long pause',
+    ],
+    [
+      callers
+        .replace('buckets.get(key)', 'buckets.get(key.toLowerCase())')
+        .replaceAll('buckets.set(key,', 'buckets.set(key.toLowerCase(),'),
+      'Compares keys exactly',
+    ],
+    [
+      callers.replace('buckets.get(key) ??', "buckets.get('all') ??").replaceAll('buckets.set(key,', "buckets.set('all',"),
+      'Gives each key its own bucket',
+    ],
+  ])
+})

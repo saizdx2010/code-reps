@@ -248,6 +248,7 @@ export const recallVariants: Record<string, string[]> = {
   routing: ['backend-route-specificity', 'backend-route-request', 'backend-match-route'],
   'concurrent-writes': ['backend-replay-writes', 'backend-if-match', 'backend-versioned-update'],
   'background-jobs': ['backend-queue-simulation', 'backend-claim-job', 'backend-job-failure'],
+  'rate-limiting': ['backend-limit-callers', 'backend-sliding-log', 'backend-token-bucket'],
 }
 export function recurringReviews(history: PortableRecord[], now = Date.now()) {
   return getAllJourneys(history, now).flatMap(state => {

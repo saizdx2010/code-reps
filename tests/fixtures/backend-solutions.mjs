@@ -324,4 +324,50 @@ function runQueue(jobIds: string[], outcomes: Record<string, Outcome[]>, policy:
   }
   return { completed, deadLetters, finishedAt: clock }
 }`,
+  'backend-token-bucket': `
+function takeToken(bucket: { tokens: number; updatedAt: number }, now: number, capacity: number, refillMs: number) {
+  const added = Math.floor((now - bucket.updatedAt) / refillMs)
+  const tokens = Math.min(capacity, bucket.tokens + added)
+  const updatedAt = tokens === capacity ? now : bucket.updatedAt + added * refillMs
+  if (tokens >= 1) return { allowed: true, bucket: { tokens: tokens - 1, updatedAt }, retryAfterMs: 0 }
+  return { allowed: false, bucket: { tokens, updatedAt }, retryAfterMs: updatedAt + refillMs - now }
+}`,
+  'backend-sliding-log': `
+function slidingLimit(times: number[], now: number, limit: number, windowMs: number) {
+  const counted = times.filter(t => t > now - windowMs && t <= now).sort((a, b) => a - b)
+  if (counted.length < limit) return { allowed: true, remaining: limit - counted.length - 1, retryAfterMs: 0 }
+  return { allowed: false, remaining: 0, retryAfterMs: counted[counted.length - limit] + windowMs - now }
+}`,
+  'backend-limit-response': `
+function limitResponse(decision: { allowed: boolean; remaining: number; retryAfterMs: number }, limit: number) {
+  const headers: Record<string, string> = {
+    'RateLimit-Limit': String(limit),
+    'RateLimit-Remaining': String(decision.allowed ? Math.max(0, decision.remaining) : 0),
+  }
+  if (decision.allowed) return { status: 200, headers }
+  return { status: 429, headers: { ...headers, 'Retry-After': String(Math.max(1, Math.ceil(decision.retryAfterMs / 1000))) } }
+}`,
+  'backend-sliding-counter': `
+function slidingEstimate(previousCount: number, currentCount: number, now: number, windowMs: number, limit: number) {
+  const start = Math.floor(now / windowMs) * windowMs
+  const overlap = start + windowMs - now
+  const used = currentCount + Math.floor((previousCount * overlap) / windowMs)
+  return { allowed: used < limit, used }
+}`,
+  'backend-limit-callers': `
+function limitRequests(requests: { key: string; at: number }[], capacity: number, refillMs: number) {
+  const buckets = new Map<string, { tokens: number; refilledAt: number }>()
+  return requests.map(({ key, at }) => {
+    const bucket = buckets.get(key) ?? { tokens: capacity, refilledAt: at }
+    const added = Math.floor((at - bucket.refilledAt) / refillMs)
+    const tokens = Math.min(capacity, bucket.tokens + added)
+    const refilledAt = tokens === capacity ? at : bucket.refilledAt + added * refillMs
+    if (tokens >= 1) {
+      buckets.set(key, { tokens: tokens - 1, refilledAt })
+      return { allowed: true, retryAfterMs: 0 }
+    }
+    buckets.set(key, { tokens, refilledAt })
+    return { allowed: false, retryAfterMs: refilledAt + refillMs - at }
+  })
+}`,
 }

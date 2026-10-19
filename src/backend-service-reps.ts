@@ -2092,4 +2092,483 @@ export const backendServiceReps: Rep[] = [
       },
     ],
   },
+  {
+    id: 'backend-token-bucket',
+    title: 'Refill a token bucket',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'An API lets each caller send short bursts but limits the steady rate. A token bucket stores up to a set number of tokens, gains one at a fixed interval, and spends one per request. Instead of a timer, the bucket refills from the time that has passed whenever a request arrives.',
+    prompt:
+      'Implement takeToken(bucket, now, capacity, refillMs). bucket is {tokens, updatedAt}. First refill: added is the number of whole refillMs intervals from updatedAt to now, tokens becomes the smaller of capacity and bucket.tokens + added, and updatedAt becomes now if the bucket is now full, or else bucket.updatedAt + added × refillMs, so time toward the next token is kept. Then, with at least 1 token, return {allowed: true, bucket: {tokens: tokens - 1, updatedAt}, retryAfterMs: 0}. Otherwise return {allowed: false, bucket: {tokens, updatedAt}, retryAfterMs: updatedAt + refillMs - now}. Do not change the bucket you were given.',
+    brief: {
+      summary: 'Implement takeToken(bucket, now, capacity, refillMs) and return {allowed, bucket, retryAfterMs}.',
+      rules: [
+        'Refill first: added is the number of whole refillMs intervals from updatedAt to now, and tokens becomes the smaller of capacity and bucket.tokens + added.',
+        'updatedAt becomes now if the bucket is now full, or else bucket.updatedAt + added × refillMs, so time toward the next token is kept.',
+        'With at least 1 token, return {allowed: true, bucket: {tokens: tokens - 1, updatedAt}, retryAfterMs: 0}.',
+        'Otherwise return {allowed: false, bucket: {tokens, updatedAt}, retryAfterMs: updatedAt + refillMs - now}.',
+      ],
+      edgeCases: ['A full bucket gains nothing, so its refill time starts again at now.', 'Do not change the bucket you were given.'],
+    },
+    example: {
+      input: 'takeToken({tokens: 0, updatedAt: 0}, 1500, 3, 1000)',
+      output: '{allowed: true, bucket: {tokens: 0, updatedAt: 1000}, retryAfterMs: 0}',
+    },
+    note: 'Times are whole milliseconds with now at or after updatedAt; capacity and refillMs are positive whole numbers, and bucket.tokens is between 0 and capacity. These are values passed to your function, not a live server or clock.',
+    vocabulary: [
+      {
+        term: 'Token bucket',
+        meaning: 'a limiter that holds up to a set number of tokens, adds one at a steady rate, and spends one per request',
+      },
+      { term: 'Burst', meaning: 'many requests arriving close together' },
+    ],
+    planPrompt:
+      'An empty bucket was last refilled at 0, with capacity 3 and one token per 1000 ms. What does takeToken return at 999, 1500, and 10000, and what is updatedAt each time?',
+    starter:
+      'type Bucket = { tokens: number; updatedAt: number }\n\nfunction takeToken(bucket: Bucket, now: number, capacity: number, refillMs: number): { allowed: boolean; bucket: Bucket; retryAfterMs: number } {\n  // Refill from the time that passed, then try to spend a token.\n  return { allowed: false, bucket, retryAfterMs: 0 }\n}\n',
+    functionName: 'takeToken',
+    preserveInput: true,
+    hints: [
+      'Count whole intervals with Math.floor; a part of an interval adds no token yet.',
+      'Move updatedAt forward by exactly the intervals you counted, not to now, unless the bucket is full.',
+      'A refused request waits until the next whole interval after the new updatedAt.',
+    ],
+    checks: [
+      {
+        name: 'Keeps the time toward the next token',
+        input: [{ tokens: 0, updatedAt: 0 }, 1500, 3, 1000],
+        expected: { allowed: true, bucket: { tokens: 0, updatedAt: 1000 }, retryAfterMs: 0 },
+      },
+      {
+        name: 'Spends a token from a full bucket',
+        input: [{ tokens: 3, updatedAt: 0 }, 500, 3, 1000],
+        expected: { allowed: true, bucket: { tokens: 2, updatedAt: 500 }, retryAfterMs: 0 },
+      },
+      {
+        name: 'Refuses one millisecond before a token arrives',
+        input: [{ tokens: 0, updatedAt: 0 }, 999, 3, 1000],
+        expected: { allowed: false, bucket: { tokens: 0, updatedAt: 0 }, retryAfterMs: 1 },
+      },
+      {
+        name: 'Adds a token exactly at the interval',
+        input: [{ tokens: 0, updatedAt: 0 }, 1000, 3, 1000],
+        expected: { allowed: true, bucket: { tokens: 0, updatedAt: 1000 }, retryAfterMs: 0 },
+      },
+      {
+        name: 'Adds several tokens at once',
+        input: [{ tokens: 0, updatedAt: 0 }, 2500, 5, 1000],
+        expected: { allowed: true, bucket: { tokens: 1, updatedAt: 2000 }, retryAfterMs: 0 },
+      },
+      {
+        name: 'Stops refilling at capacity',
+        input: [{ tokens: 1, updatedAt: 0 }, 10000, 3, 1000],
+        expected: { allowed: true, bucket: { tokens: 2, updatedAt: 10000 }, retryAfterMs: 0 },
+      },
+      {
+        name: 'Starts the refill time again when the bucket fills exactly',
+        input: [{ tokens: 2, updatedAt: 0 }, 1300, 3, 1000],
+        expected: { allowed: true, bucket: { tokens: 2, updatedAt: 1300 }, retryAfterMs: 0 },
+      },
+      {
+        name: 'Measures the wait from the last refill',
+        input: [{ tokens: 0, updatedAt: 400 }, 900, 3, 1000],
+        expected: { allowed: false, bucket: { tokens: 0, updatedAt: 400 }, retryAfterMs: 500 },
+      },
+      {
+        name: 'Works with a capacity of one',
+        input: [{ tokens: 0, updatedAt: 0 }, 1000, 1, 1000],
+        expected: { allowed: true, bucket: { tokens: 0, updatedAt: 1000 }, retryAfterMs: 0 },
+      },
+    ],
+  },
+  {
+    id: 'backend-sliding-log',
+    title: 'Limit with a sliding window',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'A fixed window lets a caller send a full allowance just before it resets and another just after. A sliding window counts the requests in the last stretch of time ending now, so the allowance holds over any period of that length.',
+    prompt:
+      "Implement slidingLimit(times, now, limit, windowMs). times holds the caller's earlier accepted request times. Count the times t with now - windowMs < t <= now. If the count is less than limit, return {allowed: true, remaining: limit - count - 1, retryAfterMs: 0}. Otherwise return {allowed: false, remaining: 0, retryAfterMs}, where retryAfterMs is how long until enough counted times have left the window for the count to drop below limit: sort the counted times from oldest, take the one at position count - limit (from 0), and return that time + windowMs - now. Do not change times.",
+    brief: {
+      summary: 'Implement slidingLimit(times, now, limit, windowMs) and return {allowed, remaining, retryAfterMs}.',
+      rules: [
+        'Count the earlier times t with now - windowMs < t <= now.',
+        'If the count is less than limit, return {allowed: true, remaining: limit - count - 1, retryAfterMs: 0}.',
+        'Otherwise return {allowed: false, remaining: 0, retryAfterMs}: sort the counted times from oldest, take the one at position count - limit (from 0), and return that time + windowMs - now.',
+      ],
+      edgeCases: [
+        'A time exactly windowMs before now has left the window.',
+        'Times may be in any order; times after now are ignored.',
+        'Do not change times.',
+      ],
+    },
+    example: { input: 'slidingLimit([1000, 1500], 1800, 3, 1000)', output: '{allowed: true, remaining: 0, retryAfterMs: 0}' },
+    note: 'Times are whole milliseconds; limit and windowMs are positive whole numbers; times has at most 500 entries. The count can be above limit when the limit was lowered, which is why more than one time may need to leave. These are values passed to your function, not a live server or clock.',
+    vocabulary: [
+      { term: 'Sliding window', meaning: 'a span of time that always ends now, such as the last 60 seconds' },
+      { term: 'Boundary burst', meaning: 'up to twice the allowance sent around the moment a fixed window resets' },
+    ],
+    planPrompt:
+      'With limit 2 and windowMs 1000, a caller sent requests at 1900 and 1950. What does a request at 2050 get, and how would a fixed window that resets at 2000 answer instead?',
+    starter:
+      'function slidingLimit(times: number[], now: number, limit: number, windowMs: number): { allowed: boolean; remaining: number; retryAfterMs: number } {\n  // Count the times inside the window that ends now.\n  return { allowed: true, remaining: limit - 1, retryAfterMs: 0 }\n}\n',
+    functionName: 'slidingLimit',
+    preserveInput: true,
+    hints: [
+      'Filter the times into the window first; the left edge is excluded and now is included.',
+      'When refused, the count must fall to limit - 1, so count - limit + 1 of the oldest times have to leave.',
+      'Sort a copy of the counted times; the last of those that must leave is at index count - limit.',
+    ],
+    checks: [
+      {
+        name: 'Allows a request and reports what remains',
+        input: [[1000, 1500], 1800, 3, 1000],
+        expected: { allowed: true, remaining: 0, retryAfterMs: 0 },
+      },
+      {
+        name: 'Allows the first request with no history',
+        input: [[], 0, 2, 1000],
+        expected: { allowed: true, remaining: 1, retryAfterMs: 0 },
+      },
+      {
+        name: 'Drops a time exactly one window old',
+        input: [[800], 1800, 1, 1000],
+        expected: { allowed: true, remaining: 0, retryAfterMs: 0 },
+      },
+      {
+        name: 'Counts a time just inside the window',
+        input: [[801], 1800, 1, 1000],
+        expected: { allowed: false, remaining: 0, retryAfterMs: 1 },
+      },
+      {
+        name: 'Waits for the oldest time to leave',
+        input: [[1200, 1300, 1500], 1600, 3, 1000],
+        expected: { allowed: false, remaining: 0, retryAfterMs: 600 },
+      },
+      {
+        name: 'Sorts times before choosing',
+        input: [[1500, 1200, 1300], 1600, 3, 1000],
+        expected: { allowed: false, remaining: 0, retryAfterMs: 600 },
+      },
+      {
+        name: 'Waits for several times when the count is over the limit',
+        input: [[1100, 1200, 1300, 1400], 1500, 2, 1000],
+        expected: { allowed: false, remaining: 0, retryAfterMs: 800 },
+      },
+      {
+        name: 'Counts requests across a fixed-window boundary',
+        input: [[1900, 1950], 2050, 2, 1000],
+        expected: { allowed: false, remaining: 0, retryAfterMs: 850 },
+      },
+      { name: 'Ignores times later than now', input: [[1900], 1500, 1, 1000], expected: { allowed: true, remaining: 0, retryAfterMs: 0 } },
+    ],
+  },
+  {
+    id: 'backend-limit-response',
+    title: 'Answer 429 with Retry-After',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'Once a limiter has decided, the API has to tell the caller. Well-behaved clients read the limit headers to slow down early, and when they are refused they wait for the number of seconds the server suggests.',
+    prompt:
+      'Implement limitResponse(decision, limit). decision has allowed, remaining, and retryAfterMs. Every response has the headers RateLimit-Limit, which is limit, and RateLimit-Remaining, which is decision.remaining when allowed (or 0 if that is negative) and 0 when refused; header values are text. An allowed request gets {status: 200, headers}. A refused one gets {status: 429, headers}, where headers also has Retry-After: retryAfterMs in whole seconds, rounded up, and at least 1. Do not change the inputs.',
+    brief: {
+      summary: 'Implement limitResponse(decision, limit) and return {status, headers}.',
+      rules: [
+        'Every response has RateLimit-Limit (limit) and RateLimit-Remaining: decision.remaining when allowed (or 0 if that is negative), and 0 when refused.',
+        'An allowed request gets {status: 200, headers}.',
+        'A refused one gets {status: 429, headers}, where headers also has Retry-After: retryAfterMs in whole seconds, rounded up, and at least 1.',
+      ],
+      edgeCases: ['Header values are text, such as "5".', 'Do not change the inputs.'],
+    },
+    example: {
+      input: 'limitResponse({allowed: false, remaining: 0, retryAfterMs: 1200}, 10)',
+      output: '{status: 429, headers: {"RateLimit-Limit": "10", "RateLimit-Remaining": "0", "Retry-After": "2"}}',
+    },
+    note: 'limit is a positive whole number; remaining and retryAfterMs are whole numbers. Header names are written exactly as shown. Several RateLimit header formats are in use; this contract uses these three. These are values passed to your function, not a live server.',
+    vocabulary: [
+      { term: 'Too Many Requests (429)', meaning: 'the response that says a caller has gone over its rate limit' },
+      { term: 'Retry-After', meaning: 'a response header that says how many seconds to wait before trying again' },
+    ],
+    planPrompt: 'What Retry-After do waits of 1, 1000, 1001, and 0 milliseconds give? Why is rounding down a problem for the client?',
+    starter:
+      'type Decision = { allowed: boolean; remaining: number; retryAfterMs: number }\n\nfunction limitResponse(decision: Decision, limit: number): { status: number; headers: Record<string, string> } {\n  // Build the headers every response shares, then add Retry-After when refused.\n  return { status: 200, headers: {} }\n}\n',
+    functionName: 'limitResponse',
+    preserveInput: true,
+    hints: [
+      'Build the two shared headers first, turning numbers into text with String.',
+      'Math.ceil turns milliseconds into whole seconds without sending the client back early.',
+      'Math.max gives both lower bounds: 0 for remaining and 1 for Retry-After.',
+    ],
+    checks: [
+      {
+        name: 'Rounds the wait up to whole seconds',
+        input: [{ allowed: false, remaining: 0, retryAfterMs: 1200 }, 10],
+        expected: { status: 429, headers: { 'RateLimit-Limit': '10', 'RateLimit-Remaining': '0', 'Retry-After': '2' } },
+      },
+      {
+        name: 'Reports what remains on an allowed request',
+        input: [{ allowed: true, remaining: 4, retryAfterMs: 0 }, 5],
+        expected: { status: 200, headers: { 'RateLimit-Limit': '5', 'RateLimit-Remaining': '4' } },
+      },
+      {
+        name: 'Reports zero remaining on the last allowed request',
+        input: [{ allowed: true, remaining: 0, retryAfterMs: 0 }, 5],
+        expected: { status: 200, headers: { 'RateLimit-Limit': '5', 'RateLimit-Remaining': '0' } },
+      },
+      {
+        name: 'Never reports a negative remainder',
+        input: [{ allowed: true, remaining: -2, retryAfterMs: 0 }, 5],
+        expected: { status: 200, headers: { 'RateLimit-Limit': '5', 'RateLimit-Remaining': '0' } },
+      },
+      {
+        name: 'Rounds one millisecond up to one second',
+        input: [{ allowed: false, remaining: 0, retryAfterMs: 1 }, 5],
+        expected: { status: 429, headers: { 'RateLimit-Limit': '5', 'RateLimit-Remaining': '0', 'Retry-After': '1' } },
+      },
+      {
+        name: 'Keeps an exact second',
+        input: [{ allowed: false, remaining: 0, retryAfterMs: 1000 }, 5],
+        expected: { status: 429, headers: { 'RateLimit-Limit': '5', 'RateLimit-Remaining': '0', 'Retry-After': '1' } },
+      },
+      {
+        name: 'Rounds just past a second up',
+        input: [{ allowed: false, remaining: 0, retryAfterMs: 1001 }, 5],
+        expected: { status: 429, headers: { 'RateLimit-Limit': '5', 'RateLimit-Remaining': '0', 'Retry-After': '2' } },
+      },
+      {
+        name: 'Asks for at least one second',
+        input: [{ allowed: false, remaining: 0, retryAfterMs: 0 }, 5],
+        expected: { status: 429, headers: { 'RateLimit-Limit': '5', 'RateLimit-Remaining': '0', 'Retry-After': '1' } },
+      },
+      {
+        name: 'Reports zero remaining when refused',
+        input: [{ allowed: false, remaining: 3, retryAfterMs: 59999 }, 60],
+        expected: { status: 429, headers: { 'RateLimit-Limit': '60', 'RateLimit-Remaining': '0', 'Retry-After': '60' } },
+      },
+    ],
+  },
+  {
+    id: 'backend-sliding-counter',
+    title: 'Estimate a sliding window from two counts',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'Keeping every request time for every caller costs memory. Many limiters keep only two numbers per caller, the counts for the current and previous fixed windows, and estimate the sliding window by counting the part of the previous window that still falls inside it.',
+    prompt:
+      'Implement slidingEstimate(previousCount, currentCount, now, windowMs, limit). Fixed windows start at 0, windowMs, 2 × windowMs, and so on, and start is Math.floor(now / windowMs) × windowMs. currentCount counts the accepted requests in the window that starts at start, and previousCount those in the window before it. The sliding window is the windowMs milliseconds ending at now, which still covers start + windowMs - now milliseconds of the previous window. Let used be currentCount plus previousCount × (start + windowMs - now) / windowMs, rounded down to a whole number. Return {allowed: used < limit, used}.',
+    brief: {
+      summary: 'Implement slidingEstimate(previousCount, currentCount, now, windowMs, limit) and return {allowed, used}.',
+      rules: [
+        'Fixed windows start at 0, windowMs, 2 × windowMs, and so on, and start is Math.floor(now / windowMs) × windowMs.',
+        'The sliding window ending at now still covers start + windowMs - now milliseconds of the previous window.',
+        'used is currentCount plus previousCount × (start + windowMs - now) / windowMs, rounded down to a whole number.',
+        'Return {allowed: used < limit, used}.',
+      ],
+      edgeCases: ['At the exact start of a window the whole previous count still applies.', 'A used value equal to limit is refused.'],
+    },
+    example: { input: 'slidingEstimate(10, 3, 1250, 1000, 12)', output: '{allowed: true, used: 10}' },
+    note: "All values are whole numbers; windowMs and limit are positive. The estimate assumes the previous window's requests were spread evenly; real traffic may not be. These are values passed to your function, not a live server or clock.",
+    vocabulary: [
+      { term: 'Window counter', meaning: 'a single count of requests kept for each fixed window' },
+      { term: 'Weighted estimate', meaning: 'a count that includes only the share of an older count that still applies' },
+    ],
+    planPrompt: 'With windowMs 1000 and previousCount 10, how much of the previous count applies at now 2000, 2250, and 2999?',
+    starter:
+      'function slidingEstimate(previousCount: number, currentCount: number, now: number, windowMs: number, limit: number): { allowed: boolean; used: number } {\n  // Weight the previous count by how much of it the sliding window still covers.\n  return { allowed: currentCount < limit, used: currentCount }\n}\n',
+    functionName: 'slidingEstimate',
+    preserveInput: true,
+    hints: [
+      'Find where the current fixed window starts, then how many milliseconds of the previous window the last windowMs still reaches.',
+      'Multiply before dividing, so whole-number inputs give an exact result before rounding down.',
+      'Compare used with limit using <, so reaching the limit refuses the request.',
+    ],
+    checks: [
+      { name: 'Weights the previous count', input: [10, 3, 1250, 1000, 12], expected: { allowed: true, used: 10 } },
+      { name: 'Counts the whole previous window at the start', input: [10, 0, 2000, 1000, 10], expected: { allowed: false, used: 10 } },
+      { name: 'Counts almost none of it at the end', input: [10, 4, 2999, 1000, 5], expected: { allowed: true, used: 4 } },
+      { name: 'Rounds the estimate down', input: [3, 0, 1500, 1000, 2], expected: { allowed: true, used: 1 } },
+      { name: 'Refuses when the estimate reaches the limit', input: [4, 3, 1500, 1000, 5], expected: { allowed: false, used: 5 } },
+      { name: 'Allows one below the limit', input: [4, 2, 1500, 1000, 5], expected: { allowed: true, used: 4 } },
+      {
+        name: 'Uses the current count alone with no previous requests',
+        input: [0, 7, 3400, 1000, 8],
+        expected: { allowed: true, used: 7 },
+      },
+      { name: 'Keeps whole-number precision', input: [999, 0, 1667, 1000, 1000], expected: { allowed: true, used: 332 } },
+      { name: 'Uses the supplied window size', input: [6, 1, 100, 60, 7], expected: { allowed: true, used: 3 } },
+    ],
+  },
+  {
+    id: 'backend-limit-callers',
+    title: 'Limit many callers with token buckets',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'An API gateway sees requests from many callers, each identified by an API key. Every key has its own token bucket, so a busy caller runs out of tokens without affecting anyone else.',
+    prompt:
+      "Implement limitRequests(requests, capacity, refillMs). requests is a list of {key, at} in order of time. Each key has its own bucket, which starts full, with capacity tokens and its refill time at the key's first request. For each request, refill that key's bucket: whole refillMs intervals since its refill time each add a token, up to capacity; the refill time moves forward by those whole intervals, or to the request time if the bucket is now full. Then spend a token if there is one and return {allowed: true, retryAfterMs: 0}; otherwise return {allowed: false, retryAfterMs}, the time until the bucket's next token. Return one result per request, in order. Do not change requests.",
+    brief: {
+      summary: 'Implement limitRequests(requests, capacity, refillMs) and return one {allowed, retryAfterMs} per request.',
+      rules: [
+        "Each key has its own bucket, which starts full, with capacity tokens and its refill time at the key's first request.",
+        'Refill before each request: whole refillMs intervals since the refill time each add a token, up to capacity.',
+        'The refill time moves forward by those whole intervals, or to the request time if the bucket is now full.',
+        "Spend a token if there is one and return {allowed: true, retryAfterMs: 0}; otherwise return {allowed: false, retryAfterMs}, the time until the bucket's next token.",
+      ],
+      edgeCases: ['A refused request spends nothing.', 'Do not change requests.'],
+    },
+    example: {
+      input: 'limitRequests([{key: "k1", at: 0}, {key: "k1", at: 0}, {key: "k2", at: 0}], 1, 1000)',
+      output: '[{allowed: true, retryAfterMs: 0}, {allowed: false, retryAfterMs: 1000}, {allowed: true, retryAfterMs: 0}]',
+    },
+    note: 'Keys are non-empty text compared exactly; times are whole milliseconds that never decrease; capacity and refillMs are positive whole numbers. requests has at most 200 entries. These are values passed to your function, not a live gateway or clock.',
+    vocabulary: [
+      { term: 'Rate-limit key', meaning: 'the name a limiter counts requests under, such as an API key' },
+      { term: 'Refill interval', meaning: 'how often a token bucket gains one token' },
+    ],
+    planPrompt:
+      'With capacity 2 and one token per 1000 ms, key k1 sends requests at 0, 0, 1500, 1999, and 2000. Trace its tokens and refill time after each one.',
+    starter:
+      'type Request = { key: string; at: number }\n\nfunction limitRequests(requests: Request[], capacity: number, refillMs: number): { allowed: boolean; retryAfterMs: number }[] {\n  // Keep one bucket per key.\n  return requests.map(() => ({ allowed: true, retryAfterMs: 0 }))\n}\n',
+    functionName: 'limitRequests',
+    preserveInput: true,
+    hints: [
+      'Keep a Map from key to {tokens, refilledAt}; a key with no entry yet gets a full bucket at its first request time.',
+      'Refill from the stored refill time, moving it by whole intervals so part of an interval is not lost.',
+      'A refused request still saves the refilled bucket, but spends nothing.',
+    ],
+    checks: [
+      {
+        name: 'Gives each key its own bucket',
+        input: [
+          [
+            { key: 'k1', at: 0 },
+            { key: 'k1', at: 0 },
+            { key: 'k2', at: 0 },
+          ],
+          1,
+          1000,
+        ],
+        expected: [
+          { allowed: true, retryAfterMs: 0 },
+          { allowed: false, retryAfterMs: 1000 },
+          { allowed: true, retryAfterMs: 0 },
+        ],
+      },
+      {
+        name: 'Allows a burst up to the capacity',
+        input: [
+          [
+            { key: 'k1', at: 0 },
+            { key: 'k1', at: 0 },
+            { key: 'k1', at: 0 },
+          ],
+          2,
+          1000,
+        ],
+        expected: [
+          { allowed: true, retryAfterMs: 0 },
+          { allowed: true, retryAfterMs: 0 },
+          { allowed: false, retryAfterMs: 1000 },
+        ],
+      },
+      {
+        name: 'Keeps the time toward the next token across requests',
+        input: [
+          [
+            { key: 'k1', at: 0 },
+            { key: 'k1', at: 0 },
+            { key: 'k1', at: 1500 },
+            { key: 'k1', at: 1999 },
+            { key: 'k1', at: 2000 },
+          ],
+          2,
+          1000,
+        ],
+        expected: [
+          { allowed: true, retryAfterMs: 0 },
+          { allowed: true, retryAfterMs: 0 },
+          { allowed: true, retryAfterMs: 0 },
+          { allowed: false, retryAfterMs: 1 },
+          { allowed: true, retryAfterMs: 0 },
+        ],
+      },
+      {
+        name: 'Starts a new key full at its first request',
+        input: [
+          [
+            { key: 'k1', at: 0 },
+            { key: 'k2', at: 5000 },
+            { key: 'k2', at: 5000 },
+          ],
+          2,
+          1000,
+        ],
+        expected: [
+          { allowed: true, retryAfterMs: 0 },
+          { allowed: true, retryAfterMs: 0 },
+          { allowed: true, retryAfterMs: 0 },
+        ],
+      },
+      {
+        name: 'Refused requests spend nothing',
+        input: [
+          [
+            { key: 'k1', at: 0 },
+            { key: 'k1', at: 300 },
+            { key: 'k1', at: 600 },
+            { key: 'k1', at: 1000 },
+          ],
+          1,
+          1000,
+        ],
+        expected: [
+          { allowed: true, retryAfterMs: 0 },
+          { allowed: false, retryAfterMs: 700 },
+          { allowed: false, retryAfterMs: 400 },
+          { allowed: true, retryAfterMs: 0 },
+        ],
+      },
+      {
+        name: 'Stops refilling at capacity after a long pause',
+        input: [
+          [
+            { key: 'k1', at: 0 },
+            { key: 'k1', at: 0 },
+            { key: 'k1', at: 60000 },
+            { key: 'k1', at: 60000 },
+            { key: 'k1', at: 60000 },
+          ],
+          2,
+          1000,
+        ],
+        expected: [
+          { allowed: true, retryAfterMs: 0 },
+          { allowed: true, retryAfterMs: 0 },
+          { allowed: true, retryAfterMs: 0 },
+          { allowed: true, retryAfterMs: 0 },
+          { allowed: false, retryAfterMs: 1000 },
+        ],
+      },
+      {
+        name: 'Compares keys exactly',
+        input: [
+          [
+            { key: 'k1', at: 0 },
+            { key: 'K1', at: 0 },
+          ],
+          1,
+          1000,
+        ],
+        expected: [
+          { allowed: true, retryAfterMs: 0 },
+          { allowed: true, retryAfterMs: 0 },
+        ],
+      },
+      { name: 'Handles no requests', input: [[], 1, 1000], expected: [] },
+    ],
+  },
 ]

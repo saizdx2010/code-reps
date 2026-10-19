@@ -425,6 +425,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'rate-limiting',
+    title: 'Limit how often callers may ask',
+    guided: 'backend-token-bucket',
+    independent: 'backend-sliding-log',
+    recall: 'backend-limit-callers',
+    practice: ['backend-limit-response', 'backend-sliding-counter'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

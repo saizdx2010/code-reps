@@ -244,6 +244,66 @@ export const backendDepth: Record<string, RepDepth> = {
     transfer:
       'Add a second worker, so two entries can run at the same time. Decide how the clock and the tie-break work when both workers are free, and whether the history can still be reproduced exactly. This changed contract is self-reviewed, not checked by the original cases.',
   },
+  'backend-token-bucket': {
+    reasoning:
+      'The bucket stores two facts, how many tokens it has and when it last gained one, and every other fact follows from the time that has passed. Adding only whole intervals and moving the refill time by exactly those intervals keeps the long-run rate at one token per interval, however the requests are spaced. A full bucket has nothing to work toward, so its refill time restarts at now, and the capacity caps how large a burst can be.',
+    trace:
+      'An empty bucket refilled at 0, with refillMs 1000, gets a request at 1500: one whole interval has passed, so it gains one token and the refill time moves to 1000, not 1500. The request spends the token. A request at 1999 finds no new whole interval since 1000, so it is refused with retryAfterMs 1000 + 1000 - 1999 = 1. With {tokens: 2, updatedAt: 0}, capacity 3, and now 1300, the bucket fills exactly, so the refill time becomes 1300 before a token is spent.',
+    alternative:
+      'Storing tokens as a fraction (adding elapsed / refillMs each time) gives the same long-run rate without tracking a refill time, but fractions bring rounding and a less obvious "next token" time. A leaky bucket, which queues requests and lets them out at a steady rate, smooths traffic instead of refusing it; the token bucket refuses at once and allows bursts.',
+    counterexample:
+      'Setting updatedAt to now on every refill throws away the 500 ms of progress at 1500, so the next token arrives at 2500 instead of 2000. Measuring retryAfterMs from now instead of the refill time ("refillMs - 0") tells the caller at 999 to wait 1000 ms when 1 ms is enough.',
+    transfer:
+      'Let some requests cost more than one token, such as a bulk export costing 5. Decide what a request that needs more tokens than the capacity gets, and how retryAfterMs counts several missing tokens. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-sliding-log': {
+    reasoning:
+      'A sliding window counts exactly the requests in the last windowMs milliseconds, so the allowance holds over every period of that length, not only over aligned slots. When the count is at or over the limit, the count drops below the limit only after count - limit + 1 of the oldest times have left, and the last of those to leave is the one at index count - limit in sorted order.',
+    trace:
+      'For times [1100, 1200, 1300, 1400] at now 1500 with limit 2 and windowMs 1000, all four are later than 500, so the count is 4. Three must leave for the count to reach 1. Sorted, the third oldest is at index 4 - 2 = 2, which is 1300; it leaves the window at 2300, so retryAfterMs is 2300 - 1500 = 800.',
+    alternative:
+      'A fixed window needs one counter per slot instead of every time, but allows the boundary burst that "Counts requests across a fixed-window boundary" refuses. Blending the previous and current window counts approximates a sliding window with two numbers, at the cost of assuming requests were spread evenly.',
+    counterexample:
+      'Including a time exactly windowMs old (t >= now - windowMs) refuses the request at 1800 for a time at 800, which the contract says has left. Always waiting for the oldest time gives 600 instead of 800 when the count is over the limit, so the caller is refused again when it comes back.',
+    transfer:
+      'Store only the accepted times and drop those older than the window on each call, so the list cannot grow without limit. Decide whether a refused request should be stored, and what the list looks like after a long burst. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-limit-response': {
+    reasoning:
+      'The response has to be safe to follow literally. Retry-After takes whole seconds, so rounding a wait up guarantees that a client which waits that long finds the limit open; rounding down sends it back too early. A minimum of 1 keeps a refusal from ever saying "retry now". The limit headers turn the same decision into early guidance, and the remainder never goes below 0 even if a limiter reports a negative one.',
+    trace:
+      'A refusal with retryAfterMs 1200 is 1.2 seconds, which rounds up to 2, so the headers are RateLimit-Limit "10", RateLimit-Remaining "0", and Retry-After "2". With retryAfterMs 1000 the wait is exactly 1 second, and with 0 it would be 0 seconds but the minimum makes it "1". An allowed request with remaining -2 reports "0".',
+    alternative:
+      "Retry-After can also hold an HTTP date, which is precise but depends on the client's clock agreeing with the server's; a number of seconds does not. Some APIs send the reset time of the window instead of a wait, which suits fixed windows but says little for a token bucket.",
+    counterexample:
+      'Math.round(1200 / 1000) gives 1, so a client that waits one second is refused again. Leaving the number unconverted puts 2 rather than "2" in the headers, which a real HTTP library would turn into text anyway but this contract checks.',
+    transfer:
+      'Add a RateLimit-Reset header that says, in whole seconds, when the allowance will be full again. Decide what it means for a token bucket and how it should round. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-sliding-counter': {
+    reasoning:
+      "The sliding window ending at now overlaps the previous fixed window for start + windowMs - now milliseconds, so, if the previous window's requests were spread evenly, that share of its count still applies. Multiplying before dividing keeps the arithmetic exact for whole numbers, and rounding down gives the caller the benefit of the doubt for a fraction of a request.",
+    trace:
+      'At now 1250 with windowMs 1000, the current window started at 1000, and the last 1000 ms still reach 750 ms into the previous window. With previousCount 10 that is 10 × 750 / 1000 = 7.5, rounded down to 7, plus currentCount 3 gives used 10, below the limit of 12. At now 2000 the whole previous window still applies, so previousCount 10 alone reaches a limit of 10 and the request is refused.',
+    alternative:
+      "Keeping every request time is exact but costs memory per request; two counters cost the same for one request or a million, which is why large services use this estimate. Its weakness is uneven traffic: if all of the previous window's requests came at its very end, the estimate counts too few of them.",
+    counterexample:
+      'Weighting by the part of the current window that has passed (now - start) instead of what is left counts almost none of the previous window at its start, when it should count all of it. Dividing before multiplying, as Math.floor(previousCount / windowMs) × remaining, rounds most counts down to 0.',
+    transfer:
+      'Turn the estimate into a Retry-After: when refused, find how long until enough of the previous window has slid out for used to fall below the limit. Decide how currentCount affects that answer. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-limit-callers': {
+    reasoning:
+      "Each key's bucket is independent, so the whole problem is the single-bucket rule applied with a map from key to bucket. A key's first request finds a full bucket, refills are computed from the stored refill time so partial progress carries across requests, and a refusal saves the refilled bucket without spending, so a caller who keeps asking does not push its own next token further away.",
+    trace:
+      'With capacity 1 and refillMs 1000, k1 is allowed at 0 and its bucket is empty with refill time 0. At 300 no whole interval has passed, so it is refused with 1000 - 300 = 700; at 600 the same bucket gives 400. At 1000 one interval has passed, the bucket fills to 1, its refill time becomes 1000 because it is full, and the request is allowed.',
+    alternative:
+      'One global bucket for all keys is simpler but lets one busy caller refuse everyone else. A real gateway keeps these buckets in a shared store, such as an in-memory database, so several gateway servers agree; the refill rule is the same, but each update must be atomic.',
+    counterexample:
+      'Starting a new key with an empty bucket refuses k2\'s first request in "Starts a new key full at its first request". Spending a token on refused requests as well pushes the 1000 ms request in "Refused requests spend nothing" into a refusal.',
+    transfer:
+      "Give some keys a larger capacity, such as paid plans, using a table of limits by key. Decide what an unknown key gets and whether changing a key's capacity affects tokens it already has. This changed contract is self-reviewed, not checked by the original cases.",
+  },
 }
 
 export const backendGuides: Record<string, ReflectionGuide> = {
@@ -527,6 +587,72 @@ export const backendGuides: Record<string, ReflectionGuide> = {
     example:
       'I keep a list of entries {id, runAt, attempts, order}, starting with every job at time 0. Each step removes the entry with the smallest runAt, then order, moves the clock to its runAt if later, and reads its outcome. ok completes it; permanent or the last allowed attempt adds a dead letter; otherwise I queue a new entry with the next order and the backed-off time. finishedAt is the clock after the last attempt. The checks call the function directly, not a real queue.',
   },
+  'backend-token-bucket': {
+    plan: [
+      'Count the whole intervals since the last refill.',
+      'Refill up to capacity and move the refill time by those intervals, or to now when full.',
+      'Spend a token, or work out the wait for the next one.',
+    ],
+    explanation: [
+      'Trace a request halfway between two tokens.',
+      'Explain why the refill time does not jump to now every time.',
+      'Say what capacity and the refill interval each control.',
+    ],
+    example:
+      'added is Math.floor((now - updatedAt) / refillMs), and tokens is the smaller of capacity and the old tokens plus added. The refill time becomes now when the bucket is full, or else moves forward by added intervals. With a token I spend it and allow; without one I refuse with the time until updatedAt + refillMs. The work is constant. The checks pass times in directly; no clock or server runs.',
+  },
+  'backend-sliding-log': {
+    plan: [
+      'Keep the times inside (now - windowMs, now].',
+      'Allow when the count is below the limit, with what remains.',
+      'When refused, wait for the time at index count - limit, sorted, to leave.',
+    ],
+    explanation: [
+      'Trace a request just after a fixed-window boundary.',
+      'Explain the edge at exactly windowMs ago.',
+      'Explain why more than one time may need to leave.',
+    ],
+    example:
+      'I filter times to t > now - windowMs and t <= now and sort them. Below the limit I allow and report limit - count - 1 remaining. Otherwise I refuse; the count falls below the limit once the time at index count - limit has left, at that time plus windowMs. The work is O(n log n) for the sort. The checks pass times in directly, not a running server.',
+  },
+  'backend-limit-response': {
+    plan: [
+      'Build RateLimit-Limit and RateLimit-Remaining as text.',
+      'Return 200 when allowed.',
+      'Return 429 with Retry-After rounded up and at least 1 when refused.',
+    ],
+    explanation: ['Trace a 1200 ms wait.', 'Explain why Retry-After rounds up.', 'Say what the remaining header shows on a refusal.'],
+    example:
+      'I set RateLimit-Limit to String(limit) and RateLimit-Remaining to String(Math.max(0, remaining)) when allowed or "0" when refused. Allowed requests get 200. Refused ones get 429 and Retry-After set to String(Math.max(1, Math.ceil(retryAfterMs / 1000))). The work is constant. The checks call the function directly, not a real HTTP stack.',
+  },
+  'backend-sliding-counter': {
+    plan: [
+      'Find the start of the current fixed window.',
+      'Work out how much of the previous window the sliding window still covers.',
+      'Add that share of the previous count to the current count, rounded down.',
+    ],
+    explanation: [
+      'Trace the estimate at the start and near the end of a window.',
+      'Explain why multiplying before dividing matters.',
+      'Say what the estimate assumes about the previous window.',
+    ],
+    example:
+      'start is Math.floor(now / windowMs) × windowMs, and the sliding window still covers start + windowMs - now milliseconds of the previous window. used is currentCount plus Math.floor(previousCount × that overlap / windowMs), and the request is allowed when used is below the limit. The work is constant. The checks pass counts and times in directly; real traffic need not be spread evenly.',
+  },
+  'backend-limit-callers': {
+    plan: [
+      "Keep a bucket per key, full at the key's first request.",
+      'Refill from the stored refill time by whole intervals.',
+      'Spend a token or report the wait, saving the bucket either way.',
+    ],
+    explanation: [
+      'Trace one key that is refused twice before a token arrives.',
+      'Explain why keys never affect each other.',
+      'Explain why a refused request spends nothing.',
+    ],
+    example:
+      "I keep a Map from key to {tokens, refilledAt}, creating a full bucket at a key's first request. For each request I add whole intervals up to capacity, move the refill time by those intervals or to the request time when full, and then either spend a token or refuse with refilledAt + refillMs - at, saving the bucket in both cases. The work is linear in the requests. The checks pass the requests directly, not through a gateway.",
+  },
 }
 
 export const backendLessonDepth: Record<string, LessonDepth> = {
@@ -569,5 +695,15 @@ export const backendLessonDepth: Record<string, LessonDepth> = {
       'A teammate moves the INSERT after COMMIT, as its own statement. Describe where the worker could stop so that 500 is added twice, then where it could stop without any harm.',
     answer:
       'If the worker stops after COMMIT but before the separate INSERT, the balance has changed but no ID was recorded, so the redelivered message passes the check and adds 500 again. Stopping before COMMIT is harmless: the transaction rolls back, nothing was applied, and the redelivery applies it once.',
+  },
+  'rate-limiting': {
+    title: 'Refill from the last refill, not the last request',
+    code: 'capacity 1, one token per 1000 ms, empty at 0\n\nrequest at 1500 → one token; count the next one from 1000\nnext token at 2000\n\nmistake: count from the request at 1500\nnext token at 2500',
+    reasoning:
+      'A token bucket promises one token per interval over the long run. Each refill adds only whole tokens, so the time since the last whole token is progress toward the next one. Moving the refill time to the request time throws that progress away: a caller who always arrives halfway between tokens gets one every 1500 ms instead of every 1000 ms. When the bucket is full there is no next token to work toward, so the refill time moves to now.',
+    challenge:
+      'A bucket with capacity 2 and one token per 1000 ms is empty at 0. Requests arrive at 1500, 2600, and 3100. Predict each decision with the correct rule, then with the "refill from the last request" mistake.',
+    answer:
+      'With the correct rule all three are allowed: 1500 gains one token and counts from 1000, 2600 gains one and counts from 2000, and 3100 gains one and counts from 3000. With the mistake, 1500 and 2600 are allowed but restart the count at their own times, so at 3100 only 500 ms have passed and the request is refused.',
   },
 }
