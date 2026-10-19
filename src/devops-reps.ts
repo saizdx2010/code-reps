@@ -3215,4 +3215,470 @@ export const devopsReps: Rep[] = [
       },
     ],
   },
+  {
+    id: 'devops-health-endpoints',
+    title: 'Answer liveness and readiness checks',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'An orchestrator asks each instance two questions. Liveness asks whether the process is stuck and should be restarted. Readiness asks whether it should get traffic right now. Mixing them up is costly: if liveness fails whenever the database is down, every instance restarts at once and the outage gets worse.',
+    prompt:
+      'Implement healthEndpoints(state). state is {started, shuttingDown, stalled, dependencies}, where dependencies lists {name, required, up}. Liveness looks only at stalled: return {status: 503} if stalled is true and {status: 200} otherwise. Readiness collects reasons in this order: "starting" if started is false, "shutting down" if shuttingDown is true, then "NAME is down" for each required dependency that is not up, in list order, where NAME is its name. Readiness is {status: 200, reasons: []} with no reasons, and {status: 503, reasons} otherwise. Dependencies that are not required never affect readiness. Return {live, ready}. Do not change state.',
+    brief: {
+      summary: 'Implement healthEndpoints(state) and return {live, ready}.',
+      rules: [
+        'Liveness looks only at stalled: {status: 503} if stalled, else {status: 200}.',
+        'Readiness reasons, in order: "starting" if not started, "shutting down" if shuttingDown, then "NAME is down" for each required dependency that is not up.',
+        'Readiness is {status: 200, reasons: []} with no reasons, and {status: 503, reasons} otherwise.',
+      ],
+      edgeCases: [
+        'A dependency that is not required never affects readiness.',
+        'A down database makes the instance not ready, but still live.',
+        'Do not change state.',
+      ],
+    },
+    example: {
+      input:
+        'healthEndpoints({started: true, shuttingDown: false, stalled: false, dependencies: [{name: "database", required: true, up: false}, {name: "cache", required: false, up: false}]})',
+      output: '{live: {status: 200}, ready: {status: 503, reasons: ["database is down"]}}',
+    },
+    note: `Real health endpoints return these as HTTP responses; here they are values your function returns. ${notRun}`,
+    vocabulary: [
+      { term: 'Liveness check', meaning: 'a check that asks whether a process is stuck and should be restarted' },
+      { term: 'Readiness check', meaning: 'a check that asks whether an instance should receive traffic right now' },
+    ],
+    planPrompt:
+      'The database goes down for every instance at once. What should liveness and readiness each answer, and what would happen if liveness failed too?',
+    starter:
+      'type Dependency = { name: string; required: boolean; up: boolean }\ntype State = { started: boolean; shuttingDown: boolean; stalled: boolean; dependencies: Dependency[] }\n\nfunction healthEndpoints(state: State) {\n  return { live: { status: 200 }, ready: { status: 200, reasons: [] as string[] } }\n}\n',
+    functionName: 'healthEndpoints',
+    preserveInput: true,
+    hints: [
+      'Work out liveness first; it needs only one field.',
+      'Build the readiness reasons in a list, in the stated order.',
+      'The status follows from whether the list is empty.',
+    ],
+    checks: [
+      {
+        name: 'Stays live while the database is down',
+        input: [
+          {
+            started: true,
+            shuttingDown: false,
+            stalled: false,
+            dependencies: [
+              { name: 'database', required: true, up: false },
+              { name: 'cache', required: false, up: false },
+            ],
+          },
+        ],
+        expected: { live: { status: 200 }, ready: { status: 503, reasons: ['database is down'] } },
+      },
+      {
+        name: 'Is ready when every required dependency is up',
+        input: [
+          {
+            started: true,
+            shuttingDown: false,
+            stalled: false,
+            dependencies: [
+              { name: 'database', required: true, up: true },
+              { name: 'cache', required: false, up: false },
+            ],
+          },
+        ],
+        expected: { live: { status: 200 }, ready: { status: 200, reasons: [] } },
+      },
+      {
+        name: 'Is not ready while starting',
+        input: [{ started: false, shuttingDown: false, stalled: false, dependencies: [] }],
+        expected: { live: { status: 200 }, ready: { status: 503, reasons: ['starting'] } },
+      },
+      {
+        name: 'Is not ready while shutting down',
+        input: [{ started: true, shuttingDown: true, stalled: false, dependencies: [{ name: 'database', required: true, up: true }] }],
+        expected: { live: { status: 200 }, ready: { status: 503, reasons: ['shutting down'] } },
+      },
+      {
+        name: 'Fails liveness only when stalled',
+        input: [{ started: true, shuttingDown: false, stalled: true, dependencies: [{ name: 'database', required: true, up: true }] }],
+        expected: { live: { status: 503 }, ready: { status: 200, reasons: [] } },
+      },
+      {
+        name: 'Lists every reason in order',
+        input: [
+          {
+            started: false,
+            shuttingDown: true,
+            stalled: false,
+            dependencies: [
+              { name: 'queue', required: true, up: false },
+              { name: 'cache', required: false, up: false },
+              { name: 'database', required: true, up: false },
+            ],
+          },
+        ],
+        expected: {
+          live: { status: 200 },
+          ready: { status: 503, reasons: ['starting', 'shutting down', 'queue is down', 'database is down'] },
+        },
+      },
+      {
+        name: 'Is ready with no dependencies',
+        input: [{ started: true, shuttingDown: false, stalled: false, dependencies: [] }],
+        expected: { live: { status: 200 }, ready: { status: 200, reasons: [] } },
+      },
+    ],
+  },
+  {
+    id: 'devops-probe-thresholds',
+    title: 'Put an instance in and out of service',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A load balancer checks each instance every few seconds. A single failed check could be a blip, so it takes several failures in a row to remove an instance and several passes in a row to add it back. A new instance starts out of service until it has passed enough checks.',
+    prompt:
+      'Implement serviceTimeline(results, healthyThreshold, unhealthyThreshold). results lists check results in time order, true for a pass. The instance starts out of service. Count passes in a row and failures in a row; a pass resets the failure count and a failure resets the pass count. When the instance is out of service and the passes in a row reach healthyThreshold, it goes into service. When it is in service and the failures in a row reach unhealthyThreshold, it goes out of service. Return a list with one entry per result: true if the instance is in service after that check, false otherwise. Do not change results.',
+    brief: {
+      summary:
+        'Implement serviceTimeline(results, healthyThreshold, unhealthyThreshold) and return whether the instance is in service after each check.',
+      rules: [
+        'The instance starts out of service.',
+        'Count passes and failures in a row; each kind resets the other.',
+        'Out of service, it goes in when the passes in a row reach healthyThreshold; in service, it goes out when the failures in a row reach unhealthyThreshold.',
+      ],
+      edgeCases: ['Thresholds of 1 change state on a single check.', 'Do not change results.'],
+    },
+    example: {
+      input: 'serviceTimeline([true, true, false, true, true, true, false, false], 3, 2)',
+      output: '[false, false, false, false, false, true, true, false]',
+    },
+    note: `Thresholds are whole numbers of at least 1; there are at most 1,000 results. ${notRun}`,
+    vocabulary: [
+      { term: 'Load balancer', meaning: 'a service that spreads incoming requests across several instances' },
+      { term: 'Health threshold', meaning: 'how many checks in a row must pass or fail before an instance changes state' },
+    ],
+    planPrompt:
+      'With thresholds of 3 to go in and 2 to go out, trace pass, pass, fail, pass, pass, pass, fail, fail. When does the instance enter and leave service?',
+    starter:
+      'function serviceTimeline(results: boolean[], healthyThreshold: number, unhealthyThreshold: number): boolean[] {\n  return results.map(() => false)\n}\n',
+    functionName: 'serviceTimeline',
+    preserveInput: true,
+    hints: [
+      'Keep three variables: in service, passes in a row, and failures in a row.',
+      'Update the counts first, then check the threshold that matters for the current state.',
+      'Push the state after each check.',
+    ],
+    checks: [
+      {
+        name: 'Follows the example',
+        input: [[true, true, false, true, true, true, false, false], 3, 2],
+        expected: [false, false, false, false, false, true, true, false],
+      },
+      { name: 'Starts out of service', input: [[true], 2, 2], expected: [false] },
+      { name: 'Enters service at the threshold', input: [[true, true], 2, 2], expected: [false, true] },
+      {
+        name: 'Stays in service through a short failure',
+        input: [[true, true, false, true, false, true], 2, 2],
+        expected: [false, true, true, true, true, true],
+      },
+      { name: 'Leaves service at the threshold', input: [[true, false, false, false], 1, 3], expected: [true, true, true, false] },
+      {
+        name: 'Needs a fresh run of passes to come back',
+        input: [[true, false, true, false, true, true], 1, 1],
+        expected: [true, false, true, false, true, true],
+      },
+      {
+        name: 'Ignores failures while out of service',
+        input: [[false, false, false, true, true], 2, 1],
+        expected: [false, false, false, false, true],
+      },
+      { name: 'Handles no checks', input: [[], 2, 2], expected: [] },
+    ],
+  },
+  {
+    id: 'devops-restart-backoff',
+    title: 'Back off between restarts',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'When a container keeps crashing, restarting it immediately every time wastes resources and floods the logs. Orchestrators wait longer after each crash, up to a limit, and start counting again once the container has stayed up for a while.',
+    prompt:
+      'Implement restartDelays(runs, policy). runs lists how many seconds each run of a container lasted before it crashed, in order. policy is {baseSeconds, maxSeconds, resetAfterSeconds}. Return the delay before each restart, one per run. The delay after a crash is baseSeconds × 2 to the power of the number of earlier crashes in the current series, but at most maxSeconds. A run that lasted at least resetAfterSeconds starts a new series, so the delay after its crash is baseSeconds. Do not change the inputs.',
+    brief: {
+      summary: 'Implement restartDelays(runs, policy) and return the delay before each restart.',
+      rules: [
+        'The delay is baseSeconds × 2 to the power of the earlier crashes in the current series, at most maxSeconds.',
+        'A run that lasted at least resetAfterSeconds starts a new series, so its delay is baseSeconds.',
+        'Return one delay per run, in order.',
+      ],
+      edgeCases: ['A run exactly resetAfterSeconds long starts a new series.', 'Do not change the inputs.'],
+    },
+    example: {
+      input: 'restartDelays([5, 5, 5, 700, 5], {baseSeconds: 10, maxSeconds: 300, resetAfterSeconds: 600})',
+      output: '[10, 20, 40, 10, 20]',
+    },
+    note: `Times are whole seconds and are passed in; your function never reads a clock. Real orchestrators add other limits, such as how many restarts are allowed in total. ${notRun}`,
+    vocabulary: [
+      { term: 'Crash loop', meaning: 'a container that keeps crashing soon after every restart' },
+      { term: 'Backoff', meaning: 'waiting longer after each failure before trying again' },
+    ],
+    planPrompt:
+      'With base 10, max 300, and reset 600, what are the delays for ten 1-second runs in a row? What changes if the sixth run lasts 600 seconds?',
+    starter:
+      'type Policy = { baseSeconds: number; maxSeconds: number; resetAfterSeconds: number }\n\nfunction restartDelays(runs: number[], policy: Policy): number[] {\n  return runs.map(() => policy.baseSeconds)\n}\n',
+    functionName: 'restartDelays',
+    preserveInput: true,
+    hints: [
+      'Keep a count of crashes in the current series.',
+      'Reset the count to 0 before working out the delay when a run was long enough.',
+      'Math.min applies the limit after doubling.',
+    ],
+    checks: [
+      {
+        name: 'Doubles and resets as in the example',
+        input: [[5, 5, 5, 700, 5], { baseSeconds: 10, maxSeconds: 300, resetAfterSeconds: 600 }],
+        expected: [10, 20, 40, 10, 20],
+      },
+      {
+        name: 'Stops at the limit',
+        input: [[1, 1, 1, 1, 1, 1, 1], { baseSeconds: 10, maxSeconds: 300, resetAfterSeconds: 600 }],
+        expected: [10, 20, 40, 80, 160, 300, 300],
+      },
+      {
+        name: 'Resets at exactly the reset time',
+        input: [[1, 1, 600], { baseSeconds: 10, maxSeconds: 300, resetAfterSeconds: 600 }],
+        expected: [10, 20, 10],
+      },
+      {
+        name: 'Keeps the series one second short of it',
+        input: [[1, 1, 599], { baseSeconds: 10, maxSeconds: 300, resetAfterSeconds: 600 }],
+        expected: [10, 20, 40],
+      },
+      {
+        name: 'Uses the supplied policy',
+        input: [[2, 2, 2], { baseSeconds: 5, maxSeconds: 12, resetAfterSeconds: 60 }],
+        expected: [5, 10, 12],
+      },
+      {
+        name: 'Starts a series with a long first run',
+        input: [[900, 1], { baseSeconds: 10, maxSeconds: 300, resetAfterSeconds: 600 }],
+        expected: [10, 20],
+      },
+      { name: 'Handles no crashes', input: [[], { baseSeconds: 10, maxSeconds: 300, resetAfterSeconds: 600 }], expected: [] },
+    ],
+  },
+  {
+    id: 'devops-liveness-restart',
+    title: 'Find when a liveness check restarts a container',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A liveness check that starts too soon, or gives up too quickly, restarts a container that was only slow to start, and the restart starts the slow startup over again. Working out when the check would fire shows whether its settings fit how the service behaves.',
+    prompt:
+      'Implement livenessRestart(probe, stalls, horizon). probe is {initialDelay, period, failureThreshold}: checks run at second initialDelay, then every period seconds, while the time is at most horizon. stalls lists {from, to} ranges during which the container does not answer; a check at time t fails if from <= t < to for some stall, and passes otherwise. Count failures in a row; a pass resets the count. Return the time of the check at which the failures in a row reach failureThreshold, which is when the container is restarted, or null if that never happens by horizon. Do not change the inputs.',
+    brief: {
+      summary: 'Implement livenessRestart(probe, stalls, horizon) and return the restart time or null.',
+      rules: [
+        'Checks run at initialDelay, then every period seconds, while the time is at most horizon.',
+        'A check at time t fails if from <= t < to for some stall, and passes otherwise.',
+        'Count failures in a row, reset by a pass; return the time of the check that reaches failureThreshold, or null.',
+      ],
+      edgeCases: ["A check exactly at a stall's to passes.", 'Do not change the inputs.'],
+    },
+    example: {
+      input: 'livenessRestart({initialDelay: 10, period: 10, failureThreshold: 3}, [{from: 0, to: 45}], 300)',
+      output: '30',
+    },
+    note: `Times are whole seconds passed in; the example's stall from 0 to 45 is a container that needs 45 seconds to start. ${notRun}`,
+    vocabulary: [
+      { term: 'Initial delay', meaning: 'how long a check waits after a container starts before the first check' },
+      { term: 'Failure threshold', meaning: 'how many checks in a row must fail before action is taken' },
+    ],
+    planPrompt:
+      'A service takes 45 seconds to start. Which settings of initialDelay, period, and failureThreshold stop the check from restarting it during startup?',
+    starter:
+      'type Probe = { initialDelay: number; period: number; failureThreshold: number }\n\nfunction livenessRestart(probe: Probe, stalls: { from: number; to: number }[], horizon: number): number | null {\n  return null\n}\n',
+    functionName: 'livenessRestart',
+    preserveInput: true,
+    hints: [
+      'Loop with t from initialDelay while t <= horizon, adding period each time.',
+      'A stall includes its from time and excludes its to time.',
+      'Return as soon as the count reaches the threshold.',
+    ],
+    checks: [
+      {
+        name: 'Restarts a slow start in the example',
+        input: [{ initialDelay: 10, period: 10, failureThreshold: 3 }, [{ from: 0, to: 45 }], 300],
+        expected: 30,
+      },
+      {
+        name: 'Waits long enough for the start',
+        input: [{ initialDelay: 50, period: 10, failureThreshold: 3 }, [{ from: 0, to: 45 }], 300],
+        expected: null,
+      },
+      {
+        name: 'Tolerates enough failures to cover the start',
+        input: [{ initialDelay: 10, period: 10, failureThreshold: 5 }, [{ from: 0, to: 45 }], 300],
+        expected: null,
+      },
+      {
+        name: 'Passes a check exactly at the end of a stall',
+        input: [{ initialDelay: 10, period: 10, failureThreshold: 3 }, [{ from: 0, to: 30 }], 300],
+        expected: null,
+      },
+      {
+        name: 'Fails a check exactly at the start of a stall',
+        input: [{ initialDelay: 10, period: 10, failureThreshold: 2 }, [{ from: 60, to: 80 }], 300],
+        expected: 70,
+      },
+      {
+        name: 'Resets the count after a pass',
+        input: [
+          { initialDelay: 5, period: 5, failureThreshold: 3 },
+          [
+            { from: 5, to: 15 },
+            { from: 20, to: 30 },
+          ],
+          300,
+        ],
+        expected: null,
+      },
+      {
+        name: 'Stops checking after the horizon',
+        input: [{ initialDelay: 10, period: 10, failureThreshold: 3 }, [{ from: 100, to: 200 }], 110],
+        expected: null,
+      },
+      {
+        name: 'Counts a check at the horizon',
+        input: [{ initialDelay: 10, period: 10, failureThreshold: 2 }, [{ from: 100, to: 200 }], 110],
+        expected: 110,
+      },
+    ],
+  },
+  {
+    id: 'devops-graceful-drain',
+    title: 'Drain requests before shutting down',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'When an instance is told to stop, cutting it off at once fails the requests it is still working on. A graceful shutdown keeps accepting briefly while the load balancer stops sending traffic, then refuses new requests, lets the ones in progress finish, and gives up on any that are still running when the grace period ends.',
+    prompt:
+      'Implement gracefulDrain(requests, shutdownAt, policy). requests lists {id, arrives, finishes} in seconds, where finishes is when the request would complete if allowed. policy is {acceptForSeconds, graceSeconds}. The instance accepts requests that arrive before shutdownAt + acceptForSeconds, and rejects the rest. The deadline is shutdownAt + graceSeconds. An accepted request is "completed" if it finishes at or before the deadline, and "cut off" otherwise. The instance exits at the latest of shutdownAt + acceptForSeconds and the finish times of every accepted request, but no later than the deadline. Return {completed, rejected, cutOff, exitAt}, with ids in the order of requests. Do not change the inputs.',
+    brief: {
+      summary: 'Implement gracefulDrain(requests, shutdownAt, policy) and return {completed, rejected, cutOff, exitAt}.',
+      rules: [
+        'Accept requests that arrive before shutdownAt + acceptForSeconds; reject the rest.',
+        'The deadline is shutdownAt + graceSeconds; an accepted request is completed if it finishes at or before it, and cut off otherwise.',
+        'exitAt is the latest of shutdownAt + acceptForSeconds and the finish times of every accepted request, but no later than the deadline.',
+        'List ids in the order of requests.',
+      ],
+      edgeCases: [
+        'A request arriving exactly when accepting stops is rejected.',
+        'A request finishing exactly at the deadline completes.',
+        'Do not change the inputs.',
+      ],
+    },
+    example: {
+      input:
+        'gracefulDrain([{id: "a", arrives: 95, finishes: 98}, {id: "b", arrives: 99, finishes: 112}, {id: "c", arrives: 104, finishes: 106}, {id: "d", arrives: 101, finishes: 140}], 100, {acceptForSeconds: 5, graceSeconds: 30})',
+      output: '{completed: ["a", "b", "c"], rejected: [], cutOff: ["d"], exitAt: 130}',
+    },
+    note: `Times are whole seconds passed in. acceptForSeconds is at most graceSeconds. Real shutdowns also close idle connections and stop background work, which this rep leaves out. ${notRun}`,
+    vocabulary: [
+      { term: 'Graceful shutdown', meaning: 'stopping a service by finishing the work in progress instead of cutting it off' },
+      { term: 'Shutdown grace period', meaning: 'the time a stopping process gets to finish before it is forced to stop' },
+    ],
+    planPrompt:
+      'In the example, why is c accepted although it arrives after shutdownAt, and why does the instance exit at 130 rather than when b finishes?',
+    starter:
+      'type Request = { id: string; arrives: number; finishes: number }\n\nfunction gracefulDrain(requests: Request[], shutdownAt: number, policy: { acceptForSeconds: number; graceSeconds: number }) {\n  return { completed: [] as string[], rejected: [] as string[], cutOff: [] as string[], exitAt: shutdownAt }\n}\n',
+    functionName: 'gracefulDrain',
+    preserveInput: true,
+    hints: [
+      'Work out two times first: when accepting stops and the deadline.',
+      'Each request lands in exactly one of the three lists.',
+      'A cut-off request keeps the instance busy until the deadline, so it counts toward exitAt too.',
+    ],
+    checks: [
+      {
+        name: 'Drains the example',
+        input: [
+          [
+            { id: 'a', arrives: 95, finishes: 98 },
+            { id: 'b', arrives: 99, finishes: 112 },
+            { id: 'c', arrives: 104, finishes: 106 },
+            { id: 'd', arrives: 101, finishes: 140 },
+          ],
+          100,
+          { acceptForSeconds: 5, graceSeconds: 30 },
+        ],
+        expected: { completed: ['a', 'b', 'c'], rejected: [], cutOff: ['d'], exitAt: 130 },
+      },
+      {
+        name: 'Rejects a request when accepting has stopped',
+        input: [
+          [
+            { id: 'a', arrives: 104, finishes: 106 },
+            { id: 'b', arrives: 105, finishes: 107 },
+          ],
+          100,
+          { acceptForSeconds: 5, graceSeconds: 30 },
+        ],
+        expected: { completed: ['a'], rejected: ['b'], cutOff: [], exitAt: 106 },
+      },
+      {
+        name: 'Completes a request that finishes at the deadline',
+        input: [[{ id: 'a', arrives: 99, finishes: 130 }], 100, { acceptForSeconds: 5, graceSeconds: 30 }],
+        expected: { completed: ['a'], rejected: [], cutOff: [], exitAt: 130 },
+      },
+      {
+        name: 'Waits until accepting stops even when idle',
+        input: [[{ id: 'a', arrives: 90, finishes: 95 }], 100, { acceptForSeconds: 5, graceSeconds: 30 }],
+        expected: { completed: ['a'], rejected: [], cutOff: [], exitAt: 105 },
+      },
+      {
+        name: 'Exits when the last request finishes',
+        input: [
+          [
+            { id: 'a', arrives: 98, finishes: 117 },
+            { id: 'b', arrives: 102, finishes: 109 },
+          ],
+          100,
+          { acceptForSeconds: 5, graceSeconds: 30 },
+        ],
+        expected: { completed: ['a', 'b'], rejected: [], cutOff: [], exitAt: 117 },
+      },
+      {
+        name: 'Stops accepting at once with no accept time',
+        input: [
+          [
+            { id: 'a', arrives: 100, finishes: 101 },
+            { id: 'b', arrives: 99, finishes: 103 },
+          ],
+          100,
+          { acceptForSeconds: 0, graceSeconds: 10 },
+        ],
+        expected: { completed: ['b'], rejected: ['a'], cutOff: [], exitAt: 103 },
+      },
+      {
+        name: 'Sorts each id into one list in request order',
+        input: [
+          [
+            { id: 'r3', arrives: 120, finishes: 121 },
+            { id: 'r1', arrives: 90, finishes: 200 },
+            { id: 'r2', arrives: 100, finishes: 101 },
+          ],
+          100,
+          { acceptForSeconds: 2, graceSeconds: 20 },
+        ],
+        expected: { completed: ['r2'], rejected: ['r3'], cutOff: ['r1'], exitAt: 120 },
+      },
+      {
+        name: 'Exits when accepting stops with no requests',
+        input: [[], 100, { acceptForSeconds: 5, graceSeconds: 30 }],
+        expected: { completed: [], rejected: [], cutOff: [], exitAt: 105 },
+      },
+    ],
+  },
 ]

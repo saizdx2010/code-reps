@@ -770,3 +770,92 @@ test('D6 deploy checks catch rounding, hashing, switch, pause, and verdict mista
     [verdict.replace('policy.maxErrorPercent * requests', '2 * requests'), 'Uses the supplied limits'],
   ])
 })
+
+test('D7 health checks catch signal, run, backoff, timing, and drain mistakes', async () => {
+  const endpoints = solution('devops-health-endpoints')
+  await assertCaught('devops-health-endpoints', [
+    [
+      endpoints.replace('live: { status: state.stalled ? 503 : 200 }', 'live: { status: state.stalled || reasons.length ? 503 : 200 }'),
+      'Stays live while the database is down',
+    ],
+    [
+      endpoints.replace('if (dependency.required && !dependency.up)', 'if (!dependency.up)'),
+      'Is ready when every required dependency is up',
+    ],
+    [endpoints.replace("  if (state.shuttingDown) reasons.push('shutting down')\n", ''), 'Is not ready while shutting down'],
+    [endpoints.replace("  if (!state.started) reasons.push('starting')\n", ''), 'Is not ready while starting'],
+    [
+      endpoints.replace(
+        'ready: { status: reasons.length ? 503 : 200, reasons }',
+        'ready: { status: reasons.length || state.stalled ? 503 : 200, reasons }',
+      ),
+      'Fails liveness only when stalled',
+    ],
+    [
+      endpoints
+        .replace("  if (!state.started) reasons.push('starting')\n", '')
+        .replace("dependency.name + ' is down')\n", "dependency.name + ' is down')\n  if (!state.started) reasons.push('starting')\n"),
+      'Lists every reason in order',
+    ],
+  ])
+  const timeline = solution('devops-probe-thresholds')
+  await assertCaught('devops-probe-thresholds', [
+    [timeline.replace('let inService = false', 'let inService = true'), 'Starts out of service'],
+    [timeline.replace('      passes++\n      failures = 0\n', '      passes++\n'), 'Stays in service through a short failure'],
+    [timeline.replace('      failures++\n      passes = 0\n', '      failures++\n'), 'Follows the example'],
+    [timeline.replace('passes >= healthyThreshold', 'passes > healthyThreshold'), 'Enters service at the threshold'],
+    [timeline.replace('failures >= unhealthyThreshold', 'failures > unhealthyThreshold'), 'Leaves service at the threshold'],
+    [
+      timeline.replace(
+        'if (inService && failures >= unhealthyThreshold) inService = false',
+        'if (failures >= unhealthyThreshold) {\n        inService = false\n        passes = -healthyThreshold\n      }',
+      ),
+      'Ignores failures while out of service',
+    ],
+  ])
+  const backoff = solution('devops-restart-backoff')
+  await assertCaught('devops-restart-backoff', [
+    [
+      backoff.replace('Math.min(policy.maxSeconds, policy.baseSeconds * 2 ** crashes)', 'policy.baseSeconds * 2 ** crashes'),
+      'Stops at the limit',
+    ],
+    [backoff.replace('    if (seconds >= policy.resetAfterSeconds) crashes = 0\n', ''), 'Doubles and resets as in the example'],
+    [backoff.replace('seconds >= policy.resetAfterSeconds', 'seconds > policy.resetAfterSeconds'), 'Resets at exactly the reset time'],
+    [
+      backoff.replace(
+        '    if (seconds >= policy.resetAfterSeconds) crashes = 0\n    const delay = Math.min(policy.maxSeconds, policy.baseSeconds * 2 ** crashes)\n',
+        '    const delay = Math.min(policy.maxSeconds, policy.baseSeconds * 2 ** crashes)\n    if (seconds >= policy.resetAfterSeconds) crashes = -1\n',
+      ),
+      'Doubles and resets as in the example',
+    ],
+    [
+      backoff.replace('policy.baseSeconds * 2 ** crashes', '10 * 2 ** crashes').replace('Math.min(policy.maxSeconds,', 'Math.min(300,'),
+      'Uses the supplied policy',
+    ],
+  ])
+  const liveness = solution('devops-liveness-restart')
+  await assertCaught('devops-liveness-restart', [
+    [liveness.replace('t < stall.to', 't <= stall.to'), 'Passes a check exactly at the end of a stall'],
+    [liveness.replace('stall.from <= t', 'stall.from < t'), 'Fails a check exactly at the start of a stall'],
+    [liveness.replace('    } else failures = 0\n', '    }\n'), 'Resets the count after a pass'],
+    [liveness.replace('t <= horizon', 't < horizon'), 'Counts a check at the horizon'],
+    [liveness.replace('let t = probe.initialDelay', 'let t = 0'), 'Waits long enough for the start'],
+    [liveness.replace('failures >= probe.failureThreshold', 'failures > probe.failureThreshold'), 'Restarts a slow start in the example'],
+  ])
+  const drain = solution('devops-graceful-drain')
+  await assertCaught('devops-graceful-drain', [
+    [drain.replace('const stopAccepting = shutdownAt + policy.acceptForSeconds', 'const stopAccepting = shutdownAt'), 'Drains the example'],
+    [drain.replace('request.arrives >= stopAccepting', 'request.arrives > stopAccepting'), 'Rejects a request when accepting has stopped'],
+    [drain.replace('request.finishes <= deadline', 'request.finishes < deadline'), 'Completes a request that finishes at the deadline'],
+    [drain.replace('let busyUntil = stopAccepting', 'let busyUntil = shutdownAt'), 'Waits until accepting stops even when idle'],
+    [drain.replace('exitAt: Math.min(deadline, busyUntil)', 'exitAt: deadline'), 'Exits when the last request finishes'],
+    [
+      drain.replace(
+        '    else cutOff.push(request.id)\n    busyUntil = Math.max(busyUntil, request.finishes)\n',
+        '    else {\n      cutOff.push(request.id)\n      continue\n    }\n    busyUntil = Math.max(busyUntil, request.finishes)\n',
+      ),
+      'Drains the example',
+    ],
+    [drain.replace('exitAt: Math.min(deadline, busyUntil)', 'exitAt: busyUntil'), 'Sorts each id into one list in request order'],
+  ])
+})

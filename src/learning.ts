@@ -497,6 +497,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'service-health',
+    title: 'Keep traffic on instances that can serve',
+    guided: 'devops-health-endpoints',
+    independent: 'devops-probe-thresholds',
+    recall: 'devops-graceful-drain',
+    practice: ['devops-restart-backoff', 'devops-liveness-restart'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

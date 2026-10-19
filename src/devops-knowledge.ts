@@ -488,4 +488,90 @@ export const devopsSkills: Skill[] = [
     repIds: ['devops-rolling-batches', 'devops-percent-rollout', 'devops-blue-green', 'devops-canary-schedule', 'devops-canary-verdict'],
     related: ['container-images', 'ci-pipelines'],
   },
+  {
+    id: 'service-health',
+    title: 'Health: liveness, readiness, restarts, and draining',
+    summary:
+      'Tell liveness from readiness, put instances in and out of service from runs of checks, back off between restarts, and drain requests before shutting down.',
+    prerequisites: ['deploy-strategies'],
+    objectives: [
+      'Answer liveness from whether the process is stuck, and readiness from startup, shutdown, and required dependencies.',
+      'Use runs of passing and failing checks to add and remove instances, and set check timing that fits a slow start.',
+      'Back off between restarts, and shut down by finishing work in progress within a grace period.',
+    ],
+    sections: [
+      {
+        title: 'Two different questions',
+        body: 'Liveness asks whether the process is stuck and needs a restart; readiness asks whether it should get traffic right now. A dependency that is down, such as the database, makes an instance not ready, but restarting it would not fix the database, so liveness ignores dependencies. If liveness failed whenever the database did, every instance would restart at once and the outage would get worse. An instance that is still starting or is shutting down is alive but not ready.',
+      },
+      {
+        title: 'Decide from runs of checks',
+        body: 'Load balancers and orchestrators check every few seconds and act only on runs: several failures in a row to remove an instance or restart it, several passes in a row to add it back. A single blip changes nothing. The timing has to fit the service: a liveness check that starts before a slow service has finished starting fails until it restarts the container, and the restart starts the slow startup over again.',
+      },
+      {
+        title: 'Back off, then shut down gracefully',
+        body: 'A container that keeps crashing is restarted after growing delays, doubling up to a limit, and the delays start over once it has stayed up for a while. When an instance is told to stop, it keeps accepting briefly while the load balancer stops sending traffic, then refuses new requests, lets those in progress finish, and is stopped by force when the grace period ends. Requests still running then are cut off, which is why long requests need a long enough grace period.',
+      },
+      {
+        title: 'What these reps check',
+        body: 'These reps work from states, check results, and times passed to your functions, in whole seconds. The checks show that the functions apply the stated policies; they do not run an orchestrator, send signals, or serve requests.',
+      },
+    ],
+    example:
+      'database down for every instance\n\nliveness: 200 (the process is fine)\nreadiness: 503, "database is down"\n\nif liveness also failed → every instance restarts → none can serve when the database returns',
+    walkthrough: [
+      'The process is not stuck, so liveness passes and the orchestrator leaves it running.',
+      'A required dependency is down, so readiness fails and the load balancer stops sending it traffic.',
+      'When the database comes back, readiness passes again and traffic returns without any restart.',
+      'Tying liveness to the database would restart every instance at the same moment, adding a startup delay to the outage.',
+    ],
+    mistakes: [
+      'Failing liveness because a dependency is down, so a shared outage restarts every instance.',
+      'Starting liveness checks before a slow service has finished starting, which causes a restart loop.',
+      'Removing an instance after one failed check, so normal blips cause churn.',
+      'Exiting as soon as the stop signal arrives, which fails every request still in progress.',
+    ],
+    questions: [
+      q(
+        'liveness-dependency-v1',
+        "The database is down. What should an instance's liveness check answer?",
+        '',
+        ['Fail, so the instance restarts', 'Pass, because restarting will not fix the database', 'Fail only for the first instance'],
+        1,
+        'Liveness asks whether this process is stuck. A down database is readiness information; restarts would not help and would make the outage worse.',
+      ),
+      q(
+        'readiness-shutdown-v1',
+        'An instance has been told to stop and is finishing its last requests. What should readiness answer?',
+        '',
+        ['Ready, it is still running', 'Not ready, so no new traffic is sent', 'Not live'],
+        1,
+        'It should finish what it has but get no new requests, which is exactly what failing readiness does.',
+      ),
+      q(
+        'liveness-initial-delay-v1',
+        'A service takes 60 seconds to start. Its liveness check starts at 10 seconds, runs every 10, and restarts after 3 failures. What happens?',
+        '',
+        ['It starts normally at 60 seconds', 'It is restarted at 30 seconds, again and again', 'It is never checked'],
+        1,
+        'The checks at 10, 20, and 30 seconds fail before startup ends, so it restarts at 30 and the startup begins again.',
+      ),
+      q(
+        'restart-backoff-v1',
+        'Restarts wait 10 seconds, doubling each time up to 300. How long is the wait before the fourth restart in a crash loop?',
+        '',
+        ['40 seconds', '80 seconds', '300 seconds'],
+        1,
+        'The waits are 10, 20, 40, then 80 seconds.',
+      ),
+    ],
+    repIds: [
+      'devops-health-endpoints',
+      'devops-probe-thresholds',
+      'devops-restart-backoff',
+      'devops-liveness-restart',
+      'devops-graceful-drain',
+    ],
+    related: ['deploy-strategies', 'retries'],
+  },
 ]

@@ -541,6 +541,16 @@ export const paths = [
           'devops-canary-verdict',
         ],
       },
+      {
+        title: 'Keep instances healthy',
+        repIds: [
+          'devops-health-endpoints',
+          'devops-probe-thresholds',
+          'devops-restart-backoff',
+          'devops-liveness-restart',
+          'devops-graceful-drain',
+        ],
+      },
     ] satisfies readonly PathStage[],
   },
 ] as const

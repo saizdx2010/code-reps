@@ -573,6 +573,15 @@ export const indonesianGlossary: Record<string, string> = {
   'Error rate': 'bagian request yang gagal dalam suatu periode',
   Promote: 'memindahkan canary ke seluruh lalu lintas setelah terbukti sehat',
   'Deploy rollback': 'mengembalikan layanan ke versi yang dijalankannya sebelum perubahan yang buruk',
+  'Liveness check': 'pemeriksaan yang menanyakan apakah sebuah proses macet dan perlu dijalankan ulang',
+  'Readiness check': 'pemeriksaan yang menanyakan apakah sebuah instance sebaiknya menerima lalu lintas saat ini',
+  'Load balancer': 'layanan yang menyebarkan request yang masuk ke beberapa instance',
+  'Health threshold': 'berapa kali berturut-turut pemeriksaan harus lolos atau gagal sebelum instance berganti keadaan',
+  'Crash loop': 'container yang terus mogok tidak lama setelah setiap restart',
+  'Initial delay': 'berapa lama pemeriksaan menunggu setelah container mulai sebelum pemeriksaan pertama',
+  'Failure threshold': 'berapa kali berturut-turut pemeriksaan harus gagal sebelum tindakan diambil',
+  'Graceful shutdown': 'menghentikan layanan dengan menyelesaikan pekerjaan yang sedang berjalan, bukan memutusnya',
+  'Shutdown grace period': 'waktu yang diberikan kepada proses yang berhenti untuk selesai sebelum dipaksa berhenti',
 }
 
 /** Shown with the glossary when Indonesian help is on. */

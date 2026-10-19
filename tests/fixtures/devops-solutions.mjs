@@ -489,4 +489,71 @@ function canaryVerdict(
   }
   return { decision: 'continue', at: null }
 }`,
+  'devops-health-endpoints': `
+type State = { started: boolean; shuttingDown: boolean; stalled: boolean; dependencies: { name: string; required: boolean; up: boolean }[] }
+function healthEndpoints(state: State) {
+  const reasons: string[] = []
+  if (!state.started) reasons.push('starting')
+  if (state.shuttingDown) reasons.push('shutting down')
+  for (const dependency of state.dependencies) if (dependency.required && !dependency.up) reasons.push(dependency.name + ' is down')
+  return { live: { status: state.stalled ? 503 : 200 }, ready: { status: reasons.length ? 503 : 200, reasons } }
+}`,
+  'devops-probe-thresholds': `
+function serviceTimeline(results: boolean[], healthyThreshold: number, unhealthyThreshold: number): boolean[] {
+  let inService = false
+  let passes = 0
+  let failures = 0
+  return results.map(passed => {
+    if (passed) {
+      passes++
+      failures = 0
+      if (!inService && passes >= healthyThreshold) inService = true
+    } else {
+      failures++
+      passes = 0
+      if (inService && failures >= unhealthyThreshold) inService = false
+    }
+    return inService
+  })
+}`,
+  'devops-restart-backoff': `
+function restartDelays(runs: number[], policy: { baseSeconds: number; maxSeconds: number; resetAfterSeconds: number }): number[] {
+  let crashes = 0
+  return runs.map(seconds => {
+    if (seconds >= policy.resetAfterSeconds) crashes = 0
+    const delay = Math.min(policy.maxSeconds, policy.baseSeconds * 2 ** crashes)
+    crashes++
+    return delay
+  })
+}`,
+  'devops-liveness-restart': `
+function livenessRestart(probe: { initialDelay: number; period: number; failureThreshold: number }, stalls: { from: number; to: number }[], horizon: number) {
+  let failures = 0
+  for (let t = probe.initialDelay; t <= horizon; t += probe.period) {
+    if (stalls.some(stall => stall.from <= t && t < stall.to)) {
+      failures++
+      if (failures >= probe.failureThreshold) return t
+    } else failures = 0
+  }
+  return null
+}`,
+  'devops-graceful-drain': `
+function gracefulDrain(requests: { id: string; arrives: number; finishes: number }[], shutdownAt: number, policy: { acceptForSeconds: number; graceSeconds: number }) {
+  const stopAccepting = shutdownAt + policy.acceptForSeconds
+  const deadline = shutdownAt + policy.graceSeconds
+  const completed: string[] = []
+  const rejected: string[] = []
+  const cutOff: string[] = []
+  let busyUntil = stopAccepting
+  for (const request of requests) {
+    if (request.arrives >= stopAccepting) {
+      rejected.push(request.id)
+      continue
+    }
+    if (request.finishes <= deadline) completed.push(request.id)
+    else cutOff.push(request.id)
+    busyUntil = Math.max(busyUntil, request.finishes)
+  }
+  return { completed, rejected, cutOff, exitAt: Math.min(deadline, busyUntil) }
+}`,
 }

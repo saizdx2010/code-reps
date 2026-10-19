@@ -364,6 +364,66 @@ export const devopsDepth: Record<string, RepDepth> = {
     transfer:
       'Add a limit on total time: if no decision is reached within 30 counted samples, roll back. Decide whether skipped samples count toward the limit. This changed contract is self-reviewed, not checked by the original cases.',
   },
+  'devops-health-endpoints': {
+    reasoning:
+      'The two answers lead to different actions, so each looks only at what its action could fix. A restart can unstick a stalled process, so liveness looks only at stalled. Withholding traffic helps while the instance is starting, stopping, or missing a required dependency, so readiness collects exactly those reasons, and optional dependencies, which the instance can work without, never count.',
+    trace:
+      'For an instance that has not started, is shutting down, has queue and database down as required, and cache down as optional: the reasons are "starting", "shutting down", "queue is down", and "database is down", in that order, so readiness is 503. stalled is false, so liveness is 200 even though nothing else is healthy.',
+    alternative:
+      'Some services report one combined health status, which is simpler but forces a choice between restarting too often and not removing traffic. A third check, a startup check, can hold liveness off until the first successful start instead of relying on a long initial delay.',
+    counterexample:
+      'Failing liveness when a required dependency is down returns 503 for live in "Stays live while the database is down". Counting every dependency for readiness makes the instance not ready because the optional cache is down in "Is ready when every required dependency is up".',
+    transfer:
+      'Add a degraded state for dependencies that are slow but answering. Decide whether degraded required dependencies should affect readiness and how the reason is worded. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-probe-thresholds': {
+    reasoning:
+      'Acting only on runs filters out single blips: a pass resets the failure run and a failure resets the pass run, so only consecutive results count. Which threshold applies depends on the current state, so failures while out of service and passes while in service change nothing but the counts. Starting out of service means a new instance must prove itself before it gets traffic.',
+    trace:
+      'For pass, pass, fail, pass, pass, pass, fail, fail with thresholds 3 and 2: the first two passes are a run of 2, then the failure resets it. The next three passes reach 3, so the instance goes into service after the sixth check. The next failure is a run of 1, still in service; the eighth makes 2, so it leaves service.',
+    alternative:
+      'Counting failures over a sliding window, such as 3 of the last 5, tolerates flapping instances differently from strict runs. A single threshold for both directions is simpler, but adding an instance usually deserves more caution than keeping one.',
+    counterexample:
+      'Not resetting the pass count on a failure lets the instance in after pass, pass, fail, pass with a threshold of 3. Applying the failure threshold while out of service changes nothing here, but forgetting that the instance starts out of service puts it into service before its first check.',
+    transfer:
+      'Add a minimum time out of service: once removed, the instance cannot return for 30 seconds even if it passes. Decide how check times are passed in and how the counts behave during that time. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-restart-backoff': {
+    reasoning:
+      'Each crash in a series doubles the wait, so a container that crashes immediately is retried quickly at first and then rarely, and the limit keeps the wait bounded. A long run shows the problem has gone away, so it starts a new series: the decision is made before computing the delay for that crash, which is why the delay after a long run is the base again.',
+    trace:
+      'For runs 5, 5, 5, 700, 5 with base 10, limit 300, and reset 600: the first three short runs give 10, 20, and 40 as the count goes 0, 1, 2. The 700-second run is at least 600, so the count resets to 0 and its delay is 10. The next short run follows with a count of 1, giving 20.',
+    alternative:
+      'Adding random jitter to each delay spreads out restarts when many containers crash together, at the cost of less predictable timing. A fixed delay is simplest but either restarts a broken container too often or recovers a fixed one too slowly.',
+    counterexample:
+      'Checking the reset after computing the delay gives 80 instead of 10 after the 700-second run. Applying the limit before doubling lets the delay grow past 300.',
+    transfer:
+      'Stop restarting after 10 crashes within one hour, and report the container as failed. Decide which inputs you need and whether the reset rule also clears that count. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-liveness-restart': {
+    reasoning:
+      'Checks happen at fixed times, so the question is which of those times fall inside a stall and whether enough of them fall in a row. Treating each stall as including its start and excluding its end makes a check at the moment a service recovers count as a pass. Returning at the first check that completes the run gives the restart time.',
+    trace:
+      'For a 45-second startup with checks at 10, 20, 30 and a threshold of 3, all three checks fall inside 0 to 45, so the third failure at 30 restarts the container. With a threshold of 5, the checks at 10, 20, 30, and 40 fail, the check at 50 passes and resets the count, and no restart happens by 300.',
+    alternative:
+      'A separate startup check that runs until the first success, with liveness starting only after it, handles slow and fast starts alike. A long initial delay works too, but delays catching a process that hangs early in every run.',
+    counterexample:
+      'Treating a stall\'s end as included fails the check at 30 in "Passes a check exactly at the end of a stall" and restarts the container. Forgetting to reset the count after a pass restarts in "Resets the count after a pass", where failures are never three in a row.',
+    transfer:
+      'Each check also has a timeout: a check during a slow period that answers after more than 1 second counts as a failure. Decide how slow periods are passed in. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-graceful-drain': {
+    reasoning:
+      'Two times divide everything: when accepting stops, and the deadline. Arrival decides acceptance, and finish time against the deadline decides completed or cut off. The instance cannot leave before it stops accepting, it stays busy while any accepted request is running, and it cannot stay past the deadline, so the exit is that busy time capped at the deadline.',
+    trace:
+      'For the example, accepting stops at 105 and the deadline is 130. a, b, and c arrive before 105, so they are accepted, and finish at 98, 112, and 106, all by 130. d arrives at 101, is accepted, but would finish at 140, so it is cut off. The busy time is the latest of 105, 98, 112, 106, and 140, which is 140, capped to 130.',
+    alternative:
+      'Rejecting new requests at once on the stop signal is simpler, but the load balancer may still send requests for a few seconds, which then fail. Making the grace period longer than the slowest request avoids cut-offs at the cost of slower deploys.',
+    counterexample:
+      'Ignoring the accept time rejects c in the example, although the load balancer had not yet stopped sending traffic. Exiting when the last completed request finishes gives 112, although d is still running until the deadline.',
+    transfer:
+      'Requests can be retried by the client when cut off. Add a list of retryable request ids and report which cut-off requests will be retried. This changed contract is self-reviewed, not checked by the original cases.',
+  },
 }
 
 export const devopsGuides: Record<string, ReflectionGuide> = {
@@ -763,6 +823,76 @@ export const devopsGuides: Record<string, ReflectionGuide> = {
     example:
       'For each sample with at least minRequests requests, it is unhealthy when errors × 100 > maxErrorPercent × requests. An unhealthy sample adds to its run and resets the healthy run, and the reverse; reaching unhealthyNeeded returns rollback and healthyNeeded returns promote, with the index. Otherwise the result is continue. The work is linear in the samples. The checks pass counts in directly; no metrics are read.',
   },
+  'devops-health-endpoints': {
+    plan: [
+      'Answer liveness from stalled alone.',
+      'Collect readiness reasons in order.',
+      'Set the readiness status from whether there are reasons.',
+    ],
+    explanation: [
+      'Trace an instance whose database is down.',
+      'Explain why liveness ignores dependencies.',
+      'Say why optional dependencies never count.',
+    ],
+    example:
+      'live is 503 when stalled and 200 otherwise. I push "starting" if not started, "shutting down" if shuttingDown, then "NAME is down" for each required dependency that is not up. ready is 200 with no reasons and 503 with any. The work is linear in the dependencies. The checks pass a state in directly; no orchestrator asks.',
+  },
+  'devops-probe-thresholds': {
+    plan: [
+      'Start out of service with both counts at 0.',
+      'Update the run counts for each result.',
+      'Change state when the run for the current state reaches its threshold.',
+    ],
+    explanation: [
+      'Trace the example around its two changes.',
+      'Explain why a pass resets the failure count.',
+      'Say why a new instance starts out of service.',
+    ],
+    example:
+      'For each result, a pass adds to passes and resets failures, and enters service if out and passes reach the healthy threshold; a failure does the reverse with the unhealthy threshold. I push the state after each result. The work is linear in the results. The checks pass results in directly; no load balancer runs.',
+  },
+  'devops-restart-backoff': {
+    plan: [
+      'Keep a crash count for the current series.',
+      'Reset it when a run lasted at least the reset time.',
+      'Double the base by the count, cap it, and add the crash.',
+    ],
+    explanation: [
+      'Trace a long run in the middle of a crash loop.',
+      'Explain why the reset comes before the delay.',
+      'Say what the limit protects.',
+    ],
+    example:
+      'For each run, I reset crashes to 0 if it lasted at least resetAfterSeconds, take Math.min(maxSeconds, baseSeconds × 2 ** crashes), then add 1 to crashes. The work is linear in the runs. The checks pass run lengths in directly; no container restarts.',
+  },
+  'devops-liveness-restart': {
+    plan: [
+      'Run checks from initialDelay every period up to the horizon.',
+      'Fail a check inside a stall, including its start and excluding its end.',
+      'Return the time the failures in a row reach the threshold.',
+    ],
+    explanation: [
+      'Trace a slow start against short and long settings.',
+      'Explain why a pass resets the count.',
+      'Say what settings fit a 45-second start.',
+    ],
+    example:
+      'I loop t from initialDelay while t <= horizon, adding period. A check fails if some stall has from <= t < to; failures count up and return t at the threshold, and a pass resets the count. Otherwise I return null. The work is checks times stalls. The checks pass times in directly; no clock is read.',
+  },
+  'devops-graceful-drain': {
+    plan: [
+      'Work out when accepting stops and the deadline.',
+      'Sort each request into rejected, completed, or cut off.',
+      'Exit at the latest busy time, capped at the deadline.',
+    ],
+    explanation: [
+      'Trace a request still running at the deadline.',
+      'Explain why the instance keeps accepting briefly.',
+      'Say why exitAt is never before accepting stops.',
+    ],
+    example:
+      'stopAccepting is shutdownAt + acceptForSeconds and the deadline is shutdownAt + graceSeconds. A request arriving at or after stopAccepting is rejected; otherwise it is completed if it finishes by the deadline and cut off if not, and its finish raises the busy time, which starts at stopAccepting. exitAt is the busy time capped at the deadline. The work is linear in the requests. The checks pass times in directly; no signal is sent.',
+  },
 }
 
 export const devopsLessonDepth: Record<string, LessonDepth> = {
@@ -825,5 +955,15 @@ export const devopsLessonDepth: Record<string, LessonDepth> = {
       'A team decides buckets with hash(userId) % 100 and runs two experiments at 10% each, on different flags. Predict who gets which feature, and repair the bucket rule.',
     answer:
       'Without the flag in the hashed text, both flags give every user the same bucket, so the same 10% of users get both features and the other 90% get neither. The two experiments cannot be told apart. Hashing flag + ":" + userId gives each flag an independent order, so the two groups overlap only by chance.',
+  },
+  'service-health': {
+    title: 'A restart only helps a process that is stuck',
+    code: 'database down\n  liveness fails  → restart every instance → all start over, still no database\n  readiness fails → stop sending traffic   → all recover when it returns\n\nprocess stuck in a loop\n  liveness fails  → restart → it answers again',
+    reasoning:
+      'Each check triggers a different action, so each should fail only when its action can help. Restarting clears a process that is stuck, but it cannot fix a database, a network, or a dependency, and restarting every instance at once adds startup time to an outage. Withholding traffic is the right response to anything outside the process, and it reverses itself as soon as the problem clears.',
+    challenge:
+      "A team's liveness check calls the database and fails if the query takes more than 1 second. During a busy hour the database slows to 2 seconds per query. Predict what happens to the service, then repair the checks.",
+    answer:
+      'Every instance fails liveness, the orchestrator restarts them all, and while they restart there is no capacity at all, so the slow hour becomes an outage. The restarts also hit the database with new connections. Liveness should only check that the process itself responds; the database check belongs in readiness, which stops traffic without restarting anything.',
   },
 }

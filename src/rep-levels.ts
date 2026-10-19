@@ -384,6 +384,11 @@ export const repLevels: Record<string, RepLevel> = {
   'devops-blue-green': 2,
   'devops-canary-schedule': 2,
   'devops-canary-verdict': 3,
+  'devops-health-endpoints': 2,
+  'devops-probe-thresholds': 2,
+  'devops-restart-backoff': 2,
+  'devops-liveness-restart': 2,
+  'devops-graceful-drain': 3,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

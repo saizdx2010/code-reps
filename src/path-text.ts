@@ -395,5 +395,10 @@ export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
         'Plan a rolling update in whole batches, roll a feature out to a stable share of users, switch between blue and green, find where a paused canary stands, and decide from error rates whether to promote or roll back.',
       recap: 'You can now plan a gradual deploy and decide from evidence whether to go on or roll back.',
     },
+    'Keep instances healthy': {
+      description:
+        'Answer liveness and readiness from the right signals, put instances in and out of service from runs of checks, back off between restarts, catch a liveness check that restarts a slow start, and drain requests before shutting down.',
+      recap: 'You can now keep traffic away from instances that cannot serve, without restarting the ones that only need to wait.',
+    },
   },
 }

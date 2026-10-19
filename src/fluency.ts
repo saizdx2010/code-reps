@@ -256,6 +256,7 @@ export const recallVariants: Record<string, string[]> = {
   'ci-pipelines': ['devops-skip-unchanged', 'devops-cache-key', 'devops-job-waves'],
   'container-images': ['devops-multistage-rebuild', 'devops-image-tags', 'devops-layer-rebuild'],
   'deploy-strategies': ['devops-canary-verdict', 'devops-percent-rollout', 'devops-rolling-batches'],
+  'service-health': ['devops-graceful-drain', 'devops-probe-thresholds', 'devops-health-endpoints'],
 }
 export function recurringReviews(history: PortableRecord[], now = Date.now()) {
   return getAllJourneys(history, now).flatMap(state => {
