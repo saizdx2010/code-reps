@@ -13,6 +13,18 @@ import { devopsSolutions } from './fixtures/devops-solutions.mjs'
 const failed = async (id, code) => (await runAsyncRep(code, id)).filter(result => !result.passed).map(result => result.name)
 const solution = id => devopsSolutions[id]
 
+/** Runs a check with the process in one time zone, then restores the zone the tests started in. */
+async function withTimeZone(zone, run) {
+  const previous = process.env.TZ
+  process.env.TZ = zone
+  try {
+    return await run()
+  } finally {
+    if (previous === undefined) delete process.env.TZ
+    else process.env.TZ = previous
+  }
+}
+
 /** Each mutant names the authored check that must catch it, so a check that stops testing its rule fails here. */
 async function assertCaught(id, mutants) {
   assert.deepEqual(await failed(id, solution(id)), [], `${id} reference`)
@@ -925,11 +937,17 @@ test('D8 schedule checks catch field, day-rule, zone, start, and clock-change mi
     ],
     [utc.replace('either ? domOk || dowOk : domOk && dowOk', 'domOk && dowOk'), 'Uses either day field when both are set'],
     [utc.replace('.map(day => day % 7)', ''), 'Treats 7 as Sunday'],
-    [
-      utc.replace('d.getUTCDay()', 'd.getDay()').replace('d.getUTCDate()', 'd.getDate()').replace('d.getUTCHours()', 'd.getHours()'),
-      'Skips the weekend in the example',
-    ],
   ])
+  // Local-time getters only differ from the UTC ones where the machine is not on UTC, so this mistake is checked
+  // under a fixed zone: a UTC machine, such as CI, would otherwise run it as the correct solution.
+  await withTimeZone('Asia/Jakarta', () =>
+    assertCaught('devops-cron-next-utc', [
+      [
+        utc.replace('d.getUTCDay()', 'd.getDay()').replace('d.getUTCDate()', 'd.getDate()').replace('d.getUTCHours()', 'd.getHours()'),
+        'Skips the weekend in the example',
+      ],
+    ]),
+  )
   const zone = solution('devops-cron-next-zone')
   await assertCaught('devops-cron-next-zone', [
     [zone.replace('      .sort((a, b) => a - b)[0]', '      .sort((a, b) => b - a)[0]'), 'Runs at the first of two repeated times'],
