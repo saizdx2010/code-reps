@@ -154,3 +154,138 @@ test('D1 CI output checks catch range, cleaning, word, condition, matcher, and b
     ],
   ])
 })
+
+test('D2 configuration checks catch parsing, default, error-collection, masking, and comparison mistakes', async () => {
+  const port = solution('devops-read-port')
+  await assertCaught('devops-read-port', [
+    [port.replace('/^[0-9]+$/.test(raw) ? Number(raw) : NaN', 'parseInt(raw, 10)'), 'Refuses trailing letters'],
+    [port.replace('/^[0-9]+$/.test(raw) ? Number(raw) : NaN', 'Number(raw)'), 'Refuses exponent notation'],
+    [port.replace('/^[0-9]+$/.test(raw) ? Number(raw) : NaN', 'Number(raw)'), 'Refuses a sign'],
+    [port.replace('port >= 1 &&', 'port >= 0 &&'), 'Refuses port 0'],
+    [port.replace('port <= 65535', 'port < 65535'), 'Accepts the highest port'],
+    [port.replace('env.PORT.trim()', 'env.PORT'), 'Reads the example'],
+    [port.replace("Object.hasOwn(env, 'PORT') ? env.PORT.trim() : ''", "(env.PORT ?? env.port ?? '').trim()"), 'Matches the name exactly'],
+    [
+      port.replace("if (raw === '') return { ok: true, port: 3000 }", "if (!Object.hasOwn(env, 'PORT')) return { ok: true, port: 3000 }"),
+      'Uses 3000 when PORT is blank',
+    ],
+  ])
+  const env = solution('devops-validate-env')
+  await assertCaught('devops-validate-env', [
+    [
+      env.replace(
+        "const raw = given !== '' ? given : setting.default?.trim()",
+        'const raw = Object.hasOwn(env, setting.name) ? given : setting.default?.trim()',
+      ),
+      'Uses the default for a blank value',
+    ],
+    [
+      env.replace("errors.push(setting.name + ' is required')", "return { ok: false, errors: [setting.name + ' is required'] }"),
+      'Reports every problem in schema order',
+    ],
+    [env.replace('/^-?[0-9]+$/', '/^[0-9]+$/'), 'Accepts a negative integer'],
+    [env.replace('/^-?[0-9]+$/.test(raw)', '!Number.isNaN(parseInt(raw, 10))'), 'Refuses an integer with letters'],
+    [env.replace('/^-?[0-9]+$/.test(raw)', 'Number.isFinite(Number(raw))'), 'Refuses a decimal integer'],
+    [env.replace('const lower = raw.toLowerCase()', 'const lower = raw'), 'Reads the example'],
+    [
+      env
+        .replace("lower === 'true' || lower === '1'", "lower === 'true'")
+        .replace("lower === 'false' || lower === '0'", "lower === 'false'"),
+      'Reads 1 and 0 as booleans',
+    ],
+    [
+      env.replace("else errors.push(setting.name + ' must be true or false')", 'else config[setting.name] = false'),
+      'Refuses other boolean words',
+    ],
+    [
+      env.replace(
+        "if (setting.type === 'string') config[setting.name] = raw",
+        "if (setting.type === 'string') config[setting.name] = env[setting.name] ?? raw",
+      ),
+      'Trims a string but keeps inner spaces',
+    ],
+    [
+      env.replace("if (setting.required) errors.push(setting.name + ' is required')", "errors.push(setting.name + ' is required')"),
+      'Leaves out an optional setting with no value',
+    ],
+    [
+      env.replace(
+        "    if (setting.type === 'string') config[setting.name] = raw\n",
+        "    if (raw === setting.default) config[setting.name] = raw\n    else if (setting.type === 'string') config[setting.name] = raw\n",
+      ),
+      'Converts a default by its type',
+    ],
+  ])
+  const mask = solution('devops-mask-secrets')
+  await assertCaught('devops-mask-secrets', [
+    [mask.replace('    .sort((a, b) => b.length - a.length)\n', ''), 'Masks a longer value before a shorter one inside it'],
+    [mask.replace("text.replaceAll(value, '***')", "text.replace(value, '***')"), 'Masks every occurrence'],
+    [mask.replace("text.replaceAll(value, '***')", "text.replace(new RegExp(value, 'g'), '***')"), 'Treats a value as plain text'],
+    [mask.replace('env[name].length >= 4', 'env[name].length > 0'), 'Skips values shorter than 4 characters'],
+    [mask.replace('env[name].length >= 4', 'env[name].length > 4'), 'Skips values shorter than 4 characters'],
+    [
+      // A function replacer keeps "$&" in the mutant's code instead of letting replace() expand it.
+      mask.replace(
+        "text.replaceAll(value, '***')",
+        () => "text.replace(new RegExp(value.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&'), 'gi'), '***')",
+      ),
+      'Matches case exactly',
+    ],
+    [mask.replace('const values = sensitive', 'const values = Object.keys(env)'), 'Leaves variables that are not sensitive'],
+  ])
+  const dotenv = solution('devops-parse-dotenv')
+  await assertCaught('devops-parse-dotenv', [
+    [dotenv.replace("const at = line.indexOf('=')", "const at = line.lastIndexOf('=')"), 'Keeps "=" inside a value'],
+    [dotenv.replace("value.indexOf(' #')", "value.indexOf('#')"), 'Keeps "#" without a space before it'],
+    [
+      dotenv
+        .replace(
+          '    if (value.length >= 2 && (quote === \'"\' || quote === "\'") && value.endsWith(quote)) value = value.slice(1, -1)\n    else {\n',
+          '    {\n',
+        )
+        .replace(
+          '    values[name] = value\n',
+          '    if (value.length >= 2 && (quote === \'"\' || quote === "\'") && value.endsWith(quote)) value = value.slice(1, -1)\n    values[name] = value\n',
+        ),
+      'Reads the example',
+    ],
+    [dotenv.replace('(quote === \'"\' || quote === "\'")', "quote === '\"'"), 'Removes single quotes'],
+    [dotenv.replace(' && value.endsWith(quote)', ' && /["\']$/.test(value)'), 'Keeps mismatched quotes'],
+    [dotenv.replace("    if (line.startsWith('export ')) line = line.slice('export '.length)\n", ''), 'Removes a leading export'],
+    [dotenv.replace('/^[A-Za-z_][A-Za-z0-9_]*$/', '/^[A-Za-z0-9_-]+$/'), 'Reports bad lines by number'],
+    [dotenv.replace('errors.push(index + 1)', 'errors.push(index)'), 'Reports bad lines by number'],
+    [
+      dotenv
+        .replace('let line = raw.trim()', "let line = raw.replace(/^ +| +$/g, '')")
+        .replace('let value = line.slice(at + 1).trim()', "let value = line.slice(at + 1).replace(/^ +| +$/g, '')"),
+      'Handles Windows line endings',
+    ],
+    [dotenv.replace('line.slice(0, at).trim()', 'line.slice(0, at)'), 'Trims around the name and value'],
+    [dotenv.replace('value.length >= 2 &&', ''), 'Keeps a lone quote character'],
+  ])
+  const drift = solution('devops-config-drift')
+  await assertCaught('devops-config-drift', [
+    [
+      drift.replace('const inStaging = Object.hasOwn(staging, name)', 'const inStaging = Boolean(staging[name])'),
+      'Counts an empty value as present',
+    ],
+    [
+      drift.replace('...Object.keys(production)])].sort()', '...Object.keys(production)])].sort((a, b) => a.localeCompare(b))'),
+      'Sorts names with the default sort',
+    ],
+    [drift.replace("staging: hide ? '***' : staging[name]", 'staging: staging[name]'), 'Reports the example'],
+    [drift.replace('const hide = sensitive.includes(name)', 'const hide = sensitive.length > 0'), 'Hides only sensitive names'],
+    [
+      drift.replace(
+        "if (!inProduction) report.push({ name, change: 'missing in production' })",
+        "if (!inProduction) report.push({ name, change: 'missing in production', staging: staging[name] })",
+      ),
+      'Never shows a sensitive value that is missing elsewhere',
+    ],
+    [
+      drift.replace('staging[name] !== production[name]', 'staging[name].trim().toLowerCase() !== production[name].trim().toLowerCase()'),
+      'Compares values exactly',
+    ],
+    [drift.replace('    else if (staging[name] !== production[name]) {', '    else {'), 'Leaves equal values out'],
+  ])
+})

@@ -84,4 +84,88 @@ export const devopsSkills: Skill[] = [
     repIds: ['devops-exit-meaning', 'devops-first-error', 'devops-step-outcomes', 'devops-error-annotations', 'devops-failing-step'],
     related: [],
   },
+  {
+    id: 'service-config',
+    title: 'Configuration: environment variables, schemas, and secrets',
+    summary:
+      'Read settings from environment variables, check them all against a schema when the service starts, and keep secret values out of logs and reports.',
+    prerequisites: ['ci-output'],
+    objectives: [
+      'Read a setting from an environment variable with a type, a range, and a default, refusing text that only looks like a number.',
+      'Check every setting against a schema at startup and report all problems at once.',
+      'Mask secret values in log lines and compare two environments without printing secrets.',
+    ],
+    sections: [
+      {
+        title: 'Settings live outside the code',
+        body: 'The same build should run on a laptop, in CI, in staging, and in production, so the things that differ, such as ports, database addresses, and feature switches, are passed in as environment variables. Every environment variable is text. A port of "8080" has to be turned into a number, and "8080abc" or "1e3" must be refused rather than read as 8080 or 1000 by a forgiving parser.',
+      },
+      {
+        title: 'Check everything when the service starts',
+        body: 'A schema lists each setting with its type, whether it is required, and its default. Checking the whole schema at startup and stopping with a clear list of problems is called failing fast: one restart fixes every mistake, instead of the service running for an hour and failing on the first request that needs a missing value. An empty value is usually treated as missing, so a blank line in a settings file does not hide a required setting.',
+      },
+      {
+        title: 'Keep secrets out of logs',
+        body: 'Passwords and tokens are also passed in as environment variables, and a script can print one by accident. CI services mask known secrets by replacing each value with a placeholder in every log line. Mask longer values first, because a shorter secret inside a longer one would otherwise leave part of the longer one visible, and treat each value as plain text, since secrets contain characters such as "." and "+". Masking cannot unprint a value already shown elsewhere, so the real fix is not to print it.',
+      },
+      {
+        title: 'Local files and drift',
+        body: 'For local work, a .env file holds NAME=value lines that a loader turns into variables. Over time environments drift apart: a variable added in staging is forgotten in production. Comparing the two sets of names and values, while showing only "***" for secret ones, finds that drift before a deploy does.',
+      },
+    ],
+    example:
+      'schema: PORT integer required · DEBUG boolean default "false" · DATABASE_URL string required\nenv:    PORT="8080" · DEBUG="yes"\n\nPORT          "8080" → 8080\nDEBUG         "yes"  → error: DEBUG must be true or false\nDATABASE_URL  missing → error: DATABASE_URL is required',
+    walkthrough: [
+      'PORT is present and is only digits, so it becomes the number 8080.',
+      'DEBUG is present, so its default is not used, and "yes" is not one of true, false, 1, or 0.',
+      'DATABASE_URL is missing and has no default, so it is reported as required.',
+      'Both errors are reported together, so one fix and one restart are enough.',
+    ],
+    mistakes: [
+      'Converting with parseInt or Number, which accept "8080abc" or "1e3".',
+      'Stopping at the first problem, so each restart reveals only one more.',
+      'Treating an empty value as set, so a blank line hides a missing required setting.',
+      'Masking a short secret before a longer one that contains it, which leaves part of the longer one in the log.',
+    ],
+    questions: [
+      q(
+        'port-parseint-v1',
+        'PORT is "8080abc". What does parseInt(PORT, 10) return?',
+        '',
+        ['NaN', '8080', 'An error'],
+        1,
+        'parseInt reads digits until the first character that is not one and ignores the rest, so the mistake passes silently. Check the whole text first.',
+      ),
+      q(
+        'config-fail-fast-v1',
+        'A required DATABASE_URL is missing. When should the service report it?',
+        '',
+        [
+          'On the first request that needs the database',
+          'At startup, together with any other setting problems',
+          'Never; use an empty address',
+        ],
+        1,
+        'Checking every setting at startup fails fast: the service never runs half-configured, and one list shows every problem.',
+      ),
+      q(
+        'mask-longest-first-v1',
+        'Secrets "abc123" and "token-abc123" both appear in a log. Masking "abc123" first leaves what in place of "token-abc123"?',
+        '',
+        ['***', 'token-***', 'token-abc123'],
+        1,
+        'Once "abc123" is replaced, the longer value no longer matches, so "token-" stays visible. Mask longer values first.',
+      ),
+      q(
+        'env-empty-default-v1',
+        'WORKERS is set to "" and its default is "4". Under the usual rule, what is the setting?',
+        '',
+        ['"" (empty)', '4', 'An error'],
+        1,
+        'An empty value is treated as missing, so the default applies.',
+      ),
+    ],
+    repIds: ['devops-read-port', 'devops-validate-env', 'devops-mask-secrets', 'devops-parse-dotenv', 'devops-config-drift'],
+    related: ['ci-output', 'validation'],
+  },
 ]

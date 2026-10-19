@@ -1021,7 +1021,7 @@ export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[
       'databases',
     ],
   },
-  { id: 'devops', title: 'DevOps', skillIds: ['ci-output'] },
+  { id: 'devops', title: 'DevOps', skillIds: ['ci-output', 'service-config'] },
   {
     id: 'async',
     title: 'Async & runtime',

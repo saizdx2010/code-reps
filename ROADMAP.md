@@ -145,7 +145,7 @@ Every check is honest about what it establishes: SQL reps run SQLite's dialect o
 **Phase 3: DevOps** (new `devops` track; TypeScript reps that simulate authored policies)
 
 - [x] D1 · Read CI output: exit codes and the first real error in a log, as the new `devops` track's first stage (last on the track picker, "Builds on Backend"), with a lesson (`ci-output`) and the `ci-output` journey: read an exit code, find the first real error in a log with colour codes, timestamps, warnings, and an exit-code summary, then a delayed "which step failed the job" with steps allowed to fail; step conditions (on success, on failure, always) and compiler errors as annotations are practice.
-- [ ] D2 · Configuration: environment-variable validation and secret redaction.
+- [x] D2 · Configuration: environment-variable validation and secret redaction, as the Check configuration stage with a lesson (`service-config`) and the `service-config` journey: read a port with a default, check every setting against a schema (required, type, default) at startup, then a delayed comparison of two environments that never prints a sensitive value; masking sensitive values in log lines and reading a .env file are practice.
 - [ ] D3 · Versions: semver comparison and bumps, ranges, and lockfile diffs.
 - [ ] D4 · Pipelines: job ordering, cache keys, and skipping unchanged work.
 - [ ] D5 · Containers: which image layers rebuild, and tag rules.

@@ -452,6 +452,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'service-config',
+    title: 'Check settings before a service starts',
+    guided: 'devops-read-port',
+    independent: 'devops-validate-env',
+    recall: 'devops-config-drift',
+    practice: ['devops-mask-secrets', 'devops-parse-dotenv'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

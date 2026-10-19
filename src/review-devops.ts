@@ -64,6 +64,66 @@ export const devopsDepth: Record<string, RepDepth> = {
     transfer:
       "Steps can now be retried once. Each step lists its attempts, and the step fails only if its last attempt fails. Decide which attempt's log explains the failure. This changed contract is self-reviewed, not checked by the original cases.",
   },
+  'devops-read-port': {
+    reasoning:
+      'Checking the whole trimmed text against a digits-only pattern before converting means the number can only come from text that is exactly a number, so nothing is silently dropped or reinterpreted. The range check then applies to that exact number. A missing or blank value is a different case from an invalid one: it means "not set", so the default applies instead of an error.',
+    trace:
+      'For "8080abc", the pattern /^[0-9]+$/ fails at "a", so the result is the error, although parseInt would give 8080. For "1e3", the pattern fails at "e", although Number would give 1000. For "0080", the pattern matches and Number gives 80, which is in range. For "   ", trimming leaves "", so the default 3000 applies.',
+    alternative:
+      'Number.isInteger(Number(raw)) accepts "1e3" and " 8080 " without trimming, and parseInt accepts trailing text; either needs the pattern anyway. A schema library can express the same rule, but it still has to be told that text such as "1e3" is not a port.',
+    counterexample:
+      'parseInt(raw, 10) with a range check accepts "8080abc" as 8080, which "Refuses trailing letters" refuses. Checking raw === undefined instead of trimming first treats "   " as invalid instead of using the default.',
+    transfer:
+      'Read HOST too, defaulting to "127.0.0.1", and refuse "0.0.0.0" unless ALLOW_PUBLIC is "true". Decide how the two settings report errors together. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-validate-env': {
+    reasoning:
+      'Each setting is handled in two separate steps: choose the text (the value, else the default, else nothing) and then convert it by type. Collecting errors instead of returning early means one run reports every problem, and going through the schema in order makes that report stable. A default passes through the same conversion as a value, so a setting has one meaning however it was supplied.',
+    trace:
+      'For WORKERS "many", DEBUG "maybe", no DATABASE_URL, and no PORT with default "3000": DATABASE_URL has no value or default and is required, so "DATABASE_URL is required". WORKERS fails the integer pattern. PORT uses "3000" and becomes 3000. DEBUG lowercases to "maybe", which is not a boolean word. The result lists the three errors in schema order.',
+    alternative:
+      'A schema library would give richer types, such as URLs and enums, and generated TypeScript types for the config. Throwing on the first error is simpler but makes a broken deployment take several restarts to fix.',
+    counterexample:
+      'Returning at the first error reports only "DATABASE_URL is required" in "Reports every problem in schema order". Using the default only when the variable is absent, not when it is blank, reports WORKERS "  " as an invalid integer instead of using 4.',
+    transfer:
+      'Add a type "list" for comma-separated text, such as ALLOWED_ORIGINS. Decide how to treat spaces around commas, empty items, and an empty list. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-mask-secrets': {
+    reasoning:
+      'Masking longer values first guarantees that when a shorter secret is part of a longer one, the longer one is replaced whole before the shorter one could split it. Treating each value as plain text means every character in it is matched literally, which matters because tokens contain ".", "+", and "*". Skipping very short values avoids turning ordinary text into placeholders.',
+    trace:
+      'With SHORT "abc123" and LONG "token-abc123" in the line "sent token-abc123", sorting by length puts "token-abc123" first, so the line becomes "sent ***" and "abc123" no longer appears. In the other order, "abc123" is replaced first, giving "sent token-***", and the longer value no longer matches.',
+    alternative:
+      'A single regular expression built from all values, with each value escaped and the alternatives ordered longest first, does the work in one pass per line. CI services also mask common encodings of a secret, such as its base64 form, which this rep leaves out.',
+    counterexample:
+      'new RegExp(value, "g") treats "p@ss.w*rd+" as a pattern, so the literal password is not matched and leaks in "Treats a value as plain text". Masking in the order the names were listed fails "Masks a longer value before a shorter one inside it".',
+    transfer:
+      'Also mask the value when it appears URL-encoded, such as "p%40ss" for "p@ss". Decide whether the encoded form needs the same length limit and in what order the forms are masked. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-parse-dotenv': {
+    reasoning:
+      'Each line is read in a fixed order so that each rule only sees what the earlier ones left: skip comments, remove export, split at the first "=", check the name, then decide between a quoted value and an unquoted one. Checking for quotes before looking for a comment is what lets "#" survive inside quotes, and requiring a space before "#" keeps URLs and colours such as "#fff" intact.',
+    trace:
+      'For GREETING="hello # world", the first "=" splits the name GREETING from "\\"hello # world\\"", which starts and ends with ", so the value is hello # world and the "#" is never treated as a comment. For DEBUG=true # for now, the value is not quoted, so " #" starts a comment and the value becomes "true". For "2FAST=yes", the name starts with a digit, so line 4 is reported.',
+    alternative:
+      'A library such as dotenv also handles escapes and multi-line quoted values; writing the rules out shows what a loader decides for you. Rejecting the whole file on the first bad line is stricter, but reporting line numbers lets a person fix every problem at once.',
+    counterexample:
+      'Removing comments before checking quotes turns GREETING="hello # world" into "\\"hello", which the example check refuses. Splitting at the last "=" turns KEY=a=b into a name "KEY=a", which is invalid.',
+    transfer:
+      'Allow ${NAME} inside a value to refer to a variable defined earlier in the file. Decide what happens with an undefined name, a name defined later, and a reference inside single quotes. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-config-drift': {
+    reasoning:
+      'The report has to cover every name in either environment, so the names come from the union of both maps, sorted for a stable order. Presence is checked with hasOwn, not truthiness, so an empty value counts as set. Whether to hide a value is decided only for names whose values differ, and a name missing on one side never shows its value at all.',
+    trace:
+      'For staging {PORT: "8080", DB_PASSWORD: "a1"} and production {PORT: "80", DB_PASSWORD: "b2", CDN: "on"}, the sorted names are CDN, DB_PASSWORD, PORT. CDN is only in production. DB_PASSWORD differs and is sensitive, so both values show "***". PORT differs and is not sensitive, so 8080 and 80 are shown.',
+    alternative:
+      'Comparing a hash of each secret value, instead of hiding it completely, would show whether two secrets match without revealing them, but even a hash of a short secret can be guessed. Reporting equal names too, as "same", makes a longer report that is easier to scan for completeness.',
+    counterexample:
+      'Testing presence with staging[name] treats PROXY "" as missing, which "Counts an empty value as present" refuses. Sorting with localeCompare puts "a" before "B", which "Sorts names with the default sort" refuses.',
+    transfer:
+      'Some names are expected to differ, such as DATABASE_URL. Add a list of such names and decide whether they are skipped entirely or reported only when one side is missing. This changed contract is self-reviewed, not checked by the original cases.',
+  },
 }
 
 export const devopsGuides: Record<string, ReflectionGuide> = {
@@ -129,6 +189,68 @@ export const devopsGuides: Record<string, ReflectionGuide> = {
     example:
       'I find the first step with exitCode !== 0 and continueOnError false, or return null. In its log I find the first trimmed line matching /^(error|fatal)\\b/i and return its 1-based position and text. Without one, the cause is "command not found" for 127, "stopped by signal" and code - 128 above 128, and "exit code" otherwise. The work is linear in the steps and that log. The checks pass authored steps, not a CI service.',
   },
+  'devops-read-port': {
+    plan: ['Treat a missing or blank PORT as 3000.', 'Check the trimmed text is only digits.', 'Convert it and check the range.'],
+    explanation: ['Trace "8080abc" and "1e3".', 'Explain why the default is not an error.', 'Say why leading zeros are allowed.'],
+    example:
+      'I trim PORT, or use "" when it is missing; an empty result gives 3000. If the text matches /^[0-9]+$/, I convert it with Number and accept it from 1 to 65535. Anything else returns the error. The work is linear in the length of the value. The checks pass env in directly; no process environment is read.',
+  },
+  'devops-validate-env': {
+    plan: [
+      'For each setting, choose the value, the default, or nothing.',
+      'Convert the chosen text by type, collecting errors.',
+      'Return every error in schema order, or the config.',
+    ],
+    explanation: [
+      'Trace a schema with three different problems.',
+      'Explain why a blank value uses the default.',
+      'Say why every error is reported at once.',
+    ],
+    example:
+      'For each setting I take the trimmed value, or the trimmed default when the value is blank or missing. With neither, a required setting adds "is required". Strings keep the text; integers must match /^-?[0-9]+$/; booleans accept true, 1, false, and 0 in lower case. Errors collect in schema order. The work is linear in the schema. The checks pass env and the schema in directly.',
+  },
+  'devops-mask-secrets': {
+    plan: [
+      'Collect the sensitive values that are set and at least 4 characters long.',
+      'Sort them longest first.',
+      'Replace every occurrence of each in every line.',
+    ],
+    explanation: [
+      'Trace two secrets where one contains the other.',
+      'Explain why a value is not used as a pattern.',
+      'Say why very short values are skipped.',
+    ],
+    example:
+      'I filter sensitive names to those set in env with values of at least 4 characters, map them to values, and sort by length, longest first. Each line goes through replaceAll for each value with "***". The work is the number of lines times the number of values times the line length. The checks pass lines in directly; no CI service masks anything.',
+  },
+  'devops-parse-dotenv': {
+    plan: [
+      'Trim each line and skip blanks and comments; remove a leading export.',
+      'Split at the first "=" and check the name, recording bad line numbers.',
+      'Keep a quoted value\'s inside, or remove a " #" comment from an unquoted one.',
+    ],
+    explanation: [
+      'Trace a quoted value that contains "#".',
+      'Explain why the first "=" is the split point.',
+      'Say what happens to a repeated name.',
+    ],
+    example:
+      'For each line I trim, skip "" and "#" lines, and remove "export ". indexOf("=") gives the name, which must match /^[A-Za-z_][A-Za-z0-9_]*$/, or the line number goes into errors. A value of 2 or more characters wrapped in matching quotes keeps its inside; otherwise I cut at " #" and trim. Later names overwrite earlier ones. The work is linear in the text. The checks pass text in directly; no file is read.',
+  },
+  'devops-config-drift': {
+    plan: [
+      'Collect and sort every name from both maps.',
+      'Report names missing on one side.',
+      'Report differing values, hiding sensitive ones.',
+    ],
+    explanation: [
+      'Trace a sensitive name whose values differ.',
+      'Explain why an empty value is present.',
+      'Say what the report never shows.',
+    ],
+    example:
+      'I sort the union of both maps\' keys. hasOwn tells me whether each side has the name; a name on one side only is reported missing on the other. When both have it and the values differ, I report both, replaced by "***" if the name is sensitive. The work is O(n log n) for the sort. The checks pass both maps in directly.',
+  },
 }
 
 export const devopsLessonDepth: Record<string, LessonDepth> = {
@@ -141,5 +263,15 @@ export const devopsLessonDepth: Record<string, LessonDepth> = {
       'A log shows "warning: error handler is deprecated", then "Errors: 0", then "fatal: could not read from remote repository", then "npm ERR! code 128". Predict which line is the first real error, and what the exit code 128 in the last line most likely is.',
     answer:
       'The warning and "Errors: 0" are not errors. The first real error is "fatal: could not read from remote repository", a Git failure such as a missing access token or a wrong URL. "npm ERR! code 128" is a later effect: npm reporting that the Git command it ran exited with 128, which is an ordinary failure code, not a signal.',
+  },
+  'service-config': {
+    title: 'Missing, blank, and invalid are three different answers',
+    code: 'WORKERS missing  → use the default "4" → 4\nWORKERS = "   "   → blank, use the default → 4\nWORKERS = "four"  → invalid → "WORKERS must be an integer"\nWORKERS = "4x"    → invalid (parseInt would say 4)',
+    reasoning:
+      'A setting can be absent, present but blank, or present with text that does not fit its type. Absent and blank both mean nobody chose a value, so the default applies. Text that does not fit means somebody chose a value and got it wrong, so the service must stop and say so rather than guess. A forgiving parser such as parseInt hides that mistake by reading a prefix.',
+    challenge:
+      'A team sets TIMEOUT_MS="30s" in production, expecting 30 seconds. Predict what parseInt and the schema rule each do with it, and what happens to requests in each case.',
+    answer:
+      'parseInt reads 30, so every request times out after 30 milliseconds and the service seems broken for a reason nobody can see in the settings. The schema rule refuses "30s" as an integer at startup, so the deploy stops with "TIMEOUT_MS must be an integer" and the mistake is fixed before any request is affected.',
   },
 }

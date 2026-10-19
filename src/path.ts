@@ -509,6 +509,10 @@ export const paths = [
         title: 'Read CI output',
         repIds: ['devops-exit-meaning', 'devops-first-error', 'devops-step-outcomes', 'devops-error-annotations', 'devops-failing-step'],
       },
+      {
+        title: 'Check configuration',
+        repIds: ['devops-read-port', 'devops-validate-env', 'devops-mask-secrets', 'devops-parse-dotenv', 'devops-config-drift'],
+      },
     ] satisfies readonly PathStage[],
   },
 ] as const

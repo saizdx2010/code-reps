@@ -643,4 +643,467 @@ export const devopsReps: Rep[] = [
       },
     ],
   },
+  {
+    id: 'devops-read-port',
+    title: 'Read a port from the environment',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A service reads its settings from environment variables, so the same build can run on a laptop, in CI, and in production. Every value arrives as text, and a value that is missing, mistyped, or out of range has to be handled before the service starts.',
+    prompt:
+      'Implement readPort(env). env maps environment variable names to text values. If PORT is missing, or empty after trimming spaces, return {ok: true, port: 3000}. Otherwise the trimmed value must be made only of the digits 0 to 9 and name a number from 1 to 65535; leading zeros are allowed. Then return {ok: true, port} with that number. Otherwise return {ok: false, error: "PORT must be a whole number from 1 to 65535"}. Variable names are case-sensitive.',
+    brief: {
+      summary: 'Implement readPort(env) and return {ok: true, port} or {ok: false, error}.',
+      rules: [
+        'A missing PORT, or one that is empty after trimming, gives {ok: true, port: 3000}.',
+        'Otherwise the trimmed value must be only the digits 0 to 9 and name a number from 1 to 65535; leading zeros are allowed.',
+        'A valid value gives {ok: true, port} with that number.',
+        'Anything else gives {ok: false, error: "PORT must be a whole number from 1 to 65535"}.',
+      ],
+      edgeCases: [
+        'Variable names are case-sensitive, so "port" is not PORT.',
+        'A sign, a decimal point, or letters make the value invalid.',
+      ],
+    },
+    example: { input: 'readPort({PORT: " 8080 "})', output: '{ok: true, port: 8080}' },
+    note: `env is passed in, like process.env; your function never reads the real environment. Values have at most 100 characters. ${notRun}`,
+    vocabulary: [
+      { term: 'Environment variable', meaning: 'a named text value that the system gives a program when it starts' },
+      { term: 'Default value', meaning: 'the value used when a setting is not given' },
+    ],
+    planPrompt:
+      'Which of "8080abc", "1e3", "0080", "65536", and "  " are valid ports under this contract, and which built-in parsing would accept the wrong ones?',
+    starter:
+      'function readPort(env: Record<string, string>): { ok: true; port: number } | { ok: false; error: string } {\n  // Treat a missing or blank PORT as the default, then check the text before converting it.\n  return { ok: true, port: 3000 }\n}\n',
+    functionName: 'readPort',
+    preserveInput: true,
+    hints: [
+      'Check the text with a pattern such as /^[0-9]+$/ before turning it into a number.',
+      'parseInt("8080abc") is 8080 and Number("1e3") is 1000, so neither alone is enough.',
+      'Compare the number with both ends of the range after converting it.',
+    ],
+    checks: [
+      { name: 'Reads the example', input: [{ PORT: ' 8080 ' }], expected: { ok: true, port: 8080 } },
+      { name: 'Uses 3000 when PORT is missing', input: [{ HOST: '0.0.0.0' }], expected: { ok: true, port: 3000 } },
+      { name: 'Uses 3000 when PORT is blank', input: [{ PORT: '   ' }], expected: { ok: true, port: 3000 } },
+      { name: 'Accepts the highest port', input: [{ PORT: '65535' }], expected: { ok: true, port: 65535 } },
+      { name: 'Accepts the lowest port', input: [{ PORT: '1' }], expected: { ok: true, port: 1 } },
+      { name: 'Refuses port 0', input: [{ PORT: '0' }], expected: { ok: false, error: 'PORT must be a whole number from 1 to 65535' } },
+      {
+        name: 'Refuses a port above the range',
+        input: [{ PORT: '65536' }],
+        expected: { ok: false, error: 'PORT must be a whole number from 1 to 65535' },
+      },
+      {
+        name: 'Refuses trailing letters',
+        input: [{ PORT: '8080abc' }],
+        expected: { ok: false, error: 'PORT must be a whole number from 1 to 65535' },
+      },
+      {
+        name: 'Refuses exponent notation',
+        input: [{ PORT: '1e3' }],
+        expected: { ok: false, error: 'PORT must be a whole number from 1 to 65535' },
+      },
+      {
+        name: 'Refuses a decimal point',
+        input: [{ PORT: '80.5' }],
+        expected: { ok: false, error: 'PORT must be a whole number from 1 to 65535' },
+      },
+      { name: 'Refuses a sign', input: [{ PORT: '+80' }], expected: { ok: false, error: 'PORT must be a whole number from 1 to 65535' } },
+      { name: 'Allows leading zeros', input: [{ PORT: '0080' }], expected: { ok: true, port: 80 } },
+      { name: 'Matches the name exactly', input: [{ port: '9000' }], expected: { ok: true, port: 3000 } },
+    ],
+  },
+  {
+    id: 'devops-validate-env',
+    title: 'Check settings against a schema',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A service with a dozen settings should check them all when it starts and report every problem at once, instead of failing an hour later on the first request that needs a missing value. A schema lists each setting with its type, whether it is required, and its default.',
+    prompt:
+      'Implement validateEnv(env, schema). env maps variable names to text values. schema is a list of {name, type, required, default?}, where type is "string", "integer", or "boolean" and default, when given, is text. Go through the schema in order. Let raw be env[name] trimmed; if it is missing or empty, use default instead, and if there is no default, add the error "NAME is required" when required is true or leave the setting out when it is false. Convert raw by type: a string is the trimmed text; an integer must be an optional "-" and one or more digits, else the error is "NAME must be an integer"; a boolean is true for "true" or "1" and false for "false" or "0", compared in lower case, else the error is "NAME must be true or false". NAME is the setting\'s name. If there are errors, return {ok: false, errors} in schema order; otherwise return {ok: true, config} mapping each included name to its converted value. Ignore variables the schema does not list. Do not change the inputs.',
+    brief: {
+      summary: 'Implement validateEnv(env, schema) and return {ok: true, config} or {ok: false, errors}.',
+      rules: [
+        'Take env[name] trimmed; if it is missing or empty, use the text default. With no default, a required setting adds "NAME is required" and an optional one is left out.',
+        'string: the trimmed text. integer: an optional "-" and digits, else "NAME must be an integer".',
+        'boolean: "true" or "1" is true and "false" or "0" is false, in any letter case, else "NAME must be true or false".',
+        'With any errors, return {ok: false, errors} in schema order; otherwise {ok: true, config}.',
+      ],
+      edgeCases: [
+        'A default goes through the same conversion as a value.',
+        'Variables the schema does not list are ignored.',
+        'Do not change the inputs.',
+      ],
+    },
+    example: {
+      input:
+        'validateEnv({PORT: "8080", DEBUG: "TRUE"}, [{name: "PORT", type: "integer", required: true}, {name: "DEBUG", type: "boolean", required: false, default: "false"}, {name: "REGION", type: "string", required: false, default: "eu-west"}])',
+      output: '{ok: true, config: {PORT: 8080, DEBUG: true, REGION: "eu-west"}}',
+    },
+    note: `env is passed in; your function never reads the real environment. Names in schema are unique; there are at most 50 settings. ${notRun}`,
+    vocabulary: [
+      {
+        term: 'Configuration schema',
+        meaning: "a list of the settings a program accepts, with each one's type, default, and whether it is required",
+      },
+      { term: 'Fail fast', meaning: 'stop at startup with a clear error instead of running with a bad setting' },
+    ],
+    planPrompt:
+      'An env is missing a required setting, has "yes" for a boolean, and "12a" for an integer. What should the result list, and in what order?',
+    starter:
+      "type Setting = { name: string; type: 'string' | 'integer' | 'boolean'; required: boolean; default?: string }\n\nfunction validateEnv(env: Record<string, string>, schema: Setting[]) {\n  return { ok: true, config: {} as Record<string, string | number | boolean> }\n}\n",
+    functionName: 'validateEnv',
+    preserveInput: true,
+    hints: [
+      'Collect errors in a list instead of returning at the first one.',
+      'Decide which text to use first (value, default, or none), then convert it by type.',
+      'Lowercase the text once before comparing a boolean.',
+    ],
+    checks: [
+      {
+        name: 'Reads the example',
+        input: [
+          { PORT: '8080', DEBUG: 'TRUE' },
+          [
+            { name: 'PORT', type: 'integer', required: true },
+            { name: 'DEBUG', type: 'boolean', required: false, default: 'false' },
+            { name: 'REGION', type: 'string', required: false, default: 'eu-west' },
+          ],
+        ],
+        expected: { ok: true, config: { PORT: 8080, DEBUG: true, REGION: 'eu-west' } },
+      },
+      {
+        name: 'Reports a missing required setting',
+        input: [{}, [{ name: 'DATABASE_URL', type: 'string', required: true }]],
+        expected: { ok: false, errors: ['DATABASE_URL is required'] },
+      },
+      {
+        name: 'Uses the default for a blank value',
+        input: [{ WORKERS: '  ' }, [{ name: 'WORKERS', type: 'integer', required: true, default: '4' }]],
+        expected: { ok: true, config: { WORKERS: 4 } },
+      },
+      {
+        name: 'Leaves out an optional setting with no value',
+        input: [{}, [{ name: 'SENTRY_DSN', type: 'string', required: false }]],
+        expected: { ok: true, config: {} },
+      },
+      {
+        name: 'Refuses an integer with letters',
+        input: [{ WORKERS: '12a' }, [{ name: 'WORKERS', type: 'integer', required: true }]],
+        expected: { ok: false, errors: ['WORKERS must be an integer'] },
+      },
+      {
+        name: 'Accepts a negative integer',
+        input: [{ OFFSET: '-5' }, [{ name: 'OFFSET', type: 'integer', required: true }]],
+        expected: { ok: true, config: { OFFSET: -5 } },
+      },
+      {
+        name: 'Refuses a decimal integer',
+        input: [{ OFFSET: '2.5' }, [{ name: 'OFFSET', type: 'integer', required: true }]],
+        expected: { ok: false, errors: ['OFFSET must be an integer'] },
+      },
+      {
+        name: 'Reads 1 and 0 as booleans',
+        input: [
+          { A: '1', B: '0' },
+          [
+            { name: 'A', type: 'boolean', required: true },
+            { name: 'B', type: 'boolean', required: true },
+          ],
+        ],
+        expected: { ok: true, config: { A: true, B: false } },
+      },
+      {
+        name: 'Refuses other boolean words',
+        input: [{ DEBUG: 'yes' }, [{ name: 'DEBUG', type: 'boolean', required: true }]],
+        expected: { ok: false, errors: ['DEBUG must be true or false'] },
+      },
+      {
+        name: 'Reports every problem in schema order',
+        input: [
+          { WORKERS: 'many', DEBUG: 'maybe' },
+          [
+            { name: 'DATABASE_URL', type: 'string', required: true },
+            { name: 'WORKERS', type: 'integer', required: true },
+            { name: 'PORT', type: 'integer', required: false, default: '3000' },
+            { name: 'DEBUG', type: 'boolean', required: false },
+          ],
+        ],
+        expected: {
+          ok: false,
+          errors: ['DATABASE_URL is required', 'WORKERS must be an integer', 'DEBUG must be true or false'],
+        },
+      },
+      {
+        name: 'Converts a default by its type',
+        input: [{}, [{ name: 'CACHE', type: 'boolean', required: false, default: 'FALSE' }]],
+        expected: { ok: true, config: { CACHE: false } },
+      },
+      {
+        name: 'Trims a string but keeps inner spaces',
+        input: [{ GREETING: '  hello there  ' }, [{ name: 'GREETING', type: 'string', required: true }]],
+        expected: { ok: true, config: { GREETING: 'hello there' } },
+      },
+      {
+        name: 'Ignores variables the schema does not list',
+        input: [{ PORT: '80', PATH: '/usr/bin' }, [{ name: 'PORT', type: 'integer', required: true }]],
+        expected: { ok: true, config: { PORT: 80 } },
+      },
+    ],
+  },
+  {
+    id: 'devops-mask-secrets',
+    title: 'Mask secret values in log lines',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'CI logs are read by many people and kept for weeks, so a password or token printed by a script must not appear in them. CI services replace the values of known secrets in every log line before storing it.',
+    prompt:
+      'Implement maskLog(lines, env, sensitive). sensitive lists the names of variables whose values must never appear in a log. Take the value of each sensitive name from env, skipping names that are missing and values shorter than 4 characters. In each line, replace every occurrence of each value with "***", masking longer values before shorter ones so no part of a longer value is left. Matching is exact and case-sensitive, and a value is plain text, not a pattern. Return the masked lines in order. Do not change the inputs.',
+    brief: {
+      summary: 'Implement maskLog(lines, env, sensitive) and return the masked lines.',
+      rules: [
+        "Take each sensitive name's value from env, skipping missing names and values shorter than 4 characters.",
+        'Replace every occurrence of each value in each line with "***".',
+        'Mask longer values before shorter ones.',
+        'Match exactly and case-sensitively; a value is plain text, not a pattern.',
+      ],
+      edgeCases: ['Variables not listed in sensitive are never masked.', 'Do not change the inputs.'],
+    },
+    example: {
+      input: 'maskLog(["login with s3cr3t-token"], {API_TOKEN: "s3cr3t-token", USER: "ada"}, ["API_TOKEN"])',
+      output: '["login with ***"]',
+    },
+    note: `Very short values are skipped because masking them would hide ordinary text; a real secret that short is a problem in its own right. Masking does not undo a secret already printed elsewhere. ${notRun}`,
+    vocabulary: [
+      { term: 'Secret', meaning: 'a value such as a password or token that grants access and must be kept out of code and logs' },
+      { term: 'Masking', meaning: 'replacing a sensitive value with a placeholder before text is shown or stored' },
+    ],
+    planPrompt:
+      'Two secrets are "abc123" and "token-abc123". In what order must you mask them, and what leaks if you choose the other order?',
+    starter:
+      'function maskLog(lines: string[], env: Record<string, string>, sensitive: string[]): string[] {\n  // Find the values to hide, then replace them in every line.\n  return lines\n}\n',
+    functionName: 'maskLog',
+    preserveInput: true,
+    hints: [
+      'Build the list of values first, then sort it by length, longest first.',
+      'String.prototype.replaceAll with a string replaces every occurrence without treating it as a pattern.',
+      'A regular expression built from a value breaks when the value contains characters such as ".", "*", or "+".',
+    ],
+    checks: [
+      {
+        name: 'Masks the example',
+        input: [['login with s3cr3t-token'], { API_TOKEN: 's3cr3t-token', USER: 'ada' }, ['API_TOKEN']],
+        expected: ['login with ***'],
+      },
+      {
+        name: 'Masks every occurrence',
+        input: [['key=k-9f2a then k-9f2a again'], { KEY: 'k-9f2a' }, ['KEY']],
+        expected: ['key=*** then *** again'],
+      },
+      {
+        name: 'Masks several secrets across lines',
+        input: [['user=deploy pass=hunter22', 'token: tk_live_77'], { PASSWORD: 'hunter22', TOKEN: 'tk_live_77' }, ['PASSWORD', 'TOKEN']],
+        expected: ['user=deploy pass=***', 'token: ***'],
+      },
+      {
+        name: 'Masks a longer value before a shorter one inside it',
+        input: [['sent token-abc123'], { SHORT: 'abc123', LONG: 'token-abc123' }, ['SHORT', 'LONG']],
+        expected: ['sent ***'],
+      },
+      {
+        name: 'Skips values shorter than 4 characters',
+        input: [['pin is 123 and code is 4567'], { PIN: '123', CODE: '4567' }, ['PIN', 'CODE']],
+        expected: ['pin is 123 and code is ***'],
+      },
+      {
+        name: 'Skips names that are not set',
+        input: [['nothing to hide'], {}, ['API_TOKEN']],
+        expected: ['nothing to hide'],
+      },
+      {
+        name: 'Matches case exactly',
+        input: [['Secret-Value and secret-value'], { TOKEN: 'secret-value' }, ['TOKEN']],
+        expected: ['Secret-Value and ***'],
+      },
+      {
+        name: 'Treats a value as plain text',
+        input: [['pass p@ss.w*rd+ and pXssXwXrd'], { PASSWORD: 'p@ss.w*rd+' }, ['PASSWORD']],
+        expected: ['pass *** and pXssXwXrd'],
+      },
+      {
+        name: 'Leaves variables that are not sensitive',
+        input: [['region eu-west-1 token abcd1234'], { REGION: 'eu-west-1', TOKEN: 'abcd1234' }, ['TOKEN']],
+        expected: ['region eu-west-1 token ***'],
+      },
+      { name: 'Handles no lines', input: [[], { TOKEN: 'abcd1234' }, ['TOKEN']], expected: [] },
+    ],
+  },
+  {
+    id: 'devops-parse-dotenv',
+    title: 'Read a .env file',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'For local work, many projects keep settings in a .env file: one NAME=value line per variable, with comments and quotes. A loader turns the file into variables before the program starts, and should point at the lines it could not read.',
+    prompt:
+      'Implement parseDotenv(text). Split text into lines at "\\n". Trim each line; skip it if it is empty or starts with "#". Remove a leading "export " if present. The line must contain "="; the name is the text before the first "=", trimmed, and must start with a letter or "_" followed by letters, digits, or "_". The value is the text after the first "=", trimmed. If the value is at least 2 characters long and starts and ends with the same quote character, either " or \', remove those two quotes and keep the inside exactly. Otherwise, remove a comment that starts with " #" (a space and "#") and everything after it, then trim again. A later line for the same name replaces the earlier value. Return {values, errors}, where errors lists the line numbers, counting from 1, of lines that have no "=" or an invalid name.',
+    brief: {
+      summary: 'Implement parseDotenv(text) and return {values, errors}.',
+      rules: [
+        'Split at "\\n" and trim each line; skip empty lines and lines starting with "#"; remove a leading "export ".',
+        'The name is the trimmed text before the first "=" and must match a letter or "_" followed by letters, digits, or "_"; a line with no "=" or a bad name adds its line number (from 1) to errors.',
+        'The value is the trimmed text after the first "=". A value of 2 or more characters wrapped in matching " or \' quotes keeps exactly what is inside.',
+        'Otherwise remove a " #" comment and everything after it, then trim. A later line for the same name wins.',
+      ],
+      edgeCases: ['"#" inside quotes or without a space before it is part of the value.', 'A value may contain more "=" characters.'],
+    },
+    example: {
+      input: 'parseDotenv("# local settings\\nPORT=8080\\nGREETING=\\"hello # world\\"\\nDEBUG=true # for now")',
+      output: '{values: {PORT: "8080", GREETING: "hello # world", DEBUG: "true"}, errors: []}',
+    },
+    note: `Real .env loaders differ on escapes and multi-line values; this rep uses only the rules above. text has at most 500 lines. ${notRun}`,
+    vocabulary: [
+      { term: '.env file', meaning: 'a text file of NAME=value lines that a loader turns into environment variables for local work' },
+      { term: 'Inline comment', meaning: 'a note at the end of a line, after the value, that the loader ignores' },
+    ],
+    planPrompt: 'What do the lines KEY=a=b, URL=http://x#top, NOTE=" spaced ", and 2FAST=yes each produce?',
+    starter:
+      'function parseDotenv(text: string): { values: Record<string, string>; errors: number[] } {\n  // Read one line at a time.\n  return { values: {}, errors: [] }\n}\n',
+    functionName: 'parseDotenv',
+    preserveInput: true,
+    hints: [
+      'indexOf("=") finds the first "=", so the value keeps any later ones.',
+      'Check for matching quotes before looking for a comment, so a "#" inside quotes survives.',
+      'Count line numbers from the split lines, including skipped ones.',
+    ],
+    checks: [
+      {
+        name: 'Reads the example',
+        input: ['# local settings\nPORT=8080\nGREETING="hello # world"\nDEBUG=true # for now'],
+        expected: { values: { PORT: '8080', GREETING: 'hello # world', DEBUG: 'true' }, errors: [] },
+      },
+      { name: 'Keeps "=" inside a value', input: ['KEY=a=b'], expected: { values: { KEY: 'a=b' }, errors: [] } },
+      {
+        name: 'Keeps "#" without a space before it',
+        input: ['URL=http://x#top'],
+        expected: { values: { URL: 'http://x#top' }, errors: [] },
+      },
+      { name: 'Keeps spaces inside quotes', input: ['NOTE=" spaced "'], expected: { values: { NOTE: ' spaced ' }, errors: [] } },
+      { name: 'Removes single quotes', input: ["NAME='Ada Lovelace'"], expected: { values: { NAME: 'Ada Lovelace' }, errors: [] } },
+      { name: 'Keeps mismatched quotes', input: ['ODD="half\''], expected: { values: { ODD: '"half\'' }, errors: [] } },
+      { name: 'Removes a leading export', input: ['export TOKEN=abc'], expected: { values: { TOKEN: 'abc' }, errors: [] } },
+      {
+        name: 'Trims around the name and value',
+        input: ['  REGION =  eu-west  '],
+        expected: { values: { REGION: 'eu-west' }, errors: [] },
+      },
+      { name: 'Lets a later line win', input: ['MODE=dev\nMODE=prod'], expected: { values: { MODE: 'prod' }, errors: [] } },
+      { name: 'Allows an empty value', input: ['EMPTY='], expected: { values: { EMPTY: '' }, errors: [] } },
+      { name: 'Keeps a lone quote character', input: ['Q="'], expected: { values: { Q: '"' }, errors: [] } },
+      {
+        name: 'Reports bad lines by number',
+        input: ['GOOD=1\n\njust text\n2FAST=yes\nmy-key=x\n_OK=2'],
+        expected: { values: { GOOD: '1', _OK: '2' }, errors: [3, 4, 5] },
+      },
+      { name: 'Handles Windows line endings', input: ['A=1\r\nB=2\r\n'], expected: { values: { A: '1', B: '2' }, errors: [] } },
+    ],
+  },
+  {
+    id: 'devops-config-drift',
+    title: 'Compare settings between two environments',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A change works in staging but fails in production. Often the code is the same and the settings differ: a variable set in one place and forgotten in the other, or a different value. A drift report lists those differences without printing any secret.',
+    prompt:
+      'Implement configDrift(staging, production, sensitive). staging and production map variable names to text values, and sensitive lists names whose values must not be shown. Look at every name that appears in either map, in the default sort order. Report {name, change: "missing in production"} for a name only in staging, and {name, change: "missing in staging"} for a name only in production. A name in both whose values differ exactly gives {name, change: "different", staging, production} with both values, each shown as "***" when the name is sensitive. A name whose values are equal is not reported. An empty value still counts as present. Return the list. Do not change the inputs.',
+    brief: {
+      summary: 'Implement configDrift(staging, production, sensitive) and return a list of differences.',
+      rules: [
+        'Look at every name in either map, in the default sort order.',
+        'A name only in staging gives {name, change: "missing in production"}; only in production, {name, change: "missing in staging"}.',
+        'Different values give {name, change: "different", staging, production}, each value shown as "***" when the name is sensitive.',
+        'Equal values are not reported.',
+      ],
+      edgeCases: [
+        'An empty value counts as present.',
+        'Values are compared exactly, including letter case and spaces.',
+        'Do not change the inputs.',
+      ],
+    },
+    example: {
+      input: 'configDrift({PORT: "8080", DB_PASSWORD: "a1"}, {PORT: "80", DB_PASSWORD: "b2", CDN: "on"}, ["DB_PASSWORD"])',
+      output:
+        '[{name: "CDN", change: "missing in staging"}, {name: "DB_PASSWORD", change: "different", staging: "***", production: "***"}, {name: "PORT", change: "different", staging: "8080", production: "80"}]',
+    },
+    note: `There are at most 200 names in each map. ${notRun}`,
+    vocabulary: [
+      { term: 'Configuration drift', meaning: 'settings that slowly become different between environments that should match' },
+      { term: 'Staging', meaning: 'an environment set up like production, used to try a change before real users see it' },
+    ],
+    planPrompt:
+      'Which names must you look at, and how do you keep a secret from leaking when its values differ between the two environments?',
+    starter:
+      'type Drift = { name: string; change: string; staging?: string; production?: string }\n\nfunction configDrift(staging: Record<string, string>, production: Record<string, string>, sensitive: string[]): Drift[] {\n  return []\n}\n',
+    functionName: 'configDrift',
+    preserveInput: true,
+    hints: [
+      'Combine the keys of both objects without repeats, then sort them.',
+      'Use Object.hasOwn or the in operator to tell a missing name from an empty value.',
+      'Decide what to show for each value only after you know the values differ.',
+    ],
+    checks: [
+      {
+        name: 'Reports the example',
+        input: [{ PORT: '8080', DB_PASSWORD: 'a1' }, { PORT: '80', DB_PASSWORD: 'b2', CDN: 'on' }, ['DB_PASSWORD']],
+        expected: [
+          { name: 'CDN', change: 'missing in staging' },
+          { name: 'DB_PASSWORD', change: 'different', staging: '***', production: '***' },
+          { name: 'PORT', change: 'different', staging: '8080', production: '80' },
+        ],
+      },
+      {
+        name: 'Reports a name missing in production',
+        input: [{ FEATURE_X: 'on', PORT: '80' }, { PORT: '80' }, []],
+        expected: [{ name: 'FEATURE_X', change: 'missing in production' }],
+      },
+      { name: 'Leaves equal values out', input: [{ A: '1', B: '2' }, { B: '2', A: '1' }, []], expected: [] },
+      {
+        name: 'Counts an empty value as present',
+        input: [{ PROXY: '' }, { PROXY: 'http://proxy:3128' }, []],
+        expected: [{ name: 'PROXY', change: 'different', staging: '', production: 'http://proxy:3128' }],
+      },
+      {
+        name: 'Compares values exactly',
+        input: [{ MODE: 'Prod' }, { MODE: 'prod ' }, []],
+        expected: [{ name: 'MODE', change: 'different', staging: 'Prod', production: 'prod ' }],
+      },
+      {
+        name: 'Never shows a sensitive value that is missing elsewhere',
+        input: [{ API_KEY: 'k-123' }, {}, ['API_KEY']],
+        expected: [{ name: 'API_KEY', change: 'missing in production' }],
+      },
+      {
+        name: 'Hides only sensitive names',
+        input: [{ TOKEN: 'aaaa', REGION: 'eu' }, { TOKEN: 'bbbb', REGION: 'us' }, ['TOKEN']],
+        expected: [
+          { name: 'REGION', change: 'different', staging: 'eu', production: 'us' },
+          { name: 'TOKEN', change: 'different', staging: '***', production: '***' },
+        ],
+      },
+      {
+        name: 'Sorts names with the default sort',
+        input: [{ b: '1', B: '1', a: '1' }, {}, []],
+        expected: [
+          { name: 'B', change: 'missing in production' },
+          { name: 'a', change: 'missing in production' },
+          { name: 'b', change: 'missing in production' },
+        ],
+      },
+      { name: 'Handles two empty maps', input: [{}, {}, []], expected: [] },
+    ],
+  },
 ]

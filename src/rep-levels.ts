@@ -359,6 +359,11 @@ export const repLevels: Record<string, RepLevel> = {
   'devops-step-outcomes': 2,
   'devops-error-annotations': 2,
   'devops-failing-step': 2,
+  'devops-read-port': 1,
+  'devops-validate-env': 2,
+  'devops-mask-secrets': 2,
+  'devops-parse-dotenv': 2,
+  'devops-config-drift': 2,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

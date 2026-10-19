@@ -370,5 +370,10 @@ export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
         'Read an exit code, find the first real error in a noisy log, decide which steps ran after a failure, turn compiler errors into annotations, and name the step that failed a job.',
       recap: 'You can now read CI output: what an exit code means and which line explains a failure.',
     },
+    'Check configuration': {
+      description:
+        'Read a port with a default, check every setting against a schema at startup, mask secrets in log lines, read a .env file, and compare two environments without printing secrets.',
+      recap: "You can now check a service's settings before it starts and keep its secrets out of logs.",
+    },
   },
 }

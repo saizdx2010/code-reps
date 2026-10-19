@@ -524,6 +524,16 @@ export const indonesianGlossary: Record<string, string> = {
   Combobox: 'input teks yang digabung dengan daftar saran untuk dipilih',
   'aria-activedescendant': 'atribut yang menunjuk opsi aktif sementara fokus tetap di input',
   Listbox: 'daftar opsi yang bisa dipilih salah satunya',
+  'Environment variable': 'nilai teks bernama yang diberikan sistem kepada program saat mulai berjalan',
+  'Default value': 'nilai yang dipakai bila sebuah pengaturan tidak diberikan',
+  'Configuration schema': 'daftar pengaturan yang diterima program, beserta tipe, nilai bawaan, dan apakah wajib',
+  'Fail fast': 'berhenti saat mulai dengan error yang jelas daripada berjalan dengan pengaturan yang salah',
+  Secret: 'nilai seperti kata sandi atau token yang memberi akses dan harus dijauhkan dari kode dan log',
+  Masking: 'mengganti nilai sensitif dengan penanda sebelum teks ditampilkan atau disimpan',
+  '.env file': 'file teks berisi baris NAMA=nilai yang diubah loader menjadi variabel lingkungan untuk kerja lokal',
+  'Inline comment': 'catatan di akhir baris, setelah nilai, yang diabaikan loader',
+  'Configuration drift': 'pengaturan yang perlahan menjadi berbeda antara lingkungan yang seharusnya sama',
+  Staging: 'lingkungan yang disiapkan seperti produksi, dipakai untuk mencoba perubahan sebelum pengguna nyata melihatnya',
 }
 
 /** Shown with the glossary when Indonesian help is on. */
