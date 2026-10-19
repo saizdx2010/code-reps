@@ -506,6 +506,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'cron-schedules',
+    title: 'Say exactly when a schedule runs',
+    guided: 'devops-cron-field',
+    independent: 'devops-cron-matches',
+    recall: 'devops-cron-next-zone',
+    practice: ['devops-local-to-utc', 'devops-cron-next-utc'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

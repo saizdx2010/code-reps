@@ -551,6 +551,10 @@ export const paths = [
           'devops-graceful-drain',
         ],
       },
+      {
+        title: 'Schedule jobs',
+        repIds: ['devops-cron-field', 'devops-cron-matches', 'devops-local-to-utc', 'devops-cron-next-utc', 'devops-cron-next-zone'],
+      },
     ] satisfies readonly PathStage[],
   },
 ] as const

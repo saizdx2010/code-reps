@@ -1024,7 +1024,16 @@ export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[
   {
     id: 'devops',
     title: 'DevOps',
-    skillIds: ['ci-output', 'service-config', 'semver', 'ci-pipelines', 'container-images', 'deploy-strategies', 'service-health'],
+    skillIds: [
+      'ci-output',
+      'service-config',
+      'semver',
+      'ci-pipelines',
+      'container-images',
+      'deploy-strategies',
+      'service-health',
+      'cron-schedules',
+    ],
   },
   {
     id: 'async',

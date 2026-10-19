@@ -556,4 +556,146 @@ function gracefulDrain(requests: { id: string; arrives: number; finishes: number
   }
   return { completed, rejected, cutOff, exitAt: Math.min(deadline, busyUntil) }
 }`,
+  'devops-cron-field': `
+function expandField(field: string, min: number, max: number): number[] | null {
+  const values = new Set<number>()
+  for (const part of field.split(',')) {
+    const match = /^(\\*|(\\d+)(?:-(\\d+))?)(?:\\/(\\d+))?$/.exec(part)
+    if (!match) return null
+    const [, base, first, last, stepText] = match
+    if (stepText !== undefined && base !== '*' && last === undefined) return null
+    const start = base === '*' ? min : Number(first)
+    const end = base === '*' ? max : last !== undefined ? Number(last) : start
+    const step = stepText === undefined ? 1 : Number(stepText)
+    if (start < min || end > max || start > end || step < 1) return null
+    for (let value = start; value <= end; value += step) values.add(value)
+  }
+  return [...values].sort((a, b) => a - b)
+}`,
+  'devops-cron-matches': `
+function cronMatches(expression: string, time: { minute: number; hour: number; day: number; month: number; weekday: number }): boolean {
+  const expand = (field: string, min: number, max: number) => {
+    const values = new Set<number>()
+    for (const part of field.split(',')) {
+      const [range, stepText] = part.split('/')
+      const [low, high] = range === '*' ? [min, max] : range.split('-').map(Number)
+      const end = range === '*' || range.includes('-') ? high : low
+      for (let value = low; value <= end; value += stepText ? Number(stepText) : 1) values.add(value)
+    }
+    return values
+  }
+  const [minute, hour, dom, month, dow] = expression.split(' ')
+  const weekdays = new Set([...expand(dow, 0, 7)].map(day => day % 7))
+  const domOk = expand(dom, 1, 31).has(time.day)
+  const dowOk = weekdays.has(time.weekday)
+  const dayOk = !dom.startsWith('*') && !dow.startsWith('*') ? domOk || dowOk : domOk && dowOk
+  return expand(minute, 0, 59).has(time.minute) && expand(hour, 0, 23).has(time.hour) && expand(month, 1, 12).has(time.month) && dayOk
+}`,
+  'devops-local-to-utc': `
+function localToUtc(local: string, zone: string) {
+  const format = new Intl.DateTimeFormat('en-US', { timeZone: zone, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' })
+  const wall = (ms: number) => {
+    const parts: Record<string, number> = {}
+    for (const part of format.formatToParts(new Date(ms))) if (part.type !== 'literal') parts[part.type] = Number(part.value)
+    return Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute)
+  }
+  const [date, clock] = local.split('T')
+  const [year, month, day] = date.split('-').map(Number)
+  const [hour, minute] = clock.split(':').map(Number)
+  const target = Date.UTC(year, month - 1, day, hour, minute)
+  const offsets = new Set([-86400000, 0, 86400000].map(shift => wall(target + shift) - (target + shift)))
+  const found = [...offsets]
+    .map(offset => target - offset)
+    .filter(instant => wall(instant) === target)
+    .sort((a, b) => a - b)
+    .map(instant => new Date(instant).toISOString())
+  if (found.length === 0) return { status: 'gap' }
+  if (found.length === 1) return { status: 'ok', instant: found[0] }
+  return { status: 'overlap', instants: found }
+}`,
+  'devops-cron-next-utc': `
+function nextRunUtc(expression: string, after: string): string | null {
+  const expand = (field: string, min: number, max: number) => {
+    const values = new Set<number>()
+    for (const part of field.split(',')) {
+      const [range, stepText] = part.split('/')
+      const [low, high] = range === '*' ? [min, max] : range.split('-').map(Number)
+      const end = range === '*' || range.includes('-') ? high : low
+      for (let value = low; value <= end; value += stepText ? Number(stepText) : 1) values.add(value)
+    }
+    return values
+  }
+  const [minuteField, hourField, domField, monthField, dowField] = expression.split(' ')
+  const minutes = expand(minuteField, 0, 59)
+  const hours = expand(hourField, 0, 23)
+  const doms = expand(domField, 1, 31)
+  const months = expand(monthField, 1, 12)
+  const dows = new Set([...expand(dowField, 0, 7)].map(day => day % 7))
+  const either = !domField.startsWith('*') && !dowField.startsWith('*')
+  const start = Math.floor(Date.parse(after) / 60000) * 60000 + 60000
+  const limit = Date.parse(after) + 366 * 86400000
+  for (let t = start; t <= limit; t += 60000) {
+    const d = new Date(t)
+    const domOk = doms.has(d.getUTCDate())
+    const dowOk = dows.has(d.getUTCDay())
+    const dayOk = months.has(d.getUTCMonth() + 1) && (either ? domOk || dowOk : domOk && dowOk)
+    if (!dayOk) {
+      t = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1) - 60000
+      continue
+    }
+    if (hours.has(d.getUTCHours()) && minutes.has(d.getUTCMinutes())) return d.toISOString()
+  }
+  return null
+}`,
+  'devops-cron-next-zone': `
+function nextRun(expression: string, after: string, zone: string): string | null {
+  const expand = (field: string, min: number, max: number) => {
+    const values: number[] = []
+    for (const part of field.split(',')) {
+      const [range, stepText] = part.split('/')
+      const [low, high] = range === '*' ? [min, max] : range.split('-').map(Number)
+      const end = range === '*' || range.includes('-') ? high : low
+      for (let value = low; value <= end; value += stepText ? Number(stepText) : 1) values.push(value)
+    }
+    return [...new Set(values)].sort((a, b) => a - b)
+  }
+  const [minuteField, hourField, domField, monthField, dowField] = expression.split(' ')
+  const minutes = expand(minuteField, 0, 59)
+  const hours = expand(hourField, 0, 23)
+  const doms = expand(domField, 1, 31)
+  const months = expand(monthField, 1, 12)
+  const dows = expand(dowField, 0, 7).map(day => day % 7)
+  const either = !domField.startsWith('*') && !dowField.startsWith('*')
+  const format = new Intl.DateTimeFormat('en-US', { timeZone: zone, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' })
+  const fields = (ms: number) => {
+    const parts: Record<string, number> = {}
+    for (const part of format.formatToParts(new Date(ms))) if (part.type !== 'literal') parts[part.type] = Number(part.value)
+    return parts
+  }
+  const wall = (ms: number) => {
+    const p = fields(ms)
+    return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute)
+  }
+  // The earliest instant showing this wall time, or undefined when clocks skip it.
+  const firstInstant = (target: number) =>
+    [...new Set([-86400000, 0, 86400000].map(shift => wall(target + shift) - (target + shift)))]
+      .map(offset => target - offset)
+      .filter(instant => wall(instant) === target)
+      .sort((a, b) => a - b)[0]
+  const from = Date.parse(after)
+  const limit = from + 8 * 86400000
+  const today = fields(from)
+  for (let offset = 0; offset <= 9; offset++) {
+    const date = new Date(Date.UTC(today.year, today.month - 1, today.day + offset))
+    const domOk = doms.includes(date.getUTCDate())
+    const dowOk = dows.includes(date.getUTCDay())
+    if (!months.includes(date.getUTCMonth() + 1) || !(either ? domOk || dowOk : domOk && dowOk)) continue
+    for (const hour of hours)
+      for (const minute of minutes) {
+        const instant = firstInstant(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), hour, minute))
+        if (instant !== undefined && instant > from && instant <= limit) return new Date(instant).toISOString()
+      }
+  }
+  return null
+}`,
 }

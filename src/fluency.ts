@@ -257,6 +257,7 @@ export const recallVariants: Record<string, string[]> = {
   'container-images': ['devops-multistage-rebuild', 'devops-image-tags', 'devops-layer-rebuild'],
   'deploy-strategies': ['devops-canary-verdict', 'devops-percent-rollout', 'devops-rolling-batches'],
   'service-health': ['devops-graceful-drain', 'devops-probe-thresholds', 'devops-health-endpoints'],
+  'cron-schedules': ['devops-cron-next-zone', 'devops-cron-matches', 'devops-cron-field'],
 }
 export function recurringReviews(history: PortableRecord[], now = Date.now()) {
   return getAllJourneys(history, now).flatMap(state => {

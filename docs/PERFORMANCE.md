@@ -7,7 +7,7 @@
 | Initial route JavaScript and static dependencies | 530,000 | 157,500 |
 | Additional editor JavaScript, including its dynamic language modules | 4,200,000 | 1,050,000 |
 | Additional frontend preview/check JavaScript | 3,900,000 | 1,050,000 |
-| Editor, TypeScript, and practice worker JavaScript | 12,000,000 | 3,100,000 |
+| Editor, TypeScript, and practice worker JavaScript | 12,150,000 | 3,100,000 |
 
 The script deduplicates shared chunks within each group, excludes initial-route dependencies from the additional groups, and requires all three local workers. Worker totals also include their shared and dynamically imported JavaScript chunks. It also rejects unused CSS, HTML, and JSON language workers. Editor and frontend groups describe separate features; their totals are not a sum of every possible network request.
 
@@ -22,6 +22,8 @@ The SQL track added startup data (its path stages, journeys, lessons, and catalo
 Before the Backend track's second new stage, the startup catalog reclaimed about 4.4 KB gzip with no budget changed: each rep's difficulty level is now copied into its catalog row by `yarn content:index`, so `src/rep-levels.ts` (one entry per rep ID) no longer ships at startup and `repLevel` reads the catalog, and the starter fingerprint shrank from 64 to 32 bits, which still tells a draft from its starter (a test checks that no two distinct starters share one). Initial JavaScript went from 156,412 to 152,018 gzip bytes.
 
 After the Backend track's routing stage (152,507 gzip bytes), the track descriptions and every stage's description and recap moved from `src/path.ts` to `src/path-text.ts`. The trail needs only stage titles and rep lists to draw itself, so Home loads the text beside the trail (`usePathText`) and All tracks imports it with its own lazy chunk; a stage shows its title, level, and progress until the text arrives, or if it cannot load. Initial JavaScript went from 152,507 to 147,770 gzip bytes with no budget changed, and later stages add their text to that 5.9 KB gzip chunk instead of to startup.
+
+The DevOps track crossed the worker's raw budget at its eighth stage: 12,007,529 raw bytes against 12,000,000, while its gzip size, 2,878,355 bytes, stayed well under 3,100,000. The practice worker imports every rep through `src/rep.ts`, so each rep's whole text (brief, notes, hints, and checks) ships in it; the seven DevOps stages before it added 19,543 to 27,046 raw bytes each, the eighth added 22,459, and Backend's API-evolution stage added 29,770. The raw budget was raised once, to 12,150,000, which holds the two remaining DevOps stages with about 90 KB to spare; no other budget changed. Sending only the open rep's checks to the worker would remove most rep text from it, but changes the run request between the page and the worker, so it is left for a separate change with its own browser coverage.
 
 The SQLite browser suite attaches Home and editor readiness durations alongside the bundle report. It uses the built app and a fresh browser context on the local machine, without CPU/network throttling. Measurements include Playwright observation overhead and are not representative of every learner's hardware. Shared CI timing has no hard speed threshold; byte budgets provide the reproducible regression gate.
 

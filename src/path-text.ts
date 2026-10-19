@@ -400,5 +400,10 @@ export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
         'Answer liveness and readiness from the right signals, put instances in and out of service from runs of checks, back off between restarts, catch a liveness check that restarts a slow start, and drain requests before shutting down.',
       recap: 'You can now keep traffic away from instances that cannot serve, without restarting the ones that only need to wait.',
     },
+    'Schedule jobs': {
+      description:
+        'Expand cron fields, check a schedule against a time with the two-day-field rule, turn local times into instants across clock changes, and find the next run in UTC and in a named time zone.',
+      recap: 'You can now read a cron schedule and say exactly when it runs, even on the nights clocks change.',
+    },
   },
 }

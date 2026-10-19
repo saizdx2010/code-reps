@@ -3681,4 +3681,392 @@ export const devopsReps: Rep[] = [
       },
     ],
   },
+  {
+    id: 'devops-cron-field',
+    title: 'Expand one cron field',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A cron schedule such as "*/15 9-17 * * 1-5" packs a lot into five short fields. Each field is a small language of its own: lists, ranges, and steps. Turning one field into the plain list of values it allows is the first step to reading or checking any schedule.',
+    prompt:
+      'Implement expandField(field, min, max). field is a list of parts separated by commas, with no spaces. Each part is "*" (every value from min to max), a number, a range "a-b" (a to b inclusive, with a not greater than b), or "*" or a range followed by "/s", which keeps every s-th value starting from the first one, such as "*/15" or "10-30/10". Numbers are written with digits only and must be from min to max, and s must be at least 1. Return the values the field allows, sorted from lowest to highest without repeats, or null if any part is not one of these forms or breaks a limit.',
+    brief: {
+      summary: 'Implement expandField(field, min, max) and return the sorted values, or null.',
+      rules: [
+        'Parts are separated by commas: "*", a number, a range "a-b" with a not greater than b, or "*" or a range followed by "/s".',
+        '"/s" keeps every s-th value starting from the first one in its range, as in "*/15" or "10-30/10".',
+        'Numbers are digits only and from min to max; s is at least 1.',
+        'Return the values sorted without repeats, or null for any invalid part.',
+      ],
+      edgeCases: ['A single number with a step, such as "7/2", is invalid.', 'An empty part, as in "1,,2", is invalid.'],
+    },
+    example: { input: 'expandField("*/15", 0, 59)', output: '[0, 15, 30, 45]' },
+    note: `Real cron tools accept more forms, such as names like MON and JAN; this rep uses only the forms above. ${notRun}`,
+    vocabulary: [
+      { term: 'Cron expression', meaning: 'five fields that say at which minutes, hours, days, months, and weekdays a job runs' },
+      { term: 'Step value', meaning: 'the /s part of a cron field, which keeps every s-th value of a range' },
+    ],
+    planPrompt: 'What do "1-3,2-4", "30,5", "*/100" for minutes, and "5-1" each give? Which of them are invalid, and why?',
+    starter:
+      'function expandField(field: string, min: number, max: number): number[] | null {\n  // Handle one part at a time, collecting values in a Set.\n  return []\n}\n',
+    functionName: 'expandField',
+    hints: [
+      'A regular expression such as /^(\\*|(\\d+)(-(\\d+))?)(\\/(\\d+))?$/ splits a part into its pieces.',
+      'Work out a start, an end, and a step for every valid part, then loop.',
+      'A step is allowed after "*" or a range, but not after a single number.',
+    ],
+    checks: [
+      { name: 'Expands the example', input: ['*/15', 0, 59], expected: [0, 15, 30, 45] },
+      { name: 'Expands "*"', input: ['*', 0, 6], expected: [0, 1, 2, 3, 4, 5, 6] },
+      { name: 'Reads a single number', input: ['5', 0, 59], expected: [5] },
+      { name: 'Reads a range', input: ['9-17', 0, 23], expected: [9, 10, 11, 12, 13, 14, 15, 16, 17] },
+      { name: 'Steps through a range', input: ['10-30/10', 0, 59], expected: [10, 20, 30] },
+      { name: 'Sorts a list and removes repeats', input: ['30,5,1-3,2-4', 0, 59], expected: [1, 2, 3, 4, 5, 30] },
+      { name: 'Starts a step from min', input: ['*/5', 1, 12], expected: [1, 6, 11] },
+      { name: 'Allows a step larger than the range', input: ['*/100', 0, 59], expected: [0] },
+      { name: 'Refuses a number out of range', input: ['60', 0, 59], expected: null },
+      { name: 'Refuses a backwards range', input: ['5-1', 0, 59], expected: null },
+      { name: 'Refuses a step of 0', input: ['*/0', 0, 59], expected: null },
+      { name: 'Refuses a step after a single number', input: ['7/2', 0, 59], expected: null },
+      { name: 'Refuses an empty part', input: ['1,,2', 0, 59], expected: null },
+      { name: 'Refuses words and signs', input: ['MON', 0, 6], expected: null },
+      { name: 'Refuses a range that ends out of range', input: ['1-32', 1, 31], expected: null },
+    ],
+  },
+  {
+    id: 'devops-cron-matches',
+    title: 'Check whether a cron schedule matches a time',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A cron schedule runs a job at every minute that matches all five of its fields. The day fields have a surprising rule: when both the day of the month and the day of the week are restricted, a day matches if either one does, which catches people out when they write "the 13th, if it is a Friday".',
+    prompt:
+      'Implement cronMatches(expression, time). expression is five fields separated by single spaces: minute (0-59), hour (0-23), day of month (1-31), month (1-12), and day of week (0-7, where 0 and 7 both mean Sunday). Each field is a comma-separated list of parts: "*", a number, a range "a-b", or "*" or a range followed by "/s" for every s-th value from the start of its range. time is {minute, hour, day, month, weekday}, with weekday 0 for Sunday. The minute, hour, and month must each be allowed by their field. For the day: if neither day field starts with "*", the day matches when the day of month or the weekday is allowed; otherwise both must be allowed. Return true or false. Expressions are valid.',
+    brief: {
+      summary: 'Implement cronMatches(expression, time) and return true or false.',
+      rules: [
+        'Fields: minute 0-59, hour 0-23, day of month 1-31, month 1-12, day of week 0-7 (0 and 7 are Sunday).',
+        'Parts: "*", a number, "a-b", or "*" or a range followed by "/s"; separated by commas.',
+        'Minute, hour, and month must each be allowed.',
+        'If neither day field starts with "*", either day field may match; otherwise both must be allowed.',
+      ],
+      edgeCases: ['"*/2" starts with "*", so it does not switch on the either-day rule.', 'A day-of-week field of 7 matches Sunday.'],
+    },
+    example: {
+      input: 'cronMatches("30 9 * * 1-5", {minute: 30, hour: 9, day: 19, month: 10, weekday: 1})',
+      output: 'true',
+    },
+    note: `This follows the classic cron rule for the two day fields; some schedulers differ. time is passed in, so no clock or time zone is involved. ${notRun}`,
+    vocabulary: [
+      { term: 'Day of week', meaning: 'the fifth cron field, where 0 is Sunday and 6 is Saturday' },
+      { term: 'Day of month', meaning: 'the third cron field, the date within the month from 1 to 31' },
+    ],
+    planPrompt:
+      'Does "0 12 13 * 5" run on Friday the 6th, Monday the 13th, and Tuesday the 14th? Why might the person who wrote it be surprised?',
+    starter:
+      'type Time = { minute: number; hour: number; day: number; month: number; weekday: number }\n\nfunction cronMatches(expression: string, time: Time): boolean {\n  return false\n}\n',
+    functionName: 'cronMatches',
+    hints: [
+      'Expand each field into its allowed values first, as you would for one field.',
+      'Turn 7 into 0 in the day-of-week values before comparing.',
+      'Decide the day rule from whether each day field starts with "*", not from its values.',
+    ],
+    checks: [
+      { name: 'Matches a weekday time', input: ['30 9 * * 1-5', { minute: 30, hour: 9, day: 19, month: 10, weekday: 1 }], expected: true },
+      { name: 'Refuses a weekend day', input: ['30 9 * * 1-5', { minute: 30, hour: 9, day: 24, month: 10, weekday: 6 }], expected: false },
+      {
+        name: 'Refuses the wrong minute',
+        input: ['30 9 * * 1-5', { minute: 31, hour: 9, day: 19, month: 10, weekday: 1 }],
+        expected: false,
+      },
+      {
+        name: 'Matches either day when both are restricted',
+        input: ['0 12 13 * 5', { minute: 0, hour: 12, day: 6, month: 11, weekday: 5 }],
+        expected: true,
+      },
+      {
+        name: 'Matches the date alone when both are restricted',
+        input: ['0 12 13 * 5', { minute: 0, hour: 12, day: 13, month: 10, weekday: 2 }],
+        expected: true,
+      },
+      {
+        name: 'Refuses a day neither field allows',
+        input: ['0 12 13 * 5', { minute: 0, hour: 12, day: 14, month: 10, weekday: 3 }],
+        expected: false,
+      },
+      {
+        name: 'Needs both days when one starts with "*"',
+        input: ['0 12 */2 * 1', { minute: 0, hour: 12, day: 4, month: 10, weekday: 1 }],
+        expected: false,
+      },
+      {
+        name: 'Accepts both days when one starts with "*"',
+        input: ['0 12 */2 * 1', { minute: 0, hour: 12, day: 3, month: 10, weekday: 1 }],
+        expected: true,
+      },
+      { name: 'Treats 7 as Sunday', input: ['0 0 * * 7', { minute: 0, hour: 0, day: 25, month: 10, weekday: 0 }], expected: true },
+      { name: 'Checks the month', input: ['0 0 1 1,7 *', { minute: 0, hour: 0, day: 1, month: 6, weekday: 1 }], expected: false },
+      {
+        name: 'Uses steps in the minute field',
+        input: ['*/20 * * * *', { minute: 40, hour: 3, day: 2, month: 2, weekday: 1 }],
+        expected: true,
+      },
+      {
+        name: 'Refuses a minute between steps',
+        input: ['*/20 * * * *', { minute: 50, hour: 3, day: 2, month: 2, weekday: 1 }],
+        expected: false,
+      },
+      {
+        name: 'Uses lists in the hour field',
+        input: ['0 8,12,18 * * *', { minute: 0, hour: 13, day: 2, month: 2, weekday: 1 }],
+        expected: false,
+      },
+    ],
+  },
+  {
+    id: 'devops-local-to-utc',
+    title: 'Turn a local time into an instant',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A schedule written as "02:30 in New York" is a wall-clock time, not one moment. When clocks spring forward, 02:30 does not happen at all that day; when they fall back, 01:30 happens twice, an hour apart. A scheduler has to know which case it is in before it can run anything.',
+    prompt:
+      'Implement localToUtc(local, zone). local is a wall-clock time "YYYY-MM-DDTHH:MM" and zone is an IANA time zone name such as "America/New_York". Find every instant, on a whole minute, whose local date and time in zone equal local. If there is none, return {status: "gap"}; if there is one, return {status: "ok", instant}; if there are two, return {status: "overlap", instants: [earlier, later]}. Write instants as Date.prototype.toISOString does, such as "2026-07-15T13:00:00.000Z". Read local times with Intl.DateTimeFormat and its timeZone option; never use the machine\'s own time zone.',
+    brief: {
+      summary: 'Implement localToUtc(local, zone) and return {status: "ok", instant}, {status: "gap"}, or {status: "overlap", instants}.',
+      rules: [
+        'Find every whole-minute instant whose local date and time in zone equal local ("YYYY-MM-DDTHH:MM").',
+        'None gives {status: "gap"}, one gives {status: "ok", instant}, and two give {status: "overlap", instants: [earlier, later]}.',
+        'Write instants with toISOString, such as "2026-07-15T13:00:00.000Z".',
+        "Read local times with Intl.DateTimeFormat and its timeZone option, never the machine's time zone.",
+      ],
+      edgeCases: ['Some zones are offset by half an hour or shift by half an hour.', 'The local date can differ from the UTC date.'],
+    },
+    example: {
+      input: 'localToUtc("2026-11-01T01:30", "America/New_York")',
+      output: '{status: "overlap", instants: ["2026-11-01T05:30:00.000Z", "2026-11-01T06:30:00.000Z"]}',
+    },
+    note: `In these checks a zone changes its offset at most once within any two days. The answers use the time zone rules built into the JavaScript engine, which are the same in Node and Chromium for these dates. ${notRun}`,
+    vocabulary: [
+      {
+        term: 'IANA time zone',
+        meaning: 'a named set of clock rules, such as America/New_York, including when daylight saving time starts and ends',
+      },
+      {
+        term: 'Daylight saving time',
+        meaning: 'moving clocks forward in summer and back in winter, which skips an hour and repeats an hour each year',
+      },
+    ],
+    planPrompt:
+      "If you guess an instant by treating the local time as UTC, how far off can the guess be, and how can you correct it using the zone's offset near that time?",
+    starter:
+      "type Result = { status: 'ok'; instant: string } | { status: 'gap' } | { status: 'overlap'; instants: [string, string] }\n\nfunction localToUtc(local: string, zone: string): Result {\n  return { status: 'gap' }\n}\n",
+    functionName: 'localToUtc',
+    hints: [
+      'Write a helper that takes an instant and returns its local year, month, day, hour, and minute in zone using formatToParts with hourCycle "h23".',
+      'The offset at an instant is that local time read as if it were UTC, minus the instant. Each possible offset gives one candidate instant.',
+      'Collect the offsets a day before, at, and a day after a first guess, and keep the candidates whose local time really equals local.',
+    ],
+    checks: [
+      {
+        name: 'Converts a summer time',
+        input: ['2026-07-15T09:00', 'America/New_York'],
+        expected: { status: 'ok', instant: '2026-07-15T13:00:00.000Z' },
+      },
+      {
+        name: 'Converts a winter time',
+        input: ['2026-01-15T09:00', 'America/New_York'],
+        expected: { status: 'ok', instant: '2026-01-15T14:00:00.000Z' },
+      },
+      { name: 'Reports a time skipped in spring', input: ['2026-03-08T02:30', 'America/New_York'], expected: { status: 'gap' } },
+      {
+        name: 'Converts the first time after the jump',
+        input: ['2026-03-08T03:00', 'America/New_York'],
+        expected: { status: 'ok', instant: '2026-03-08T07:00:00.000Z' },
+      },
+      {
+        name: 'Reports a time repeated in autumn',
+        input: ['2026-11-01T01:30', 'America/New_York'],
+        expected: { status: 'overlap', instants: ['2026-11-01T05:30:00.000Z', '2026-11-01T06:30:00.000Z'] },
+      },
+      {
+        name: 'Converts the time just after the repeat',
+        input: ['2026-11-01T02:00', 'America/New_York'],
+        expected: { status: 'ok', instant: '2026-11-01T07:00:00.000Z' },
+      },
+      {
+        name: 'Handles a half-hour offset',
+        input: ['2026-10-19T09:00', 'Asia/Kolkata'],
+        expected: { status: 'ok', instant: '2026-10-19T03:30:00.000Z' },
+      },
+      { name: 'Converts UTC itself', input: ['2026-10-19T09:00', 'UTC'], expected: { status: 'ok', instant: '2026-10-19T09:00:00.000Z' } },
+      {
+        name: 'Repeats an hour in the southern autumn',
+        input: ['2026-04-05T02:30', 'Australia/Sydney'],
+        expected: { status: 'overlap', instants: ['2026-04-04T15:30:00.000Z', '2026-04-04T16:30:00.000Z'] },
+      },
+      { name: 'Skips an hour in the southern spring', input: ['2026-10-04T02:30', 'Australia/Sydney'], expected: { status: 'gap' } },
+      {
+        name: 'Repeats half an hour where clocks move by 30 minutes',
+        input: ['2026-04-05T01:45', 'Australia/Lord_Howe'],
+        expected: { status: 'overlap', instants: ['2026-04-04T14:45:00.000Z', '2026-04-04T15:15:00.000Z'] },
+      },
+      {
+        name: 'Crosses the date line',
+        input: ['2026-12-31T23:30', 'Pacific/Kiritimati'],
+        expected: { status: 'ok', instant: '2026-12-31T09:30:00.000Z' },
+      },
+    ],
+  },
+  {
+    id: 'devops-cron-next-utc',
+    title: 'Find the next run of a cron schedule',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'Before a scheduled job is saved, a good tool shows when it will next run, so a mistake such as "every minute of 9 a.m." instead of "9:00" is caught at once. In UTC every minute exists exactly once, so the next run is the first minute after now that matches.',
+    prompt:
+      'Implement nextRunUtc(expression, after). expression is five fields separated by single spaces: minute (0-59), hour (0-23), day of month (1-31), month (1-12), and day of week (0-7, where 0 and 7 both mean Sunday). Each field is a comma-separated list of parts: "*", a number, a range "a-b", or "*" or a range followed by "/s" for every s-th value from the start of its range. A minute matches when its minute, hour, and month are allowed and its day matches: if neither day field starts with "*", the day of month or the weekday must be allowed; otherwise both must be. after is an ISO 8601 time ending in "Z". Return the first whole minute strictly after after that matches, read in UTC, written as Date.prototype.toISOString does. Look at most 366 days after after; return null if no minute in that time matches. Expressions are valid.',
+    brief: {
+      summary: 'Implement nextRunUtc(expression, after) and return the next matching minute in UTC, or null.',
+      rules: [
+        'Fields: minute 0-59, hour 0-23, day of month 1-31, month 1-12, day of week 0-7 (0 and 7 are Sunday); parts are "*", a number, "a-b", or "*" or a range with "/s".',
+        'If neither day field starts with "*", either day field may match; otherwise both must be allowed.',
+        'after is an ISO 8601 time ending in "Z"; return the first whole minute strictly after it that matches, read in UTC, written with toISOString.',
+        'Look at most 366 days ahead; return null if nothing matches.',
+      ],
+      edgeCases: ['A time exactly on a matching minute is not "after" itself.', 'Seconds in after round up to the next whole minute.'],
+    },
+    example: { input: 'nextRunUtc("30 9 * * 1-5", "2026-10-23T10:00:00Z")', output: '"2026-10-26T09:30:00.000Z"' },
+    note: `after is passed in, so your function never reads a clock, and everything is in UTC. A schedule such as February 29 can be more than 366 days away, which gives null here. ${notRun}`,
+    vocabulary: [
+      { term: 'Scheduled job', meaning: 'work that runs automatically at set times, such as a nightly backup' },
+      { term: 'UTC', meaning: 'Coordinated Universal Time, the reference time with no time zone offset and no daylight saving' },
+    ],
+    planPrompt:
+      'Starting from 2026-10-23T10:00:00Z, a Friday, when is the next run of "30 9 * * 1-5"? Which search is simpler: minute by minute, or day by day?',
+    starter: 'function nextRunUtc(expression: string, after: string): string | null {\n  return null\n}\n',
+    functionName: 'nextRunUtc',
+    hints: [
+      'Expand the five fields into sets once, before searching.',
+      'Start from the next whole minute: Math.floor(ms / 60000) * 60000 + 60000.',
+      'Skipping a whole day when the day or month does not match keeps a 366-day search fast.',
+    ],
+    checks: [
+      { name: 'Skips the weekend in the example', input: ['30 9 * * 1-5', '2026-10-23T10:00:00Z'], expected: '2026-10-26T09:30:00.000Z' },
+      { name: 'Finds a run later the same day', input: ['30 9 * * 1-5', '2026-10-19T08:00:00Z'], expected: '2026-10-19T09:30:00.000Z' },
+      { name: 'Never returns after itself', input: ['30 9 * * *', '2026-10-19T09:30:00Z'], expected: '2026-10-20T09:30:00.000Z' },
+      {
+        name: 'Rounds seconds up to the next minute',
+        input: ['59 23 31 12 *', '2026-12-31T23:58:30Z'],
+        expected: '2026-12-31T23:59:00.000Z',
+      },
+      { name: 'Moves into the next month', input: ['0 0 1 * *', '2026-10-19T08:00:00Z'], expected: '2026-11-01T00:00:00.000Z' },
+      {
+        name: 'Uses either day field when both are set',
+        input: ['0 12 13 * 5', '2026-10-19T08:00:00Z'],
+        expected: '2026-10-23T12:00:00.000Z',
+      },
+      { name: 'Steps through minutes', input: ['*/20 * * * *', '2026-10-19T08:41:10Z'], expected: '2026-10-19T09:00:00.000Z' },
+      { name: 'Treats 7 as Sunday', input: ['0 6 * * 7', '2026-10-19T08:00:00Z'], expected: '2026-10-25T06:00:00.000Z' },
+      { name: 'Crosses into a new year', input: ['0 0 1 1 *', '2026-10-19T08:00:00Z'], expected: '2027-01-01T00:00:00.000Z' },
+      { name: 'Returns null beyond 366 days', input: ['0 0 29 2 *', '2026-10-19T08:00:00Z'], expected: null },
+    ],
+  },
+  {
+    id: 'devops-cron-next-zone',
+    title: 'Find the next run in a time zone',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A team schedules a report for 01:30 New York time. Twice a year the clocks change: one night 02:30 never happens, and another night 01:30 happens twice. The scheduler has to state what it does in both cases, and then find the next run from any moment.',
+    prompt:
+      'Implement nextRun(expression, after, zone). expression is five fields separated by single spaces: minute (0-59), hour (0-23), day of month (1-31), month (1-12), and day of week (0-7, where 0 and 7 both mean Sunday). Each field is a comma-separated list of parts: "*", a number, a range "a-b", or "*" or a range followed by "/s" for every s-th value from the start of its range. A local time matches when its minute, hour, and month are allowed and its day matches: if neither day field starts with "*", the day of month or the weekday must be allowed; otherwise both must be. Times are local wall-clock times in the IANA time zone zone. A local time that does not exist, because clocks jumped over it, never runs. A local time that happens twice, because clocks were set back, runs only at the earlier of its two instants, even if that instant is before after. after is an ISO 8601 time ending in "Z". Return the first run strictly after after, on a whole minute, written as Date.prototype.toISOString does; look at most 8 days after after and return null if there is none. Read local times with Intl.DateTimeFormat and its timeZone option, never the machine\'s own time zone.',
+    brief: {
+      summary: 'Implement nextRun(expression, after, zone) and return the next run as an instant, or null.',
+      rules: [
+        'Fields: minute 0-59, hour 0-23, day of month 1-31, month 1-12, day of week 0-7 (0 and 7 are Sunday); parts are "*", a number, "a-b", or "*" or a range with "/s"; either day field may match only if neither starts with "*".',
+        'Match local wall-clock times in zone, read with Intl.DateTimeFormat and its timeZone option.',
+        'A local time skipped by a clock change never runs; a local time that happens twice runs only at the earlier instant, even if that is before after.',
+        'after is an ISO 8601 time ending in "Z"; return the first run strictly after it, within 8 days, written with toISOString, or null.',
+      ],
+      edgeCases: [
+        'On the night clocks go back, an hourly job skips the repeated hour.',
+        'Zones with half-hour offsets still run on whole local minutes.',
+      ],
+    },
+    example: { input: 'nextRun("30 2 * * *", "2026-03-07T12:00:00Z", "America/New_York")', output: '"2026-03-09T06:30:00.000Z"' },
+    note: `In these checks a zone changes its offset at most once within any two days, and the answers use the time zone rules built into the JavaScript engine. after and zone are passed in, so your function never reads the clock or the machine's time zone. ${notRun}`,
+    vocabulary: [
+      { term: 'Wall-clock time', meaning: 'the time shown on a local clock, which can skip or repeat when daylight saving time changes' },
+      { term: 'Instant', meaning: 'one exact moment, the same everywhere, usually written in UTC' },
+    ],
+    planPrompt:
+      'For "30 1 * * *" in New York, what are the next runs after 2026-10-31T12:00:00Z and after 2026-11-01T06:20:00Z, and why is 2026-11-01T06:30:00Z never a run?',
+    starter: 'function nextRun(expression: string, after: string, zone: string): string | null {\n  return null\n}\n',
+    functionName: 'nextRun',
+    hints: [
+      'Create one Intl.DateTimeFormat for the zone, with hourCycle "h23", and reuse it; reading parts with formatToParts gives the local fields.',
+      'Stepping one minute at a time works: a skipped local time is never produced, and a local time no later than one you have already seen is a repeat.',
+      'To know which local times already happened before after, start following the local clock a day before after, but only return instants after it.',
+    ],
+    checks: [
+      {
+        name: 'Skips a time clocks jump over',
+        input: ['30 2 * * *', '2026-03-07T12:00:00Z', 'America/New_York'],
+        expected: '2026-03-09T06:30:00.000Z',
+      },
+      {
+        name: 'Runs at the first of two repeated times',
+        input: ['30 1 * * *', '2026-10-31T12:00:00Z', 'America/New_York'],
+        expected: '2026-11-01T05:30:00.000Z',
+      },
+      {
+        name: 'Does not run the repeat later that night',
+        input: ['30 1 * * *', '2026-11-01T05:45:00Z', 'America/New_York'],
+        expected: '2026-11-02T06:30:00.000Z',
+      },
+      {
+        name: 'Knows the repeat already ran before after',
+        input: ['30 1 * * *', '2026-11-01T06:20:00Z', 'America/New_York'],
+        expected: '2026-11-02T06:30:00.000Z',
+      },
+      {
+        name: 'Skips the repeated hour for an hourly job',
+        input: ['0 * * * *', '2026-11-01T05:30:00Z', 'America/New_York'],
+        expected: '2026-11-01T07:00:00.000Z',
+      },
+      {
+        name: 'Reads weekdays in the zone',
+        input: ['30 9 * * 1-5', '2026-10-23T14:00:00Z', 'America/New_York'],
+        expected: '2026-10-26T13:30:00.000Z',
+      },
+      {
+        name: 'Runs on a half-hour offset',
+        input: ['0 9 * * *', '2026-10-19T08:00:00Z', 'Asia/Kolkata'],
+        expected: '2026-10-20T03:30:00.000Z',
+      },
+      {
+        name: 'Skips a southern spring gap',
+        input: ['30 2 * * *', '2026-10-03T12:00:00Z', 'Australia/Sydney'],
+        expected: '2026-10-04T15:30:00.000Z',
+      },
+      {
+        name: 'Uses the local date for the day of week',
+        input: ['0 0 * * 0', '2026-10-24T23:30:00Z', 'Asia/Tokyo'],
+        expected: '2026-10-31T15:00:00.000Z',
+      },
+      {
+        name: 'Starts from the local date of after',
+        input: ['30 23 * * *', '2026-10-20T02:00:00Z', 'America/New_York'],
+        expected: '2026-10-20T03:30:00.000Z',
+      },
+      {
+        name: 'Never returns after itself',
+        input: ['30 9 * * 1-5', '2026-10-19T13:30:00Z', 'America/New_York'],
+        expected: '2026-10-20T13:30:00.000Z',
+      },
+      { name: 'Returns null beyond 8 days', input: ['0 0 1 * *', '2026-10-19T08:00:00Z', 'America/New_York'], expected: null },
+    ],
+  },
 ]

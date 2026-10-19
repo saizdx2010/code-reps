@@ -574,4 +574,88 @@ export const devopsSkills: Skill[] = [
     ],
     related: ['deploy-strategies', 'retries'],
   },
+  {
+    id: 'cron-schedules',
+    title: 'Schedules: cron expressions, time zones, and clock changes',
+    summary:
+      'Read the five fields of a cron expression, find the next run, and handle the local times that daylight saving time skips or repeats.',
+    prerequisites: ['service-health'],
+    objectives: [
+      'Expand cron fields with lists, ranges, and steps, and apply the rule that joins the two day fields.',
+      'Find the next run of a schedule after a given instant, in UTC and in a named time zone.',
+      'Turn a local wall-clock time into an instant, and state what happens to times that are skipped or repeated.',
+    ],
+    sections: [
+      {
+        title: 'Five fields',
+        body: 'A cron expression has five fields: minute, hour, day of month, month, and day of week, where 0 and 7 both mean Sunday. Each field is "*" for every value, a number, a range such as 9-17, a list such as 1,15, or a step such as */15 for every fifteenth value. A job runs at every minute that all five fields allow, so "* 9 * * *" runs sixty times between 9:00 and 9:59, while "0 9 * * *" runs once.',
+      },
+      {
+        title: 'The two day fields',
+        body: 'The day of month and the day of week are joined by a rule that surprises people. If both are restricted, a day matches when either one does: "0 12 13 * 5" runs on every 13th and on every Friday, not only on Friday the 13th. If either field starts with "*", both must match, which in practice means the other field decides.',
+      },
+      {
+        title: 'Schedules live in local time',
+        body: "A schedule usually means local wall-clock time, such as 01:30 in New York, and a wall-clock time is not always one instant. When clocks spring forward, a local time such as 02:30 does not happen that day; when they fall back, 01:30 happens twice, an hour apart. A scheduler has to choose: these reps skip a time that does not exist and run a repeated time only at its earlier instant, so the job never runs twice in one night. Reading local times with Intl.DateTimeFormat and an explicit timeZone keeps the answer independent of the machine's own time zone.",
+      },
+      {
+        title: 'What these reps check',
+        body: 'The current time and the time zone are always passed in, so the functions never read a clock, and every answer is an exact instant. The time zone rules come from the JavaScript engine, which uses the same data in Node and Chromium for the dates in these checks. The checks do not run a scheduler or wait for any time to pass.',
+      },
+    ],
+    example:
+      '"30 1 * * *" in America/New_York, night of 2026-11-01 (clocks go back at 02:00)\n\n05:30Z = 01:30 EDT → runs (first 01:30)\n06:30Z = 01:30 EST → skipped (repeat)\nnext run: 2026-11-02T06:30Z = 01:30 EST',
+    walkthrough: [
+      'At 05:30 UTC it is 01:30 daylight time in New York, which matches the schedule, so the job runs.',
+      'At 06:00 UTC the clocks go back an hour, so at 06:30 UTC it is 01:30 again, now standard time.',
+      'That second 01:30 is a repeat, so the job does not run again that night.',
+      'The next run is 01:30 the following day, which is 06:30 UTC now that the offset is five hours.',
+    ],
+    mistakes: [
+      'Writing "* 9 * * *" for "9 a.m.", which runs every minute of that hour.',
+      'Expecting "0 12 13 * 5" to mean only Friday the 13th.',
+      "Converting local times with the machine's time zone instead of the schedule's.",
+      'Running a job twice on the night clocks go back, or failing on the time clocks skip.',
+    ],
+    questions: [
+      q(
+        'cron-every-minute-v1',
+        'How many times between 9:00 and 9:59 does "* 9 * * *" run?',
+        '',
+        ['Once', '60 times', 'Never'],
+        1,
+        'The minute field "*" allows every minute, so the job runs at each of the 60 minutes in hour 9.',
+      ),
+      q(
+        'cron-day-either-v1',
+        'Does "0 12 13 * 5" run at noon on Friday the 6th?',
+        '',
+        [
+          'No, only on Friday the 13th',
+          'Yes, because both day fields are restricted, either may match',
+          'Only in months with a Friday the 13th',
+        ],
+        1,
+        'With both day fields restricted, a day matches if it is the 13th or a Friday.',
+      ),
+      q(
+        'dst-gap-v1',
+        'In New York, clocks jump from 02:00 to 03:00 on 2026-03-08. When does a job scheduled at 02:30 run that day, under the rule used in these reps?',
+        '',
+        ['At 03:30', 'It does not run that day', 'At 02:30 standard time'],
+        1,
+        '02:30 does not exist that day. These reps skip it; some schedulers run it right after the jump instead, which is why the rule must be stated.',
+      ),
+      q(
+        'dst-overlap-v1',
+        "On 2026-11-01, 01:30 happens twice in New York. How many times does a 01:30 job run that night under these reps' rule?",
+        '',
+        ['Twice', 'Once, at the first 01:30', 'Once, at the second 01:30'],
+        1,
+        'A repeated local time runs only at its earlier instant, so the job runs once.',
+      ),
+    ],
+    repIds: ['devops-cron-field', 'devops-cron-matches', 'devops-local-to-utc', 'devops-cron-next-utc', 'devops-cron-next-zone'],
+    related: ['service-health', 'dependency-injection'],
+  },
 ]

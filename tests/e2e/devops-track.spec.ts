@@ -51,3 +51,13 @@ test('a DevOps rep runs its checks in the worker and says what they do not estab
   await page.keyboard.press('ControlOrMeta+Enter')
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
 })
+
+// Time zone answers come from the engine's own rules; this confirms Chromium agrees with the Node references.
+for (const repId of ['devops-local-to-utc', 'devops-cron-next-zone']) {
+  test(`${repId} passes in Chromium's worker with the reference solution`, async ({ page }) => {
+    await page.goto(`/#/practice/${repId}`)
+    await replaceCode(page, devopsSolutions[repId], repId)
+    await page.keyboard.press('ControlOrMeta+Enter')
+    await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
+  })
+}

@@ -859,3 +859,132 @@ test('D7 health checks catch signal, run, backoff, timing, and drain mistakes', 
     [drain.replace('exitAt: Math.min(deadline, busyUntil)', 'exitAt: busyUntil'), 'Sorts each id into one list in request order'],
   ])
 })
+
+test('D8 schedule checks catch field, day-rule, zone, start, and clock-change mistakes', async () => {
+  const field = solution('devops-cron-field')
+  await assertCaught('devops-cron-field', [
+    [
+      field.replace("const start = base === '*' ? min : Number(first)", "const start = base === '*' ? 0 : Number(first)"),
+      'Starts a step from min',
+    ],
+    [
+      field.replace("    if (stepText !== undefined && base !== '*' && last === undefined) return null\n", ''),
+      'Refuses a step after a single number',
+    ],
+    // A step of 0 would loop forever, so this mutant skips the part instead of refusing the field.
+    [field.replace(' || step < 1) return null', ') return null\n    if (step < 1) continue'), 'Refuses a step of 0'],
+    [field.replace(' || start > end', ''), 'Refuses a backwards range'],
+    [field.replace('end > max || ', ''), 'Refuses a range that ends out of range'],
+    [field.replace('return [...values].sort((a, b) => a - b)', 'return [...values]'), 'Sorts a list and removes repeats'],
+    [field.replace("field.split(',')", "field.split(',').filter(part => part !== '')"), 'Refuses an empty part'],
+  ])
+  const matches = solution('devops-cron-matches')
+  await assertCaught('devops-cron-matches', [
+    [
+      matches.replace("!dom.startsWith('*') && !dow.startsWith('*') ? domOk || dowOk : domOk && dowOk", 'domOk && dowOk'),
+      'Matches either day when both are restricted',
+    ],
+    [
+      matches.replace(
+        "!dom.startsWith('*') && !dow.startsWith('*') ? domOk || dowOk : domOk && dowOk",
+        "dom !== '*' && dow !== '*' ? domOk || dowOk : domOk && dowOk",
+      ),
+      'Needs both days when one starts with "*"',
+    ],
+    [matches.replace('.map(day => day % 7)', ''), 'Treats 7 as Sunday'],
+    [matches.replace(' && expand(month, 1, 12).has(time.month)', ''), 'Checks the month'],
+    [matches.replace('value += stepText ? Number(stepText) : 1', 'value += 1'), 'Refuses a minute between steps'],
+  ])
+  const toUtc = solution('devops-local-to-utc')
+  await assertCaught('devops-local-to-utc', [
+    [toUtc.replace('[-86400000, 0, 86400000]', '[0]'), 'Reports a time repeated in autumn'],
+    [toUtc.replace('    .filter(instant => wall(instant) === target)\n', ''), 'Reports a time skipped in spring'],
+    [toUtc.replace('timeZone: zone, ', ''), 'Converts a summer time'],
+    [toUtc.replace('    .sort((a, b) => a - b)\n', '    .sort((a, b) => b - a)\n'), 'Reports a time repeated in autumn'],
+    [toUtc.replace("hourCycle: 'h23', ", 'hour12: true, '), 'Crosses the date line'],
+  ])
+  const utc = solution('devops-cron-next-utc')
+  await assertCaught('devops-cron-next-utc', [
+    [
+      utc.replace(
+        'const start = Math.floor(Date.parse(after) / 60000) * 60000 + 60000',
+        'const start = Math.floor(Date.parse(after) / 60000) * 60000',
+      ),
+      'Never returns after itself',
+    ],
+    [
+      utc.replace(
+        'const start = Math.floor(Date.parse(after) / 60000) * 60000 + 60000',
+        'const start = Math.ceil(Date.parse(after) / 60000) * 60000',
+      ),
+      'Never returns after itself',
+    ],
+    [
+      utc.replace('const limit = Date.parse(after) + 366 * 86400000', 'const limit = Date.parse(after) + 4 * 366 * 86400000'),
+      'Returns null beyond 366 days',
+    ],
+    [utc.replace('either ? domOk || dowOk : domOk && dowOk', 'domOk && dowOk'), 'Uses either day field when both are set'],
+    [utc.replace('.map(day => day % 7)', ''), 'Treats 7 as Sunday'],
+    [
+      utc.replace('d.getUTCDay()', 'd.getDay()').replace('d.getUTCDate()', 'd.getDate()').replace('d.getUTCHours()', 'd.getHours()'),
+      'Skips the weekend in the example',
+    ],
+  ])
+  const zone = solution('devops-cron-next-zone')
+  await assertCaught('devops-cron-next-zone', [
+    [zone.replace('      .sort((a, b) => a - b)[0]', '      .sort((a, b) => b - a)[0]'), 'Runs at the first of two repeated times'],
+    [
+      zone.replace('.sort((a, b) => a - b)[0]', '.find(instant => instant > from) ?? undefined'),
+      'Knows the repeat already ran before after',
+    ],
+    [
+      zone.replace('const limit = from + 8 * 86400000', 'const limit = from + 40 * 86400000').replace('offset <= 9', 'offset <= 41'),
+      'Returns null beyond 8 days',
+    ],
+    [zone.replace('instant > from', 'instant >= from'), 'Never returns after itself'],
+    [zone.replace('timeZone: zone, ', "timeZone: 'UTC', "), 'Runs on a half-hour offset'],
+    [
+      zone
+        .replace('const today = fields(from)', 'const today = new Date(from)')
+        .replace(
+          'Date.UTC(today.year, today.month - 1, today.day + offset)',
+          'Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + offset)',
+        ),
+      'Starts from the local date of after',
+    ],
+  ])
+  // The approach the hints describe, stepping minute by minute from a day before after, satisfies the same contract.
+  const stepping = `
+function nextRun(expression: string, after: string, zone: string): string | null {
+  const expand = (field: string, min: number, max: number) => {
+    const values = new Set<number>()
+    for (const part of field.split(',')) {
+      const [range, step] = part.split('/')
+      const [low, high] = range === '*' ? [min, max] : range.split('-').map(Number)
+      const end = range === '*' || range.includes('-') ? high : low
+      for (let v = low; v <= end; v += step ? Number(step) : 1) values.add(v)
+    }
+    return values
+  }
+  const [mi, ho, dm, mo, dw] = expression.split(' ')
+  const minutes = expand(mi, 0, 59), hours = expand(ho, 0, 23), doms = expand(dm, 1, 31), months = expand(mo, 1, 12)
+  const dows = new Set([...expand(dw, 0, 7)].map(d => d % 7))
+  const either = !dm.startsWith('*') && !dw.startsWith('*')
+  const format = new Intl.DateTimeFormat('en-US', { timeZone: zone, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' })
+  const from = Date.parse(after)
+  let seen = -Infinity
+  for (let t = Math.floor(from / 60000) * 60000 - 86400000; t <= from + 8 * 86400000; t += 60000) {
+    const p: Record<string, number> = {}
+    for (const part of format.formatToParts(new Date(t))) if (part.type !== 'literal') p[part.type] = Number(part.value)
+    const wall = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute)
+    const repeat = wall <= seen
+    seen = Math.max(seen, wall)
+    if (t <= from || repeat) continue
+    const weekday = new Date(Date.UTC(p.year, p.month - 1, p.day)).getUTCDay()
+    const dayOk = either ? doms.has(p.day) || dows.has(weekday) : doms.has(p.day) && dows.has(weekday)
+    if (months.has(p.month) && dayOk && hours.has(p.hour) && minutes.has(p.minute)) return new Date(t).toISOString()
+  }
+  return null
+}`
+  assert.deepEqual(await failed('devops-cron-next-zone', stepping), [])
+})

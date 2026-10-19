@@ -389,6 +389,11 @@ export const repLevels: Record<string, RepLevel> = {
   'devops-restart-backoff': 2,
   'devops-liveness-restart': 2,
   'devops-graceful-drain': 3,
+  'devops-cron-field': 2,
+  'devops-cron-matches': 2,
+  'devops-local-to-utc': 3,
+  'devops-cron-next-utc': 3,
+  'devops-cron-next-zone': 3,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

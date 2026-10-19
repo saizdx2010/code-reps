@@ -424,6 +424,66 @@ export const devopsDepth: Record<string, RepDepth> = {
     transfer:
       'Requests can be retried by the client when cut off. Add a list of retryable request ids and report which cut-off requests will be retried. This changed contract is self-reviewed, not checked by the original cases.',
   },
+  'devops-cron-field': {
+    reasoning:
+      'Every valid part reduces to the same three numbers: a start, an end, and a step. "*" means the whole range, a number is a range of one, and a step only makes sense after something that is already a range, which is why "7/2" is refused. Checking every limit before adding values means an invalid part can never leave a partial answer, and a Set followed by a sort gives each value once in order.',
+    trace:
+      'For "30,5,1-3,2-4" with 0 to 59, the parts give {30}, {5}, {1, 2, 3}, and {2, 3, 4}. The Set holds 30, 5, 1, 2, 3, and 4, and sorting gives [1, 2, 3, 4, 5, 30]. For "*/5" with 1 to 12, the start is min, 1, so the values are 1, 6, and 11, not 0, 5, and 10.',
+    alternative:
+      'Splitting each part with split("/") and split("-") instead of one pattern is easier to read but needs separate checks for empty pieces and non-digits. Returning a bit mask instead of a list makes later matching faster but is harder to show.',
+    counterexample:
+      'Starting every step at 0 gives [0, 5, 10] for "*/5" in 1 to 12, where 0 is not even a valid month. parseInt accepts "5x" as 5, so a pattern that checks the whole part is needed to refuse it.',
+    transfer:
+      'Accept day names, MON to SUN, in the day-of-week field, in any letter case and inside ranges. Decide whether "SUN-MON" is valid. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-cron-matches': {
+    reasoning:
+      'Minute, hour, and month are independent conditions that must all hold. The two day fields are combined by a rule chosen by cron long ago: when both are restricted the schedule means "these dates or these weekdays", so either is enough, and when one starts with "*" only the other really restricts the day, so both must hold. The test is on the field text, not its values, so "*/2" still counts as starting with "*".',
+    trace:
+      'For "0 12 */2 * 1" at day 4, weekday 1: minute 0, hour 12, and month all match. The day-of-month field starts with "*", so both day fields must hold. Weekday 1 is allowed, but day 4 is not in 1, 3, 5, and so on, so the result is false.',
+    alternative:
+      'Some schedulers always require both day fields to match, which is what most people expect but breaks schedules written for classic cron. Others offer a separate syntax, such as "5#2" for the second Friday, which avoids the either-day rule altogether.',
+    counterexample:
+      'Requiring both day fields every time refuses Friday the 6th for "0 12 13 * 5". Deciding the rule from whether a field allows every value treats "*/2" as restricted and returns true for day 4 in "Needs both days when one starts with "*"".',
+    transfer:
+      'Add "L" in the day-of-month field, meaning the last day of the month. Decide what extra input your function needs and how "L" combines with the either-day rule. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-local-to-utc': {
+    reasoning:
+      'An instant shows the wall time target exactly when instant + offset(instant) = target, so every possible offset near the target gives one candidate, target − offset. Offsets change at most once within the window, so the offsets a day before, at, and a day after the first guess cover every case. Keeping only candidates whose local time really is the target filters out a gap, which leaves none, and an overlap, which leaves two.',
+    trace:
+      'For 2026-11-01T01:30 in New York, the offsets a day before and after are −4 hours and −5 hours. The candidates are 05:30Z and 06:30Z, and both show 01:30 locally, so the result is an overlap. For 2026-03-08T02:30, the candidates are 06:30Z, which shows 01:30, and 07:30Z, which shows 03:30, so neither matches and the time is in the gap.',
+    alternative:
+      'Stepping through every minute of the day and recording which instants show the target also works, but makes up to 1,440 formatter calls instead of a handful. Libraries such as Temporal, once available, expose this choice directly as "earlier", "later", or "reject".',
+    counterexample:
+      'Using only the offset at the first guess finds one of the two instants in an overlap and reports "ok". Using the machine\'s own time zone with new Date(year, month, ...) gives answers that change from one computer to another.',
+    transfer:
+      'Return the instant a scheduler should use instead of a status: for a gap, the first instant after the jump; for an overlap, the earlier one. Decide how to find the first instant after a gap. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-cron-next-utc': {
+    reasoning:
+      'In UTC every minute exists once, so the next run is simply the first matching minute after after. Starting at the next whole minute keeps after itself from counting, and skipping the rest of a day as soon as its date or month fails keeps a search of up to a year fast while still checking every candidate minute in order.',
+    trace:
+      'For "30 9 * * 1-5" after 2026-10-23T10:00:00Z, a Friday, the search starts at 10:01. No later minute on Friday is 09:30, Saturday and Sunday fail the weekday test and are skipped a day at a time, and Monday 2026-10-26 at 09:30 matches, so the result is "2026-10-26T09:30:00.000Z".',
+    alternative:
+      'Jumping straight to the next allowed month, day, hour, and minute is faster still, but needs care when a jump overflows into the next unit. Minute stepping without skipping days is simplest but takes over half a million steps for a yearly schedule.',
+    counterexample:
+      'Starting the search at after itself returns after when it lies on a matching minute, which "Never returns after itself" refuses. Rounding the start down instead of up returns 23:58 in "Rounds seconds up to the next minute".',
+    transfer:
+      'Return the next 5 runs instead of one, for a preview in the user interface. Decide whether the 366-day limit applies to all five together. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-cron-next-zone': {
+    reasoning:
+      'Matching happens on local wall-clock time, so each candidate is a local date and time that the schedule allows, turned into the instants that show it. A skipped time has no instant and is passed over, and a repeated time is represented only by its earlier instant, so it can never run twice. Comparing that earlier instant with after, rather than the later one, is what stops the repeat from running when after falls between the two.',
+    trace:
+      'For "30 1 * * *" after 2026-11-01T06:20:00Z, local time is 01:20 standard time on 2026-11-01. The candidate 2026-11-01 01:30 has instants 05:30Z and 06:30Z; the earlier one, 05:30Z, is not after 06:20Z, so it is passed over. The next candidate, 2026-11-02 01:30, is 06:30Z, which is the answer.',
+    alternative:
+      'Stepping minute by minute from a day before after, remembering the latest local time seen, treats any local time that is not later than one already seen as a repeat. It is simpler to write and fast enough for 8 days, but slower for long horizons than visiting matching days.',
+    counterexample:
+      'Using the later instant of a repeated time runs the job at 06:30Z in "Runs at the first of two repeated times". Starting to follow the local clock only at after runs it at 06:30Z in "Knows the repeat already ran before after", because 01:30 standard time looks new.',
+    transfer:
+      'Change the gap rule: a job whose local time is skipped runs at the first instant after the jump instead. Decide what an hourly job does on that night. This changed contract is self-reviewed, not checked by the original cases.',
+  },
 }
 
 export const devopsGuides: Record<string, ReflectionGuide> = {
@@ -893,6 +953,72 @@ export const devopsGuides: Record<string, ReflectionGuide> = {
     example:
       'stopAccepting is shutdownAt + acceptForSeconds and the deadline is shutdownAt + graceSeconds. A request arriving at or after stopAccepting is rejected; otherwise it is completed if it finishes by the deadline and cut off if not, and its finish raises the busy time, which starts at stopAccepting. exitAt is the busy time capped at the deadline. The work is linear in the requests. The checks pass times in directly; no signal is sent.',
   },
+  'devops-cron-field': {
+    plan: [
+      'Split the field at commas.',
+      'Turn each part into a start, an end, and a step, refusing invalid ones.',
+      'Collect the values, then sort them.',
+    ],
+    explanation: [
+      'Trace a step over a range that does not start at 0.',
+      'Explain why "7/2" is refused.',
+      'Say why an invalid part makes the whole field null.',
+    ],
+    example:
+      'For each part I match /^(\\*|(\\d+)(?:-(\\d+))?)(?:\\/(\\d+))?$/. "*" gives min to max; a number gives a range of one; a step after a single number returns null. The start, end, and step must be within limits. I add every s-th value from start to end to a Set and return it sorted. The work is the number of values. The checks pass fields in directly.',
+  },
+  'devops-cron-matches': {
+    plan: [
+      'Expand each field, mapping 7 to 0 for the weekday.',
+      'Check minute, hour, and month.',
+      'Join the day fields with "or" only when neither starts with "*".',
+    ],
+    explanation: [
+      'Trace "0 12 13 * 5" on Friday the 6th.',
+      'Explain why "*/2" does not switch on the either-day rule.',
+      'Say why "* 9 * * *" runs 60 times.',
+    ],
+    example:
+      'I expand each field into a Set, turning 7 into 0 for weekdays. Minute, hour, and month must be in their sets. If neither day field starts with "*", the day matches when the date or the weekday is in its set; otherwise both must be. The work is the size of the fields. The checks pass a time in directly; no clock is read.',
+  },
+  'devops-local-to-utc': {
+    plan: [
+      'Read local fields for an instant with formatToParts in the zone.',
+      'Collect the offsets a day before, at, and after a first guess.',
+      'Keep candidates whose local time equals the target and count them.',
+    ],
+    explanation: ['Trace an overlap in New York.', 'Explain why a gap has no instant.', "Say why the machine's time zone is never used."],
+    example:
+      'wall(ms) formats ms in the zone with hourCycle "h23" and turns the parts back into a UTC number. The target is the local time read as UTC. For the offsets at target − 1 day, target, and target + 1 day, each candidate is target − offset, and I keep those whose wall time equals the target, sorted. None is a gap, one is ok, two are an overlap. The work is a few formatter calls. The checks pass the time and zone in directly.',
+  },
+  'devops-cron-next-utc': {
+    plan: [
+      'Expand the fields once.',
+      'Start at the next whole minute after after.',
+      'Check each minute, skipping the rest of a day whose date or month fails, up to 366 days.',
+    ],
+    explanation: [
+      'Trace a weekday schedule from a Friday afternoon.',
+      'Explain why the search starts after after.',
+      'Say why skipping days keeps it fast.',
+    ],
+    example:
+      'I expand the fields into Sets, start at floor(after / 60000) × 60000 + 60000, and loop to after + 366 days. If the month or day rule fails, I jump to the next UTC midnight; otherwise a minute in the hour and minute sets returns toISOString. The work is at most the minutes of the matching days. The checks pass after in directly; no clock is read.',
+  },
+  'devops-cron-next-zone': {
+    plan: [
+      'Expand the fields and create one formatter for the zone.',
+      'Visit local days from the local date of after, keeping those the day rules allow.',
+      'For each allowed time, take its earliest instant, skipping gaps, and return the first after after within 8 days.',
+    ],
+    explanation: [
+      'Trace the night clocks go back with after between the two 01:30s.',
+      'Explain the gap and repeat rules.',
+      'Say why the earlier instant is compared with after.',
+    ],
+    example:
+      "I read after's local date in the zone, then for each of the next days check month and the day rule on the local date. For each allowed hour and minute, the earliest instant showing that wall time comes from the offsets near it; a gap gives none. The first instant after after and within 8 days is returned with toISOString. The work is days times allowed times. The checks pass after and zone in directly; no clock or machine time zone is read.",
+  },
 }
 
 export const devopsLessonDepth: Record<string, LessonDepth> = {
@@ -965,5 +1091,15 @@ export const devopsLessonDepth: Record<string, LessonDepth> = {
       "A team's liveness check calls the database and fails if the query takes more than 1 second. During a busy hour the database slows to 2 seconds per query. Predict what happens to the service, then repair the checks.",
     answer:
       'Every instance fails liveness, the orchestrator restarts them all, and while they restart there is no capacity at all, so the slow hour becomes an outage. The restarts also hit the database with new connections. Liveness should only check that the process itself responds; the database check belongs in readiness, which stops traffic without restarting anything.',
+  },
+  'cron-schedules': {
+    title: 'A local time can happen zero, one, or two times',
+    code: 'America/New_York, 2026\n\n03-08 02:30 → never      (clocks jump 02:00 → 03:00)\n07-15 09:00 → 13:00Z     (one instant)\n11-01 01:30 → 05:30Z and 06:30Z   (clocks go back 02:00 → 01:00)',
+    reasoning:
+      'Clocks in a time zone are a function of the instant, not the other way round. Every instant shows exactly one local time, but when clocks jump forward an hour of local times is never shown, and when they go back an hour is shown twice. A scheduler that works in local time must therefore choose a rule for both cases, and the rule shapes behaviour: skipping the gap means a 02:30 job does not run that night, and running the earlier repeat means a 01:30 job runs once, not twice.',
+    challenge:
+      'An hourly job, "0 * * * *", runs in New York. Predict how many times it runs between 00:00 and 04:00 local time on 2026-03-08 and on 2026-11-01, under these reps\' rules.',
+    answer:
+      'On 2026-03-08 the local times 00:00, 01:00, 03:00, and 04:00 occur; 02:00 is skipped, so it runs 4 times, one fewer than usual. On 2026-11-01 the times 00:00, 01:00 (once, at the earlier instant), 02:00, 03:00, and 04:00 run, so it runs 5 times, the usual number, although the local hours from 00:00 to 04:00 took 5 real hours instead of 4.',
   },
 }

@@ -582,6 +582,17 @@ export const indonesianGlossary: Record<string, string> = {
   'Failure threshold': 'berapa kali berturut-turut pemeriksaan harus gagal sebelum tindakan diambil',
   'Graceful shutdown': 'menghentikan layanan dengan menyelesaikan pekerjaan yang sedang berjalan, bukan memutusnya',
   'Shutdown grace period': 'waktu yang diberikan kepada proses yang berhenti untuk selesai sebelum dipaksa berhenti',
+  'Cron expression': 'lima kolom yang menyatakan pada menit, jam, hari, bulan, dan hari dalam minggu apa sebuah job berjalan',
+  'Step value': 'bagian /s pada kolom cron, yang mengambil setiap nilai ke-s dari sebuah rentang',
+  'Day of week': 'kolom cron kelima, di mana 0 adalah Minggu dan 6 adalah Sabtu',
+  'Day of month': 'kolom cron ketiga, tanggal dalam bulan dari 1 sampai 31',
+  'IANA time zone': 'kumpulan aturan jam bernama, seperti America/New_York, termasuk kapan waktu musim panas mulai dan berakhir',
+  'Daylight saving time':
+    'memajukan jam di musim panas dan memundurkannya di musim dingin, sehingga setiap tahun satu jam terlewat dan satu jam terulang',
+  'Scheduled job': 'pekerjaan yang berjalan otomatis pada waktu tertentu, seperti cadangan setiap malam',
+  UTC: 'Coordinated Universal Time, waktu acuan tanpa selisih zona waktu dan tanpa waktu musim panas',
+  'Wall-clock time': 'waktu yang ditunjukkan jam setempat, yang bisa terlewat atau terulang saat waktu musim panas berubah',
+  Instant: 'satu saat yang tepat, sama di mana pun, biasanya ditulis dalam UTC',
 }
 
 /** Shown with the glossary when Indonesian help is on. */
