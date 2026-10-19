@@ -4913,6 +4913,16 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   min-width: 8px;
   flex-basis: 0;
 }
+/* The end segments take the bar's rounding, so an outlined rung's inset edge follows the curve instead of being
+   cut off by the bar's clip. */
+.skill-ladder-bar > span:first-child {
+  border-top-left-radius: inherit;
+  border-bottom-left-radius: inherit;
+}
+.skill-ladder-bar > span:last-child {
+  border-top-right-radius: inherit;
+  border-bottom-right-radius: inherit;
+}
 /* Four rungs that stay distinct in every scheme and mode: solid, mid, outlined, and empty. */
 .skill-ladder-bar [data-rung='retained'],
 .skill-ladder-legend [data-rung='retained']::before {
