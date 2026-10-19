@@ -479,6 +479,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'container-images',
+    title: 'Predict what an image build rebuilds',
+    guided: 'devops-layer-rebuild',
+    independent: 'devops-image-tags',
+    recall: 'devops-multistage-rebuild',
+    practice: ['devops-dockerignore', 'devops-tag-cleanup'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

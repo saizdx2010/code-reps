@@ -512,3 +512,143 @@ test('D4 pipeline checks catch wave, loop, hashing, fallback, timing, and propag
     [skip.replace('job.needs.some(runs)', 'job.needs.every(runs) && job.needs.length > 0'), 'Runs a job when any one of its needs runs'],
   ])
 })
+
+test('D5 container checks catch propagation, matching, tag, ignore-order, retention, and stage mistakes', async () => {
+  const layers = solution('devops-layer-rebuild')
+  await assertCaught('devops-layer-rebuild', [
+    [layers.replace('    if (!rebuilding) rebuilding =', '    rebuilding ='), 'Rebuilds from the copied source in the example'],
+    [layers.replace("source === '.' || ", ''), 'Copies everything with "."'],
+    [
+      layers.replace(
+        "source.endsWith('/') ? file.startsWith(source) : file === source",
+        "source.endsWith('/') ? file.includes(source) : file === source",
+      ),
+      'Matches a folder only from the start of a path',
+    ],
+    [
+      layers.replace("source.endsWith('/') ? file.startsWith(source) : file === source", 'file.startsWith(source)'),
+      'Matches a file exactly',
+    ],
+    [layers.replace('step.copies.some(source =>', 'step.copies.slice(0, 1).some(source =>'), 'Checks every source of a step'],
+  ])
+  const tags = solution('devops-image-tags')
+  await assertCaught('devops-image-tags', [
+    [tags.replace("    if (branch === 'main') return ['main', 'edge', shaTag]\n", ''), 'Tags main as edge'],
+    [
+      tags.replace(
+        "if (pre) return [major + '.' + minor + '.' + patch + pre, shaTag]",
+        "if (pre) return [major + '.' + minor + '.' + patch + pre, 'latest', shaTag]",
+      ),
+      'Gives a pre-release only its version',
+    ],
+    [tags.replace('/^v?(\\d+)', '/^v(\\d+)'), 'Accepts a version without v'],
+    [
+      tags.replace(
+        ".replace(/[^a-z0-9._-]/g, '-')\n      .replace(/^[.-]+/, '')",
+        ".replace(/^[.-]+/, '')\n      .replace(/[^a-z0-9._-]/g, '-')",
+      ),
+      'Removes leading characters after replacing',
+    ],
+    [tags.replace('.slice(0, 40)', ''), 'Keeps at most 40 characters'],
+    [tags.replace('      .toLowerCase()\n', '\n'), 'Converts a feature branch'],
+    [tags.replace('/[^a-z0-9._-]/g', '/[^a-z0-9-]/g'), 'Keeps dots and underscores'],
+    [
+      tags.replace('return name ? [name, shaTag] : [shaTag]\n  }\n  const tag', 'return [name, shaTag]\n  }\n  const tag'),
+      'Gives only the sha tag for an empty name',
+    ],
+    [tags.replace("const shaTag = 'sha-' + sha.slice(0, 7)", "const shaTag = 'sha-' + sha.slice(0, 8)"), 'Tags the release in the example'],
+    [
+      tags.replace(
+        "  if (ref.startsWith('refs/heads/')) {",
+        "  const versionLike = /^v?\\d+\\.\\d+\\.\\d+$/.exec(ref.split('/').pop()!)\n  if (versionLike) {\n    const [major, minor, patch] = versionLike[0].replace('v', '').split('.')\n    return [major + '.' + minor + '.' + patch, major + '.' + minor, major, 'latest', 'sha-' + sha.slice(0, 7)]\n  }\n  if (ref.startsWith('refs/heads/')) {",
+      ),
+      'Treats a branch named like a version as a branch',
+    ],
+  ])
+  const ignore = solution('devops-dockerignore')
+  await assertCaught('devops-dockerignore', [
+    [
+      ignore.replace(
+        'for (const rule of rules) if (matches(rule.pattern, path)) keep = rule.keep',
+        'for (const rule of rules) if (matches(rule.pattern, path)) {\n      keep = rule.keep\n      break\n    }',
+      ),
+      'Filters the example',
+    ],
+    [
+      ignore.replace("return path === pattern || path.startsWith(pattern + '/')", 'return path.startsWith(pattern)'),
+      'Matches a name as a folder but not as a prefix',
+    ],
+    [
+      ignore.replace(
+        "if (pattern.endsWith('/')) return path.startsWith(pattern)",
+        "if (pattern.endsWith('/')) return path.includes(pattern)",
+      ),
+      'Matches a folder pattern from the start',
+    ],
+    [
+      ignore.replace(
+        "path.slice(path.lastIndexOf('/') + 1).endsWith(pattern.slice(1))",
+        'path === pattern.slice(2) || path.endsWith(pattern.slice(2))',
+      ),
+      'Matches *.ext in any folder',
+    ],
+    [
+      ignore.replace(".filter(line => line !== '' && !line.startsWith('#'))", ".filter(line => line !== '')"),
+      'Skips comments and blank lines',
+    ],
+    [ignore.replace('.map(line => line.trim())\n', ''), 'Trims lines'],
+    [ignore.replace('{ pattern: line.slice(1), keep: true }', '{ pattern: line, keep: true }'), 'Filters the example'],
+  ])
+  const cleanup = solution('devops-tag-cleanup')
+  await assertCaught('devops-tag-cleanup', [
+    [cleanup.replace('deployed.includes(name) || ', ''), 'Never deletes a deployed tag'],
+    [
+      cleanup
+        .replace('    if (isProtected(tag.name)) continue\n', '')
+        .replace(
+          'for (const tag of newestFirst.slice(keepPerBranch)) doomed.add(tag.name)',
+          'for (const tag of newestFirst.slice(keepPerBranch)) if (!isProtected(tag.name)) doomed.add(tag.name)',
+        ),
+      'Keeps the allowance for unprotected tags',
+    ],
+    [
+      cleanup.replace('const newestFirst = [...group].sort((a, b) => b.pushedAt - a.pushedAt)', 'const newestFirst = [...group].reverse()'),
+      'Uses push time, not list order',
+    ],
+    [
+      cleanup.replace('[...group].sort((a, b) => b.pushedAt - a.pushedAt)', '[...group].sort((a, b) => a.pushedAt - b.pushedAt).reverse()'),
+      'Treats the earlier tag as newer on a tie',
+    ],
+    [cleanup.replace('/^\\d+\\.\\d+\\.\\d+$/', '/^v?\\d+(\\.\\d+)*$/'), 'Protects only the exact version form'],
+    [
+      cleanup.replace('byBranch.set(tag.branch,', "byBranch.set('all',").replace('byBranch.get(tag.branch)', "byBranch.get('all')"),
+      'Counts branches separately',
+    ],
+  ])
+  const stages = solution('devops-multistage-rebuild')
+  await assertCaught('devops-multistage-rebuild', [
+    [
+      stages.replace('let rebuilding = changedStages.has(stage.from)', 'let rebuilding = false'),
+      'Rebuilds a stage that starts from a changed stage',
+    ],
+    [
+      stages.replace(
+        'step.fromStage !== undefined\n            ? changedStages.has(step.fromStage)\n            : step.copies',
+        'step.copies',
+      ),
+      'Ignores changed files for a copy from a stage',
+    ],
+    [stages.replace('? changedStages.has(step.fromStage)', '? false'), 'Rebuilds from the source change in the example'],
+    [
+      stages.replace(
+        '    if (rebuilding) changedStages.add(stage.name)',
+        "    if (result[stage.name].includes('rebuilt')) changedStages.add(stage.name)",
+      ),
+      'Passes a change through a stage with no steps',
+    ],
+    [
+      stages.replace('? changedStages.has(step.fromStage)', '? changedStages.size > 0'),
+      'Keeps a stage cached when the stage it copies from did not change',
+    ],
+  ])
+})

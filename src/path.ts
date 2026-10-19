@@ -527,6 +527,10 @@ export const paths = [
         title: 'Run pipelines',
         repIds: ['devops-job-waves', 'devops-cache-key', 'devops-cache-restore', 'devops-pipeline-duration', 'devops-skip-unchanged'],
       },
+      {
+        title: 'Build container images',
+        repIds: ['devops-layer-rebuild', 'devops-image-tags', 'devops-dockerignore', 'devops-tag-cleanup', 'devops-multistage-rebuild'],
+      },
     ] satisfies readonly PathStage[],
   },
 ] as const

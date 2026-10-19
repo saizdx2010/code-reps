@@ -319,4 +319,90 @@ function jobsToRun(jobs: { name: string; needs: string[]; paths: string[] }[], c
     skip: jobs.filter(job => !runs(job.name)).map(job => job.name),
   }
 }`,
+  'devops-layer-rebuild': `
+function layerRebuilds(steps: { instruction: string; copies: string[] }[], changed: string[]): string[] {
+  const matches = (source: string, file: string) => source === '.' || (source.endsWith('/') ? file.startsWith(source) : file === source)
+  let rebuilding = false
+  return steps.map(step => {
+    if (!rebuilding) rebuilding = step.copies.some(source => changed.some(file => matches(source, file)))
+    return rebuilding ? 'rebuilt' : 'cached'
+  })
+}`,
+  'devops-image-tags': `
+function imageTags(ref: string, sha: string): string[] {
+  const convert = (name: string) =>
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]/g, '-')
+      .replace(/^[.-]+/, '')
+      .slice(0, 40)
+  const shaTag = 'sha-' + sha.slice(0, 7)
+  if (ref.startsWith('refs/heads/')) {
+    const branch = ref.slice('refs/heads/'.length)
+    if (branch === 'main') return ['main', 'edge', shaTag]
+    const name = convert(branch)
+    return name ? [name, shaTag] : [shaTag]
+  }
+  const tag = ref.slice('refs/tags/'.length)
+  const version = /^v?(\\d+)\\.(\\d+)\\.(\\d+)(-.+)?$/.exec(tag)
+  if (version) {
+    const [, major, minor, patch, pre] = version
+    if (pre) return [major + '.' + minor + '.' + patch + pre, shaTag]
+    return [major + '.' + minor + '.' + patch, major + '.' + minor, major, 'latest', shaTag]
+  }
+  const name = convert(tag)
+  return name ? [name, shaTag] : [shaTag]
+}`,
+  'devops-dockerignore': `
+function buildContext(files: string[], ignore: string[]): string[] {
+  const rules = ignore
+    .map(line => line.trim())
+    .filter(line => line !== '' && !line.startsWith('#'))
+    .map(line => (line.startsWith('!') ? { pattern: line.slice(1), keep: true } : { pattern: line, keep: false }))
+  const matches = (pattern: string, path: string) => {
+    if (pattern.endsWith('/')) return path.startsWith(pattern)
+    if (pattern.startsWith('*.')) return path.slice(path.lastIndexOf('/') + 1).endsWith(pattern.slice(1))
+    return path === pattern || path.startsWith(pattern + '/')
+  }
+  return files.filter(path => {
+    let keep = true
+    for (const rule of rules) if (matches(rule.pattern, path)) keep = rule.keep
+    return keep
+  })
+}`,
+  'devops-tag-cleanup': `
+function tagsToDelete(tags: { name: string; branch: string; pushedAt: number }[], keepPerBranch: number, deployed: string[]): string[] {
+  const isProtected = (name: string) => deployed.includes(name) || /^\\d+\\.\\d+\\.\\d+$/.test(name)
+  const byBranch = new Map<string, { name: string; pushedAt: number }[]>()
+  for (const tag of tags) {
+    if (isProtected(tag.name)) continue
+    byBranch.set(tag.branch, [...(byBranch.get(tag.branch) ?? []), tag])
+  }
+  const doomed = new Set<string>()
+  for (const group of byBranch.values()) {
+    const newestFirst = [...group].sort((a, b) => b.pushedAt - a.pushedAt)
+    for (const tag of newestFirst.slice(keepPerBranch)) doomed.add(tag.name)
+  }
+  return tags.filter(tag => doomed.has(tag.name)).map(tag => tag.name)
+}`,
+  'devops-multistage-rebuild': `
+type Step = { copies: string[]; fromStage?: string }
+function stageRebuilds(stages: { name: string; from: string; steps: Step[] }[], changed: string[]) {
+  const matches = (source: string, file: string) => source === '.' || (source.endsWith('/') ? file.startsWith(source) : file === source)
+  const changedStages = new Set<string>()
+  const result: Record<string, string[]> = {}
+  for (const stage of stages) {
+    let rebuilding = changedStages.has(stage.from)
+    result[stage.name] = stage.steps.map(step => {
+      if (!rebuilding)
+        rebuilding =
+          step.fromStage !== undefined
+            ? changedStages.has(step.fromStage)
+            : step.copies.some(source => changed.some(file => matches(source, file)))
+      return rebuilding ? 'rebuilt' : 'cached'
+    })
+    if (rebuilding) changedStages.add(stage.name)
+  }
+  return result
+}`,
 }

@@ -244,6 +244,66 @@ export const devopsDepth: Record<string, RepDepth> = {
     transfer:
       'Add a job flag alwaysRun for jobs such as security scans. Decide whether a job that needs an alwaysRun job must then always run too. This changed contract is self-reviewed, not checked by the original cases.',
   },
+  'devops-layer-rebuild': {
+    reasoning:
+      'A layer is reusable only if everything it was built from is unchanged: its own copied files and every layer beneath it. So the first step whose copied files changed starts a rebuild, and from then on every step rebuilds, whatever it copies. A step that copies nothing can only be rebuilt by an earlier step, because the step list itself is unchanged here.',
+    trace:
+      'For the example with package-lock.json changed, FROM copies nothing and stays cached. The second step copies package-lock.json, which changed, so it rebuilds and the flag turns on. RUN npm ci and COPY src/ then rebuild because the flag is on, although src/ did not change.',
+    alternative:
+      'A build could check each step only against its own inputs, which would be cheaper but wrong: the install output depends on the copied lockfile layer beneath it. Real builders also hash the files a step copies, so touching a file without changing its content does not rebuild.',
+    counterexample:
+      'Checking each step only against its own sources leaves RUN npm run build cached in the example. Matching folders with includes rebuilds COPY src/ for "tests/src/a.ts" in "Matches a folder only from the start of a path".',
+    transfer:
+      'Add an ARG step whose value comes from the build command, such as a version number. Decide how a changed value is passed in and which steps it rebuilds. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-image-tags': {
+    reasoning:
+      'Each kind of ref answers a different question, so each gets its own tags: a release says which version it is and moves the floating tags 1.4, 1, and latest; a pre-release must not move them, so it gets only its full version; a branch gets a readable converted name. The commit tag is added to every build, so whatever runs can be traced to its code.',
+    trace:
+      'For refs/heads/@@hotfix, the branch is "@@hotfix". Lowercasing leaves it; replacing invalid characters gives "--hotfix"; removing leading "." and "-" gives "hotfix", which is kept with "sha-abcdef0". For refs/tags/v2.0.0-rc.1, the version pattern matches with the pre-release "-rc.1", so the only name tag is "2.0.0-rc.1" and latest does not move.',
+    alternative:
+      'Tagging every build only with its commit is unambiguous but forces people to look up which commit is the release. Some teams also tag the date or the build number, which sorts well but carries no compatibility meaning.',
+    counterexample:
+      'Removing leading characters before replacing leaves "--hotfix" for "@@hotfix", because "@" is not removed by that step. Treating a branch named "1.2.3" as a release would move latest from a branch build, which "Treats a branch named like a version as a branch" refuses.',
+    transfer:
+      'Add tags for pull requests, refs/pull/42/merge, as "pr-42". Decide what happens when a pull request is updated and whether old pr tags should be removed. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-dockerignore': {
+    reasoning:
+      'Each line is a rule that either leaves a file out or brings it back, and the last matching rule wins, so a general rule followed by a specific exception works as written. The three pattern forms are kept distinct so each matches only what it says: a folder from the start, a file ending in any folder, or one path and everything under it.',
+    trace:
+      'For logs/keep.log with lines node_modules, *.log, !logs/keep.log, .env: node_modules does not match. *.log matches because the last part, keep.log, ends with ".log", so the file is left out for now. !logs/keep.log matches the path exactly, so it is kept. .env does not match, so the last decision, keep, stands.',
+    alternative:
+      'Listing the files to include instead of the ones to exclude makes it impossible to leak a new file by accident, at the cost of updating the list for every new folder. Real ignore files use glob patterns with "**", which are more flexible and harder to read.',
+    counterexample:
+      'Stopping at the first matching line drops logs/keep.log in the example, because *.log matches first. Matching "build" with startsWith also drops "builder.ts" in "Matches a name as a folder but not as a prefix".',
+    transfer:
+      'Support patterns that start with "**/", such as "**/temp", meaning the name in any folder. Decide how it combines with the folder rule and with exceptions. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-tag-cleanup': {
+    reasoning:
+      'Protection is decided before counting, so a running image or a release can never be pushed out by the allowance, and does not take a place from the branch builds the allowance is meant to keep. Sorting each branch newest first with a stable sort makes ties follow the list, and deleting everything past the allowance leaves exactly the newest few.',
+    trace:
+      'For branch b with tags new (900), old (100), and mid (500) and an allowance of 1, none is protected. Sorted newest first they are new, mid, old, so new is kept and mid and old are deleted, returned in the order of tags: old, mid.',
+    alternative:
+      'Deleting by age, such as anything older than 30 days, needs a current time and can delete every tag of a quiet branch. Keeping a fixed number per branch never empties a branch but keeps old tags of abandoned branches forever.',
+    counterexample:
+      'Counting protected tags toward the allowance deletes a-2 in "Keeps the allowance for unprotected tags". Protecting any name that starts with a digit protects "2.1", which "Protects only the exact version form" refuses.',
+    transfer:
+      'Delete every tag of a branch that was merged and deleted more than 14 days ago, except protected ones. Decide which inputs you need and how this rule combines with the allowance. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'devops-multistage-rebuild': {
+    reasoning:
+      "Stages are worked out in order, so whether an earlier stage changed is known before any stage that uses it. Inside a stage the single-stage rule applies, with two more reasons to start rebuilding: the stage starts from a changed stage, or a step copies from one. A step that copies from a stage depends on that stage's result, not on the build folder, so changed files never affect it directly.",
+    trace:
+      'For docs, api, and final with only api/server.ts changed: docs copies docs/, which did not change, so it is cached. api copies api/, so it rebuilds and api is marked changed. In final, the first step copies from docs, which did not change, so it is cached; the second copies from api, which changed, so it rebuilds.',
+    alternative:
+      "A builder can also skip stages the final image never uses, which saves work but means a stage's status depends on the final target. Copying the whole compiled folder into one stage is simpler but makes the final image larger.",
+    counterexample:
+      'Testing changed files for a step that copies from a stage rebuilds final in "Ignores changed files for a copy from a stage". Marking a stage changed only when it has a rebuilt step misses "alias", which has no steps but starts from a changed stage.',
+    transfer:
+      'Let a stage start from an image whose digest can change, passed in as a list of updated images. Decide which stages and steps that rebuilds. This changed contract is self-reviewed, not checked by the original cases.',
+  },
 }
 
 export const devopsGuides: Record<string, ReflectionGuide> = {
@@ -503,6 +563,76 @@ export const devopsGuides: Record<string, ReflectionGuide> = {
     example:
       'A path ending in "/" matches files that start with it; others must be equal. runs(name) returns the remembered answer or whether any path matches any changed file or any need runs. I filter jobs into run and skip with it. The work is jobs times paths times changed files. The checks pass changed paths in directly; no repository is read.',
   },
+  'devops-layer-rebuild': {
+    plan: [
+      'Match a source against a changed file: ".", a folder, or an exact path.',
+      'Turn a flag on at the first step with a matching source.',
+      'Mark every step from there as rebuilt.',
+    ],
+    explanation: [
+      'Trace a lockfile change through an install step.',
+      'Explain why a step that copies nothing can rebuild.',
+      'Say why step order matters for build time.',
+    ],
+    example:
+      'matches returns true for ".", for a "/" source that the file starts with, or for an equal path. I map the steps; while the flag is off, it turns on if any source matches any changed file, and each step gets "rebuilt" or "cached" from the flag. The work is steps times sources times changed files. The checks pass steps and paths in directly; no image is built.',
+  },
+  'devops-image-tags': {
+    plan: [
+      'Split the ref into a branch or a tag.',
+      'Give main, other branches, release versions, pre-releases, and other tags their name tags.',
+      'End with the commit tag.',
+    ],
+    explanation: [
+      'Trace a branch name with invalid characters at the start.',
+      'Explain why a pre-release does not get latest.',
+      'Say why every image gets a commit tag.',
+    ],
+    example:
+      'convert lowercases, replaces /[^a-z0-9._-]/g with "-", removes /^[.-]+/, and keeps 40 characters. Branches give main and edge for main, or the converted name if it is not empty. Tags matching /^v?(\\d+)\\.(\\d+)\\.(\\d+)(-.+)?$/ give the full version with a pre-release, or the version, major.minor, major, and latest; other tags are converted. I append "sha-" and seven characters. The work is linear in the ref. The checks pass refs in directly; no registry is contacted.',
+  },
+  'devops-dockerignore': {
+    plan: [
+      'Parse the lines into patterns, skipping comments and blanks and marking exceptions.',
+      'Match a pattern as a folder, a "*." ending, or a path and its folder.',
+      'Let the last matching line decide for each file.',
+    ],
+    explanation: [
+      'Trace an exception after a general rule.',
+      'Explain why "build" does not match "builder.ts".',
+      'Say what happens when the exception comes first.',
+    ],
+    example:
+      'I trim the lines, drop "" and "#" lines, and turn each into {pattern, keep}. A "/" pattern matches paths that start with it; a "*." pattern matches when the part after the last "/" ends with the rest; others match the equal path or paths under it. Each file starts kept, and every matching rule sets keep. The work is files times lines. The checks pass paths in directly; no files are read.',
+  },
+  'devops-tag-cleanup': {
+    plan: [
+      'Mark deployed and version tags as protected.',
+      'Group the other tags by branch and sort each newest first.',
+      'Delete everything past the allowance, in the order of tags.',
+    ],
+    explanation: [
+      'Trace a branch where a deployed tag is old.',
+      'Explain why protected tags do not use the allowance.',
+      'Say how a tie is broken.',
+    ],
+    example:
+      'A tag is protected if deployed includes it or it matches /^\\d+\\.\\d+\\.\\d+$/. Other tags go into a Map by branch; each group is sorted by pushedAt, newest first, with a stable sort, and names after the first keepPerBranch go into a Set. I return tags filtered by that Set. The work is O(n log n). The checks pass tags in directly; no registry is changed.',
+  },
+  'devops-multistage-rebuild': {
+    plan: [
+      'Go through the stages in order, remembering which changed.',
+      'Start a stage rebuilding if it starts from a changed stage.',
+      'Otherwise start at the first step that copies from a changed stage or a changed file, and record whether the stage changed.',
+    ],
+    explanation: [
+      'Trace a change that reaches the final stage through a copy.',
+      'Explain why a copy from a stage ignores changed files.',
+      'Say why a stage with no steps can still change.',
+    ],
+    example:
+      'I keep a Set of changed stages. Each stage starts with rebuilding set if its from is in the Set. Each step, while not rebuilding, checks its fromStage in the Set, or its sources against changed files. Statuses follow the flag, and a stage whose flag ends on joins the Set. The work is steps times sources times changed files. The checks pass stages in directly; no Docker build runs.',
+  },
 }
 
 export const devopsLessonDepth: Record<string, LessonDepth> = {
@@ -545,5 +675,15 @@ export const devopsLessonDepth: Record<string, LessonDepth> = {
       'A team caches node_modules with the key deps-<os>-<hash of package.json>. They update a package version only in the lockfile. Predict what CI restores and what goes wrong, then repair the key.',
     answer:
       'package.json did not change, so the key is the same and CI restores the old node_modules with the previous package version, skipping the install. Tests run against code the lockfile no longer describes. Hashing the lockfile instead, which records the exact versions, makes any version change produce a new key.',
+  },
+  'container-images': {
+    title: 'Put what changes least at the top',
+    code: 'COPY . .                 ← any change rebuilds from here\nRUN npm ci               ← reinstalls on every code change\n\nCOPY package*.json ./    ← changes only with dependencies\nRUN npm ci               ← cached for code changes\nCOPY src/ ./src/         ← code changes rebuild from here',
+    reasoning:
+      'Every step after a rebuilt step runs again, so the position of the first step a change touches decides how much a build costs. Copying everything first makes every change, even to a README, reinstall all packages. Copying only the package files, installing, and then copying the code means the slow install reruns only when dependencies change, which is rare.',
+    challenge:
+      'A Dockerfile has COPY . ., RUN npm ci (3 minutes), RUN npm run build (1 minute). A team pushes 20 changes a day: 18 change only src/ and 2 change package-lock.json. Estimate the daily build minutes before and after reordering it as package files, install, source, build.',
+    answer:
+      'Before, every change rebuilds from COPY . ., so each build takes about 4 minutes: 20 × 4 = 80 minutes. After, the 18 source changes reuse the install and take about 1 minute, and the 2 dependency changes take about 4: 18 + 8 = 26 minutes. A README change, which used to cost 4 minutes, now costs nothing if README.md is not copied.',
   },
 }

@@ -328,4 +328,84 @@ export const devopsSkills: Skill[] = [
     repIds: ['devops-job-waves', 'devops-cache-key', 'devops-cache-restore', 'devops-pipeline-duration', 'devops-skip-unchanged'],
     related: ['ci-output', 'semver'],
   },
+  {
+    id: 'container-images',
+    title: 'Containers: image layers, build context, and tags',
+    summary:
+      'Predict which image layers a change rebuilds, keep files out of the build context, and tag and clean up images so the right one can always be found.',
+    prerequisites: ['ci-pipelines'],
+    objectives: [
+      'Predict which build steps reuse their cached layer and which rebuild after a change, in one stage or several.',
+      'Order build steps so that common changes rebuild as little as possible, and leave files out of the build context.',
+      'Tag images from branches and releases, and choose old tags to delete without losing running or released images.',
+    ],
+    sections: [
+      {
+        title: 'An image is a stack of layers',
+        body: 'A container image is built from a list of steps: start from a base image, copy files in, run commands. Each step saves its result as a layer. On the next build, a step whose inputs are unchanged reuses its layer from the cache. Once a step has to run again, every later step runs again too, because it was built on top of the old result. That is why builds copy the lockfile and install packages before copying the source code: editing code then rebuilds only the last few steps.',
+      },
+      {
+        title: 'Stages and the build context',
+        body: 'A multi-stage build compiles in one stage and copies only the output into a small final stage. A stage that starts from, or copies from, a stage that changed must rebuild too. Everything in the build folder is the build context, which steps can copy from. An ignore file leaves out folders such as node_modules and files such as .env, so builds are faster and local secrets never reach an image.',
+      },
+      {
+        title: 'Tags say which image to run',
+        body: 'Each build pushes an image with tags. A release gets its version, such as 1.4.2, plus 1.4, 1, and latest, so users can choose how closely to follow updates; a pre-release gets only its own version, so latest never points at a test build. Branch builds get a tag made from the branch name, converted to the characters tags allow, and every image gets a tag from its commit, so any running image can be traced to its code.',
+      },
+      {
+        title: 'Clean up without losing what matters',
+        body: 'Registries fill up quickly, so cleanup policies keep only the newest few tags per branch. They must never delete an image that is running, or a release someone may need to roll back to. These reps describe builds and registries as plain data passed to your functions; the checks do not run Docker, build an image, or contact a registry.',
+      },
+    ],
+    example:
+      'FROM node:24                              cached\nCOPY package.json package-lock.json ./   cached\nRUN npm ci                                cached\nCOPY src/ ./src/                          rebuilt  ← src/app.ts changed\nRUN npm run build                         rebuilt  ← built on the new layer',
+    walkthrough: [
+      'FROM copies nothing from the build folder, so it stays cached.',
+      'The package files did not change, so the copy and the install reuse their layers.',
+      'src/app.ts changed and is copied by COPY src/, so that step rebuilds.',
+      'The build step comes after a rebuilt step, so it rebuilds too, even though it copies nothing.',
+    ],
+    mistakes: [
+      'Copying all the source code before installing packages, so every code change reinstalls everything.',
+      'Expecting a later step to stay cached after an earlier step rebuilt.',
+      'Leaving .env or node_modules in the build context, so secrets end up in the image or builds slow down.',
+      'Moving latest to a pre-release, or deleting a tag that is still deployed.',
+    ],
+    questions: [
+      q(
+        'layer-after-rebuild-v1',
+        'Step 3 of 5 rebuilds. What happens to steps 4 and 5?',
+        '',
+        ['They stay cached if their own inputs are unchanged', 'They rebuild too', 'Only step 5 rebuilds'],
+        1,
+        'Each layer is built on the one before it, so every step after a rebuilt step runs again.',
+      ),
+      q(
+        'copy-order-v1',
+        'Why do Dockerfiles copy package-lock.json and run the install before copying src/?',
+        '',
+        ['Installs must run first by rule', 'So a code change reuses the cached install layer', 'To make the image smaller'],
+        1,
+        'Code changes far more often than the lockfile. With the install first, a code change rebuilds only the steps after COPY src/.',
+      ),
+      q(
+        'prerelease-latest-v1',
+        'v2.0.0-rc.1 is built. Should it get the latest tag?',
+        '',
+        ['Yes, it is the newest build', 'No, latest should point at a release', 'Only if main passed'],
+        1,
+        'People pull latest expecting a release. A pre-release gets only its own version tag.',
+      ),
+      q(
+        'tag-cleanup-deployed-v1',
+        'A cleanup keeps the 3 newest tags per branch. An older tag on that branch is running in production. Should it be deleted?',
+        '',
+        ['Yes, it is not among the newest 3', 'No, a running image is never deleted', 'Only after the next deploy'],
+        1,
+        'Deleting a running image can stop a restart or a rollback from finding it, so running tags are protected.',
+      ),
+    ],
+    repIds: ['devops-layer-rebuild', 'devops-image-tags', 'devops-dockerignore', 'devops-tag-cleanup', 'devops-multistage-rebuild'],
+    related: ['ci-pipelines', 'semver'],
+  },
 ]

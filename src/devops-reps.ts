@@ -2054,4 +2054,601 @@ export const devopsReps: Rep[] = [
       },
     ],
   },
+  {
+    id: 'devops-layer-rebuild',
+    title: 'Predict which image layers rebuild',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A container image is built from a list of steps, and each step saves its result as a layer. On the next build, a step whose inputs are unchanged reuses its saved layer. Once one step has to run again, every step after it runs again too, because it was built on top of the old result.',
+    prompt:
+      'Implement layerRebuilds(steps, changed). steps lists the build steps in order as {instruction, copies}, where copies lists the sources a step copies from the build folder (empty for steps that copy nothing). changed lists the paths of files that changed since the last build; the step list itself is unchanged. Go through the steps in order. A step is "rebuilt" if an earlier step was rebuilt, or if one of its sources matches a changed file: the source "." matches every file, a source ending with "/" matches every file whose path starts with it, and any other source matches only the file with exactly that path. Otherwise it is "cached". Return one status per step, in order. Do not change the inputs.',
+    brief: {
+      summary: 'Implement layerRebuilds(steps, changed) and return "rebuilt" or "cached" for each step.',
+      rules: [
+        'A step is "rebuilt" if an earlier step was rebuilt, or if one of its copies matches a changed file; otherwise it is "cached".',
+        '"." matches every file; a source ending with "/" matches files whose path starts with it; any other source matches only that exact path.',
+        'The step list itself is unchanged, so a step that copies nothing rebuilds only after an earlier rebuild.',
+      ],
+      edgeCases: ['"src/" matches "src/app.ts" but not "tests/src/a.ts".', 'Do not change the inputs.'],
+    },
+    example: {
+      input:
+        'layerRebuilds([{instruction: "FROM node:24", copies: []}, {instruction: "COPY package.json package-lock.json ./", copies: ["package.json", "package-lock.json"]}, {instruction: "RUN npm ci", copies: []}, {instruction: "COPY src/ ./src/", copies: ["src/"]}, {instruction: "RUN npm run build", copies: []}], ["src/app.ts"])',
+      output: '["cached", "cached", "cached", "rebuilt", "rebuilt"]',
+    },
+    note: `Real image builders also rebuild a step when its instruction text or its base image changes, and they compare file contents rather than a list of changed paths. ${notRun}`,
+    vocabulary: [
+      { term: 'Image layer', meaning: 'the saved result of one build step, reused by later builds when its inputs are unchanged' },
+      { term: 'Build cache', meaning: 'the saved layers an image builder reuses instead of running steps again' },
+    ],
+    planPrompt:
+      'In the example, what rebuilds when only package-lock.json changes? Why do builds copy the lockfile and install before copying the source code?',
+    starter:
+      "type Step = { instruction: string; copies: string[] }\n\nfunction layerRebuilds(steps: Step[], changed: string[]): string[] {\n  // Once a step rebuilds, every later step does too.\n  return steps.map(() => 'cached')\n}\n",
+    functionName: 'layerRebuilds',
+    preserveInput: true,
+    hints: [
+      'Write the rule for one source and one changed file as a small function.',
+      'Keep a boolean that turns true at the first rebuilt step and stays true.',
+      'A step with no copies can only rebuild because an earlier one did.',
+    ],
+    checks: [
+      {
+        name: 'Rebuilds from the copied source in the example',
+        input: [
+          [
+            { instruction: 'FROM node:24', copies: [] },
+            { instruction: 'COPY package.json package-lock.json ./', copies: ['package.json', 'package-lock.json'] },
+            { instruction: 'RUN npm ci', copies: [] },
+            { instruction: 'COPY src/ ./src/', copies: ['src/'] },
+            { instruction: 'RUN npm run build', copies: [] },
+          ],
+          ['src/app.ts'],
+        ],
+        expected: ['cached', 'cached', 'cached', 'rebuilt', 'rebuilt'],
+      },
+      {
+        name: 'Rebuilds the install after a lockfile change',
+        input: [
+          [
+            { instruction: 'FROM node:24', copies: [] },
+            { instruction: 'COPY package.json package-lock.json ./', copies: ['package.json', 'package-lock.json'] },
+            { instruction: 'RUN npm ci', copies: [] },
+            { instruction: 'COPY src/ ./src/', copies: ['src/'] },
+          ],
+          ['package-lock.json'],
+        ],
+        expected: ['cached', 'rebuilt', 'rebuilt', 'rebuilt'],
+      },
+      {
+        name: 'Copies everything with "."',
+        input: [
+          [
+            { instruction: 'FROM node:24', copies: [] },
+            { instruction: 'COPY . .', copies: ['.'] },
+            { instruction: 'RUN npm ci', copies: [] },
+          ],
+          ['README.md'],
+        ],
+        expected: ['cached', 'rebuilt', 'rebuilt'],
+      },
+      {
+        name: 'Keeps everything cached when nothing it copies changed',
+        input: [
+          [
+            { instruction: 'FROM node:24', copies: [] },
+            { instruction: 'COPY src/ ./src/', copies: ['src/'] },
+            { instruction: 'RUN npm run build', copies: [] },
+          ],
+          ['docs/intro.md', 'README.md'],
+        ],
+        expected: ['cached', 'cached', 'cached'],
+      },
+      {
+        name: 'Matches a folder only from the start of a path',
+        input: [[{ instruction: 'COPY src/ ./src/', copies: ['src/'] }], ['tests/src/a.ts', 'src-old/b.ts']],
+        expected: ['cached'],
+      },
+      {
+        name: 'Matches a file exactly',
+        input: [[{ instruction: 'COPY package.json ./', copies: ['package.json'] }], ['web/package.json', 'package.json.bak']],
+        expected: ['cached'],
+      },
+      {
+        name: 'Rebuilds every later step, whatever it copies',
+        input: [
+          [
+            { instruction: 'COPY config/ ./config/', copies: ['config/'] },
+            { instruction: 'COPY assets/ ./assets/', copies: ['assets/'] },
+            { instruction: 'RUN echo done', copies: [] },
+          ],
+          ['config/app.json'],
+        ],
+        expected: ['rebuilt', 'rebuilt', 'rebuilt'],
+      },
+      {
+        name: 'Checks every source of a step',
+        input: [[{ instruction: 'COPY a.txt b.txt ./', copies: ['a.txt', 'b.txt'] }], ['b.txt']],
+        expected: ['rebuilt'],
+      },
+      { name: 'Handles nothing changed', input: [[{ instruction: 'COPY . .', copies: ['.'] }], []], expected: ['cached'] },
+    ],
+  },
+  {
+    id: 'devops-image-tags',
+    title: 'Tag an image from a branch or release',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'Every build pushes an image, and its tags tell people which one to run: a release version, the newest build of the main branch, or a build of one feature branch. Tags have a limited character set, so branch names have to be converted, and every image also gets a tag from its commit, so any build can be traced back.',
+    prompt:
+      'Implement imageTags(ref, sha). ref is "refs/heads/" followed by a branch name, or "refs/tags/" followed by a tag name; sha is the commit\'s 40-character lowercase hexadecimal ID. To convert a name: lowercase it, replace every character other than a-z, 0-9, ".", "_", and "-" with "-", remove "." and "-" characters from the start, and keep at most the first 40 characters. For the branch "main", the name tags are "main" and "edge". For any other branch, the name tag is the converted branch name, or none if it is empty. For a tag of the form MAJOR.MINOR.PATCH (whole numbers), optionally starting with "v", the name tags are "MAJOR.MINOR.PATCH", "MAJOR.MINOR", "MAJOR", and "latest". For such a version followed by "-" and a pre-release, the only name tag is the version without "v", such as "2.0.0-rc.1". Any other tag is converted like a branch name. Return the name tags in that order, followed by "sha-" and the first 7 characters of sha.',
+    brief: {
+      summary: 'Implement imageTags(ref, sha) and return the list of image tags.',
+      rules: [
+        'Convert a name: lowercase; replace characters other than a-z, 0-9, ".", "_", "-" with "-"; remove leading "." and "-"; keep at most 40 characters.',
+        'Branch "main" gives "main" and "edge"; another branch gives its converted name, or nothing if that is empty.',
+        'A tag MAJOR.MINOR.PATCH, optionally with "v", gives "MAJOR.MINOR.PATCH", "MAJOR.MINOR", "MAJOR", and "latest"; with a "-" pre-release, only the version without "v", such as "2.0.0-rc.1".',
+        'Any other tag is converted like a branch name. Always end with "sha-" and the first 7 characters of sha.',
+      ],
+      edgeCases: ['A pre-release never gets "latest".', 'A branch name of only invalid characters gives only the sha tag.'],
+    },
+    example: {
+      input: 'imageTags("refs/tags/v1.4.2", "3f9a1c27b0e4d5a6c7b8e9f0a1b2c3d4e5f6a7b8")',
+      output: '["1.4.2", "1.4", "1", "latest", "sha-3f9a1c2"]',
+    },
+    note: `This tag policy keeps names to 40 characters for readability; image registries allow up to 128. ${notRun}`,
+    vocabulary: [
+      { term: 'Image tag', meaning: 'a name attached to a container image, such as 1.4.2 or latest, used to choose which image to run' },
+      { term: 'Commit SHA', meaning: 'the unique ID of a commit, written in hexadecimal' },
+    ],
+    planPrompt:
+      'Which tags do refs/heads/feature/Login-Page, refs/tags/v2.0.0-rc.1, and refs/heads/main get? Why does a pre-release not move "latest"?',
+    starter: "function imageTags(ref: string, sha: string): string[] {\n  return ['sha-' + sha.slice(0, 7)]\n}\n",
+    functionName: 'imageTags',
+    hints: [
+      'Split the ref into its kind (heads or tags) and the name after the second "/" of the prefix.',
+      'One conversion function serves branches and non-version tags: lowercase, replace, trim the start, cut.',
+      'Match versions with a pattern such as /^v?(\\d+)\\.(\\d+)\\.(\\d+)(-.+)?$/.',
+    ],
+    checks: [
+      {
+        name: 'Tags the release in the example',
+        input: ['refs/tags/v1.4.2', '3f9a1c27b0e4d5a6c7b8e9f0a1b2c3d4e5f6a7b8'],
+        expected: ['1.4.2', '1.4', '1', 'latest', 'sha-3f9a1c2'],
+      },
+      {
+        name: 'Tags main as edge',
+        input: ['refs/heads/main', 'abcdef0123456789abcdef0123456789abcdef01'],
+        expected: ['main', 'edge', 'sha-abcdef0'],
+      },
+      {
+        name: 'Converts a feature branch',
+        input: ['refs/heads/feature/Login-Page', 'abcdef0123456789abcdef0123456789abcdef01'],
+        expected: ['feature-login-page', 'sha-abcdef0'],
+      },
+      {
+        name: 'Gives a pre-release only its version',
+        input: ['refs/tags/v2.0.0-rc.1', 'abcdef0123456789abcdef0123456789abcdef01'],
+        expected: ['2.0.0-rc.1', 'sha-abcdef0'],
+      },
+      {
+        name: 'Accepts a version without v',
+        input: ['refs/tags/3.0.10', 'abcdef0123456789abcdef0123456789abcdef01'],
+        expected: ['3.0.10', '3.0', '3', 'latest', 'sha-abcdef0'],
+      },
+      {
+        name: 'Converts a tag that is not a version',
+        input: ['refs/tags/Nightly Build', 'abcdef0123456789abcdef0123456789abcdef01'],
+        expected: ['nightly-build', 'sha-abcdef0'],
+      },
+      {
+        name: 'Keeps dots and underscores',
+        input: ['refs/heads/release/1.x_fix', 'abcdef0123456789abcdef0123456789abcdef01'],
+        expected: ['release-1.x_fix', 'sha-abcdef0'],
+      },
+      {
+        name: 'Removes leading dots and dashes',
+        input: ['refs/heads/-.wip', 'abcdef0123456789abcdef0123456789abcdef01'],
+        expected: ['wip', 'sha-abcdef0'],
+      },
+      {
+        name: 'Removes leading characters after replacing',
+        input: ['refs/heads/@@hotfix', 'abcdef0123456789abcdef0123456789abcdef01'],
+        expected: ['hotfix', 'sha-abcdef0'],
+      },
+      {
+        name: 'Keeps at most 40 characters',
+        input: ['refs/heads/feature/a-very-long-branch-name-that-keeps-going-and-going', 'abcdef0123456789abcdef0123456789abcdef01'],
+        expected: ['feature-a-very-long-branch-name-that-kee', 'sha-abcdef0'],
+      },
+      {
+        name: 'Gives only the sha tag for an empty name',
+        input: ['refs/heads/!!!', 'abcdef0123456789abcdef0123456789abcdef01'],
+        expected: ['sha-abcdef0'],
+      },
+      {
+        name: 'Treats a branch named like a version as a branch',
+        input: ['refs/heads/1.2.3', 'abcdef0123456789abcdef0123456789abcdef01'],
+        expected: ['1.2.3', 'sha-abcdef0'],
+      },
+    ],
+  },
+  {
+    id: 'devops-dockerignore',
+    title: 'Leave ignored files out of the build',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'Everything in the build folder is sent to the image builder and can end up in the image unless an ignore file leaves it out. Leaving out folders such as node_modules and files such as .env keeps builds fast and keeps local secrets out of images.',
+    prompt:
+      'Implement buildContext(files, ignore). files lists the paths in the build folder; ignore is the lines of an ignore file. Trim each line and skip empty lines and lines starting with "#". A line starting with "!" is an exception, and its pattern is the rest of the line. A pattern ending with "/" matches every path that starts with it. A pattern starting with "*." matches every path whose last part (after the last "/") ends with the text after "*". Any other pattern matches the path equal to it and every path that starts with it followed by "/". For each file, the last line whose pattern matches decides: an ordinary line leaves the file out and an exception keeps it. A file no line matches is kept. Return the kept paths in order. Do not change the inputs.',
+    brief: {
+      summary: 'Implement buildContext(files, ignore) and return the paths that are kept.',
+      rules: [
+        'Trim lines; skip empty ones and "#" comments; a line starting with "!" is an exception for the rest of the line.',
+        'A pattern ending with "/" matches paths that start with it; "*.ext" matches paths whose last part ends with ".ext".',
+        'Any other pattern matches the path equal to it and every path under it as a folder.',
+        'The last matching line decides: an ordinary line leaves the file out, an exception keeps it; with no match the file is kept.',
+      ],
+      edgeCases: [
+        '"build" matches "build/app.js" but not "builder.ts".',
+        'An exception before the line it should override has no effect.',
+        'Do not change the inputs.',
+      ],
+    },
+    example: {
+      input:
+        'buildContext(["src/app.ts", "node_modules/a/index.js", "debug.log", "logs/keep.log", ".env"], ["node_modules", "*.log", "!logs/keep.log", ".env"])',
+      output: '["src/app.ts", "logs/keep.log"]',
+    },
+    note: `Real ignore files also support "?", "*" in the middle of a path, and "**"; this rep uses only the forms above. ${notRun}`,
+    vocabulary: [
+      { term: 'Build context', meaning: 'the files sent to the image builder, which steps can copy from' },
+      { term: 'Ignore file', meaning: 'a list of patterns for files a tool should leave out, such as .dockerignore or .gitignore' },
+    ],
+    planPrompt:
+      'With the lines "*.log" and "!logs/keep.log", which of debug.log and logs/keep.log are kept? What changes if the two lines swap places?',
+    starter: 'function buildContext(files: string[], ignore: string[]): string[] {\n  return files\n}\n',
+    functionName: 'buildContext',
+    preserveInput: true,
+    hints: [
+      'Parse the lines once into {pattern, exception} pairs.',
+      'Write one function that says whether a pattern matches a path, with a branch for each of the three forms.',
+      'Walk the lines in order for each file and remember the decision of the last one that matched.',
+    ],
+    checks: [
+      {
+        name: 'Filters the example',
+        input: [
+          ['src/app.ts', 'node_modules/a/index.js', 'debug.log', 'logs/keep.log', '.env'],
+          ['node_modules', '*.log', '!logs/keep.log', '.env'],
+        ],
+        expected: ['src/app.ts', 'logs/keep.log'],
+      },
+      {
+        name: 'Lets the last matching line decide',
+        input: [
+          ['debug.log', 'logs/keep.log'],
+          ['!logs/keep.log', '*.log'],
+        ],
+        expected: [],
+      },
+      {
+        name: 'Matches *.ext in any folder',
+        input: [['a.log', 'logs/b.log', 'deep/er/c.log', 'log.txt', 'catalog'], ['*.log']],
+        expected: ['log.txt', 'catalog'],
+      },
+      {
+        name: 'Matches a name as a folder but not as a prefix',
+        input: [['build/app.js', 'build', 'builder.ts', 'src/build/x.js'], ['build']],
+        expected: ['builder.ts', 'src/build/x.js'],
+      },
+      {
+        name: 'Matches a folder pattern from the start',
+        input: [['dist/a.js', 'src/dist/b.js', 'dist'], ['dist/']],
+        expected: ['src/dist/b.js', 'dist'],
+      },
+      {
+        name: 'Skips comments and blank lines',
+        input: [
+          ['notes.md', '#notes.md'],
+          ['#notes.md', '', '   '],
+        ],
+        expected: ['notes.md', '#notes.md'],
+      },
+      {
+        name: 'Trims lines',
+        input: [['.env', 'src/a.ts'], ['  .env  ']],
+        expected: ['src/a.ts'],
+      },
+      {
+        name: 'Re-includes a whole folder',
+        input: [
+          ['docs/a.md', 'docs/b.md', 'readme.md'],
+          ['*.md', '!docs/'],
+        ],
+        expected: ['docs/a.md', 'docs/b.md'],
+      },
+      { name: 'Keeps everything with no lines', input: [['a', 'b/c'], []], expected: ['a', 'b/c'] },
+    ],
+  },
+  {
+    id: 'devops-tag-cleanup',
+    title: 'Choose old image tags to delete',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'An image registry fills up with a tag for every build of every branch. A cleanup policy keeps the newest few per branch and deletes the rest, but must never delete an image that is running somewhere or a release someone may need to roll back to.',
+    prompt:
+      "Implement tagsToDelete(tags, keepPerBranch, deployed). tags lists {name, branch, pushedAt}, where pushedAt is a whole number of seconds; deployed lists tag names that are running now. A tag is protected if its name is in deployed or has the form MAJOR.MINOR.PATCH (whole numbers). Protected tags are never deleted and do not use up a branch's allowance. For each branch, keep its keepPerBranch newest unprotected tags (largest pushedAt; on a tie, the one earlier in tags counts as newer) and delete its other unprotected tags. Return the names to delete in the order of tags. Do not change the inputs.",
+    brief: {
+      summary: 'Implement tagsToDelete(tags, keepPerBranch, deployed) and return the names to delete.',
+      rules: [
+        'A tag is protected if its name is in deployed or has the form MAJOR.MINOR.PATCH; protected tags are never deleted.',
+        'Per branch, keep the keepPerBranch newest unprotected tags by pushedAt, the earlier one in tags counting as newer on a tie.',
+        "Delete the branch's other unprotected tags; protected tags do not use up the allowance.",
+        'Return the names to delete in the order of tags.',
+      ],
+      edgeCases: ['keepPerBranch can be 0.', '"1.2" or "v1.2.3" is not of the protected form.', 'Do not change the inputs.'],
+    },
+    example: {
+      input:
+        'tagsToDelete([{name: "main-101", branch: "main", pushedAt: 100}, {name: "main-102", branch: "main", pushedAt: 200}, {name: "main-103", branch: "main", pushedAt: 300}, {name: "1.4.0", branch: "main", pushedAt: 50}], 2, [])',
+      output: '["main-101"]',
+    },
+    note: `There are at most 1,000 tags. Real registries delete images by digest, and two tags can point at the same image. ${notRun}`,
+    vocabulary: [
+      { term: 'Image registry', meaning: 'a server that stores container images and their tags' },
+      { term: 'Retention policy', meaning: 'a rule for how long or how many old items to keep before deleting them' },
+    ],
+    planPrompt:
+      'A branch has five tags and you keep two. One of the old ones is deployed. Which tags are deleted, and does the deployed one change how many others you keep?',
+    starter:
+      'type Tag = { name: string; branch: string; pushedAt: number }\n\nfunction tagsToDelete(tags: Tag[], keepPerBranch: number, deployed: string[]): string[] {\n  return []\n}\n',
+    functionName: 'tagsToDelete',
+    preserveInput: true,
+    hints: [
+      'Decide protection first, then group the unprotected tags by branch.',
+      'Sort each group newest first with a stable sort, so equal times keep their order.',
+      'Everything after the first keepPerBranch in a sorted group is deleted; collect names in a Set and filter tags by it to keep the original order.',
+    ],
+    checks: [
+      {
+        name: 'Deletes the oldest tag in the example',
+        input: [
+          [
+            { name: 'main-101', branch: 'main', pushedAt: 100 },
+            { name: 'main-102', branch: 'main', pushedAt: 200 },
+            { name: 'main-103', branch: 'main', pushedAt: 300 },
+            { name: '1.4.0', branch: 'main', pushedAt: 50 },
+          ],
+          2,
+          [],
+        ],
+        expected: ['main-101'],
+      },
+      {
+        name: 'Never deletes a deployed tag',
+        input: [
+          [
+            { name: 'main-101', branch: 'main', pushedAt: 100 },
+            { name: 'main-102', branch: 'main', pushedAt: 200 },
+            { name: 'main-103', branch: 'main', pushedAt: 300 },
+          ],
+          1,
+          ['main-101'],
+        ],
+        expected: ['main-102'],
+      },
+      {
+        name: 'Keeps the allowance for unprotected tags',
+        input: [
+          [
+            { name: 'a-1', branch: 'a', pushedAt: 10 },
+            { name: 'a-2', branch: 'a', pushedAt: 20 },
+            { name: 'a-3', branch: 'a', pushedAt: 30 },
+          ],
+          2,
+          ['a-3'],
+        ],
+        expected: [],
+      },
+      {
+        name: 'Counts branches separately',
+        input: [
+          [
+            { name: 'x-1', branch: 'x', pushedAt: 10 },
+            { name: 'y-1', branch: 'y', pushedAt: 15 },
+            { name: 'x-2', branch: 'x', pushedAt: 20 },
+            { name: 'y-2', branch: 'y', pushedAt: 25 },
+          ],
+          1,
+          [],
+        ],
+        expected: ['x-1', 'y-1'],
+      },
+      {
+        name: 'Uses push time, not list order',
+        input: [
+          [
+            { name: 'new', branch: 'b', pushedAt: 900 },
+            { name: 'old', branch: 'b', pushedAt: 100 },
+            { name: 'mid', branch: 'b', pushedAt: 500 },
+          ],
+          1,
+          [],
+        ],
+        expected: ['old', 'mid'],
+      },
+      {
+        name: 'Treats the earlier tag as newer on a tie',
+        input: [
+          [
+            { name: 'first', branch: 'b', pushedAt: 100 },
+            { name: 'second', branch: 'b', pushedAt: 100 },
+          ],
+          1,
+          [],
+        ],
+        expected: ['second'],
+      },
+      {
+        name: 'Protects only the exact version form',
+        input: [
+          [
+            { name: '2.0.0', branch: 'main', pushedAt: 1 },
+            { name: 'v2.0.1', branch: 'main', pushedAt: 2 },
+            { name: '2.1', branch: 'main', pushedAt: 3 },
+          ],
+          0,
+          [],
+        ],
+        expected: ['v2.0.1', '2.1'],
+      },
+      { name: 'Handles no tags', input: [[], 3, []], expected: [] },
+    ],
+  },
+  {
+    id: 'devops-multistage-rebuild',
+    title: 'Predict rebuilds in a multi-stage build',
+    category: 'DevOps',
+    format: 'devops',
+    context:
+      'A multi-stage build uses one stage to install tools and compile, and a small final stage that copies only the compiled output. A change can rebuild some stages and leave others cached, and a stage that copies from another stage rebuilds whenever that stage produced something new.',
+    prompt:
+      'Implement stageRebuilds(stages, changed). stages lists {name, from, steps} in order; from is an image name or the name of an earlier stage. Each step is {copies, fromStage?}: copies lists sources, taken from the build folder, or from the earlier stage named by fromStage when it is given. changed lists changed file paths in the build folder; the stage and step lists are unchanged. Within a stage, a step is "rebuilt" if an earlier step in the same stage was rebuilt, if the stage starts from an earlier stage that changed, if it copies from a stage that changed, or if it copies from the build folder and one of its sources matches a changed file: "." matches every file, a source ending with "/" matches paths that start with it, and any other source matches only that exact path. Otherwise it is "cached". A stage changed if any of its steps was rebuilt, or if it starts from an earlier stage that changed. Return an object mapping each stage name to its list of step statuses. Do not change the inputs.',
+    brief: {
+      summary: "Implement stageRebuilds(stages, changed) and return each stage's step statuses.",
+      rules: [
+        'A step is "rebuilt" after an earlier rebuilt step in its stage, when its stage starts from a changed stage, when it copies from a changed stage, or when a source it copies from the build folder matches a changed file.',
+        '"." matches every file; a source ending with "/" matches paths that start with it; others match only that exact path.',
+        'A stage changed if any of its steps was rebuilt, or if it starts from a stage that changed.',
+        'Return {stageName: statuses} for every stage.',
+      ],
+      edgeCases: [
+        'A stage that starts from an image name is not affected by that image here.',
+        'A stage with no steps still changes when its starting stage changed.',
+        'Do not change the inputs.',
+      ],
+    },
+    example: {
+      input:
+        'stageRebuilds([{name: "deps", from: "node:24", steps: [{copies: ["package-lock.json"]}, {copies: []}]}, {name: "build", from: "deps", steps: [{copies: ["src/"]}, {copies: []}]}, {name: "final", from: "nginx:1.27", steps: [{copies: ["dist/"], fromStage: "build"}]}], ["src/app.ts"])',
+      output: '{deps: ["cached", "cached"], build: ["rebuilt", "rebuilt"], final: ["rebuilt"]}',
+    },
+    note: `Stage names are unique and every stage named in from or fromStage comes earlier. A real builder may skip stages the final image never uses; this rep works out every stage. ${notRun}`,
+    vocabulary: [
+      {
+        term: 'Multi-stage build',
+        meaning: 'an image build with several stages, where later stages copy only what they need from earlier ones',
+      },
+      { term: 'Build stage', meaning: 'one named part of a multi-stage build, starting from an image or an earlier stage' },
+    ],
+    planPrompt: 'In the example, what rebuilds when only package-lock.json changes, and what when only README.md changes?',
+    starter:
+      'type Step = { copies: string[]; fromStage?: string }\ntype Stage = { name: string; from: string; steps: Step[] }\n\nfunction stageRebuilds(stages: Stage[], changed: string[]): Record<string, string[]> {\n  return {}\n}\n',
+    functionName: 'stageRebuilds',
+    preserveInput: true,
+    hints: [
+      'Keep a Set of the names of stages that changed; stages come in order, so earlier answers are ready when you need them.',
+      'Inside a stage, start rebuilding as soon as any reason applies, and keep rebuilding to the end of the stage.',
+      'A source copied from another stage depends on that stage, not on changed files.',
+    ],
+    checks: [
+      {
+        name: 'Rebuilds from the source change in the example',
+        input: [
+          [
+            { name: 'deps', from: 'node:24', steps: [{ copies: ['package-lock.json'] }, { copies: [] }] },
+            { name: 'build', from: 'deps', steps: [{ copies: ['src/'] }, { copies: [] }] },
+            { name: 'final', from: 'nginx:1.27', steps: [{ copies: ['dist/'], fromStage: 'build' }] },
+          ],
+          ['src/app.ts'],
+        ],
+        expected: { deps: ['cached', 'cached'], build: ['rebuilt', 'rebuilt'], final: ['rebuilt'] },
+      },
+      {
+        name: 'Rebuilds a stage that starts from a changed stage',
+        input: [
+          [
+            { name: 'deps', from: 'node:24', steps: [{ copies: ['package-lock.json'] }, { copies: [] }] },
+            { name: 'build', from: 'deps', steps: [{ copies: ['src/'] }, { copies: [] }] },
+            { name: 'final', from: 'nginx:1.27', steps: [{ copies: ['dist/'], fromStage: 'build' }] },
+          ],
+          ['package-lock.json'],
+        ],
+        expected: { deps: ['rebuilt', 'rebuilt'], build: ['rebuilt', 'rebuilt'], final: ['rebuilt'] },
+      },
+      {
+        name: 'Keeps every stage cached for a file nothing copies',
+        input: [
+          [
+            { name: 'deps', from: 'node:24', steps: [{ copies: ['package-lock.json'] }, { copies: [] }] },
+            { name: 'build', from: 'deps', steps: [{ copies: ['src/'] }, { copies: [] }] },
+            { name: 'final', from: 'nginx:1.27', steps: [{ copies: ['dist/'], fromStage: 'build' }] },
+          ],
+          ['README.md'],
+        ],
+        expected: { deps: ['cached', 'cached'], build: ['cached', 'cached'], final: ['cached'] },
+      },
+      {
+        name: 'Ignores changed files for a copy from a stage',
+        input: [
+          [
+            { name: 'build', from: 'node:24', steps: [{ copies: ['src/'] }] },
+            { name: 'final', from: 'nginx:1.27', steps: [{ copies: ['dist/'], fromStage: 'build' }] },
+          ],
+          ['dist/old.js'],
+        ],
+        expected: { build: ['cached'], final: ['cached'] },
+      },
+      {
+        name: 'Rebuilds only from the step that copies the change',
+        input: [
+          [
+            {
+              name: 'app',
+              from: 'node:24',
+              steps: [{ copies: [] }, { copies: ['package.json'] }, { copies: ['src/'] }, { copies: [] }],
+            },
+          ],
+          ['src/index.ts'],
+        ],
+        expected: { app: ['cached', 'cached', 'rebuilt', 'rebuilt'] },
+      },
+      {
+        name: 'Passes a change through a stage with no steps',
+        input: [
+          [
+            { name: 'base', from: 'node:24', steps: [{ copies: ['.'] }] },
+            { name: 'alias', from: 'base', steps: [] },
+            { name: 'final', from: 'node:24', steps: [{ copies: [] }, { copies: ['out/'], fromStage: 'alias' }] },
+          ],
+          ['anything.txt'],
+        ],
+        expected: { base: ['rebuilt'], alias: [], final: ['cached', 'rebuilt'] },
+      },
+      {
+        name: 'Keeps a stage cached when the stage it copies from did not change',
+        input: [
+          [
+            { name: 'docs', from: 'python:3.13', steps: [{ copies: ['docs/'] }] },
+            { name: 'api', from: 'node:24', steps: [{ copies: ['api/'] }] },
+            {
+              name: 'final',
+              from: 'nginx:1.27',
+              steps: [
+                { copies: ['site/'], fromStage: 'docs' },
+                { copies: ['bin/'], fromStage: 'api' },
+              ],
+            },
+          ],
+          ['api/server.ts'],
+        ],
+        expected: { docs: ['cached'], api: ['rebuilt'], final: ['cached', 'rebuilt'] },
+      },
+    ],
+  },
 ]

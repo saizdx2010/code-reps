@@ -374,6 +374,11 @@ export const repLevels: Record<string, RepLevel> = {
   'devops-cache-restore': 2,
   'devops-pipeline-duration': 3,
   'devops-skip-unchanged': 3,
+  'devops-layer-rebuild': 2,
+  'devops-image-tags': 2,
+  'devops-dockerignore': 2,
+  'devops-tag-cleanup': 2,
+  'devops-multistage-rebuild': 3,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

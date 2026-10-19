@@ -553,6 +553,16 @@ export const indonesianGlossary: Record<string, string> = {
   'Parallel jobs': 'job yang berjalan bersamaan karena tidak saling membutuhkan',
   'Path filter': 'daftar file atau folder yang dibaca sebuah job, dipakai untuk memutuskan apakah perubahan memengaruhinya',
   Monorepo: 'satu repositori yang berisi beberapa proyek atau layanan',
+  'Image layer': 'hasil tersimpan dari satu langkah build, dipakai lagi oleh build berikutnya bila masukannya tidak berubah',
+  'Build cache': 'layer tersimpan yang dipakai lagi oleh pembuat image daripada menjalankan ulang langkahnya',
+  'Image tag': 'nama yang ditempelkan pada image container, seperti 1.4.2 atau latest, untuk memilih image yang dijalankan',
+  'Commit SHA': 'ID unik sebuah commit, ditulis dalam heksadesimal',
+  'Build context': 'file yang dikirim ke pembuat image, tempat langkah-langkah bisa menyalin',
+  'Ignore file': 'daftar pola file yang harus dilewati sebuah alat, seperti .dockerignore atau .gitignore',
+  'Image registry': 'server yang menyimpan image container beserta tag-nya',
+  'Retention policy': 'aturan berapa lama atau berapa banyak item lama disimpan sebelum dihapus',
+  'Multi-stage build': 'build image dengan beberapa tahap, di mana tahap selanjutnya hanya menyalin yang diperlukan dari tahap sebelumnya',
+  'Build stage': 'satu bagian bernama dalam build multi-tahap, dimulai dari sebuah image atau tahap sebelumnya',
 }
 
 /** Shown with the glossary when Indonesian help is on. */

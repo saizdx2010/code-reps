@@ -385,5 +385,10 @@ export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
         "Order jobs into waves by what they need and catch loops, build cache keys from the files that matter, pick a fallback cache, find a pipeline's critical path, and skip jobs a change cannot affect.",
       recap: 'You can now plan a pipeline: what runs when, what can be reused, and what can be skipped.',
     },
+    'Build container images': {
+      description:
+        'Predict which image layers a change rebuilds, tag images from branches and releases, leave ignored files out of the build, clean up old tags safely, and follow a change through a multi-stage build.',
+      recap: 'You can now predict what an image build reuses and rebuilds, and tag and clean up images safely.',
+    },
   },
 }
