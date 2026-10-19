@@ -40,7 +40,7 @@ export type Rep = {
   id: string
   title: string
   category: string
-  format?: 'debug' | 'read' | 'transform' | 'frontend' | 'backend' | 'refactor' | 'sql'
+  format?: 'debug' | 'read' | 'transform' | 'frontend' | 'backend' | 'refactor' | 'sql' | 'devops'
   context?: string
   acceptanceCriteria?: string[]
   prompt: string

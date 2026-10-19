@@ -52,4 +52,12 @@ export const pathIntroductions: Record<PathId, PathIntroduction> = {
       'FROM names the table to read. WHERE keeps only the rows that match. SELECT chooses the columns, and ORDER BY sorts the result.',
     next: 'Start by choosing columns from one table. A failed check shows your rows beside the expected rows, so run early and compare.',
   },
+  devops: {
+    title: 'From a passing check to a running service',
+    body: 'DevOps is the work of building, shipping, and running software reliably. CI runs your checks on every change, a deploy moves a new version into service, and monitoring tells you whether it is healthy. Every rep here is a TypeScript function that applies an authored policy, such as what an exit code means; the checks call it with authored inputs and never run a shell, Docker, CI, or a real network. Backend first helps, because later stages ship and watch a service.',
+    example: "$ npm test\nError: Cannot find module './tax'\n$ echo $?\n1",
+    explanation:
+      'A command reports how it ended through its exit code: 0 for success and anything else for failure. CI stops a job at the first failing step, so the cause is usually the first error in that step, not the last line.',
+    next: 'Start by reading exit codes and finding the first real error in a log. Each later stage takes one part of shipping and running a service.',
+  },
 }

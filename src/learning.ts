@@ -443,6 +443,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'ci-output',
+    title: 'Read what CI is telling you',
+    guided: 'devops-exit-meaning',
+    independent: 'devops-first-error',
+    recall: 'devops-failing-step',
+    practice: ['devops-step-outcomes', 'devops-error-annotations'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

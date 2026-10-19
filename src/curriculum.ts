@@ -33,11 +33,11 @@ type PathId = (typeof paths)[number]['id']
 /** Foundations is the shared root; every other track builds on it. Paths keep their own rep lists for badges and goals. */
 export const foundationsPathId: PathId = 'typescript'
 export const trackGroups: { title: string; pathIds: PathId[] }[] = [
-  { title: 'Choose a track', pathIds: ['algorithms-data-structures', 'pattern-recognition', 'frontend', 'sql', 'backend'] },
+  { title: 'Choose a track', pathIds: ['algorithms-data-structures', 'pattern-recognition', 'frontend', 'sql', 'backend', 'devops'] },
 ]
 
 /** The track each one builds on, as reading guidance on the track picker. Nothing is locked, dimmed, or reordered by it. */
-export const trackBuildsOn: Partial<Record<PathId, PathId>> = { sql: foundationsPathId, backend: 'sql' }
+export const trackBuildsOn: Partial<Record<PathId, PathId>> = { sql: foundationsPathId, backend: 'sql', devops: 'backend' }
 
 const repsOf = (pathId: PathId) => new Set<string>(paths.find(path => path.id === pathId)!.stages.flatMap(stage => stage.repIds))
 const foundationsRepIds = repsOf(foundationsPathId)

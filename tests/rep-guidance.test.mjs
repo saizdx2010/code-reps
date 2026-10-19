@@ -88,7 +88,7 @@ function trackOf(id) {
 const trackReps = path => path.stages.flatMap(stage => [...stage.repIds])
 
 test('a track opens with a Beginner bridge rep', () => {
-  for (const id of ['frontend', 'backend']) {
+  for (const id of ['frontend', 'backend', 'devops']) {
     const first = trackReps(trackOf(id))[0]
     assert.equal(repLevel(first), 1, `${id} should open at Beginner`)
   }
@@ -98,6 +98,7 @@ test('an Intermediate track rep raises a non-blocking checkpoint until a Beginne
   for (const [trackId, bridge] of [
     ['frontend', 'frontend-screen-message'],
     ['backend', 'backend-split-target'],
+    ['devops', 'devops-exit-meaning'],
   ]) {
     const target = trackReps(trackOf(trackId)).find(id => repLevel(id) === 2)
     const beginnerElsewhere = reps.map(rep => rep.id).find(id => repLevel(id) === 1 && !trackReps(trackOf(trackId)).includes(id))

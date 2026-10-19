@@ -2,6 +2,7 @@ import { reactSolutions } from './fixtures/react-solution.mjs'
 import { sqliteSolution, sqliteCustomerTotalsSolution, sqliteRestockSolution } from './fixtures/sqlite-solution.mjs'
 import { sqlSolutions } from './fixtures/sql-solutions.mjs'
 import { backendSolutions } from './fixtures/backend-solutions.mjs'
+import { devopsSolutions } from './fixtures/devops-solutions.mjs'
 import initSqlJs from 'sql.js'
 import { typescriptDepthSolutions } from './fixtures/typescript-depth-solutions.mjs'
 import { recallThinSolutions } from './fixtures/recall-thin-solutions.mjs'
@@ -43,6 +44,7 @@ const solutions = {
   'sqlite-restock-upsert': sqliteRestockSolution,
   ...sqlSolutions,
   ...backendSolutions,
+  ...devopsSolutions,
   ...typescriptDepthSolutions,
   ...recallThinSolutions,
   ...journeyPracticeSolutions,

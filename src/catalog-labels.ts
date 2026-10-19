@@ -9,6 +9,7 @@ export const formatLabels: Record<string, string> = {
   frontend: 'Frontend',
   backend: 'Backend',
   sql: 'SQL',
+  devops: 'DevOps',
   refactor: 'Improving code',
 }
 
@@ -60,6 +61,7 @@ const practicalTopics: Record<string, string> = {
 const problemStages = paths.find(path => path.id === 'algorithms-data-structures')!.stages
 const sqlStages = paths.find(path => path.id === 'sql')!.stages
 const backendStages = paths.find(path => path.id === 'backend')!.stages
+const devopsStages = paths.find(path => path.id === 'devops')!.stages
 // Backend stages whose reps use the 'Backend services' category; each stage title is its Library topic.
 const backendServiceTopics = [
   'What a request is',
@@ -84,6 +86,7 @@ export function catalogTopic(rep: Pick<RepSummary, 'id' | 'category'>): string {
     return sqlStages.find(stage => (stage.repIds as readonly string[]).includes(rep.id))?.title ?? 'SQL'
   if (rep.category === 'Backend services')
     return backendStages.find(stage => (stage.repIds as readonly string[]).includes(rep.id))?.title ?? 'Requests and validation'
+  if (rep.category === 'DevOps') return devopsStages.find(stage => (stage.repIds as readonly string[]).includes(rep.id))?.title ?? 'DevOps'
   if (rep.category.startsWith('Algorithm ') || rep.category === 'Problem-solving patterns') {
     return problemStages.find(stage => (stage.repIds as readonly string[]).includes(rep.id))?.title ?? 'Problem solving'
   }
@@ -132,6 +135,7 @@ export const catalogAreas: { title: string; topics: string[] }[] = [
   { title: 'Frontend', topics: ['Interface logic', 'Accessible interactions', 'Building a browser feature', 'Frontend projects'] },
   { title: 'Backend & data', topics: ['Requests and validation', ...backendServiceTopics, 'Backend projects'] },
   { title: 'Databases & SQL', topics: sqlStages.map(stage => stage.title) },
+  { title: 'DevOps', topics: devopsStages.map(stage => stage.title) },
   { title: 'Async & runtime', topics: ['Async and timing'] },
   { title: 'Patterns & resources', topics: ['Shared resources and events'] },
   {

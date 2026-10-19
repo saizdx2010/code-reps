@@ -26,7 +26,7 @@ const effortBands: Record<RepLevel, readonly [string, string, string, string]> =
   3: ['30–45 minutes', '40–60 minutes', '50–75 minutes', '60–90 minutes'],
 }
 const effortLoadLimits = [100, 150, 300] as const
-const longerFormats = new Set(['frontend', 'backend', 'refactor'])
+const longerFormats = new Set(['frontend', 'backend', 'refactor', 'devops'])
 
 /** Reading and checking load: words in the brief plus eight per check. */
 export function effortLoad(entry: { briefWords: number; checkTotal: number }): number {

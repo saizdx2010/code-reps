@@ -12,6 +12,7 @@ export const trackDescriptions: Record<PathId, string> = {
   frontend: 'Decide what a screen shows, keep async results current, and manage live connections.',
   sql: 'Query a real SQLite database: filter, summarize, join, design tables, and change data safely.',
   backend: 'Turn a raw request into a trustworthy result: route, validate, authorize, store, queue, and limit.',
+  devops: 'Read CI output, ship with rollouts and health checks, and keep a service observable.',
 }
 
 export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
@@ -361,6 +362,13 @@ export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
     'Interview round': {
       description: 'Clarify, validate, and explain a backend interview task.',
       recap: 'You can now clarify, validate, and explain a backend interview task.',
+    },
+  },
+  devops: {
+    'Read CI output': {
+      description:
+        'Read an exit code, find the first real error in a noisy log, decide which steps ran after a failure, turn compiler errors into annotations, and name the step that failed a job.',
+      recap: 'You can now read CI output: what an exit code means and which line explains a failure.',
     },
   },
 }

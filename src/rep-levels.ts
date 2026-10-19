@@ -354,6 +354,11 @@ export const repLevels: Record<string, RepLevel> = {
   'backend-deprecation-headers': 2,
   'backend-webhook-deliveries': 2,
   'backend-downgrade-response': 3,
+  'devops-exit-meaning': 1,
+  'devops-first-error': 2,
+  'devops-step-outcomes': 2,
+  'devops-error-annotations': 2,
+  'devops-failing-step': 2,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

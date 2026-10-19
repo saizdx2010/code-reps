@@ -89,12 +89,12 @@ const previouslyPlaced = [
 test('the trail is Foundations plus its tracks', () => {
   assert.deepEqual(
     paths.map(path => path.id),
-    ['typescript', 'algorithms-data-structures', 'pattern-recognition', 'frontend', 'sql', 'backend'],
+    ['typescript', 'algorithms-data-structures', 'pattern-recognition', 'frontend', 'sql', 'backend', 'devops'],
   )
   assert.equal(foundationsPathId, 'typescript')
   assert.deepEqual(
     trackGroups.flatMap(group => group.pathIds),
-    ['algorithms-data-structures', 'pattern-recognition', 'frontend', 'sql', 'backend'],
+    ['algorithms-data-structures', 'pattern-recognition', 'frontend', 'sql', 'backend', 'devops'],
   )
 })
 

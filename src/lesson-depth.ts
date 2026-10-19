@@ -4,6 +4,7 @@ import { dsaLessonDepth } from './review-dsa-lessons.ts'
 import { practicalLessonDepth } from './review-practical-lessons.ts'
 import { sqlLessonDepth } from './review-sql.ts'
 import { backendLessonDepth } from './review-backend.ts'
+import { devopsLessonDepth } from './review-devops.ts'
 export type LessonDepth = { title: string; code: string; reasoning: string; challenge: string; answer: string }
 
 export const lessonDepth: Record<string, LessonDepth> = {
@@ -13,6 +14,7 @@ export const lessonDepth: Record<string, LessonDepth> = {
   ...dsaLessonDepth,
   ...sqlLessonDepth,
   ...backendLessonDepth,
+  ...devopsLessonDepth,
   values: {
     title: 'A binding and an object can change independently',
     code: 'const first = { score: 1 };\nconst second = first;\nsecond.score = 2;\n// first.score is now 2.',

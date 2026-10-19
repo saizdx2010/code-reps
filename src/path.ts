@@ -501,6 +501,16 @@ export const paths = [
       },
     ] satisfies readonly PathStage[],
   },
+  {
+    id: 'devops',
+    title: 'DevOps',
+    stages: [
+      {
+        title: 'Read CI output',
+        repIds: ['devops-exit-meaning', 'devops-first-error', 'devops-step-outcomes', 'devops-error-annotations', 'devops-failing-step'],
+      },
+    ] satisfies readonly PathStage[],
+  },
 ] as const
 
 /** Paths that were merged into the current Foundations and tracks. Saved goals that name one still need a home. */

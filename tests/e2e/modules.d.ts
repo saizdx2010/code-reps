@@ -2,6 +2,9 @@
 declare module '*/fixtures/connected-feature-solutions.mjs' {
   export const connectedSolutions: Record<string, string>[]
 }
+declare module '*/fixtures/devops-solutions.mjs' {
+  export const devopsSolutions: Record<string, string>
+}
 declare module '*/fixtures/dom-solutions.mjs' {
   export const domSolutions: Record<string, string>
 }

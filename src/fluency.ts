@@ -250,6 +250,7 @@ export const recallVariants: Record<string, string[]> = {
   'background-jobs': ['backend-queue-simulation', 'backend-claim-job', 'backend-job-failure'],
   'rate-limiting': ['backend-limit-callers', 'backend-sliding-log', 'backend-token-bucket'],
   'api-evolution': ['backend-downgrade-response', 'backend-classify-change', 'backend-choose-version'],
+  'ci-output': ['devops-failing-step', 'devops-first-error', 'devops-exit-meaning'],
 }
 export function recurringReviews(history: PortableRecord[], now = Date.now()) {
   return getAllJourneys(history, now).flatMap(state => {

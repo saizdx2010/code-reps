@@ -3,6 +3,7 @@ import { asyncRuntimeReps } from './async-runtime-reps.ts'
 import { sqliteReps } from './sqlite-reps.ts'
 import { sqlReps } from './sql-reps.ts'
 import { backendServiceReps } from './backend-service-reps.ts'
+import { devopsReps } from './devops-reps.ts'
 // Node-only: tests, scripts, and the practice worker see every rep synchronously through this list.
 // The app never imports it; it loads one source at a time through src/rep-content.ts.
 // This is the one list of rep sources, and its order is the catalog order. After adding a rep module here, run
@@ -78,4 +79,5 @@ export const repSources: { name: string; reps: Rep[]; lessons?: readonly RepLess
   { name: 'practical-journey-reps', reps: practicalJourneyReps },
   { name: 'sql-reps', reps: sqlReps },
   { name: 'backend-service-reps', reps: backendServiceReps },
+  { name: 'devops-reps', reps: devopsReps },
 ]

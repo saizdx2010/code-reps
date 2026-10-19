@@ -4,6 +4,7 @@ import { dsaSkills } from './dsa-knowledge.ts'
 import { practicalSkills } from './practical-knowledge.ts'
 import { sqlSkills } from './sql-knowledge.ts'
 import { backendSkills } from './backend-knowledge.ts'
+import { devopsSkills } from './devops-knowledge.ts'
 import { q } from './knowledge-question.ts'
 export type Question = {
   completion?: boolean
@@ -958,6 +959,7 @@ export const skills: Skill[] = [
   ...dsaSkills,
   ...sqlSkills,
   ...backendSkills,
+  ...devopsSkills,
 ]
 export const skillById = (id: string) => skills.find(skill => skill.id === id)
 export const contentVersion = 7
@@ -1019,6 +1021,7 @@ export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[
       'databases',
     ],
   },
+  { id: 'devops', title: 'DevOps', skillIds: ['ci-output'] },
   {
     id: 'async',
     title: 'Async & runtime',
