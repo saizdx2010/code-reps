@@ -407,6 +407,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'authorization',
+    title: 'Decide who may act on a record',
+    guided: 'backend-role-permission',
+    independent: 'backend-owner-access',
+    recall: 'backend-loan-access',
+    practice: ['backend-session-state', 'backend-visible-notes'],
+    delayDays: 3,
+  },
+  {
     id: 'concurrent-writes',
     title: 'Keep concurrent edits from being lost',
     guided: 'backend-versioned-update',
@@ -439,7 +448,7 @@ export const journeys: Journey[] = [
     guided: 'backend-choose-version',
     independent: 'backend-classify-change',
     recall: 'backend-downgrade-response',
-    practice: ['backend-deprecation-headers', 'backend-webhook-deliveries'],
+    practice: ['backend-deprecation-headers', 'backend-webhook-deliveries', 'backend-verify-signature'],
     delayDays: 3,
   },
   {

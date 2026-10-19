@@ -5,6 +5,7 @@ import { stageLabels } from './learning.ts'
 import { repLevelLabel, stageLevelRange } from './rep-levels.ts'
 import type { StageText } from './path-text'
 import type { TrailNode, TrailStage } from './trail-map'
+import { openExternalProject } from './ui-navigation'
 
 type Props = {
   stages: TrailStage[]
@@ -31,7 +32,7 @@ const markerIcon = (node: TrailNode) =>
     ? 'check'
     : node.kind === 'lesson'
       ? 'book'
-      : node.kind === 'project'
+      : node.kind === 'project' || node.kind === 'external'
         ? 'flag'
         : node.role === 'Recall'
           ? 'repeat'
@@ -44,7 +45,8 @@ const stageSummary = (stage: Stage, text?: StageText) =>
     : stage.coveredBy
       ? `Covered in ${stage.coveredBy.title}. Open it to revisit these reps here.`
       : (text?.description ?? stage.description)
-const levelRange = (stage: TrailStage) => stageLevelRange(stage.nodes.flatMap(node => (node.kind === 'lesson' ? [] : [node.repId])))
+const levelRange = (stage: TrailStage) =>
+  stageLevelRange(stage.nodes.flatMap(node => (node.kind === 'rep' || node.kind === 'project' ? [node.repId] : [])))
 
 /** A path drawn as stages of connected nodes: lessons before the reps that use them, then recall and projects. */
 export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenTrack, text }: Props) {
@@ -57,7 +59,7 @@ export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenTrack, 
             open={
               stage.current ||
               (index === 0 && !stage.covered && stage.done < stage.total) ||
-              stage.nodes.every(node => node.kind === 'project')
+              stage.nodes.every(node => node.kind === 'project' || node.kind === 'external')
             }
           >
             <summary className="path-stage-heading">
@@ -69,9 +71,7 @@ export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenTrack, 
                 {stageSummary(stage, text?.[stage.title]) && <p>{stageSummary(stage, text?.[stage.title])}</p>}
                 {levelRange(stage) && <StatusChip>{levelRange(stage)}</StatusChip>}
               </div>
-              <span className="trail-stage-count">
-                {stage.done}/{stage.total}
-              </span>
+              <span className="trail-stage-count">{stage.total ? `${stage.done}/${stage.total}` : 'Self-review'}</span>
             </summary>
             {stage.coveredBy && onOpenTrack && (
               <button type="button" className="text-button trail-covered" onClick={() => onOpenTrack(stage.coveredBy!.id)}>
@@ -98,6 +98,15 @@ export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenTrack, 
                       <small>{node.reason}</small>
                       <button type="button" className="text-button" onClick={() => onOpenRep(node.repId)}>
                         Open project milestone
+                      </button>
+                    </div>
+                  ) : node.kind === 'external' ? (
+                    <div className="trail-project">
+                      <span className="trail-node-title">{node.title}</span>
+                      <small>External project · Self-review</small>
+                      <small>{node.reason}</small>
+                      <button type="button" className="text-button" onClick={() => openExternalProject(node.projectId)}>
+                        Open project brief
                       </button>
                     </div>
                   ) : (

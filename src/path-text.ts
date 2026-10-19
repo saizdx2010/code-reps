@@ -311,6 +311,12 @@ export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
         'Run real SQLite from TypeScript: undo a failed stock transfer, total orders per customer with a join, and restock inventory all or nothing. These reps live in the SQL track.',
       recap: 'You can now write joins and aggregates and keep multi-statement changes atomic.',
     },
+    'Decide who may act': {
+      description:
+        'Decide whether a session still counts, check what a role allows, and let members reach only their own records, in a single note or in a list.',
+      recap:
+        'You can now refuse a request with the right status: 401 without a session, 403 without permission, and 404 for records that are not yours.',
+    },
     'Handle concurrent writes': {
       description:
         'See how two saves based on the same read lose a change, then refuse stale writes with version numbers, If-Match tags, and compare-and-set.',
@@ -333,7 +339,7 @@ export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
     },
     'Evolve an API': {
       description:
-        'Choose a response version, tell compatible changes from breaking ones, announce a deprecation and a sunset, apply webhook deliveries once and in order, and answer clients pinned to older versions.',
+        'Choose a response version, tell compatible changes from breaking ones, announce a deprecation and a sunset, verify a webhook signature, apply deliveries once and in order, and answer clients pinned to older versions.',
       recap: 'You can now change an API while the clients built against it keep working.',
     },
     'Read and improve code': {

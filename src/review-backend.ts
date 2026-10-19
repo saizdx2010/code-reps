@@ -124,6 +124,66 @@ export const backendDepth: Record<string, RepDepth> = {
     transfer:
       'Add typed parameters such as /orders/:id(number) that match only digits. Decide where a typed parameter ranks between a plain parameter and a literal, and how /orders/new routes. This changed contract is self-reviewed, not checked by the original cases.',
   },
+  'backend-session-state': {
+    reasoning:
+      'A session can stop counting for three different reasons, and each one is measured from a different moment: revocation is a flag, the absolute lifetime runs from sign-in, and the idle timeout runs from the last use. Checking them in a fixed order makes the reason deterministic when several apply, and taking now as an argument keeps the decision a pure function that a test can drive to the exact millisecond of each limit.',
+    trace:
+      'For a session created at 0 and last used at 7000000: at 8000000 it is 8000000 ms old and 1000000 ms idle, both under their limits, so the answer is 200. At 8800000 it has been idle for exactly 1800000 ms, so the answer is 401 "idle". At 28800000 it is exactly 8 hours old, and "expired" is checked before "idle", so that is the reason.',
+    alternative:
+      'Storing an expiresAt time on the record and sliding it forward on every use folds both limits into one comparison, but then the absolute lifetime needs its own stored value, or an always-active session never ends. Keeping createdAt and lastSeenAt separate makes both rules visible in one place.',
+    counterexample:
+      'Measuring the 8-hour limit from lastSeenAt lets an active session last forever: "Measures the 8-hour limit from sign-in" refuses it. Comparing with > instead of >= lets a session through at exactly 30 minutes idle, which "Ends a session idle for exactly 30 minutes" catches.',
+    transfer:
+      'Add "remember me" sessions that may last 30 days but must be used at least once a week. Decide which fields the record needs and how the answer changes for a session that was revoked after its owner changed their password. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-role-permission': {
+    reasoning:
+      'The function answers two separate questions. Without a user there is nobody to authorize, so the answer is 401 before the table is consulted. With a user, the safe default is 403, and only a grant found in one of their roles changes it to 200. A wildcard is a prefix that ends at the colon, so it covers the verbs of exactly one resource and cannot leak onto a resource whose name merely starts the same way.',
+    trace:
+      'For a user with roles ["viewer", "tagger"] asking for "tags:edit": viewer grants "notes:read", which is neither equal to the action nor a wildcard. tagger grants "tags:edit", which equals it, so the answer is 200. For an editor with "notes:*" asking for "notes-archive:read", the wildcard covers actions starting with "notes:", and "notes-archive:read" does not, so the answer is 403.',
+    alternative:
+      'Expanding every role into a Set of allowed actions once, at startup, turns each request into a single lookup, but wildcards then need their own set of resources. Checking grants per request is simpler for a small table and keeps the wildcard rule in one line.',
+    counterexample:
+      'Testing a wildcard with action.startsWith("notes") instead of "notes:" lets "notes-archive:read" through, which "Keeps a wildcard to its own resource" refuses. Returning 403 for a missing user hides the difference between "sign in" and "not allowed", which "Answers 401 without a session" catches.',
+    transfer:
+      'Add explicit deny entries, such as "notes:delete" listed under a "restricted" role, that win over any grant. Decide the order in which grants and denies are checked and what a user with both editor and restricted roles gets. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-owner-access': {
+    reasoning:
+      'Roles say what kinds of actions a user may take, but not which records. The owner check comes first so that ownership always wins, even for an admin who wrote the note. Sharing grants reading only, so a shared member gets 403 for changes: they already know the note exists. Everyone else gets 404, the same answer as a missing note, so the response does not reveal that a note with this ID exists.',
+    trace:
+      'For note n1 owned by m1 and shared with m2: m1 deleting matches the owner rule, so 200. Admin a1 editing is not the owner, and admins may only read and delete, so 403. m2 reading is listed in sharedWith, so 200; m2 editing gets 403. m3 reading matches none of the rules, so 404.',
+    alternative:
+      'Loading only the notes the user may reach, for example with WHERE id = ? AND (owner_id = ? OR ...), makes a forbidden note and a missing note the same empty result automatically. That removes the separate 404 branch, but sharing still needs a join, and the read-only rule for shared members still needs a check after loading.',
+    counterexample:
+      'Checking the admin rule before the owner rule refuses an admin who edits their own note, which "Treats an admin who owns the note as its owner" catches. Answering 403 to an unrelated member confirms the note exists, which "Hides the note from other members" refuses.',
+    transfer:
+      'Let an owner share a note for editing as well as reading, with the sharing list naming the level for each member. Decide what a shared editor may delete and what an admin sees in the response. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-visible-notes': {
+    reasoning:
+      'A list endpoint is the same access decision applied to many records, so it must use the same rule as opening one. Filtering before counting matters as much as filtering the IDs: a total of 12 when a member can see 3 tells them 9 notes exist that they cannot open. Keeping the given order leaves sorting to whoever produced the list.',
+    trace:
+      'For member m2 and notes n1 (m1, shared with m2), n2 (m1), n3 (m2): n1 is visible because sharedWith includes m2, n2 is not, and n3 is visible because m2 owns it. The answer is {ids: ["n1", "n3"], total: 2}. For an admin every note passes, so the total equals the length of the list.',
+    alternative:
+      'A database query can filter with WHERE owner_id = ? OR id IN (shared rows) and count with the same WHERE clause, which also keeps paging correct. Filtering an array in code is fine for a list already loaded, but it would page and count the wrong rows if it ran after LIMIT.',
+    counterexample:
+      'Returning total: notes.length reports hidden notes, which "Counts only the visible notes" catches. Matching sharedWith with includes on a joined string, such as "m10,M1".includes("m1"), finds "m1" inside "m10"; "Matches shared members by exact id" refuses it.',
+    transfer:
+      'Page the visible notes: return at most limit IDs after an offset, plus the total. Decide why filtering has to happen before the offset, and what total means on the last page. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-loan-access': {
+    reasoning:
+      "This combines the stage in a new place. The first decision is who may know the loan exists: its borrower and any librarian; another member gets 404 for any action, like a missing loan. Only then does the action matter: viewing needs nothing more, while renewing follows the rules for the actor's role, with time passed in as now so each boundary can be checked exactly.",
+    trace:
+      'Loan L1 belongs to m1, is due at 5000, and has 2 renewals. m1 viewing at 9000 is allowed. m1 renewing at 6000 is at or after the due time, and overdue is checked before the limit, so the answer is 403 "overdue". A librarian renewing at 6000 ignores the due time and checks only 2 < 3, so 200. m2 renewing gets 404.',
+    alternative:
+      'A table of rules keyed by role and action, each a small function, keeps adding roles cheap and makes the policy readable as data. With two roles and two actions, a few ordered if statements are easier to check against the contract.',
+    counterexample:
+      'Checking the renewal count before the due time tells a member with an overdue loan at the limit "limit" instead of "overdue"; "Reports overdue before the limit" catches it. Answering 403 to another member\'s renewal reveals the loan exists, which "Refuses to renew another member\'s loan as if it did not exist" refuses.',
+    transfer:
+      'Add holds: a loan may not be renewed by anyone when another member has a hold on the book, and the librarian sees who holds it. Decide where the hold check goes in the order and what each actor is told. This changed contract is self-reviewed, not checked by the original cases.',
+  },
   'backend-versioned-update': {
     reasoning:
       'The version is a promise about what the client saw: an update naming version 3 says "I made this change to version 3". If the record has moved on, applying the change would silently replace whatever happened in between, so the only safe answers are to apply it to exactly that version or to refuse it with the current version so the client can look again. Building the new record on a copy keeps the stored one intact whichever way the decision goes.',
@@ -352,6 +412,18 @@ export const backendDepth: Record<string, RepDepth> = {
     transfer:
       'Keep the seen delivery IDs only for the last 24 hours, with an arrival time on each delivery. Decide what happens when a retry arrives after an ID has been forgotten, and whether the sequence check still protects you. This changed contract is self-reviewed, not checked by the original cases.',
   },
+  'backend-verify-signature': {
+    reasoning:
+      'The signature answers "did someone with the secret send exactly this?", and the time answers "was it sent just now?". Signing the time together with the body ties them, so an old delivery cannot be given a fresh time. Parsing the header strictly first means an odd header is refused rather than guessed at, checking the time before computing the HMAC skips needless work, and accepting any of several v1 values lets the provider rotate its secret without a gap.',
+    trace:
+      'For header "t=1760000000,v1=b25e…7c8a" and now 1760000100, the pieces give t = "1760000000" and one v1. The gap is 100 seconds, within 300. hmacHex("sample-secret-1", "1760000000." + body) gives b25e…7c8a, equal to the v1, so the answer is {ok: true}. Adding one space inside the body changes the HMAC completely, so the same header gets "mismatch".',
+    alternative:
+      'Node offers crypto.timingSafeEqual and createHmac, which avoid writing the comparison by hand; the Web Crypto API also has crypto.subtle.verify, which compares inside the platform. Writing hmacHex and a small comparison keeps the steps visible and works the same in the browser worker and in Node.',
+    counterexample:
+      'Signing only the body accepts a signature made over the body alone and a delivery whose time was changed, which "Signs the time together with the body" and "Refuses a time changed after signing" catch. Using now - t without Math.abs lets a far-future time through, which "Refuses a time 301 seconds ahead" refuses. Returning early with === is not caught by any check: the checks cannot measure timing, so that part is self-reviewed.',
+    transfer:
+      'Add a store of seen (t, v1) pairs so the same signed delivery is accepted only once, even within the 300 seconds. Decide how long entries must be kept, and why the time window lets the store stay small. This changed contract is self-reviewed, not checked by the original cases.',
+  },
   'backend-downgrade-response': {
     reasoning:
       "Each change was made on top of the previous version, so it can only be undone from the version right after it. Undoing newest first walks the body back one release at a time, and each undo sees exactly the shape that change produced. Changes released on or before the pinned date are part of the client's version and are left alone.",
@@ -506,6 +578,72 @@ export const backendGuides: Record<string, ReflectionGuide> = {
     ],
     example:
       'For each pattern I match the segments before an optional final "*", requiring equal counts without a wildcard and a non-empty rest with one, and capture the parameters and the rest. I keep the best match so far and replace it only when a left-to-right walk finds a position where the new pattern has the higher kind rank. The work is the number of patterns times the path length. The checks pass strings directly, not a live router.',
+  },
+  'backend-session-state': {
+    plan: [
+      'Return 401 "missing" for null and "revoked" when revoked.',
+      'Compare the age from createdAt with 8 hours, then the idle time from lastSeenAt with 30 minutes.',
+      'Otherwise return 200 with the userId.',
+    ],
+    explanation: [
+      'Trace a session at exactly the idle limit.',
+      'Explain why the two limits are measured from different times.',
+      'Say what these checks do not cover, such as cookies or signing out on other devices.',
+    ],
+    example:
+      'I return 401 "missing" for no session and "revoked" when it was signed out. Then I compare now - createdAt with 28800000 and now - lastSeenAt with 1800000, counting the limit itself as too late, and report "expired" before "idle". Otherwise I return 200 with the userId. It is constant time and does not change the input. The checks pass records and now directly, not cookies or a clock.',
+  },
+  'backend-role-permission': {
+    plan: [
+      'Return 401 when there is no user.',
+      'For each role, look up its grants; a missing role grants nothing.',
+      'Return 200 when a grant equals the action or is a wildcard for its resource, else 403.',
+    ],
+    explanation: [
+      'Trace a wildcard against a resource whose name starts the same way.',
+      'Explain why a missing role is a refusal, not an error or an allowance.',
+      'Say why 401 and 403 are different answers.',
+    ],
+    example:
+      'I return 401 for a null user. Otherwise I loop over the roles, read permissions[role] ?? [], and allow when a grant equals the action or ends in ":*" and the action starts with the grant without its "*". If nothing matches I return 403. The work is the number of grants across the roles. The checks call the function directly, not a live server.',
+  },
+  'backend-owner-access': {
+    plan: [
+      'Return 404 for a missing note.',
+      'Allow the owner anything, then apply the admin rule.',
+      'A shared member may read (403 otherwise); everyone else gets 404.',
+    ],
+    explanation: [
+      "Trace an admin editing their own note and someone else's.",
+      'Explain when the answer is 403 and when it is 404.',
+      'Say what a role check alone would let through.',
+    ],
+    example:
+      'I return 404 for a null note. The owner gets 200 for every action. An admin gets 200 for read and delete and 403 for edit. A member in sharedWith gets 200 for read and 403 otherwise, and anyone else gets 404 so the note seems not to exist. It is linear in sharedWith. The checks call the function directly, not a database.',
+  },
+  'backend-visible-notes': {
+    plan: ['Write the visibility test for one note.', 'Filter the list with it, keeping the order.', 'Return the IDs and their count.'],
+    explanation: [
+      'Trace a member who owns one note and is shared another.',
+      'Explain why total counts only visible notes.',
+      'Say what changes when the list is paged.',
+    ],
+    example:
+      'I keep a note when the user is an admin, owns it, or appears in its sharedWith, comparing IDs exactly. I map the kept notes to their IDs in order and return them with their count as total, so hidden notes are not counted. The work is linear in the notes and their sharing lists. The checks pass an array, not a database query.',
+  },
+  'backend-loan-access': {
+    plan: [
+      "Return 404 for a missing loan or another member's loan.",
+      'Allow viewing for the borrower and librarians.',
+      "Apply the renewal rules for the actor's role, overdue before the limit for members.",
+    ],
+    explanation: [
+      'Trace a member renewing an overdue loan at the limit.',
+      'Explain why another member gets 404 rather than 403.',
+      'Say how the librarian rules differ and why now is an argument.',
+    ],
+    example:
+      'I return 404 for a null loan and for a member who is not the borrower. Viewing is then 200. A member renewing gets 403 "overdue" when now >= dueAt, then 403 "limit" at 2 renewals, else 200; a librarian gets 403 "limit" at 3 renewals, else 200. It is constant time. The checks pass actors, loans, and now directly, not a live library system.',
   },
   'backend-versioned-update': {
     plan: [
@@ -769,6 +907,20 @@ export const backendGuides: Record<string, ReflectionGuide> = {
     example:
       'I keep a Set of seen delivery IDs and a Map from resource to its last applied sequence. For each delivery, a seen ID is a DUPLICATE; otherwise I record the ID, and a sequence at or below the stored one is STALE. Anything else updates the state, the stored sequence, and the applied list. The work is linear in the deliveries. The checks pass a list of deliveries, not live webhook requests.',
   },
+  'backend-verify-signature': {
+    plan: [
+      'Parse the header into one t and the v1 values, or return "malformed".',
+      'Return "stale" when now and t differ by more than 300 seconds.',
+      'Sign t + "." + body and compare it with each v1 in constant time.',
+    ],
+    explanation: [
+      'Trace a delivery whose body changed by one space.',
+      'Explain why the time is signed together with the body.',
+      'Say what the checks cannot prove about your comparison.',
+    ],
+    example:
+      'I split the header at commas, trim each piece, and collect t and v1 values, returning "malformed" unless there is exactly one all-digit t and at least one v1. I return "stale" when Math.abs(now - t) > 300. Then I compute hmacHex(secret, t + "." + body) and compare it with each v1 by checking the lengths and combining every character difference with |=, returning {ok: true} on a match and "mismatch" otherwise. The checks call it directly with header text, and timing is self-reviewed.',
+  },
   'backend-downgrade-response': {
     plan: [
       'Keep the changes released after the pinned date.',
@@ -805,6 +957,16 @@ export const backendLessonDepth: Record<string, LessonDepth> = {
       'A team adds GET /orders/:id/items. Predict the response to POST /orders/42/items, then to GET /orders/42/items/ with a trailing slash, using the segment rules in this lesson.',
     answer:
       'POST /orders/42/items matches the new pattern, but only GET is registered for it, so the answer is 405 with Allow: GET, HEAD. With a trailing slash the path has one more, empty segment, so no pattern matches and the answer is 404, unless the server cleans the path first by dropping empty segments, in which case the GET route answers.',
+  },
+  'http-authorization': {
+    title: 'The ID in the URL is a claim, not a permission',
+    code: "GET /notes/n1   (signed in as m3, role: member)\n\nrole check only:      members may read notes → 200, m3 reads m1's note\nwith ownership check: n1 belongs to m1, not shared with m3 → 404",
+    reasoning:
+      'Any client can put any ID in a request, so a role check that only asks "may members read notes?" lets every member read every note by changing the number in the URL. The server has to ask the narrower question as well: may this member act on this record? That check belongs next to the code that loads the record, on every endpoint that takes an ID, because the browser hiding a button protects nothing.',
+    challenge:
+      'A team adds GET /notes/n1/history, which returns past versions of a note. Its handler checks that the user is signed in and has the "notes:read" permission. Describe what m3 can do with it, then say which check is missing and what it should answer.',
+    answer:
+      "m3 can request the history of any note, including m1's private one, because the handler never compares the note's owner with m3; old versions leak even though GET /notes/n1 itself is protected. The handler needs the same ownership and sharing check as the note it belongs to, answering 404 when m3 may not see n1, so that the existence of the note stays private there too.",
   },
   'concurrent-writes': {
     title: 'Make the check and the write one step',

@@ -257,6 +257,137 @@ test('B2 routing checks catch segment-count, empty-parameter, 404/405, HEAD, and
   ])
 })
 
+test('B3 authorization checks catch status, boundary, wildcard, ownership, counting, and order mistakes', async () => {
+  const session = solution('backend-session-state')
+  await assertCaught('backend-session-state', [
+    [
+      session.replace('now - session.lastSeenAt >= HOUR / 2', 'now - session.lastSeenAt > HOUR / 2'),
+      'Ends a session idle for exactly 30 minutes',
+    ],
+    [
+      session.replace('now - session.createdAt >= 8 * HOUR', 'now - session.createdAt > 8 * HOUR'),
+      'Ends a session exactly 8 hours after sign-in',
+    ],
+    [
+      session.replace('now - session.createdAt >= 8 * HOUR', 'now - session.lastSeenAt >= 8 * HOUR'),
+      'Measures the 8-hour limit from sign-in',
+    ],
+    [
+      session.replace('now - session.lastSeenAt >= HOUR / 2', 'now - session.createdAt >= HOUR / 2'),
+      'Measures the idle limit from the last use',
+    ],
+    [session.replace("  if (session.revoked) return { status: 401, reason: 'revoked' }\n", ''), 'Refuses a revoked session'],
+    [
+      session.replace(
+        "  if (session.revoked) return { status: 401, reason: 'revoked' }\n  if (now - session.createdAt >= 8 * HOUR) return { status: 401, reason: 'expired' }\n",
+        "  if (now - session.createdAt >= 8 * HOUR) return { status: 401, reason: 'expired' }\n  if (session.revoked) return { status: 401, reason: 'revoked' }\n",
+      ),
+      'Reports revoked before expired',
+    ],
+    [
+      session.replace(
+        "  if (now - session.createdAt >= 8 * HOUR) return { status: 401, reason: 'expired' }\n  if (now - session.lastSeenAt >= HOUR / 2) return { status: 401, reason: 'idle' }\n",
+        "  if (now - session.lastSeenAt >= HOUR / 2) return { status: 401, reason: 'idle' }\n  if (now - session.createdAt >= 8 * HOUR) return { status: 401, reason: 'expired' }\n",
+      ),
+      'Reports expired before idle',
+    ],
+  ])
+  const role = solution('backend-role-permission')
+  await assertCaught('backend-role-permission', [
+    [
+      role.replace('if (user === null) return { status: 401 }', 'if (user === null) return { status: 403 }'),
+      'Answers 401 without a session',
+    ],
+    [
+      role.replace('action.startsWith(grant.slice(0, -1))', 'action.startsWith(grant.slice(0, -2))'),
+      'Keeps a wildcard to its own resource',
+    ],
+    [
+      role.replace("grant === action || (grant.endsWith(':*')", "grant === action || grant === '*' || (grant.endsWith(':*')"),
+      'Does not treat a bare "*" as every action',
+    ],
+    [role.replace('grant === action ||', 'grant.toLowerCase() === action.toLowerCase() ||'), 'Compares names with their letter case'],
+    [
+      role.replace(
+        "(grant.endsWith(':*') && action.startsWith(grant.slice(0, -1)))",
+        "(action.endsWith(':*') && grant.startsWith(action.slice(0, -1)))",
+      ),
+      'Does not let a requested wildcard match a narrower grant',
+    ],
+    [
+      role.replace(
+        '    if (grants.some(covers)) return { status: 200 }\n  }',
+        '    return grants.some(covers) ? { status: 200 } : { status: 403 }\n  }',
+      ),
+      'Combines the grants of several roles',
+    ],
+    [role.replace(': []', ": ['notes:read']"), 'Ignores a role missing from the table'],
+  ])
+  const owner = solution('backend-owner-access')
+  await assertCaught('backend-owner-access', [
+    [owner.replace('  return { status: 404 }\n}', '  return { status: 403 }\n}'), 'Hides the note from other members'],
+    [
+      owner.replace(
+        "  if (note.ownerId === user.id) return { status: 200 }\n  if (user.role === 'admin') return { status: action === 'edit' ? 403 : 200 }\n",
+        "  if (user.role === 'admin') return { status: action === 'edit' ? 403 : 200 }\n  if (note.ownerId === user.id) return { status: 200 }\n",
+      ),
+      'Treats an admin who owns the note as its owner',
+    ],
+    [owner.replace("{ status: action === 'edit' ? 403 : 200 }", '{ status: 200 }'), "Refuses an admin who edits someone else's note"],
+    [owner.replace("{ status: action === 'read' ? 200 : 403 }", '{ status: 200 }'), 'Refuses a shared member who edits'],
+    [
+      owner.replace("{ status: action === 'read' ? 200 : 403 }", "{ status: action === 'delete' ? 403 : 200 }"),
+      'Refuses a shared member who edits',
+    ],
+    [
+      owner.replace("{ status: action === 'edit' ? 403 : 200 }", "{ status: action === 'read' ? 200 : 403 }"),
+      'Lets an admin delete any note',
+    ],
+  ])
+  const visible = solution('backend-visible-notes')
+  await assertCaught('backend-visible-notes', [
+    [visible.replace('total: ids.length', 'total: notes.length'), 'Counts only the visible notes'],
+    [
+      visible.replace('note.sharedWith.includes(user.id)', "note.sharedWith.join(',').toLowerCase().includes(user.id)"),
+      'Matches shared members by exact id',
+    ],
+    [visible.replace("user.role === 'admin' || ", ''), 'Shows an admin every note'],
+    [visible.replace(' || note.sharedWith.includes(user.id)', ''), 'Shows a member their own and shared notes'],
+  ])
+  const loan = solution('backend-loan-access')
+  await assertCaught('backend-loan-access', [
+    [
+      loan.replace(
+        'if (!librarian && actor.id !== loan.memberId) return { status: 404 }',
+        'if (!librarian && actor.id !== loan.memberId) return { status: 403 }',
+      ),
+      "Hides another member's loan",
+    ],
+    [
+      loan.replace(
+        "  if (now >= loan.dueAt) return { status: 403, reason: 'overdue' }\n  if (loan.renewals >= 2) return { status: 403, reason: 'limit' }\n",
+        "  if (loan.renewals >= 2) return { status: 403, reason: 'limit' }\n  if (now >= loan.dueAt) return { status: 403, reason: 'overdue' }\n",
+      ),
+      'Reports overdue before the limit',
+    ],
+    [loan.replace('now >= loan.dueAt', 'now > loan.dueAt'), 'Refuses a member renewing at the due time'],
+    [
+      loan.replace("if (librarian) return loan.renewals >= 3 ? { status: 403, reason: 'limit' } : { status: 200 }\n", ''),
+      'Lets a librarian renew an overdue loan',
+    ],
+    [loan.replace('loan.renewals >= 3', 'loan.renewals >= 4'), 'Refuses a librarian at three renewals'],
+    [
+      loan
+        .replace(
+          "if (action === 'view') return { status: 200 }",
+          "if (action === 'view') return librarian || actor.id === loan.memberId ? { status: 200 } : { status: 404 }",
+        )
+        .replace('if (!librarian && actor.id !== loan.memberId) return { status: 404 }\n', ''),
+      "Refuses to renew another member's loan as if it did not exist",
+    ],
+  ])
+})
+
 test('B4 concurrent-write checks catch stale writes, falsy fields, weak tags, unseen changes, and value-only comparisons', async () => {
   const update = solution('backend-versioned-update')
   await assertCaught('backend-versioned-update', [
@@ -773,4 +904,35 @@ test('B7 API evolution checks catch version, compatibility, date, delivery, and 
   // Undoing on the caller's body changes the input, which the runner reports separately from a wrong result.
   const mutating = downgrade.replace('const result: Record<string, unknown> = { ...body }', 'const result: Record<string, unknown> = body')
   assert.ok((await runAsyncRep(mutating, 'backend-downgrade-response')).some(result => result.message?.includes('changed its input')))
+})
+
+test('B7 signature checks catch signed text, time window, header shape, and comparison mistakes', async () => {
+  const verify = solution('backend-verify-signature')
+  await assertCaught('backend-verify-signature', [
+    [verify.replace("hmacHex(secret, times[0] + '.' + body)", 'hmacHex(secret, body)'), 'Signs the time together with the body'],
+    [verify.replace('Math.abs(now - Number(times[0])) > 300', 'now - Number(times[0]) > 300'), 'Refuses a time 301 seconds ahead'],
+    [
+      verify.replace('Math.abs(now - Number(times[0])) > 300', 'Math.abs(now - Number(times[0])) >= 300'),
+      'Accepts a time exactly 300 seconds old',
+    ],
+    [verify.replace('times.length !== 1', 'times.length === 0'), 'Refuses two times'],
+    [verify.replace('!/^[0-9]+$/.test(times[0])', 'Number.isNaN(Number(times[0]))'), 'Refuses a time that is not a whole number'],
+    [verify.replace(' || signatures.length === 0', ''), 'Requires a signature'],
+    [verify.replace('const part = piece.trim()', 'const part = piece'), 'Ignores spaces and other keys'],
+    [
+      verify.replace('sameText(signature, expected)', 'sameText(signature.toLowerCase(), expected)'),
+      'Compares signatures as lowercase hex',
+    ],
+    [
+      verify.replace(
+        "  if (Math.abs(now - Number(times[0])) > 300) return { ok: false, reason: 'stale' }\n  const expected = await hmacHex(secret, times[0] + '.' + body)\n",
+        "  const expected = await hmacHex(secret, times[0] + '.' + body)\n  if (!signatures.some(signature => sameText(signature, expected))) return { ok: false, reason: 'mismatch' }\n  if (Math.abs(now - Number(times[0])) > 300) return { ok: false, reason: 'stale' }\n",
+      ),
+      'Checks the time before the signature',
+    ],
+    [
+      verify.replace('for (const signature of signatures) if', 'for (const signature of signatures.slice(0, 1)) if'),
+      'Accepts any matching v1 while secrets are rotated',
+    ],
+  ])
 })

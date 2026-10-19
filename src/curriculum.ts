@@ -13,6 +13,20 @@ export const pathApplications: Partial<Record<(typeof paths)[number]['id'], { re
   backend: [{ repId: 'project-ticket-api', reason: 'Combine validation, filtering, and paging in a ticket API.' }],
 }
 
+/**
+ * Projects outside Code Reps that end a track. They live in Library → Projects (src/browser-projects.ts); the trail
+ * shows them so the track's last step is visible, but never counts them: a self-review is learner-reported evidence.
+ */
+export const pathExternalProjects: Partial<Record<(typeof paths)[number]['id'], { projectId: string; title: string; reason: string }[]>> = {
+  devops: [
+    {
+      projectId: 'devops-container-ci',
+      title: 'Containerize an app and add CI on your own machine',
+      reason: 'Package a service you wrote, add health checks and a CI workflow, and record the results in a self-review.',
+    },
+  ],
+}
+
 export function repCurriculumRole(repId: string) {
   const journey = journeys.find(item => [item.guided, item.independent, item.recall].includes(repId))
   if (!journey) return 'Application'

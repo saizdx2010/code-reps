@@ -163,6 +163,86 @@ export const backendSkills: Skill[] = [
     related: ['http-request-anatomy', 'http'],
   },
   {
+    id: 'http-authorization',
+    title: 'Authorization: who may do what',
+    summary:
+      'Decide, on every request, whether this person may take this action on this record: a session that still counts, a role that grants the action, and an ownership check for the record itself.',
+    prerequisites: ['http-routing'],
+    objectives: [
+      'Tell authentication from authorization, and choose between 401, 403, and 404 for a refusal.',
+      'Decide whether a session still counts from its revocation, its age, and its last use.',
+      "Check a role's permissions and a record's owner on the server for every request, including list endpoints.",
+    ],
+    sections: [
+      {
+        title: 'Two questions on every request',
+        body: 'Authentication answers "who is this?": a sign-in creates a session, and each request carries its ID. Authorization answers "may they do this?": given who it is, the server decides whether this action on this record is allowed. A request with no valid session gets 401 Unauthorized, despite the name, because the server does not know who is asking. A known user who may not take the action gets 403 Forbidden.',
+      },
+      {
+        title: 'A session stops counting',
+        body: 'A session record is only useful while it still counts. It stops when the person signs out (the record is revoked), when it reaches an absolute lifetime measured from sign-in, and when it goes unused for longer than an idle timeout measured from its last use. Checking these on the server, against a time passed in rather than read from the clock, keeps the rule testable.',
+      },
+      {
+        title: 'Roles grant actions, and nothing else does',
+        body: 'A permission table lists what each role may do, such as viewer: notes:read and editor: notes:*. The safe default is to deny: an action is allowed only when some role the user holds grants it, and a role the table does not know grants nothing. A wildcard grant such as notes:* covers every verb on its own resource, and only that resource.',
+      },
+      {
+        title: 'Check the record, not just the role',
+        body: "Two members with the same role must still not reach each other's notes, so the server compares the record's owner with the user on every request that names a record, including a list. Answering 404 to someone who may not know a record exists keeps its existence private; 403 fits when they may see it but not change it, such as a note shared with them for reading. The browser can hide buttons, but only the server's check decides.",
+      },
+    ],
+    example:
+      'note n1: owner m1, shared with m2\n\nm1 edits n1   → 200 (owner)\nm2 reads n1   → 200 (shared for reading)\nm2 edits n1   → 403 (may see it, may not change it)\nm3 reads n1   → 404 (does not learn it exists)\nno session    → 401 (nobody to check)',
+    walkthrough: [
+      'Without a session there is no user to check, so the answer is 401 before anything else.',
+      'm1 owns n1, so every action on it is allowed.',
+      'm2 was given read access, so reading succeeds and editing is refused with 403.',
+      'm3 has no connection to n1; answering 404 keeps the note looking like one that does not exist.',
+    ],
+    mistakes: [
+      'Answering 403 when there is no session, or 401 when the user is known but not allowed.',
+      'Checking only the role, so any member can open any note by changing the ID in the URL.',
+      'Filtering a list in the browser, or reporting a total that counts notes the user cannot see.',
+      'Treating a role that is missing from the permission table as allowed.',
+    ],
+    questions: [
+      q(
+        'authz-no-session-401-v1',
+        'A request to delete a note arrives without any session. Which status fits?',
+        '',
+        ['401 Unauthorized', '403 Forbidden', '404 Not Found'],
+        0,
+        'Without a session the server does not know who is asking, so it cannot decide; 401 says to sign in first.',
+      ),
+      q(
+        'authz-role-missing-v1',
+        'A user\'s only role is "guest", and the permission table has no entry for guest. They ask to read notes. What should the server answer?',
+        '',
+        ['200, because no rule forbids it', '403, because nothing grants it', '401, because the role is unknown'],
+        1,
+        'Deny by default: an action is allowed only when a role grants it. The user is known, so the refusal is 403, not 401.',
+      ),
+      q(
+        'authz-hide-existence-v1',
+        'Member m3 asks for note n1, which belongs to m1 and is not shared with m3. Which answer keeps the note private?',
+        '',
+        ['403 Forbidden', '404 Not Found', '200 with an empty body'],
+        1,
+        '403 confirms that n1 exists. 404 gives the same answer as for a note that does not exist.',
+      ),
+      q(
+        'authz-session-idle-v1',
+        'A session was created 2 hours ago and last used 45 minutes ago. The idle timeout is 30 minutes and the absolute lifetime is 8 hours. Does it still count?',
+        '',
+        ['Yes, it is under 8 hours old', 'No, it has been idle too long', 'Yes, idle time only matters after 8 hours'],
+        1,
+        'Both limits apply. It is young enough, but 45 minutes without use is past the 30-minute idle timeout.',
+      ),
+    ],
+    repIds: ['backend-session-state', 'backend-role-permission', 'backend-owner-access', 'backend-visible-notes', 'backend-loan-access'],
+    related: ['http-routing', 'http'],
+  },
+  {
     id: 'concurrent-writes',
     title: 'Concurrent writes: lost updates and version checks',
     summary:
@@ -406,12 +486,13 @@ export const backendSkills: Skill[] = [
     id: 'api-evolution',
     title: 'Evolve an API without breaking clients',
     summary:
-      'Change requests and responses while existing apps keep working: choose a version per request, tell compatible changes from breaking ones, announce deprecations, and accept webhook deliveries that arrive twice or out of order.',
+      'Change requests and responses while existing apps keep working: choose a version per request, tell compatible changes from breaking ones, announce deprecations, and accept webhook deliveries only when they are signed, recent, new, and in order.',
     prerequisites: ['http-routing'],
     objectives: [
       'Choose a response shape from a version in the path or a header, with a documented default and a clear error for an unknown version.',
       'Decide whether a field change to a request or a response is compatible or breaking for clients that cannot update yet.',
       'Announce a deprecation and a sunset date, and apply webhook deliveries once each and in sequence order.',
+      'Check that a webhook delivery is signed with the shared secret and recent before acting on it.',
     ],
     sections: [
       {
@@ -428,7 +509,7 @@ export const backendSkills: Skill[] = [
       },
       {
         title: 'Deprecate before you remove, and expect repeats',
-        body: 'Before removing an endpoint, announce it: from the deprecation date, responses carry a Deprecation header, a Sunset header with the date it stops working, and a Link to its replacement; from the sunset date it answers 410 Gone. Webhooks run the other way, from a provider to you. Providers retry deliveries that were not acknowledged and do not promise their order, so a receiver skips a delivery ID it has already seen and skips a change whose sequence number is not newer than the last one applied for that resource. Checking who sent a webhook is a separate step that these reps leave out.',
+        body: 'Before removing an endpoint, announce it: from the deprecation date, responses carry a Deprecation header, a Sunset header with the date it stops working, and a Link to its replacement; from the sunset date it answers 410 Gone. Webhooks run the other way, from a provider to you. Providers retry deliveries that were not acknowledged and do not promise their order, so a receiver skips a delivery ID it has already seen and skips a change whose sequence number is not newer than the last one applied for that resource. Before any of that, it checks who sent the delivery: the provider signs the signing time and the raw body with a shared secret (an HMAC), and the receiver computes the same signature, compares it in constant time, and refuses a signing time more than a few minutes from now, so a captured delivery cannot be sent again later.',
       },
     ],
     example:
@@ -478,12 +559,21 @@ export const backendSkills: Skill[] = [
         1,
         'A new delivery ID means it is not a repeat, but sequence 5 is older than the change already applied, so applying it would undo newer data.',
       ),
+      q(
+        'webhook-signature-time-v1',
+        'A delivery has a correct signature, but it was signed two hours ago and the tolerance is 5 minutes. What should the receiver do?',
+        '',
+        ['Accept it, because the signature matches', 'Refuse it as stale', 'Accept it once and remember its signature'],
+        1,
+        'The signature proves the provider sent it once, not that it was sent now. Refusing old signing times stops a captured delivery from being replayed later.',
+      ),
     ],
     repIds: [
       'backend-choose-version',
       'backend-classify-change',
       'backend-deprecation-headers',
       'backend-webhook-deliveries',
+      'backend-verify-signature',
       'backend-downgrade-response',
     ],
     related: ['http-routing', 'background-jobs'],

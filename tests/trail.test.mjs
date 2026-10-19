@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { buildTrail } from '../src/trail-map.ts'
-import { foundationsPathId, stageCoveredByFoundations, trackGroups } from '../src/curriculum.ts'
+import { foundationsPathId, pathExternalProjects, stageCoveredByFoundations, trackGroups } from '../src/curriculum.ts'
+import { browserProjects, serviceProjects } from '../src/browser-projects.ts'
 import { paths } from '../src/path.ts'
 import { stageTexts, trackDescriptions } from '../src/path-text.ts'
 
@@ -70,6 +71,25 @@ test('project applications end the trail without changing path completion counts
   const last = trail.stages.at(-1)
   assert.ok(last.nodes.every(node => node.kind === 'project'))
   assert.equal(trail.total, new Set(paths.find(path => path.id === 'frontend').stages.flatMap(stage => stage.repIds)).size)
+})
+
+test('the DevOps project outside Code Reps ends its trail but is never counted or marked done', () => {
+  const done = { ...fresh, completed: () => true }
+  for (const input of [fresh, done]) {
+    const trail = buildTrail('devops', input)
+    const last = trail.stages.at(-1)
+    assert.deepEqual(
+      last.nodes.map(node => [node.kind, node.projectId, node.state]),
+      [['external', 'devops-container-ci', 'open']],
+    )
+    assert.equal(last.total, 0)
+    assert.equal(last.done, 0)
+    assert.equal(trail.total, new Set(paths.find(path => path.id === 'devops').stages.flatMap(stage => stage.repIds)).size)
+  }
+  // The trail keeps its own copy of the title so Library projects stay out of startup; it must match the project.
+  const projects = [...browserProjects, ...serviceProjects]
+  for (const link of Object.values(pathExternalProjects).flat())
+    assert.equal(link.title, projects.find(project => project.id === link.projectId)?.title, link.projectId)
 })
 
 test('every authored stage has text, keyed by its title, and the trail keeps those titles', () => {

@@ -66,6 +66,7 @@ const devopsStages = paths.find(path => path.id === 'devops')!.stages
 const backendServiceTopics = [
   'What a request is',
   'Route a request',
+  'Decide who may act',
   'Handle concurrent writes',
   'Run background jobs',
   'Limit request rates',

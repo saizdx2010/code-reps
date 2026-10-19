@@ -175,6 +175,59 @@ function pickRoute(patterns: string[], path: string) {
   }
   return best
 }`,
+  'backend-session-state': `
+type Session = { userId: string; createdAt: number; lastSeenAt: number; revoked: boolean }
+function checkSession(session: Session | null, now: number) {
+  const HOUR = 60 * 60 * 1000
+  if (!session) return { status: 401, reason: 'missing' }
+  if (session.revoked) return { status: 401, reason: 'revoked' }
+  if (now - session.createdAt >= 8 * HOUR) return { status: 401, reason: 'expired' }
+  if (now - session.lastSeenAt >= HOUR / 2) return { status: 401, reason: 'idle' }
+  return { status: 200, userId: session.userId }
+}`,
+  'backend-role-permission': `
+function authorize(user: { id: string; roles: string[] } | null, action: string, permissions: Record<string, string[]>) {
+  if (user === null) return { status: 401 }
+  const covers = (grant: string) => grant === action || (grant.endsWith(':*') && action.startsWith(grant.slice(0, -1)))
+  for (const role of user.roles) {
+    const grants = Object.hasOwn(permissions, role) ? permissions[role] : []
+    if (grants.some(covers)) return { status: 200 }
+  }
+  return { status: 403 }
+}`,
+  'backend-owner-access': `
+type User = { id: string; role: 'member' | 'admin' }
+type Note = { id: string; ownerId: string; sharedWith: string[] }
+function noteAccess(user: User, note: Note | null, action: 'read' | 'edit' | 'delete') {
+  if (note === null) return { status: 404 }
+  if (note.ownerId === user.id) return { status: 200 }
+  if (user.role === 'admin') return { status: action === 'edit' ? 403 : 200 }
+  if (note.sharedWith.includes(user.id)) return { status: action === 'read' ? 200 : 403 }
+  return { status: 404 }
+}`,
+  'backend-visible-notes': `
+type User = { id: string; role: 'member' | 'admin' }
+type Note = { id: string; ownerId: string; sharedWith: string[] }
+function visibleNotes(user: User, notes: Note[]) {
+  const ids: string[] = []
+  for (const note of notes) {
+    if (user.role === 'admin' || note.ownerId === user.id || note.sharedWith.includes(user.id)) ids.push(note.id)
+  }
+  return { ids, total: ids.length }
+}`,
+  'backend-loan-access': `
+type Actor = { id: string; role: 'member' | 'librarian' }
+type Loan = { id: string; memberId: string; dueAt: number; renewals: number }
+function decideLoan(actor: Actor, loan: Loan | null, action: 'view' | 'renew', now: number) {
+  if (loan === null) return { status: 404 }
+  const librarian = actor.role === 'librarian'
+  if (!librarian && actor.id !== loan.memberId) return { status: 404 }
+  if (action === 'view') return { status: 200 }
+  if (librarian) return loan.renewals >= 3 ? { status: 403, reason: 'limit' } : { status: 200 }
+  if (now >= loan.dueAt) return { status: 403, reason: 'overdue' }
+  if (loan.renewals >= 2) return { status: 403, reason: 'limit' }
+  return { status: 200 }
+}`,
   'backend-versioned-update': `
 type StoredRecord = { id: string; version: number; data: Record<string, unknown> }
 function applyUpdate(record: StoredRecord, update: { expectedVersion: number; changes: Record<string, unknown> }) {
@@ -436,6 +489,39 @@ function applyDeliveries(deliveries: { deliveryId: string; resource: string; seq
     applied.push(delivery.deliveryId)
   }
   return { state, applied, skipped }
+}`,
+  'backend-verify-signature': `
+async function hmacHex(secret: string, text: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(text))
+  return Array.from(new Uint8Array(signature), byte => byte.toString(16).padStart(2, '0')).join('')
+}
+function sameText(a: string, b: string) {
+  if (a.length !== b.length) return false
+  let difference = 0
+  for (let index = 0; index < a.length; index++) difference |= a.charCodeAt(index) ^ b.charCodeAt(index)
+  return difference === 0
+}
+async function verifyWebhook(secret: string, header: string | null, body: string, now: number) {
+  if (header === null) return { ok: false, reason: 'malformed' }
+  const times: string[] = []
+  const signatures: string[] = []
+  for (const piece of header.split(',')) {
+    const part = piece.trim()
+    const at = part.indexOf('=')
+    if (at === -1) continue
+    const key = part.slice(0, at)
+    const value = part.slice(at + 1)
+    if (key === 't') times.push(value)
+    else if (key === 'v1') signatures.push(value)
+  }
+  if (times.length !== 1 || !/^[0-9]+$/.test(times[0]) || signatures.length === 0) return { ok: false, reason: 'malformed' }
+  if (Math.abs(now - Number(times[0])) > 300) return { ok: false, reason: 'stale' }
+  const expected = await hmacHex(secret, times[0] + '.' + body)
+  let matched = false
+  for (const signature of signatures) if (sameText(signature, expected)) matched = true
+  return matched ? { ok: true } : { ok: false, reason: 'mismatch' }
 }`,
   'backend-downgrade-response': `
 type Change =

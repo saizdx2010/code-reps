@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { InfoNote } from './Layout'
 import { Button } from './Button'
 import {
@@ -11,16 +12,42 @@ import {
 } from './browser-projects'
 import type { BrowserProject } from './browser-projects'
 import { repIndex as reps } from './catalog-index'
+import { openProjectKey } from './ui-navigation'
 
 type Props = { openRep: (id: string) => void; recordReflection: (title: string, body: string, skillId?: string) => void }
 
 export function BrowserProjects({ openRep, recordReflection }: Props) {
+  // A trail link names one project: open it and bring it into view once, then forget the request. The request is
+  // cleared inside the frame, so a cancelled first run (React Strict Mode) leaves it for the run that follows.
+  useEffect(() => {
+    let projectId: string | null = null
+    try {
+      projectId = sessionStorage.getItem(openProjectKey)
+    } catch {
+      return
+    }
+    if (!projectId) return
+    const frame = requestAnimationFrame(() => {
+      try {
+        sessionStorage.removeItem(openProjectKey)
+      } catch {
+        /* The request was read; a failed removal only means the project opens again on a later visit this session. */
+      }
+      const element = document.getElementById(`project-${projectId}`)
+      if (element?.tagName !== 'DETAILS') return
+      const details = element as HTMLDetailsElement
+      details.open = true
+      details.scrollIntoView({ block: 'start' })
+      details.querySelector<HTMLElement>(':scope > summary')?.focus({ preventScroll: true })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [])
   function reflect(project: BrowserProject) {
     recordReflection(projectHeading(project), projectReflection(project), project.skillId)
   }
   // Every project, browser level or DevOps, shares one layout: requirements, preparation, a self-review note, and a transfer.
   const overview = (project: BrowserProject) => (
-    <details key={project.id} className="hub-panel project-overview">
+    <details key={project.id} id={`project-${project.id}`} className="hub-panel project-overview">
       <summary>
         <h3>{projectHeading(project)}</h3>
         <p>{project.brief}</p>

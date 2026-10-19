@@ -907,6 +907,502 @@ export const backendServiceReps: Rep[] = [
     ],
   },
   {
+    id: 'backend-session-state',
+    title: 'Decide whether a session still counts',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'After someone signs in, the server keeps a session record and the browser sends its ID with each request. Before doing anything else, the server looks the record up and decides whether it still counts: it may have been signed out, may be too old, or may have gone unused for too long.',
+    prompt:
+      'Implement checkSession(session, now). session is null when no record matches the request, or {userId, createdAt, lastSeenAt, revoked}, with times in milliseconds. Decide in this order: if session is null, return {status: 401, reason: "missing"}; if revoked is true, return {status: 401, reason: "revoked"}; if now - createdAt is at least 28800000 (8 hours), return {status: 401, reason: "expired"}; if now - lastSeenAt is at least 1800000 (30 minutes), return {status: 401, reason: "idle"}. Otherwise return {status: 200, userId}. Do not change the input.',
+    brief: {
+      summary: 'Implement checkSession(session, now) and return 401 with a reason, or 200 with the userId.',
+      rules: [
+        'If session is null, return {status: 401, reason: "missing"}.',
+        'If revoked is true, return {status: 401, reason: "revoked"}.',
+        'If now - createdAt is at least 28800000 (8 hours), return {status: 401, reason: "expired"}.',
+        'If now - lastSeenAt is at least 1800000 (30 minutes), return {status: 401, reason: "idle"}.',
+        'Otherwise return {status: 200, userId}. The first rule that applies decides the answer.',
+      ],
+      edgeCases: [
+        'Reaching a limit exactly counts as too late.',
+        'The 8-hour limit counts from createdAt, however recently the session was used.',
+        'Do not change the input.',
+      ],
+    },
+    example: {
+      input: 'checkSession({userId: "m1", createdAt: 0, lastSeenAt: 7000000, revoked: false}, 8000000)',
+      output: '{status: 200, userId: "m1"}',
+    },
+    note: 'Times are whole milliseconds with createdAt <= lastSeenAt <= now. The checks pass session records to your function directly: there is no cookie, no live server, and no clock, because now is always an argument.',
+    vocabulary: [
+      { term: 'Session', meaning: 'a record the server keeps after sign-in, so later requests can be tied to the same person' },
+      { term: 'Idle timeout', meaning: 'how long a session may go unused before it stops counting' },
+      { term: 'Absolute lifetime', meaning: 'the longest a session may last from sign-in, however often it is used' },
+    ],
+    planPrompt:
+      'A session started at 0 and was last used at 7000000. Decide the answer at 8000000, at 8800000, and at 28800000, and name the rule each one meets.',
+    starter:
+      "type Session = { userId: string; createdAt: number; lastSeenAt: number; revoked: boolean }\ntype Decision = { status: 200; userId: string } | { status: 401; reason: 'missing' | 'revoked' | 'expired' | 'idle' }\n\nfunction checkSession(session: Session | null, now: number): Decision {\n  // Check each reason in order, then allow.\n  return { status: 401, reason: 'missing' }\n}\n",
+    functionName: 'checkSession',
+    preserveInput: true,
+    hints: [
+      'Write the four reasons in the order the contract lists them; the first one that applies decides the answer.',
+      'Both limits use elapsed time: subtract the stored time from now and compare with the limit, counting the limit itself as too late.',
+      'Return 401 with "missing" for null, then "revoked", then "expired" measured from createdAt, then "idle" measured from lastSeenAt, and 200 with the userId otherwise.',
+    ],
+    checks: [
+      {
+        name: 'Allows an active session',
+        input: [{ userId: 'm1', createdAt: 0, lastSeenAt: 7000000, revoked: false }, 8000000],
+        expected: { status: 200, userId: 'm1' },
+      },
+      { name: 'Refuses a request without a session', input: [null, 5000], expected: { status: 401, reason: 'missing' } },
+      {
+        name: 'Refuses a revoked session',
+        input: [{ userId: 'm1', createdAt: 0, lastSeenAt: 1000, revoked: true }, 2000],
+        expected: { status: 401, reason: 'revoked' },
+      },
+      {
+        name: 'Ends a session idle for exactly 30 minutes',
+        input: [{ userId: 'm1', createdAt: 0, lastSeenAt: 1000, revoked: false }, 1801000],
+        expected: { status: 401, reason: 'idle' },
+      },
+      {
+        name: 'Allows a session idle for just under 30 minutes',
+        input: [{ userId: 'm1', createdAt: 0, lastSeenAt: 1000, revoked: false }, 1800999],
+        expected: { status: 200, userId: 'm1' },
+      },
+      {
+        name: 'Ends a session exactly 8 hours after sign-in',
+        input: [{ userId: 'm2', createdAt: 0, lastSeenAt: 28799000, revoked: false }, 28800000],
+        expected: { status: 401, reason: 'expired' },
+      },
+      {
+        name: 'Allows a session just under 8 hours old',
+        input: [{ userId: 'm2', createdAt: 0, lastSeenAt: 28700000, revoked: false }, 28799999],
+        expected: { status: 200, userId: 'm2' },
+      },
+      {
+        name: 'Measures the 8-hour limit from sign-in',
+        input: [{ userId: 'm2', createdAt: 0, lastSeenAt: 28000000, revoked: false }, 28900000],
+        expected: { status: 401, reason: 'expired' },
+      },
+      {
+        name: 'Measures the idle limit from the last use',
+        input: [{ userId: 'm3', createdAt: 0, lastSeenAt: 10000000, revoked: false }, 11000000],
+        expected: { status: 200, userId: 'm3' },
+      },
+      {
+        name: 'Reports revoked before expired',
+        input: [{ userId: 'm1', createdAt: 0, lastSeenAt: 0, revoked: true }, 30000000],
+        expected: { status: 401, reason: 'revoked' },
+      },
+      {
+        name: 'Reports expired before idle',
+        input: [{ userId: 'm1', createdAt: 0, lastSeenAt: 0, revoked: false }, 28800000],
+        expected: { status: 401, reason: 'expired' },
+      },
+    ],
+  },
+  {
+    id: 'backend-role-permission',
+    title: 'Check what a role allows',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'A notes service gives each member one or more roles, and a table lists the actions each role allows. Every request names one action, such as "notes:read", and the server answers before it touches any data.',
+    prompt:
+      'Implement authorize(user, action, permissions). user is null when the request has no valid session, or {id, roles}, where roles is an array of role names. permissions maps a role name to the actions it grants. An action is "<resource>:<verb>", such as "notes:read", and a grant is either an exact action or "<resource>:*", which covers every verb on that resource. Return {status: 401} when user is null. Return {status: 200} when any of the user\'s roles grants the action. Otherwise, including when a role is not in the table or the user has no roles, return {status: 403}. Names are compared exactly, letter case included. Do not change the inputs.',
+    brief: {
+      summary: 'Implement authorize(user, action, permissions) and return 200, 401, or 403.',
+      rules: [
+        'Return {status: 401} when user is null.',
+        'A grant equal to the action covers it, and a grant "<resource>:*" covers every action that starts with "<resource>:".',
+        "Return {status: 200} when any of the user's roles grants the action.",
+        'Otherwise return {status: 403}. A role missing from the table grants nothing.',
+      ],
+      edgeCases: [
+        'A wildcard covers only its own resource: "notes:*" does not cover "notes-archive:read".',
+        'A bare "*" is not a wildcard grant; it covers only an action named exactly "*".',
+        'Names are compared exactly, letter case included.',
+        'Do not change the inputs.',
+      ],
+    },
+    example: {
+      input: 'authorize({id: "m1", roles: ["viewer"]}, "notes:delete", {viewer: ["notes:read"], editor: ["notes:*"]})',
+      output: '{status: 403}',
+    },
+    note: 'Users, roles, and the permission table are values passed to your function. There is no live server or user directory; the checks call it directly.',
+    vocabulary: [
+      { term: 'Role', meaning: 'a named group of permissions given to a user, such as editor' },
+      { term: 'Permission', meaning: 'one action a role allows, such as notes:edit' },
+      { term: 'Deny by default', meaning: 'refusing every action that nothing explicitly allows' },
+    ],
+    planPrompt:
+      'The table gives viewer ["notes:read"] and editor ["notes:*"]. Decide each answer: a viewer reading notes, a viewer deleting notes, an editor deleting notes, an editor reading notes-archive, and a request with no session.',
+    starter:
+      "type User = { id: string; roles: string[] }\ntype Permissions = { [role: string]: string[] }\n\nfunction authorize(user: User | null, action: string, permissions: Permissions): { status: 200 | 401 | 403 } {\n  // Allow only what one of the user's roles grants.\n  return { status: 403 }\n}\n",
+    functionName: 'authorize',
+    preserveInput: true,
+    hints: [
+      'Keep the two refusals apart: no user at all is 401, while a known user without the permission is 403.',
+      'A grant ending in ":*" covers an action when the action starts with the grant minus its "*", colon included.',
+      'Loop over the roles, look each one up in the table (a missing role grants nothing), and return 200 as soon as one grant covers the action; otherwise return 403.',
+    ],
+    checks: [
+      {
+        name: 'Allows an exact grant',
+        input: [{ id: 'm1', roles: ['viewer'] }, 'notes:read', { viewer: ['notes:read'], editor: ['notes:*'] }],
+        expected: { status: 200 },
+      },
+      {
+        name: 'Refuses an action no role grants',
+        input: [{ id: 'm1', roles: ['viewer'] }, 'notes:delete', { viewer: ['notes:read'], editor: ['notes:*'] }],
+        expected: { status: 403 },
+      },
+      {
+        name: 'Answers 401 without a session',
+        input: [null, 'notes:read', { viewer: ['notes:read'], editor: ['notes:*'] }],
+        expected: { status: 401 },
+      },
+      {
+        name: 'Lets a wildcard cover every verb on its resource',
+        input: [{ id: 'm2', roles: ['editor'] }, 'notes:delete', { viewer: ['notes:read'], editor: ['notes:*'] }],
+        expected: { status: 200 },
+      },
+      {
+        name: 'Keeps a wildcard to its own resource',
+        input: [{ id: 'm2', roles: ['editor'] }, 'notes-archive:read', { viewer: ['notes:read'], editor: ['notes:*'] }],
+        expected: { status: 403 },
+      },
+      {
+        name: 'Combines the grants of several roles',
+        input: [{ id: 'm3', roles: ['viewer', 'tagger'] }, 'tags:edit', { viewer: ['notes:read'], tagger: ['tags:edit'] }],
+        expected: { status: 200 },
+      },
+      {
+        name: 'Ignores a role missing from the table',
+        input: [{ id: 'm4', roles: ['guest'] }, 'notes:read', { viewer: ['notes:read'] }],
+        expected: { status: 403 },
+      },
+      {
+        name: 'Refuses a user with no roles',
+        input: [{ id: 'm5', roles: [] }, 'notes:read', { viewer: ['notes:read'] }],
+        expected: { status: 403 },
+      },
+      {
+        name: 'Does not treat a bare "*" as every action',
+        input: [{ id: 'm6', roles: ['owner'] }, 'notes:read', { owner: ['*'] }],
+        expected: { status: 403 },
+      },
+      {
+        name: 'Compares names with their letter case',
+        input: [{ id: 'm1', roles: ['viewer'] }, 'Notes:read', { viewer: ['notes:read'] }],
+        expected: { status: 403 },
+      },
+      {
+        name: 'Does not let a requested wildcard match a narrower grant',
+        input: [{ id: 'm1', roles: ['viewer'] }, 'notes:*', { viewer: ['notes:read'] }],
+        expected: { status: 403 },
+      },
+    ],
+  },
+  {
+    id: 'backend-owner-access',
+    title: 'Let members reach only their own notes',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'In a notes app, each note belongs to the member who wrote it, and the owner can share a note with other members for reading. A role check alone cannot tell these apart, so on every request the server also checks whether this member may act on this particular note.',
+    prompt:
+      'Implement noteAccess(user, note, action). user is {id, role}, with role "member" or "admin". note is null when no note has the requested ID, or {id, ownerId, sharedWith}, where sharedWith is an array of member IDs. action is "read", "edit", or "delete". Decide in this order: if note is null, return {status: 404}. If note.ownerId equals user.id, return {status: 200} for any action. If user.role is "admin", return {status: 200} for read and delete and {status: 403} for edit. If sharedWith includes user.id, return {status: 200} for read and {status: 403} otherwise. For anyone else return {status: 404}, so the note looks the same as one that does not exist. Do not change the inputs.',
+    brief: {
+      summary: 'Implement noteAccess(user, note, action) and return 200, 403, or 404.',
+      rules: [
+        'If note is null, return {status: 404}.',
+        'The owner (note.ownerId equals user.id) may take any action: {status: 200}.',
+        "An admin may read and delete any note, but editing someone else's note is {status: 403}.",
+        'A member listed in sharedWith may read: {status: 200}; editing or deleting is {status: 403}.',
+        'Anyone else gets {status: 404}, the same answer as a note that does not exist.',
+      ],
+      edgeCases: ['An admin who owns the note follows the owner rule.', 'Do not change the inputs.'],
+    },
+    example: {
+      input: 'noteAccess({id: "m2", role: "member"}, {id: "n1", ownerId: "m1", sharedWith: ["m2"]}, "edit")',
+      output: '{status: 403}',
+    },
+    note: 'Users and notes are values passed to your function; there is no live server or database. A real handler loads the note by ID and makes this decision before reading or changing it.',
+    vocabulary: [
+      { term: 'Ownership check', meaning: "comparing a record's owner with the user making the request before acting on it" },
+      { term: 'Object-level access', meaning: 'deciding access for each record, not only for each kind of action' },
+    ],
+    planPrompt:
+      'Note n1 belongs to m1 and is shared with m2. Decide read, edit, and delete for m1, for m2, for another member m3, and for an admin a1.',
+    starter:
+      "type User = { id: string; role: 'member' | 'admin' }\ntype Note = { id: string; ownerId: string; sharedWith: string[] }\ntype Action = 'read' | 'edit' | 'delete'\n\nfunction noteAccess(user: User, note: Note | null, action: Action): { status: 200 | 403 | 404 } {\n  // Decide in the order of the rules.\n  return { status: 404 }\n}\n",
+    functionName: 'noteAccess',
+    preserveInput: true,
+    hints: [
+      'Answer 404 for a missing note before anything else: there is nothing to act on.',
+      'Check the owner before the role, so an admin who wrote the note may still edit it.',
+      'After the owner and admin rules, a shared member may only read (403 for the rest), and everyone else gets 404, the same as a missing note.',
+    ],
+    checks: [
+      {
+        name: 'Lets the owner edit',
+        input: [{ id: 'm1', role: 'member' }, { id: 'n1', ownerId: 'm1', sharedWith: ['m2'] }, 'edit'],
+        expected: { status: 200 },
+      },
+      {
+        name: 'Lets the owner delete',
+        input: [{ id: 'm1', role: 'member' }, { id: 'n1', ownerId: 'm1', sharedWith: ['m2'] }, 'delete'],
+        expected: { status: 200 },
+      },
+      {
+        name: 'Lets a shared member read',
+        input: [{ id: 'm2', role: 'member' }, { id: 'n1', ownerId: 'm1', sharedWith: ['m2'] }, 'read'],
+        expected: { status: 200 },
+      },
+      {
+        name: 'Refuses a shared member who edits',
+        input: [{ id: 'm2', role: 'member' }, { id: 'n1', ownerId: 'm1', sharedWith: ['m2'] }, 'edit'],
+        expected: { status: 403 },
+      },
+      {
+        name: 'Refuses a shared member who deletes',
+        input: [{ id: 'm2', role: 'member' }, { id: 'n1', ownerId: 'm1', sharedWith: ['m2'] }, 'delete'],
+        expected: { status: 403 },
+      },
+      {
+        name: 'Hides the note from other members',
+        input: [{ id: 'm3', role: 'member' }, { id: 'n1', ownerId: 'm1', sharedWith: ['m2'] }, 'read'],
+        expected: { status: 404 },
+      },
+      {
+        name: 'Hides the note from other members who try to edit',
+        input: [{ id: 'm3', role: 'member' }, { id: 'n1', ownerId: 'm1', sharedWith: ['m2'] }, 'edit'],
+        expected: { status: 404 },
+      },
+      { name: 'Answers 404 for a missing note', input: [{ id: 'm1', role: 'member' }, null, 'read'], expected: { status: 404 } },
+      {
+        name: 'Answers 404 for a missing note to an admin too',
+        input: [{ id: 'a1', role: 'admin' }, null, 'delete'],
+        expected: { status: 404 },
+      },
+      {
+        name: 'Lets an admin read any note',
+        input: [{ id: 'a1', role: 'admin' }, { id: 'n1', ownerId: 'm1', sharedWith: [] }, 'read'],
+        expected: { status: 200 },
+      },
+      {
+        name: 'Lets an admin delete any note',
+        input: [{ id: 'a1', role: 'admin' }, { id: 'n1', ownerId: 'm1', sharedWith: [] }, 'delete'],
+        expected: { status: 200 },
+      },
+      {
+        name: "Refuses an admin who edits someone else's note",
+        input: [{ id: 'a1', role: 'admin' }, { id: 'n1', ownerId: 'm1', sharedWith: [] }, 'edit'],
+        expected: { status: 403 },
+      },
+      {
+        name: 'Treats an admin who owns the note as its owner',
+        input: [{ id: 'a1', role: 'admin' }, { id: 'n2', ownerId: 'a1', sharedWith: [] }, 'edit'],
+        expected: { status: 200 },
+      },
+    ],
+  },
+  {
+    id: 'backend-visible-notes',
+    title: 'List only the notes a member may see',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'The notes list endpoint returns one page of IDs and a total, so the app can show "12 notes". The list has to follow the same rules as opening one note, or it shows titles and counts that a member could never open.',
+    prompt:
+      'Implement visibleNotes(user, notes). user is {id, role}, with role "member" or "admin"; notes is an array of {id, ownerId, sharedWith}. An admin may see every note. A member may see a note they own or one whose sharedWith includes their id. Return {ids, total}: ids lists the IDs of the notes the user may see, in the given order, and total is how many there are. Notes the user may not see are left out of both, so the answer does not reveal how many other notes exist. Do not change the inputs.',
+    brief: {
+      summary: 'Implement visibleNotes(user, notes) and return {ids, total} for the notes the user may see.',
+      rules: [
+        'An admin may see every note.',
+        'A member may see a note they own or one whose sharedWith includes their id.',
+        'ids keeps the given order, and total counts only the notes the user may see.',
+      ],
+      edgeCases: ['An empty list returns {ids: [], total: 0}.', 'Do not change the inputs.'],
+    },
+    example: {
+      input:
+        'visibleNotes({id: "m2", role: "member"}, [{id: "n1", ownerId: "m1", sharedWith: ["m2"]}, {id: "n2", ownerId: "m1", sharedWith: []}, {id: "n3", ownerId: "m2", sharedWith: []}])',
+      output: '{ids: ["n1", "n3"], total: 2}',
+    },
+    note: 'Notes are an array passed to your function, not a live database. A real endpoint filters in its query (for example WHERE owner_id = ? OR ...) before paging, which these reps do not cover.',
+    vocabulary: [
+      { term: 'Row-level filtering', meaning: 'limiting a list to the rows the requesting user may see, before counting or paging' },
+    ],
+    planPrompt:
+      'Three notes: n1 by m1 shared with m2, n2 by m1, n3 by m2. Write the ids and total for m1, for m2, for m3, and for an admin.',
+    starter:
+      "type User = { id: string; role: 'member' | 'admin' }\ntype Note = { id: string; ownerId: string; sharedWith: string[] }\n\nfunction visibleNotes(user: User, notes: Note[]): { ids: string[]; total: number } {\n  // Keep the notes this user may see.\n  return { ids: [], total: notes.length }\n}\n",
+    functionName: 'visibleNotes',
+    preserveInput: true,
+    hints: [
+      'Write one test that says whether this user may see one note, using the same rules as opening it.',
+      'Filter with that test first, then count what is left; counting the whole list tells a member how many hidden notes exist.',
+      'Return the filtered IDs in their original order and their count as total; an admin passes the test for every note.',
+    ],
+    checks: [
+      {
+        name: 'Shows a member their own and shared notes',
+        input: [
+          { id: 'm2', role: 'member' },
+          [
+            { id: 'n1', ownerId: 'm1', sharedWith: ['m2'] },
+            { id: 'n2', ownerId: 'm1', sharedWith: [] },
+            { id: 'n3', ownerId: 'm2', sharedWith: [] },
+          ],
+        ],
+        expected: { ids: ['n1', 'n3'], total: 2 },
+      },
+      {
+        name: 'Counts only the visible notes',
+        input: [
+          { id: 'm3', role: 'member' },
+          [
+            { id: 'n1', ownerId: 'm1', sharedWith: ['m2'] },
+            { id: 'n2', ownerId: 'm1', sharedWith: [] },
+          ],
+        ],
+        expected: { ids: [], total: 0 },
+      },
+      {
+        name: 'Shows an admin every note',
+        input: [
+          { id: 'a1', role: 'admin' },
+          [
+            { id: 'n1', ownerId: 'm1', sharedWith: [] },
+            { id: 'n2', ownerId: 'm2', sharedWith: [] },
+          ],
+        ],
+        expected: { ids: ['n1', 'n2'], total: 2 },
+      },
+      {
+        name: 'Keeps the given order',
+        input: [
+          { id: 'm1', role: 'member' },
+          [
+            { id: 'n9', ownerId: 'm1', sharedWith: [] },
+            { id: 'n4', ownerId: 'm2', sharedWith: ['m1'] },
+            { id: 'n7', ownerId: 'm1', sharedWith: [] },
+          ],
+        ],
+        expected: { ids: ['n9', 'n4', 'n7'], total: 3 },
+      },
+      { name: 'Returns nothing for an empty list', input: [{ id: 'm1', role: 'member' }, []], expected: { ids: [], total: 0 } },
+      {
+        name: 'Matches shared members by exact id',
+        input: [{ id: 'm1', role: 'member' }, [{ id: 'n5', ownerId: 'm2', sharedWith: ['m10', 'M1'] }]],
+        expected: { ids: [], total: 0 },
+      },
+    ],
+  },
+  {
+    id: 'backend-loan-access',
+    title: 'Decide who may view or renew a loan',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      "A library app lists book loans. Members use it to check and renew their own loans; librarians use it at the desk to look up and renew anyone's. Renewing has limits, and a member cannot renew a loan that is already overdue.",
+    prompt:
+      'Implement decideLoan(actor, loan, action, now). actor is {id, role}, with role "member" or "librarian". loan is null when no loan has the requested ID, or {id, memberId, dueAt, renewals}, with dueAt in milliseconds. action is "view" or "renew". If loan is null, return {status: 404}. A member whose id is not loan.memberId gets {status: 404} for either action. Viewing is {status: 200} for the loan\'s member and for any librarian. When the loan\'s member renews: if now is at or after dueAt, return {status: 403, reason: "overdue"}; otherwise, if renewals is 2 or more, return {status: 403, reason: "limit"}; otherwise {status: 200}. When a librarian renews: if renewals is 3 or more, return {status: 403, reason: "limit"}; otherwise {status: 200}, even when the loan is overdue. Do not change the inputs.',
+    brief: {
+      summary: 'Implement decideLoan(actor, loan, action, now) and return 200, 403 with a reason, or 404.',
+      rules: [
+        'A missing loan is {status: 404}, and so is any loan of another member when the actor is a member.',
+        "The loan's member and any librarian may view it: {status: 200}.",
+        'A member renewing their loan gets {status: 403, reason: "overdue"} at or after dueAt, then {status: 403, reason: "limit"} with 2 or more renewals, and {status: 200} otherwise.',
+        'A librarian renewing gets {status: 403, reason: "limit"} with 3 or more renewals and {status: 200} otherwise, even for an overdue loan.',
+      ],
+      edgeCases: ['The role decides which renewal rules apply.', 'Do not change the inputs.'],
+    },
+    example: {
+      input: 'decideLoan({id: "m1", role: "member"}, {id: "L1", memberId: "m1", dueAt: 5000, renewals: 1}, "renew", 4000)',
+      output: '{status: 200}',
+    },
+    note: 'Actors and loans are values passed to your function, and now is an argument, not the machine clock. There is no live server or library database; the checks call the function directly.',
+    vocabulary: [
+      { term: 'Borrower', meaning: 'the member a loan belongs to' },
+      { term: 'Renewal limit', meaning: 'the most times a loan may be extended' },
+    ],
+    planPrompt:
+      'Loan L1 belongs to m1, is due at 5000, and has 2 renewals. Decide m1 viewing, m1 renewing at 4000, m2 viewing, and a librarian renewing at 6000.',
+    starter:
+      "type Actor = { id: string; role: 'member' | 'librarian' }\ntype Loan = { id: string; memberId: string; dueAt: number; renewals: number }\ntype Decision = { status: 200 } | { status: 404 } | { status: 403; reason: 'overdue' | 'limit' }\n\nfunction decideLoan(actor: Actor, loan: Loan | null, action: 'view' | 'renew', now: number): Decision {\n  // Decide who may act on this loan, then apply the renewal rules.\n  return { status: 404 }\n}\n",
+    functionName: 'decideLoan',
+    preserveInput: true,
+    hints: [
+      'Settle whether this actor may know about the loan at all before looking at the action.',
+      "Viewing needs only that first decision; renewing then follows the rules for the actor's role.",
+      'For a member, check overdue before the renewal count; for a librarian, only the count of 3 matters.',
+    ],
+    checks: [
+      {
+        name: 'Lets a member renew their loan',
+        input: [{ id: 'm1', role: 'member' }, { id: 'L1', memberId: 'm1', dueAt: 5000, renewals: 1 }, 'renew', 4000],
+        expected: { status: 200 },
+      },
+      {
+        name: 'Lets a member view their loan',
+        input: [{ id: 'm1', role: 'member' }, { id: 'L1', memberId: 'm1', dueAt: 5000, renewals: 2 }, 'view', 9000],
+        expected: { status: 200 },
+      },
+      {
+        name: "Hides another member's loan",
+        input: [{ id: 'm2', role: 'member' }, { id: 'L1', memberId: 'm1', dueAt: 5000, renewals: 0 }, 'view', 4000],
+        expected: { status: 404 },
+      },
+      {
+        name: "Refuses to renew another member's loan as if it did not exist",
+        input: [{ id: 'm2', role: 'member' }, { id: 'L1', memberId: 'm1', dueAt: 5000, renewals: 0 }, 'renew', 4000],
+        expected: { status: 404 },
+      },
+      {
+        name: 'Answers 404 for a missing loan',
+        input: [{ id: 'k1', role: 'librarian' }, null, 'view', 4000],
+        expected: { status: 404 },
+      },
+      {
+        name: 'Refuses a member renewing at the due time',
+        input: [{ id: 'm1', role: 'member' }, { id: 'L1', memberId: 'm1', dueAt: 5000, renewals: 0 }, 'renew', 5000],
+        expected: { status: 403, reason: 'overdue' },
+      },
+      {
+        name: 'Refuses a member at the renewal limit',
+        input: [{ id: 'm1', role: 'member' }, { id: 'L1', memberId: 'm1', dueAt: 5000, renewals: 2 }, 'renew', 4000],
+        expected: { status: 403, reason: 'limit' },
+      },
+      {
+        name: 'Reports overdue before the limit',
+        input: [{ id: 'm1', role: 'member' }, { id: 'L1', memberId: 'm1', dueAt: 5000, renewals: 2 }, 'renew', 6000],
+        expected: { status: 403, reason: 'overdue' },
+      },
+      {
+        name: "Lets a librarian view anyone's loan",
+        input: [{ id: 'k1', role: 'librarian' }, { id: 'L1', memberId: 'm1', dueAt: 5000, renewals: 0 }, 'view', 4000],
+        expected: { status: 200 },
+      },
+      {
+        name: 'Lets a librarian renew an overdue loan',
+        input: [{ id: 'k1', role: 'librarian' }, { id: 'L1', memberId: 'm1', dueAt: 5000, renewals: 2 }, 'renew', 6000],
+        expected: { status: 200 },
+      },
+      {
+        name: 'Refuses a librarian at three renewals',
+        input: [{ id: 'k1', role: 'librarian' }, { id: 'L1', memberId: 'm1', dueAt: 5000, renewals: 3 }, 'renew', 4000],
+        expected: { status: 403, reason: 'limit' },
+      },
+    ],
+  },
+  {
     id: 'backend-versioned-update',
     title: 'Reject a stale write',
     category: 'Backend services',
@@ -3109,6 +3605,230 @@ export const backendServiceReps: Rep[] = [
         expected: { state: { 'order-7': 'packed' }, applied: ['d1', 'D1'], skipped: [] },
       },
       { name: 'Handles no deliveries', input: [[]], expected: { state: {}, applied: [], skipped: [] } },
+    ],
+  },
+  {
+    id: 'backend-verify-signature',
+    title: 'Check that a webhook came from its sender',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'Anyone who knows your webhook address can send it a request, so a provider signs each delivery. It shares a signing secret with you once, then sends a header holding the time it signed and an HMAC of that time and the raw body. Your receiver computes the same HMAC and acts only on a delivery whose signature matches and whose time is recent.',
+    prompt:
+      'Implement the async function verifyWebhook(secret, header, body, now). header is the signature header text, or null when it is missing. It is a comma-separated list of key=value pieces, with spaces around a piece ignored: one t piece holds the signing time in whole seconds (digits only), and one or more v1 pieces hold signatures; other keys are ignored. If the header is null, has no t, has more than one t, has a t that is not all digits, or has no v1, return {ok: false, reason: "malformed"}. Otherwise, if now and t differ by more than 300 seconds in either direction, return {ok: false, reason: "stale"}. Otherwise compute the HMAC-SHA256 of the text t + "." + body with secret as the key, written as lowercase hex, using the hmacHex helper in the starter. Return {ok: true} if any v1 equals it, comparing with a function that takes the same time wherever two strings first differ; otherwise return {ok: false, reason: "mismatch"}.',
+    brief: {
+      summary: 'Implement async verifyWebhook(secret, header, body, now) and return {ok: true} or {ok: false, reason}.',
+      rules: [
+        'Split the header at commas and trim each piece; read t (exactly one, digits only) and every v1, and ignore other keys.',
+        'A missing header, a missing or repeated t, a t that is not all digits, or no v1 gives {ok: false, reason: "malformed"}.',
+        'If now and t differ by more than 300 seconds, either way, return {ok: false, reason: "stale"}.',
+        'Sign t + "." + body with the secret using hmacHex (HMAC-SHA256 as lowercase hex). Return {ok: true} if any v1 equals the result, else {ok: false, reason: "mismatch"}.',
+        'Compare signatures with a function whose time does not depend on where two strings first differ.',
+      ],
+      edgeCases: [
+        'Exactly 300 seconds apart is still recent.',
+        'The body is checked exactly as received: a re-formatted copy of the same JSON does not match.',
+        'Signatures are lowercase hex; an uppercase copy does not match.',
+      ],
+    },
+    example: {
+      input:
+        'await verifyWebhook("sample-secret-1", "t=1760000000,v1=b25e066a…a47c8a", \'{"event":"order.paid","order":"o-7"}\', 1760000100)',
+      output: '{ok: true}',
+    },
+    note: 'The secret and signatures are sample values. hmacHex uses the Web Crypto API that browsers and Node provide. The checks call your function directly with header text, not a live webhook request, and they cannot measure timing: whether your comparison takes the same time wherever strings differ is self-reviewed.',
+    vocabulary: [
+      { term: 'HMAC', meaning: 'a code computed from a message and a secret key; only someone with the key can produce the same code' },
+      { term: 'Signing secret', meaning: 'the value a sender and receiver both keep, used to sign and check deliveries' },
+      { term: 'Timestamp tolerance', meaning: 'how far a signed time may be from now before a delivery is refused as old' },
+      { term: 'Constant-time comparison', meaning: 'comparing two values in a way that takes the same time wherever they first differ' },
+    ],
+    planPrompt:
+      'A delivery was signed at t = 1000 and arrives with now = 1250, then again with now = 1301. Say what you check, in order, for each arrival, and which answer each one gets if the signature is correct.',
+    starter:
+      "type Verdict = { ok: true } | { ok: false; reason: 'malformed' | 'stale' | 'mismatch' }\n\nasync function hmacHex(secret: string, text: string): Promise<string> {\n  const encoder = new TextEncoder()\n  const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])\n  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(text))\n  return Array.from(new Uint8Array(signature), byte => byte.toString(16).padStart(2, '0')).join('')\n}\n\nasync function verifyWebhook(secret: string, header: string | null, body: string, now: number): Promise<Verdict> {\n  // Read t and v1 from the header, check the time, then compare signatures.\n  return { ok: false, reason: 'malformed' }\n}\n",
+    functionName: 'verifyWebhook',
+    hints: [
+      'Parse the header completely before deciding anything: collect the t values and the v1 values, and stop with "malformed" if the shape is wrong.',
+      'Check the time before computing the signature, and measure the gap both ways with Math.abs.',
+      'Sign the time and the body together, then compare with a loop that visits every character and combines the differences, returning only at the end.',
+    ],
+    checks: [
+      {
+        name: 'Accepts a valid signature',
+        input: [
+          'sample-secret-1',
+          't=1760000000,v1=b25e066ad291b0bcf8944a04e902ef4f4dbc167b20084d10b9218a6cfea47c8a',
+          '{"event":"order.paid","order":"o-7"}',
+          1760000100,
+        ],
+        expected: { ok: true },
+      },
+      {
+        name: 'Accepts any matching v1 while secrets are rotated',
+        input: [
+          'sample-secret-1',
+          't=1760000000,v1=464875bdc17219580d7a2d32828b4c45455573f8c29eaf4f0945d9aa52b5c553,v1=b25e066ad291b0bcf8944a04e902ef4f4dbc167b20084d10b9218a6cfea47c8a',
+          '{"event":"order.paid","order":"o-7"}',
+          1760000100,
+        ],
+        expected: { ok: true },
+      },
+      {
+        name: 'Refuses a body changed after signing',
+        input: [
+          'sample-secret-1',
+          't=1760000000,v1=b25e066ad291b0bcf8944a04e902ef4f4dbc167b20084d10b9218a6cfea47c8a',
+          '{"event": "order.paid","order":"o-7"}',
+          1760000100,
+        ],
+        expected: { ok: false, reason: 'mismatch' },
+      },
+      {
+        name: 'Refuses a signature made with another secret',
+        input: [
+          'sample-secret-1',
+          't=1760000000,v1=464875bdc17219580d7a2d32828b4c45455573f8c29eaf4f0945d9aa52b5c553',
+          '{"event":"order.paid","order":"o-7"}',
+          1760000100,
+        ],
+        expected: { ok: false, reason: 'mismatch' },
+      },
+      {
+        name: 'Signs the time together with the body',
+        input: [
+          'sample-secret-1',
+          't=1760000000,v1=21e33ead4708f9762a81a4d7084ef309001a66ed5dbf1fc50e5c8042f94ac71d',
+          '{"event":"order.paid","order":"o-7"}',
+          1760000100,
+        ],
+        expected: { ok: false, reason: 'mismatch' },
+      },
+      {
+        name: 'Refuses a time changed after signing',
+        input: [
+          'sample-secret-1',
+          't=1760000001,v1=b25e066ad291b0bcf8944a04e902ef4f4dbc167b20084d10b9218a6cfea47c8a',
+          '{"event":"order.paid","order":"o-7"}',
+          1760000100,
+        ],
+        expected: { ok: false, reason: 'mismatch' },
+      },
+      {
+        name: 'Accepts a time exactly 300 seconds old',
+        input: [
+          'sample-secret-1',
+          't=1759999700,v1=c719bfa0b4c114e2c428293603798fd473f8228092170e5138d6d81944418bdf',
+          '{"event":"order.paid","order":"o-7"}',
+          1760000000,
+        ],
+        expected: { ok: true },
+      },
+      {
+        name: 'Refuses a time 301 seconds old',
+        input: [
+          'sample-secret-1',
+          't=1759999699,v1=b518a428c2d055d58979d8827f0485ee76ac599d1b3a5d0693c0c73436e4b5ab',
+          '{"event":"order.paid","order":"o-7"}',
+          1760000000,
+        ],
+        expected: { ok: false, reason: 'stale' },
+      },
+      {
+        name: 'Refuses a time 301 seconds ahead',
+        input: [
+          'sample-secret-1',
+          't=1760000301,v1=b4efb4d7ac2252a2597c4941521986acaaac24b59c2c7ff78ddf39be1bdd7e3e',
+          '{"event":"order.paid","order":"o-7"}',
+          1760000000,
+        ],
+        expected: { ok: false, reason: 'stale' },
+      },
+      {
+        name: 'Accepts a time 300 seconds ahead',
+        input: [
+          'sample-secret-1',
+          't=1760000300,v1=be1c671be716990e65b3c3e8a4c0d65785573182ae27ef9789343e57b8c4eb22',
+          '{"event":"order.paid","order":"o-7"}',
+          1760000000,
+        ],
+        expected: { ok: true },
+      },
+      {
+        name: 'Checks the time before the signature',
+        input: [
+          'sample-secret-1',
+          't=1759999000,v1=464875bdc17219580d7a2d32828b4c45455573f8c29eaf4f0945d9aa52b5c553',
+          '{"event":"order.paid","order":"o-7"}',
+          1760000000,
+        ],
+        expected: { ok: false, reason: 'stale' },
+      },
+      {
+        name: 'Reports a missing header as malformed',
+        input: ['sample-secret-1', null, '{"event":"order.paid","order":"o-7"}', 1760000100],
+        expected: { ok: false, reason: 'malformed' },
+      },
+      {
+        name: 'Requires a time',
+        input: [
+          'sample-secret-1',
+          'v1=b25e066ad291b0bcf8944a04e902ef4f4dbc167b20084d10b9218a6cfea47c8a',
+          '{"event":"order.paid","order":"o-7"}',
+          1760000100,
+        ],
+        expected: { ok: false, reason: 'malformed' },
+      },
+      {
+        name: 'Requires a signature',
+        input: ['sample-secret-1', 't=1760000000', '{"event":"order.paid","order":"o-7"}', 1760000100],
+        expected: { ok: false, reason: 'malformed' },
+      },
+      {
+        name: 'Refuses a time that is not a whole number',
+        input: [
+          'sample-secret-1',
+          't=1760000000.5,v1=b25e066ad291b0bcf8944a04e902ef4f4dbc167b20084d10b9218a6cfea47c8a',
+          '{"event":"order.paid","order":"o-7"}',
+          1760000100,
+        ],
+        expected: { ok: false, reason: 'malformed' },
+      },
+      {
+        name: 'Refuses two times',
+        input: [
+          'sample-secret-1',
+          't=1760000000,t=1760000000,v1=b25e066ad291b0bcf8944a04e902ef4f4dbc167b20084d10b9218a6cfea47c8a',
+          '{"event":"order.paid","order":"o-7"}',
+          1760000100,
+        ],
+        expected: { ok: false, reason: 'malformed' },
+      },
+      {
+        name: 'Ignores spaces and other keys',
+        input: [
+          'sample-secret-1',
+          ' t=1760000000 , v0=abc , v1=b25e066ad291b0bcf8944a04e902ef4f4dbc167b20084d10b9218a6cfea47c8a ',
+          '{"event":"order.paid","order":"o-7"}',
+          1760000100,
+        ],
+        expected: { ok: true },
+      },
+      {
+        name: 'Compares signatures as lowercase hex',
+        input: [
+          'sample-secret-1',
+          't=1760000000,v1=B25E066AD291B0BCF8944A04E902EF4F4DBC167B20084D10B9218A6CFEA47C8A',
+          '{"event":"order.paid","order":"o-7"}',
+          1760000100,
+        ],
+        expected: { ok: false, reason: 'mismatch' },
+      },
+      {
+        name: 'Signs an empty body',
+        input: ['sample-secret-1', 't=1760000000,v1=9791c2211ebdca656130550c28dff418dde1d2610e4a2ef42a808df2ff0d52b7', '', 1760000100],
+        expected: { ok: true },
+      },
     ],
   },
   {

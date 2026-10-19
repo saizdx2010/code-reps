@@ -59,6 +59,19 @@ export function goToView(view: View) {
   location.hash = routeHash({ view })
 }
 
+/** Session key naming the project that Library → Projects opens and scrolls to once, after a trail link. */
+export const openProjectKey = 'code-reps:ui:projects:open'
+
+/** Opens Library → Projects with one external project expanded, such as the DevOps project at the end of its trail. */
+export function openExternalProject(projectId: string) {
+  try {
+    sessionStorage.setItem(openProjectKey, projectId)
+  } catch {
+    /* Without session storage the page still opens; the learner expands the project. */
+  }
+  goToView('projects')
+}
+
 export function navigationArea(view: View): keyof typeof navigationSections {
   view = sectionView(view)
   if (view === 'workspace') return 'library'

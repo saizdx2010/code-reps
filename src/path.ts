@@ -413,6 +413,16 @@ export const paths = [
         repIds: ['sqlite-stock-transfer', 'sqlite-customer-totals', 'sqlite-restock-upsert'],
       },
       {
+        title: 'Decide who may act',
+        repIds: [
+          'backend-session-state',
+          'backend-role-permission',
+          'backend-owner-access',
+          'backend-visible-notes',
+          'backend-loan-access',
+        ],
+      },
+      {
         title: 'Handle concurrent writes',
         repIds: [
           'backend-versioned-update',
@@ -465,6 +475,7 @@ export const paths = [
           'backend-classify-change',
           'backend-deprecation-headers',
           'backend-webhook-deliveries',
+          'backend-verify-signature',
           'backend-downgrade-response',
         ],
       },

@@ -998,6 +998,7 @@ export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[
       'http-routing',
       'validation',
       'http',
+      'http-authorization',
       'concurrent-writes',
       'background-jobs',
       'rate-limiting',

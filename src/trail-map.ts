@@ -1,4 +1,4 @@
-import { pathApplications, repCurriculumRole, stageHomeTrack } from './curriculum.ts'
+import { pathApplications, pathExternalProjects, repCurriculumRole, stageHomeTrack } from './curriculum.ts'
 import { skillSummariesForRep as skillsForRep } from './skill-index.ts'
 import { paths } from './path.ts'
 import { repIndex as reps } from './catalog-index.ts'
@@ -8,6 +8,8 @@ export type TrailNode =
   | { kind: 'lesson'; id: string; skillId: string; title: string; state: 'done' | 'open' }
   | { kind: 'rep'; id: string; repId: string; title: string; role: string; state: TrailNodeState; inProgress: boolean }
   | { kind: 'project'; id: string; repId: string; title: string; reason: string; state: 'done' | 'open' }
+  /** A self-reviewed project outside Code Reps: shown on the trail, never counted, never marked done. */
+  | { kind: 'external'; id: string; projectId: string; title: string; reason: string; state: 'open' }
 export type TrailStage = {
   title: string
   /** Fixed text for a stage the trail adds itself, such as projects; authored stages take theirs from src/path-text.ts. */
@@ -97,11 +99,19 @@ export function buildTrail(pathId: string, input: TrailInput): { stages: TrailSt
         ]
       : []
   })
-  if (projects.length)
+  const external = (pathExternalProjects[path.id] ?? []).map((project): TrailNode => ({
+    kind: 'external',
+    id: `external:${project.projectId}`,
+    projectId: project.projectId,
+    title: project.title,
+    reason: project.reason,
+    state: 'open',
+  }))
+  if (projects.length || external.length)
     stages.push({
       title: 'Apply this track in a project',
       description: 'Use these skills together in a larger task.',
-      nodes: projects,
+      nodes: [...projects, ...external],
       covered: false,
       done: projects.filter(node => node.state === 'done').length,
       total: projects.length,

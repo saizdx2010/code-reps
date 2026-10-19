@@ -246,6 +246,7 @@ export const recallVariants: Record<string, string[]> = {
   'sql-migrations': ['sql-migrate-status-codes', 'sql-rebuild-table', 'sql-add-column'],
   'request-anatomy': ['backend-read-json-body', 'backend-decode-query', 'backend-split-target'],
   routing: ['backend-route-specificity', 'backend-route-request', 'backend-match-route'],
+  authorization: ['backend-loan-access', 'backend-owner-access', 'backend-role-permission'],
   'concurrent-writes': ['backend-replay-writes', 'backend-if-match', 'backend-versioned-update'],
   'background-jobs': ['backend-queue-simulation', 'backend-claim-job', 'backend-job-failure'],
   'rate-limiting': ['backend-limit-callers', 'backend-sliding-log', 'backend-token-bucket'],

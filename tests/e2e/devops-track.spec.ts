@@ -28,6 +28,31 @@ test('DevOps is the last track card, builds on Backend, and opens its trail', as
   await expect(page.locator('#path-title')).toHaveText('DevOps')
 })
 
+test('the DevOps trail ends with its own-machine project, which opens expanded in Projects', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/#/paths')
+  await page
+    .locator('.path-choices')
+    .getByRole('button', { name: /^DevOps/ })
+    .click()
+  const last = page.locator('.trail-stage').last()
+  await expect(last.locator('h3')).toHaveText('Apply this track in a project')
+  await expect(last.locator('.trail-stage-count')).toHaveText('Self-review')
+  await expect(last).toContainText('Containerize an app and add CI on your own machine')
+  await expect(last).toContainText('External project · Self-review')
+  await last.getByRole('button', { name: 'Open project brief' }).click()
+  await expect(page).toHaveURL(/#\/projects$/)
+  const project = page.locator('#project-devops-container-ci')
+  const summary = page.locator('#project-devops-container-ci > summary')
+  await expect(project).toHaveAttribute('open', '')
+  await expect(summary).toBeFocused()
+  await expect(summary).toBeInViewport()
+  // The request is used once: coming back to Projects later leaves the project as the learner left it.
+  await summary.click()
+  await page.reload()
+  await expect(page.locator('#project-devops-container-ci')).not.toHaveAttribute('open', '')
+})
+
 test('DevOps can be chosen at a phone width without horizontal scrolling', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/#/paths')

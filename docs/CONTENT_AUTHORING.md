@@ -66,7 +66,7 @@ Run `yarn content:check`, `yarn lint`, `yarn test`, and `yarn build`. Coverage v
 
 ## Path application links
 
-`src/curriculum.ts` contains authored path-to-project application links. Each link names an existing project milestone rep and explains how it applies the path's skills. Keep links relevant rather than assigning every path a destination. Roles and recall evidence derive from `src/learning.ts`; do not duplicate journey definitions. `tests/curriculum.test.mjs` checks target validity and evidence distinctions. Project completion is not automatic proof of transfer or mastery.
+`src/curriculum.ts` contains authored path-to-project application links. Each link names an existing project milestone rep and explains how it applies the path's skills. Keep links relevant rather than assigning every path a destination. Roles and recall evidence derive from `src/learning.ts`; do not duplicate journey definitions. `tests/curriculum.test.mjs` checks target validity and evidence distinctions. Project completion is not automatic proof of transfer or mastery. `pathExternalProjects` in the same file ends a trail with a project outside Code Reps, such as the DevOps hero project in `src/browser-projects.ts`; keep its title equal to the project's, and remember that the trail never counts it or marks it done, because its self-review is learner-reported.
 
 ## Optional visual step traces
 
