@@ -310,6 +310,11 @@ export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
         'Run real SQLite from TypeScript: undo a failed stock transfer, total orders per customer with a join, and restock inventory all or nothing. These reps live in the SQL track.',
       recap: 'You can now write joins and aggregates and keep multi-statement changes atomic.',
     },
+    'Handle concurrent writes': {
+      description:
+        'See how two saves based on the same read lose a change, then refuse stale writes with version numbers, If-Match tags, and compare-and-set.',
+      recap: "You can now detect and refuse a stale write instead of losing someone else's change.",
+    },
     'Stay reliable': {
       description:
         'Check cache freshness, back off retries, limit request rates, avoid double effects, resubmit payments safely, roll back optimistic updates, and share resources safely.',

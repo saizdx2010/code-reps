@@ -256,3 +256,140 @@ test('B2 routing checks catch segment-count, empty-parameter, 404/405, HEAD, and
     ],
   ])
 })
+
+test('B4 concurrent-write checks catch stale writes, falsy fields, weak tags, unseen changes, and value-only comparisons', async () => {
+  const update = solution('backend-versioned-update')
+  await assertCaught('backend-versioned-update', [
+    [
+      update.replace('update.expectedVersion !== record.version', 'update.expectedVersion < record.version'),
+      'Refuses an update based on a later version',
+    ],
+    [
+      update.replace('if (value === null) delete data[field]', 'if (!value) delete data[field]'),
+      'Keeps values that are zero, false, or empty',
+    ],
+    [
+      update.replace('const data: Record<string, unknown> = { ...record.data }', 'const data: Record<string, unknown> = record.data'),
+      'Removes a field set to null',
+    ],
+    [
+      update.replace('if (value === null) delete data[field]\n    else data[field] = value', 'data[field] = value'),
+      'Removes a field set to null',
+    ],
+    [update.replace('version: record.version + 1', 'version: record.version'), 'Applies an update based on the current version'],
+    [
+      update.replace(
+        'for (const [field, value] of Object.entries(update.changes)) {',
+        'for (const [field, value] of Object.entries(update.changes)) {\n    if (typeof value === "object" && value !== null && typeof data[field] === "object") { data[field] = { ...(data[field] as object), ...value }; continue }',
+      ),
+      'Replaces a nested object whole',
+    ],
+  ])
+  const put = solution('backend-if-match')
+  await assertCaught('backend-if-match', [
+    [
+      put.replace('if (ifMatch === null) return { status: 428 }', 'if (ifMatch === null) return { status: 412 }'),
+      'Requires an If-Match header',
+    ],
+    [
+      put.replace(
+        '  if (ifMatch === null) return { status: 428 }\n',
+        '  if (ifMatch === null) return current === null ? { status: 412 } : { status: 428 }\n',
+      ),
+      'Requires the header even when nothing exists',
+    ],
+    [put.replace("!tag.trim().startsWith('W/') && tag.trim() === current.etag", 'tag.includes(current.etag)'), 'Never matches a weak tag'],
+    [
+      put.replace('tag.trim() === current.etag', "tag.trim().replaceAll('\"', '') === current.etag.replaceAll('\"', '')"),
+      'Compares tags with their quotes',
+    ],
+    [put.replace("header === '*' ||", "header.includes('*') ||"), 'Treats * inside a list as an ordinary tag'],
+    [
+      put
+        .replace("current !== null &&\n    (header === '*' ||", "(header === '*' ||")
+        .replace('tag.trim() === current.etag', 'tag.trim() === current?.etag'),
+      'Refuses * when nothing exists',
+    ],
+    [put.replace('Number(current.etag.slice(2, -1)) + 1', 'Number(current.etag.at(-2)) + 1'), 'Reads every digit of the number'],
+    [put.replace("header.split(',').some(tag =>", '[header].some(tag =>'), 'Accepts a match anywhere in a list'],
+  ])
+  const lost = solution('backend-lost-updates')
+  await assertCaught('backend-lost-updates', [
+    [
+      lost.replace('author !== null && author !== event.client &&', 'author !== event.client &&'),
+      'Ignores a write that replaces the starting value',
+    ],
+    [lost.replace('author !== null && author !== event.client &&', 'author !== null &&'), 'Ignores a client replacing its own write'],
+    [
+      lost.replace('(read === undefined || writtenAt > read)', '(read !== undefined && writtenAt > read)'),
+      'Counts any other change when the writer never read',
+    ],
+    [
+      lost
+        .replace(
+          'let author: string | null = null',
+          'let author: string | null = null\n  const writes: { client: string; at: number }[] = []',
+        )
+        .replace(
+          'if (author !== null && author !== event.client && (read === undefined || writtenAt > read)) lost.push(position)',
+          'if (writes.some(w => w.client !== event.client && (read === undefined || w.at > read))) lost.push(position)\n    writes.push({ client: event.client, at: position })',
+        ),
+      'Counts only the write that replaced the change',
+    ],
+    [
+      lost.replace(
+        "if (event.type === 'read') {\n      lastRead.set(event.client, position)",
+        "if (event.type === 'read') {\n      if (!lastRead.has(event.client)) lastRead.set(event.client, position)",
+      ),
+      'Uses the latest read',
+    ],
+  ])
+  const cas = solution('backend-compare-and-set')
+  await assertCaught('backend-compare-and-set', [
+    [cas.replace('Object.hasOwn(store, key) ? store[key] : null', 'store[key] ?? null'), 'Treats inherited names as missing'],
+    [cas.replace('Object.hasOwn(store, key) ? store[key] : null', 'store[key] || null'), 'Treats an empty string as a value'],
+    [
+      cas.replace('const copy: Record<string, string> = { ...store }', 'const copy: Record<string, string> = store'),
+      'Sets a value that still matches',
+    ],
+    [
+      cas.replace('if (next === null) delete copy[key]\n  else copy[key] = next', 'copy[key] = next as string'),
+      'Removes a key when next is null',
+    ],
+    [
+      cas.replace('if (current !== expected)', 'if (current !== null && expected !== null && current !== expected)'),
+      'Refuses to create a key that exists',
+    ],
+    [cas.replace('if (current !== expected)', 'if (current?.toLowerCase() !== expected?.toLowerCase())'), 'Compares values exactly'],
+  ])
+  const replay = solution('backend-replay-writes')
+  await assertCaught('backend-replay-writes', [
+    [replay.replace('      known.set(event.client, version)\n    } else', '    } else'), 'Lets a client write again after its own write'],
+    [
+      replay.replace('known.get(event.client) === version', '(known.get(event.client) ?? version) === version'),
+      'Refuses a write from a client that never read',
+    ],
+    [
+      replay
+        .replace('const known = new Map<string, number>()', 'const known = new Map<string, string>()')
+        .replace("if (event.type === 'read') known.set(event.client, version)", "if (event.type === 'read') known.set(event.client, value)")
+        .replace('known.get(event.client) === version', 'known.get(event.client) === value')
+        .replace('      known.set(event.client, version)\n', '      known.set(event.client, value)\n'),
+      'Refuses a stale write after a change was undone',
+    ],
+    [
+      replay.replace(
+        '} else refused.push(position)',
+        '} else {\n      refused.push(position)\n      known.set(event.client, version)\n    }',
+      ),
+      'Keeps refusing until the client reads again',
+    ],
+    [
+      replay.replace(
+        "if (event.type === 'read') known.set(event.client, version)",
+        "if (event.type === 'read' && !known.has(event.client)) known.set(event.client, version)",
+      ),
+      'A read records the version at that moment',
+    ],
+  ])
+})

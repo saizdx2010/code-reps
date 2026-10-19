@@ -407,6 +407,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'concurrent-writes',
+    title: 'Keep concurrent edits from being lost',
+    guided: 'backend-versioned-update',
+    independent: 'backend-if-match',
+    recall: 'backend-replay-writes',
+    practice: ['backend-lost-updates', 'backend-compare-and-set'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

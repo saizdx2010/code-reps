@@ -136,8 +136,8 @@ Every check is honest about what it establishes: SQL reps run SQLite's dialect o
 
 - [x] B1 · What a request is: method, path, query, headers, and body, as the Backend track's new first stage, with a lesson (`http-request-anatomy`) and the `request-anatomy` journey: split a target, decode a query string, then a delayed JSON-body reader; the request line and case-insensitive headers are practice. Handlers are functions over strings, header pairs, and request objects, not a live server.
 - [x] B2 · Routing: path parameters, and 404 versus 405, as a stage before validation, with a lesson (`http-routing`) and the `routing` journey: match a pattern, choose 404 or 405 with an Allow list, then a delayed most-specific-route picker with wildcards; cleaning a path and building one from values are practice.
-- [ ] B3 · Authorization: session expiry, roles, and ownership checks.
-- [ ] B4 · Concurrent writes: version numbers and lost updates.
+- [ ] B3 · Authorization: session expiry, roles, and ownership checks. Skipped in this pass: an automated content check stopped the drafting twice, so this stage still needs separate authoring. Later stages do not depend on it.
+- [x] B4 · Concurrent writes: version numbers and lost updates, after the SQL-linked storage stage, with a lesson (`concurrent-writes`) and the `concurrent-writes` journey: refuse a stale write by version, honor If-Match with 412 and 428, then a delayed replay of several clients' edits; spotting lost updates in a last-write-wins log and compare-and-set are practice.
 - [ ] B5 · Background jobs: retries, dead letters, and at-least-once processing.
 - [ ] B6 · Rate limits: token bucket and sliding window.
 - [ ] B7 · Evolve an API: versioning and webhook signature verification.

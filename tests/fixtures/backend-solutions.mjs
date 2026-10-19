@@ -175,4 +175,69 @@ function pickRoute(patterns: string[], path: string) {
   }
   return best
 }`,
+  'backend-versioned-update': `
+type StoredRecord = { id: string; version: number; data: Record<string, unknown> }
+function applyUpdate(record: StoredRecord, update: { expectedVersion: number; changes: Record<string, unknown> }) {
+  if (update.expectedVersion !== record.version) return { ok: false, status: 409, currentVersion: record.version }
+  const data: Record<string, unknown> = { ...record.data }
+  for (const [field, value] of Object.entries(update.changes)) {
+    if (value === null) delete data[field]
+    else data[field] = value
+  }
+  return { ok: true, record: { id: record.id, version: record.version + 1, data } }
+}`,
+  'backend-if-match': `
+function conditionalPut(current: { etag: string; value: string } | null, ifMatch: string | null, value: string) {
+  if (ifMatch === null) return { status: 428 }
+  const header = ifMatch.trim()
+  const matches =
+    current !== null &&
+    (header === '*' || header.split(',').some(tag => !tag.trim().startsWith('W/') && tag.trim() === current.etag))
+  if (!matches) return { status: 412 }
+  const next = Number(current.etag.slice(2, -1)) + 1
+  return { status: 200, resource: { etag: '"v' + next + '"', value } }
+}`,
+  'backend-lost-updates': `
+function lostUpdates(events: { client: string; type: 'read' | 'write' }[]) {
+  const lastRead = new Map<string, number>()
+  let author: string | null = null
+  let writtenAt = -1
+  const lost: number[] = []
+  events.forEach((event, position) => {
+    if (event.type === 'read') {
+      lastRead.set(event.client, position)
+      return
+    }
+    const read = lastRead.get(event.client)
+    if (author !== null && author !== event.client && (read === undefined || writtenAt > read)) lost.push(position)
+    author = event.client
+    writtenAt = position
+  })
+  return lost
+}`,
+  'backend-compare-and-set': `
+function compareAndSet(store: Record<string, string>, key: string, expected: string | null, next: string | null) {
+  const current = Object.hasOwn(store, key) ? store[key] : null
+  if (current !== expected) return { ok: false, current }
+  const copy: Record<string, string> = { ...store }
+  if (next === null) delete copy[key]
+  else copy[key] = next
+  return { ok: true, store: copy }
+}`,
+  'backend-replay-writes': `
+type Event = { client: string; type: 'read' } | { client: string; type: 'write'; value: string }
+function replayWrites(initial: { value: string; version: number }, events: Event[]) {
+  let { value, version } = initial
+  const known = new Map<string, number>()
+  const refused: number[] = []
+  events.forEach((event, position) => {
+    if (event.type === 'read') known.set(event.client, version)
+    else if (known.get(event.client) === version) {
+      value = event.value
+      version += 1
+      known.set(event.client, version)
+    } else refused.push(position)
+  })
+  return { value, version, refused }
+}`,
 }

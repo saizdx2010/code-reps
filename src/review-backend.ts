@@ -124,6 +124,66 @@ export const backendDepth: Record<string, RepDepth> = {
     transfer:
       'Add typed parameters such as /orders/:id(number) that match only digits. Decide where a typed parameter ranks between a plain parameter and a literal, and how /orders/new routes. This changed contract is self-reviewed, not checked by the original cases.',
   },
+  'backend-versioned-update': {
+    reasoning:
+      'The version is a promise about what the client saw: an update naming version 3 says "I made this change to version 3". If the record has moved on, applying the change would silently replace whatever happened in between, so the only safe answers are to apply it to exactly that version or to refuse it with the current version so the client can look again. Building the new record on a copy keeps the stored one intact whichever way the decision goes.',
+    trace:
+      'Record p1 is at version 3 with price 40. Editor A sends expectedVersion 3 with price 35: the versions match, so data becomes {name: "Lamp", price: 35} and the version becomes 4. Editor B, who also read version 3, sends expectedVersion 3 with price 45: the record is now at 4, so B gets {ok: false, status: 409, currentVersion: 4} and price 35 survives.',
+    alternative:
+      "Locking the record while someone edits it (pessimistic concurrency) prevents conflicts instead of detecting them, but a lock held across a person's editing session blocks everyone else and needs a timeout when the editor walks away. Version checks cost nothing until two writes actually collide, which is why web APIs usually choose them.",
+    counterexample:
+      "Removing every field whose new value is falsy, as in `if (!value) delete data[key]`, drops a stock of 0 and a featured flag of false. Spreading changes into the stored data object instead of a copy changes the caller's record even when the update is refused.",
+    transfer:
+      'Allow an update to say "apply only these fields if nobody changed them", using a version per field instead of one per record. Decide what a client gets back when one field is stale and another is not. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-if-match': {
+    reasoning:
+      'If-Match turns an update into a conditional one: change the resource only if it is still the version this tag names. A missing header means the client did not say which version it saw, so a server that requires conditional updates answers 428 instead of guessing. Comparing whole strong tags, quotes included, is the rule HTTP sets for If-Match, because a weak tag only promises that two versions are equivalent, not identical.',
+    trace:
+      'With the stored tag "v7", the header \' "v6" ,  "v7" \' splits into two pieces; trimming gives "v6" and "v7", and the second equals the stored tag, so the answer is 200. The number between "v and the closing quote is 7, so the new tag is "v8". The header W/"v7" starts with W/, so it never matches and the answer is 412. With no stored resource, "*" has nothing to match, so the answer is 412 too.',
+    alternative:
+      'A server can compare a version number in the request body instead, as the previous rep did; If-Match keeps the check in HTTP itself, so caches, proxies, and client libraries understand it. Some APIs accept updates without If-Match and fall back to last write wins, which is simpler for clients but brings back lost updates.',
+    counterexample:
+      'header.includes(current.etag) accepts W/"v7", because the weak tag contains "v7". Building the new tag with current.etag + 1 or by adding to the last character gives "v7"1 or turns "v9" into "v:" instead of "v10".',
+    transfer:
+      'Support If-None-Match: * on create, so a client can say "only if nothing exists yet". Decide the status for an existing resource and how it differs from If-Match. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-lost-updates': {
+    reasoning:
+      "A change is lost when it is replaced by someone who never saw it. Only the write being replaced matters, so it is enough to remember who made the latest write and when, and each client's latest read. A write that replaces its own author's value, the starting value, or a value written before its author's last read loses nothing that author did not know about.",
+    trace:
+      "In the example A reads at 0 and B reads at 1. A writes at 2, replacing the starting value, so nothing is lost and A now owns the stored value from position 2. B writes at 3: the stored value was written by A at position 2, after B's last read at 1, so position 3 replaced an unseen change and the result is [3].",
+    alternative:
+      "Comparing every pair of writes finds the same answer but costs O(n²) and can count a change twice once it has already been lost. Tracking only the latest write and each client's latest read is one pass. A version-checked server, as in the other reps of this stage, would refuse position 3 instead of reporting it afterwards.",
+    counterexample:
+      'Counting a write whenever any other client wrote since the writer\'s last read reports the second A write in "A read, B write, A write, A write" again, although B\'s change was already lost at the first one. Treating "never read" as "read at the start" misses "A write, B write", where B replaced A\'s change without ever reading it.',
+    transfer:
+      'Report, for each lost update, whose change was replaced and by whom, so the team can contact both. Decide what to report when several changes were replaced in a row. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-compare-and-set': {
+    reasoning:
+      'Compare-and-set folds the check and the write into one operation: the value changes only if it still equals what the caller expected, so two callers that read the same value cannot both succeed. Treating a missing key as null gives the same operation a create-only form (expect null) and a delete form (next null), and Object.hasOwn keeps names such as toString from counting as stored values.',
+    trace:
+      'For {a: ""} with key "a", expected null, and next "v", the store has "a" as its own property, so the current value is "", which is not null, and the answer is {ok: false, current: ""}. For {} with key "toString", the store has no own property of that name, so the current value is null, it matches, and the new store is {toString: "v"}.',
+    alternative:
+      'Version numbers detect a change even when a value went from x to y and back to x, which compare-and-set cannot see (the "ABA" case); compare-and-set is simpler when the value itself is what matters. An operation such as "add 1" done by the store itself needs no expected value at all, because it cannot lose a concurrent increment.',
+    counterexample:
+      'store[key] ?? null reads toString from Object.prototype, so the current value is a function and an expected null never matches. store[key] || null turns "" into null, so a create-only call overwrites an empty value it should have refused.',
+    transfer:
+      'Add a version to every key and make compare-and-set compare versions instead of values. Decide what a caller passes for a key that does not exist yet and how a delete changes the version. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-replay-writes': {
+    reasoning:
+      "The server holds one fact per client, the version that client last saw, and one fact about the record, its current version. A write is safe exactly when those two agree, because then nothing has been accepted since the client looked. Updating the writer's known version after an accepted write matches what a real response does (it returns the new version), so a client can make several changes in a row without reading in between.",
+    trace:
+      'In "Keeps refusing until the client reads again", A and B both read version 1. A writes "dark" at 2: 1 equals 1, so the version becomes 2 and A knows 2. B writes at 3 with known version 1, which is refused, and again at 4, refused again because a refusal leaves B at 1. B reads at 5 and learns 2, so its write at 6 is accepted: the value is "green", the version 3, and refused [3, 4].',
+    alternative:
+      'Comparing values instead of versions ("accept if the value is still what I read") accepts A\'s write in "Refuses a stale write after a change was undone", because B changed the value and then changed it back, so it looks untouched; versions see that two changes happened. Merging changes automatically, as collaborative editors do, avoids refusals altogether but needs a rule for every kind of conflict.',
+    counterexample:
+      'Forgetting to update the writer\'s known version after an accepted write refuses A\'s second write in "Lets a client write again after its own write". Treating a client that never read as knowing version 0, or the initial version, accepts its write.',
+    transfer:
+      'Make a refused client retry automatically: read again, then write again, at most twice. Decide whether the retry should resend the same value or ask the client, and what the log shows. This changed contract is self-reviewed, not checked by the original cases.',
+  },
 }
 
 export const backendGuides: Record<string, ReflectionGuide> = {
@@ -267,6 +327,76 @@ export const backendGuides: Record<string, ReflectionGuide> = {
     example:
       'For each pattern I match the segments before an optional final "*", requiring equal counts without a wildcard and a non-empty rest with one, and capture the parameters and the rest. I keep the best match so far and replace it only when a left-to-right walk finds a position where the new pattern has the higher kind rank. The work is the number of patterns times the path length. The checks pass strings directly, not a live router.',
   },
+  'backend-versioned-update': {
+    plan: [
+      'Compare expectedVersion with the stored version.',
+      'On a match, copy the data and apply each change.',
+      'Return the copy with the version plus 1, or 409 with the current version.',
+    ],
+    explanation: [
+      'Trace two updates based on the same version.',
+      'Explain why null removes a field but 0 and false do not.',
+      'Say what the version check does not cover, such as merging the two changes.',
+    ],
+    example:
+      'I compare expectedVersion with record.version and return 409 with the current version when they differ. Otherwise I copy data, delete each field whose change is null, set every other changed field, and return a new record with the same id and the version plus 1. The work is linear in the number of fields, and the input is not changed. The checks call the function directly, not a database.',
+  },
+  'backend-if-match': {
+    plan: [
+      'Return 428 when the header is missing.',
+      'Decide whether * or one strong tag in the list matches.',
+      'Return 412 without a match, or 200 with the next tag.',
+    ],
+    explanation: [
+      'Trace a header that lists an old tag and the current one.',
+      'Explain why a weak tag never matches.',
+      'Explain the difference between 428 and 412.',
+    ],
+    example:
+      'A null header gets 428. A trimmed "*" matches when a resource exists; otherwise I split the header at commas, trim each tag, skip tags that start with W/, and look for one equal to the stored tag. No match, or no resource, gets 412. A match gets 200 and a new tag with the number after v increased by 1. The work is linear in the header. The checks call the function directly, not a server.',
+  },
+  'backend-lost-updates': {
+    plan: [
+      'Remember who wrote the stored value, and at which position.',
+      "Remember each client's latest read.",
+      "Count a write when it replaces another client's value that it never read.",
+    ],
+    explanation: [
+      "Trace a log where one client writes twice after another client's write.",
+      'Explain why replacing your own write loses nothing.',
+      'Say how a version check would have changed this log.',
+    ],
+    example:
+      "I walk the log once, keeping each client's latest read position and the author and position of the latest write. A write counts when the stored value has an author, the author is another client, and the client has never read or read before that write. Then the writer becomes the stored value's author. The work is linear in the log. The checks call the function directly; they do not run concurrent requests.",
+  },
+  'backend-compare-and-set': {
+    plan: [
+      "Find the current value, null when the key is not the store's own.",
+      'Compare it with expected exactly.',
+      'Copy the store, then set or remove the key.',
+    ],
+    explanation: [
+      'Trace a create-only call (expected null) for a key that holds "".',
+      'Explain why inherited names count as missing.',
+      'Say what compare-and-set cannot notice that a version number can.',
+    ],
+    example:
+      'I read the current value with Object.hasOwn, so missing and inherited keys are null, and compare it with expected using ===. A mismatch returns the current value. A match copies the store and sets the key to next, or deletes it when next is null. The work is linear in the store size because of the copy. The checks call the function directly, not a real store.',
+  },
+  'backend-replay-writes': {
+    plan: [
+      'Keep the current value and version, and a map of known versions.',
+      'Record the current version on each read.',
+      "Accept a write only when the writer's known version is current.",
+    ],
+    explanation: [
+      'Trace two clients that read the same version and both write.',
+      "Explain why an accepted write updates its writer's known version.",
+      'Explain why comparing values instead of versions would be wrong.',
+    ],
+    example:
+      "I keep the stored value, the current version, and a map from client to the version it last saw. A read stores the current version for that client. A write is accepted only when the client has a known version equal to the current one; then I store the value, add 1 to the version, and update the writer's known version. Otherwise I record its position as refused. The work is linear in the log. The checks call the function directly, not a live server.",
+  },
 }
 
 export const backendLessonDepth: Record<string, LessonDepth> = {
@@ -289,5 +419,15 @@ export const backendLessonDepth: Record<string, LessonDepth> = {
       'A team adds GET /orders/:id/items. Predict the response to POST /orders/42/items, then to GET /orders/42/items/ with a trailing slash, using the segment rules in this lesson.',
     answer:
       'POST /orders/42/items matches the new pattern, but only GET is registered for it, so the answer is 405 with Allow: GET, HEAD. With a trailing slash the path has one more, empty segment, so no pattern matches and the answer is 404, unless the server cleans the path first by dropping empty segments, in which case the GET route answers.',
+  },
+  'concurrent-writes': {
+    title: 'Make the check and the write one step',
+    code: '-- Two steps: another write can land between them\nSELECT version FROM products WHERE id = 1;  -- 3\nUPDATE products SET price = 35 WHERE id = 1;\n\n-- One step: the database checks and writes together\nUPDATE products SET price = 35, version = version + 1\nWHERE id = 1 AND version = 3;  -- 0 rows changed means a conflict',
+    reasoning:
+      "A version check only protects a write if nothing can happen between the check and the write. Reading the version, comparing it in application code, and then updating leaves a gap in which another request can save. Putting the expected version in the UPDATE's WHERE clause makes the database do both at once: the row changes only if it still has version 3, and the number of changed rows says whether it did.",
+    challenge:
+      'Two requests run the two-step version at the same time against version 3. Describe an order of their four statements that loses an update, then say what each request sees with the one-step version.',
+    answer:
+      'If both SELECT statements run first, both see version 3 and both pass the check; both UPDATE statements then run, and the second replaces the first. With the one-step UPDATE, the first request changes one row and moves the record to version 4; the second finds no row with version 3, changes zero rows, and reports a conflict instead.',
   },
 }

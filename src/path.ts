@@ -413,6 +413,16 @@ export const paths = [
         repIds: ['sqlite-stock-transfer', 'sqlite-customer-totals', 'sqlite-restock-upsert'],
       },
       {
+        title: 'Handle concurrent writes',
+        repIds: [
+          'backend-versioned-update',
+          'backend-if-match',
+          'backend-lost-updates',
+          'backend-compare-and-set',
+          'backend-replay-writes',
+        ],
+      },
+      {
         title: 'Stay reliable',
         repIds: [
           'cache-freshness',

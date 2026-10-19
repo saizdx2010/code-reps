@@ -162,4 +162,84 @@ export const backendSkills: Skill[] = [
     repIds: ['backend-match-route', 'backend-route-request', 'backend-normalize-path', 'backend-build-path', 'backend-route-specificity'],
     related: ['http-request-anatomy', 'http'],
   },
+  {
+    id: 'concurrent-writes',
+    title: 'Concurrent writes: lost updates and version checks',
+    summary:
+      'See how two writes based on the same read lose a change, and prevent it with version numbers, conditional requests, and compare-and-set.',
+    prerequisites: ['databases'],
+    objectives: [
+      'Explain how read, modify, and write loses an update when two clients interleave.',
+      'Refuse a stale write with a version number or an If-Match tag, and choose between 409, 412, and 428.',
+      'Decide what a client does after a refusal: read again, combine the changes, and try again.',
+    ],
+    sections: [
+      {
+        title: 'How an update gets lost',
+        body: 'Most edits are read, modify, write: load the record, change it in memory, save it. When two clients do this at the same time, both read version 3 and both save, and the second save replaces the first without anyone noticing. Every request succeeded, yet one change is gone, because the server stores whatever arrives last ("last write wins").',
+      },
+      {
+        title: 'A version number makes a stale write visible',
+        body: 'Store a version with each record and increase it on every accepted change. A client sends back the version it read, and the server accepts the write only if that is still the current version; otherwise it answers 409 Conflict with the current version. This is optimistic concurrency: nothing is locked while people work, and the rare collision is caught when they save. In SQL the check and the write are one statement, such as `UPDATE products SET price = ?, version = version + 1 WHERE id = ? AND version = ?`, and zero changed rows means a conflict.',
+      },
+      {
+        title: 'HTTP spells it with ETags',
+        body: 'A response can carry an ETag that names one version of a resource, and a client sends it back in an If-Match header. The server answers 412 Precondition Failed when the tag no longer matches, and can demand the header with 428 Precondition Required so that no client updates without saying what it saw. `If-Match: *` means "only if it exists". A weak tag, written `W/"v7"`, only promises that two versions are equivalent, so If-Match never accepts it.',
+      },
+      {
+        title: 'After a refusal',
+        body: 'A refused write is information, not a failure to hide. The client reads the record again, shows or combines the other change, and tries again with the new version; resending the same change with the new version just brings the lost update back. Some values avoid the read altogether: compare-and-set changes a value only if it still holds what you expect, and an increment done by the database itself (`count = count + 1`) cannot lose a concurrent increment.',
+      },
+    ],
+    example:
+      'stored at version 3: price 40\n\nA reads version 3, wants price 35\nB reads version 3, wants price 45\nA saves, expecting 3 → accepted, now version 4\nB saves, expecting 3 → 409 Conflict, current version 4\nB reads version 4, sees 35, saves expecting 4 → accepted, version 5',
+    walkthrough: [
+      'Both clients read version 3, so both plan changes from price 40.',
+      'A saves first; the versions match, so the change is stored and the version becomes 4.',
+      'B still expects version 3, so the server refuses with 409 and reports version 4.',
+      'B reads again, sees price 35, decides its change still applies, and saves against version 4.',
+    ],
+    mistakes: [
+      'Checking the version in one query and writing in another, so a write can slip in between.',
+      'Comparing values instead of versions, so a change that was later undone looks like no change.',
+      'Resending a refused change with the new version without looking at what changed.',
+      'Accepting a weak ETag in If-Match, or treating a missing If-Match as permission.',
+    ],
+    questions: [
+      q(
+        'lost-update-stock-v1',
+        'Two clients both read stock 10. One sells 2 and saves 8; the other sells 3 and saves 7. With no version check, what is stored?',
+        '',
+        ['5', '7', '8'],
+        1,
+        'Last write wins: the second save stores 7 and the first sale is lost. The correct stock is 5.',
+      ),
+      q(
+        'stale-version-409-v1',
+        'A record is at version 4. An update says it was based on version 3. What should the server do?',
+        '',
+        ['Apply it and move to version 5', 'Refuse it with 409 Conflict', 'Apply it without changing the version'],
+        1,
+        'Version 3 is out of date, so the update was made without seeing the latest change. Refusing lets the client read version 4 and decide again.',
+      ),
+      q(
+        'if-match-required-428-v1',
+        'An API requires If-Match on updates. A client sends PUT without it. Which status fits?',
+        '',
+        ['412 Precondition Failed', '428 Precondition Required', '409 Conflict'],
+        1,
+        '428 says the request must be conditional. 412 is for a condition that was sent but did not hold.',
+      ),
+      q(
+        'blind-retry-v1',
+        'A save is refused because the version changed. The client at once resends the same change with the new version. What goes wrong?',
+        '',
+        ['Nothing: that is the fix', 'It replaces the other change without anyone seeing it', 'The server refuses it again'],
+        1,
+        'Resending blindly with the new version brings the lost update back. Read the record again and decide how the two changes combine first.',
+      ),
+    ],
+    repIds: ['backend-versioned-update', 'backend-if-match', 'backend-lost-updates', 'backend-compare-and-set', 'backend-replay-writes'],
+    related: ['databases', 'optimistic-updates'],
+  },
 ]

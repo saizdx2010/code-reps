@@ -334,6 +334,11 @@ export const repLevels: Record<string, RepLevel> = {
   'backend-normalize-path': 2,
   'backend-build-path': 2,
   'backend-route-specificity': 3,
+  'backend-versioned-update': 2,
+  'backend-if-match': 2,
+  'backend-lost-updates': 2,
+  'backend-compare-and-set': 2,
+  'backend-replay-writes': 3,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

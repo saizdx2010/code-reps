@@ -906,4 +906,545 @@ export const backendServiceReps: Rep[] = [
       { name: 'Returns null when nothing matches', input: [['/orders/:id'], '/customers/1'], expected: null },
     ],
   },
+  {
+    id: 'backend-versioned-update',
+    title: 'Reject a stale write',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'Two people open the same product, both edit it, and both save. Without a check, the second save quietly replaces the first. Each stored record carries a version number, and every update names the version it was based on.',
+    prompt:
+      'Implement applyUpdate(record, update). record has id, version, and data (an object); update has expectedVersion and changes (an object). If expectedVersion is not equal to record.version, return {ok: false, status: 409, currentVersion: record.version}. Otherwise return {ok: true, record} with a new record: the same id, the version increased by 1, and data with each change applied, where a change whose value is null removes that field and any other value sets it. Do not change the inputs.',
+    brief: {
+      summary: 'Implement applyUpdate(record, update) and return the new record or a conflict.',
+      rules: [
+        'If expectedVersion is not equal to record.version, return {ok: false, status: 409, currentVersion: record.version}.',
+        'Otherwise return {ok: true, record} with a new record: the same id and the version increased by 1.',
+        'Apply each change to data: a change whose value is null removes that field, and any other value sets it.',
+      ],
+      edgeCases: [
+        'An empty set of changes still counts as an update.',
+        'Only top-level fields change: a nested object replaces the old value whole.',
+        'Do not change the inputs.',
+      ],
+    },
+    example: {
+      input: 'applyUpdate({id: "p1", version: 3, data: {name: "Lamp", price: 40}}, {expectedVersion: 3, changes: {price: 35}})',
+      output: '{ok: true, record: {id: "p1", version: 4, data: {name: "Lamp", price: 35}}}',
+    },
+    note: 'version and expectedVersion are whole numbers from 0. data and changes are plain objects with at most 20 fields, holding JSON values. These are values passed to your function, not a live database.',
+    vocabulary: [
+      { term: 'Lost update', meaning: 'a change silently replaced by another write that was based on older data' },
+      {
+        term: 'Optimistic concurrency',
+        meaning: 'letting writes go ahead without locks and refusing any write based on an out-of-date version',
+      },
+    ],
+    planPrompt:
+      'Two editors both read version 3. Editor A saves first, then editor B. Write what each save returns and the version the record ends at.',
+    starter:
+      'type StoredRecord = { id: string; version: number; data: { [field: string]: unknown } }\ntype Update = { expectedVersion: number; changes: { [field: string]: unknown } }\n\nfunction applyUpdate(record: StoredRecord, update: Update) {\n  // Compare the versions, then build the new record.\n  return { ok: true, record }\n}\n',
+    functionName: 'applyUpdate',
+    preserveInput: true,
+    hints: [
+      'Compare the two version numbers first: a mismatch means the update was based on data that has changed since.',
+      'Build the new data on a copy, so the stored record is untouched.',
+      'Walk the changes: remove the field for null, set it for anything else, then return the copy with the version plus 1.',
+    ],
+    checks: [
+      {
+        name: 'Applies an update based on the current version',
+        input: [
+          { id: 'p1', version: 3, data: { name: 'Lamp', price: 40 } },
+          { expectedVersion: 3, changes: { price: 35 } },
+        ],
+        expected: { ok: true, record: { id: 'p1', version: 4, data: { name: 'Lamp', price: 35 } } },
+      },
+      {
+        name: 'Refuses an update based on an older version',
+        input: [
+          { id: 'p1', version: 3, data: { price: 40 } },
+          { expectedVersion: 2, changes: { price: 35 } },
+        ],
+        expected: { ok: false, status: 409, currentVersion: 3 },
+      },
+      {
+        name: 'Refuses an update based on a later version',
+        input: [
+          { id: 'p1', version: 3, data: { price: 40 } },
+          { expectedVersion: 4, changes: { price: 35 } },
+        ],
+        expected: { ok: false, status: 409, currentVersion: 3 },
+      },
+      {
+        name: 'Removes a field set to null',
+        input: [
+          { id: 'p1', version: 1, data: { name: 'Lamp', note: 'old' } },
+          { expectedVersion: 1, changes: { note: null } },
+        ],
+        expected: { ok: true, record: { id: 'p1', version: 2, data: { name: 'Lamp' } } },
+      },
+      {
+        name: 'Adds a new field',
+        input: [
+          { id: 'p1', version: 1, data: { name: 'Lamp' } },
+          { expectedVersion: 1, changes: { color: 'red' } },
+        ],
+        expected: { ok: true, record: { id: 'p1', version: 2, data: { name: 'Lamp', color: 'red' } } },
+      },
+      {
+        name: 'Keeps values that are zero, false, or empty',
+        input: [
+          { id: 'p1', version: 1, data: { stock: 5 } },
+          { expectedVersion: 1, changes: { stock: 0, featured: false, label: '' } },
+        ],
+        expected: { ok: true, record: { id: 'p1', version: 2, data: { stock: 0, featured: false, label: '' } } },
+      },
+      {
+        name: 'Counts an empty set of changes as an update',
+        input: [
+          { id: 'p1', version: 3, data: { name: 'Lamp' } },
+          { expectedVersion: 3, changes: {} },
+        ],
+        expected: { ok: true, record: { id: 'p1', version: 4, data: { name: 'Lamp' } } },
+      },
+      {
+        name: 'Starts from version 0',
+        input: [
+          { id: 'p2', version: 0, data: {} },
+          { expectedVersion: 0, changes: { name: 'Desk' } },
+        ],
+        expected: { ok: true, record: { id: 'p2', version: 1, data: { name: 'Desk' } } },
+      },
+      {
+        name: 'Replaces a nested object whole',
+        input: [
+          { id: 'p1', version: 1, data: { size: { w: 1, h: 2 } } },
+          { expectedVersion: 1, changes: { size: { w: 3 } } },
+        ],
+        expected: { ok: true, record: { id: 'p1', version: 2, data: { size: { w: 3 } } } },
+      },
+      {
+        name: 'Ignores a null change for a missing field',
+        input: [
+          { id: 'p1', version: 1, data: { name: 'Lamp' } },
+          { expectedVersion: 1, changes: { gone: null } },
+        ],
+        expected: { ok: true, record: { id: 'p1', version: 2, data: { name: 'Lamp' } } },
+      },
+    ],
+  },
+  {
+    id: 'backend-if-match',
+    title: 'Update only if the tag still matches',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'HTTP has a version check built in. A response carries an ETag naming the version of a resource, and a client that wants to change it sends that tag back in an If-Match header. The server makes the change only if the tag still matches.',
+    prompt:
+      'Implement conditionalPut(current, ifMatch, value). current is the stored resource {etag, value}, or null when none exists, and ifMatch is the If-Match header value or null. If ifMatch is null, return {status: 428}. If ifMatch, trimmed, is exactly "*", it matches any existing resource. Otherwise split it at commas and trim each tag: it matches when one tag equals current.etag exactly, and a weak tag (one that starts with W/) never matches. Without a match, including whenever current is null, return {status: 412}. With a match, return {status: 200, resource: {etag, value}}, where etag is current.etag with its number increased by 1. Do not change the inputs.',
+    brief: {
+      summary: 'Implement conditionalPut(current, ifMatch, value) and return 428, 412, or 200 with the new resource.',
+      rules: [
+        'If ifMatch is null, return {status: 428}.',
+        'If ifMatch, trimmed, is exactly "*", it matches any existing resource.',
+        'Otherwise split it at commas and trim each tag: it matches when one tag equals current.etag exactly, and a weak tag (one that starts with W/) never matches.',
+        'Without a match, including whenever current is null, return {status: 412}.',
+        'With a match, return {status: 200, resource: {etag, value}}, where etag is current.etag with its number increased by 1.',
+      ],
+      edgeCases: ['A "*" inside a list is an ordinary tag.', 'Do not change the inputs.'],
+    },
+    example: {
+      input: 'conditionalPut({etag: \'"v7"\', value: "draft"}, \'"v7"\', "final")',
+      output: '{status: 200, resource: {etag: \'"v8"\', value: "final"}}',
+    },
+    note: 'A stored tag is the letter v and a whole number inside double quotes, such as "v7", and the quotes are part of the tag, so v7 written without them never matches. Header tags are compared as written. A real server also returns the new tag in an ETag header; here it is a field. These are values passed to your function, not a live server.',
+    vocabulary: [
+      { term: 'ETag', meaning: 'a response header that names one version of a resource' },
+      { term: 'Precondition', meaning: 'a condition a request asks the server to check before acting, such as If-Match' },
+    ],
+    planPrompt: 'The stored tag is "v7". What does each If-Match get: missing, "v7", "v6", a list holding "v6" and "v7", W/"v7", and *?',
+    starter:
+      'type Resource = { etag: string; value: string }\ntype Put = { status: 428 } | { status: 412 } | { status: 200; resource: Resource }\n\nfunction conditionalPut(current: Resource | null, ifMatch: string | null, value: string): Put {\n  // Decide between 428, 412, and 200.\n  return { status: 412 }\n}\n',
+    functionName: 'conditionalPut',
+    preserveInput: true,
+    hints: [
+      'Handle the missing header first: without it the server cannot tell which version the client saw.',
+      'Compare whole tags, quotes included, and skip any that start with W/.',
+      'For the new tag, take the number between "v and the closing quote, add 1, and write it back in the same form.',
+    ],
+    checks: [
+      {
+        name: 'Updates when the tag matches',
+        input: [{ etag: '"v7"', value: 'draft' }, '"v7"', 'final'],
+        expected: { status: 200, resource: { etag: '"v8"', value: 'final' } },
+      },
+      { name: 'Requires an If-Match header', input: [{ etag: '"v7"', value: 'draft' }, null, 'final'], expected: { status: 428 } },
+      { name: 'Requires the header even when nothing exists', input: [null, null, 'final'], expected: { status: 428 } },
+      { name: 'Refuses an out-of-date tag', input: [{ etag: '"v7"', value: 'draft' }, '"v6"', 'final'], expected: { status: 412 } },
+      {
+        name: 'Accepts a match anywhere in a list',
+        input: [{ etag: '"v7"', value: 'draft' }, ' "v6" ,  "v7" ', 'final'],
+        expected: { status: 200, resource: { etag: '"v8"', value: 'final' } },
+      },
+      { name: 'Never matches a weak tag', input: [{ etag: '"v7"', value: 'draft' }, 'W/"v7"', 'final'], expected: { status: 412 } },
+      { name: 'Compares tags with their quotes', input: [{ etag: '"v7"', value: 'draft' }, 'v7', 'final'], expected: { status: 412 } },
+      {
+        name: 'Matches any existing resource with *',
+        input: [{ etag: '"v3"', value: 'draft' }, ' * ', 'final'],
+        expected: { status: 200, resource: { etag: '"v4"', value: 'final' } },
+      },
+      { name: 'Refuses * when nothing exists', input: [null, '*', 'final'], expected: { status: 412 } },
+      { name: 'Refuses a tag when nothing exists', input: [null, '"v1"', 'final'], expected: { status: 412 } },
+      {
+        name: 'Treats * inside a list as an ordinary tag',
+        input: [{ etag: '"v1"', value: 'draft' }, '"v0", *', 'final'],
+        expected: { status: 412 },
+      },
+      {
+        name: 'Reads every digit of the number',
+        input: [{ etag: '"v19"', value: 'draft' }, '"v19"', 'final'],
+        expected: { status: 200, resource: { etag: '"v20"', value: 'final' } },
+      },
+    ],
+  },
+  {
+    id: 'backend-lost-updates',
+    title: 'Spot lost updates in a log',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'A team suspects that edits to a shared document are disappearing. The server stores every write without a version check, so the last write wins. The request log shows which writes replaced a change their author had never read.',
+    prompt:
+      'Implement lostUpdates(events). Each event is {client, type: "read"} or {client, type: "write"}, in the order the server handled them, and every write is stored. A write replaces an unseen change when the stored value it replaces was written by a different client after this client\'s last read, or by a different client at any time if this client has never read. The value stored before the first write is never an unseen change. Return the positions (from 0) of the writes that replace an unseen change, in order. Do not change the input.',
+    brief: {
+      summary: 'Implement lostUpdates(events) and return the positions of writes that replace an unseen change.',
+      rules: [
+        'Events are {client, type: "read"} or {client, type: "write"}, in the order the server handled them; every write is stored.',
+        "A write replaces an unseen change when the stored value it replaces was written by a different client after this client's last read.",
+        'If this client has never read, any stored value written by a different client is unseen.',
+        'Return the positions (from 0) of those writes, in order.',
+      ],
+      edgeCases: ['The value stored before the first write is never an unseen change.', 'Do not change the input.'],
+    },
+    example: {
+      input:
+        'lostUpdates([{client: "A", type: "read"}, {client: "B", type: "read"}, {client: "A", type: "write"}, {client: "B", type: "write"}])',
+      output: '[3]',
+    },
+    note: 'Client names are non-empty text and compare exactly; events has at most 200 entries. A read sees every write handled before it. These are values passed to your function, not a live server.',
+    vocabulary: [
+      { term: 'Last write wins', meaning: 'storing whichever write arrives last, without checking what it replaces' },
+      { term: 'Interleaving', meaning: 'the order in which steps from different requests happen to mix' },
+    ],
+    planPrompt:
+      'For the example, write after each event who wrote the stored value, at which position, and when each client last read. Which write replaces something its author never saw?',
+    starter:
+      'type Event = { client: string; type: "read" | "write" }\n\nfunction lostUpdates(events: Event[]): number[] {\n  // Track who wrote the stored value and when each client last read.\n  return []\n}\n',
+    functionName: 'lostUpdates',
+    preserveInput: true,
+    hints: [
+      "Two facts decide each write: who wrote the value being replaced, and when, compared with this client's last read.",
+      "Remember the author and position of the latest write, and each client's latest read position in a Map.",
+      "A write counts when the stored value has an author, the author is someone else, and its position is after this client's last read or the client never read.",
+    ],
+    checks: [
+      {
+        name: 'Finds the write that replaced an unread change',
+        input: [
+          [
+            { client: 'A', type: 'read' },
+            { client: 'B', type: 'read' },
+            { client: 'A', type: 'write' },
+            { client: 'B', type: 'write' },
+          ],
+        ],
+        expected: [3],
+      },
+      { name: 'Ignores a write that replaces the starting value', input: [[{ client: 'A', type: 'write' }]], expected: [] },
+      {
+        name: 'Ignores a client replacing its own write',
+        input: [
+          [
+            { client: 'A', type: 'read' },
+            { client: 'A', type: 'write' },
+            { client: 'A', type: 'write' },
+          ],
+        ],
+        expected: [],
+      },
+      {
+        name: 'Ignores a change the writer read',
+        input: [
+          [
+            { client: 'A', type: 'write' },
+            { client: 'B', type: 'read' },
+            { client: 'B', type: 'write' },
+          ],
+        ],
+        expected: [],
+      },
+      {
+        name: 'Counts any other change when the writer never read',
+        input: [
+          [
+            { client: 'A', type: 'write' },
+            { client: 'B', type: 'write' },
+          ],
+        ],
+        expected: [1],
+      },
+      {
+        name: 'Counts only the write that replaced the change',
+        input: [
+          [
+            { client: 'A', type: 'read' },
+            { client: 'B', type: 'write' },
+            { client: 'A', type: 'write' },
+            { client: 'A', type: 'write' },
+          ],
+        ],
+        expected: [2],
+      },
+      {
+        name: 'Uses the latest read',
+        input: [
+          [
+            { client: 'B', type: 'read' },
+            { client: 'A', type: 'write' },
+            { client: 'B', type: 'read' },
+            { client: 'B', type: 'write' },
+          ],
+        ],
+        expected: [],
+      },
+      {
+        name: 'Finds several in one log',
+        input: [
+          [
+            { client: 'A', type: 'read' },
+            { client: 'B', type: 'read' },
+            { client: 'C', type: 'read' },
+            { client: 'A', type: 'write' },
+            { client: 'B', type: 'write' },
+            { client: 'C', type: 'write' },
+          ],
+        ],
+        expected: [4, 5],
+      },
+      { name: 'Handles an empty log', input: [[]], expected: [] },
+      {
+        name: 'Reads alone change nothing',
+        input: [
+          [
+            { client: 'A', type: 'read' },
+            { client: 'B', type: 'read' },
+          ],
+        ],
+        expected: [],
+      },
+    ],
+  },
+  {
+    id: 'backend-compare-and-set',
+    title: 'Compare and set a value',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'A small key-value store offers one safe write: change a key only if it still holds the value you expect. Callers use it to update shared values without locking them.',
+    prompt:
+      'Implement compareAndSet(store, key, expected, next). store maps keys to text values. The current value of key is store[key] when store has key as its own property, and null otherwise. If the current value is not equal to expected, return {ok: false, current}. Otherwise return {ok: true, store} with a new store in which key holds next, or from which key is removed when next is null. Do not change store.',
+    brief: {
+      summary: 'Implement compareAndSet(store, key, expected, next).',
+      rules: [
+        'The current value of key is store[key] when store has key as its own property, and null otherwise.',
+        'If the current value is not equal to expected, return {ok: false, current}.',
+        'Otherwise return {ok: true, store} with a new store in which key holds next, or from which key is removed when next is null.',
+      ],
+      edgeCases: ['An empty string is a value, not a missing key.', 'Keys and values compare exactly.', 'Do not change store.'],
+    },
+    example: { input: 'compareAndSet({count: "1"}, "count", "1", "2")', output: '{ok: true, store: {count: "2"}}' },
+    note: 'store has at most 50 keys; expected and next are text or null. These are values passed to your function, not a live store.',
+    vocabulary: [
+      { term: 'Compare-and-set', meaning: 'writing a value only if the current value is still the one you expect' },
+      { term: 'Atomic', meaning: 'done as one step that nothing else can interrupt' },
+    ],
+    planPrompt:
+      'For an empty store, what do compareAndSet with expected null and expected "x" each return? Then what happens if you expect null for a key that holds ""?',
+    starter:
+      'function compareAndSet(store: Record<string, string>, key: string, expected: string | null, next: string | null) {\n  // Read the current value, compare, then build the new store.\n  return { ok: false, current: null }\n}\n',
+    functionName: 'compareAndSet',
+    preserveInput: true,
+    hints: [
+      'Work out the current value first, using Object.hasOwn so a name such as toString counts as missing.',
+      'Compare with ===, so null and "" stay different.',
+      'Copy the store before setting or deleting the key.',
+    ],
+    checks: [
+      {
+        name: 'Sets a value that still matches',
+        input: [{ count: '1' }, 'count', '1', '2'],
+        expected: { ok: true, store: { count: '2' } },
+      },
+      { name: 'Refuses an out-of-date expectation', input: [{ count: '2' }, 'count', '1', '2'], expected: { ok: false, current: '2' } },
+      { name: 'Creates a missing key when null is expected', input: [{}, 'a', null, 'x'], expected: { ok: true, store: { a: 'x' } } },
+      { name: 'Refuses to create a key that exists', input: [{ a: 'x' }, 'a', null, 'y'], expected: { ok: false, current: 'x' } },
+      { name: 'Removes a key when next is null', input: [{ a: 'x', b: 'y' }, 'a', 'x', null], expected: { ok: true, store: { b: 'y' } } },
+      { name: 'Refuses when a value is expected for a missing key', input: [{}, 'a', 'x', 'y'], expected: { ok: false, current: null } },
+      { name: 'Treats an empty string as a value', input: [{ a: '' }, 'a', null, 'v'], expected: { ok: false, current: '' } },
+      { name: 'Treats inherited names as missing', input: [{}, 'toString', null, 'v'], expected: { ok: true, store: { toString: 'v' } } },
+      { name: 'Compares values exactly', input: [{ a: 'X' }, 'a', 'x', 'y'], expected: { ok: false, current: 'X' } },
+      {
+        name: 'Allows setting the same value again',
+        input: [{ a: 'x', b: 'y' }, 'a', 'x', 'x'],
+        expected: { ok: true, store: { a: 'x', b: 'y' } },
+      },
+    ],
+  },
+  {
+    id: 'backend-replay-writes',
+    title: 'Replay concurrent edits with versions',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'Several clients edit one shared setting. Each reads it, works for a while, and writes back. The server keeps a version number, so a write based on an older read is refused and that client has to read again.',
+    prompt:
+      'Implement replayWrites(initial, events). initial is {value, version}. Process events in order. A read event {client, type: "read"} records the current version as that client\'s known version. A write event {client, type: "write", value} is accepted when the client\'s known version equals the current version: the value is stored, the version increases by 1, and the client\'s known version becomes the new version. Otherwise the write is refused and changes nothing, which includes a client that has never read. Return {value, version, refused}, where refused lists the positions (from 0) of refused writes, in order. Do not change the inputs.',
+    brief: {
+      summary: 'Implement replayWrites(initial, events) and return {value, version, refused}.',
+      rules: [
+        'A read event {client, type: "read"} records the current version as that client\'s known version.',
+        'A write event {client, type: "write", value} is accepted when the client\'s known version equals the current version.',
+        "An accepted write stores the value, increases the version by 1, and sets the client's known version to the new version.",
+        'Otherwise the write is refused and changes nothing, which includes a client that has never read.',
+        'refused lists the positions (from 0) of refused writes, in order.',
+      ],
+      edgeCases: ["A refused write leaves the client's known version as it was.", 'Do not change the inputs.'],
+    },
+    example: {
+      input:
+        'replayWrites({value: "light", version: 1}, [{client: "A", type: "read"}, {client: "B", type: "read"}, {client: "A", type: "write", value: "dark"}, {client: "B", type: "write", value: "blue"}])',
+      output: '{value: "dark", version: 2, refused: [3]}',
+    },
+    note: 'Client names are non-empty text and compare exactly; values are text. events has at most 100 entries. These are values passed to your function, not a live server.',
+    vocabulary: [
+      { term: 'Version number', meaning: 'a counter stored with a record that increases with every accepted change' },
+      {
+        term: 'Read-modify-write',
+        meaning: 'reading a value, changing it in your code, and writing it back, which can lose changes made in between',
+      },
+    ],
+    planPrompt:
+      "Trace the example in a table with a row per event: the stored value, the current version, and each client's known version. Which row refuses a write, and why?",
+    starter:
+      'type Event = { client: string; type: "read" } | { client: string; type: "write"; value: string }\n\nfunction replayWrites(initial: { value: string; version: number }, events: Event[]) {\n  // Track each client\'s known version as you go.\n  return { value: initial.value, version: initial.version, refused: [] as number[] }\n}\n',
+    functionName: 'replayWrites',
+    preserveInput: true,
+    hints: [
+      'Keep a Map from each client to the version that client last saw.',
+      'A write needs a known version, and that version must equal the current one at the moment of the write.',
+      "After an accepted write, update both the current version and the writer's known version; a refused write changes neither.",
+    ],
+    checks: [
+      {
+        name: 'Refuses the second of two writes based on the same read',
+        input: [
+          { value: 'light', version: 1 },
+          [
+            { client: 'A', type: 'read' },
+            { client: 'B', type: 'read' },
+            { client: 'A', type: 'write', value: 'dark' },
+            { client: 'B', type: 'write', value: 'blue' },
+          ],
+        ],
+        expected: { value: 'dark', version: 2, refused: [3] },
+      },
+      {
+        name: 'Accepts edits that take turns',
+        input: [
+          { value: 'light', version: 1 },
+          [
+            { client: 'A', type: 'read' },
+            { client: 'A', type: 'write', value: 'dark' },
+            { client: 'B', type: 'read' },
+            { client: 'B', type: 'write', value: 'blue' },
+          ],
+        ],
+        expected: { value: 'blue', version: 3, refused: [] },
+      },
+      {
+        name: 'Refuses a write from a client that never read',
+        input: [{ value: 'light', version: 1 }, [{ client: 'A', type: 'write', value: 'dark' }]],
+        expected: { value: 'light', version: 1, refused: [0] },
+      },
+      {
+        name: 'Lets a client write again after its own write',
+        input: [
+          { value: 'light', version: 1 },
+          [
+            { client: 'A', type: 'read' },
+            { client: 'A', type: 'write', value: 'dark' },
+            { client: 'A', type: 'write', value: 'blue' },
+          ],
+        ],
+        expected: { value: 'blue', version: 3, refused: [] },
+      },
+      {
+        name: 'Keeps refusing until the client reads again',
+        input: [
+          { value: 'light', version: 1 },
+          [
+            { client: 'A', type: 'read' },
+            { client: 'B', type: 'read' },
+            { client: 'A', type: 'write', value: 'dark' },
+            { client: 'B', type: 'write', value: 'blue' },
+            { client: 'B', type: 'write', value: 'green' },
+            { client: 'B', type: 'read' },
+            { client: 'B', type: 'write', value: 'green' },
+          ],
+        ],
+        expected: { value: 'green', version: 3, refused: [3, 4] },
+      },
+      {
+        name: 'A read records the version at that moment',
+        input: [
+          { value: 'light', version: 1 },
+          [
+            { client: 'A', type: 'read' },
+            { client: 'B', type: 'read' },
+            { client: 'B', type: 'write', value: 'blue' },
+            { client: 'A', type: 'read' },
+            { client: 'A', type: 'write', value: 'dark' },
+          ],
+        ],
+        expected: { value: 'dark', version: 3, refused: [] },
+      },
+      {
+        name: 'Refuses a stale write after a change was undone',
+        input: [
+          { value: 'light', version: 1 },
+          [
+            { client: 'A', type: 'read' },
+            { client: 'B', type: 'read' },
+            { client: 'B', type: 'write', value: 'dark' },
+            { client: 'B', type: 'write', value: 'light' },
+            { client: 'A', type: 'write', value: 'blue' },
+          ],
+        ],
+        expected: { value: 'light', version: 3, refused: [4] },
+      },
+      { name: 'Handles an empty log', input: [{ value: 'light', version: 7 }, []], expected: { value: 'light', version: 7, refused: [] } },
+      {
+        name: 'Starts from the given version',
+        input: [
+          { value: 'light', version: 7 },
+          [
+            { client: 'A', type: 'read' },
+            { client: 'A', type: 'write', value: 'dark' },
+          ],
+        ],
+        expected: { value: 'dark', version: 8, refused: [] },
+      },
+    ],
+  },
 ]
