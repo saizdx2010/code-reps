@@ -69,3 +69,29 @@ test('authored state reference solutions pass strict semantic checks; invalid fi
     ).some(diagnostic => diagnostic.code === 2339),
   )
 })
+
+test('the DevOps hero project is learner-reported, links DevOps preparation reps, and files its note under a DevOps lesson', async () => {
+  const { serviceProjects, serviceProjectReview, projectHeading } = await import('../src/browser-projects.ts')
+  const { devopsReps } = await import('../src/devops-reps.ts')
+  const { devopsSkills } = await import('../src/devops-knowledge.ts')
+  assert.equal(serviceProjects.length, 1)
+  const [project] = serviceProjects
+  assert.equal(projectHeading(project), 'DevOps hero project: Containerize an app and add CI on your own machine')
+  assert.ok(projectHeading(project).length <= 120, 'note titles are at most 120 characters')
+  assert.ok(devopsSkills.some(skill => skill.id === project.skillId))
+  for (const id of project.preparation)
+    assert.ok(
+      devopsReps.some(rep => rep.id === id),
+      id,
+    )
+  const reflection = projectReflection(project)
+  assert.ok(reflection.startsWith(projectHeading(project)))
+  assert.ok(reflection.includes('learner-reported'))
+  assert.ok(reflection.includes('Not checked'))
+  for (const point of [...project.requirements, ...serviceProjectReview, ...project.verification]) assert.ok(reflection.includes(point))
+  // The DOM-specific browser review never appears in the service project's self-review.
+  assert.ok(!reflection.includes('375px'))
+  assert.ok(reflection.length <= 20_000)
+  // Browser levels keep their headings and their own review.
+  assert.ok(projectReflection(browserProjects[0]).startsWith('Level 1: Build a task list'))
+})

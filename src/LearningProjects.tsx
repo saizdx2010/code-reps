@@ -12,7 +12,7 @@ const BrowserProjects = lazy(() =>
     .catch(() => ({
       default: () => (
         <section role="alert">
-          <p>Browser projects could not load. Reload to try again; your saved work will be kept.</p>
+          <p>Projects could not load. Reload to try again; your saved work will be kept.</p>
           <Button onClick={() => window.location.reload()}>Reload projects</Button>
         </section>
       ),
@@ -29,12 +29,13 @@ type Props = {
 
 /** Projects: the in-browser projects, then capstones as milestones with a final self-review. */
 export function LearningProjects({ state, update, history, openRep, openNotebook }: Props) {
-  function recordReflection(title: string, body: string) {
+  // Browser projects file their notes under the frontend lesson; a project may name its own lesson.
+  function recordReflection(title: string, body: string, skillId = 'frontend') {
     const note: LearningNote = {
       id: crypto.randomUUID(),
       title,
       body,
-      skillId: 'frontend',
+      skillId,
       repId: '',
       kind: 'note',
       updatedAt: new Date().toISOString(),

@@ -58,6 +58,6 @@ export const pathIntroductions: Record<PathId, PathIntroduction> = {
     example: "$ npm test\nError: Cannot find module './tax'\n$ echo $?\n1",
     explanation:
       'A command reports how it ended through its exit code: 0 for success and anything else for failure. CI stops a job at the first failing step, so the cause is usually the first error in that step, not the last line.',
-    next: 'Start by reading exit codes and finding the first real error in a log. Each later stage takes one part of shipping and running a service.',
+    next: 'Start by reading exit codes and finding the first real error in a log. Each later stage takes one part of shipping and running a service, and the hero project in Library → Projects puts them together on your own machine, recorded as your own self-review.',
   },
 }
