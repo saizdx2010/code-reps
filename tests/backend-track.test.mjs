@@ -630,3 +630,147 @@ test('B6 rate-limit checks catch refill, window-edge, rounding, weighting, and p
     ],
   ])
 })
+
+test('B7 API evolution checks catch version, compatibility, date, delivery, and undo-order mistakes', async () => {
+  const version = solution('backend-choose-version')
+  await assertCaught('backend-choose-version', [
+    [version.replace('/^v[0-9]+$/', '/^v[0-9]+/'), 'Leaves a lookalike segment in the path'],
+    [version.replace('/^v[0-9]+$/', '/^v[0-9]+$/i'), 'Matches only a lowercase v'],
+    [version.replace('/^v[0-9]+$/', '/^v[0-9]$/'), 'Reads a version with several digits'],
+    [version.replace(" || '/'", ''), 'Routes a bare version to "/"'],
+    [version.replace("name.toLowerCase() === 'api-version'", "name === 'Api-Version'"), 'Finds the header in any letter case and trims it'],
+    [
+      version.replace("header && header[1].trim() !== '' ? header[1].trim() : null", 'header ? header[1].trim() : null'),
+      'Treats a blank header as no header',
+    ],
+    [
+      version.replace(
+        "if (fromPath !== null && fromHeader !== null && fromPath !== fromHeader) return { ok: false, status: 400, error: 'VERSION_CONFLICT' }\n",
+        '',
+      ),
+      'Reports a conflict before an unknown version',
+    ],
+    [version.replace('?? fallback', "?? 'v1'"), 'Uses the supplied default'],
+    [version.replace('?? fallback', '?? supported[supported.length - 1]'), 'Uses the default when nothing names a version'],
+  ])
+  const classify = solution('backend-classify-change')
+  await assertCaught('backend-classify-change', [
+    [classify.replace("breaks = direction === 'response'", 'breaks = false'), 'A removed response field is breaking'],
+    [classify.replace("breaks = direction === 'response'", 'breaks = true'), 'A removed request field is compatible'],
+    [classify.replace("direction === 'request' && now!.required", 'now!.required'), 'An added response field is compatible'],
+    [classify.replace("direction === 'request' && now!.required", 'false'), 'A new required request field is breaking'],
+    [classify.replace("direction === 'request' && now!.required", "direction === 'request'"), 'A new optional request field is compatible'],
+    [
+      classify.replace(
+        "(direction === 'response' ? old.required && !now.required : !old.required && now.required)",
+        '(!old.required && now.required)',
+      ),
+      'A response field that may now be missing is breaking',
+    ],
+    [
+      classify.replace(
+        "(direction === 'response' ? old.required && !now.required : !old.required && now.required)",
+        '(old.required && !now.required)',
+      ),
+      'Required changes break requests in the other direction',
+    ],
+    [classify.replace('breaks = old.type !== now.type ||', 'breaks ='), 'A changed request type is breaking'],
+    [classify.replace('breaks = old.type !== now.type ||', 'breaks ='), 'A type change outweighs a compatible change'],
+    [classify.replace('...Object.keys(after)])].sort()', '...Object.keys(after)])]'), 'Sorts names and leaves unchanged fields out'],
+    [
+      classify.replace('    else if (old.type === now.type && old.required === now.required) continue\n', ''),
+      'Reports nothing for identical fields',
+    ],
+  ])
+  const deprecation = solution('backend-deprecation-headers')
+  await assertCaught('backend-deprecation-headers', [
+    [
+      deprecation
+        .replace('const at = Date.parse(now)', 'const at = now')
+        .replace('const deprecated = Date.parse(policy.deprecatedAt)', 'const deprecated = policy.deprecatedAt')
+        .replace('const sunset = Date.parse(policy.sunsetAt)', 'const sunset = policy.sunsetAt')
+        .replace("'@' + deprecated / 1000", "'@' + Date.parse(deprecated) / 1000")
+        .replace('new Date(sunset).toUTCString()', 'new Date(Date.parse(sunset)).toUTCString()'),
+      'Reaches a sunset given with an offset',
+    ],
+    [deprecation.replace('at >= sunset', 'at > sunset'), 'Answers 410 Gone from the exact sunset time'],
+    [deprecation.replace('at < deprecated', 'at <= deprecated'), 'Starts warning at the exact deprecation time'],
+    [deprecation.replace("'@' + deprecated / 1000", "'@' + deprecated"), 'Announces the deprecation in the example'],
+    [deprecation.replace('new Date(sunset).toUTCString()', 'new Date(sunset).toISOString()'), 'Announces the deprecation in the example'],
+    [
+      deprecation.replace('return { status: 410, headers: { Link: link } }', 'return { status: 404, headers: { Link: link } }'),
+      'Keeps answering 410 after the sunset',
+    ],
+    [
+      deprecation.replace(
+        'return { status: 410, headers: { Link: link } }',
+        'return { status: 410, headers: { Sunset: new Date(sunset).toUTCString(), Link: link } }',
+      ),
+      'Answers 410 Gone from the exact sunset time',
+    ],
+    [
+      deprecation
+        .replace('const at = Date.parse(now)', 'const at = Date.parse(now.slice(0, 10))')
+        .replace('const deprecated = Date.parse(policy.deprecatedAt)', 'const deprecated = Date.parse(policy.deprecatedAt.slice(0, 10))'),
+      'Uses the time of day, not only the date',
+    ],
+  ])
+  const deliveries = solution('backend-webhook-deliveries')
+  await assertCaught('backend-webhook-deliveries', [
+    [
+      deliveries.replace('delivery.sequence <= (last.get', 'delivery.sequence < (last.get'),
+      'Skips a new delivery of a sequence already applied',
+    ],
+    [
+      deliveries.replace("      skipped.push({ deliveryId: delivery.deliveryId, reason: 'STALE' })\n      continue\n", ''),
+      'Skips an older change that arrives late',
+    ],
+    [
+      deliveries.replaceAll('last.get(delivery.resource)', "last.get('all')").replace('last.set(delivery.resource,', "last.set('all',"),
+      'Keeps sequences separate for each resource',
+    ],
+    [
+      deliveries
+        .replace('    seen.add(delivery.deliveryId)\n', '')
+        .replace(
+          '    last.set(delivery.resource, delivery.sequence)\n',
+          '    seen.add(delivery.deliveryId)\n    last.set(delivery.resource, delivery.sequence)\n',
+        ),
+      'Calls a repeat of a skipped delivery a duplicate',
+    ],
+    [
+      deliveries
+        .replaceAll('seen.has(delivery.deliveryId)', 'seen.has(delivery.deliveryId.toLowerCase())')
+        .replace('seen.add(delivery.deliveryId)', 'seen.add(delivery.deliveryId.toLowerCase())'),
+      'Compares delivery IDs exactly',
+    ],
+    [deliveries.replace('(last.get(delivery.resource) ?? 0)', '(last.get(delivery.resource) ?? 1)'), 'Applies new changes in order'],
+    [
+      deliveries.replace(
+        'delivery.sequence <= (last.get(delivery.resource) ?? 0)',
+        'delivery.sequence !== (last.get(delivery.resource) ?? 0) + 1',
+      ),
+      'Accepts any first sequence for a resource',
+    ],
+    [
+      deliveries.replace(
+        "    if (seen.has(delivery.deliveryId)) {\n      skipped.push({ deliveryId: delivery.deliveryId, reason: 'DUPLICATE' })\n      continue\n    }\n    seen.add(delivery.deliveryId)\n",
+        '',
+      ),
+      'Skips the repeated delivery in the example',
+    ],
+  ])
+  const downgrade = solution('backend-downgrade-response')
+  await assertCaught('backend-downgrade-response', [
+    [downgrade.replace('(a.version < b.version ? 1 : -1)', '(a.version < b.version ? -1 : 1)'), 'Undoes the newest change first'],
+    [downgrade.replace('.sort((a, b) => (a.version < b.version ? 1 : -1))', '.reverse()'), 'Handles changes listed newest first'],
+    [downgrade.replace('change.version > pinned', 'change.version >= pinned'), 'Keeps a change released on the pinned date'],
+    [downgrade.replace('change.version > pinned', 'true'), 'Undoes only the changes after the pinned date'],
+    [downgrade.replace('      if (Object.hasOwn(result, change.to)) {\n', '      {\n'), 'Skips a rename whose field is missing'],
+    [downgrade.replace('    else result[change.field] = change.value\n', ''), 'Restores a removed field with its old value'],
+    [downgrade.replace("} else if (change.kind === 'add') delete result[change.field]", '}'), 'Removes a field added later'],
+  ])
+  // Undoing on the caller's body changes the input, which the runner reports separately from a wrong result.
+  const mutating = downgrade.replace('const result: Record<string, unknown> = { ...body }', 'const result: Record<string, unknown> = body')
+  assert.ok((await runAsyncRep(mutating, 'backend-downgrade-response')).some(result => result.message?.includes('changed its input')))
+})

@@ -402,4 +402,90 @@ export const backendSkills: Skill[] = [
     repIds: ['backend-token-bucket', 'backend-sliding-log', 'backend-limit-response', 'backend-sliding-counter', 'backend-limit-callers'],
     related: ['http', 'background-jobs'],
   },
+  {
+    id: 'api-evolution',
+    title: 'Evolve an API without breaking clients',
+    summary:
+      'Change requests and responses while existing apps keep working: choose a version per request, tell compatible changes from breaking ones, announce deprecations, and accept webhook deliveries that arrive twice or out of order.',
+    prerequisites: ['http-routing'],
+    objectives: [
+      'Choose a response shape from a version in the path or a header, with a documented default and a clear error for an unknown version.',
+      'Decide whether a field change to a request or a response is compatible or breaking for clients that cannot update yet.',
+      'Announce a deprecation and a sunset date, and apply webhook deliveries once each and in sequence order.',
+    ],
+    sections: [
+      {
+        title: 'Clients update on their own schedule',
+        body: 'A web page updates when you deploy, but a phone app, a partner integration, or a script someone wrote last year keeps sending the requests it was built with. Once an API has clients, every change has to be checked against them: will a client that has not changed still work? Versioning, compatibility rules, and deprecation dates are the tools for answering yes.',
+      },
+      {
+        title: 'A version chooses the shape',
+        body: 'A request can name the version it wants in the path, as in /v2/orders, or in a header such as Api-Version: v2. A request that names none gets a documented default, usually the oldest supported version, so clients written before versioning keep working. A version the server does not know gets a clear 400 error rather than a guess, and a request that names two different versions is refused instead of picking one silently. Some APIs name versions by release date and keep each client on its own date, undoing newer changes, newest first, before answering.',
+      },
+      {
+        title: 'Compatible or breaking depends on who reads the field',
+        body: 'The side that reads a field is the side a change can break. Clients read responses, so removing a response field, changing its type, or letting a field that was always present go missing is breaking, while adding a field is compatible as long as clients ignore fields they do not know. The server reads requests, so adding a required request field breaks every client that does not send it, while adding an optional one is compatible. Changing a type is breaking in both directions.',
+      },
+      {
+        title: 'Deprecate before you remove, and expect repeats',
+        body: 'Before removing an endpoint, announce it: from the deprecation date, responses carry a Deprecation header, a Sunset header with the date it stops working, and a Link to its replacement; from the sunset date it answers 410 Gone. Webhooks run the other way, from a provider to you. Providers retry deliveries that were not acknowledged and do not promise their order, so a receiver skips a delivery ID it has already seen and skips a change whose sequence number is not newer than the last one applied for that resource. Checking who sent a webhook is a separate step that these reps leave out.',
+      },
+    ],
+    example:
+      'response fields before: id (string, always), total (number, always)\nresponse fields after:  id (string, always), total (string, always), currency (string, always)\n\ntotal    → type changed      → breaking\ncurrency → added              → compatible\nid       → unchanged',
+    walkthrough: [
+      'Collect every field name from both lists: currency, id, and total.',
+      'total changed from number to string; a client doing arithmetic on it breaks, so it is breaking.',
+      'currency is new; clients that ignore unknown fields keep working, so it is compatible.',
+      'id is the same on both sides, so it is not reported.',
+    ],
+    mistakes: [
+      'Giving requests without a version the newest shape, which changes the answer for every old client at once.',
+      'Judging a request change by the response rules: a new required request field is breaking, not compatible.',
+      'Removing an endpoint on its sunset date without having sent Deprecation and Sunset headers before it.',
+      'Applying webhook deliveries in arrival order, so a late older change overwrites a newer one.',
+    ],
+    questions: [
+      q(
+        'version-default-v1',
+        'An API documents v1 as its default and v2 as its newest version. A request names no version. Which shape should it get?',
+        '',
+        ['v2, the newest', 'v1, the documented default', 'A 400 error asking for a version'],
+        1,
+        'The default exists so requests written before versioning keep getting the shape they were built for.',
+      ),
+      q(
+        'response-field-removed-v1',
+        'Which change to a response can break an existing client?',
+        '',
+        ['Adding a new field', 'Removing a field', 'Making a sometimes-missing field always present'],
+        1,
+        'A client that reads the removed field gets nothing. Clients ignore new fields, and a field that is always present is still there for them.',
+      ),
+      q(
+        'request-field-required-v1',
+        'Which change to a request body can break an existing client?',
+        '',
+        ['Adding an optional field', 'Adding a required field', 'No longer reading a field'],
+        1,
+        'Existing clients do not send the new field, so the server rejects their requests. An optional field or an ignored field leaves them working.',
+      ),
+      q(
+        'webhook-stale-sequence-v1',
+        'A webhook for order 7 with sequence 5 arrives after sequence 6 was applied. Its delivery ID is new. What should the receiver do?',
+        '',
+        ['Apply it, because its delivery ID is new', 'Skip it as stale', 'Skip it as a duplicate delivery'],
+        1,
+        'A new delivery ID means it is not a repeat, but sequence 5 is older than the change already applied, so applying it would undo newer data.',
+      ),
+    ],
+    repIds: [
+      'backend-choose-version',
+      'backend-classify-change',
+      'backend-deprecation-headers',
+      'backend-webhook-deliveries',
+      'backend-downgrade-response',
+    ],
+    related: ['http-routing', 'background-jobs'],
+  },
 ]

@@ -304,6 +304,66 @@ export const backendDepth: Record<string, RepDepth> = {
     transfer:
       "Give some keys a larger capacity, such as paid plans, using a table of limits by key. Decide what an unknown key gets and whether changing a key's capacity affects tokens it already has. This changed contract is self-reviewed, not checked by the original cases.",
   },
+  'backend-choose-version': {
+    reasoning:
+      'Two places can name a version, so the function first reads each one on its own terms, then combines them with a fixed precedence: two different answers are a conflict, one answer wins, and no answer means the documented default. Only after that is the result checked against the supported list, so a client that sent a contradictory request hears about the contradiction rather than about one half of it.',
+    trace:
+      'For "/v3/orders" with Api-Version "v2", the first segment "v3" matches the pattern, so the path names v3 and the route is "/orders"; the header names v2. They differ, so the answer is VERSION_CONFLICT even though v3 is also unsupported. For "/v2" the path names v2 and nothing is left after it, so the route is "/". For "/v2x/orders" the pattern fails at "x", so no version is named and the default v1 applies to the whole path.',
+    alternative:
+      'Content negotiation, such as Accept: application/vnd.shop.v2+json, keeps versions out of URLs but is harder to try in a browser. Path versions are easy to see and cache but make every route repeat the version. Choosing the newest version as the default is simpler for new clients but silently changes old ones whenever a version ships.',
+    counterexample:
+      'A pattern without the end anchor, /^v[0-9]+/, reads "v2x" as v2 and routes "/v2x/orders" as "/orders". Treating a blank header as present makes "/v2/orders" with Api-Version "  " a conflict between "v2" and "".',
+    transfer:
+      'Accept the header value as a bare number too, so "2" means "v2". Decide whether "02" or "v02" should match, and what a conflict means when both forms are used. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-classify-change': {
+    reasoning:
+      'A change can only break the side that reads the field. Clients read responses, so anything that takes information away from them, or changes its type, breaks them; the server reads requests, so anything that asks clients for more than they send breaks them. Each field gets one verdict, and any breaking difference outweighs a compatible one because a single broken client is enough.',
+    trace:
+      'For a request where gift goes from not required to required and sku from required to not required, gift now demands something old clients never sent, so it is breaking, while sku now asks for less, so it is compatible. For a response where rating goes from an optional number to an always-present string, the required change alone would be compatible, but the type change is breaking, so rating is breaking.',
+    alternative:
+      'A schema tool can compare whole OpenAPI documents and also catch changes such as a narrowed list of allowed values. Comparing only type and required keeps the rules visible, but misses those, so a real review still reads the diff. Treating every change as breaking is safe but forces a new version for harmless additions.',
+    counterexample:
+      'Using the response rules for requests calls a new required request field compatible, which "A new required request field is breaking" refuses. Skipping the sort returns ["region", "area"] when the names arrive in that order.',
+    transfer:
+      'Add an enum: a field may list its allowed values. Decide whether adding a value or removing one is breaking for a response, and then for a request. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-deprecation-headers': {
+    reasoning:
+      'Three instants split time into three periods, and each period has one response. Turning every time into milliseconds first makes the comparison independent of how the text was written, including its offset, and the boundaries are half-open: the deprecation date and the sunset date each start their own period.',
+    trace:
+      'With a sunset of 2026-06-01T07:00:00+07:00, Date.parse gives the same instant as 2026-06-01T00:00:00Z. A request at 2026-05-31T23:30:00Z is earlier, so it still gets 200 with Sunset "Mon, 01 Jun 2026 00:00:00 GMT"; a request at 2026-06-01T00:00:00Z is not earlier, so it gets 410 with only Link. Deprecation for 2026-03-01T00:00:00Z is 1772323200000 / 1000, written "@1772323200".',
+    alternative:
+      'An API gateway can add these headers to every response of a route from configuration, which keeps handlers unchanged but hides the schedule from code review. Returning 404 after the sunset is common but tells clients less than 410 Gone, which says the endpoint existed and was removed on purpose.',
+    counterexample:
+      'Comparing the ISO text instead of instants treats "2026-06-01T07:00:00+07:00" as later than "2026-06-01T00:00:00Z", so "Reaches a sunset given with an offset" still answers 200. Using > instead of >= for the sunset answers 200 at the exact sunset time.',
+    transfer:
+      'Start sending the Sunset header 30 days before the deprecation date as an early notice. Decide what the response looks like in that window and how the boundaries behave at exactly 30 days. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-webhook-deliveries': {
+    reasoning:
+      'Two different problems need two different memories. A retry repeats a delivery, so a set of delivery IDs catches it however the rest of the data looks. Reordering delivers an older change late, so a last-applied sequence per resource catches it even though its delivery ID is new. Recording every delivery ID, applied or skipped, makes a retried stale delivery a duplicate too.',
+    trace:
+      'For d2 (sequence 2), then d1 (sequence 1), then d1 again on order-7: d2 is new and order-7 has no sequence yet, so it is applied and the last sequence becomes 2. d1 is new but 1 is not greater than 2, so it is skipped as STALE and its ID is remembered. The second d1 is found in the seen set and skipped as DUPLICATE before its sequence is looked at.',
+    alternative:
+      'A receiver can hold early deliveries and apply them only when the missing sequence numbers arrive, which keeps every intermediate status but needs a buffer and a timeout for numbers that never come. Skipping older changes keeps only the latest status, which suits a status field but not a log of events. Many receivers also store the IDs in a database with a unique constraint so repeats are caught after a restart.',
+    counterexample:
+      'Checking the sequence before the delivery ID reports the second d1 as STALE instead of DUPLICATE. Keeping one sequence counter for all resources skips order-1 sequence 4 after order-2 sequence 2 for the wrong reason, and skips order-2 entirely if order-1 is ahead.',
+    transfer:
+      'Keep the seen delivery IDs only for the last 24 hours, with an arrival time on each delivery. Decide what happens when a retry arrives after an ID has been forgotten, and whether the sequence check still protects you. This changed contract is self-reviewed, not checked by the original cases.',
+  },
+  'backend-downgrade-response': {
+    reasoning:
+      "Each change was made on top of the previous version, so it can only be undone from the version right after it. Undoing newest first walks the body back one release at a time, and each undo sees exactly the shape that change produced. Changes released on or before the pinned date are part of the client's version and are left alone.",
+    trace:
+      'With changes 2024-06-01 rename name→fullName and 2025-01-15 rename fullName→displayName, a body {id: 7, displayName: "Ada"} pinned at 2023-12-31 undoes 2025-01-15 first: displayName moves back to fullName. Then 2024-06-01 moves fullName back to name, giving {id: 7, name: "Ada"}. Pinned at 2024-07-01, only the 2025 change is newer, so the result is {id: 7, fullName: "Ada"}.',
+    alternative:
+      'Keeping one handler per version avoids the undo chain, but every fix then has to be made in each copy. Translating only between neighbouring versions, as here, means each change is written once and old clients get every later fix. Some teams instead stop supporting versions older than a cut-off date, which shortens the chain.',
+    counterexample:
+      'Undoing oldest first tries to rename fullName to name before fullName exists, then renames displayName to fullName, leaving {id: 7, fullName: "Ada"} for a client that expects name. Using >= pinned also undoes a change released on the pinned date, which "Keeps a change released on the pinned date" refuses.',
+    transfer:
+      'Add a change kind that moved a field into a nested object, such as address.city from city. Decide how to undo it, and what happens if a later change renames something inside that object. This changed contract is self-reviewed, not checked by the original cases.',
+  },
 }
 
 export const backendGuides: Record<string, ReflectionGuide> = {
@@ -653,6 +713,76 @@ export const backendGuides: Record<string, ReflectionGuide> = {
     example:
       "I keep a Map from key to {tokens, refilledAt}, creating a full bucket at a key's first request. For each request I add whole intervals up to capacity, move the refill time by those intervals or to the request time when full, and then either spend a token or refuse with refilledAt + refillMs - at, saving the bucket in both cases. The work is linear in the requests. The checks pass the requests directly, not through a gateway.",
   },
+  'backend-choose-version': {
+    plan: [
+      'Read a version from the first path segment, and the route path that remains.',
+      'Read a version from a non-blank Api-Version header.',
+      'Refuse a conflict, choose the named or default version, then check it is supported.',
+    ],
+    explanation: [
+      'Trace a request whose path and header disagree.',
+      'Explain why a request with no version gets the default and not the newest.',
+      'Say why "v2x" is not a version.',
+    ],
+    example:
+      'I take the first segment and test it against /^v[0-9]+$/; if it matches, the route is the rest of the path or "/". I find Api-Version by lowercased name and ignore a blank value. Two different versions give VERSION_CONFLICT; otherwise I use the named version or the fallback and return UNKNOWN_VERSION if it is not supported. The work is linear in the headers. The checks call the function directly, not a running server.',
+  },
+  'backend-classify-change': {
+    plan: [
+      'Collect and sort every field name from both sides.',
+      'Decide for each field whether it was added, removed, or changed.',
+      'Apply the rules for the side that reads the field, and let any breaking difference win.',
+    ],
+    explanation: [
+      'Trace a field that is added as required to a request, then to a response.',
+      'Explain why a type change breaks in both directions.',
+      'Say what this check cannot see, such as changed meanings.',
+    ],
+    example:
+      'I sort the union of field names. A field only in after is breaking for a request when it is required and compatible otherwise; a field only in before is breaking for a response and compatible for a request. For a field in both, a type change is breaking, and a required change is breaking when it asks more of the reader. Unchanged fields are skipped. The work is O(n log n) for the sort. The checks compare field lists, not real clients.',
+  },
+  'backend-deprecation-headers': {
+    plan: [
+      'Turn the three times into instants.',
+      'Find the period now falls in: before deprecation, deprecated, or after sunset.',
+      'Build the headers for that period.',
+    ],
+    explanation: [
+      'Trace a request at the exact sunset time.',
+      'Explain why the times must be compared as instants and not as text.',
+      'Say what each of the three headers tells a client.',
+    ],
+    example:
+      'I parse now, deprecatedAt, and sunsetAt with Date.parse. Before the deprecation I return 200 with no headers; at or after the sunset I return 410 with only Link; between them I return 200 with Deprecation "@" and the seconds, Sunset from toUTCString, and Link. The work is constant. The checks pass now in directly; no clock is read and no server runs.',
+  },
+  'backend-webhook-deliveries': {
+    plan: [
+      'Skip a delivery ID seen earlier as a duplicate.',
+      'Skip a sequence not newer than the last applied for its resource as stale.',
+      'Otherwise apply the status and remember the sequence.',
+    ],
+    explanation: [
+      'Trace an older change that arrives after a newer one.',
+      'Explain why a new delivery ID can still be stale.',
+      'Say why sequences are kept per resource.',
+    ],
+    example:
+      'I keep a Set of seen delivery IDs and a Map from resource to its last applied sequence. For each delivery, a seen ID is a DUPLICATE; otherwise I record the ID, and a sequence at or below the stored one is STALE. Anything else updates the state, the stored sequence, and the applied list. The work is linear in the deliveries. The checks pass a list of deliveries, not live webhook requests.',
+  },
+  'backend-downgrade-response': {
+    plan: [
+      'Keep the changes released after the pinned date.',
+      'Sort them newest first.',
+      'Undo each on a copy of the body: rename back, delete an added field, restore a removed one.',
+    ],
+    explanation: [
+      'Trace two renames of the same field for a client pinned before both.',
+      'Explain why the order of undoing matters.',
+      'Say why a change on the pinned date stays.',
+    ],
+    example:
+      'I copy the body, keep the changes whose version is later than pinned, and sort them newest first. A rename moves the value of to back to from when to is present; an add deletes the field; a remove sets the field to its old value. The work is O(c log c) for the sort plus the number of changes. The checks call the function directly, not a live API.',
+  },
 }
 
 export const backendLessonDepth: Record<string, LessonDepth> = {
@@ -705,5 +835,15 @@ export const backendLessonDepth: Record<string, LessonDepth> = {
       'A bucket with capacity 2 and one token per 1000 ms is empty at 0. Requests arrive at 1500, 2600, and 3100. Predict each decision with the correct rule, then with the "refill from the last request" mistake.',
     answer:
       'With the correct rule all three are allowed: 1500 gains one token and counts from 1000, 2600 gains one and counts from 2000, and 3100 gains one and counts from 3000. With the mistake, 1500 and 2600 are allowed but restart the count at their own times, so at 3100 only 500 ms have passed and the request is refused.',
+  },
+  'api-evolution': {
+    title: 'The reader decides whether a change breaks',
+    code: 'response: add "currency" (always present) → compatible\nrequest:  add "currency" (required)       → breaking\n\nresponse: "email" always present → may be missing → breaking\nrequest:  "email" required → optional            → compatible',
+    reasoning:
+      'The same edit to a field list can be safe or breaking depending on who reads the field. A response is read by clients, so it may give them more but never less: removing a field, changing its type, or letting it go missing breaks them. A request is read by the server, so it may ask clients for less but never more: a new required field or a field that becomes required breaks every client that does not send it.',
+    challenge:
+      'A team renames the response field "zip" to "postalCode" in one release. Classify that release as the field rules would, then propose a way to ship the rename without breaking existing clients.',
+    answer:
+      'The rules see two changes: "zip" removed, which is breaking for a response, and "postalCode" added, which is compatible. One safe path is to send both fields for a while, announce the deprecation of "zip" with a sunset date, and remove it only in a new version; or keep "zip" for clients pinned to older versions by undoing the rename for them.',
   },
 }

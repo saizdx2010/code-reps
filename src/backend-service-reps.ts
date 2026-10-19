@@ -2571,4 +2571,657 @@ export const backendServiceReps: Rep[] = [
       { name: 'Handles no requests', input: [[], 1, 1000], expected: [] },
     ],
   },
+  {
+    id: 'backend-choose-version',
+    title: 'Choose a response version',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'An API changed the shape of its responses, but apps built against the first shape are still in use. Each request may name the version it wants, in the path or in a header, and a request that names none gets the documented default, so existing clients keep working.',
+    prompt:
+      'Implement chooseVersion(path, headers, supported, fallback). path starts with "/". The path names a version when its first segment is a lowercase "v" followed by one or more digits, such as "/v2/orders"; the route path is then the rest of the path, or "/" if nothing is left. The header names a version when an Api-Version header (name in any letter case) has a value that is not empty after trimming; the version is that trimmed value. If both name a version and they differ, return {ok: false, status: 400, error: "VERSION_CONFLICT"}. Otherwise the version is the one named, or fallback when neither names one. If that version is not in supported, return {ok: false, status: 400, error: "UNKNOWN_VERSION"}. Otherwise return {ok: true, version, path}, where path is the route path. Do not change the inputs.',
+    brief: {
+      summary:
+        'Implement chooseVersion(path, headers, supported, fallback) and return {ok: true, version, path} or {ok: false, status, error}.',
+      rules: [
+        'The path names a version when its first segment is a lowercase "v" followed by digits, as in "/v2/orders"; the route path is the rest, or "/" if nothing is left.',
+        'The header names a version when Api-Version (name in any letter case) has a value that is not empty after trimming.',
+        'If both name a version and they differ, return {ok: false, status: 400, error: "VERSION_CONFLICT"}.',
+        'Otherwise use the named version, or fallback when neither names one. A version not in supported gives {ok: false, status: 400, error: "UNKNOWN_VERSION"}.',
+        'Return {ok: true, version, path} with the route path.',
+      ],
+      edgeCases: [
+        'A segment such as "v2x" or "V2" is not a version, so it stays in the route path.',
+        'Check for a conflict before checking whether the version is supported.',
+        'Do not change the inputs.',
+      ],
+    },
+    example: {
+      input: 'chooseVersion("/v2/orders/7", [], ["v1", "v2"], "v1")',
+      output: '{ok: true, version: "v2", path: "/orders/7"}',
+    },
+    note: 'Headers are [name, value] pairs, and Api-Version appears at most once. Versions are compared exactly, and fallback is always in supported. These are values passed to your function, not a live server.',
+    vocabulary: [
+      { term: 'API version', meaning: 'a name for one shape of an API, so a client can ask for the shape it was built against' },
+      { term: 'Default version', meaning: 'the version a request gets when it does not name one' },
+    ],
+    planPrompt:
+      'With supported ["v1", "v2"] and fallback "v1", what do "/v2", "/v2x/orders", and "/v3/orders" with an Api-Version header of "v2" each return?',
+    starter:
+      'type Header = [string, string]\n\nfunction chooseVersion(path: string, headers: Header[], supported: string[], fallback: string) {\n  // Read a version from the path and from the Api-Version header, then decide.\n  return { ok: true, version: fallback, path }\n}\n',
+    functionName: 'chooseVersion',
+    preserveInput: true,
+    hints: [
+      'The first segment is the text between the first and second "/". Test it with a pattern anchored at both ends.',
+      'Find the header by comparing lowercased names, and treat a blank value as no header at all.',
+      'Decide in order: a conflict, then the named or default version, then whether it is supported.',
+    ],
+    checks: [
+      {
+        name: 'Reads the version from the path',
+        input: ['/v2/orders/7', [], ['v1', 'v2'], 'v1'],
+        expected: { ok: true, version: 'v2', path: '/orders/7' },
+      },
+      {
+        name: 'Reads the version from a header',
+        input: ['/orders', [['Api-Version', 'v2']], ['v1', 'v2'], 'v1'],
+        expected: { ok: true, version: 'v2', path: '/orders' },
+      },
+      {
+        name: 'Uses the default when nothing names a version',
+        input: ['/orders', [['Accept', 'application/json']], ['v1', 'v2'], 'v1'],
+        expected: { ok: true, version: 'v1', path: '/orders' },
+      },
+      {
+        name: 'Uses the supplied default',
+        input: ['/orders', [], ['v1', 'v2', 'v3'], 'v3'],
+        expected: { ok: true, version: 'v3', path: '/orders' },
+      },
+      {
+        name: 'Finds the header in any letter case and trims it',
+        input: ['/orders', [['api-VERSION', ' v2 ']], ['v1', 'v2'], 'v1'],
+        expected: { ok: true, version: 'v2', path: '/orders' },
+      },
+      {
+        name: 'Rejects an unknown version in the path',
+        input: ['/v3/orders', [], ['v1', 'v2'], 'v1'],
+        expected: { ok: false, status: 400, error: 'UNKNOWN_VERSION' },
+      },
+      {
+        name: 'Rejects an unknown version in the header',
+        input: ['/orders', [['Api-Version', '2']], ['v1', 'v2'], 'v1'],
+        expected: { ok: false, status: 400, error: 'UNKNOWN_VERSION' },
+      },
+      {
+        name: 'Accepts a path and header that agree',
+        input: ['/v2/orders', [['Api-Version', 'v2']], ['v1', 'v2'], 'v1'],
+        expected: { ok: true, version: 'v2', path: '/orders' },
+      },
+      {
+        name: 'Reports a conflict before an unknown version',
+        input: ['/v3/orders', [['Api-Version', 'v2']], ['v1', 'v2'], 'v1'],
+        expected: { ok: false, status: 400, error: 'VERSION_CONFLICT' },
+      },
+      {
+        name: 'Leaves a lookalike segment in the path',
+        input: ['/v2x/orders', [], ['v1', 'v2'], 'v1'],
+        expected: { ok: true, version: 'v1', path: '/v2x/orders' },
+      },
+      {
+        name: 'Matches only a lowercase v',
+        input: ['/V2/orders', [], ['v1', 'v2'], 'v1'],
+        expected: { ok: true, version: 'v1', path: '/V2/orders' },
+      },
+      {
+        name: 'Reads a version with several digits',
+        input: ['/v10/items', [], ['v9', 'v10'], 'v9'],
+        expected: { ok: true, version: 'v10', path: '/items' },
+      },
+      { name: 'Routes a bare version to "/"', input: ['/v2', [], ['v1', 'v2'], 'v1'], expected: { ok: true, version: 'v2', path: '/' } },
+      {
+        name: 'Treats a blank header as no header',
+        input: ['/v2/orders', [['Api-Version', '  ']], ['v1', 'v2'], 'v1'],
+        expected: { ok: true, version: 'v2', path: '/orders' },
+      },
+    ],
+  },
+  {
+    id: 'backend-classify-change',
+    title: 'Spot a breaking change',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'Apps built against an API keep running after the API changes, often for months. Before a change ships, the team compares the old and new field lists for a request or a response and asks, field by field, whether any existing client would stop working.',
+    prompt:
+      'Implement classifyChanges(direction, before, after). direction is "response" (the server sends it and clients read it) or "request" (clients send it and the server reads it). before and after map each field name to {type, required}; for a response, required means the field is always present. Compare every field that appears in either. For a response, a field that was removed, changed type, or went from required to not required is breaking; a field that was added, or went from not required to required, is compatible. For a request, a field that was added as required, changed type, or went from not required to required is breaking; a field that was added as not required, was removed, or went from required to not required is compatible. A field with any breaking difference is breaking. Return {breaking, compatible}, each a list of field names sorted with the default sort; unchanged fields appear in neither. Do not change the inputs.',
+    brief: {
+      summary: 'Implement classifyChanges(direction, before, after) and return {breaking, compatible}.',
+      rules: [
+        'Response (clients read it): removed, changed type, or required → not required is breaking; added, or not required → required, is compatible.',
+        'Request (clients send it): added as required, changed type, or not required → required is breaking; added as not required, removed, or required → not required is compatible.',
+        'A field with any breaking difference is breaking.',
+        'Return both lists sorted with the default sort; unchanged fields appear in neither.',
+      ],
+      edgeCases: ['For a response, required means the field is always present.', 'Do not change the inputs.'],
+    },
+    example: {
+      input:
+        'classifyChanges("response", {id: {type: "string", required: true}, total: {type: "number", required: true}}, {id: {type: "string", required: true}, total: {type: "string", required: true}, currency: {type: "string", required: true}})',
+      output: '{breaking: ["total"], compatible: ["currency"]}',
+    },
+    note: 'Field names are lowercase letters and underscores; types are names such as "string" or "number" compared exactly. Clients are assumed to ignore response fields they do not know, and the server to ignore request fields it does not read. These are values passed to your function, not a live API or real clients.',
+    vocabulary: [
+      { term: 'Breaking change', meaning: 'a change that makes a client written for the old API stop working' },
+      { term: 'Compatible change', meaning: 'a change that existing clients can keep working through without being updated' },
+    ],
+    planPrompt:
+      'Adding a required field is safe in one direction and breaking in the other. Which is which, and why does it depend on who reads the field?',
+    starter:
+      "type Field = { type: string; required: boolean }\n\nfunction classifyChanges(direction: 'request' | 'response', before: Record<string, Field>, after: Record<string, Field>) {\n  // Compare every field name from either side.\n  return { breaking: [] as string[], compatible: [] as string[] }\n}\n",
+    functionName: 'classifyChanges',
+    preserveInput: true,
+    hints: [
+      'Collect the field names from both objects without repeats, and sort them before you look at each one.',
+      'Ask who reads the field: the side that reads it is the one a change can break.',
+      'A field missing from before was added, one missing from after was removed, and one in both may differ in type or in required.',
+    ],
+    checks: [
+      {
+        name: 'Classifies the example',
+        input: [
+          'response',
+          { id: { type: 'string', required: true }, total: { type: 'number', required: true } },
+          {
+            id: { type: 'string', required: true },
+            total: { type: 'string', required: true },
+            currency: { type: 'string', required: true },
+          },
+        ],
+        expected: { breaking: ['total'], compatible: ['currency'] },
+      },
+      {
+        name: 'A removed response field is breaking',
+        input: [
+          'response',
+          { id: { type: 'string', required: true }, nickname: { type: 'string', required: false } },
+          { id: { type: 'string', required: true } },
+        ],
+        expected: { breaking: ['nickname'], compatible: [] },
+      },
+      {
+        name: 'An added response field is compatible',
+        input: [
+          'response',
+          { id: { type: 'string', required: true } },
+          { id: { type: 'string', required: true }, status: { type: 'string', required: true } },
+        ],
+        expected: { breaking: [], compatible: ['status'] },
+      },
+      {
+        name: 'A response field that may now be missing is breaking',
+        input: ['response', { email: { type: 'string', required: true } }, { email: { type: 'string', required: false } }],
+        expected: { breaking: ['email'], compatible: [] },
+      },
+      {
+        name: 'A response field that is now always present is compatible',
+        input: ['response', { email: { type: 'string', required: false } }, { email: { type: 'string', required: true } }],
+        expected: { breaking: [], compatible: ['email'] },
+      },
+      {
+        name: 'A changed request type is breaking',
+        input: ['request', { quantity: { type: 'number', required: true } }, { quantity: { type: 'string', required: true } }],
+        expected: { breaking: ['quantity'], compatible: [] },
+      },
+      {
+        name: 'A new required request field is breaking',
+        input: [
+          'request',
+          { sku: { type: 'string', required: true } },
+          { sku: { type: 'string', required: true }, warehouse: { type: 'string', required: true } },
+        ],
+        expected: { breaking: ['warehouse'], compatible: [] },
+      },
+      {
+        name: 'A new optional request field is compatible',
+        input: [
+          'request',
+          { sku: { type: 'string', required: true } },
+          { sku: { type: 'string', required: true }, note: { type: 'string', required: false } },
+        ],
+        expected: { breaking: [], compatible: ['note'] },
+      },
+      {
+        name: 'A removed request field is compatible',
+        input: [
+          'request',
+          { sku: { type: 'string', required: true }, coupon: { type: 'string', required: true } },
+          { sku: { type: 'string', required: true } },
+        ],
+        expected: { breaking: [], compatible: ['coupon'] },
+      },
+      {
+        name: 'Required changes break requests in the other direction',
+        input: [
+          'request',
+          { gift: { type: 'boolean', required: false }, sku: { type: 'string', required: true } },
+          { gift: { type: 'boolean', required: true }, sku: { type: 'string', required: false } },
+        ],
+        expected: { breaking: ['gift'], compatible: ['sku'] },
+      },
+      {
+        name: 'A type change outweighs a compatible change',
+        input: ['response', { rating: { type: 'number', required: false } }, { rating: { type: 'string', required: true } }],
+        expected: { breaking: ['rating'], compatible: [] },
+      },
+      {
+        name: 'Sorts names and leaves unchanged fields out',
+        input: [
+          'response',
+          { zone: { type: 'string', required: true }, id: { type: 'string', required: true }, city: { type: 'string', required: true } },
+          {
+            id: { type: 'string', required: true },
+            city: { type: 'string', required: true },
+            region: { type: 'string', required: true },
+            area: { type: 'string', required: true },
+          },
+        ],
+        expected: { breaking: ['zone'], compatible: ['area', 'region'] },
+      },
+      {
+        name: 'Reports nothing for identical fields',
+        input: ['request', { sku: { type: 'string', required: true } }, { sku: { type: 'string', required: true } }],
+        expected: { breaking: [], compatible: [] },
+      },
+    ],
+  },
+  {
+    id: 'backend-deprecation-headers',
+    title: 'Announce a deprecation and a sunset',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'An old endpoint is being retired. From its deprecation date every response warns clients and names the replacement, and from its sunset date the endpoint stops answering with data. Announcing both dates early gives client teams time to move.',
+    prompt:
+      'Implement deprecationResponse(policy, now). policy is {deprecatedAt, sunsetAt, successor}; deprecatedAt, sunsetAt, and now are ISO 8601 times with a "Z" or a ±HH:MM offset. Compare them as instants. Before deprecatedAt, return {status: 200, headers: {}}. From deprecatedAt until just before sunsetAt, return {status: 200, headers} with three headers: Deprecation is "@" followed by deprecatedAt in whole seconds since 1970-01-01T00:00:00Z; Sunset is sunsetAt as an HTTP date in GMT, such as "Tue, 01 Sep 2026 00:00:00 GMT"; and Link is the successor in angle brackets followed by ; rel="successor-version", such as </v2/orders>; rel="successor-version". From sunsetAt on, return {status: 410, headers} with only the Link header. Do not change the inputs.',
+    brief: {
+      summary: 'Implement deprecationResponse(policy, now) and return {status, headers}.',
+      rules: [
+        'Compare deprecatedAt, sunsetAt, and now as instants; they are ISO 8601 times with "Z" or a ±HH:MM offset.',
+        'Before deprecatedAt: {status: 200, headers: {}}.',
+        'From deprecatedAt until just before sunsetAt: status 200 with Deprecation ("@" and deprecatedAt in whole seconds since 1970-01-01T00:00:00Z), Sunset (sunsetAt as an HTTP date in GMT, such as "Tue, 01 Sep 2026 00:00:00 GMT"), and Link.',
+        'Link is the successor in angle brackets followed by ; rel="successor-version", such as </v2/orders>; rel="successor-version".',
+        'From sunsetAt on: {status: 410, headers} with only Link.',
+      ],
+      edgeCases: [
+        'The deprecation date and the sunset date each start their period.',
+        'A time with an offset still gives a Sunset date in GMT.',
+        'Do not change the inputs.',
+      ],
+    },
+    example: {
+      input:
+        'deprecationResponse({deprecatedAt: "2026-03-01T00:00:00Z", sunsetAt: "2026-09-01T00:00:00Z", successor: "/v2/orders"}, "2026-05-10T08:00:00Z")',
+      output:
+        "{status: 200, headers: {Deprecation: '@1772323200', Sunset: 'Tue, 01 Sep 2026 00:00:00 GMT', Link: '</v2/orders>; rel=\"successor-version\"'}}",
+    },
+    note: 'Times are whole seconds, and sunsetAt is after deprecatedAt. The HTTP date format is the one Date.prototype.toUTCString produces. now is passed in, so your function never reads a clock; these are values passed to your function, not a live server.',
+    vocabulary: [
+      { term: 'Deprecation', meaning: 'a notice that something still works but will be removed, so clients should move away from it' },
+      { term: 'Sunset', meaning: 'the date after which a deprecated endpoint stops working' },
+    ],
+    planPrompt:
+      'For a deprecation at 2026-03-01T00:00:00Z and a sunset at 2026-09-01T00:00:00Z, what should requests at 2026-02-28T23:59:59Z, at exactly the deprecation, and at exactly the sunset get?',
+    starter:
+      'type Policy = { deprecatedAt: string; sunsetAt: string; successor: string }\n\nfunction deprecationResponse(policy: Policy, now: string): { status: number; headers: Record<string, string> } {\n  // Turn the three times into instants, then pick the period now falls in.\n  return { status: 200, headers: {} }\n}\n',
+    functionName: 'deprecationResponse',
+    preserveInput: true,
+    hints: [
+      'Date.parse turns each ISO time into milliseconds since 1970, which compares correctly whatever offset the text used.',
+      'Comparing the text itself goes wrong as soon as two times use different offsets.',
+      'Divide milliseconds by 1000 for the Deprecation value, and build Sunset from a Date made from those milliseconds.',
+    ],
+    checks: [
+      {
+        name: 'Announces the deprecation in the example',
+        input: [
+          { deprecatedAt: '2026-03-01T00:00:00Z', sunsetAt: '2026-09-01T00:00:00Z', successor: '/v2/orders' },
+          '2026-05-10T08:00:00Z',
+        ],
+        expected: {
+          status: 200,
+          headers: { Deprecation: '@1772323200', Sunset: 'Tue, 01 Sep 2026 00:00:00 GMT', Link: '</v2/orders>; rel="successor-version"' },
+        },
+      },
+      {
+        name: 'Sends no headers before the deprecation',
+        input: [
+          { deprecatedAt: '2026-03-01T00:00:00Z', sunsetAt: '2026-09-01T00:00:00Z', successor: '/v2/orders' },
+          '2026-02-28T23:59:59Z',
+        ],
+        expected: { status: 200, headers: {} },
+      },
+      {
+        name: 'Starts warning at the exact deprecation time',
+        input: [
+          { deprecatedAt: '2026-03-01T00:00:00Z', sunsetAt: '2026-09-01T00:00:00Z', successor: '/v2/orders' },
+          '2026-03-01T00:00:00Z',
+        ],
+        expected: {
+          status: 200,
+          headers: { Deprecation: '@1772323200', Sunset: 'Tue, 01 Sep 2026 00:00:00 GMT', Link: '</v2/orders>; rel="successor-version"' },
+        },
+      },
+      {
+        name: 'Still answers one second before the sunset',
+        input: [
+          { deprecatedAt: '2026-03-01T00:00:00Z', sunsetAt: '2026-09-01T00:00:00Z', successor: '/v2/orders' },
+          '2026-08-31T23:59:59Z',
+        ],
+        expected: {
+          status: 200,
+          headers: { Deprecation: '@1772323200', Sunset: 'Tue, 01 Sep 2026 00:00:00 GMT', Link: '</v2/orders>; rel="successor-version"' },
+        },
+      },
+      {
+        name: 'Answers 410 Gone from the exact sunset time',
+        input: [
+          { deprecatedAt: '2026-03-01T00:00:00Z', sunsetAt: '2026-09-01T00:00:00Z', successor: '/v2/orders' },
+          '2026-09-01T00:00:00Z',
+        ],
+        expected: { status: 410, headers: { Link: '</v2/orders>; rel="successor-version"' } },
+      },
+      {
+        name: 'Keeps answering 410 after the sunset',
+        input: [
+          { deprecatedAt: '2026-03-01T00:00:00Z', sunsetAt: '2026-09-01T00:00:00Z', successor: '/v2/orders' },
+          '2027-01-15T09:00:00Z',
+        ],
+        expected: { status: 410, headers: { Link: '</v2/orders>; rel="successor-version"' } },
+      },
+      {
+        name: 'Uses the time of day, not only the date',
+        input: [
+          { deprecatedAt: '2026-03-01T12:30:00Z', sunsetAt: '2026-09-01T00:00:00Z', successor: '/v2/orders' },
+          '2026-03-01T12:29:59Z',
+        ],
+        expected: { status: 200, headers: {} },
+      },
+      {
+        name: 'Writes Deprecation for a time within a day',
+        input: [{ deprecatedAt: '2026-03-01T12:30:00Z', sunsetAt: '2026-09-01T00:00:00Z', successor: '/v3/items' }, '2026-03-01T12:30:00Z'],
+        expected: {
+          status: 200,
+          headers: { Deprecation: '@1772368200', Sunset: 'Tue, 01 Sep 2026 00:00:00 GMT', Link: '</v3/items>; rel="successor-version"' },
+        },
+      },
+      {
+        name: 'Compares times with different offsets as instants',
+        input: [
+          { deprecatedAt: '2026-03-01T00:00:00Z', sunsetAt: '2026-06-01T07:00:00+07:00', successor: '/v2/orders' },
+          '2026-05-31T23:30:00Z',
+        ],
+        expected: {
+          status: 200,
+          headers: { Deprecation: '@1772323200', Sunset: 'Mon, 01 Jun 2026 00:00:00 GMT', Link: '</v2/orders>; rel="successor-version"' },
+        },
+      },
+      {
+        name: 'Reaches a sunset given with an offset',
+        input: [
+          { deprecatedAt: '2026-03-01T00:00:00Z', sunsetAt: '2026-06-01T07:00:00+07:00', successor: '/v2/orders' },
+          '2026-06-01T00:00:00Z',
+        ],
+        expected: { status: 410, headers: { Link: '</v2/orders>; rel="successor-version"' } },
+      },
+    ],
+  },
+  {
+    id: 'backend-webhook-deliveries',
+    title: 'Apply webhook deliveries once and in order',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      'A payment provider tells your service about order changes by calling your webhook endpoint. It retries a delivery that was not acknowledged, so the same delivery can arrive twice, and deliveries can overtake each other, so an older change can arrive after a newer one. Each delivery carries its own ID and a sequence number that grows with each change to the same order.',
+    prompt:
+      'Implement applyDeliveries(deliveries). Each delivery is {deliveryId, resource, sequence, status}, in arrival order. Process them in order. A delivery whose deliveryId arrived earlier in the list is skipped with reason "DUPLICATE". Otherwise, if its sequence is not greater than the last sequence applied for the same resource, it is skipped with reason "STALE". Otherwise apply it: the resource\'s status becomes the delivery\'s status and its last applied sequence becomes this sequence. Return {state, applied, skipped}: state maps each resource to its applied status, applied lists the applied delivery IDs in order, and skipped lists {deliveryId, reason} in order. Do not change deliveries.',
+    brief: {
+      summary: 'Implement applyDeliveries(deliveries) and return {state, applied, skipped}.',
+      rules: [
+        'Process deliveries in arrival order.',
+        'A deliveryId that arrived earlier in the list is skipped as "DUPLICATE", whether the earlier one was applied or skipped.',
+        'Otherwise, a sequence not greater than the last one applied for the same resource is skipped as "STALE".',
+        "Otherwise apply it: set the resource's status and remember its sequence.",
+        'Return {state, applied, skipped}, with applied and skipped in processing order.',
+      ],
+      edgeCases: ['Sequences are counted separately for each resource.', 'Do not change deliveries.'],
+    },
+    example: {
+      input:
+        'applyDeliveries([{deliveryId: "d1", resource: "order-7", sequence: 1, status: "paid"}, {deliveryId: "d1", resource: "order-7", sequence: 1, status: "paid"}])',
+      output: '{state: {"order-7": "paid"}, applied: ["d1"], skipped: [{deliveryId: "d1", reason: "DUPLICATE"}]}',
+    },
+    note: 'deliveryId and resource are non-empty text compared exactly; sequence is a positive whole number; there are at most 500 deliveries. Verifying who sent a delivery is a separate step that this rep leaves out. These are values passed to your function, not a live webhook endpoint.',
+    vocabulary: [
+      { term: 'Webhook', meaning: 'a request another service sends to your endpoint to tell you something changed' },
+      { term: 'Delivery ID', meaning: 'an ID that stays the same each time the sender retries the same delivery' },
+      { term: 'Sequence number', meaning: 'a number that grows with each change, so a receiver can tell older changes from newer ones' },
+    ],
+    planPrompt:
+      'Order 7 receives sequence 1 (paid), then sequence 3 (shipped), then sequence 2 (packed), then sequence 3 again under its first delivery ID. What is applied, what is skipped, and why?',
+    starter:
+      'type Delivery = { deliveryId: string; resource: string; sequence: number; status: string }\n\nfunction applyDeliveries(deliveries: Delivery[]) {\n  // Remember which deliveries arrived and the last sequence applied per resource.\n  return { state: {} as Record<string, string>, applied: [] as string[], skipped: [] as { deliveryId: string; reason: string }[] }\n}\n',
+    functionName: 'applyDeliveries',
+    preserveInput: true,
+    hints: [
+      'Keep a Set of delivery IDs you have seen and a Map from resource to its last applied sequence.',
+      'Check for a repeated delivery ID first, and record every ID you see, applied or not.',
+      'A resource with no applied sequence yet accepts any positive sequence.',
+    ],
+    checks: [
+      {
+        name: 'Skips the repeated delivery in the example',
+        input: [
+          [
+            { deliveryId: 'd1', resource: 'order-7', sequence: 1, status: 'paid' },
+            { deliveryId: 'd1', resource: 'order-7', sequence: 1, status: 'paid' },
+          ],
+        ],
+        expected: { state: { 'order-7': 'paid' }, applied: ['d1'], skipped: [{ deliveryId: 'd1', reason: 'DUPLICATE' }] },
+      },
+      {
+        name: 'Applies new changes in order',
+        input: [
+          [
+            { deliveryId: 'd1', resource: 'order-7', sequence: 1, status: 'paid' },
+            { deliveryId: 'd2', resource: 'order-7', sequence: 2, status: 'packed' },
+            { deliveryId: 'd3', resource: 'order-7', sequence: 3, status: 'shipped' },
+          ],
+        ],
+        expected: { state: { 'order-7': 'shipped' }, applied: ['d1', 'd2', 'd3'], skipped: [] },
+      },
+      {
+        name: 'Skips an older change that arrives late',
+        input: [
+          [
+            { deliveryId: 'd1', resource: 'order-7', sequence: 1, status: 'paid' },
+            { deliveryId: 'd3', resource: 'order-7', sequence: 3, status: 'shipped' },
+            { deliveryId: 'd2', resource: 'order-7', sequence: 2, status: 'packed' },
+          ],
+        ],
+        expected: { state: { 'order-7': 'shipped' }, applied: ['d1', 'd3'], skipped: [{ deliveryId: 'd2', reason: 'STALE' }] },
+      },
+      {
+        name: 'Skips a new delivery of a sequence already applied',
+        input: [
+          [
+            { deliveryId: 'd1', resource: 'order-7', sequence: 4, status: 'paid' },
+            { deliveryId: 'd9', resource: 'order-7', sequence: 4, status: 'refunded' },
+          ],
+        ],
+        expected: { state: { 'order-7': 'paid' }, applied: ['d1'], skipped: [{ deliveryId: 'd9', reason: 'STALE' }] },
+      },
+      {
+        name: 'Keeps sequences separate for each resource',
+        input: [
+          [
+            { deliveryId: 'a5', resource: 'order-1', sequence: 5, status: 'shipped' },
+            { deliveryId: 'b2', resource: 'order-2', sequence: 2, status: 'paid' },
+            { deliveryId: 'a4', resource: 'order-1', sequence: 4, status: 'packed' },
+          ],
+        ],
+        expected: {
+          state: { 'order-1': 'shipped', 'order-2': 'paid' },
+          applied: ['a5', 'b2'],
+          skipped: [{ deliveryId: 'a4', reason: 'STALE' }],
+        },
+      },
+      {
+        name: 'Accepts any first sequence for a resource',
+        input: [[{ deliveryId: 'd7', resource: 'order-3', sequence: 7, status: 'packed' }]],
+        expected: { state: { 'order-3': 'packed' }, applied: ['d7'], skipped: [] },
+      },
+      {
+        name: 'Calls a repeat of a skipped delivery a duplicate',
+        input: [
+          [
+            { deliveryId: 'd2', resource: 'order-7', sequence: 2, status: 'packed' },
+            { deliveryId: 'd1', resource: 'order-7', sequence: 1, status: 'paid' },
+            { deliveryId: 'd1', resource: 'order-7', sequence: 1, status: 'paid' },
+          ],
+        ],
+        expected: {
+          state: { 'order-7': 'packed' },
+          applied: ['d2'],
+          skipped: [
+            { deliveryId: 'd1', reason: 'STALE' },
+            { deliveryId: 'd1', reason: 'DUPLICATE' },
+          ],
+        },
+      },
+      {
+        name: 'Compares delivery IDs exactly',
+        input: [
+          [
+            { deliveryId: 'd1', resource: 'order-7', sequence: 1, status: 'paid' },
+            { deliveryId: 'D1', resource: 'order-7', sequence: 2, status: 'packed' },
+          ],
+        ],
+        expected: { state: { 'order-7': 'packed' }, applied: ['d1', 'D1'], skipped: [] },
+      },
+      { name: 'Handles no deliveries', input: [[]], expected: { state: {}, applied: [], skipped: [] } },
+    ],
+  },
+  {
+    id: 'backend-downgrade-response',
+    title: 'Answer a client pinned to an older version',
+    category: 'Backend services',
+    format: 'backend',
+    context:
+      "Some APIs name each version by the date it was released and let every client stay on the version it was built against. The service builds each response in the newest shape, then undoes, one at a time, every change released after the client's version, so an old client still gets the shape it expects.",
+    prompt:
+      'Implement downgrade(body, pinned, changes). body is a response in the newest shape, an object of field names to values. pinned is the client\'s version and every change has a version; versions are dates written "YYYY-MM-DD". A change is {version, kind: "rename", from, to} (that version renamed field from to to), {version, kind: "add", field} (it added field), or {version, kind: "remove", field, value} (it removed field, which always held value). Undo every change whose version is later than pinned, newest first: undo a rename by moving the value of to back to from, only if to is present; undo an add by deleting field; undo a remove by setting field to value. Changes can be listed in any order, and no two share a version. Return the result as a new object. Do not change body or changes.',
+    brief: {
+      summary: 'Implement downgrade(body, pinned, changes) and return the response in the shape of the pinned version.',
+      rules: [
+        'A change is a rename {from, to}, an add {field}, or a remove {field, value}, each with a "YYYY-MM-DD" version.',
+        'Undo every change whose version is later than pinned, newest first.',
+        'Undo a rename by moving the value of to back to from, only if to is present; undo an add by deleting field; undo a remove by setting field to value.',
+        'Return a new object.',
+      ],
+      edgeCases: [
+        "A change released on the pinned date is part of the client's version, so it stays.",
+        'Changes can be listed in any order.',
+        'Do not change body or changes.',
+      ],
+    },
+    example: {
+      input: 'downgrade({id: 7, fullName: "Ada"}, "2024-01-01", [{version: "2024-06-01", kind: "rename", from: "name", to: "fullName"}])',
+      output: '{id: 7, name: "Ada"}',
+    },
+    note: 'Field values are text, numbers, booleans, or null. No two changes share a version, and changes has at most 50 entries. These are values passed to your function, not a live API.',
+    vocabulary: [
+      { term: 'Pinned version', meaning: 'the API version a client was built against and keeps receiving' },
+      { term: 'Version change', meaning: 'one recorded difference between an API version and the one before it' },
+    ],
+    planPrompt:
+      'Which changes does a client pinned to a given date need undone, and in what order must you undo them when one change builds on another?',
+    starter:
+      "type Change =\n  | { version: string; kind: 'rename'; from: string; to: string }\n  | { version: string; kind: 'add'; field: string }\n  | { version: string; kind: 'remove'; field: string; value: unknown }\n\nfunction downgrade(body: Record<string, unknown>, pinned: string, changes: Change[]) {\n  // Return the response in the shape of the pinned version.\n  return body\n}\n",
+    functionName: 'downgrade',
+    preserveInput: true,
+    hints: [
+      'Dates written "YYYY-MM-DD" compare correctly as text.',
+      'Work out which changes the client has not seen, and put them in the order you will undo them.',
+      'Copy the body before changing anything.',
+    ],
+    checks: [
+      {
+        name: 'Undoes a rename for an older client',
+        input: [{ id: 7, fullName: 'Ada' }, '2024-01-01', [{ version: '2024-06-01', kind: 'rename', from: 'name', to: 'fullName' }]],
+        expected: { id: 7, name: 'Ada' },
+      },
+      {
+        name: 'Keeps a change released on the pinned date',
+        input: [{ id: 7, fullName: 'Ada' }, '2024-06-01', [{ version: '2024-06-01', kind: 'rename', from: 'name', to: 'fullName' }]],
+        expected: { id: 7, fullName: 'Ada' },
+      },
+      {
+        name: 'Removes a field added later',
+        input: [{ id: 7, currency: 'EUR', total: 1200 }, '2024-12-31', [{ version: '2025-02-01', kind: 'add', field: 'currency' }]],
+        expected: { id: 7, total: 1200 },
+      },
+      {
+        name: 'Restores a removed field with its old value',
+        input: [{ id: 7 }, '2024-12-31', [{ version: '2025-03-01', kind: 'remove', field: 'taxIncluded', value: false }]],
+        expected: { id: 7, taxIncluded: false },
+      },
+      {
+        name: 'Undoes the newest change first',
+        input: [
+          { id: 7, displayName: 'Ada' },
+          '2023-12-31',
+          [
+            { version: '2024-06-01', kind: 'rename', from: 'name', to: 'fullName' },
+            { version: '2025-01-15', kind: 'rename', from: 'fullName', to: 'displayName' },
+          ],
+        ],
+        expected: { id: 7, name: 'Ada' },
+      },
+      {
+        name: 'Handles changes listed newest first',
+        input: [
+          { id: 7, contact: 'ada@example.com' },
+          '2023-12-31',
+          [
+            { version: '2025-05-01', kind: 'rename', from: 'email', to: 'contact' },
+            { version: '2024-02-01', kind: 'add', field: 'email' },
+          ],
+        ],
+        expected: { id: 7 },
+      },
+      {
+        name: 'Undoes only the changes after the pinned date',
+        input: [
+          { id: 7, displayName: 'Ada', currency: 'EUR' },
+          '2024-07-01',
+          [
+            { version: '2025-01-15', kind: 'rename', from: 'fullName', to: 'displayName' },
+            { version: '2024-06-01', kind: 'rename', from: 'name', to: 'fullName' },
+            { version: '2025-02-01', kind: 'add', field: 'currency' },
+          ],
+        ],
+        expected: { id: 7, fullName: 'Ada' },
+      },
+      {
+        name: 'Skips a rename whose field is missing',
+        input: [{ id: 7 }, '2024-01-01', [{ version: '2024-06-01', kind: 'rename', from: 'name', to: 'fullName' }]],
+        expected: { id: 7 },
+      },
+      {
+        name: 'Returns the same fields when nothing is newer',
+        input: [{ id: 7, total: 1200 }, '2026-01-01', []],
+        expected: { id: 7, total: 1200 },
+      },
+    ],
+  },
 ]

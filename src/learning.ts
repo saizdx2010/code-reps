@@ -434,6 +434,15 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'api-evolution',
+    title: 'Change an API without breaking clients',
+    guided: 'backend-choose-version',
+    independent: 'backend-classify-change',
+    recall: 'backend-downgrade-response',
+    practice: ['backend-deprecation-headers', 'backend-webhook-deliveries'],
+    delayDays: 3,
+  },
+  {
     id: 'dom-interactions',
     title: 'Build accessible interactions',
     guided: 'dom-disclosure',

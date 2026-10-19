@@ -42,7 +42,7 @@ export const pathIntroductions: Record<PathId, PathIntroduction> = {
     body: 'A backend receives input, checks it, does work, and returns a result. TypeScript describes a value, but data from outside still needs a runtime check. Foundations first helps, especially objects, arrays, and functions.',
     example: 'const input: unknown = { name: "Ada" }\n// Check its shape before reading input.name.',
     explanation: '"Unknown" means nobody has verified the value yet. A type assertion would not check what actually arrived.',
-    next: 'Begin by reading the parts of a request, then validate input, page results, and shape handlers. Reliability reps come next: caches, retries, and shared resources. Finish with the ticket API project.',
+    next: 'Begin by reading the parts of a request and routing it, then validate input, page results, and shape handlers. Later stages store data, keep concurrent writes safe, stay reliable with caches and retries, run background jobs, limit request rates, and evolve the API without breaking clients. Finish with the ticket API project.',
   },
   sql: {
     title: 'Ask questions of stored data',

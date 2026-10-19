@@ -11,7 +11,7 @@ export const trackDescriptions: Record<PathId, string> = {
   'pattern-recognition': 'Read an unlabeled problem, identify its decisive signals, and explain your choice before coding.',
   frontend: 'Decide what a screen shows, keep async results current, and manage live connections.',
   sql: 'Query a real SQLite database: filter, summarize, join, design tables, and change data safely.',
-  backend: 'Check input, return predictable results, and keep retries, caches, and shared resources safe.',
+  backend: 'Turn a raw request into a trustworthy result: route, validate, authorize, store, queue, and limit.',
 }
 
 export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
@@ -329,6 +329,11 @@ export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
       description:
         'Refill a token bucket, count a sliding window, estimate one from two counters, answer 429 with Retry-After, and keep a bucket per caller.',
       recap: 'You can now limit how often each caller may ask and tell refused callers when to come back.',
+    },
+    'Evolve an API': {
+      description:
+        'Choose a response version, tell compatible changes from breaking ones, announce a deprecation and a sunset, apply webhook deliveries once and in order, and answer clients pinned to older versions.',
+      recap: 'You can now change an API while the clients built against it keep working.',
     },
     'Read and improve code': {
       description: 'Trace an existing importer, then refactor a working report without changing its behavior.',

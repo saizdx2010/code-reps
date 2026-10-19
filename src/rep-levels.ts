@@ -349,6 +349,11 @@ export const repLevels: Record<string, RepLevel> = {
   'backend-limit-response': 2,
   'backend-sliding-counter': 2,
   'backend-limit-callers': 3,
+  'backend-choose-version': 2,
+  'backend-classify-change': 2,
+  'backend-deprecation-headers': 2,
+  'backend-webhook-deliveries': 2,
+  'backend-downgrade-response': 3,
 }
 
 /** The level for a rep, or undefined when the rep has not been placed yet. */

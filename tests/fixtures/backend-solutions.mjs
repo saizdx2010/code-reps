@@ -370,4 +370,90 @@ function limitRequests(requests: { key: string; at: number }[], capacity: number
     return { allowed: false, retryAfterMs: refilledAt + refillMs - at }
   })
 }`,
+  'backend-choose-version': `
+function chooseVersion(path: string, headers: [string, string][], supported: string[], fallback: string) {
+  const segment = path.split('/')[1] ?? ''
+  const fromPath = /^v[0-9]+$/.test(segment) ? segment : null
+  const route = fromPath === null ? path : path.slice(fromPath.length + 1) || '/'
+  const header = headers.find(([name]) => name.toLowerCase() === 'api-version')
+  const fromHeader = header && header[1].trim() !== '' ? header[1].trim() : null
+  if (fromPath !== null && fromHeader !== null && fromPath !== fromHeader) return { ok: false, status: 400, error: 'VERSION_CONFLICT' }
+  const version = fromPath ?? fromHeader ?? fallback
+  if (!supported.includes(version)) return { ok: false, status: 400, error: 'UNKNOWN_VERSION' }
+  return { ok: true, version, path: route }
+}`,
+  'backend-classify-change': `
+type Field = { type: string; required: boolean }
+function classifyChanges(direction: 'request' | 'response', before: Record<string, Field>, after: Record<string, Field>) {
+  const breaking: string[] = []
+  const compatible: string[] = []
+  const names = [...new Set([...Object.keys(before), ...Object.keys(after)])].sort()
+  for (const name of names) {
+    const old = Object.hasOwn(before, name) ? before[name] : undefined
+    const now = Object.hasOwn(after, name) ? after[name] : undefined
+    let breaks: boolean
+    if (!old) breaks = direction === 'request' && now!.required
+    else if (!now) breaks = direction === 'response'
+    else if (old.type === now.type && old.required === now.required) continue
+    else breaks = old.type !== now.type || (direction === 'response' ? old.required && !now.required : !old.required && now.required)
+    if (breaks) breaking.push(name)
+    else compatible.push(name)
+  }
+  return { breaking, compatible }
+}`,
+  'backend-deprecation-headers': `
+function deprecationResponse(policy: { deprecatedAt: string; sunsetAt: string; successor: string }, now: string) {
+  const at = Date.parse(now)
+  const deprecated = Date.parse(policy.deprecatedAt)
+  const sunset = Date.parse(policy.sunsetAt)
+  const link = '<' + policy.successor + '>; rel="successor-version"'
+  if (at < deprecated) return { status: 200, headers: {} }
+  if (at >= sunset) return { status: 410, headers: { Link: link } }
+  return {
+    status: 200,
+    headers: { Deprecation: '@' + deprecated / 1000, Sunset: new Date(sunset).toUTCString(), Link: link },
+  }
+}`,
+  'backend-webhook-deliveries': `
+function applyDeliveries(deliveries: { deliveryId: string; resource: string; sequence: number; status: string }[]) {
+  const seen = new Set<string>()
+  const last = new Map<string, number>()
+  const state: Record<string, string> = {}
+  const applied: string[] = []
+  const skipped: { deliveryId: string; reason: string }[] = []
+  for (const delivery of deliveries) {
+    if (seen.has(delivery.deliveryId)) {
+      skipped.push({ deliveryId: delivery.deliveryId, reason: 'DUPLICATE' })
+      continue
+    }
+    seen.add(delivery.deliveryId)
+    if (delivery.sequence <= (last.get(delivery.resource) ?? 0)) {
+      skipped.push({ deliveryId: delivery.deliveryId, reason: 'STALE' })
+      continue
+    }
+    last.set(delivery.resource, delivery.sequence)
+    state[delivery.resource] = delivery.status
+    applied.push(delivery.deliveryId)
+  }
+  return { state, applied, skipped }
+}`,
+  'backend-downgrade-response': `
+type Change =
+  | { version: string; kind: 'rename'; from: string; to: string }
+  | { version: string; kind: 'add'; field: string }
+  | { version: string; kind: 'remove'; field: string; value: unknown }
+function downgrade(body: Record<string, unknown>, pinned: string, changes: Change[]) {
+  const result: Record<string, unknown> = { ...body }
+  const newer = changes.filter(change => change.version > pinned).sort((a, b) => (a.version < b.version ? 1 : -1))
+  for (const change of newer) {
+    if (change.kind === 'rename') {
+      if (Object.hasOwn(result, change.to)) {
+        result[change.from] = result[change.to]
+        delete result[change.to]
+      }
+    } else if (change.kind === 'add') delete result[change.field]
+    else result[change.field] = change.value
+  }
+  return result
+}`,
 }
