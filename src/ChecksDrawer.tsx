@@ -1,14 +1,34 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import type { Ref } from 'react'
 import { CheckFeedback } from './Experience'
 import { Icon } from './Icon'
 import { StatusChip } from './Layout'
 import { skillSummariesForRep } from './skill-index.ts'
-import type { TestResult } from './runner.types'
+import type { SqlError, TestResult } from './runner.types'
 
-type CheckRun = { results: TestResult[] | null; staleResults: TestResult[] | null; runError: string; running: boolean; runNotice: string }
+type CheckRun = {
+  results: TestResult[] | null
+  staleResults: TestResult[] | null
+  runError: string
+  running: boolean
+  loadingEngine?: boolean
+  runNotice: string
+}
 
 const passedCount = (results: TestResult[]) => results.filter(result => result.passed).length
+
+// SQLite's complaint about the query text loads with the first one. Without it, the message still shows as text.
+const SqlErrorBox = lazy(() =>
+  import('./SqlResults')
+    .then(module => ({ default: module.SqlErrorBox }))
+    .catch(() => ({ default: ({ error }: { error: SqlError }) => <p>{error.message}</p> })),
+)
+
+/** The same SQLite complaint on every check means SQLite could not run the query at all, whatever the data. */
+function sharedSqlError(results: TestResult[] | null): SqlError | undefined {
+  const first = results?.[0]?.sqlError
+  return first && results!.every(result => !result.passed && result.sqlError?.message === first.message) ? first : undefined
+}
 
 /** The checks drawer at the foot of the code column: run state, results, and help for failed checks. */
 export function ChecksDrawer({
@@ -22,6 +42,7 @@ export function ChecksDrawer({
   openLesson,
   onExplain,
   explaining,
+  probes = false,
 }: {
   run: CheckRun
   allPassed: boolean
@@ -34,19 +55,24 @@ export function ChecksDrawer({
   onExplain: () => void
   /** The Explain step is open or already written, so the drawer does not offer to go there. */
   explaining: boolean
+  /** Every check of a schema rep is a probe of one rule, so the summary counts probes. */
+  probes?: boolean
 }) {
-  const { results, staleResults, runError, running, runNotice } = run
+  const { results, staleResults, runError, running, loadingEngine, runNotice } = run
   const stale = !running && !results && !runError ? staleResults : null
   const state = running ? 'running' : runError ? 'failed' : results ? (allPassed ? 'passed' : 'failed') : stale ? 'stale' : ''
+  const sqlError = sharedSqlError(results)
   const summary = running
     ? 'Running…'
-    : results
-      ? `${passedCount(results)} of ${results.length} passed`
-      : runError
-        ? 'Needs attention'
-        : stale
-          ? `Last run: ${passedCount(stale)} of ${stale.length} passed`
-          : 'Not run yet'
+    : sqlError
+      ? 'SQLite could not run the query'
+      : results
+        ? `${passedCount(results)} of ${results.length} passed`
+        : runError
+          ? 'Needs attention'
+          : stale
+            ? `Last run: ${passedCount(stale)} of ${stale.length} passed`
+            : 'Not run yet'
   // The open failed case follows the learner from a fresh run into its out-of-date reference.
   const shown = results ?? stale
   const firstFailed = shown?.find(result => !result.passed)?.name ?? null
@@ -83,13 +109,38 @@ export function ChecksDrawer({
             <span className="result-running-track" aria-hidden="true">
               <span />
             </span>
-            <strong>Running checks</strong>
-            <p>Checking your solution against {checkCount} cases.</p>
+            {loadingEngine ? (
+              <>
+                <strong>Loading SQLite</strong>
+                <p>
+                  The database engine loads before the checks run. Then each of the {checkCount} checks runs against its own fresh database.
+                </p>
+              </>
+            ) : (
+              <>
+                <strong>Running checks</strong>
+                <p>Checking your solution against {checkCount} cases.</p>
+              </>
+            )}
           </div>
         ) : runError ? (
           <div className="error-message" role="alert">
             {runError}
           </div>
+        ) : sqlError ? (
+          <>
+            <div className="result-summary failed">
+              <span>
+                <Icon name="alert" />
+              </span>
+              <div>
+                <strong>SQLite could not run the query</strong>
+              </div>
+            </div>
+            <Suspense fallback={<p>{sqlError.message}</p>}>
+              <SqlErrorBox error={sqlError} />
+            </Suspense>
+          </>
         ) : results ? (
           <>
             <div className={`result-summary ${allPassed ? 'passed' : 'failed'}`}>
@@ -97,7 +148,15 @@ export function ChecksDrawer({
                 <Icon name={allPassed ? 'check' : 'alert'} />
               </span>
               <div>
-                <strong>{allPassed ? 'All checks passed' : `${passedCount(results)} of ${results.length} checks passed`}</strong>
+                <strong>
+                  {probes
+                    ? allPassed
+                      ? 'All probes behaved as the contract says'
+                      : `${passedCount(results)} of ${results.length} probes behaved as the contract says`
+                    : allPassed
+                      ? 'All checks passed'
+                      : `${passedCount(results)} of ${results.length} checks passed`}
+                </strong>
               </div>
               {allPassed && !completed && !explaining && (
                 <button type="button" className="primary-button checks-next" onClick={onExplain}>
@@ -157,7 +216,7 @@ export function WorkspaceToolbar({
   onStop: () => void
   onResults: () => void
 }) {
-  const { results, staleResults, runError, running } = run
+  const { results, staleResults, runError, running, loadingEngine } = run
   const stale = !running && !results && !runError && staleResults
   return (
     <div ref={ref} className="workspace-toolbar">
@@ -171,7 +230,9 @@ export function WorkspaceToolbar({
       <div className={`workspace-toolbar-run${stale ? ' is-stale' : ''}`}>
         <span role="status">
           {running
-            ? 'Running checks…'
+            ? loadingEngine
+              ? 'Loading SQLite…'
+              : 'Running checks…'
             : results
               ? `${passedCount(results)}/${results.length} passed`
               : stale

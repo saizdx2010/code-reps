@@ -1989,6 +1989,110 @@ footer {
   flex: 1;
   min-height: 0;
 }
+.editor-foot {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 8px 18px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+}
+/* SQL briefs: the Tables card and example rows, generated from the same schema and seed the checks load. */
+.sql-tables {
+  margin: 18px 0 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.sql-tables > summary {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.sql-tables-title {
+  font-weight: 600;
+}
+.sql-tables-meta {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+}
+.sql-tables-body {
+  border-top: 1px solid var(--border);
+}
+.sql-table-preview {
+  padding: 14px;
+}
+.sql-table-preview + .sql-table-preview {
+  border-top: 1px solid var(--border);
+}
+.sql-table-preview h4 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+.sql-table-preview h4 code {
+  font-weight: 700;
+}
+.sql-table-preview h4 span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.sql-definition {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font: 12px/1.6 var(--font-mono);
+  overflow-wrap: anywhere;
+}
+/* A table wider than its box shows a soft edge on the side that still scrolls, as the trace tables do. */
+.sql-mini-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background:
+    linear-gradient(to right, var(--surface) 30%, transparent) left / 24px 100% no-repeat local,
+    linear-gradient(to left, var(--surface) 30%, transparent) right / 24px 100% no-repeat local,
+    linear-gradient(to right, var(--border-strong), transparent) left / 8px 100% no-repeat scroll,
+    linear-gradient(to left, var(--border-strong), transparent) right / 8px 100% no-repeat scroll,
+    var(--surface);
+}
+.sql-mini-table {
+  width: 100%;
+  border-collapse: collapse;
+  font: 12px var(--font-mono);
+}
+.sql-mini-table :is(th, td) {
+  padding: 7px 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+.sql-mini-table th {
+  background: var(--surface-2);
+  font-weight: 600;
+}
+.sql-mini-table tbody tr {
+  border-top: 1px solid var(--border);
+}
+.sql-example {
+  display: grid;
+  gap: 10px;
+  margin: 22px 0;
+  padding: 14px;
+  border-radius: var(--radius-control);
+  background: var(--bg);
+}
+.sql-example .example-label {
+  font-size: 12px;
+}
 .editor-loading {
   display: flex;
   flex-direction: column;
@@ -2170,6 +2274,178 @@ footer {
 }
 .value-comparison .diff-line {
   background: var(--accent-soft);
+}
+/* SQLite checks: expected and received rows as small tables on the desk. Differences carry words, not colour alone. */
+.sql-comparison {
+  margin: 10px 0 4px;
+}
+.sql-comparison-tables {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.sql-comparison-tables.is-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+.sql-compare-side {
+  min-width: 0;
+}
+.result-list .sql-starting {
+  margin: 6px 0 0;
+}
+.sql-caption {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+/* The row number column is pinned, so only the right edge needs the scroll cue. */
+.sql-table-wrap {
+  min-width: 0;
+  overflow-x: auto;
+  border-radius: var(--radius-control);
+  background:
+    linear-gradient(to left, var(--surface-2) 30%, transparent) right / 24px 100% no-repeat local,
+    linear-gradient(to left, var(--border-strong), transparent) right / 8px 100% no-repeat scroll,
+    var(--surface-2);
+}
+.sql-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.sql-table :is(th, td) {
+  padding: 7px 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+.sql-table tbody tr {
+  border-top: 1px solid var(--border);
+}
+.sql-table th {
+  font-weight: 600;
+}
+/* Row numbers stay at the left edge of a wide table, so "row 3" can always be found. */
+.sql-table .sql-row-number {
+  position: sticky;
+  left: 0;
+  width: 1%;
+  background: var(--surface-2);
+  /* A divider marks the pinned column, so cells scrolling under it read as scrolled rather than cut off. */
+  box-shadow: inset -1px 0 var(--border);
+  color: var(--muted);
+  font-weight: 400;
+}
+.sql-null {
+  color: var(--muted);
+  font-style: italic;
+}
+.sql-cell-wrong > span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 1px 8px;
+  border: 1.5px solid var(--error);
+  border-radius: 6px;
+}
+.sql-cell-wrong strong {
+  color: var(--error);
+}
+.sql-cell-expected {
+  color: var(--muted);
+  font-family: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
+}
+/* An extra or missing row is outlined on every cell, so pinned cells keep the outline while the table scrolls. */
+.sql-table tr.sql-row-marked > td {
+  box-shadow:
+    inset 0 1.5px var(--error),
+    inset 0 -1.5px var(--error);
+}
+.sql-table tr.sql-row-marked > td:first-child {
+  box-shadow:
+    inset 1.5px 1.5px var(--error),
+    inset 0 -1.5px var(--error);
+}
+.sql-table tr.sql-row-marked > td:last-child {
+  box-shadow:
+    inset -1.5px 1.5px var(--error),
+    inset 0 -1.5px var(--error);
+}
+/* The row status stays at the right edge of a wide table, so "Extra row" is never scrolled out of sight. */
+.sql-table .sql-row-status {
+  position: sticky;
+  right: 0;
+  background: var(--surface-2);
+  box-shadow: inset 1px 0 var(--border);
+  text-align: right;
+}
+.sql-pill {
+  display: inline-block;
+  padding: 1px 9px;
+  border: 1px solid var(--error);
+  border-radius: 999px;
+  color: var(--error);
+  font:
+    12px 'Source Sans 3',
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
+}
+.sql-table .sql-gap td,
+.sql-empty,
+.sql-more {
+  color: var(--muted);
+  font-family: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
+  font-size: 12px;
+}
+.sql-more {
+  margin: 4px 0 0;
+}
+.result-list .sql-difference {
+  margin: 10px 0 0;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.sql-plan {
+  margin: 8px 0 4px;
+  color: var(--text);
+  font-weight: 400;
+}
+.sql-plan-code {
+  padding: 12px 14px;
+  margin: 0 0 8px;
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  font: 12px/1.6 var(--font-mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.sql-plan-label {
+  color: var(--muted);
+  font-size: 11px;
+}
+.sql-plan p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.sql-error-code {
+  padding: 12px 14px;
+  margin: 0 0 10px;
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  font: 12px/1.6 var(--font-mono);
+  white-space: pre;
+  overflow-x: auto;
+}
+.sql-error-message {
+  color: var(--error);
+}
+.sql-error p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
 }
 .passed-checks li {
   align-items: center;
@@ -2794,7 +3070,7 @@ dialog.preview-inline {
     padding: 24px;
   }
   .path-choices {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
   }
   .evidence-list li {
     grid-template-columns: 150px minmax(0, 1fr);
@@ -3068,8 +3344,12 @@ dialog.preview-inline {
   .editor-top {
     padding: 8px 14px;
   }
-  .value-comparison {
+  .value-comparison,
+  .sql-comparison-tables {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .sql-tables-fresh {
+    display: none;
   }
   .completion-checklist {
     gap: 10px;

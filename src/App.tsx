@@ -14,6 +14,7 @@ import { getActiveProfile, localStore } from './local-store'
 import { deviceSaveFailure } from './save-status'
 import { repIndex as reps } from './catalog-index'
 import type { RepSummary } from './catalog-index'
+import type { Rep } from './rep-types'
 import { useRepContent } from './useRepContent'
 import { peekRepContent } from './rep-content'
 import { paths } from './path'
@@ -120,6 +121,12 @@ const editorOptions = {
   tabSize: 2,
   wordWrap: 'on',
 } as const
+/** What a SQL rep accepts, in the editor's footer: one read-only statement, or a script that may change data. */
+function sqlContract(rep: Rep) {
+  if (rep.sql?.compare !== 'state') return 'One statement · read-only'
+  return rep.checks.some(check => check.sql?.probes?.length) ? 'Your schema · probe statements run after' : 'Statements run in order'
+}
+
 type IndonesianHelp = Pick<typeof import('./vocabulary-id'), 'indonesianGlossary' | 'englishTipsForIndonesianSpeakers'>
 
 function App({ profileName = 'My learning', onManageProfiles }: { profileName?: string; onManageProfiles?: () => void }) {
@@ -552,9 +559,12 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   const stepComplete = (stepId: string) => (stepId === 'review' ? !!attempt.completedAt : stepId !== 'understand' && stepDone[stepId])
   const layoutColumns = focusMode ? 'auto minmax(0, 1fr)' : `minmax(0, ${splitWidth}fr) 12px minmax(0, ${100 - splitWidth}fr)`
   const activeRound = fluency.state.rounds.find(round => !round.endedAt && round.repId === repId)
-  const editorPath = `code-reps://${getActiveProfile()}/${rep.id}/solution.${full?.reactPreview ? 'tsx' : 'ts'}`
+  // The catalog knows a SQL rep before its content loads, so the editor opens with the right file and language.
+  const sqlRep = rep.format === 'sql'
+  const editorPath = `code-reps://${getActiveProfile()}/${rep.id}/${sqlRep ? 'query.sql' : `solution.${full?.reactPreview ? 'tsx' : 'ts'}`}`
   const editorLabel =
-    `TypeScript solution for ${rep.title}. Press Control or Command Enter to run checks. ` + 'Tab moves focus out of the editor.'
+    `${sqlRep ? 'SQL query' : 'TypeScript solution'} for ${rep.title}. Press Control or Command Enter to run checks. ` +
+    'Tab moves focus out of the editor.'
 
   const runChecksShortcut = (event: ReactKeyboardEvent) => {
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
@@ -714,12 +724,18 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
                   focusRequest={editorFocusRequest}
                   height="100%"
                   path={editorPath}
-                  language="typescript"
+                  language={sqlRep ? 'sql' : 'typescript'}
                   value={attempt.code}
                   onChange={value => update('code', value ?? '')}
                   onRunChecks={runChecks}
                   options={{ ariaLabel: editorLabel, ...editorOptions }}
                 />
+              )}
+              {sqlRep && (
+                <div className="editor-foot">
+                  <span>SQLite · a fresh database for every check</span>
+                  {full?.sql && <span>{sqlContract(full)}</span>}
+                </div>
               )}
             </div>
           </section>
@@ -743,6 +759,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
             openLesson={openKnowledge}
             onExplain={() => revealSection('explain-section')}
             explaining={activeStep === 'explain' || stepDone.explain}
+            probes={Boolean(full?.sql && full.checks.every(check => check.sql?.probes?.length))}
           />
           <WorkspaceToolbar
             ref={toolbarRef}

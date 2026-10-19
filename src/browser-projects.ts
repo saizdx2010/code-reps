@@ -9,6 +9,12 @@ export type BrowserProject = {
   examples: string[]
   verification: string[]
   transfer: string
+  /** Shown instead of "Level N" in headings and the note title, for projects outside the three browser levels. */
+  label?: string
+  /** The final self-review points, when they differ from the browser projects' list. */
+  review?: string[]
+  /** The lesson a self-review note is filed under; browser projects use frontend. */
+  skillId?: string
 }
 
 export const externalSetup = [
@@ -136,9 +142,14 @@ export const browserProjects: BrowserProject[] = [
   },
 ]
 
+/** "Level 2: Build a persistent reading journal", or the project's own label for projects outside the levels. */
+export function projectHeading(project: BrowserProject): string {
+  return `${project.label ?? `Level ${project.level}`}: ${project.title}`
+}
+
 export function projectReflection(project: BrowserProject): string {
   return [
-    `Level ${project.level}: ${project.title}`,
+    projectHeading(project),
     'External project self-review — learner-reported evidence',
     'Date:',
     'Project location:',
@@ -146,9 +157,73 @@ export function projectReflection(project: BrowserProject): string {
     ...project.requirements.map(
       (requirement, index) => `Requirement ${index + 1}: ${requirement}\nStatus (Met / Not met / Not checked):\nEvidence:`,
     ),
-    ...projectReview.map(point => `${point}\nEvidence:`),
+    ...(project.review ?? projectReview).map(point => `${point}\nEvidence:`),
     ...project.verification.map(point => `${point}\nResult:`),
     `Later transfer: ${project.transfer}\nDate and evidence:`,
     'Unresolved issues:',
   ].join('\n\n')
 }
+
+// The DevOps track's hero project. Like the browser levels it is learner-owned and learner-reported: Code Reps never
+// builds, runs, or checks it, and completing it records a notebook self-review, not checked evidence.
+export const serviceProjectSetup = [
+  'Work in a folder outside the Code Reps checkout, with its own Git repository. Use a container tool you already have installed, such as Docker or Podman, and any CI service, or a local script that runs the same steps. Code Reps does not install, run, or contact any of them.',
+  "Start from a small HTTP service you wrote yourself, such as the ticket API from the Backend track's project, with at least one route, automated tests, and a lockfile.",
+  'Keep secrets out of the repository, the image, and this notebook: use placeholder values in examples and never paste real credentials.',
+  'Run every build, test, and container command yourself and record the commands and their results. A step you did not run stays Not checked.',
+]
+
+export const serviceProjectReview = [
+  'For every requirement, record Met, Not met, or Not checked, with the command, log line, exit code, or HTTP status that shows it.',
+  'Record the build, test, and CI commands you ran and their exit codes. A command you did not run remains Not checked.',
+  'Explain one decision you made for each of configuration, image layers, health checks, and CI, and one alternative you rejected.',
+  'Describe one failure you caused on purpose and how the logs, statuses, or exit codes showed it.',
+  'Record assistance, hints, and generated solutions used. Documentation is permitted. Assisted completion is useful practice, but does not establish independence.',
+  'List unresolved defects and anything left Not checked, such as another operating system or a real cloud deployment.',
+]
+
+export const serviceProjects: BrowserProject[] = [
+  {
+    id: 'devops-container-ci',
+    level: 3,
+    label: 'DevOps hero project',
+    skillId: 'ci-pipelines',
+    review: serviceProjectReview,
+    title: 'Containerize an app and add CI on your own machine',
+    brief:
+      'Package a small service you wrote into a container image with health checks and validated settings, and add a CI workflow that tests, builds, and tags it. Everything runs on your own machine; you record the results yourself.',
+    readiness:
+      'Recommended: the DevOps stages from Read CI output to Watch a service, and a small HTTP service of your own. Completing them is not required, and every project remains open.',
+    preparation: [
+      'devops-failing-step',
+      'devops-validate-env',
+      'devops-mask-secrets',
+      'devops-cache-key',
+      'devops-layer-rebuild',
+      'devops-image-tags',
+      'devops-health-endpoints',
+      'devops-graceful-drain',
+    ],
+    requirements: [
+      'Read every setting from environment variables and check them all at startup against a written schema: a missing required value stops the service with a non-zero exit code and a message naming the variable, and every default is documented. Provide a .env.example with placeholder values; the real .env stays out of Git and out of the image.',
+      'Write a container build file that copies the lockfile and installs dependencies before copying the source, so a change to the source alone reuses the dependency layer. Use a multi-stage build so the final image holds only what the service needs to run, pin the base image to a version rather than latest, and run the service as a user other than root.',
+      'Leave tests, local settings, and other files the image does not need out of the build context with an ignore file, and check that no secret value appears in the image or in its build output.',
+      'Add a liveness endpoint that does not depend on other services, and a readiness endpoint that fails while the service is starting, while it is shutting down, and while a required dependency is unavailable.',
+      'On the stop signal, fail readiness at once, finish requests already in progress within a stated grace period, then exit with code 0. Requests still running at the end of the grace period may be cut off; say how long the grace period is and why.',
+      'Add a CI workflow, on any CI service or as a local script that runs the same steps, that installs exactly from the lockfile, runs the tests, builds the image, and tags it with the commit SHA, and with the version for a version tag. It stops at the first failing step, and a cache keyed on the lockfile speeds up the install.',
+      'Write a README section that explains how to build, configure, run, and check the service locally, including the commands, the settings, and the exit codes and HTTP statuses that show it is healthy.',
+    ],
+    examples: [
+      'Change one line of source and rebuild: the dependency layer is reused and only the later layers rebuild. Change the lockfile: the install step runs again.',
+      'Start the container without a required variable: it exits with a non-zero code and a message naming the variable, and prints no secret value.',
+      'Send the stop signal while a slow request is running: readiness fails at once, the request completes within the grace period, and the process exits with code 0.',
+    ],
+    verification: [
+      'Run the CI steps on your machine and record each command with its exit code. Break a test on purpose, confirm the workflow stops at that step, and record the first real error line from its log.',
+      'Inspect the final image: record its size and layers, confirm that .env and test files are absent, and confirm that it runs as a user other than root. Record the commands you used and what they showed.',
+      'Call the health endpoints while the service starts, while a required dependency is stopped, and during shutdown, and record each status. Record the tags CI produced for a branch build and for a version tag.',
+    ],
+    transfer:
+      "After a break, add a second service that the first one depends on, run both together with a local compose file, and make the first service's readiness reflect the second one. Write the acceptance criteria first, then record which checks you ran and what remained Not checked. This external transfer is self-reviewed, not an automatic Retained state.",
+  },
+]

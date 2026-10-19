@@ -2,6 +2,9 @@
 declare module '*/fixtures/connected-feature-solutions.mjs' {
   export const connectedSolutions: Record<string, string>[]
 }
+declare module '*/fixtures/devops-solutions.mjs' {
+  export const devopsSolutions: Record<string, string>
+}
 declare module '*/fixtures/dom-solutions.mjs' {
   export const domSolutions: Record<string, string>
 }
@@ -19,6 +22,9 @@ declare module '*/fixtures/sqlite-solution.mjs' {
   export const sqliteSolution: string
   export const sqliteCustomerTotalsSolution: string
   export const sqliteRestockSolution: string
+}
+declare module '*/fixtures/sql-solutions.mjs' {
+  export const sqlSolutions: Record<string, string>
 }
 declare module '*/fixtures/rich-solutions.mjs' {
   export const richSolutions: Record<string, string>

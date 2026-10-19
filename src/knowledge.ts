@@ -2,6 +2,9 @@ import { typescriptBoundarySkill } from './typescript-depth-knowledge.ts'
 import { browserStateSkill } from './browser-state-knowledge.ts'
 import { dsaSkills } from './dsa-knowledge.ts'
 import { practicalSkills } from './practical-knowledge.ts'
+import { sqlSkills } from './sql-knowledge.ts'
+import { backendSkills } from './backend-knowledge.ts'
+import { devopsSkills } from './devops-knowledge.ts'
 import { q } from './knowledge-question.ts'
 export type Question = {
   completion?: boolean
@@ -954,6 +957,9 @@ export const skills: Skill[] = [
   typescriptBoundarySkill,
   browserStateSkill,
   ...dsaSkills,
+  ...sqlSkills,
+  ...backendSkills,
+  ...devopsSkills,
 ]
 export const skillById = (id: string) => skills.find(skill => skill.id === id)
 export const contentVersion = 7
@@ -984,7 +990,54 @@ export const knowledgeGroups: { id: string; title: string; skillIds: string[] }[
     ],
   },
   { id: 'frontend', title: 'Frontend', skillIds: ['frontend', 'react'] },
-  { id: 'backend', title: 'Backend & data', skillIds: ['validation', 'http', 'databases'] },
+  {
+    id: 'backend',
+    title: 'Backend & data',
+    skillIds: [
+      'http-request-anatomy',
+      'http-routing',
+      'validation',
+      'http',
+      'http-authorization',
+      'concurrent-writes',
+      'background-jobs',
+      'rate-limiting',
+      'api-evolution',
+    ],
+  },
+  {
+    id: 'sql',
+    title: 'Databases & SQL',
+    skillIds: [
+      'sql-reading',
+      'sql-filtering',
+      'sql-summarizing',
+      'sql-joining',
+      'sql-subqueries',
+      'sql-schema-design',
+      'sql-changing-data',
+      'sql-window-functions',
+      'sql-indexes',
+      'sql-migrations',
+      'databases',
+    ],
+  },
+  {
+    id: 'devops',
+    title: 'DevOps',
+    skillIds: [
+      'ci-output',
+      'service-config',
+      'semver',
+      'ci-pipelines',
+      'container-images',
+      'deploy-strategies',
+      'service-health',
+      'cron-schedules',
+      'observability',
+      'incident-response',
+    ],
+  },
   {
     id: 'async',
     title: 'Async & runtime',

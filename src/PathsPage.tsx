@@ -1,13 +1,15 @@
 import { useRef } from 'react'
 import type { ReactNode } from 'react'
 import { Icon } from './Icon'
-import { foundationsPathId, trackGroups } from './curriculum'
+import { foundationsPathId, trackBuildsOn, trackGroups } from './curriculum'
 import { Select } from './Input'
 import { InfoNote, PageHeader } from './Layout'
 import { PathIntroduction } from './PathIntroduction'
 import { Trail } from './Trail'
 import type { buildTrail } from './trail-map'
 import { paths } from './path'
+import { pathIntroductions } from './path-introductions'
+import { stageTexts, trackDescriptions } from './path-text'
 import type { LearnerStart } from './learning'
 
 type PathId = (typeof paths)[number]['id']
@@ -39,13 +41,13 @@ export function PathsPage(props: Props) {
   const refresher = learnerStart === 'returning' && selectedPath.id === foundationsPathId
   const pathIntroduction = refresher
     ? {
-        ...selectedPath.introduction,
+        ...pathIntroductions[selectedPath.id],
         title: 'A quick TypeScript refresher',
         next:
           'You can revisit the language basics above whenever you need them. ' +
           'Start with a guided array rep, then solve a related task on your own.',
       }
-    : selectedPath.introduction
+    : pathIntroductions[selectedPath.id]
   const firstRepId = trail.stages
     .flatMap(stage => stage.nodes)
     .find(node => node.kind === 'rep')
@@ -68,10 +70,11 @@ export function PathsPage(props: Props) {
     return (
       <button key={id} type="button" className={wide ? 'track-root' : undefined} aria-pressed={pathId === id} onClick={() => choose(id)}>
         <strong>{path.title}</strong>
-        <span>{path.description}</span>
+        <span>{trackDescriptions[path.id]}</span>
         <small>
           {count(id)}
           {goalPathId === id ? ' · Your goal' : ''}
+          {trackBuildsOn[id] ? ` · Builds on ${paths.find(item => item.id === trackBuildsOn[id])!.title}` : ''}
         </small>
       </button>
     )
@@ -129,11 +132,19 @@ export function PathsPage(props: Props) {
       </details>
       <section className="path-overview" aria-labelledby="path-title">
         <div>
-          <span className="home-label">{selectedPath.id === foundationsPathId ? 'Start here' : 'Builds on Foundations'}</span>
+          <span className="home-label">
+            {selectedPath.id === foundationsPathId
+              ? 'Start here'
+              : `Builds on ${paths.find(item => item.id === (trackBuildsOn[selectedPath.id] ?? foundationsPathId))!.title}`}
+          </span>
           <h2 id="path-title" tabIndex={-1}>
             {refresher ? 'Return to problem solving' : selectedPath.title}
           </h2>
-          <p>{refresher ? 'Start with guided problems, then revisit skills without hints after a break.' : selectedPath.description}</p>
+          <p>
+            {refresher
+              ? 'Start with guided problems, then revisit skills without hints after a break.'
+              : trackDescriptions[selectedPath.id]}
+          </p>
           <div className="path-goal">
             <p ref={goalLine} tabIndex={-1} role="status">
               {goalPathId === selectedPath.id ? 'Your current learning goal.' : 'Browsing this track does not change your learning goal.'}
@@ -190,10 +201,11 @@ export function PathsPage(props: Props) {
       </details>
       <Trail
         stages={trail.stages}
+        text={stageTexts[selectedPath.id]}
         evidence={evidence}
         onOpenRep={openRep}
         onOpenLesson={openLesson}
-        onOpenFoundations={selectedPath.id === foundationsPathId ? undefined : () => choose(foundationsPathId)}
+        onOpenTrack={id => choose(id as PathId)}
       />
     </main>
   )

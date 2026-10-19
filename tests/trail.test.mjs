@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { buildTrail } from '../src/trail-map.ts'
-import { foundationsPathId, stageCoveredByFoundations, trackGroups } from '../src/curriculum.ts'
+import { foundationsPathId, pathExternalProjects, stageCoveredByFoundations, trackGroups } from '../src/curriculum.ts'
+import { browserProjects, serviceProjects } from '../src/browser-projects.ts'
 import { paths } from '../src/path.ts'
+import { stageTexts, trackDescriptions } from '../src/path-text.ts'
 
 const fresh = { completed: () => false, inProgress: () => false, recallReady: () => true, lessonChecked: () => false }
 
@@ -52,6 +54,18 @@ test('language refreshers in other tracks are shown as covered by Foundations', 
   assert.equal(buildTrail(dsa.id, fresh).stages[1].covered, true)
 })
 
+test('a Backend stage made of SQL reps links to the SQL track instead of repeating it', () => {
+  const backend = buildTrail('backend', fresh)
+  const linked = backend.stages.filter(stage => stage.coveredBy)
+  assert.deepEqual(
+    linked.map(stage => [stage.coveredBy.id, stage.coveredBy.title, stage.covered]),
+    [['sql', 'SQL', true]],
+  )
+  // The SQL track shows the same reps as its own stage, never as a link.
+  assert.ok(buildTrail('sql', fresh).stages.every(stage => !stage.coveredBy))
+  assert.equal(buildTrail('algorithms-data-structures', fresh).stages[1].coveredBy.title, 'Foundations')
+})
+
 test('project applications end the trail without changing path completion counts', () => {
   const trail = buildTrail('frontend', fresh)
   const last = trail.stages.at(-1)
@@ -59,12 +73,39 @@ test('project applications end the trail without changing path completion counts
   assert.equal(trail.total, new Set(paths.find(path => path.id === 'frontend').stages.flatMap(stage => stage.repIds)).size)
 })
 
-test('every authored stage has a recap that survives trail derivation', () => {
+test('the DevOps project outside Code Reps ends its trail but is never counted or marked done', () => {
+  const done = { ...fresh, completed: () => true }
+  for (const input of [fresh, done]) {
+    const trail = buildTrail('devops', input)
+    const last = trail.stages.at(-1)
+    assert.deepEqual(
+      last.nodes.map(node => [node.kind, node.projectId, node.state]),
+      [['external', 'devops-container-ci', 'open']],
+    )
+    assert.equal(last.total, 0)
+    assert.equal(last.done, 0)
+    assert.equal(trail.total, new Set(paths.find(path => path.id === 'devops').stages.flatMap(stage => stage.repIds)).size)
+  }
+  // The trail keeps its own copy of the title so Library projects stay out of startup; it must match the project.
+  const projects = [...browserProjects, ...serviceProjects]
+  for (const link of Object.values(pathExternalProjects).flat())
+    assert.equal(link.title, projects.find(project => project.id === link.projectId)?.title, link.projectId)
+})
+
+test('every authored stage has text, keyed by its title, and the trail keeps those titles', () => {
+  assert.deepEqual(Object.keys(trackDescriptions).sort(), paths.map(path => path.id).sort())
+  assert.deepEqual(Object.keys(stageTexts).sort(), paths.map(path => path.id).sort())
   for (const path of paths) {
+    assert.ok(trackDescriptions[path.id].trim(), path.id)
+    const titles = path.stages.map(stage => stage.title)
+    assert.equal(new Set(titles).size, titles.length, `${path.id} repeats a stage title`)
+    assert.deepEqual(Object.keys(stageTexts[path.id]), titles, `${path.id}: src/path-text.ts must list every stage, in order`)
     const trail = buildTrail(path.id, { ...fresh, completed: () => true })
     path.stages.forEach((stage, index) => {
-      assert.match(stage.recap, /^You can now .+\.$/)
-      assert.equal(trail.stages[index].recap, stage.recap)
+      const text = stageTexts[path.id][stage.title]
+      assert.ok(text.description.trim(), stage.title)
+      assert.match(text.recap, /^You can now .+\.$/)
+      assert.equal(trail.stages[index].title, stage.title)
       assert.equal(trail.stages[index].done, trail.stages[index].total)
     })
   }

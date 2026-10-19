@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { firstPath, migratePathId, paths, retiredPathIds } from '../src/path.ts'
-import { foundationsPathId, pathApplications, trackGroups } from '../src/curriculum.ts'
+import { pathIntroductions } from '../src/path-introductions.ts'
+import { stageTexts } from '../src/path-text.ts'
+import { foundationsPathId, pathApplications, stageHomeTrack, trackGroups } from '../src/curriculum.ts'
 import { emptyFluency, parseFluency } from '../src/fluency.ts'
 import { journeys } from '../src/learning.ts'
 import { catalogTopic } from '../src/catalog-labels.ts'
@@ -84,15 +86,15 @@ const previouslyPlaced = [
   'project-ticket-api',
 ]
 
-test('the trail is Foundations plus four tracks', () => {
+test('the trail is Foundations plus its tracks', () => {
   assert.deepEqual(
     paths.map(path => path.id),
-    ['typescript', 'algorithms-data-structures', 'pattern-recognition', 'frontend', 'backend'],
+    ['typescript', 'algorithms-data-structures', 'pattern-recognition', 'frontend', 'sql', 'backend', 'devops'],
   )
   assert.equal(foundationsPathId, 'typescript')
   assert.deepEqual(
     trackGroups.flatMap(group => group.pathIds),
-    ['algorithms-data-structures', 'pattern-recognition', 'frontend', 'backend'],
+    ['algorithms-data-structures', 'pattern-recognition', 'frontend', 'sql', 'backend', 'devops'],
   )
 })
 
@@ -112,14 +114,22 @@ test('every rep from the old nine paths still appears in a path or its project c
     )
 })
 
-test('reps are not duplicated across tracks except recognition practice, interview capstones and Foundations stage links', () => {
+test('reps are not duplicated across tracks except recognition practice, interview capstones, and stage links', () => {
   const owners = new Map()
+  // Foundations reps are excluded by leaving Foundations out; a stage linking to another track (SQL in Backend) is skipped.
+  const linkedElsewhere = (pathId, stage) => ![undefined, foundationsPathId].includes(stageHomeTrack(pathId, stage.repIds))
   for (const path of paths.filter(path => path.id !== foundationsPathId))
-    for (const id of new Set(path.stages.flatMap(stage => stage.repIds))) owners.set(id, [...(owners.get(id) ?? []), path.id])
+    for (const id of new Set(path.stages.filter(stage => !linkedElsewhere(path.id, stage)).flatMap(stage => stage.repIds)))
+      owners.set(id, [...(owners.get(id) ?? []), path.id])
   const shared = [...owners].filter(([, list]) => list.length > 1).map(([id]) => id)
   const recognitionIds = paths.find(path => path.id === 'pattern-recognition').stages.flatMap(stage => stage.repIds)
   assert.deepEqual(shared.sort(), [...recognitionIds, 'interview-backend'].sort())
   for (const id of recognitionIds) assert.deepEqual(owners.get(id), ['algorithms-data-structures', 'pattern-recognition'])
+  const backend = paths.find(path => path.id === 'backend')
+  assert.deepEqual(
+    backend.stages.filter(stage => linkedElsewhere('backend', stage)).map(stage => stage.repIds),
+    [['sqlite-stock-transfer', 'sqlite-customer-totals', 'sqlite-restock-upsert']],
+  )
 })
 
 test('retired path ids map to current paths, and saved goals migrate safely', () => {
@@ -181,13 +191,13 @@ test('recognition practice reuses valid tasks with mixed journeys and unlabeled 
   const grids = path.stages.find(stage => stage.title === 'Find your way across a floor plan')
   assert.equal(grids.title, 'Find your way across a floor plan')
   assert.deepEqual(grids.repIds, ['grid-open-neighbours', 'grid-count-rooms', 'grid-fewest-steps'])
-  assert.ok(grids.description && grids.recap)
+  assert.ok(stageTexts[path.id][grids.title].description && stageTexts[path.id][grids.title].recap)
   const puzzle = path.stages.find(stage => stage.title === 'Solve a two-part puzzle')
   assert.equal(puzzle.title, 'Solve a two-part puzzle')
   assert.deepEqual(puzzle.repIds, ['puzzle-parse-part-one', 'puzzle-adapt-part-two'])
-  assert.ok(puzzle.description && puzzle.recap)
+  assert.ok(stageTexts[path.id][puzzle.title].description && stageTexts[path.id][puzzle.title].recap)
   const lesson = skills.find(skill => skill.id === 'recognize-the-pattern')
-  assert.ok(path.introduction.body.includes(lesson.title))
+  assert.ok(pathIntroductions[path.id].body.includes(lesson.title))
   assert.ok(lesson.questions.length >= 6)
   assert.equal(new Set(lesson.questions.map(question => question.id)).size, lesson.questions.length)
   for (const question of lesson.questions) {

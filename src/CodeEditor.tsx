@@ -41,6 +41,10 @@ function applyEditorTheme(instance: typeof monaco) {
       { token: 'string', foreground: 'dfb890' },
       { token: 'number', foreground: 'c9b9e9' },
       { token: 'type', foreground: 'a9d3c8' },
+      // The base theme gives SQL strings, built-in names, and operators loud colours of their own; match the desk instead.
+      { token: 'string.sql', foreground: 'dfb890' },
+      { token: 'predefined.sql', foreground: 'a9d3c8' },
+      { token: 'operator.sql', foreground: 'edf0eb' },
     ],
     colors: {
       'editor.background': '#303f38',
@@ -82,7 +86,9 @@ function applyEditorTheme(instance: typeof monaco) {
         ? colour('--accent', '#bce57b').slice(1)
         : rule.token === 'comment'
           ? colour('--muted', '#b1c1b5').slice(1)
-          : rule.foreground,
+          : rule.token === 'operator.sql'
+            ? colour('--text', '#edf0eb').slice(1)
+            : rule.foreground,
   }))
   instance.editor.defineTheme('code-reps', theme)
 }

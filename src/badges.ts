@@ -2,6 +2,7 @@ import { firstPath, paths } from './path.ts'
 import type { PortableRecord } from './portability.ts'
 import { plural } from './ui-copy.ts'
 import { evidenceBadges } from './evidence-badges.ts'
+import { stageHomeTrack } from './curriculum.ts'
 
 /** The path shape badges read. Passing a changed catalog shows how badges follow a path edit. */
 type BadgeCatalog = readonly { id: string; title: string; stages: readonly { title: string; repIds: readonly string[] }[] }[]
@@ -25,8 +26,6 @@ export type Badge = {
   /** What earned it, in a sentence, for an earned evidence badge. */
   detail?: string
 }
-
-const firstPathReps = new Set<string>(firstPath.stages.flatMap(stage => [...stage.repIds]))
 
 // Completed attempts only: unfinished drafts and ended sessions never become PortableRecords.
 // Invalid and future dates are ignored, and each rep counts once at its earliest valid completion.
@@ -81,8 +80,8 @@ export function profileBadges(history: PortableRecord[], now = new Date(), catal
   for (const path of catalog) {
     path.stages.forEach((stage, index) => {
       const ids = [...new Set<string>(stage.repIds)]
-      // Stages made only of Foundations reps are earned in Foundations, not repeated.
-      if (path.id !== firstPath.id && ids.every(id => firstPathReps.has(id))) return
+      // A stage made only of another track's reps (Foundations, or SQL in Backend) is earned in that track, not repeated.
+      if (stageHomeTrack(path.id, ids)) return
       badges.push(
         build(
           first,

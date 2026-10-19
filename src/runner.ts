@@ -1,14 +1,55 @@
 import { createAsyncFixture } from './async-fixture.ts'
-import { checkSqliteTask, isSqliteRep, type SqliteFactory } from './sqlite-task.ts'
+import { expectedOutcome, judgeSql, observeSql, observeSqlFunction, type SqliteFactory } from './sqlite-task.ts'
 import { compileSolution } from './compile-solution.ts'
 import { reps } from './rep.ts'
 import { sameValue } from './compare.ts'
+import type { Rep } from './rep-types.ts'
 import type { TestResult } from './runner.types'
+
+const missingSqlite: SqliteFactory = () => {
+  throw new Error('SQLite must be loaded before running this rep.')
+}
+
+/** Whether a rep's checks need the bundled SQLite engine. The worker loads it only for these reps. */
+export const repNeedsSqlite = (repId: string) => Boolean(reps.find(item => item.id === repId)?.sql)
+
+/** Learner SQL text runs as written against each check's fresh database; there is no function to compile. */
+function runSqlRep(code: string, rep: Rep & { sql: NonNullable<Rep['sql']> }, createDatabase: SqliteFactory): TestResult[] {
+  if (typeof code !== 'string' || code.length > 100_000) throw new Error('The SQL is too large to run.')
+  return rep.checks.map(check => {
+    const seed = check.sql ? rep.sql.seeds[check.sql.seed] : undefined
+    const input = seed ? `Starting data: ${seed.about}` : undefined
+    try {
+      if (!check.sql) throw new Error('Missing SQLite check specification.')
+      const verdict = judgeSql(rep.sql, check, observeSql(rep.sql, check.sql, code, createDatabase))
+      const plan = verdict.plan ? { plan: verdict.plan } : {}
+      return verdict.passed
+        ? { name: check.name, passed: true, ...plan }
+        : {
+            name: check.name,
+            passed: false,
+            input,
+            message: verdict.message,
+            ...(verdict.tables.length ? { tables: verdict.tables } : {}),
+            ...(verdict.sqlError ? { sqlError: verdict.sqlError } : {}),
+            ...plan,
+          }
+    } catch (error) {
+      return {
+        name: check.name,
+        passed: false,
+        input,
+        message: error instanceof Error ? error.message : 'SQLite could not run the checks.',
+      }
+    }
+  })
+}
 
 export function runRep(code: string, repId: string, createDatabase?: SqliteFactory): TestResult[] {
   const rep = reps.find(item => item.id === repId)
   if (!rep) throw new Error('This rep could not be found.')
   if (rep.runtime) throw new Error('This rep requires the asynchronous fixture runner.')
+  if (rep.sql && rep.format === 'sql') return runSqlRep(code, { ...rep, sql: rep.sql }, createDatabase ?? missingSqlite)
   if (rep.format === 'frontend') throw new Error('This exercise uses browser interaction checks. Run it in the workspace.')
   if (typeof code !== 'string' || code.length > 100_000) throw new Error('The solution is too large to run.')
   const outputText = compileSolution(code, rep.functionName)
@@ -16,23 +57,22 @@ export function runRep(code: string, repId: string, createDatabase?: SqliteFacto
     `${outputText}\nreturn typeof ${rep.functionName} === 'function' ? ${rep.functionName} : undefined`,
   )() as unknown
   if (typeof solve !== 'function') throw new Error(`Define a function named ${rep.functionName}.`)
-  return rep.checks.map(({ name, input, expected }) => {
-    const inputPreview = `${rep.functionName}(${input.map(value => JSON.stringify(value)).join(', ')})`.slice(0, 200)
+  return rep.checks.map(({ name, input, expected, sql }) => {
+    // A SQLite function receives the database first; its starting data is part of the input the learner needs to see.
+    const seed = rep.sql && sql ? rep.sql.seeds[sql.seed] : undefined
+    const inputPreview = `${rep.functionName}(${[...(rep.sql ? ['db'] : []), ...input.map(value => JSON.stringify(value))].join(', ')})${
+      seed ? ` with ${seed.about}` : ''
+    }`.slice(0, 200)
     try {
       const argumentsCopy = structuredClone(input)
-      const actual = isSqliteRep(rep.id)
-        ? checkSqliteTask(
-            rep.id,
-            solve as (...values: unknown[]) => unknown,
-            argumentsCopy,
-            createDatabase ??
-              (() => {
-                throw new Error('SQLite must be loaded before running this rep.')
-              }),
-          )
-        : (solve as (...values: unknown[]) => unknown)(...argumentsCopy)
+      if (rep.sql && !sql) throw new Error('Missing SQLite check specification.')
+      const actual =
+        rep.sql && sql
+          ? observeSqlFunction(rep.sql, sql, solve as (...values: unknown[]) => unknown, argumentsCopy, createDatabase ?? missingSqlite)
+              .outcome
+          : (solve as (...values: unknown[]) => unknown)(...argumentsCopy)
       const changedInput = rep.preserveInput && !sameValue(argumentsCopy, input)
-      const passed = sameValue(actual, expected) && !changedInput
+      const passed = sameValue(actual, rep.sql ? expectedOutcome(rep.sql, expected) : expected) && !changedInput
       const format = (value: unknown) => {
         try {
           return JSON.stringify(value) ?? String(value)
@@ -62,7 +102,7 @@ export function runRep(code: string, repId: string, createDatabase?: SqliteFacto
 export async function runAsyncRep(code: string, repId: string, createDatabase?: SqliteFactory): Promise<TestResult[]> {
   const rep = reps.find(item => item.id === repId)
   if (!rep) throw new Error('This rep could not be found.')
-  if (isSqliteRep(rep.id)) return runRep(code, repId, createDatabase)
+  if (rep.sql) return runRep(code, repId, createDatabase)
   if (rep.format === 'frontend') throw new Error('This exercise uses browser interaction checks. Run it in the workspace.')
   if (typeof code !== 'string' || code.length > 100_000) throw new Error('The solution is too large to run.')
   const output = compileSolution(code, rep.functionName)

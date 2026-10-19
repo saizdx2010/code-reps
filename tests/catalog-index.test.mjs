@@ -3,10 +3,11 @@ import { readFileSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import test from 'node:test'
 import ts from 'typescript'
-import { renderCatalogIndex } from '../scripts/catalog-index.mjs'
+import { renderCatalogIndex, renderSqlPreviews } from '../scripts/catalog-index.mjs'
 import { foundationRepIds, repIndex, skillIndex } from '../src/catalog-index.ts'
 import { loadAllReps, loadRepContent } from '../src/rep-content.ts'
 import { starterHash } from '../src/starter-hash.ts'
+import { repLevels } from '../src/rep-levels.ts'
 import { skills } from '../src/knowledge.ts'
 import { reps } from '../src/rep.ts'
 
@@ -16,6 +17,32 @@ test('the generated catalog index matches the authored reps and lessons', () => 
     renderCatalogIndex(),
     'Run `yarn content:index` and commit src/catalog-index.ts.',
   )
+})
+
+test('the generated SQL table previews match each SQLite rep schema and first seed', async () => {
+  assert.equal(
+    readFileSync(new URL('../src/sql-previews.ts', import.meta.url), 'utf8'),
+    await renderSqlPreviews(),
+    'Run `yarn content:index` and commit src/sql-previews.ts.',
+  )
+  const { sqlPreviews } = await import('../src/sql-previews.ts')
+  assert.deepEqual(
+    Object.keys(sqlPreviews).sort(),
+    reps
+      .filter(rep => rep.sql)
+      .map(rep => rep.id)
+      .sort(),
+  )
+  const preview = sqlPreviews['sqlite-customer-totals']
+  assert.deepEqual(
+    preview.tables.map(table => [table.name, table.rows, table.sample.length]),
+    [
+      ['customers', 4, 3],
+      ['orders', 6, 3],
+    ],
+  )
+  assert.ok(preview.tables[1].definition.includes('customer_id INTEGER NOT NULL → customers.id'))
+  assert.deepEqual(sqlPreviews['sql-select-columns'].example.columns, ['title', 'author', 'published'])
 })
 
 test('the index lists every rep and skill in catalog order with stable ids', () => {
@@ -30,8 +57,8 @@ test('the index lists every rep and skill in catalog order with stable ids', () 
   for (const [position, item] of repIndex.entries()) {
     const rep = reps[position]
     assert.deepEqual(
-      [item.title, item.category, item.format, item.starterHash, item.hintTotal],
-      [rep.title, rep.category, rep.format, starterHash(rep.starter), rep.hints.length],
+      [item.title, item.category, item.format, item.starterHash, item.hintTotal, item.level],
+      [rep.title, rep.category, rep.format, starterHash(rep.starter), rep.hints.length, repLevels[rep.id]],
     )
   }
   for (const [position, summary] of skillIndex.entries()) {
@@ -41,8 +68,8 @@ test('the index lists every rep and skill in catalog order with stable ids', () 
       skill.questions.map(question => [question.id, question.answer, question.options.length]),
     )
     assert.deepEqual(
-      [summary.title, summary.prerequisites, summary.related, summary.repIds, summary.firstMistake],
-      [skill.title, skill.prerequisites, skill.related, skill.repIds, skill.mistakes[0]],
+      [summary.title, summary.prerequisites, summary.related, summary.repIds],
+      [skill.title, skill.prerequisites, skill.related, skill.repIds],
     )
   }
   assert.ok(foundationRepIds.length > 0 && foundationRepIds.every(id => repIndex.some(item => item.id === id)))
@@ -52,7 +79,7 @@ test('the startup catalog keeps a starter fingerprint, never the starter text', 
   const source = readFileSync(new URL('../src/catalog-index.ts', import.meta.url), 'utf8')
   for (const item of repIndex) {
     assert.equal('starter' in item, false, item.id)
-    assert.match(item.starterHash, /^[0-9a-f]{16}$/, item.id)
+    assert.match(item.starterHash, /^[0-9a-f]{8}$/, item.id)
   }
   for (const rep of reps)
     assert.equal(source.includes(JSON.stringify(rep.starter)), false, `${rep.id} starter text leaked into the catalog`)
@@ -62,6 +89,13 @@ test('starter fingerprints are stable and sensitive to every character', () => {
   assert.equal(starterHash('let x = 1'), starterHash('let x = 1'))
   assert.notEqual(starterHash('let x = 1'), starterHash('let x = 1 '))
   assert.notEqual(starterHash('let x = 1'), starterHash('let x = 2'))
+  // 32 bits are enough to tell a draft from its starter; distinct starters in the catalog never share one.
+  const byHash = new Map()
+  for (const rep of reps) {
+    const other = byHash.get(starterHash(rep.starter))
+    assert.ok(other === undefined || other === rep.starter, `${rep.id} shares a starter fingerprint`)
+    byHash.set(starterHash(rep.starter), rep.starter)
+  }
 })
 
 test('loading a rep returns the same authored content the full catalog holds', async () => {

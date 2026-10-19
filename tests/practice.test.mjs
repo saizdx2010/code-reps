@@ -133,13 +133,16 @@ test('a finished catalog without due work has no arbitrary recommendation', () =
   assert.equal(plan.recommended, null)
 })
 
+// The Backend track's first rep: what a goal recommends before any Backend work exists.
+const firstBackendRep = paths.find(path => path.id === 'backend').stages[0].repIds[0]
+
 test('a selected backend goal changes new practice without hiding saved work', () => {
   const plan = getPracticePlan({}, [], 'returning', 'sum-positive-numbers', Date.now(), 'backend')
-  assert.equal(plan.next.repId, 'backend-check-quantity')
+  assert.equal(plan.next.repId, firstBackendRep)
   assert.match(plan.next.reason, /goal/)
   const saved = { 'sum-positive-numbers': { plan: 'Resume my plan', code: '', explanation: '', hintCount: 0 } }
   const withOtherDraft = getPracticePlan(saved, [], 'returning', 'sum-positive-numbers', Date.now(), 'backend')
-  assert.equal(withOtherDraft.next.repId, 'backend-check-quantity')
+  assert.equal(withOtherDraft.next.repId, firstBackendRep)
   assert.equal(withOtherDraft.unfinished[0].mode, 'resume')
 })
 
@@ -166,7 +169,7 @@ test('goal-path drafts outrank other drafts, while due recall still leads', () =
   assert.equal(getPracticePlan(drafts, history, 'returning', '', now, 'backend').next.repId, 'count-above-threshold')
   const outsideOnly = { 'sum-positive-numbers': drafts['sum-positive-numbers'] }
   const plan = getPracticePlan(outsideOnly, [], 'returning', '', now, 'backend')
-  assert.equal(plan.next.repId, 'backend-check-quantity')
+  assert.equal(plan.next.repId, firstBackendRep)
   assert.equal(plan.unfinished[0].repId, 'sum-positive-numbers')
 })
 
@@ -176,7 +179,7 @@ test('daily new-rep choice stays available alongside saved drafts and due recall
   const before = structuredClone(drafts)
   const plan = getPracticePlan(drafts, history, 'returning', '', now, 'backend')
   assert.equal(plan.next.repId, 'count-above-threshold')
-  assert.equal(plan.recommended.repId, 'backend-check-quantity')
+  assert.equal(plan.recommended.repId, firstBackendRep)
   assert.match(plan.recommended.reason, /goal|Backend/i)
   assert.equal(plan.unfinished[0].repId, 'backend-page-results')
   assert.deepEqual(drafts, before)

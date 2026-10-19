@@ -1,4 +1,4 @@
-import { browserProjects, projectReflection } from '../src/browser-projects.ts'
+import { browserProjects, projectReflection, serviceProjects } from '../src/browser-projects.ts'
 import { validateContentDepth } from '../src/content-depth.ts'
 import { reps } from '../src/rep.ts'
 import { skills, contentVersion } from '../src/knowledge.ts'
@@ -11,14 +11,16 @@ const errors = [
   ...validateContentDepth(ids, new Set(skills.map(skill => skill.id))),
   ...validateReps(reps, reflectionGuides),
 ]
-for (const project of browserProjects) {
+for (const project of [...browserProjects, ...serviceProjects]) {
   if (!project.requirements.length || !project.verification.length || !project.examples.length || !project.transfer || !project.readiness)
     errors.push(`${project.id}: incomplete external project`)
   for (const id of project.preparation) if (!ids.has(id)) errors.push(`${project.id}: missing preparation rep ${id}`)
   if (projectReflection(project).length > 20_000) errors.push(`${project.id}: self-review exceeds notebook limit`)
+  if (project.skillId && !skills.some(skill => skill.id === project.skillId))
+    errors.push(`${project.id}: unknown note lesson ${project.skillId}`)
 }
 if (
-  new Set(browserProjects.map(project => project.id)).size !== browserProjects.length ||
+  new Set([...browserProjects, ...serviceProjects].map(project => project.id)).size !== browserProjects.length + serviceProjects.length ||
   ![1, 2, 3].every(level => browserProjects.some(project => project.level === level))
 )
   errors.push('External project levels need unique IDs and one complete project per level.')

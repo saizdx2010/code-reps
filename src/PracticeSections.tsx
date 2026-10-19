@@ -32,7 +32,25 @@ const RepGuidance = lazy(() =>
 // Growth notes appear only after a completion, so they load with it rather than with the app. They describe a saved
 // attempt, so if they cannot load the completion panel simply goes without them.
 const LearningMoments = lazy<ComponentType<Moments>>(() => import('./LearningMoments').catch(() => ({ default: () => null })))
+// A SQLite rep's tables and example rows load with its brief. Without them the brief still has its written contract.
+const SqlTables = lazy(() => import('./SqlTables').then(module => ({ default: module.SqlTables })).catch(() => ({ default: () => null })))
+const SqlExample = lazy<ComponentType<{ repId: string; children: ReactNode }>>(() =>
+  import('./SqlTables')
+    .then(module => ({ default: module.SqlExample }))
+    .catch(() => ({ default: ({ children }: { children: ReactNode }) => children })),
+)
 const TraceViewer = lazyRoute(() => import('./TraceViewer').then(module => module.TraceViewer), 'The trace')
+
+const exampleBlock = (rep: Rep) => (
+  <div className="example">
+    <div className="example-label">Example</div>
+    <code>{rep.example.input}</code>
+    <span className="example-arrow">
+      <Icon name="arrow" />
+    </span>
+    <code>{rep.example.output}</code>
+  </div>
+)
 
 type Writing = ReturnType<typeof practiceWritingPrompts>
 type RepContent = ReturnType<typeof useRepContent>
@@ -243,14 +261,18 @@ export function BriefSection({
               ))}
             </ul>
           )}
-          <div className="example">
-            <div className="example-label">Example</div>
-            <code>{full.example.input}</code>
-            <span className="example-arrow">
-              <Icon name="arrow" />
-            </span>
-            <code>{full.example.output}</code>
-          </div>
+          {full.sql && (
+            <Suspense fallback={null}>
+              <SqlTables repId={full.id} />
+            </Suspense>
+          )}
+          {full.sql ? (
+            <Suspense fallback={exampleBlock(full)}>
+              <SqlExample repId={full.id}>{exampleBlock(full)}</SqlExample>
+            </Suspense>
+          ) : (
+            exampleBlock(full)
+          )}
           {notes.brief && (
             <p className="task-note">
               <InlineCode text={notes.brief} />

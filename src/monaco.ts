@@ -77,5 +77,7 @@ import '../node_modules/monaco-editor/esm/vs/base/browser/ui/codicons/codicon/co
 import 'monaco-editor/languages/definitions/typescript/register.js'
 import 'monaco-editor/languages/definitions/javascript/register.js'
 import 'monaco-editor/languages/features/typescript/register.js'
+// SQL reps get keyword colouring only: the registration is small and loads its tokenizer when a SQL model opens.
+import 'monaco-editor/languages/definitions/sql/register.js'
 
 export * from 'monaco-editor/editor/editor.api.js'
