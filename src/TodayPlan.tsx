@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { preloadEditor } from './editor-loader'
+import { preloadPractice } from './editor-loader'
 import { Icon } from './Icon'
 import { ListRow, StatusChip } from './Layout'
 import type { PortableRecord } from './portability'
@@ -90,7 +90,7 @@ export default function TodayPlan({
               </StatusChip>
             }
             onOpen={() => onOpen(item)}
-            onPreview={preloadEditor}
+            onPreview={() => preloadPractice(item.repId)}
           />
         ))}
       </ul>

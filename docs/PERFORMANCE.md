@@ -1,6 +1,6 @@
 # Local loading and bundle budgets
 
-`yarn build` produces Vite's manifest and runs `scripts/check-bundle.mjs`. It reports raw and gzip JavaScript bytes in `dist/bundle-size.json` and fails when either budget is exceeded. Gzip is a size comparison, not a claim that the local server compresses responses. CSS, fonts, and HTML are not included in these JavaScript budgets.
+`yarn build` produces Vite's manifest and runs `scripts/check-bundle.mjs`. It reports raw and gzip bytes in `dist/bundle-size.json` and fails when either budget is exceeded. Gzip is a size comparison, not a claim that the local server compresses responses. The startup stylesheets have their own budget; fonts and HTML are not budgeted.
 
 | Group | Raw byte budget | Gzip byte budget |
 | --- | ---: | ---: |
@@ -8,8 +8,9 @@
 | Additional editor JavaScript, including its dynamic language modules | 4,200,000 | 1,050,000 |
 | Additional frontend preview/check JavaScript | 3,900,000 | 1,050,000 |
 | Editor, TypeScript, and practice worker JavaScript | 12,150,000 | 3,100,000 |
+| Initial CSS (every stylesheet the startup chunks import) | 165,000 | 30,200 |
 
-The script deduplicates shared chunks within each group, excludes initial-route dependencies from the additional groups, and requires all three local workers. Worker totals also include their shared and dynamically imported JavaScript chunks. It also rejects unused CSS, HTML, and JSON language workers. Editor and frontend groups describe separate features; their totals are not a sum of every possible network request.
+The script deduplicates shared chunks within each group, excludes initial-route dependencies from the additional groups (and does not follow the lazy imports of any startup chunk, so a chunk split out of the app entry does not pull every route into the editor's total), and requires all three local workers. Worker totals also include their shared and dynamically imported JavaScript chunks. It also rejects unused CSS, HTML, and JSON language workers. Editor and frontend groups describe separate features; their totals are not a sum of every possible network request.
 
 Monaco remains lazy, with existing hover/focus preloading and a plain text recovery editor. `src/monaco.ts` retains editor contributions from the locked Monaco release but registers only TypeScript, JavaScript, and SQL language support; the SQL registration is a few hundred bytes and its keyword tokenizer loads only when a SQL model opens. The previous general import also bundled CSS, HTML, and JSON workers plus many unused language modules. Removing those workers alone avoids approximately 2.26 MB of raw build output. This does not imply a corresponding startup-speed improvement: unused workers were not necessarily loaded on the first route.
 
@@ -34,3 +35,11 @@ The SQLite browser suite attaches Home and editor readiness durations alongside 
 When a dependency or content change exceeds a budget, inspect the manifest and measured flow before changing the limit. Keep TypeScript assistance, editor keyboard operation, recovery, and local worker behavior covered by the browser suite. Large editor/compiler chunks still trigger Vite's warning; it remains visible. The budgets establish current size limits, not a claim that loading performance is fully optimized.
 
 Reps with a `sql` block lazy-load sql.js in the practice worker. The production build bundles its WASM locally (659,806 raw bytes, 322,711 gzip bytes in sql.js 1.13.0); this binary is additional to the JavaScript budgets above. It is fetched only when such a rep runs, never from a CDN. The SQL brief's tables and the drawer's row comparison load as their own small chunks with the first SQL rep. The worker JavaScript budget includes the lazy SQLite loader. See [ADR 0002](./adr/0002-in-memory-sqlite-practice.md). Asset bundling does not establish disconnected-browser operation.
+
+## Review content, prefetching, and startup CSS
+
+A rep's review used to load every review module at once (the merged registry was 515,724 raw bytes, plus 339,787 for the DevOps reviews and the lesson discussions, which the review never read), and it loaded on startup even on Home. `yarn content:index` now also writes `src/review-chunks.ts`: a lazy loader for each module in `src/review-registry.ts` and the module that owns each rep's depth and guide, with the registry's rule that a later module replaces an earlier one. The review loads that small map (about 17 KB raw) and the one module it needs, between about 10 and 125 KB raw. `tests/catalog-index.test.mjs` fails when the map is stale and checks that every rep resolves to the same depth and guide as the merged registry. `src/rep-depth.ts` and `src/reflection-guides.ts` keep the merged records for tests and `yarn content:check`.
+
+Pointing at or focusing a rep on Trail, Today, Also waiting, the Library, or the skill map starts loading both the editor and that rep's content (`preloadPractice` in `src/editor-loader.ts`), so opening it rarely shows the content loading state. The body font is preloaded from `index.html`, so first paint does not swap from the fallback font. The app's minute clock, which refreshes due reviews and re-renders the whole app, pauses while the tab is hidden and catches up when it is shown.
+
+The startup stylesheets measured 157,475 raw / 28,762 gzip bytes when their budget was added at about 5% above that. They are not part of the JavaScript budgets above.

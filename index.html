@@ -56,6 +56,8 @@
       :root[data-palette=ocean] .startup-brand .logo-sage, :root[data-palette=plum] .startup-brand .logo-sage { display:none; }
       :root[data-palette=ocean] .startup-brand .logo-ocean, :root[data-palette=plum] .startup-brand .logo-plum { display:block; }
     </style>
+    <!-- The body font is needed for first paint; preloading it avoids a visible swap from the fallback font. -->
+    <link rel="preload" href="/fonts/source-sans-3-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="/src/index.css" />
     <title>Code Reps</title>
   </head>

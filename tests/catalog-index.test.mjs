@@ -3,7 +3,10 @@ import { readFileSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import test from 'node:test'
 import ts from 'typescript'
-import { renderCatalogIndex, renderSqlPreviews } from '../scripts/catalog-index.mjs'
+import { renderCatalogIndex, renderReviewChunks, renderSqlPreviews } from '../scripts/catalog-index.mjs'
+import { loadReviewContent } from '../src/load-review-content.ts'
+import { repDepth } from '../src/rep-depth.ts'
+import { reflectionGuides } from '../src/reflection-guides.ts'
 import { foundationRepIds, repIndex, skillIndex } from '../src/catalog-index.ts'
 import { loadAllReps, loadRepContent } from '../src/rep-content.ts'
 import { starterHash } from '../src/starter-hash.ts'
@@ -17,6 +20,23 @@ test('the generated catalog index matches the authored reps and lessons', () => 
     renderCatalogIndex(),
     'Run `yarn content:index` and commit src/catalog-index.ts.',
   )
+})
+
+test('the generated review loaders match the review registry', () => {
+  assert.equal(
+    readFileSync(new URL('../src/review-chunks.ts', import.meta.url), 'utf8'),
+    renderReviewChunks(),
+    'Run `yarn content:index` and commit src/review-chunks.ts.',
+  )
+})
+
+test('a rep review loads the same depth and guide as the merged review registry', async () => {
+  const ids = new Set([...Object.keys(repDepth), ...Object.keys(reflectionGuides), 'missing-rep'])
+  for (const id of ids) {
+    const review = await loadReviewContent(id)
+    assert.equal(review.depth, repDepth[id], `depth of ${id}`)
+    assert.equal(review.guide, reflectionGuides[id], `guide of ${id}`)
+  }
 })
 
 test('the generated SQL table previews match each SQLite rep schema and first seed', async () => {

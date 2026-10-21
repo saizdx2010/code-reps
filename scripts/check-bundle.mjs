@@ -4,6 +4,14 @@ import { join } from 'node:path'
 
 const dist = join(process.cwd(), 'dist')
 const manifest = JSON.parse(await readFile(join(dist, '.vite/manifest.json'), 'utf8'))
+// Manifest IDs of the startup chunks: the app entry and everything it imports statically.
+const startupIds = new Set()
+const visitStartup = id => {
+  if (startupIds.has(id)) return
+  startupIds.add(id)
+  for (const dependency of manifest[id]?.imports ?? []) visitStartup(dependency)
+}
+visitStartup('index.html')
 const filesFor = (key, dynamic = false) => {
   const files = new Set()
   const visited = new Set()
@@ -14,8 +22,9 @@ const filesFor = (key, dynamic = false) => {
     if (!entry) throw new Error(`Missing bundle entry: ${id}`)
     if (entry.file.endsWith('.js')) files.add(entry.file)
     for (const dependency of entry.imports ?? []) visit(dependency)
-    // Shared imports may point back to the app entry; its other routes are separate.
-    if (dynamic && id !== 'index.html') for (const dependency of entry.dynamicImports ?? []) visit(dependency)
+    // Shared imports may point back to startup chunks (the app entry, or a chunk split from it); their other routes and
+    // lazy content are separate.
+    if (dynamic && !startupIds.has(id)) for (const dependency of entry.dynamicImports ?? []) visit(dependency)
   }
   visit(key)
   return files
@@ -41,6 +50,8 @@ const groups = [
   // The practice worker bundles every rep's checks and text, so its raw size grows with the catalog. Raised from 12,000,000
   // for the DevOps track; see docs/PERFORMANCE.md for the measurements.
   { name: 'Local worker JavaScript', files: [...workerFiles], limit: 3_100_000, rawLimit: 12_150_000 },
+  // Every stylesheet the first page needs. Set at about 5% above 157,475 raw / 28,762 gzip bytes; see docs/PERFORMANCE.md.
+  { name: 'Initial CSS', files: [...startupIds].flatMap(id => manifest[id]?.css ?? []), limit: 30_200, rawLimit: 165_000 },
 ]
 const report = []
 for (const group of groups) {

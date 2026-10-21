@@ -1,6 +1,6 @@
 import { Icon } from './Icon'
 import { StatusChip } from './Layout'
-import { preloadEditor } from './editor-loader'
+import { preloadPractice } from './editor-loader'
 import { stageLabels } from './learning.ts'
 import { repLevelLabel, stageLevelRange } from './rep-levels.ts'
 import type { StageText } from './path-text'
@@ -114,8 +114,8 @@ export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenTrack, 
                       type="button"
                       id={`trail-${node.repId}`}
                       aria-current={node.state === 'next' ? 'step' : undefined}
-                      onMouseEnter={preloadEditor}
-                      onFocus={preloadEditor}
+                      onMouseEnter={() => preloadPractice(node.repId)}
+                      onFocus={() => preloadPractice(node.repId)}
                       onClick={() => onOpenRep(node.repId)}
                     >
                       <span className="trail-node-title">{node.title}</span>
