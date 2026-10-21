@@ -26,7 +26,7 @@
   top: 12px;
   right: var(--page-gutter);
   margin: 0;
-  font-size: 12px;
+  font-size: var(--type-meta);
   line-height: 1.1;
 }
 .project-list-loading > .page-loading-status {
@@ -183,7 +183,7 @@
   padding-top: 12px;
 }
 .editor-loading .loading-status {
-  font-size: 12px;
+  font-size: var(--type-meta);
   margin: 0 0 20px;
 }
 .loading-code-row {
@@ -343,4 +343,21 @@ div.rep-content-notice[role='alert'] {
   border-radius: var(--radius-control);
   background: var(--error-soft);
   color: var(--error);
+}
+
+/* Inline pieces of the brief that load just after it: same box as the loaded piece, still shapes. */
+.guidance-loading {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+.guidance-loading .skeleton-line {
+  width: 120px;
+  margin: 0;
+}
+.sql-tables-loading {
+  padding: 14px;
+}
+.sql-tables-loading .skeleton-line:last-child {
+  margin-bottom: 0;
 }

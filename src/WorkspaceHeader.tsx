@@ -1,3 +1,4 @@
+import { Button } from './Button'
 import type { KeyboardEvent, MouseEvent } from 'react'
 import type { RepSummary } from './catalog-index'
 import { Icon } from './Icon'
@@ -82,18 +83,14 @@ export function WorkspaceHeader({
         <p className="workspace-save-status" role="status">
           {saveState}
         </p>
-        <button className="reset-button" type="button" onClick={onGlossary}>
+        <Button aria-haspopup="dialog" onClick={onGlossary}>
           Glossary
-        </button>
+        </Button>
         <details className="workspace-options" onClick={closeOnAction} onKeyDown={closeOnEscape}>
           <summary>Tools</summary>
           <div>
-            <button className="reset-button" type="button" onClick={onFocusMode}>
-              {focusMode ? 'Exit focus' : 'Focus mode'}
-            </button>
-            <button className="reset-button" type="button" onClick={onReset}>
-              Reset rep
-            </button>
+            <Button onClick={onFocusMode}>{focusMode ? 'Exit focus' : 'Focus mode'}</Button>
+            <Button onClick={onReset}>Reset rep</Button>
             {skills.length > 0 && (
               <div className="workspace-knowledge">
                 <span>Related concepts</span>

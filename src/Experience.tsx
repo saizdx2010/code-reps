@@ -1,3 +1,4 @@
+import { Button } from './Button'
 import { Icon } from './Icon'
 import { Input } from './Input'
 import { reducedMotion } from './ui-motion'
@@ -245,9 +246,9 @@ export function GlossaryDrawer({ onClose }: { onClose: () => void }) {
       {glossary.status === 'error' && (
         <div role="alert">
           <p>The glossary could not load. Your work is safe.</p>
-          <button type="button" className="text-button" onClick={glossary.retry}>
+          <Button variant="text" onClick={glossary.retry}>
             Retry
-          </button>
+          </Button>
         </div>
       )}
       <dl className="glossary-list">

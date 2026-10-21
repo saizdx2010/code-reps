@@ -99,7 +99,7 @@
   border-radius: 999px;
   background: var(--surface);
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--type-meta);
   font-weight: 550;
   white-space: nowrap;
 }
@@ -187,7 +187,7 @@
   gap: 10px;
   margin-left: auto;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--type-meta);
   font-weight: 500;
 }
 .list-group > summary .list-group-meta + .ui-icon {

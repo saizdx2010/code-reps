@@ -56,9 +56,21 @@
   --type-section: 20px;
   --type-card: 17px;
   --motion-fast: 180ms;
+  /* Stacking layers, lowest first. The checks drawer's toolbar sits one above the drawer it opens. */
+  --layer-sticky: 5;
+  --layer-steps: 10;
+  --layer-drawer: 20;
+  --layer-menu: 30;
+  --layer-skip: 100;
+  --layer-tooltip: 200;
+  /* Compact labels: chips, counts, keyboard hints, and dense metadata. */
+  --type-meta: 12px;
   --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --motion-spring: cubic-bezier(0.22, 1.18, 0.36, 1);
   --shadow-menu: 0 8px 24px #23392d1a;
+  /* Modal surfaces and their backdrop. Light schemes tint them with the scheme's text colour; dark ones use black. */
+  --shadow-dialog: 0 16px 48px color-mix(in srgb, var(--text) 20%, transparent);
+  --backdrop: color-mix(in srgb, var(--text) 40%, transparent);
   /* Existing runner and preview controls use these semantic aliases. */
 }
 
@@ -93,6 +105,8 @@
   --warning-soft: #423b28;
   --warning-border: #8c7847;
   --shadow-menu: 0 8px 24px #00000040;
+  --shadow-dialog: 0 16px 48px #00000066;
+  --backdrop: #00000099;
 }
 [hidden] {
   display: none !important;
@@ -172,19 +186,19 @@ h4 {
 }
 h1 {
   margin: 0 0 12px;
-  font-size: clamp(28px, 3.2vw, 38px);
+  font-size: var(--type-page);
   font-weight: 650;
   letter-spacing: -0.035em;
 }
 h2 {
   margin: 0 0 12px;
-  font-size: 24px;
+  font-size: var(--type-section);
   font-weight: 620;
   letter-spacing: -0.025em;
 }
 h3 {
   margin: 0 0 10px;
-  font-size: 19px;
+  font-size: var(--type-card);
   font-weight: 620;
   letter-spacing: -0.015em;
 }

@@ -5,7 +5,7 @@
 .skip-link {
   clip-path: inset(50%);
   position: fixed;
-  z-index: 100;
+  z-index: var(--layer-skip);
   left: 16px;
   top: -80px;
   padding: 12px 18px;
@@ -185,7 +185,7 @@ kbd {
   padding: 3px 6px;
   border: 1px solid var(--border);
   border-radius: var(--radius-control);
-  font-size: 10px;
+  font-size: var(--type-meta);
   white-space: nowrap;
 }
 .profile-trigger {
@@ -252,7 +252,7 @@ kbd {
   flex: none;
   margin: 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--type-meta);
 }
 .workspace-topbar {
   height: 56px;
@@ -276,7 +276,7 @@ kbd {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  z-index: 30;
+  z-index: var(--layer-menu);
   display: grid;
   width: 200px;
   padding: 8px;
@@ -508,9 +508,6 @@ main {
   color: var(--muted);
   margin-bottom: 7px;
 }
-.catalog-filters {
-  margin-bottom: 26px;
-}
 .catalog-filters > summary {
   min-height: var(--control-height);
   padding: 8px 0;
@@ -554,13 +551,6 @@ main {
 }
 .catalog-list-heading > span {
   font-size: 13px;
-  color: var(--muted);
-}
-.catalog-list {
-  outline-offset: 6px;
-}
-.history-empty {
-  padding: 28px 0;
   color: var(--muted);
 }
 .path-overview {
@@ -660,7 +650,7 @@ main {
   color: var(--feature-muted);
 }
 .path-choices strong {
-  font-size: 18px;
+  font-size: var(--type-card);
   font-weight: 600;
 }
 .path-choices span,
@@ -783,33 +773,6 @@ main {
   font-size: var(--type-card);
   font-weight: 600;
   margin-bottom: 6px;
-}
-.progress-summary {
-  display: flex;
-  gap: 48px;
-  margin: 28px 0 36px;
-  padding-bottom: 26px;
-  border-bottom: 1px solid var(--border);
-}
-.progress-summary > div {
-  display: grid;
-  align-content: start;
-  gap: 8px;
-}
-.progress-summary dd {
-  grid-row: 1;
-}
-.progress-summary dt {
-  grid-row: 2;
-}
-.progress-summary dt {
-  font-size: 14px;
-  color: var(--muted);
-}
-.progress-summary dd {
-  font-size: 32px;
-  font-weight: 650;
-  margin: 0;
 }
 .progress-reviews {
   margin-top: 20px;
@@ -1024,7 +987,7 @@ main {
   padding: 8px 0;
 }
 .history-list h3 {
-  font-size: 16px;
+  font-size: var(--type-card);
   margin: 20px 0 8px;
 }
 .history-list p {
@@ -1143,6 +1106,9 @@ footer {
   position: relative;
 }
 .workspace-options > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   list-style: none;
   border: 1px solid var(--border);
   border-radius: var(--radius-control);
@@ -1158,7 +1124,7 @@ footer {
   position: absolute;
   right: 0;
   top: calc(100% + 8px);
-  z-index: 30;
+  z-index: var(--layer-menu);
   width: min(280px, calc(100vw - 40px));
   padding: 16px;
   border: 1px solid var(--border);
@@ -1259,7 +1225,7 @@ footer {
   overflow-y: auto;
   background: var(--editor);
   color: var(--text);
-  border: 1px solid #55685b;
+  border: 1px solid var(--border);
   color-scheme: dark;
   --action: #bce57b;
   --action-hover: #ceeaa3;
@@ -1349,7 +1315,7 @@ footer {
   margin: 0;
 }
 .example code {
-  font-size: 12px;
+  font-size: var(--type-meta);
   line-height: 1.8;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -1388,7 +1354,7 @@ footer {
   padding-top: 12px;
 }
 .hint-control > span {
-  font-size: 12px;
+  font-size: var(--type-meta);
   color: var(--muted);
 }
 .hint-control > .hint-note {
@@ -1669,7 +1635,7 @@ footer {
 }
 .reflection-example h3 {
   margin-top: 18px;
-  font-size: 18px;
+  font-size: var(--type-card);
 }
 /* The reward lands at the top of the Finish pane on the next-action surface, with one primary way forward. */
 .completion-panel {
@@ -1903,7 +1869,7 @@ footer {
   flex: none;
   position: sticky;
   bottom: 0;
-  z-index: 5;
+  z-index: var(--layer-sticky);
   min-height: 54px;
   padding: 9px 16px;
   border-top: 1px solid var(--border);
@@ -1929,7 +1895,7 @@ footer {
 }
 .workspace-toolbar-run > span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--type-meta);
 }
 .workspace-toolbar .primary-button {
   min-height: var(--control-height);
@@ -1976,7 +1942,7 @@ footer {
   font: 10px var(--font-mono);
 }
 .editor-hint {
-  font-size: 12px;
+  font-size: var(--type-meta);
   color: var(--muted);
 }
 .editor-wrap {
@@ -1998,7 +1964,7 @@ footer {
   padding: 8px 18px;
   border-top: 1px solid var(--border);
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--type-meta);
 }
 /* SQL briefs: the Tables card and example rows, generated from the same schema and seed the checks load. */
 .sql-tables {
@@ -2021,7 +1987,7 @@ footer {
 .sql-tables-meta {
   margin-left: auto;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--type-meta);
 }
 .sql-tables-body {
   border-top: 1px solid var(--border);
@@ -2044,7 +2010,7 @@ footer {
 }
 .sql-table-preview h4 span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--type-meta);
   font-weight: 400;
 }
 .sql-definition {
@@ -2091,7 +2057,7 @@ footer {
   background: var(--bg);
 }
 .sql-example .example-label {
-  font-size: 12px;
+  font-size: var(--type-meta);
 }
 .editor-loading {
   display: flex;
@@ -2191,7 +2157,7 @@ footer {
 }
 .checks-toggle > span:last-child {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--type-meta);
 }
 .checks-toggle > span:last-child > span {
   margin-left: 12px;
@@ -2258,11 +2224,11 @@ footer {
   background: var(--surface-2);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  font-size: 12px;
+  font-size: var(--type-meta);
 }
 .result-list .field-label {
   margin-top: 14px;
-  font-size: 12px;
+  font-size: var(--type-meta);
 }
 .value-comparison {
   display: grid;
@@ -2296,7 +2262,7 @@ footer {
 .sql-caption {
   margin: 0 0 6px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--type-meta);
 }
 /* The row number column is pinned, so only the right edge needs the scroll cue. */
 .sql-table-wrap {
@@ -2312,7 +2278,7 @@ footer {
   width: 100%;
   border-collapse: collapse;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--type-meta);
 }
 .sql-table :is(th, td) {
   padding: 7px 12px;
@@ -2396,7 +2362,7 @@ footer {
 .sql-more {
   color: var(--muted);
   font-family: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
-  font-size: 12px;
+  font-size: var(--type-meta);
 }
 .sql-more {
   margin: 4px 0 0;
@@ -2423,7 +2389,7 @@ footer {
 }
 .sql-plan-label {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--type-meta);
 }
 .sql-plan p {
   margin: 0;
@@ -2511,29 +2477,6 @@ footer {
   color: var(--muted);
   font-size: 13px;
 }
-.result-running-track {
-  display: block;
-  height: 3px;
-  background: var(--surface-2);
-  margin-bottom: 18px;
-  overflow: hidden;
-}
-.result-running-track > span {
-  display: block;
-  width: 35%;
-  height: 100%;
-  background: var(--accent);
-}
-@media (prefers-reduced-motion: no-preference) {
-  .result-running-track > span {
-    animation: check-progress 1.4s ease-in-out infinite alternate;
-  }
-}
-@keyframes check-progress {
-  to {
-    transform: translateX(185%);
-  }
-}
 /* All passed: the next step sits in the summary line instead of under the list. */
 .result-summary .checks-next {
   flex: none;
@@ -2608,10 +2551,10 @@ footer {
   background: var(--surface);
   color: var(--text);
   overflow-y: auto;
-  box-shadow: 0 16px 48px #23392d33;
+  box-shadow: var(--shadow-dialog);
 }
 dialog::backdrop {
-  background: #23392d66;
+  background: var(--backdrop);
 }
 .utility-heading,
 .hub-dialog-heading {
@@ -2623,7 +2566,7 @@ dialog::backdrop {
 }
 .utility-heading h2,
 .hub-dialog-heading h2 {
-  font-size: 25px;
+  font-size: var(--type-reading);
   margin: 0;
 }
 .utility-heading button {
@@ -2669,7 +2612,7 @@ dialog::backdrop {
   margin: 0 0 4px;
   padding: 0 12px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--type-meta);
   font-weight: 650;
   letter-spacing: 0.02em;
 }
@@ -2704,7 +2647,7 @@ dialog::backdrop {
   padding-top: 12px;
   border-top: 1px solid var(--border);
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--type-meta);
 }
 .command-results [role='option'] {
   border-radius: var(--radius-control);
@@ -3006,7 +2949,7 @@ dialog.preview-inline {
   .practice-steps {
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: var(--layer-steps);
     justify-content: space-between;
     gap: 4px;
     background: var(--surface-2);
@@ -3136,9 +3079,6 @@ dialog.preview-inline {
     padding-top: 26px;
     padding-bottom: 42px;
   }
-  h1 {
-    font-size: 29px;
-  }
   .starting-options {
     grid-template-columns: minmax(0, 1fr);
     gap: 10px;
@@ -3177,16 +3117,6 @@ dialog.preview-inline {
   .path-introduction {
     gap: 24px;
     padding: 8px 0;
-  }
-  .progress-summary {
-    gap: 24px;
-    justify-content: space-between;
-  }
-  .progress-summary dt {
-    font-size: 13px;
-  }
-  .progress-summary dd {
-    font-size: 28px;
   }
   .progress-heading {
     gap: 12px;
@@ -3273,7 +3203,7 @@ dialog.preview-inline {
   .workspace-actions .workspace-save-status {
     order: 6;
     flex: 1 1 auto;
-    font-size: 12px;
+    font-size: var(--type-meta);
     text-align: right;
     white-space: nowrap;
   }
@@ -3290,7 +3220,7 @@ dialog.preview-inline {
     right: 0;
     bottom: 0;
     left: 0;
-    z-index: 21;
+    z-index: calc(var(--layer-drawer) + 1);
     padding-bottom: max(8px, env(safe-area-inset-bottom));
     border-radius: 0;
   }
@@ -3299,7 +3229,7 @@ dialog.preview-inline {
     right: 0;
     bottom: var(--workspace-toolbar-height, 56px);
     left: 0;
-    z-index: 20;
+    z-index: var(--layer-drawer);
     max-height: min(72dvh, calc(100dvh - var(--workspace-toolbar-height, 56px) - 96px));
     border: 1px solid var(--border);
     border-bottom: 0;
@@ -3336,7 +3266,7 @@ dialog.preview-inline {
     gap: 8px;
   }
   .workspace-toolbar-run > span {
-    font-size: 11px;
+    font-size: var(--type-meta);
   }
   .editor-hint {
     display: none;
@@ -3353,7 +3283,7 @@ dialog.preview-inline {
   }
   .completion-checklist {
     gap: 10px;
-    font-size: 12px;
+    font-size: var(--type-meta);
   }
   .utility-dialog,
   .reset-dialog,
@@ -3426,7 +3356,7 @@ dialog.preview-inline {
     gap: 0;
     min-height: 58px;
     padding: 6px 2px;
-    font-size: 12.5px;
+    font-size: var(--type-meta);
   }
   .practice-steps button > span::before {
     content: counter(step);
@@ -3437,7 +3367,7 @@ dialog.preview-inline {
     margin: 0 auto 4px;
     border: 1px solid currentColor;
     border-radius: 50%;
-    font-size: 11px;
+    font-size: var(--type-meta);
     font-weight: 550;
     opacity: 0.75;
   }
@@ -3558,6 +3488,7 @@ details:not(.site-menu):not(.workspace-options):not(.knowledge-browser):not(.kno
   mask: var(--icon-chevron) center / contain no-repeat;
   transform: rotate(-90deg);
   vertical-align: middle;
+  transition: transform var(--motion-fast) var(--motion-ease);
 }
 details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):not(.knowledge-group):not(.path-picker):not(.path-stage):not(
     .progress-journey
@@ -3567,8 +3498,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   > summary::before {
   transform: rotate(0deg);
 }
-.site-menu > summary,
-.workspace-options > summary {
+.site-menu > summary {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -3583,6 +3513,14 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   height: 18px;
   background: currentColor;
   mask: var(--icon-chevron) center / contain no-repeat;
+  transition: transform var(--motion-fast) var(--motion-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  summary::before,
+  summary::after,
+  .disclosure-arrow {
+    transition: none !important;
+  }
 }
 .site-menu[open] > summary::after,
 .workspace-options[open] > summary::after,
@@ -3601,7 +3539,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   display: block;
   min-height: 1.4em;
   margin-top: 8px;
-  font-size: 12px;
+  font-size: var(--type-meta);
   line-height: 1.4;
 }
 .profile-summary dd small {
@@ -3638,7 +3576,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
     flex: 1 0 auto;
   }
   .practice-steps button {
-    font-size: 12px;
+    font-size: var(--type-meta);
     padding: 8px 2px;
     white-space: nowrap;
   }
@@ -3708,7 +3646,6 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   --action: #97d9f5;
   --action-hover: #bdeaff;
   --action-text: #203c4c;
-  border-color: var(--border);
 }
 :root[data-palette='plum'] .code-column {
   --editor: #3a2b39;
@@ -3724,7 +3661,6 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   --action: #edb9e3;
   --action-hover: #f9d6f2;
   --action-text: #493047;
-  border-color: var(--border);
 }
 
 /* Library and progress keep overview rows compact; details retain their evidence. */
@@ -3739,6 +3675,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   display: grid;
   gap: 28px;
   border: 0;
+  outline-offset: 6px;
 }
 /* One column of areas in learning order: opening a topic never moves it or its neighbours. */
 .catalog-area-heading {
@@ -3777,7 +3714,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 }
 .list-row-level {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--type-meta);
   white-space: nowrap;
 }
 .catalog-lesson-matches {
@@ -3788,23 +3725,6 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 }
 .catalog-start {
   margin-bottom: 24px;
-}
-.progress-main .progress-summary {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 12px;
-  padding: 16px 0;
-  margin: 0;
-}
-.progress-main .progress-summary > div {
-  padding: 0;
-  border: 0;
-}
-.progress-main .progress-summary dd {
-  font-size: 26px;
-}
-.progress-main .progress-summary dt {
-  font-size: 12px;
 }
 .progress-main .profile-badges {
   margin: 20px 0;
@@ -3998,9 +3918,6 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   height: 64px;
   margin: -6px -4px -4px -6px;
 }
-.badge-empty {
-  color: var(--muted);
-}
 /* Milestone notice floats over the page so it never shifts the working surface or moves focus. */
 .badge-notice {
   display: flex;
@@ -4104,40 +4021,17 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 }
 .progress-main .progress-heading p {
   margin: 3px 0 0;
-  font-size: 12px;
+  font-size: var(--type-meta);
 }
-.journey-markers {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.journey-markers > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--muted);
-  font-size: 11px;
-}
-.journey-markers > span::before {
-  content: '';
-  width: 7px;
-  height: 7px;
-  border: 1px solid var(--border-strong);
-  border-radius: 50%;
-}
-.journey-markers > span[data-complete='true']::before {
-  border-color: var(--success);
-  background: var(--success);
-}
-@media (max-width: 700px) {
+/* Between phone and tablet the Library search keeps a readable width; on phones it spans the row (see max-width: 600px). */
+@media (min-width: 601px) and (max-width: 700px) {
   .catalog-search {
     width: min(320px, 100%);
   }
+}
+@media (max-width: 700px) {
   .page-header-actions {
     width: 100%;
-  }
-  .progress-main .progress-summary {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .progress-main .progress-heading {
     flex-wrap: wrap;
@@ -4227,7 +4121,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 }
 .trace-structure .trace-index {
   fill: var(--muted);
-  font-size: 12px;
+  font-size: var(--type-meta);
 }
 .trace-structure .trace-dimmed rect {
   fill: var(--bg);
@@ -4262,7 +4156,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   font-weight: 700;
 }
 .trace-structure .trace-node-note {
-  font-size: 12px;
+  font-size: var(--type-meta);
   fill: var(--muted);
 }
 .trace-tree .trace-node-current .trace-node-note {
@@ -4479,7 +4373,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   font-family: var(--font-mono);
 }
 .trace-cell-index {
-  font-size: 12px;
+  font-size: var(--type-meta);
   color: var(--muted);
 }
 .trace-cell-value {
@@ -4487,7 +4381,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   min-height: 1.4em;
 }
 .trace-cell-tag {
-  font-size: 12px;
+  font-size: var(--type-meta);
   min-height: 1.2em;
 }
 .trace-cell-empty {
@@ -4528,7 +4422,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   gap: 2px;
 }
 .practice-steps button small {
-  font-size: 11px;
+  font-size: var(--type-meta);
   line-height: 1.2;
   color: inherit;
 }
@@ -4620,6 +4514,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 }
 .progress-main .progress-summary {
   /* Two compact counts stacked in the first column; the calendar and the ladder take full-height cards beside them. */
+  display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr) minmax(0, 1.2fr);
   grid-template-rows: auto auto;
   gap: 12px;
@@ -4628,6 +4523,9 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   border: 0;
 }
 .progress-main .progress-summary > div {
+  display: grid;
+  align-content: start;
+  gap: 8px;
   margin: 0;
   padding: 16px 18px;
   border: 1px solid var(--border);
@@ -4635,6 +4533,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   background: var(--surface);
 }
 .progress-main .progress-summary dd {
+  grid-row: 1;
   margin: 0;
   font-size: 28px;
   font-weight: 650;
@@ -4642,6 +4541,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   font-variant-numeric: tabular-nums;
 }
 .progress-main .progress-summary dt {
+  grid-row: 2;
   display: grid;
   gap: 2px;
   color: var(--text);
@@ -4772,7 +4672,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   overflow: hidden;
   max-width: 100%;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--type-meta);
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -4792,7 +4692,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 .rhythm-key {
   margin: 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--type-meta);
   line-height: 1.5;
 }
 /* The longer history stays one click away, so the rhythm card keeps the height of the cards beside it. */
@@ -4878,7 +4778,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   align-items: center;
   gap: 4px 16px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--type-meta);
 }
 .practice-calendar-key > span {
   display: inline-flex;
@@ -4989,18 +4889,19 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 }
 /* Each journey's three rungs, connected, with the label under each marker. */
 .journey-markers {
+  display: flex;
   flex-wrap: nowrap;
   gap: 0;
 }
 .journey-markers > span {
   position: relative;
   display: inline-grid;
+  align-items: center;
   justify-items: center;
   gap: 2px;
   width: 74px;
-}
-.journey-markers > span::before {
-  display: none;
+  color: var(--muted);
+  font-size: var(--type-meta);
 }
 .journey-markers > span + span::after {
   content: '';
@@ -5042,7 +4943,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 }
 .journey-markers small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--type-meta);
 }
 .progress-main .progress-quiet-links {
   display: flex;
@@ -5076,7 +4977,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
     justify-items: start;
   }
   .journey-markers > span {
-    width: 64px;
+    width: 70px;
   }
 }
 

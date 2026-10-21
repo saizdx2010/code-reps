@@ -1,3 +1,4 @@
+import { Button } from './Button'
 import { Icon } from './Icon'
 import { useId, useLayoutEffect, useRef, useState } from 'react'
 import type { KeyboardEvent, MouseEvent } from 'react'
@@ -164,15 +165,11 @@ export function DateInput({ value, onValueChange, label = 'Date' }: Props) {
             </tbody>
           </table>
           <div className="ui-calendar-actions">
-            <button type="button" className="text-button" onClick={() => choose('')}>
+            <Button variant="text" onClick={() => choose('')}>
               Clear date
-            </button>
-            <button type="button" className="reset-button" onClick={() => choose(today)}>
-              Today
-            </button>
-            <button type="button" className="reset-button" onClick={close}>
-              Cancel
-            </button>
+            </Button>
+            <Button onClick={() => choose(today)}>Today</Button>
+            <Button onClick={close}>Cancel</Button>
           </div>
         </dialog>,
         document.body,

@@ -238,13 +238,47 @@ export function PreviewLoading() {
 }
 
 /** Placeholder shown while a route chunk loads. It keeps the page heading in place so focus and skip links stay valid. */
-export function RouteLoading({ title, status }: { title: string; status: string }) {
+/** A lazy page's pending state: the page's own frame and header, so its arrival does not move the heading. */
+export function RouteLoading({
+  title,
+  status,
+  className,
+  eyebrow,
+  actions,
+}: {
+  title: string
+  status: string
+  className?: string
+  eyebrow?: string
+  actions?: ReactNode
+}) {
   return (
-    <main aria-busy="true">
-      <PageHeader title={title} />
+    <main className={className} aria-busy="true">
+      <PageHeader title={title} eyebrow={eyebrow} actions={actions} />
       <p className="loading-status page-loading-status" role="status">
         {status}
       </p>
     </main>
+  )
+}
+
+/** Holds the brief's "About this rep" line while it loads, so the brief below does not jump when it arrives. */
+export function GuidanceLoading() {
+  return (
+    <div className="rep-guidance guidance-loading" aria-hidden="true">
+      <span className="skeleton-line" />
+    </div>
+  )
+}
+
+/** Holds the SQL brief's Tables card while it loads. The table text itself is never invented. */
+export function SqlTablesLoading() {
+  return (
+    <div className="sql-tables sql-tables-loading" aria-hidden="true">
+      <span className="skeleton-line skeleton-short" />
+      <span className="skeleton-line" />
+      <span className="skeleton-line" />
+      <span className="skeleton-line skeleton-short" />
+    </div>
   )
 }

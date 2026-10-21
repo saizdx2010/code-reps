@@ -113,7 +113,8 @@ test('walkthrough preference is session-only and separate for each profile', asy
   await page.goto('/#/practice/declare-variables')
   await expect(help(page)).toHaveCount(0)
   await page.goto('/#/history')
-  await expect(page.getByText('No completed attempts yet. Finish a rep to save your first one here.', { exact: true })).toBeVisible()
+  await expect(page.getByText('No completed attempts yet.', { exact: true })).toBeVisible()
+  await expect(page.getByText('Finish a rep to save your first one here.', { exact: true })).toBeVisible()
 })
 
 test('an unavailable walkthrough leaves practice usable', async ({ page }) => {
