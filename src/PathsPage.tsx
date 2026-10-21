@@ -1,3 +1,5 @@
+import { reducedMotion } from './ui-motion'
+import { Button } from './Button'
 import { useRef } from 'react'
 import type { ReactNode } from 'react'
 import { Icon } from './Icon'
@@ -30,8 +32,6 @@ type Props = {
   openLesson: (skillId: string) => void
 }
 
-const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches
-
 /** All tracks: Foundations first, then the tracks that build on it, and the selected track's trail. */
 export function PathsPage(props: Props) {
   const { goalPathId, setGoalPath, goalError, pathId, setPathId, pathPicker, setPathPicker, learnerStart, startingPoint } = props
@@ -61,7 +61,7 @@ export function PathsPage(props: Props) {
     if (matchMedia('(max-width: 900px)').matches) setPathPicker('closed')
     requestAnimationFrame(() => {
       const heading = document.getElementById('path-title')
-      heading?.scrollIntoView({ block: 'center', behavior: reduceMotion() ? 'instant' : 'smooth' })
+      heading?.scrollIntoView({ block: 'center', behavior: reducedMotion() ? 'instant' : 'smooth' })
       heading?.focus({ preventScroll: true })
     })
   }
@@ -150,9 +150,8 @@ export function PathsPage(props: Props) {
               {goalPathId === selectedPath.id ? 'Your current learning goal.' : 'Browsing this track does not change your learning goal.'}
             </p>
             {goalPathId !== selectedPath.id && (
-              <button
-                type="button"
-                className="text-button"
+              <Button
+                variant="text"
                 onClick={() => {
                   setGoalPath(selectedPath.id)
                   // The button leaves once the goal is saved; keep keyboard focus on the line that confirms it.
@@ -162,7 +161,7 @@ export function PathsPage(props: Props) {
                 }}
               >
                 Use this as my learning goal
-              </button>
+              </Button>
             )}
             {goalError && <p role="alert">{goalError}</p>}
           </div>
@@ -172,10 +171,10 @@ export function PathsPage(props: Props) {
             {trail.done} of {trail.total} reps completed
           </span>
           {trail.nextRepId && (
-            <button className="primary-button" type="button" onClick={() => openRep(trail.nextRepId!)}>
+            <Button variant="primary" onClick={() => openRep(trail.nextRepId!)}>
               {trail.done === 0 ? 'Start track' : 'Continue track'}
               <Icon name="arrow" />
-            </button>
+            </Button>
           )}
         </div>
       </section>

@@ -1,6 +1,6 @@
 import { repTitle } from './rep-index.ts'
 import { formatDate, plural } from './ui-copy.ts'
-import { InfoNote, ListGroup, ListRow, PageHeader, StatusChip } from './Layout'
+import { EmptyState, InfoNote, ListGroup, ListRow, PageHeader, StatusChip } from './Layout'
 import { Icon } from './Icon'
 import { withoutGoal } from './practice-actions'
 import { profileBadges } from './badges'
@@ -219,7 +219,7 @@ export function ProgressPage(props: Props) {
         {earned.length > 0 ? (
           <EarnedBadges earned={earned} onOpen={open} />
         ) : (
-          <p className="badge-empty">No badges yet. Finish one rep to earn the first.</p>
+          <EmptyState title="No badges yet.">Finish one rep to earn the first.</EmptyState>
         )}
       </section>
       <nav className="progress-quiet-links" aria-label="More ways to practice">
@@ -278,6 +278,8 @@ function PracticeCalendar({ history, now }: { history: PortableRecord[]; now: nu
     Array.from({ length: 7 }, (_, weekday) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + week * 7 + weekday)),
   )
   const recent = weeks.flat().filter(date => days.has(key(date))).length
+  // The grid is drawn for sight; this sentence gives the same split in words.
+  const clean = weeks.flat().filter(date => days.get(key(date)) === 'clean').length
   return (
     <div className="practice-calendar">
       <div className="practice-calendar-grid" aria-hidden="true">
@@ -292,6 +294,9 @@ function PracticeCalendar({ history, now }: { history: PortableRecord[]; now: nu
       <small className="practice-calendar-key">
         <span>
           {recent} {plural(recent, 'day')} in 12 weeks
+          <span className="visually-hidden">
+            : {clean} hint-free, {recent - clean} with hints
+          </span>
         </span>
         <span>
           <i data-day="clean" /> hint-free
@@ -418,9 +423,9 @@ function EarnedBadge({ badge, earning, onOpen }: { badge: Badge; earning: boolea
           </span>
         )}
       </div>
-      <button type="button" className="text-button" aria-label={`${action} for ${badge.name}`} onClick={() => onOpen(badge)}>
+      <Button variant="text" aria-label={`${action} for ${badge.name}`} onClick={() => onOpen(badge)}>
         {action}
-      </button>
+      </Button>
     </li>
   )
 }
@@ -484,9 +489,9 @@ function JourneyEvidence({ progress, onOpenRep, onReviewRep }: JourneyProps) {
         <li>
           <strong>1. Guided practice</strong>
           <span>{guidedNote}</span>
-          <button type="button" className="text-button" onClick={() => onOpenRep(journey.guided)}>
+          <Button variant="text" onClick={() => onOpenRep(journey.guided)}>
             Open rep
-          </button>
+          </Button>
         </li>
         <li>
           <strong>2. Independent problem</strong>
@@ -495,9 +500,9 @@ function JourneyEvidence({ progress, onOpenRep, onReviewRep }: JourneyProps) {
               ? `Solved without hints ${formatDate(independent.completedAt)}`
               : 'Solve a related problem without hints after guided practice.'}
           </span>
-          <button type="button" className="text-button" disabled={!guided} onClick={() => onReviewRep(journey.independent)}>
+          <Button variant="text" disabled={!guided} onClick={() => onReviewRep(journey.independent)}>
             {!guided ? 'After guided rep' : independent ? 'Open rep' : 'Try rep'}
-          </button>
+          </Button>
         </li>
         {journey.practice?.map((id, index) => {
           const completed = practiced.find(record => record.repId === id)
@@ -511,18 +516,18 @@ function JourneyEvidence({ progress, onOpenRep, onReviewRep }: JourneyProps) {
                   ? `Solved without hints ${formatDate(completed.completedAt)}`
                   : 'Try without hints. This is optional and does not postpone recall.'}
               </span>
-              <button type="button" className="text-button" onClick={() => onReviewRep(id)}>
+              <Button variant="text" onClick={() => onReviewRep(id)}>
                 {completed ? 'Open rep' : 'Try rep'}
-              </button>
+              </Button>
             </li>
           )
         })}
         <li>
           <strong>{journey.practice?.length ? '4' : '3'}. Later recall</strong>
           <span>{recallNote}</span>
-          <button type="button" className="text-button" disabled={!recallDue} onClick={() => onReviewRep(journey.recall)}>
+          <Button variant="text" disabled={!recallDue} onClick={() => onReviewRep(journey.recall)}>
             {recallDue ? 'Try recall' : retained ? 'Evidence recorded' : 'Available later'}
-          </button>
+          </Button>
         </li>
       </ol>
     </details>

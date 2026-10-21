@@ -1,4 +1,5 @@
 import { Button } from './Button'
+import { PageHeader } from './Layout'
 import { Input, Select } from './Input'
 import { parseProfileBackup } from './profile-backup'
 import { backupFileText } from './portability'
@@ -193,11 +194,15 @@ export default function ProfileApp() {
   if (initial.error)
     return (
       <main className="home-main">
-        <h1>Local profiles need attention</h1>
+        <PageHeader
+          title="Local profiles need attention"
+          actions={
+            <Button variant="primary" onClick={() => location.reload()}>
+              Reload
+            </Button>
+          }
+        />
         <p role="alert">{initial.error}</p>
-        <Button type="button" onClick={() => location.reload()}>
-          Reload
-        </Button>
       </main>
     )
   const disabled = Boolean(busy)

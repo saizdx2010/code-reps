@@ -1,3 +1,4 @@
+import { Button } from './Button'
 import { repNotes } from './rep-notes.ts'
 import { usePracticeSessions } from './usePracticeSessions'
 import { AppNavigation } from './AppNavigation'
@@ -59,9 +60,9 @@ const FirstRepWalkthrough = lazy(() =>
       default: ({ onDismiss }: { onDismiss: () => void }) => (
         <aside aria-label="First rep walkthrough">
           <p>Guide unavailable. Reload to try again, or continue practice.</p>
-          <button type="button" className="text-button" onClick={onDismiss}>
+          <Button variant="text" onClick={onDismiss}>
             Skip walkthrough
-          </button>
+          </Button>
         </aside>
       ),
     })),
@@ -71,9 +72,9 @@ const FrontendPreview = lazy(() =>
     default: () => (
       <section className="panel frontend-preview" role="alert">
         <p>The preview could not load. Reload to try again; your draft will be kept.</p>
-        <button className="primary-button" type="button" onClick={() => window.location.reload()}>
+        <Button variant="primary" onClick={() => window.location.reload()}>
           Reload app
-        </button>
+        </Button>
       </section>
     ),
   })),
@@ -813,9 +814,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
           >
             Retry saving
           </button>
-          <button className="reset-button" type="button" onClick={exportData}>
-            Download backup
-          </button>
+          <Button onClick={exportData}>Download backup</Button>
         </div>
       )}
       <ScreenMemory key={`${view}:${view === 'workspace' ? repId : ''}`} screenKey={`${view}:${view === 'workspace' ? repId : ''}`}>

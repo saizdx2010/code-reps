@@ -1,6 +1,7 @@
 import { formatDate } from './ui-copy.ts'
 import { Button } from './Button'
 import { Icon } from './Icon'
+import { EmptyState } from './Layout'
 import { Input, Select, Textarea } from './Input'
 import { useRef, useState } from 'react'
 import type { FormEvent, RefObject } from 'react'
@@ -159,18 +160,28 @@ export function LearningNotebook({ state, update }: Props) {
           </article>
         ))}
       </div>
-      {!visible.length && (
-        <div className="hub-empty">
-          <span className="home-label">{query ? 'No matches' : 'Your notebook'}</span>
-          <h3>{query ? 'Try another search.' : 'Make your next attempt useful.'}</h3>
-          <p>{query ? 'No matching entries.' : 'Your notebook is empty. Save an idea or mistake after your next attempt.'}</p>
-          {!query && (
+      {!visible.length &&
+        (query ? (
+          <EmptyState
+            title="No entries match this search."
+            action={
+              <Button variant="text" onClick={() => setQuery('')}>
+                Clear search
+              </Button>
+            }
+          >
+            Try another concept or mistake.
+          </EmptyState>
+        ) : (
+          <div className="hub-empty">
+            <span className="home-label">Your notebook</span>
+            <h3>Make your next attempt useful.</h3>
+            <p>Your notebook is empty. Save an idea or mistake after your next attempt.</p>
             <Button variant="primary" onClick={newNote}>
               Write your first entry
             </Button>
-          )}
-        </div>
-      )}
+          </div>
+        ))}
     </>
   )
 }

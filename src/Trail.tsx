@@ -1,3 +1,4 @@
+import { Button } from './Button'
 import { Icon } from './Icon'
 import { StatusChip } from './Layout'
 import { preloadEditor } from './editor-loader'
@@ -74,9 +75,9 @@ export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenTrack, 
               <span className="trail-stage-count">{stage.total ? `${stage.done}/${stage.total}` : 'Self-review'}</span>
             </summary>
             {stage.coveredBy && onOpenTrack && (
-              <button type="button" className="text-button trail-covered" onClick={() => onOpenTrack(stage.coveredBy!.id)}>
+              <Button variant="text" className="trail-covered" onClick={() => onOpenTrack(stage.coveredBy!.id)}>
                 Open {stage.coveredBy.title}
-              </button>
+              </Button>
             )}
             <ol className="trail-nodes">
               {stage.nodes.map(node => (
@@ -96,18 +97,18 @@ export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenTrack, 
                       <span className="trail-node-title">{node.title}</span>
                       {repLevelLabel(node.repId) && <StatusChip>{repLevelLabel(node.repId)}</StatusChip>}
                       <small>{node.reason}</small>
-                      <button type="button" className="text-button" onClick={() => onOpenRep(node.repId)}>
+                      <Button variant="text" onClick={() => onOpenRep(node.repId)}>
                         Open project milestone
-                      </button>
+                      </Button>
                     </div>
                   ) : node.kind === 'external' ? (
                     <div className="trail-project">
                       <span className="trail-node-title">{node.title}</span>
                       <small>External project · Self-review</small>
                       <small>{node.reason}</small>
-                      <button type="button" className="text-button" onClick={() => openExternalProject(node.projectId)}>
+                      <Button variant="text" onClick={() => openExternalProject(node.projectId)}>
                         Open project brief
-                      </button>
+                      </Button>
                     </div>
                   ) : (
                     <button

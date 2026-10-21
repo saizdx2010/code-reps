@@ -559,10 +559,6 @@ main {
 .catalog-list {
   outline-offset: 6px;
 }
-.history-empty {
-  padding: 28px 0;
-  color: var(--muted);
-}
 .path-overview {
   display: flex;
   align-items: center;
@@ -2511,29 +2507,6 @@ footer {
   color: var(--muted);
   font-size: 13px;
 }
-.result-running-track {
-  display: block;
-  height: 3px;
-  background: var(--surface-2);
-  margin-bottom: 18px;
-  overflow: hidden;
-}
-.result-running-track > span {
-  display: block;
-  width: 35%;
-  height: 100%;
-  background: var(--accent);
-}
-@media (prefers-reduced-motion: no-preference) {
-  .result-running-track > span {
-    animation: check-progress 1.4s ease-in-out infinite alternate;
-  }
-}
-@keyframes check-progress {
-  to {
-    transform: translateX(185%);
-  }
-}
 /* All passed: the next step sits in the summary line instead of under the list. */
 .result-summary .checks-next {
   flex: none;
@@ -3136,9 +3109,6 @@ dialog.preview-inline {
     padding-top: 26px;
     padding-bottom: 42px;
   }
-  h1 {
-    font-size: 29px;
-  }
   .starting-options {
     grid-template-columns: minmax(0, 1fr);
     gap: 10px;
@@ -3558,6 +3528,7 @@ details:not(.site-menu):not(.workspace-options):not(.knowledge-browser):not(.kno
   mask: var(--icon-chevron) center / contain no-repeat;
   transform: rotate(-90deg);
   vertical-align: middle;
+  transition: transform var(--motion-fast) var(--motion-ease);
 }
 details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):not(.knowledge-group):not(.path-picker):not(.path-stage):not(
     .progress-journey
@@ -3583,6 +3554,14 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   height: 18px;
   background: currentColor;
   mask: var(--icon-chevron) center / contain no-repeat;
+  transition: transform var(--motion-fast) var(--motion-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  summary::before,
+  summary::after,
+  .disclosure-arrow {
+    transition: none !important;
+  }
 }
 .site-menu[open] > summary::after,
 .workspace-options[open] > summary::after,
@@ -3998,9 +3977,6 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   height: 64px;
   margin: -6px -4px -4px -6px;
 }
-.badge-empty {
-  color: var(--muted);
-}
 /* Milestone notice floats over the page so it never shifts the working surface or moves focus. */
 .badge-notice {
   display: flex;
@@ -4129,15 +4105,15 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   border-color: var(--success);
   background: var(--success);
 }
-@media (max-width: 700px) {
+/* Between phone and tablet the Library search keeps a readable width; on phones it spans the row (see max-width: 600px). */
+@media (min-width: 601px) and (max-width: 700px) {
   .catalog-search {
     width: min(320px, 100%);
   }
+}
+@media (max-width: 700px) {
   .page-header-actions {
     width: 100%;
-  }
-  .progress-main .progress-summary {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .progress-main .progress-heading {
     flex-wrap: wrap;

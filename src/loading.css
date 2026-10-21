@@ -386,3 +386,20 @@ div.rep-content-notice[role='alert'] {
   background: var(--error-soft);
   color: var(--error);
 }
+
+/* Inline pieces of the brief that load just after it: same box as the loaded piece, still shapes. */
+.guidance-loading {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+.guidance-loading .skeleton-line {
+  width: 120px;
+  margin: 0;
+}
+.sql-tables-loading {
+  padding: 14px;
+}
+.sql-tables-loading .skeleton-line:last-child {
+  margin-bottom: 0;
+}

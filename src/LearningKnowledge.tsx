@@ -1,3 +1,4 @@
+import { reducedMotion } from './ui-motion'
 import { Button } from './Button'
 import { Icon } from './Icon'
 import { Input, Select } from './Input'
@@ -64,7 +65,7 @@ export function LearningKnowledge({ state, update, history, openRep, skillId, on
     if (matchMedia('(max-width: 900px)').matches) setIndexOpen('closed')
     requestAnimationFrame(() => {
       const lesson = lessonRef.current
-      lesson?.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })
+      lesson?.scrollIntoView({ block: 'start', behavior: reducedMotion() ? 'instant' : 'smooth' })
       lesson?.focus({ preventScroll: true })
     })
   }

@@ -1,3 +1,4 @@
+import { Button } from './Button'
 import { createPortal } from 'react-dom'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { profileBadges, unacknowledgedBadges } from './badges'
@@ -78,16 +79,15 @@ export function BadgeNotice({ history, now, onView, portalTarget }: Props) {
       <p>
         <strong>{plural(shown.length, 'Badge')} earned:</strong> {shown.map(badge => badge.name).join(', ')}
       </p>
-      <button
-        type="button"
-        className="text-button"
+      <Button
+        variant="text"
         onClick={() => {
           setShown([])
           onView()
         }}
       >
         View badges
-      </button>
+      </Button>
     </div>
   )
   return portalTarget ? createPortal(notice, portalTarget) : notice

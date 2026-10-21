@@ -113,23 +113,31 @@
 .knowledge-group > summary::-webkit-details-marker {
   display: none;
 }
-.knowledge-group > summary::before {
+/* Topic groups read like ListGroup: title, quiet count, and a trailing chevron that turns over when open. */
+.knowledge-group > summary::after {
   content: '';
   display: inline-block;
   width: 18px;
   height: 18px;
   flex: none;
+  margin-left: auto;
   background: currentColor;
+  color: var(--muted);
   mask: var(--icon-chevron) center / contain no-repeat;
   transition: rotate var(--motion-fast) var(--motion-ease);
 }
-.knowledge-group:not([open]) > summary::before {
-  rotate: -90deg;
+.knowledge-group[open] > summary::after {
+  rotate: 180deg;
 }
 .knowledge-group summary > span {
-  margin-left: auto;
-  font-size: 12px;
-  font-weight: 400;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+@media (prefers-reduced-motion: reduce) {
+  .knowledge-group > summary::after {
+    transition: none;
+  }
 }
 .knowledge-topic-list {
   display: grid;

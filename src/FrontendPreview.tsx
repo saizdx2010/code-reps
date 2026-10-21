@@ -1,3 +1,4 @@
+import { Button } from './Button'
 import { Select } from './Input'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { buildFrontendFrame, previewScenarios } from './frontend-frame'
@@ -97,9 +98,9 @@ export default function FrontendPreview({ code, rep }: Props) {
           <option value="768">Tablet · 768px</option>
           <option value="1280">Desktop · 1280px</option>
         </Select>
-        <button className="primary-button" type="button" onClick={() => refresh()}>
+        <Button variant="primary" onClick={() => refresh()}>
           Update preview
-        </button>
+        </Button>
         <button ref={expandRef} className="stop-checks-button" type="button" onClick={() => (expanded ? collapse() : setExpanded(true))}>
           {expanded ? 'Exit expanded preview' : 'Expand preview'}
         </button>

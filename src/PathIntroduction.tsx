@@ -1,3 +1,4 @@
+import { Button } from './Button'
 import type { PathIntroduction as Introduction } from './path'
 
 type Props = {
@@ -16,9 +17,9 @@ export function PathIntroduction({ introduction, onStart }: Props) {
           <strong>What comes next</strong>
           <p>{introduction.next}</p>
         </div>
-        <button className="primary-button" type="button" onClick={onStart}>
+        <Button variant="primary" onClick={onStart}>
           Try the first rep{' '}
-        </button>
+        </Button>
       </div>
       <div className="path-introduction-example">
         <span className="home-label">A small example</span>

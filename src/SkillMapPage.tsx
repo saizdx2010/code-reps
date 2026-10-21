@@ -1,3 +1,5 @@
+import { reducedMotion } from './ui-motion'
+import { Button } from './Button'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from './Icon'
 import { Select } from './Input'
@@ -60,8 +62,9 @@ export function SkillMapPage({ goalPathId, progress, openRep, reviewRep }: Props
   useEffect(() => {
     const nodes = Array.from(trail.current?.querySelectorAll<HTMLElement>('[data-stepped]') ?? [])
     if (nodes.length === 0) return
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
-    const frame = requestAnimationFrame(() => nodes[0].scrollIntoView({ block: 'center', behavior: reduced ? 'instant' : 'smooth' }))
+    const frame = requestAnimationFrame(() =>
+      nodes[0].scrollIntoView({ block: 'center', behavior: reducedMotion() ? 'instant' : 'smooth' }),
+    )
     const play = (node: HTMLElement) => {
       node.dataset.step = 'play'
       setAnnouncement(latestAnnouncement.current)
@@ -163,9 +166,8 @@ export function SkillMapPage({ goalPathId, progress, openRep, reviewRep }: Props
                         <StatusChip tone={tones[node.state]}>{skillStateLabels[node.state]}</StatusChip>
                         {detail(node) && <small>{detail(node)}</small>}
                         {node.repId && (
-                          <button
-                            type="button"
-                            className="text-button"
+                          <Button
+                            variant="text"
                             onMouseEnter={preloadEditor}
                             onFocus={preloadEditor}
                             aria-label={`${node.actionLabel}: ${repTitle(node.repId)} (${node.title})`}
@@ -173,7 +175,7 @@ export function SkillMapPage({ goalPathId, progress, openRep, reviewRep }: Props
                           >
                             {node.actionLabel}
                             <Icon name="arrow" />
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </li>
