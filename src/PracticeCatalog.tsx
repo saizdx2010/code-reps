@@ -2,7 +2,7 @@ import { catalogArea, catalogAreas, catalogTopic, formatLabels } from './catalog
 import { EmptyState, ListGroup, ListRow, PageHeader, StatusChip } from './Layout'
 import { statusTone } from './ui-status'
 import { Input, Select } from './Input'
-import { preloadEditor } from './editor-loader'
+import { preloadPractice } from './editor-loader'
 import { useSessionPreference } from './useSessionPreference'
 import { repIndex as reps } from './catalog-index'
 import type { RepSummary } from './catalog-index'
@@ -82,7 +82,7 @@ export function PracticeCatalog(props: Props) {
             )}
           </>
         }
-        onPreview={preloadEditor}
+        onPreview={() => preloadPractice(item.id)}
         onOpen={() => openRep(item.id)}
       />
     )

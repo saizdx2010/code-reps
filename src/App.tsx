@@ -245,9 +245,18 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   }, [receiptKey])
   const [now, setNow] = useState(Date.now)
 
+  // Due reviews and the Today plan follow the clock. A hidden tab skips the minute tick, which re-renders the whole app,
+  // and catches up as soon as it is shown again.
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 60_000)
-    return () => window.clearInterval(timer)
+    const tick = () => {
+      if (document.visibilityState !== 'hidden') setNow(Date.now())
+    }
+    const timer = window.setInterval(tick, 60_000)
+    document.addEventListener('visibilitychange', tick)
+    return () => {
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', tick)
+    }
   }, [])
 
   // Editing code makes earlier check feedback obsolete.
@@ -431,7 +440,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   const currentStatus = repStatus(rep)
   const currentLesson = repContent.status === 'ready' ? repContent.content.lesson : undefined
   const journeyStates = practicePlan.progress
-  const review = useReviewContent()
+  const review = useReviewContent(repId)
   const recommendation = practicePlan.next
   const recommendedRep = recommendation && repById.get(recommendation.repId)
   const openPracticeAction = (action: { repId: string; mode: string }) =>

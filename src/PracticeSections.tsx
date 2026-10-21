@@ -463,8 +463,8 @@ export function ExplainSection({
   review: ReviewContent
   onReveal: Reveal
 }) {
-  const reflectionGuide = review.status === 'ready' ? review.content.reflectionGuides[repId] : undefined
-  const depth = review.status === 'ready' ? review.content.repDepth[repId] : undefined
+  const reflectionGuide = review.status === 'ready' ? review.content.guide : undefined
+  const depth = review.status === 'ready' ? review.content.depth : undefined
   return (
     <section id="explain-section" hidden={hidden} tabIndex={-1} className="panel explain-panel">
       <div className="explain-intro">

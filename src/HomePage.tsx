@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from 'react'
-import { preloadEditor } from './editor-loader'
+import { preloadPractice } from './editor-loader'
 import { Icon } from './Icon'
 import { Button } from './Button'
 import { repCurriculumRole, repPracticeContext } from './curriculum'
@@ -126,8 +126,8 @@ export function HomePage(props: Props) {
               </div>
               <Button
                 variant="primary"
-                onMouseEnter={preloadEditor}
-                onFocus={preloadEditor}
+                onMouseEnter={() => preloadPractice(recommendation.repId)}
+                onFocus={() => preloadPractice(recommendation.repId)}
                 onClick={() => openPracticeAction(recommendation)}
               >
                 {actionLabel(recommendation.mode)}
@@ -195,7 +195,7 @@ export function HomePage(props: Props) {
                 meta={moreDrafts > 0 ? `${where(draft.repId)} · ${moreDrafts} more in progress` : where(draft.repId)}
                 status={<StatusChip tone="progress">In progress</StatusChip>}
                 onOpen={() => openPracticeAction(draft)}
-                onPreview={preloadEditor}
+                onPreview={() => preloadPractice(draft.repId)}
               />
             </ListGroup>
           )}

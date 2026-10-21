@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from './Icon'
 import { Select } from './Input'
 import { EmptyState, InfoNote, PageHeader, StatusChip } from './Layout'
-import { preloadEditor } from './editor-loader'
+import { preloadPractice } from './editor-loader'
 import { paths } from './path'
 import { repTitle } from './rep-index.ts'
 import { buildSkillMap, parseStepKeys, skillStateLabels, skillStateMeaning, skillStepKey } from './skill-map'
@@ -166,8 +166,8 @@ export function SkillMapPage({ goalPathId, progress, openRep, reviewRep }: Props
                           <button
                             type="button"
                             className="text-button"
-                            onMouseEnter={preloadEditor}
-                            onFocus={preloadEditor}
+                            onMouseEnter={() => preloadPractice(node.repId!)}
+                            onFocus={() => preloadPractice(node.repId!)}
                             aria-label={`${node.actionLabel}: ${repTitle(node.repId)} (${node.title})`}
                             onClick={() => (node.mode === 'review' ? reviewRep(node.repId!) : openRep(node.repId!))}
                           >
