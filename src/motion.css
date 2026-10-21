@@ -7,7 +7,7 @@
   pointer-events: none;
   border-radius: var(--radius-control);
   background: var(--action);
-  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform 160ms var(--motion-ease);
 }
 .screen-motion > main {
   animation: page-arrive 380ms var(--motion-ease);
@@ -418,7 +418,7 @@ summary {
   transform: scale(0.94);
   transition:
     opacity 140ms ease-out,
-    transform 180ms var(--motion-spring);
+    transform var(--motion-fast) var(--motion-spring);
   pointer-events: none;
 }
 .section-nav button::after {
@@ -433,7 +433,7 @@ summary {
   transform-origin: center;
   opacity: 0.55;
   transition:
-    transform 180ms var(--motion-spring),
+    transform var(--motion-fast) var(--motion-spring),
     opacity 140ms ease-out;
 }
 .section-nav button[aria-current]::after {
