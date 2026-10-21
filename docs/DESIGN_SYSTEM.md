@@ -120,7 +120,7 @@ Use `Icon.tsx` for decorative control icons. `icons.css` is the single geometry 
 
 ## Motion
 
-Motion acknowledges interaction and shows where something came from; it never decorates idle screens. Each kind of element has one recognizable interaction, all built from the shared tokens (`--motion-fast` 180ms, `--motion-ease`, `--motion-spring`). Movement stays inside the element's own box, so hovering never shifts neighbours, and nothing animates continuously: the only repeating motion is the next trail node's ring, which plays twice on arrival and stops.
+Motion acknowledges interaction and shows where something came from; it never decorates idle screens. Each kind of element has one recognizable interaction, all built from the shared tokens (`--motion-fast` 180ms, `--motion-ease`, `--motion-spring`). Movement stays inside the element's own box, so hovering never shifts neighbours, and nothing animates continuously: the only repeating motion is the next trail node's ring, which plays twice on arrival and stops, plus the loading signals below (the startup logo's breathing and the small pending-status dot), which last only while real work is pending.
 
 | Element | Interaction |
 | --- | --- |
@@ -175,7 +175,7 @@ Place page-loading status within the existing top padding, outside document flow
 
 ## Startup first paint
 
-The initial workbook in `index.html` includes scoped critical styles so its logo header, sage background, white skeleton sheet, and narrow layout render before external styles or JavaScript load. Its title uses the page-title size. Keep this small first-paint subset aligned with `src/loading.css`. Verify it with external scripts and styles blocked, as well as delayed progress loading.
+The startup screen in `index.html` is the selected scheme's background with the logo centred on it. Its scoped critical styles render it before external styles or JavaScript load. The logo fades in after 150ms, so a quick load never flashes it, then breathes slowly (a small scale change with a soft accent halo) until the app replaces the screen; with reduced motion it stays still. Its heading and the "Loading your local progress…" status are visually hidden but announced. Keep `src/loading.css` aligned with this first-paint subset. Verify it with external scripts and styles blocked, as well as delayed progress loading.
 
 ## Colour schemes and dark mode
 
