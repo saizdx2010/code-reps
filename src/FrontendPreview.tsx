@@ -1,6 +1,8 @@
 import { Select } from './Input'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { buildFrontendFrame, previewScenarios } from './frontend-frame'
+import { frontendFrameHtml, previewScenarios } from './frontend-frame-html'
+import { compileFrontend } from './frontend-run'
+import { warmCompileWorker } from './practice-worker'
 import type { Rep } from './rep'
 
 type Props = { code: string; rep: Rep }
@@ -27,12 +29,13 @@ export default function FrontendPreview({ code, rep }: Props) {
     requestAnimationFrame(() => expandRef.current?.focus())
   }
   const previewRequest = useRef(0)
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    // The compiler loads while the learner reads the brief, so the first preview does not wait for it.
+    warmCompileWorker()
+    return () => {
       previewRequest.current++
-    },
-    [],
-  )
+    }
+  }, [])
   const frameRef = useRef<HTMLIFrameElement | null>(null)
   useEffect(() => {
     const receive = (event: MessageEvent) => {
@@ -46,10 +49,13 @@ export default function FrontendPreview({ code, rep }: Props) {
     const request = ++previewRequest.current
     setError('')
     try {
-      const runtime = rep.reactPreview ? (await import('virtual:react-frame')).default : ''
+      const [compiled, runtime] = await Promise.all([
+        compileFrontend(code, rep),
+        rep.reactPreview ? import('virtual:react-frame').then(module => module.default) : '',
+      ])
       if (request !== previewRequest.current) return
       const token = crypto.randomUUID()
-      setPreview({ html: buildFrontendFrame(code, rep, token, 'preview', previewScenarios[nextScenario], runtime), code, token })
+      setPreview({ html: frontendFrameHtml(compiled, rep, token, 'preview', previewScenarios[nextScenario], runtime), code, token })
     } catch (error) {
       if (request === previewRequest.current) setError(error instanceof Error ? error.message : 'The preview could not start.')
     }

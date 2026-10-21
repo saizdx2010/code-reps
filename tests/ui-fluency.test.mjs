@@ -308,8 +308,23 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
     const { reps } = await import(pathToFileURL(join(rootDir, 'rep.js')))
     const frontend = reps.find(rep => rep.format === 'frontend')
     assert.ok(frontend)
+    // The page compiles frontend code in the practice worker; this stand-in compiles the same way on the test's thread.
+    const { compileSolution } = await import(pathToFileURL(join(rootDir, 'compile-solution.js')))
+    bind(
+      'Worker',
+      class {
+        postMessage({ compile }) {
+          if (!compile) return
+          const { id, code, functionName, jsx: tsx, guardLoops } = compile
+          const output = compileSolution(code, functionName, tsx, { guardLoops })
+          setTimeout(() => this.onmessage?.({ data: { compiled: { id, output } } }), 0)
+        }
+        terminate() {}
+      },
+    )
     await act(async () => root.render(jsx(FrontendPreview, { code: frontend.starter, rep: frontend })))
     await click('Update preview')
+    await act(async () => new Promise(resolve => setTimeout(resolve, 10)))
     const frame = document.querySelector('iframe')
     const frameWindow = frame.contentWindow
     await click('Expand preview')

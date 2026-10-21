@@ -49,7 +49,7 @@ For a focused test, use `node --experimental-strip-types --test tests/<name>.tes
 | Trail, tracks, and Journal | `src/HomePage.tsx`, `src/PathsPage.tsx`, `src/Trail.tsx`, `src/trail-map.ts`, `src/curriculum.ts`, `src/Journal.tsx` |
 | Shared page components and styles | `src/Layout.tsx`, `src/ui-status.ts`, `src/layout.css`, `src/trail.css`, `src/index.css` (tokens) |
 | Editors and previews | `src/CodeEditor.tsx`, `src/SolutionEditor.tsx`, `src/ProjectEditor.tsx`, `src/editor-loader.ts`, `src/FrontendPreview.tsx` |
-| Check orchestration and execution | `src/check-run.ts`, `src/runner.worker.ts`, `src/runner.ts`, `src/runner.types.ts`, `src/compile-solution.ts`, `src/frontend-run.ts`, `src/frontend-frame.ts`, `src/project-files.ts` |
+| Check orchestration and execution | `src/check-run.ts`, `src/runner.worker.ts`, `src/runner.ts`, `src/runner.types.ts`, `src/compile-solution.ts`, `src/frontend-run.ts`, `src/frontend-frame.ts`, `src/frontend-frame-html.ts`, `src/practice-worker.ts`, `src/run-rep.ts`, `src/project-files.ts` |
 | Reps and paths | `src/rep.ts`, `src/path.ts`, and focused `*-reps.ts` / content modules |
 | Learning and progress evidence | `src/learning.ts`, `src/fluency.ts`, `src/useFluency.ts`, `src/LearningHub.tsx`, `src/ProgressPage.tsx` |
 | Knowledge and authored reviews | `src/knowledge.ts`, `src/rep-depth.ts`, `src/lesson-depth.ts`, `src/content-depth.ts` |

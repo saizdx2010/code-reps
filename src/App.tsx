@@ -397,6 +397,10 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     // eslint-disable-next-line react-hooks/set-state-in-effect -- adopts the starter once its content has loaded.
     if (full && full.id === repId) setAttempt(current => (current.code === undefined ? { ...current, code: full.starter } : current))
   }, [full, repId, setAttempt])
+  const { prepare: prepareChecks } = checks
+  useEffect(() => {
+    if (view === 'workspace' && full && full.id === repId) prepareChecks(full, repId)
+  }, [full, repId, view, prepareChecks])
   const allPassed = !!full && results?.length === full.checks.length && results.every(result => result.passed)
   const contentNotice = <RepContentNotice content={repContent} />
   const writing = practiceWritingPrompts({ id: rep.id, format: rep.format, planPrompt: full?.planPrompt ?? '' })
