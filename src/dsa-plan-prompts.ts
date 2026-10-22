@@ -4,6 +4,12 @@ export const dsaPlanPrompts = {
   'grid-fewest-steps': 'What must the result minimize? Name two routes of different lengths and a map with no possible route.',
   'grid-count-rooms': 'What makes two floor cells belong to the same room? Name a small map that challenges your counting rule.',
   'grid-open-neighbours': 'Which row and column inequalities make a candidate safe to read? How will you preserve the requested order?',
+  'life-count-neighbours':
+    'Which eight positions surround a cell, and which of them can fall outside the board? How will you skip the cell itself?',
+  'life-next-cell':
+    'Which neighbour counts keep a live cell alive, and which one brings a dead cell to life? Which counts sit on the boundaries?',
+  'life-next-generation':
+    'Why must every cell read the current board rather than cells you have already updated? How will you build the new board without changing grid?',
   'quiet-sensor-span': 'Which spans qualify? What boundary would expose treating equality incorrectly?',
   'shared-seat-occurrences': 'How will you account for repeated seats and an exhausted list?',
   'dispatch-priority-order': 'What decides between two requests? Which ties must preserve order?',

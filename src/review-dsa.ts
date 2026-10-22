@@ -481,6 +481,176 @@ export const dsaDepth: Record<string, RepDepth> = {
       ],
     },
   },
+  'life-count-neighbours': {
+    reasoning:
+      'Validate the position, then visit the eight offsets around it, skipping the cell itself. A neighbour is read only when both its row and its column are inside the board, so a cell on the edge counts its missing neighbours as dead. O(1) time and storage.',
+    trace:
+      'At [1,1] in ["##.",".#.","..#"]: [0,0] live, [0,1] live, [0,2] dead, [1,0] dead, [1,2] dead, [2,0] dead, [2,1] dead, [2,2] live. The centre itself is skipped, so the count is 3.',
+    alternative:
+      'Sum the 3×3 window clipped to the board, then subtract the centre cell. It is also constant time, but forgetting the subtraction counts the cell itself.',
+    counterexample:
+      'Reading grid[r + dr][c + dc] without a row check throws at the bottom edge. Wrapping columns with a remainder makes ["#..#"] at [0,0] report 1 instead of 0.',
+    transfer:
+      'Self-reviewed: count live neighbours on a board that does wrap around, so the left edge touches the right. The original checks do not validate wrapping.',
+  },
+  'life-next-cell': {
+    reasoning:
+      'Split on alive first. A live cell survives only with 2 or 3 live neighbours; a dead cell is born only with exactly 3. Every other count leaves the cell dead. Constant time.',
+    trace:
+      'nextCell(true, 4): the cell is live and 4 is more than 3, so it dies and the answer is false. nextCell(false, 3): the cell is dead with exactly 3 neighbours, so it is born and the answer is true.',
+    alternative:
+      'Return neighbours === 3 || (alive && neighbours === 2). It merges both rules, because 3 always gives a live cell and 2 only keeps one. It is shorter, but harder to check against the written rules.',
+    counterexample:
+      'Using 2 to 3 for both cases brings a dead cell with 2 neighbours to life. Handling "more than 3 dies" but not "fewer than 2" keeps a lonely live cell alive.',
+    transfer:
+      'Self-reviewed: implement HighLife, where a dead cell is also born with 6 live neighbours. The original checks do not validate the new rule.',
+  },
+  'life-next-generation': {
+    reasoning:
+      'Read only grid and build a new array: for each cell, count live neighbours in the old board with edges treated as dead, apply the rules, and join each new row. Because nothing writes into the board being read, every cell sees the same generation. O(rows × columns) time, plus storage for the new board.',
+    trace:
+      'For [".#.", ".#.", ".#."]: [1,1] is live with 2 live neighbours and survives; [1,0] and [1,2] are dead with 3 each and are born; [0,1] and [2,1] are live with 1 and die. The result is ["...", "###", "..."].',
+    alternative:
+      'Store the neighbour count of every cell first, then apply the rules in a second pass. It uses the same storage and separates counting from deciding.',
+    counterexample:
+      'Updating cells in place on the vertical blinker writes [0,1] as dead before [1,0] is counted, so [1,0] sees 2 neighbours instead of 3 and is not born. Wrapping the edges makes ["#..","#..","#.."] give ["...","###","..."] instead of ["...","##.","..."].',
+    transfer:
+      'Self-reviewed: return the board after n generations, stopping early when a generation repeats the one before it. The original checks cover only one step.',
+    traceSteps: {
+      code: [
+        'function nextGeneration(grid: string[]): string[] {',
+        "  const live = (r: number, c: number) => grid[r]?.[c] === '#'",
+        '  return grid.map((row, r) =>',
+        '    [...row].map((cell, c) => {',
+        '      let n = 0',
+        '      for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) if ((dr || dc) && live(r + dr, c + dc)) n++',
+        "      return (cell === '#' ? n === 2 || n === 3 : n === 3) ? '#' : '.'",
+        "    }).join(''),",
+        '  )',
+        '}',
+      ],
+      input: 'grid = [".#.", ".#.", ".#."]',
+      steps: [
+        {
+          line: 2,
+          vars: { r: 0 },
+          structure: {
+            kind: 'table',
+            name: 'next',
+            rowLabels: ['0', '1', '2'],
+            colLabels: ['0', '1', '2'],
+            cells: [
+              [null, null, null],
+              [null, null, null],
+              [null, null, null],
+            ],
+          },
+          note: 'The new board starts empty. grid is only read, never written, so every cell will see the same generation.',
+        },
+        {
+          line: 6,
+          vars: { r: 0, c: 0, n: 2 },
+          structure: {
+            kind: 'table',
+            name: 'next',
+            rowLabels: ['0', '1', '2'],
+            colLabels: ['0', '1', '2'],
+            cells: [
+              ['.', null, null],
+              [null, null, null],
+              [null, null, null],
+            ],
+            current: [0, 0],
+          },
+          note: '[0,0] is dead with 2 live neighbours, [0,1] and [1,1]. Birth needs exactly 3, so it stays dead.',
+        },
+        {
+          line: 6,
+          vars: { r: 0, c: 1, n: 1 },
+          structure: {
+            kind: 'table',
+            name: 'next',
+            rowLabels: ['0', '1', '2'],
+            colLabels: ['0', '1', '2'],
+            cells: [
+              ['.', '.', null],
+              [null, null, null],
+              [null, null, null],
+            ],
+            current: [0, 1],
+          },
+          note: '[0,1] is live but has only 1 live neighbour, [1,1]. Fewer than 2, so it dies.',
+        },
+        {
+          line: 6,
+          vars: { r: 0, c: 2, n: 2 },
+          structure: {
+            kind: 'table',
+            name: 'next',
+            rowLabels: ['0', '1', '2'],
+            colLabels: ['0', '1', '2'],
+            cells: [
+              ['.', '.', '.'],
+              [null, null, null],
+              [null, null, null],
+            ],
+            current: [0, 2],
+          },
+          note: '[0,2] is dead with 2 live neighbours and stays dead. Row 0 of the new board is "...".',
+        },
+        {
+          line: 6,
+          vars: { r: 1, c: 0, n: 3 },
+          structure: {
+            kind: 'table',
+            name: 'next',
+            rowLabels: ['0', '1', '2'],
+            colLabels: ['0', '1', '2'],
+            cells: [
+              ['.', '.', '.'],
+              ['#', null, null],
+              [null, null, null],
+            ],
+            current: [1, 0],
+          },
+          note: '[1,0] is dead with exactly 3 live neighbours: [0,1], [1,1], and [2,1]. It is born. [0,1] is already dead in the new board, but the count reads grid, where it is still live.',
+        },
+        {
+          line: 6,
+          vars: { r: 1, c: 1, n: 2 },
+          structure: {
+            kind: 'table',
+            name: 'next',
+            rowLabels: ['0', '1', '2'],
+            colLabels: ['0', '1', '2'],
+            cells: [
+              ['.', '.', '.'],
+              ['#', '#', null],
+              [null, null, null],
+            ],
+            current: [1, 1],
+          },
+          note: '[1,1] is live with 2 live neighbours, [0,1] and [2,1], so it survives.',
+        },
+        {
+          line: 2,
+          vars: { result: '["...","###","..."]' },
+          structure: {
+            kind: 'table',
+            name: 'next',
+            rowLabels: ['0', '1', '2'],
+            colLabels: ['0', '1', '2'],
+            cells: [
+              ['.', '.', '.'],
+              ['#', '#', '#'],
+              ['.', '.', '.'],
+            ],
+          },
+          note: '[1,2] is born like [1,0], and row 2 mirrors row 0. The result is ["...", "###", "..."]: the blinker turned horizontal.',
+        },
+      ],
+    },
+  },
   'quiet-sensor-span': {
     reasoning:
       'A sliding span tracks exactly its noisy readings. Shrinking until the count is allowed restores validity; the longest valid span ending at each right position includes every possible optimum. O(n) time and O(1) extra storage.',
@@ -4092,6 +4262,13 @@ export const dsaGuides: Record<string, Guide> = {
   'grid-fewest-steps': dsaGuide('grid-fewest-steps', grid),
   'grid-count-rooms': dsaGuide('grid-count-rooms', grid),
   'grid-open-neighbours': dsaGuide('grid-open-neighbours', grid),
+  'life-count-neighbours': dsaGuide('life-count-neighbours', grid),
+  'life-next-cell': dsaGuide('life-next-cell', grid, {
+    explain: 'Explain which counts keep a live cell alive and which one brings a dead cell to life.',
+  }),
+  'life-next-generation': dsaGuide('life-next-generation', grid, {
+    explain: 'Explain why every new cell is computed from the old board, and how edges are treated.',
+  }),
   'quiet-sensor-span': dsaGuide('quiet-sensor-span', ordering),
   'shared-seat-occurrences': dsaGuide('shared-seat-occurrences', ordering),
   'dispatch-priority-order': dsaGuide('dispatch-priority-order', ordering),

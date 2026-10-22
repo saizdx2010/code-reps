@@ -4,6 +4,11 @@ export const dsaSolutions = {
     "function openNeighbours(g:string[], p:[number,number]) { const [r,c]=p; if(r<0||r>=g.length||c<0||c>=(g[0]?.length??0)) return []; return [[r-1,c],[r,c+1],[r+1,c],[r,c-1]].filter(([y,x])=>y>=0&&y<g.length&&x>=0&&x<g[y].length&&g[y][x]==='.') }",
   'grid-count-rooms':
     "function countRooms(g:string[]) { const seen=new Set<string>(); let rooms=0; for(let r=0;r<g.length;r++) for(let c=0;c<g[r].length;c++) { if(g[r][c]!=='.'||seen.has(`${r},${c}`)) continue; rooms++; const stack=[[r,c]]; while(stack.length) { const [y,x]=stack.pop()!; const key=`${y},${x}`; if(seen.has(key)) continue; seen.add(key); for(const [ny,nx] of [[y-1,x],[y+1,x],[y,x-1],[y,x+1]]) if(g[ny]?.[nx]==='.'&&!seen.has(`${ny},${nx}`)) stack.push([ny,nx]); } } return rooms }",
+  'life-count-neighbours':
+    "function countNeighbours(g:string[], p:[number,number]) { const [r,c]=p; if(r<0||c<0||r>=g.length||c>=(g[0]?.length??0)) return 0; let n=0; for(const y of [r-1,r,r+1]) for(const x of [c-1,c,c+1]) if((y!==r||x!==c)&&y>=0&&y<g.length&&x>=0&&x<g[y].length&&g[y][x]==='#') n++; return n }",
+  'life-next-cell': 'function nextCell(alive:boolean, n:number) { return n===3 || (alive && n===2) }',
+  'life-next-generation':
+    "function nextGeneration(g:string[]) { const counts=g.map((row,r)=>Array.from(row,(_,c)=>{ let n=0; for(let y=r-1;y<=r+1;y++) for(let x=c-1;x<=c+1;x++) if((y!==r||x!==c)&&g[y]?.charAt(x)==='#') n++; return n })); return g.map((row,r)=>Array.from(row,(ch,c)=>(counts[r][c]===3||(ch==='#'&&counts[r][c]===2))?'#':'.').join('')) }",
   'grid-fewest-steps':
     "function fewestSteps(g:string[]) { const d=g.map(row=>Array(row.length).fill(Infinity)); let end:number[]=[]; for(let r=0;r<g.length;r++) for(let c=0;c<g[r].length;c++) {if(g[r][c]==='S') d[r][c]=0; if(g[r][c]==='E') end=[r,c]} for(let pass=0;pass<g.length*(g[0]?.length??0);pass++) for(let r=0;r<g.length;r++) for(let c=0;c<g[r].length;c++) if(g[r][c]!=='#') for(const [y,x] of [[r-1,c],[r+1,c],[r,c-1],[r,c+1]]) if(g[y]?.[x]!==undefined&&g[y][x]!=='#') d[r][c]=Math.min(d[r][c],d[y][x]+1); return end.length&&Number.isFinite(d[end[0]][end[1]])?d[end[0]][end[1]]:-1 }",
 

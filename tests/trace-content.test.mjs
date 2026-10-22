@@ -62,6 +62,7 @@ test('traces cover collection operations, stacks, sets, recursion, trees, tables
     'heap-rooms-needed',
     'latest-request',
     'leading-throttle',
+    'life-next-generation',
     'list-insert-sorted',
     'list-merge-sorted',
     'list-remove-value',

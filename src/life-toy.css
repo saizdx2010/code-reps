@@ -1,0 +1,172 @@
+/* The Game of Life toy in Library → Projects (src/LifeToy.tsx). Loaded with the toy, so startup never pays for it. */
+.life-toy {
+  container: life-toy / inline-size;
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+}
+/* A wide card puts the controls beside the board; a narrow one stacks them under it. */
+.life-toy-play,
+.life-toy-field,
+.life-toy-side {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+@container life-toy (min-width: 760px) {
+  .life-toy-play {
+    grid-template-columns: minmax(0, 560px) minmax(220px, 1fr);
+    gap: 24px;
+  }
+}
+.life-toy-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.life-toy-head h3 {
+  margin: 0;
+  font-size: var(--type-card);
+}
+.life-toy-head p,
+.life-toy-intro,
+.life-toy-help {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.life-toy-parts {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.life-toy-parts li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 10px 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-control);
+}
+.life-toy-parts li.is-built {
+  border-style: solid;
+  border-color: var(--border);
+}
+.life-toy-parts li > div {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+.life-toy-parts li span {
+  color: var(--muted);
+  font-size: 14px;
+}
+.life-toy > .primary-button,
+.life-toy > button {
+  justify-self: start;
+}
+.life-toy-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  font-size: 14px;
+}
+.life-toy-busy {
+  color: var(--muted);
+  font-weight: 400;
+}
+.life-toy-status span {
+  color: var(--muted);
+  font-size: 13px;
+}
+/* Cells share the board's width, so it fits a phone without scrolling; live is a filled square, not colour alone. */
+.life-board {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  max-width: 560px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+}
+.life-row {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 2px;
+}
+.life-cell {
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--surface);
+  transition:
+    background-color 120ms var(--motion-ease),
+    border-color 120ms var(--motion-ease);
+}
+.life-cell.is-live {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+.life-cell:hover {
+  border-color: var(--accent);
+}
+.life-cell:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+/* A cell that differs from the rules: diagonal stripes and an outline (shape, not colour alone), plus a label for
+   screen readers. A live one keeps its fill under the stripes. */
+.life-cell.is-marked {
+  border-color: var(--warning);
+  outline: 2px solid var(--warning);
+  outline-offset: 1px;
+  background-color: var(--warning-soft);
+  background-image: repeating-linear-gradient(135deg, var(--warning) 0 2px, transparent 2px 5px);
+}
+.life-cell.is-live.is-marked {
+  background-color: var(--accent);
+}
+.life-toy-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.life-toy-inspect {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  font-size: 14px;
+}
+.life-toy-failure {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius-control);
+  background: var(--warning-soft);
+  color: var(--warning);
+  font-size: 14px;
+}
+.life-toy-failure p {
+  margin: 0;
+}
+.life-toy-failure .life-toy-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 10px;
+}

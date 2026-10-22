@@ -4,6 +4,8 @@ import { runRepChecksAsync } from './run-rep.ts'
 import type { SqliteFactory } from './sqlite-task.ts'
 import type { Rep } from './rep-types.ts'
 import type { CompileRequest } from './runner.types'
+import { lifeStepper } from './life-toy.ts'
+import type { LifeSources, LifeStep } from './life-toy.ts'
 
 // `source` names the rep's content chunk, so the worker does not need the catalog to find it.
 type RunRequest = { code: string; repId: string; source?: string }
@@ -34,8 +36,29 @@ function prepare(repId: string, source: string | undefined): Promise<Prepared> {
   return prepared.promise
 }
 
-self.onmessage = async (event: MessageEvent<RunRequest | PrepareRequest | { compile: CompileRequest }>) => {
+// The Game of Life toy keeps one worker while it is open and steps the learner's saved code here, never on the page.
+// The compiled parts are kept until the sources change; the page stops the worker if a step runs past five seconds.
+type LifeRequest = { life: { id: number; sources: LifeSources; step: LifeStep } }
+let life: { key: string; step: ReturnType<typeof lifeStepper> } | undefined
+
+self.onmessage = async (event: MessageEvent<RunRequest | PrepareRequest | { compile: CompileRequest } | LifeRequest>) => {
   const data = event.data
+  if ('life' in data) {
+    const { id, sources, step } = data.life
+    // The time limit starts here, once the worker has loaded, as check runs start theirs after preparing.
+    self.postMessage({ life: { id, started: true } })
+    try {
+      const key = JSON.stringify(sources)
+      if (life?.key !== key) life = { key, step: lifeStepper(sources, (source, functionName) => compileSolution(source, functionName)) }
+      self.postMessage({ life: { id, result: life.step(step) } })
+    } catch (error) {
+      life = undefined
+      self.postMessage({
+        life: { id, result: { error: error instanceof Error ? error.message : 'Your saved code could not be prepared.' } },
+      })
+    }
+    return
+  }
   if ('compile' in data) {
     // Compiling only transforms text; learner code never runs here, so one compile worker can serve many requests.
     const { id, code, functionName, jsx, guardLoops } = data.compile

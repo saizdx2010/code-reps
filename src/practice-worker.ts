@@ -3,6 +3,8 @@
 // Frontend reps compile in a separate long-lived worker, which only transforms text and never runs learner code.
 
 const createWorker = () => new Worker(new URL('./runner.worker.ts', import.meta.url), { type: 'module' })
+/** A practice worker owned by its caller (the Game of Life toy), which terminates it when done. */
+export const startPracticeWorker = createWorker
 
 let spare: { worker: Worker; repId: string } | undefined
 
