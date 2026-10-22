@@ -30,7 +30,12 @@ const filesFor = (key, dynamic = false) => {
   return files
 }
 const initial = filesFor('index.html')
-const editor = filesFor('src/CodeEditor.tsx', true).difference(initial)
+// Vim keys load only for learners who turn them on, so their chunk has its own budget instead of the editor's. It shares
+// the editor's Monaco chunks, which stay in the editor group.
+const vimEntry = manifest['node_modules/monaco-vim/dist/index.mjs']
+if (!vimEntry) throw new Error('Missing bundle entry: monaco-vim')
+const vimKeys = new Set([vimEntry.file])
+const editor = filesFor('src/CodeEditor.tsx', true).difference(initial).difference(vimKeys)
 const frontend = filesFor('src/FrontendPreview.tsx', true).union(filesFor('src/frontend-run.ts', true)).difference(initial)
 const assets = await readdir(join(dist, 'assets'))
 const workers = assets.filter(name => /^(ts|editor|runner)\.worker-.*\.js$/.test(name)).map(name => `assets/${name}`)
@@ -50,6 +55,8 @@ const groups = [
   // Game of Life catalog rows (see docs/PERFORMANCE.md).
   { name: 'Initial JavaScript', files: [...initial], limit: 161_500, rawLimit: 530_000 },
   { name: 'Additional editor JavaScript', files: [...editor], limit: 1_050_000, rawLimit: 4_200_000 },
+  // About 10% above the 30,703 gzip / 100,124 raw bytes of monaco-vim 0.4.4; see docs/PERFORMANCE.md.
+  { name: 'Vim keys JavaScript', files: [...vimKeys], limit: 34_000, rawLimit: 110_000 },
   { name: 'Additional frontend JavaScript', files: [...frontend], limit: 1_050_000, rawLimit: 3_900_000 },
   // The practice worker bundles every rep's checks and text, so its raw size grows with the catalog. Raised from 12,000,000
   // for the DevOps track; see docs/PERFORMANCE.md for the measurements.

@@ -30,6 +30,7 @@ Use `E2E_PORT=4203 yarn test:e2e` to select another dedicated port. Ordinary ass
 - Exercise number limits and empty-field recovery, search clearing and focus restoration, keyboard-operated styled choices, tooltip dismissal, and failed file-import recovery through the custom file button.
 
 - Stop and edit an endless worker run, reject obsolete feedback after its deadline, recover from the real five-second timeout, and run a corrected draft.
+- Turn on Vim keys (`tests/e2e/vim-keys.spec.ts`): `dd` and `u` through the saved draft, insert and normal modes in the status row, Escape staying with Vim in focus mode, `:w` and `:make`, the setting surviving reload, ordinary typing after turning it off, Vim reattaching after a project file switch, and a failed keymap load leaving the usual editor. Keys are typed at a person's pace; machine-speed typing on a loaded machine can drop characters with or without Vim (a separate editor value race).
 - Fail the editor module request, recover the existing draft through the plain text editor, run checks, and restore Monaco with the edited draft after reload.
 - Exercise frontend preview states, filtering, Retry, viewport selection, modal Escape/focus restoration, stale preview feedback, and real sandboxed-frame checks/cleanup. Stop an endless loop in a frontend rep at the two-second loop limit, keep the page usable, and keep the draft after reload.
 - Fail the Today plan, badge notice, rep guidance, and learning-moment modules; the page and checks stay usable with a fallback message.

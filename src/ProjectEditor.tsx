@@ -20,7 +20,7 @@ export function ProjectEditor({ showHeader, ...props }: Props) {
       <span className="file-tab">
         <span className="ts-icon">{props.language === 'sql' ? 'SQL' : 'TS'}</span> {filename}
       </span>
-      <span className="editor-hint">Ctrl / ⌘ Enter to run</span>
+      <span className="editor-hint">{props.vim ? 'Vim keys · :make or Ctrl / ⌘ Enter to run' : 'Ctrl / ⌘ Enter to run'}</span>
     </div>
   )
   if (!project)

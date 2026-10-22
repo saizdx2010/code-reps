@@ -1,6 +1,7 @@
 import MonacoEditor, { loader } from '@monaco-editor/react'
 import * as monaco from './monaco'
-import { useLayoutEffect, useRef } from 'react'
+import './vim-status.css'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { sortTypeIssues } from './type-issues'
 import type { TypeIssue } from './type-issues'
 import type { ComponentProps } from 'react'
@@ -102,6 +103,30 @@ type Props = ComponentProps<typeof MonacoEditor> & {
   siblingFiles?: Record<string, string>
   /** Receives the TypeScript errors for this rep's files whenever the editor's diagnostics change. */
   onTypeIssues?: (issues: TypeIssue[]) => void
+  /** Turns on Vim keys; the keymap loads only for learners who choose it. */
+  vim?: boolean
+}
+
+type VimModule = typeof import('monaco-vim')
+type VimAdapter = ReturnType<VimModule['initVimMode']>
+// Ex commands are registered once for every editor, so each one finds its own editor's run action here.
+const vimRunners = new WeakMap<object, () => void>()
+let vimImport: Promise<VimModule> | undefined
+function loadVim() {
+  return (vimImport ??= import('monaco-vim').then(
+    module => {
+      const vim = (module.VimMode as unknown as { Vim: { defineEx(name: string, prefix: string, run: (cm: VimAdapter) => void): void } })
+        .Vim
+      // Drafts already save as the learner types, so :w only says so; :make runs the checks, as it builds in Vim.
+      vim.defineEx('write', 'w', cm => cm.openNotification('Your draft saves as you type.'))
+      vim.defineEx('make', 'mak', cm => vimRunners.get(cm)?.())
+      return module
+    },
+    error => {
+      vimImport = undefined
+      throw error
+    },
+  ))
 }
 
 const viewStateKey = (path: string | undefined) => `code-reps:editor:${path}`
@@ -113,7 +138,7 @@ function saveViewState(editor: monaco.editor.IStandaloneCodeEditor, path: string
   }
 }
 
-export default function CodeEditor({ onRunChecks, focusRequest = 0, siblingFiles, onTypeIssues, ...props }: Props) {
+export default function CodeEditor({ onRunChecks, focusRequest = 0, siblingFiles, onTypeIssues, vim = false, ...props }: Props) {
   const typeIssuesRef = useRef(onTypeIssues)
   useLayoutEffect(() => {
     typeIssuesRef.current = onTypeIssues
@@ -184,11 +209,50 @@ export default function CodeEditor({ onRunChecks, focusRequest = 0, siblingFiles
   useLayoutEffect(() => {
     runRef.current = onRunChecks
   }, [onRunChecks])
-  return (
+  const [mounted, setMounted] = useState<monaco.editor.IStandaloneCodeEditor | null>(null)
+  const vimStatusRef = useRef<HTMLDivElement>(null)
+  const [vimState, setVimState] = useState<{ mode: string; failed: boolean }>({ mode: '', failed: false })
+  useEffect(() => {
+    const status = vimStatusRef.current
+    if (!vim || !mounted || !status) return
+    let cancelled = false
+    let adapter: VimAdapter | undefined
+    loadVim().then(
+      ({ initVimMode, StatusBar }) => {
+        if (cancelled) return
+        // The : and / prompts are bare inputs; name them for assistive technology.
+        class LabelledStatusBar extends StatusBar {
+          setSec(...args: Parameters<InstanceType<typeof StatusBar>['setSec']>) {
+            const close = super.setSec(...args)
+            status!.querySelector('input')?.setAttribute('aria-label', 'Vim command line')
+            return close
+          }
+        }
+        adapter = initVimMode(mounted, status, LabelledStatusBar)
+        vimRunners.set(adapter, () => runRef.current())
+        adapter.on('vim-mode-change', (event: { mode: string; subMode?: string }) =>
+          setVimState({ mode: event.subMode ? `${event.mode} ${event.subMode}` : event.mode, failed: false }),
+        )
+        setVimState({ mode: 'normal', failed: false })
+      },
+      () => !cancelled && setVimState({ mode: '', failed: true }),
+    )
+    return () => {
+      cancelled = true
+      try {
+        adapter?.dispose()
+      } catch {
+        /* The editor may already be gone; nothing is left to restore. */
+      }
+      setVimState({ mode: '', failed: false })
+    }
+  }, [vim, mounted])
+  const editor = (
     <MonacoEditor
       {...props}
       onMount={(editor, instance) => {
         editorRef.current = editor
+        setMounted(editor)
         if (focusRequestRef.current) requestAnimationFrame(() => editor.focus())
         try {
           const saved = sessionStorage.getItem(viewStateKey(props.path))
@@ -232,5 +296,24 @@ export default function CodeEditor({ onRunChecks, focusRequest = 0, siblingFiles
         props.beforeMount?.(instance)
       }}
     />
+  )
+  // The editor keeps its place in the tree, so switching Vim keys never remounts it or loses its undo history.
+  return (
+    <>
+      {editor}
+      {vim && vimState.failed && (
+        <p className="vim-status" role="status">
+          Vim keys could not load. The editor keeps its usual keys and your draft is unchanged.
+        </p>
+      )}
+      {vim && !vimState.failed && (
+        <>
+          <div ref={vimStatusRef} className="vim-status" />
+          <p className="visually-hidden" aria-live="polite">
+            {vimState.mode && `Vim ${vimState.mode} mode`}
+          </p>
+        </>
+      )}
+    </>
   )
 }

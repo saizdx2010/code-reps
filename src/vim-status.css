@@ -1,0 +1,30 @@
+/* Vim keys: the mode, pending keys, and the : command line, in one row under the editor. */
+.vim-status {
+  flex: none;
+  min-height: 32px;
+  margin: 0;
+  padding: 6px 18px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font: 12px/20px var(--font-mono);
+}
+.vim-status > span:first-child {
+  color: var(--accent);
+}
+.vim-status > span + span:not(:empty) {
+  margin-left: 12px;
+}
+.vim-status input {
+  width: min(60ch, 70%);
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+}
+.vim-status input:focus-visible {
+  outline: none;
+}
+.vim-status .vim-notification {
+  color: var(--muted);
+}
