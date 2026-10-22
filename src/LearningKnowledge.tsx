@@ -138,7 +138,7 @@ export function LearningKnowledge({ state, update, history, openRep, skillId, on
                             <span className="visually-hidden">Predictions checked</span>
                           </span>
                         )}
-                        <Icon name="arrow" />
+                        <Icon name="arrow" still />
                       </Button>
                     )
                   })}

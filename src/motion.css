@@ -58,9 +58,6 @@
   :is(.primary-button, .finish-button):hover:not(:disabled)::after {
     animation: button-shine 650ms ease-out both;
   }
-  :is(.primary-button, .reset-button, .hint-button):hover:not(:disabled) > .icon-arrow:not(.icon-down) {
-    transform: translateX(2px);
-  }
 }
 :is(.primary-button, .finish-button, .reset-button, .hint-button, .stop-checks-button, .danger-button, .file-button):active:not(:disabled) {
   transform: translateY(0) scale(0.97);
@@ -94,15 +91,6 @@
     transform: translateX(130%);
     opacity: 0;
   }
-}
-.ui-icon {
-  width: 18px;
-  height: 18px;
-  flex: none;
-  transition: transform 260ms var(--motion-spring);
-}
-.hint-button:hover:not(:disabled) > .ui-icon {
-  transform: rotate(-12deg) scale(1.12);
 }
 .lesson-navigation button,
 .knowledge-topic-list button {
@@ -913,12 +901,7 @@ summary {
   }
 }
 .info-note .ui-icon {
-  transition:
-    rotate 220ms var(--motion-spring),
-    color var(--motion-fast) var(--motion-ease);
-}
-.info-note summary:hover .ui-icon {
-  rotate: -12deg;
+  transition: color var(--motion-fast) var(--motion-ease);
 }
 .info-note[open] summary {
   color: var(--accent);
@@ -982,22 +965,7 @@ summary {
   }
 }
 
-/* Small icon gestures: close and clear turn a quarter, play nudges forward, steppers press. */
-.icon-close,
-.icon-play {
-  transition:
-    rotate 220ms var(--motion-spring),
-    translate 220ms var(--motion-spring);
-}
-@media (hover: hover) and (pointer: fine) {
-  button:hover:not(:disabled) > .icon-close,
-  .ui-search-clear:hover .ui-icon {
-    rotate: 90deg;
-  }
-  .primary-button:hover:not(:disabled) > .icon-play {
-    translate: 2px 0;
-  }
-}
+/* Icons react on their own (icons.css, from the pack in icon-pack.ts); steppers press. */
 .ui-number-buttons button {
   transition:
     scale 120ms var(--motion-ease),
@@ -1034,14 +1002,8 @@ summary {
     transform: none !important;
   }
   .brand:hover .brand-mark,
-  .theme-trigger:hover .theme-symbol,
-  .info-note summary:hover .ui-icon,
-  button:hover > .icon-close,
-  .ui-search-clear:hover .ui-icon {
+  .theme-trigger:hover .theme-symbol {
     rotate: none !important;
-  }
-  .primary-button:hover > .icon-play {
-    translate: none !important;
   }
   .ui-number-buttons button:active {
     scale: none !important;

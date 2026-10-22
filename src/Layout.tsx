@@ -107,7 +107,7 @@ export function ListRow({ title, meta, status, current, onOpen, onPreview, actio
       {onOpen ? (
         <button type="button" aria-current={current ? 'step' : undefined} onClick={onOpen} onMouseEnter={onPreview} onFocus={onPreview}>
           {body}
-          <Icon name="arrow" />
+          <Icon name="arrow" still />
         </button>
       ) : (
         <div>
