@@ -37,7 +37,7 @@ import { practicalReps } from './practical-concepts.ts'
 import { asyncReps } from './async-reps.ts'
 import { richReps } from './rich-reps.ts'
 import { stackTraceReps } from './stack-trace-reps.ts'
-import { testingJourneyReps } from './testing-journey-reps.ts'
+import { testingReps } from './testing-journey-reps.ts'
 import { transferReps } from './transfer-reps.ts'
 import { validationReps } from './validation-reps.ts'
 import type { RepLesson } from './rep-source-loader.ts'
@@ -74,7 +74,7 @@ export const repSources: { name: string; reps: Rep[]; lessons?: readonly RepLess
   { name: 'react-reps', reps: reactReps },
   { name: 'dom-reps', reps: domReps },
   { name: 'connected-feature-reps', reps: connectedFeatureReps },
-  { name: 'testing-journey-reps', reps: testingJourneyReps },
+  { name: 'testing-journey-reps', reps: testingReps },
   { name: 'maintenance-journey-reps', reps: maintenanceJourneyReps },
   { name: 'debug-reps', reps: debugReps },
   { name: 'ai-review-reps', reps: aiReviewReps },

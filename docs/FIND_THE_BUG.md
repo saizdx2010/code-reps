@@ -8,6 +8,8 @@ A find-the-bug journey teaches learners to choose boundary cases that tell a cor
 2. **Repair (independent).** Format `debug`. The learner gets a faulty function and a bug report that reproduces with specific inputs. Checks cover the reports, the boundaries around them, rule precedence, and, where the contract forbids it, input mutation (`preserveInput: true`).
 3. **Transfer (delayed recall).** Another function with its own variants, a requirements-only brief, and no hints that name or describe a bug. It must be a different application, not the same function with new numbers. Name the variants neutrally (`variant-a`, `variant-b`).
 
+A quicker relative is [Break it](./BREAK_IT.md): no case table, one input at a time against a read-only suspect, with each authored bug as a one-bug variant that credits a catch. It shares the testing chunk and the Testing with cases topic but is not part of this journey.
+
 Why variants are chosen by name: the worker passes JSON-like inputs, and functions cannot be passed. The implementations live in the learner's starter file, and the checks send only a string.
 
 ## What the checks prove

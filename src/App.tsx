@@ -30,6 +30,7 @@ import './motion.css'
 import './trail.css'
 import { StepIndicator } from './StepIndicator'
 import { PreviewLoading } from './LoadingStates'
+import { lazyRoute } from './lazy-route'
 import { revealElement } from './ui-motion'
 import { learnerStartKey, readAttempt, readLearnerStart } from './attempt-store'
 import type { Attempt, AttemptRecord } from './attempt-store'
@@ -82,6 +83,8 @@ const FrontendPreview = lazy(() =>
     ),
   })),
 )
+// A Break it hunt replaces the editor with its own desk, loaded with the first hunt opened; a failed load offers a reload.
+const BreakIt = lazyRoute(() => import('./BreakIt').then(module => module.default), 'The hunt')
 
 // UI-only renders reuse the same learner summary. Consumers read only draft status, so typing that keeps the status changes nothing here.
 function usePracticeOverview(
@@ -652,6 +655,13 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   const activeRound = fluency.state.rounds.find(round => !round.endedAt && round.repId === repId)
   // The catalog knows a SQL rep before its content loads, so the editor opens with the right file and language.
   const sqlRep = rep.format === 'sql'
+  const codeNotice = (
+    <p className="rep-content-notice" role="status">
+      {repContent.status === 'error'
+        ? 'The starter code could not load. Retry above; your other work is safe.'
+        : 'Loading the starter code…'}
+    </p>
+  )
   const editorPath = `code-reps://${getActiveProfile()}/${rep.id}/${sqlRep ? 'query.sql' : `solution.${full?.reactPreview ? 'tsx' : 'ts'}`}`
   const editorLabel =
     `${sqlRep ? 'SQL query' : 'TypeScript solution'} for ${rep.title}. Press Control or Command Enter to run checks. ` +
@@ -812,70 +822,81 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
           aria-label="Code and preview"
           tabIndex={0}
         >
-          <section id="solution-section" tabIndex={-1} className="panel code-panel">
-            {walkthroughActive && activeStep === 'solve' && walkthroughGuide}
-            <div className="editor-wrap">
-              {attempt.code === undefined ? (
-                <p className="rep-content-notice" role="status">
-                  {repContent.status === 'error'
-                    ? 'The starter code could not load. Retry above; your other work is safe.'
-                    : 'Loading the starter code…'}
-                </p>
-              ) : (
-                <ProjectEditor
-                  showHeader
-                  key={rep.id}
-                  focusRequest={editorFocusRequest}
-                  height="100%"
-                  path={editorPath}
-                  language={sqlRep ? 'sql' : 'typescript'}
-                  value={attempt.code}
-                  onChange={value => update('code', value ?? '')}
-                  onRunChecks={runChecks}
-                  onTypeIssues={issues => setTypeIssues({ repId: rep.id, issues })}
-                  options={{ ariaLabel: editorLabel, ...editorOptions }}
-                />
-              )}
-              {sqlRep && (
-                <div className="editor-foot">
-                  <span>SQLite · a fresh database for every check</span>
-                  {full?.sql && <span>{sqlContract(full)}</span>}
+          {rep.format === 'break' ? (
+            <Suspense fallback={codeNotice}>
+              <BreakIt
+                rep={full}
+                notice={codeNotice}
+                attempt={attempt}
+                save={attempts.update}
+                onResults={checks.setResults}
+                onReveal={revealSection}
+              />
+            </Suspense>
+          ) : (
+            <>
+              <section id="solution-section" tabIndex={-1} className="panel code-panel">
+                {walkthroughActive && activeStep === 'solve' && walkthroughGuide}
+                <div className="editor-wrap">
+                  {attempt.code === undefined ? (
+                    codeNotice
+                  ) : (
+                    <ProjectEditor
+                      showHeader
+                      key={rep.id}
+                      focusRequest={editorFocusRequest}
+                      height="100%"
+                      path={editorPath}
+                      language={sqlRep ? 'sql' : 'typescript'}
+                      value={attempt.code}
+                      onChange={value => update('code', value ?? '')}
+                      onRunChecks={runChecks}
+                      onTypeIssues={issues => setTypeIssues({ repId: rep.id, issues })}
+                      options={{ ariaLabel: editorLabel, ...editorOptions }}
+                    />
+                  )}
+                  {sqlRep && (
+                    <div className="editor-foot">
+                      <span>SQLite · a fresh database for every check</span>
+                      {full?.sql && <span>{sqlContract(full)}</span>}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </section>
+              </section>
 
-          {rep.format === 'frontend' &&
-            (full ? (
-              <Suspense fallback={<PreviewLoading />}>
-                <FrontendPreview key={rep.id} rep={full} code={attempt.code ?? full.starter} />
-              </Suspense>
-            ) : (
-              repContent.status === 'loading' && <PreviewLoading />
-            ))}
-          <ChecksDrawer
-            run={checks}
-            allPassed={allPassed}
-            checkCount={full?.checks.length}
-            open={checksOpen}
-            onToggle={() => setChecksOpen(!checksOpen)}
-            completed={!!attempt.completedAt}
-            repId={repId}
-            openLesson={openKnowledge}
-            onExplain={() => revealSection('explain-section')}
-            explaining={activeStep === 'explain' || stepDone.explain}
-            neverCompleted={!completedPathIds.has(repId)}
-            probes={Boolean(full?.sql && full.checks.every(check => check.sql?.probes?.length))}
-            typeIssues={sqlRep ? null : typeIssues?.repId === repId ? typeIssues.issues : undefined}
-          />
-          <WorkspaceToolbar
-            ref={toolbarRef}
-            run={checks}
-            canRun={!!full}
-            onRun={runChecks}
-            onStop={checks.cancel}
-            onResults={() => revealSection('checks-section')}
-          />
+              {rep.format === 'frontend' &&
+                (full ? (
+                  <Suspense fallback={<PreviewLoading />}>
+                    <FrontendPreview key={rep.id} rep={full} code={attempt.code ?? full.starter} />
+                  </Suspense>
+                ) : (
+                  repContent.status === 'loading' && <PreviewLoading />
+                ))}
+              <ChecksDrawer
+                run={checks}
+                allPassed={allPassed}
+                checkCount={full?.checks.length}
+                open={checksOpen}
+                onToggle={() => setChecksOpen(!checksOpen)}
+                completed={!!attempt.completedAt}
+                repId={repId}
+                openLesson={openKnowledge}
+                onExplain={() => revealSection('explain-section')}
+                explaining={activeStep === 'explain' || stepDone.explain}
+                neverCompleted={!completedPathIds.has(repId)}
+                probes={Boolean(full?.sql && full.checks.every(check => check.sql?.probes?.length))}
+                typeIssues={sqlRep ? null : typeIssues?.repId === repId ? typeIssues.issues : undefined}
+              />
+              <WorkspaceToolbar
+                ref={toolbarRef}
+                run={checks}
+                canRun={!!full}
+                onRun={runChecks}
+                onStop={checks.cancel}
+                onResults={() => revealSection('checks-section')}
+              />
+            </>
+          )}
         </div>
       </div>
     </main>

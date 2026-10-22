@@ -46,8 +46,9 @@ const groups = [
   // 153,000 for the SQL track after moving track introductions out of startup and compacting the catalog rows, from
   // 157,500 for the icon pack, whose inline SVG shapes replaced CSS mask images, and from 159,000 for the Trail warm-up
   // and the drawer's type-check note after the comparisons and mistake habits moved out of startup, and from 160,500 for
-  // the Today set's navigation in the workspace (see docs/PERFORMANCE.md).
-  { name: 'Initial JavaScript', files: [...initial], limit: 161_000, rawLimit: 530_000 },
+  // the Today set's navigation in the workspace, and from 161,000 for the Break it format's workspace switch and the
+  // Game of Life catalog rows (see docs/PERFORMANCE.md).
+  { name: 'Initial JavaScript', files: [...initial], limit: 161_500, rawLimit: 530_000 },
   { name: 'Additional editor JavaScript', files: [...editor], limit: 1_050_000, rawLimit: 4_200_000 },
   { name: 'Additional frontend JavaScript', files: [...frontend], limit: 1_050_000, rawLimit: 3_900_000 },
   // The practice worker bundles every rep's checks and text, so its raw size grows with the catalog. Raised from 12,000,000

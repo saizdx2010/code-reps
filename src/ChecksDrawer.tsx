@@ -5,7 +5,7 @@ import { Icon } from './Icon'
 import { StatusChip } from './Layout'
 import { skillSummariesForRep } from './skill-index.ts'
 import type { SqlError, TestResult } from './runner.types'
-import { judgeCalls, noCalls, surprisesFirst, verdictSentence } from './check-calls.ts'
+import { judgeCalls, noCalls, surprisesFirst } from './check-calls.ts'
 import type { Call, CallVerdict, Calls } from './check-calls.ts'
 import { typeCheckSummary } from './type-issues'
 import type { TypeIssue } from './type-issues'
@@ -212,7 +212,6 @@ export function ChecksDrawer({
                 </Button>
               )}
             </div>
-            {verdict && <p className="call-verdict">{verdictSentence(verdict, results)}</p>}
             <Suspense fallback={null}>
               <CheckFeedback results={results} open={openName} onOpen={chooseCase} verdict={verdict} />
             </Suspense>

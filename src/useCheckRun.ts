@@ -143,5 +143,21 @@ export function useCheckRun() {
     setStaleResults(null)
   }
 
-  return { results, staleResults, runError, running, loadingEngine, runNotice, prepare, run, stop, cancel, reset, invalidate, clearResults }
+  // A Break it hunt runs its own tries (src/BreakIt.tsx) and reports their verdict with setResults, so completion reads it here.
+  return {
+    results,
+    staleResults,
+    runError,
+    running,
+    loadingEngine,
+    runNotice,
+    prepare,
+    run,
+    stop,
+    cancel,
+    reset,
+    invalidate,
+    clearResults,
+    setResults,
+  }
 }

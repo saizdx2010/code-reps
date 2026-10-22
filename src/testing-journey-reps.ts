@@ -1,3 +1,4 @@
+import { breakItReps } from './break-it-reps.ts'
 import { lines } from './rep-helpers.ts'
 import type { Rep } from './rep-types.ts'
 
@@ -312,3 +313,6 @@ export const testingJourneyReps: Rep[] = [
     ],
   },
 ]
+
+/** The testing source: the find-the-bug journey, then the Break it hunts (src/break-it-reps.ts), which load in this chunk. */
+export const testingReps: Rep[] = [...testingJourneyReps, ...breakItReps]

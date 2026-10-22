@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { surprisesFirst } from './check-calls.ts'
+import { surprisesFirst, verdictSentence } from './check-calls.ts'
 import type { Call, CallVerdict } from './check-calls.ts'
 import { Icon } from './Icon'
 import { StatusChip } from './Layout'
@@ -121,6 +121,7 @@ export function CheckFeedback({
   )
   return (
     <>
+      {verdict && <p className="call-verdict">{verdictSentence(verdict, results)}</p>}
       {!!failed.length && <ul className={`result-list${stale ? ' is-stale' : ''}`}>{failed.map((result, index) => row(result, index))}</ul>}
       {!!passed.length && (
         <ul

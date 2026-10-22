@@ -3,7 +3,8 @@ import type { ResultTable, TestResult } from './runner.types'
 type CheckWorker = Pick<Worker, 'onmessage' | 'onmessageerror' | 'onerror' | 'postMessage' | 'terminate'>
 type RunOptions = {
   createWorker: () => CheckWorker
-  onResults: (results: TestResult[]) => void
+  /** The whole reply comes too, for a Break it hunt's recomputed tries; read anything beyond `results` as untrusted. */
+  onResults: (results: TestResult[], reply: Record<string, unknown>) => void
   onError: (message: string) => void
   schedule: (callback: () => void, milliseconds: number) => number
   clearTimer: (id: number) => void
@@ -117,7 +118,7 @@ export function startCheckRun(code: string, repId: string, options: RunOptions):
           return
         }
         if (reply.error === undefined && Array.isArray(reply.results) && Array.from(reply.results).every(isTestResult)) {
-          options.onResults(reply.results)
+          options.onResults(reply.results, reply)
           return
         }
       }

@@ -34,7 +34,7 @@ export const repSourceLoaders: Record<RepSourceName, RepSourceLoader> = {
   'react-reps': source(() => import('./react-reps.ts'), module => ({ reps: module.reactReps })),
   'dom-reps': source(() => import('./dom-reps.ts'), module => ({ reps: module.domReps })),
   'connected-feature-reps': source(() => import('./connected-feature-reps.ts'), module => ({ reps: module.connectedFeatureReps })),
-  'testing-journey-reps': source(() => import('./testing-journey-reps.ts'), module => ({ reps: module.testingJourneyReps })),
+  'testing-journey-reps': source(() => import('./testing-journey-reps.ts'), module => ({ reps: module.testingReps })),
   'maintenance-journey-reps': source(() => import('./maintenance-journey-reps.ts'), module => ({ reps: module.maintenanceJourneyReps })),
   'debug-reps': source(() => import('./debug-reps.ts'), module => ({ reps: module.debugReps })),
   'ai-review-reps': source(() => import('./ai-review-reps.ts'), module => ({ reps: module.aiReviewReps })),

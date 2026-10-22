@@ -35,12 +35,26 @@ export type SqlCheck = {
   labels?: string[]
   plan?: { sql: string; uses?: PlanFact[]; avoids?: PlanFact[] }
 }
-export type Check = { name: string; input: unknown[]; expected: unknown; fixture?: AsyncFixtureSpec; sql?: SqlCheck }
+/**
+ * A Break it hunt (`format: 'break'`). The learner reads a contract and a read-only suspect, then tries one input at a
+ * time; the worker runs the suspect, the contract, and every bug's variant on a fresh copy of each input. `params` are
+ * the suspect's arguments in order: whole numbers from `min` to `max`, refused with `rule` (the contract sentence they
+ * break) when outside it. Each bug is the suspect with only that one bug left in, so an input that makes a variant
+ * disagree with the contract catches that bug. The learner's tries are saved as the attempt's code (src/break-it.ts).
+ */
+export type BreakTask = {
+  suspect: string
+  contract: string
+  params: { name: string; min: number; max: number; rule: string }[]
+  bugs: { id: string; variant: string }[]
+}
+/** `bug`: in a Break it rep, the check passes when some try catches that bug; a check without one passes when every try follows the input rules. */
+export type Check = { name: string; input: unknown[]; expected: unknown; fixture?: AsyncFixtureSpec; sql?: SqlCheck; bug?: string }
 export type Rep = {
   id: string
   title: string
   category: string
-  format?: 'debug' | 'read' | 'transform' | 'frontend' | 'backend' | 'refactor' | 'sql' | 'devops'
+  format?: 'debug' | 'read' | 'transform' | 'frontend' | 'backend' | 'refactor' | 'sql' | 'devops' | 'break'
   context?: string
   /** An error message and stack trace, shown as preformatted text in the brief. Must match what the starter throws. */
   errorReport?: string
@@ -62,6 +76,8 @@ export type Rep = {
   /** Frontend reps that check authored DOM and ARIA contracts. Without it the rep uses the directory scenarios. */
   reactPreview?: boolean
   domPreview?: { title: string; description: string; props: Record<string, unknown>; review: string[] }
+  /** Break it reps: the suspect, its contract, the input rules, and the authored bugs. */
+  breakIt?: BreakTask
   hints: string[]
   checks: Check[]
 }

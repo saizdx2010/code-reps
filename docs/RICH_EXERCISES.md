@@ -70,6 +70,10 @@ Async practice with deterministic local fixtures is described in [Content author
 
 The checks establish that the learner's cases separate the supplied variants from the correct one. They do not establish that a table is complete, that unsupplied faults would be caught, or that expected values were derived independently; the reps say so and ask the learner to name a version their table would still accept. The repair rep is checked behaviorally, and its reasoning stays self-reviewed. See [Find the bug](./FIND_THE_BUG.md) for how to author more journeys of this kind.
 
+## Break it
+
+`break-page-count` is a Break it hunt (`format: 'break'`): the learner tries one input at a time against a read-only suspect, and the worker runs the suspect, the contract, and each authored bug's one-bug variant on fresh copies. The tries are saved as the attempt's code. A catch establishes that one input separates the suspect from the contract, not that every bug would be found; the one-sentence explanation is self-reviewed. See [Break it](./BREAK_IT.md).
+
 ## React tasks
 
 `react-channel-counter`, `react-row-keys`, and `react-stale-request` are the React reps. They use the existing

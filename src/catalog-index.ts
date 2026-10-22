@@ -247,6 +247,7 @@ const repRows: [string, string, number, Rep['format'] | 0, string, number, numbe
   ["expose-overlap-bugs","Write cases that expose faulty overlap checks",36,"backend","9521d2b5",3,94,6,30,2],
   ["expose-stock-bugs","Expose faulty stock allocation",36,"backend","42d24716",3,91,5,30,2],
   ["expose-access-bugs","Expose faulty access decisions",36,"backend","566a0d49",3,87,5,30,2],
+  ["break-page-count","Break pageCount",36,"break","79b28c9e",3,57,3,30,2],
   ["read-shipping-quote","Read an unfamiliar shipping module",37,"read","3371c299",3,95,6,31,2],
   ["reproduce-quote-bug","Reproduce a reported shipping bug",37,"backend","2858b37a",3,160,3,31,2],
   ["fix-quote-bug","Write a regression case and fix the shipping bug",37,"debug","1da51e33",3,158,11,31,2],
