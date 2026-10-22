@@ -1,0 +1,197 @@
+/* Post-check and post-completion comparisons (src/CompareWork.tsx). Loaded with that chunk, so startup never pays for them. */
+/* Post-check comparison with the authored reference: a mark and a label carry each line's side, not colour alone. */
+.code-compare {
+  margin-top: 16px;
+}
+.code-compare h4 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+.code-compare > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.code-compare ol {
+  list-style: none;
+  margin: 8px 0;
+  padding: 8px;
+  overflow-x: auto;
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+}
+.code-compare li {
+  display: flex;
+  gap: 10px;
+  padding: 2px 6px;
+  white-space: pre;
+  border-left: 3px solid transparent;
+}
+.code-compare-mark {
+  width: 1ch;
+  flex: none;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+.code-compare-yours {
+  background: var(--accent-soft);
+  color: var(--feature-text);
+  border-color: var(--accent);
+}
+.code-compare-reference {
+  background: var(--bg);
+  border-color: var(--border-strong);
+  border-left-style: dashed;
+}
+.code-compare-legend {
+  font-size: 13px;
+  color: var(--muted);
+}
+/* Then and now, under the Finish receipt: the first earlier attempt beside today's. The panel's own width decides
+   whether the two versions sit side by side or switch, so a narrow task column on a wide screen also switches. */
+.then-now {
+  container: then-now / inline-size;
+  margin-top: 16px;
+  padding: 4px 16px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.then-now > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 12px 0;
+  cursor: pointer;
+  list-style: none;
+}
+.then-now-title {
+  font-size: var(--type-card);
+  font-weight: 700;
+}
+.then-now-meta {
+  color: var(--muted);
+  font-size: 14px;
+}
+.then-now > summary .ui-icon {
+  align-self: center;
+  margin-left: auto;
+  transition: rotate var(--motion-fast) var(--motion-ease);
+}
+.then-now[open] > summary .ui-icon {
+  rotate: 180deg;
+}
+.then-now-switch {
+  display: none;
+  margin: 0 0 12px;
+}
+.then-now-pair + .then-now-pair {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.then-now-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.then-now-columns > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.then-now h4 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+.then-now h4 span {
+  color: var(--muted);
+  font-weight: 400;
+}
+.then-now-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 10px;
+}
+.then-now-columns p {
+  margin: 8px 0 0;
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+.then-now-columns .then-now-empty {
+  color: var(--muted);
+}
+.then-now-code {
+  margin: 0;
+  padding: 8px 0;
+  overflow-x: auto;
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  font-size: var(--type-meta);
+  line-height: 1.6;
+}
+.then-now-code > span {
+  display: block;
+  padding: 0 10px;
+  border-left: 3px solid transparent;
+  white-space: pre;
+}
+/* Changed lines carry a bar and a hidden "Changed" label: shape and words, not colour alone. */
+.then-now-now .then-now-code > .is-changed {
+  border-left-color: var(--accent);
+  background: var(--accent-soft);
+}
+.then-now-then .then-now-code > .is-changed {
+  border-left: 3px dashed var(--border-strong);
+  background: var(--bg);
+}
+.then-now-legend,
+.then-now-prompt {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.then-now-prompt {
+  font-size: 14px;
+}
+.code-compare .sr-only,
+.then-now .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@container then-now (max-width: 620px) {
+  .then-now-switch {
+    display: flex;
+  }
+  .then-now-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .then-now[data-side='now'] .then-now-then,
+  .then-now[data-side='then'] .then-now-now {
+    display: none;
+  }
+}
+
+/* Then and now: today's version arrives from the right, once, when the panel first shows. */
+.then-now-now {
+  animation: then-now-arrive var(--motion-fast) var(--motion-ease) both;
+}
+@keyframes then-now-arrive {
+  from {
+    opacity: 0;
+    translate: 8px 0;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
