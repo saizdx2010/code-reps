@@ -24,7 +24,7 @@ import { JournalTabs } from './Journal'
 import { useReviewContent } from './useReviewContent'
 import { attemptStatus, getPracticePlan, nextRepInPath, practiceWritingPrompts } from './practice'
 import { completionEvidence } from './curriculum'
-import { skillSummaryById } from './skill-index.ts'
+import { backLabel, decodeRepOrigin, encodeRepOrigin, originFrom } from './rep-origin.ts'
 import type { LearnerStart } from './learning'
 import './design.css'
 import './motion.css'
@@ -142,7 +142,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   const sessions = usePracticeSessions()
   // The lesson in the address wins; #/knowledge alone reopens the last lesson of this session.
   const [lastLesson, setLastLesson] = useSessionPreference<string>('knowledge-skill', 'values')
-  // A rep opened from a lesson remembers it, so the workspace can lead back to that lesson instead of the Library.
+  // A rep remembers the page it was opened from, so the workspace leads back there and steps through the same list.
   const [repOrigin, setRepOrigin] = useSessionPreference<string>('rep-origin', '')
   function openKnowledge(id: string) {
     setLastLesson(id)
@@ -151,7 +151,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
 
   function setView(next: View, id?: string) {
     if (next !== 'workspace') setEditorFocusRequest(0)
-    if (next === 'workspace') setRepOrigin(route.view === 'knowledge' && id ? `${id}:${knowledgeSkill}` : '')
+    if (next === 'workspace' && id) setRepOrigin(encodeRepOrigin(id, originFrom(route.view, knowledgeSkill, origin)))
     navigate(next, next === 'workspace' ? (id ?? repId) : next === 'knowledge' ? id : undefined)
   }
   const [glossaryOpen, setGlossaryOpen] = useState(false)
@@ -306,7 +306,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   useEffect(() => {
     if (route.skillId && route.skillId !== lastLesson) setLastLesson(route.skillId)
   }, [route.skillId, lastLesson, setLastLesson])
-  const originLesson = repOrigin.startsWith(`${repId}:`) ? repOrigin.slice(repId.length + 1) : undefined
+  const origin = decodeRepOrigin(repOrigin, repId)
 
   useEffect(() => {
     if (view === 'workspace') revealElement(document.querySelector('.task-column section:not([hidden])'), 'none')
@@ -707,8 +707,13 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
         focusMode={focusMode}
         vimKeys={vimKeys}
         onVimKeys={toggleVimKeys}
-        onLibrary={() => (originLesson ? openKnowledge(originLesson) : setView('catalog'))}
-        backLabel={originLesson ? skillSummaryById(originLesson)?.title : undefined}
+        onBack={() => (origin.kind === 'lesson' ? openKnowledge(origin.skillId) : setView(origin.view))}
+        backLabel={backLabel(origin)}
+        backToLesson={origin.kind === 'lesson'}
+        origin={origin}
+        goalPathId={fluency.state.goal.pathId}
+        repStatus={id => attemptStatus(id, drafts[id])}
+        openRep={openRep}
         onGlossary={() => setGlossaryOpen(true)}
         onFocusMode={() => {
           setFocusMode(!focusMode)
