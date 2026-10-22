@@ -575,40 +575,6 @@ main {
 .path-overview .primary-button {
   flex: none;
 }
-.path-picker {
-  margin: 18px 0;
-}
-.path-picker > summary {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-height: 44px;
-  padding: 10px 0;
-  color: var(--accent);
-  cursor: pointer;
-  font-size: 15px;
-}
-.path-picker > summary > span {
-  margin-left: auto;
-  color: var(--muted);
-  font-size: 13px;
-}
-.path-picker > summary:hover > span {
-  color: var(--text);
-}
-.path-picker > summary::after {
-  content: '';
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  flex: none;
-  background: currentColor;
-  mask: var(--icon-chevron) center / contain no-repeat;
-  transition: rotate var(--motion-fast) var(--motion-ease);
-}
-.path-picker[open] > summary::after {
-  rotate: 180deg;
-}
 .path-select {
   display: grid;
   gap: 8px;
@@ -3767,11 +3733,9 @@ summary::-webkit-details-marker {
 summary::marker {
   content: '';
 }
-details:not(.site-menu):not(.workspace-options):not(.knowledge-browser):not(.knowledge-group):not(.path-picker):not(.path-stage):not(
-    .progress-journey
-  ):not(.evidence-card):not(.project-overview):not(.foundation-lesson):not(.info-note):not(.list-group):not(.plan-brief):not(
-    .practice-history
-  ):not(.then-now)
+details:not(.site-menu):not(.workspace-options):not(.knowledge-browser):not(.knowledge-group):not(.path-stage):not(.progress-journey):not(
+    .evidence-card
+  ):not(.project-overview):not(.foundation-lesson):not(.info-note):not(.list-group):not(.plan-brief):not(.practice-history):not(.then-now)
   > summary::before {
   content: '';
   display: inline-block;
@@ -3784,7 +3748,7 @@ details:not(.site-menu):not(.workspace-options):not(.knowledge-browser):not(.kno
   vertical-align: middle;
   transition: transform var(--motion-fast) var(--motion-ease);
 }
-details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):not(.knowledge-group):not(.path-picker):not(.path-stage):not(
+details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):not(.knowledge-group):not(.path-stage):not(
     .progress-journey
   ):not(.evidence-card):not(.project-overview):not(.foundation-lesson):not(.info-note):not(.list-group):not(.plan-brief):not(
     .practice-history

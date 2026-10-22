@@ -1,13 +1,15 @@
 import { expect, test } from '@playwright/test'
-import { chooseOption } from './helpers'
+import { chooseTrack } from './helpers'
 import { dsaSkills } from '../../src/dsa-knowledge'
 
 for (const width of [1280, 390]) {
   test(`recognition track and checked lesson remain usable at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/#/paths')
-    await chooseOption(page.getByRole('combobox', { name: 'Choose track', exact: true }), 'pattern-recognition')
+    await chooseTrack(page, 'pattern-recognition')
     await expect(page.locator('#path-title')).toHaveText('Pattern Recognition')
+    // The introduction starts folded so the trail is in reach; it opens on request.
+    await page.locator('.path-intro-details > summary').click()
     await expect(page.getByRole('heading', { name: 'See the shape, then solve the problem' })).toBeVisible()
     await page.reload()
     await expect(page.locator('#path-title')).toHaveText('Pattern Recognition')

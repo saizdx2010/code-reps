@@ -75,8 +75,6 @@ type Props = {
   repStatus: (rep: RepSummary) => string
   pathId: PathId
   setPathId: (id: PathId) => void
-  pathPicker: 'open' | 'closed'
-  setPathPicker: (value: 'open' | 'closed') => void
   knowledgeSkill: string
   setKnowledgeSkill: (id: string) => void
   walkthroughSeen: boolean
@@ -230,8 +228,6 @@ export function AppRoutes(props: Props) {
             goalError={fluency.error}
             pathId={pathId}
             setPathId={setPathId}
-            pathPicker={props.pathPicker}
-            setPathPicker={props.setPathPicker}
             learnerStart={learnerStart}
             startingPoint={<StartingPoint learnerStart={learnerStart} onChoose={props.onLearnerStart} />}
             completedPathIds={completedPathIds}

@@ -21,8 +21,6 @@ type Props = {
   goalError: string
   pathId: PathId
   setPathId: (id: PathId) => void
-  pathPicker: 'open' | 'closed'
-  setPathPicker: (value: 'open' | 'closed') => void
   learnerStart: LearnerStart | null
   startingPoint?: ReactNode
   completedPathIds: Set<string>
@@ -34,7 +32,7 @@ type Props = {
 
 /** All tracks: Foundations first, then the tracks that build on it, and the selected track's trail. */
 export function PathsPage(props: Props) {
-  const { goalPathId, setGoalPath, goalError, pathId, setPathId, pathPicker, setPathPicker, learnerStart, startingPoint } = props
+  const { goalPathId, setGoalPath, goalError, pathId, setPathId, learnerStart, startingPoint } = props
   const { completedPathIds, trail, evidence, openRep, openLesson } = props
   const goalLine = useRef<HTMLParagraphElement>(null)
   const selectedPath = paths.find(path => path.id === pathId) ?? paths[0]
@@ -58,7 +56,6 @@ export function PathsPage(props: Props) {
   }
   function choose(id: PathId) {
     setPathId(id)
-    if (matchMedia('(max-width: 900px)').matches) setPathPicker('closed')
     requestAnimationFrame(() => {
       const heading = document.getElementById('path-title')
       heading?.scrollIntoView({ block: 'center', behavior: reducedMotion() ? 'instant' : 'smooth' })
@@ -84,18 +81,6 @@ export function PathsPage(props: Props) {
       <PageHeader
         title="Choose a track"
         description="Every track builds on Foundations. Follow one as your goal or browse any of them freely."
-        actions={
-          <label className="path-select">
-            Choose track
-            <Select value={selectedPath.id} onChange={event => setPathId(event.target.value as PathId)}>
-              {paths.map(path => (
-                <option key={path.id} value={path.id}>
-                  {path.title}
-                </option>
-              ))}
-            </Select>
-          </label>
-        }
       />
       {startingPoint && (
         <details className="starting-point-settings">
@@ -109,42 +94,37 @@ export function PathsPage(props: Props) {
           {startingPoint}
         </details>
       )}
-      <details
-        className="path-picker"
-        open={pathPicker === 'open'}
-        onToggle={event => setPathPicker(event.currentTarget.open ? 'open' : 'closed')}
-      >
-        <summary>
-          Explore tracks <span>{paths.length} available</span>
-        </summary>
-        <div className="track-map" role="group" aria-label="Learning tracks">
-          <div className="path-choices track-foundations">
-            <span className="home-label">Start here</span>
-            {choice(foundationsPathId, true)}
-          </div>
-          {trackGroups.map(group => (
-            <div key={group.title} className="track-group">
-              <span className="home-label">{group.title}</span>
-              <div className="path-choices">{group.pathIds.map(id => choice(id))}</div>
-            </div>
+      {/* Every track at a glance on a wide screen; a narrow screen gets the same choice as one menu. */}
+      <label className="path-select track-menu">
+        Choose track
+        <Select value={selectedPath.id} onChange={event => setPathId(event.target.value as PathId)}>
+          {paths.map(path => (
+            <option key={path.id} value={path.id}>
+              {path.title}
+              {goalPathId === path.id ? ' (your goal)' : ''}
+            </option>
           ))}
+        </Select>
+      </label>
+      <div className="track-map" role="group" aria-label="Learning tracks">
+        <div className="path-choices track-foundations">
+          <span className="home-label">Start here</span>
+          {choice(foundationsPathId, true)}
         </div>
-      </details>
+        {trackGroups.map(group => (
+          <div key={group.title} className="track-group">
+            <span className="home-label">{group.title}</span>
+            <div className="path-choices">{group.pathIds.map(id => choice(id))}</div>
+          </div>
+        ))}
+      </div>
+      {/* The selected card already describes the track; this bar names it and holds its goal and next step. */}
       <section className="path-overview" aria-labelledby="path-title">
         <div>
-          <span className="home-label">
-            {selectedPath.id === foundationsPathId
-              ? 'Start here'
-              : `Builds on ${paths.find(item => item.id === (trackBuildsOn[selectedPath.id] ?? foundationsPathId))!.title}`}
-          </span>
           <h2 id="path-title" tabIndex={-1}>
             {refresher ? 'Return to problem solving' : selectedPath.title}
           </h2>
-          <p>
-            {refresher
-              ? 'Start with guided problems, then revisit skills without hints after a break.'
-              : trackDescriptions[selectedPath.id]}
-          </p>
+          {refresher && <p>Start with guided problems, then revisit skills without hints after a break.</p>}
           <div className="path-goal">
             <p ref={goalLine} tabIndex={-1} role="status">
               {goalPathId === selectedPath.id ? 'Your current learning goal.' : 'Browsing this track does not change your learning goal.'}
@@ -194,7 +174,7 @@ export function PathsPage(props: Props) {
           rep, a related rep without hints, then a fresh recall after a break.
         </p>
       </InfoNote>
-      <details className="path-intro-details" open={trail.done === 0 && selectedPath.id === foundationsPathId}>
+      <details className="path-intro-details">
         <summary>Introduction: {pathIntroduction.title}</summary>
         <PathIntroduction introduction={pathIntroduction} onStart={() => firstRepId && openRep(firstRepId)} />
       </details>

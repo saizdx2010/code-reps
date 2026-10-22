@@ -47,7 +47,7 @@ type PathId = (typeof paths)[number]['id']
 /** Foundations is the shared root; every other track builds on it. Paths keep their own rep lists for badges and goals. */
 export const foundationsPathId: PathId = 'typescript'
 export const trackGroups: { title: string; pathIds: PathId[] }[] = [
-  { title: 'Choose a track', pathIds: ['algorithms-data-structures', 'pattern-recognition', 'frontend', 'sql', 'backend', 'devops'] },
+  { title: 'Then go further', pathIds: ['algorithms-data-structures', 'pattern-recognition', 'frontend', 'sql', 'backend', 'devops'] },
 ]
 
 /** The track each one builds on, as reading guidance on the track picker. Nothing is locked, dimmed, or reordered by it. */

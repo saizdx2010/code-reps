@@ -3,8 +3,6 @@ import { expectChecksFinished, replaceCode } from './helpers'
 
 test('discover the combined path and complete a queue introduction', async ({ page }) => {
   await page.goto('/#/paths')
-  const picker = page.locator('.path-picker')
-  if ((await picker.getAttribute('open')) === null) await picker.locator('summary').click()
   await page.getByRole('button', { name: /^Problem solving/ }).click()
   await expect(page.locator('#path-title')).toHaveText('Problem solving')
   const stage = page.locator('.path-stage').filter({ hasText: 'Stack and queue operations' })
@@ -32,8 +30,8 @@ test('discover the combined path and complete a queue introduction', async ({ pa
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
 })
 
-for (const width of [1280, 320]) {
-  test(`visible path menu supports keyboard selection and reload at ${width}px`, async ({ page }) => {
+for (const width of [320]) {
+  test(`the narrow track menu supports keyboard selection and reload at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/#/paths')
     const menu = page.getByRole('combobox', { name: 'Choose track', exact: true })
