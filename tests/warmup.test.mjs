@@ -57,3 +57,22 @@ test('the stored warm-up round-trips and reports each rep position and the next 
   assert.deepEqual(warmupPosition(ids, 'sum-positive-numbers'), { index: 2, total: 3, next: undefined })
   assert.equal(warmupPosition(ids, 'has-duplicate'), undefined)
 })
+
+test('a Today set round-trips its kinds and drops unknown reps; reviews warm up before the new rep', async () => {
+  const { formatSet, parseSet } = await import('../src/warmup.ts')
+  const { setOrder } = await import('../src/today-plan.ts')
+  const items = [
+    { repId: 'create-objects', kind: 'new', done: false },
+    { repId: 'count-above-threshold', kind: 'review', done: false },
+    { repId: 'declare-variables', kind: 'review', done: true },
+  ]
+  const set = setOrder(items)
+  assert.deepEqual(set, [
+    { repId: 'count-above-threshold', kind: 'review' },
+    { repId: 'create-objects', kind: 'new' },
+  ])
+  assert.equal(formatSet(set), 'r:count-above-threshold,n:create-objects')
+  assert.deepEqual(parseSet(formatSet(set)), set)
+  assert.deepEqual(parseSet('r:not-a-rep,n:create-objects'), [{ repId: 'create-objects', kind: 'new' }])
+  assert.deepEqual(parseSet(''), [])
+})

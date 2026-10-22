@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import type { ComponentType, ReactNode } from 'react'
+import { reducedMotion } from './ui-motion'
 import { confidenceLabels, difficultyLabels } from './attempt-labels.ts'
 import type { Confidence, Difficulty } from './attempt-labels.ts'
 import type { Attempt, AttemptRecord } from './attempt-store'
@@ -470,11 +471,14 @@ export function ExplainSection({
   review,
   onReveal,
   code,
+  coolDown = false,
 }: {
   hidden: boolean
   repId: string
   writing: Writing
   code?: string
+  /** The Today set's cool-down: the trace opens in predict mode and comes into view. */
+  coolDown?: boolean
   explanation: string
   onExplanation: (explanation: string) => void
   englishTips?: readonly string[]
@@ -484,6 +488,18 @@ export function ExplainSection({
 }) {
   const reflectionGuide = review.status === 'ready' ? review.content.guide : undefined
   const depth = review.status === 'ready' ? review.content.depth : undefined
+  // The cool-down brings the trace into view once, after the step reveal has placed the Explain section.
+  const seeItRun = useRef<HTMLElement>(null)
+  const hasTrace = !!depth?.traceSteps
+  useEffect(() => {
+    if (!coolDown || hidden || !hasTrace) return
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() =>
+        seeItRun.current?.scrollIntoView({ block: 'start', behavior: reducedMotion() ? 'auto' : 'smooth' }),
+      )
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [coolDown, hidden, hasTrace])
   return (
     <section id="explain-section" hidden={hidden} tabIndex={-1} className="panel explain-panel">
       <div className="explain-intro">
@@ -514,9 +530,13 @@ export function ExplainSection({
         )}
         {allPassed && depth?.traceSteps && (
           // The trace walks a reference solution, so it only appears once the learner's own checks pass.
-          <section className="see-it-run" aria-labelledby="see-it-run-title">
-            <h3 id="see-it-run-title">See it run</h3>
-            <p>Step through a reference solution, then compare each step with what your code does.</p>
+          <section className="see-it-run" aria-labelledby="see-it-run-title" ref={seeItRun}>
+            <h3 id="see-it-run-title">{coolDown ? 'Cool-down: see it run' : 'See it run'}</h3>
+            <p>
+              {coolDown
+                ? 'The last part of today’s set. Before each step appears, call what changes, then reveal it. Stop whenever you like.'
+                : 'Step through a reference solution, then compare each step with what your code does.'}
+            </p>
             <Suspense
               fallback={
                 <p className="loading-status" role="status">
@@ -524,7 +544,7 @@ export function ExplainSection({
                 </p>
               }
             >
-              <TraceViewer key={repId} trace={depth.traceSteps} />
+              <TraceViewer key={coolDown ? `${repId}-cool-down` : repId} trace={depth.traceSteps} predictFirst={coolDown} />
             </Suspense>
             {code !== undefined && !decodeFiles(code) && (
               <Suspense fallback={null}>

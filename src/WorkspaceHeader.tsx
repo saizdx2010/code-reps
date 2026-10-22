@@ -33,6 +33,7 @@ export function WorkspaceHeader({
   onFocusMode,
   onReset,
   openLesson,
+  runLabel,
 }: {
   rep: RepSummary
   status: string
@@ -45,6 +46,8 @@ export function WorkspaceHeader({
   onFocusMode: () => void
   onReset: () => void
   openLesson: (id: string) => void
+  /** A running warm-up or Today set: where this rep sits in it. */
+  runLabel?: string
 }) {
   const skills = skillsForRep(rep.id)
   // The trail's role travels with the rep, so a recall or independent rep never looks like a first try.
@@ -72,6 +75,7 @@ export function WorkspaceHeader({
         {repLevelLabel(rep.id) && <StatusChip>{repLevelLabel(rep.id)}</StatusChip>}
         {role !== 'Application' && <StatusChip>{role}</StatusChip>}
         <StatusChip tone={statusTone(status)}>{status}</StatusChip>
+        {runLabel && <StatusChip tone="progress">{runLabel}</StatusChip>}
         <span className="workspace-category">
           {rep.category} ·{' '}
           {effortRange(rep.id)

@@ -1,6 +1,7 @@
 import type { PortableRecord } from './portability.ts'
 import type { PracticeAction } from './practice.ts'
 import { attemptKinds, dayNumber } from './profile-progress.ts'
+import type { SetItem } from './warmup.ts'
 
 /** Reviews in a day's plan, alongside one new rep. */
 export const todayReviewLimit = 2
@@ -57,3 +58,9 @@ export function todayPlan(
     shown: items.length > 1 || done > 0 || items.some(item => item.kind === 'review'),
   }
 }
+
+/** Today as a set: the open items in one run, reviews first to warm up, then the new rep as the main rep. */
+export const setOrder = (items: TodayItem[]): SetItem[] =>
+  [...items.filter(item => !item.done && item.kind === 'review'), ...items.filter(item => !item.done && item.kind === 'new')].map(
+    ({ repId, kind }) => ({ repId, kind }),
+  )

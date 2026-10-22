@@ -46,7 +46,8 @@ import { BriefSection, ExplainSection, PlanSection, RepContentNotice, ReviewSect
 import type { UpdateAttempt } from './PracticeSections'
 import { ChecksDrawer, WorkspaceToolbar } from './ChecksDrawer'
 import { practiceSteps, sectionStep, stepSection } from './practice-steps'
-import { formatWarmup, parseWarmup, pickWarmup, warmupPosition } from './warmup'
+import { formatSet, formatWarmup, parseSet, parseWarmup, pickWarmup, warmupPosition } from './warmup'
+import type { SetItem } from './warmup'
 import type { TypeIssue } from './type-issues'
 
 const repIds = reps.map(rep => rep.id)
@@ -205,6 +206,9 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   const [indonesianHelp, setIndonesianHelp] = useSessionPreference<'off' | 'on'>('indonesian-help', 'off')
   // A running warm-up takes over the completion button until its last rep. Opening any rep another way ends it.
   const [warmup, setWarmup] = useSessionPreference<string>('warmup', '')
+  const [todaySet, setTodaySet] = useSessionPreference<string>('today-set', '')
+  // The rep whose trace opens in predict mode as the set's cool-down.
+  const [coolDown, setCoolDown] = useState<string | null>(null)
   const warmupNavigation = useRef(false)
   const [indonesianHelpContent, setIndonesianHelpContent] = useState<IndonesianHelp | null>(null)
   useEffect(() => {
@@ -320,8 +324,13 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   }, [view, repId])
 
   function openRep(nextId: string) {
-    if (!warmupNavigation.current && warmup) setWarmup('')
+    // Opening a rep another way ends a running warm-up or set, so a later completion never names one of its steps.
+    if (!warmupNavigation.current) {
+      if (warmup) setWarmup('')
+      if (todaySet) setTodaySet('')
+    }
     warmupNavigation.current = false
+    if (nextId !== coolDown) setCoolDown(null)
     setChecksOpen(false)
     selectRep(nextId)
     setActiveStep('understand')
@@ -468,20 +477,46 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
       : reps.find(item => item.id === nextRepInPath(fluency.state.goal.pathId, repId, id => completedPathIds.has(id) || !recallReady(id)))
   const completionNext = pathNextRep ? { repId: pathNextRep.id, mode: 'start' } : recommendation
   const warmupAt = warmupPosition(parseWarmup(warmup), repId)
-  const completionLabel = warmupAt
-    ? warmupAt.next
-      ? `Warm-up ${warmupAt.index + 2} of ${warmupAt.total}: ${repById.get(warmupAt.next)?.title}`
-      : 'Finish warm-up'
-    : pathNextRep
-      ? `Next rep: ${pathNextRep.title}`
-      : recommendedRep && recommendation
-        ? `${actionLabel(recommendation.mode)}: ${recommendedRep.title}`
-        : 'Return to your trail'
+  const setItems = parseSet(todaySet)
+  const setAt = warmupPosition(
+    setItems.map(item => item.repId),
+    repId,
+  )
+  // A main rep with an authored trace ends the set with a cool-down: stepping through that trace, calling each step.
+  const setCoolDownReady =
+    !!setAt && !setAt.next && setItems[setAt.index].kind === 'new' && review.status === 'ready' && !!review.content.depth?.traceSteps
+  const runLabel = setAt
+    ? `Set · ${setAt.index + 1} of ${setAt.total}`
+    : warmupAt
+      ? `Warm-up · ${warmupAt.index + 1} of ${warmupAt.total}`
+      : undefined
+  const completionLabel = setAt
+    ? setAt.next
+      ? `Next in set: ${repById.get(setAt.next)?.title}`
+      : setCoolDownReady
+        ? 'Cool-down: call the steps of the trace'
+        : 'Finish set'
+    : warmupAt
+      ? warmupAt.next
+        ? `Warm-up ${warmupAt.index + 2} of ${warmupAt.total}: ${repById.get(warmupAt.next)?.title}`
+        : 'Finish warm-up'
+      : pathNextRep
+        ? `Next rep: ${pathNextRep.title}`
+        : recommendedRep && recommendation
+          ? `${actionLabel(recommendation.mode)}: ${recommendedRep.title}`
+          : 'Return to your trail'
   function openWarmupRep(id: string) {
     warmupNavigation.current = true
     openReview(id)
   }
   function continueAfterCompletion() {
+    if (setAt?.next) return openWarmupRep(setAt.next)
+    if (setAt) {
+      setTodaySet('')
+      if (!setCoolDownReady) return setView('home')
+      setCoolDown(repId)
+      return revealSection('explain-section')
+    }
     if (warmupAt?.next) return openWarmupRep(warmupAt.next)
     if (warmupAt) {
       setWarmup('')
@@ -494,6 +529,12 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     () => pickWarmup(history, journeyStates, id => attemptStatus(id, drafts[id]) === 'In progress', now),
     [history, journeyStates, drafts, now],
   )
+  function startSet(items: SetItem[]) {
+    if (!items.length) return
+    setWarmup('')
+    setTodaySet(formatSet(items))
+    openWarmupRep(items[0].repId)
+  }
   function startWarmup() {
     if (!warmupChoices.length) return
     setWarmup(formatWarmup(warmupChoices))
@@ -644,6 +685,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
         }}
         onReset={() => resetDialogRef.current?.showModal()}
         openLesson={openKnowledge}
+        runLabel={runLabel}
       />
       {activeRound && (
         <InterviewStatus
@@ -732,6 +774,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
               review={review}
               onReveal={revealSection}
               code={attempt.code}
+              coolDown={coolDown === repId}
             />
             <ReviewSection
               hidden={activeStep !== 'review'}
@@ -913,6 +956,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
           openPracticeAction={openPracticeAction}
           warmup={warmupChoices}
           startWarmup={startWarmup}
+          startSet={startSet}
           onExport={exportData}
           onImport={file => {
             void importData(file)

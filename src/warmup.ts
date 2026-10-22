@@ -51,3 +51,13 @@ export function warmupPosition(ids: string[], repId: string) {
   const index = ids.indexOf(repId)
   return index < 0 ? undefined : { index, total: ids.length, next: ids[index + 1] }
 }
+
+// Today as a set: the Today plan's open items in one run, warm-up reviews first, then the main (new) rep. Like a warm-up
+// it is a session preference, so it never enters backups; each completion is an ordinary attempt.
+export type SetItem = { repId: string; kind: 'review' | 'new' }
+export const formatSet = (items: SetItem[]) => items.map(item => `${item.kind === 'new' ? 'n' : 'r'}:${item.repId}`).join(',')
+export const parseSet = (value: string): SetItem[] =>
+  value
+    .split(',')
+    .map(part => ({ kind: part.startsWith('n:') ? ('new' as const) : ('review' as const), repId: part.slice(2) }))
+    .filter(item => repSummaryById.has(item.repId))

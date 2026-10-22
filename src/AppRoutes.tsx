@@ -22,6 +22,7 @@ import type { View } from './ui-navigation'
 import type { RestoreFlow } from './backup'
 import { repSearchText, searchWords } from './command-search'
 import type { useFluency } from './useFluency'
+import type { SetItem } from './warmup'
 import { useSessionPreference } from './useSessionPreference'
 
 const PathsPage = lazyRoute(() => import('./PathsPage').then(module => module.PathsPage), 'The tracks', 'paths-main')
@@ -88,6 +89,7 @@ type Props = {
   /** Reps a warm-up would start with now, least recently practiced first. */
   warmup: string[]
   startWarmup: () => void
+  startSet: (items: SetItem[]) => void
   onExport: () => void
   onImport: (file: File) => void
   transferMessage: string
@@ -203,6 +205,7 @@ export function AppRoutes(props: Props) {
           now={now}
           warmup={props.warmup}
           startWarmup={props.startWarmup}
+          startSet={props.startSet}
         />
       )
     case 'catalog':

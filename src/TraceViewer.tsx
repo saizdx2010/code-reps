@@ -420,10 +420,19 @@ function PickVerdict({ structure, answer, picked }: { structure: TraceStructure;
 }
 
 /** Authored snapshots for post-solve comparison, not a live code execution trace. */
-export function TraceViewer({ trace, title = 'Step trace' }: { trace: RepTrace; title?: string }) {
+export function TraceViewer({
+  trace,
+  title = 'Step trace',
+  predictFirst = false,
+}: {
+  trace: RepTrace
+  title?: string
+  /** Start in predict mode (the Today set's cool-down). */
+  predictFirst?: boolean
+}) {
   const [index, setIndex] = useState(0)
   // Predict mode hides each later step until the learner reveals it. Guesses stay in this component and are never saved.
-  const [predicting, setPredicting] = useState(false)
+  const [predicting, setPredicting] = useState(predictFirst)
   const [revealed, setRevealed] = useState<Set<number>>(() => new Set())
   const [guesses, setGuesses] = useState<Record<number, Record<string, string>>>({})
   // A tap on the cell or node expected next, for steps whose drawing can check it.

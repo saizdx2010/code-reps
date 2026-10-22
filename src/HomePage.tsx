@@ -15,6 +15,7 @@ import { usePathText } from './usePathText'
 import type { getPracticePlan, PracticeAction } from './practice'
 import { withoutGoal } from './practice-actions'
 import type { PortableRecord } from './portability'
+import type { SetItem } from './warmup'
 
 // Today's plan loads beside the trail; it starts loading as soon as Trail renders. If it cannot load, due reviews stay
 // one link away on Progress.
@@ -55,6 +56,7 @@ type Props = {
   now: number
   warmup: string[]
   startWarmup: () => void
+  startSet: (items: SetItem[]) => void
 }
 
 const modeLabel = (mode?: string) =>
@@ -184,6 +186,9 @@ export function HomePage(props: Props) {
               where={where}
               onOpen={item => (item.action ? openPracticeAction(item.action) : props.openRep(item.repId))}
               onAllReviews={props.onProgress}
+              onStartSet={props.startSet}
+              warmup={warmup}
+              startWarmup={startWarmup}
             />
           </Suspense>
           {draft && (
@@ -203,18 +208,6 @@ export function HomePage(props: Props) {
                 Find saved drafts in the Library
               </Button>
             </p>
-          )}
-          {warmup.length >= 2 && (
-            <section className="warmup-panel" aria-labelledby="warmup-heading">
-              <h2 id="warmup-heading">Quick warm-up</h2>
-              <p>
-                {warmup.length} short reps you finished before, least recent first: {warmup.map(repTitle).join(', ')}. Each starts from the
-                starter, and finishing one counts like any other attempt.
-              </p>
-              <Button onMouseEnter={() => preloadPractice(warmup[0])} onFocus={() => preloadPractice(warmup[0])} onClick={startWarmup}>
-                Start warm-up
-              </Button>
-            </section>
           )}
           <nav className="trail-links" aria-label="Progress">
             <Button variant="text" onClick={onProgress}>
