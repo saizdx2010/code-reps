@@ -4,7 +4,7 @@
 
 | Group | Raw byte budget | Gzip byte budget |
 | --- | ---: | ---: |
-| Initial route JavaScript and static dependencies | 530,000 | 161,500 |
+| Initial route JavaScript and static dependencies | 530,000 | 162,000 |
 | Additional editor JavaScript, including its dynamic language modules | 4,200,000 | 1,050,000 |
 | Vim keys (`monaco-vim`), loaded only when a learner turns them on | 110,000 | 34,000 |
 | Additional frontend preview/check JavaScript | 3,900,000 | 1,050,000 |
@@ -36,6 +36,8 @@ The playful-practice work held startup JavaScript at or below 160,284 for its fi
 On its own branch, Break it, the playful-practice hunt format, took initial JavaScript from 160,785 to about 160,950 gzip bytes with no budget changed. Its desk and stylesheet (`src/BreakIt.tsx`, `src/break-it.css`) load with the first hunt through `lazyRoute`, so startup carries only the catalog row, the format label, and one branch in the coding desk. The hunts load with the testing chunk instead of a source of their own: a new source would add a lazy loader and a hashed chunk name to startup (about 45 gzip bytes), and a content module that imported the desk's helpers would split them into a shared chunk whose name also lands in the entry's preload list. Initial CSS did not change.
 
 Merging the Break it format and the Game of Life toy took initial JavaScript to 161,074 gzip bytes. Each was under budget on its own: the hunt's desk, styles, and runner flow load with the first hunt, and the toy loads with Projects, so what reaches startup is the workspace's switch between the editor and a hunt, the hunt's catalog row, and the three Game of Life catalog rows. Moving the Predict verdict sentence into the lazily loaded check results brought it to 161,054. The remaining startup pieces are drawn synchronously by the workspace and Library, so the gzip budget was raised to 161,500, and the raw budget did not change.
+
+The practice header's way back took initial JavaScript from 161,435 to 161,772 gzip bytes. The workspace now remembers the page or lesson a rep was opened from (`src/rep-origin.ts`) and names it in the back link, which the header draws on first paint. The stepper and switcher (`src/RepStepper.tsx`, `src/rep-context.ts`, `src/rep-stepper.css`) load just after the header, and so do the Library topic labels and track lists they step through. A first attempt that imported the header's menu helpers back from the stepper made the bundler pull about 3.5 KB into startup; the helpers now live in `src/menu-close.ts`. The gzip budget was raised to 162,000, and the raw budget did not change.
 
 The practice worker now loads one rep at a time. The run request names the rep's content chunk (`source`), and `src/runner.worker.ts` imports that chunk through `src/rep-chunks.ts` and runs it with `src/run-rep.ts`; `src/runner.ts` keeps the by-ID API for tests and scripts. The worker's entry went from 4,807,175 to about 3,540,000 raw bytes, and a run loads the entry plus one rep source instead of every rep. The worker budget still counts every lazy chunk, so its total (12,087,156 raw bytes) barely moved; what each run loads did. `src/practice-worker.ts` also keeps one spare worker that has loaded its script, the open rep's chunk, and (for SQL reps) the SQLite engine before Run is pressed. Each run still uses a fresh worker once and terminates it, so learner code cannot leak state between runs, and the next spare starts after a run ends.
 

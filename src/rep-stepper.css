@@ -1,0 +1,177 @@
+/* Previous, next, and the switcher sit between the back link and the title: one quiet group of 32px controls. */
+.rep-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+  margin-left: -4px;
+  padding-right: 10px;
+  border-right: 1px solid var(--border);
+}
+.rep-stepper-step,
+.rep-switcher > summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--muted);
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+.rep-stepper-step .ui-icon {
+  width: 18px;
+  height: 18px;
+}
+.rep-stepper-step:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.rep-switcher {
+  position: relative;
+}
+.rep-switcher > summary {
+  gap: 2px;
+  padding: 0 8px;
+  color: var(--text);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  list-style: none;
+  cursor: pointer;
+}
+.rep-switcher > summary span {
+  color: var(--muted);
+}
+/* The position is the disclosure; the global chevron would crowd a three-character label. */
+.rep-switcher > summary::before,
+.rep-switcher > summary::-webkit-details-marker {
+  display: none !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  .rep-stepper-step:hover:not(:disabled),
+  .rep-switcher > summary:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+}
+.rep-stepper-step:focus-visible,
+.rep-switcher > summary:focus-visible {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.rep-switcher[open] > summary {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.rep-switcher > div {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: var(--layer-menu);
+  display: grid;
+  gap: 4px;
+  width: min(360px, calc(100vw - 40px));
+  max-height: min(60dvh, 440px);
+  padding: 8px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-menu);
+  animation: menu-arrive 240ms var(--motion-ease);
+}
+.rep-switcher-label {
+  padding: 6px 8px 2px;
+  color: var(--muted);
+  font-size: var(--type-meta);
+  font-weight: 600;
+}
+.rep-switcher ol {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rep-switcher li button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.35;
+  text-align: left;
+}
+.rep-switcher li button[aria-current='true'] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 550;
+}
+@media (hover: hover) and (pointer: fine) {
+  .rep-switcher li button:hover:not([aria-current='true']) {
+    background: var(--bg);
+    color: var(--accent);
+  }
+}
+.rep-switcher li button:focus-visible:not([aria-current='true']) {
+  background: var(--bg);
+  color: var(--accent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .rep-switcher > div {
+    animation: none;
+  }
+}
+@media (max-width: 600px) {
+  /* Back, the stepper, Glossary, and Tools share the first row: the steps narrow and a long back label truncates. */
+  .rep-stepper {
+    order: 1;
+    gap: 0;
+    margin-left: -6px;
+    padding-right: 0;
+    border-right: 0;
+  }
+  .rep-stepper-step {
+    min-width: 28px;
+  }
+  .rep-switcher > summary {
+    padding: 0 6px;
+  }
+  .workspace-header .breadcrumb-lesson {
+    max-width: 76px;
+  }
+  .workspace-header:has(.rep-stepper) .breadcrumb-link {
+    padding-right: 4px;
+  }
+  .workspace-header:has(.rep-stepper) .reset-button,
+  .workspace-header:has(.rep-stepper) .workspace-options > summary {
+    padding-inline: 10px;
+  }
+  .workspace-header:has(.rep-stepper) .workspace-options > summary {
+    gap: 6px;
+  }
+  /* On a phone the list spans the header instead of hanging off the small position label. */
+  .workspace-header:has(.rep-switcher) {
+    position: relative;
+  }
+  .rep-switcher {
+    position: static;
+  }
+  .rep-switcher > div {
+    left: 0;
+    right: 0;
+    top: 46px;
+    width: auto;
+  }
+}
