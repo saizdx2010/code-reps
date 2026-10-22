@@ -236,6 +236,8 @@ test('lesson and path completion rows respond in place without moving their layo
 
 test('a progress disclosure visibly collapses and reverses without losing its actions', async ({ page }) => {
   await page.goto('/#/progress')
+  // A new learner's journeys wait folded in Not started; open the group to reach one.
+  await page.locator('.journey-groups > .list-group > summary').first().click()
   const disclosure = page.locator('.progress-journey').first()
   const summary = disclosure.locator('summary')
   await summary.click()
