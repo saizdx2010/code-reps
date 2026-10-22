@@ -82,6 +82,8 @@ function Board({ sources, openRep }: { sources: LifeSources; openRep: (id: strin
   const [inspected, setInspected] = useState<Extract<LifeResult, { next: string[] }>['inspect'] | null>(null)
   // The boards before the current one (at most two) tell a settled board; refs keep repeated steps on the latest board.
   const trail = useRef<string[][]>([])
+  // Clear, Start over, and switching a cell start a new board; a step or answer still running for the old one is dropped.
+  const version = useRef(0)
   const current = useRef({ board, generation })
   current.current = { board, generation }
   const cells = useRef<(HTMLButtonElement | null)[]>([])
@@ -90,11 +92,14 @@ function Board({ sources, openRep }: { sources: LifeSources; openRep: (id: strin
 
   async function step(): Promise<boolean> {
     const { board: before, generation: count } = current.current
+    const started = version.current
     setBusy(true)
     const result = await session.step({ grid: before })
     setBusy(false)
+    if (version.current !== started) return false
     if ('error' in result) {
-      setFailure({ kind: 'error', message: result.error })
+      // A closed session (the toy left the page, or the code changed) ends quietly.
+      if (result.error) setFailure({ kind: 'error', message: result.error })
       return false
     }
     const history = [...trail.current, before, result.next].slice(-3)
@@ -111,6 +116,7 @@ function Board({ sources, openRep }: { sources: LifeSources; openRep: (id: strin
     return !settled(history)
   }
   function restart(next: string[]) {
+    version.current++
     setPlaying(false)
     setFailure(null)
     setInspected(null)
@@ -140,15 +146,19 @@ function Board({ sources, openRep }: { sources: LifeSources; openRep: (id: strin
     for (let i = 0; i < 10; i++) if (!(await step())) break
   }
   function toggle(r: number, c: number) {
+    version.current++
     setPlaying(false)
     setFailure(null)
     trail.current = []
     setBoard(current => current.map((row, y) => (y === r ? row.slice(0, c) + (row[c] === '#' ? '.' : '#') + row.slice(c + 1) : row)))
   }
   async function inspect(r: number, c: number) {
-    const result = await session.step({ grid: board, inspect: [r, c] })
-    if ('error' in result) setFailure({ kind: 'error', message: result.error })
-    else setInspected(result.inspect ?? null)
+    const started = version.current
+    const result = await session.step({ grid: current.current.board, inspect: [r, c] })
+    if (version.current !== started) return
+    if ('error' in result) {
+      if (result.error) setFailure({ kind: 'error', message: result.error })
+    } else setInspected(result.inspect ?? null)
   }
   function move(event: KeyboardEvent, r: number, c: number) {
     const delta = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] }[event.key]
@@ -182,29 +192,29 @@ function Board({ sources, openRep }: { sources: LifeSources; openRep: (id: strin
           {board.map((row, r) => (
             <div key={r} role="row" className="life-row">
               {Array.from(row, (cell, c) => (
-                <button
-                  key={c}
-                  ref={node => {
-                    cells.current[r * width + c] = node
-                  }}
-                  type="button"
-                  role="gridcell"
-                  tabIndex={focus[0] === r && focus[1] === c ? 0 : -1}
-                  aria-pressed={cell === '#'}
-                  aria-label={`Row ${r + 1}, column ${c + 1}, ${cell === '#' ? 'live' : 'dead'}${marked.has(`${r},${c}`) ? ', differs from the rules' : ''}`}
-                  className={`life-cell${cell === '#' ? ' is-live' : ''}${marked.has(`${r},${c}`) ? ' is-marked' : ''}`}
-                  onClick={() => {
-                    setFocus([r, c])
-                    toggle(r, c)
-                  }}
-                  onFocus={() => setFocus([r, c])}
-                  onKeyDown={event => {
-                    if (event.key === 'i') {
-                      event.preventDefault()
-                      void inspect(r, c)
-                    } else move(event, r, c)
-                  }}
-                />
+                // A grid cell holds one button; its name carries the state, so no pressed state is added.
+                <span key={c} role="gridcell" className="life-slot">
+                  <button
+                    ref={node => {
+                      cells.current[r * width + c] = node
+                    }}
+                    type="button"
+                    tabIndex={focus[0] === r && focus[1] === c ? 0 : -1}
+                    aria-label={`Row ${r + 1}, column ${c + 1}, ${cell === '#' ? 'live' : 'dead'}${marked.has(`${r},${c}`) ? ', differs from the rules' : ''}`}
+                    className={`life-cell${cell === '#' ? ' is-live' : ''}${marked.has(`${r},${c}`) ? ' is-marked' : ''}`}
+                    onClick={() => {
+                      setFocus([r, c])
+                      toggle(r, c)
+                    }}
+                    onFocus={() => setFocus([r, c])}
+                    onKeyDown={event => {
+                      if (event.key.toLowerCase() === 'i' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+                        event.preventDefault()
+                        void inspect(r, c)
+                      } else move(event, r, c)
+                    }}
+                  />
+                </span>
               ))}
             </div>
           ))}

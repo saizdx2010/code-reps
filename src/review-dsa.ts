@@ -513,7 +513,7 @@ export const dsaDepth: Record<string, RepDepth> = {
     alternative:
       'Store the neighbour count of every cell first, then apply the rules in a second pass. It uses the same storage and separates counting from deciding.',
     counterexample:
-      'Updating cells in place on the vertical blinker writes [0,1] as dead before [1,0] is counted, so [1,0] sees 2 neighbours instead of 3 and is not born. Wrapping the edges makes ["#..","#..","#.."] give ["...","###","..."] instead of ["...","##.","..."].',
+      'Updating cells in place on the vertical blinker writes [0,1] as dead before [1,0] is counted, so [1,0] sees 2 neighbours instead of 3 and is not born. Wrapping the columns makes ["#..","#..","#.."] give ["...","###","..."] instead of ["...","##.","..."].',
     transfer:
       'Self-reviewed: return the board after n generations, stopping early when a generation repeats the one before it. The original checks cover only one step.',
     traceSteps: {

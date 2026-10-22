@@ -21,12 +21,22 @@ import type { SetItem } from './warmup'
 // one link away on Progress.
 const TodayPlan = lazy(() =>
   import('./TodayPlan').catch(() => ({
-    default: ({ onAllReviews }: { onAllReviews: () => void }) => (
+    // The warm-up offer lives in the same module, so a failed load still offers it here.
+    default: ({ onAllReviews, warmup, startWarmup }: { onAllReviews: () => void; warmup: string[]; startWarmup: () => void }) => (
       <p className="today-more" role="status">
         Today's plan could not load. Reload to try again, or{' '}
         <Button variant="text" onClick={onAllReviews}>
           see due reviews on Progress
         </Button>
+        {warmup.length >= 2 && (
+          <>
+            {' '}
+            or{' '}
+            <Button variant="text" onClick={startWarmup}>
+              start a quick warm-up
+            </Button>
+          </>
+        )}
         .
       </p>
     ),

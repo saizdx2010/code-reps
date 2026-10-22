@@ -443,7 +443,9 @@ export function TraceViewer({
   const changed = changedVariables(step, previous)
   const score = predictionScore(trace.steps, revealed, guesses)
   const picked = pickScore(trace.steps, revealed, picks)
-  const target = predicting && previous ? pickTarget(step, previous) : null
+  // The pick redraws the previous step, so it is offered only once that step is visible (never after skipping ahead).
+  const previousVisible = index - 1 === 0 || revealed.has(index - 1)
+  const target = predicting && previous && previousVisible ? pickTarget(step, previous) : null
   const reveal = () => setRevealed(current => new Set(current).add(index))
   const move = (delta: number) => {
     if (delta > 0 && hidden) return reveal()

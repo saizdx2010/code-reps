@@ -24,7 +24,12 @@ export function earlierWork(repId: string, completedAt: string, history: Portabl
   const finished = Date.parse(completedAt)
   if (!Number.isFinite(finished)) return []
   const found: Earlier[] = []
-  const days = (record: PortableRecord) => Math.floor((finished - Date.parse(record.completedAt)) / DAY)
+  // Calendar days, as the dates show them: last night and this morning are one day apart, not "earlier today".
+  const calendarDay = (time: number) => {
+    const date = new Date(time)
+    return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / DAY
+  }
+  const days = (record: PortableRecord) => calendarDay(finished) - calendarDay(Date.parse(record.completedAt))
   const same = firstBefore(history, repId, finished)
   if (same) found.push({ record: same, relation: 'same', days: days(same) })
   for (const journey of journeys) {

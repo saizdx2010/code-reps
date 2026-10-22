@@ -12,8 +12,8 @@ test('lists name extra and missing items at the end by index', () => {
 })
 
 test('lists of the same length name the first differing item and count the rest', () => {
-  assert.equal(diff([1, 2, 3], [1, 5, 3]), 'Item 1 differs: 2 expected, 5 received.')
-  assert.equal(diff([1, 2, 3], [0, 5, 3]), 'Item 0 differs: 1 expected, 0 received (and 1 more).')
+  assert.equal(diff([1, 2, 3], [1, 5, 3]), 'At [1]: Expected 2, received 5: 3 more than expected.')
+  assert.equal(diff([1, 2, 3], [0, 5, 3]), 'At [0]: Expected 1, received 0: 1 less than expected. 1 more item differs too.')
   assert.equal(diff([1, 2, 3], [3, 1, 2]), 'Same items, in a different order.')
   assert.equal(diff([1, 2], [3, 1, 2]), 'Expected 2 items, received 3; the first difference is at index 0.')
 })
@@ -35,7 +35,19 @@ test('text names the first differing character, case, edges, and length', () => 
 test('objects name missing and unexpected keys before differing values', () => {
   assert.equal(diff({ total: 6 }, { count: 6 }), 'Key “total” is missing; “count” was not expected.')
   assert.equal(diff({ a: 1, b: 2 }, { a: 1 }), 'Key “b” is missing.')
-  assert.equal(diff({ total: 6, items: 2 }, { total: 3, items: 2 }), 'Key “total”: 6 expected, 3 received.')
+  assert.equal(diff({ total: 6, items: 2 }, { total: 3, items: 2 }), 'At total: Expected 6, received 3: 3 less than expected.')
+})
+
+test('nested values name the path to the first difference, so long records never read the same on both sides', () => {
+  const read = value => [{ target: 'count', read: 'textContent', value }]
+  assert.equal(diff(read('3'), read('2')), 'At [0].value: Differs at character 1: "3" expected, "2" received.')
+  assert.equal(
+    diff({ rows: [[1, 2]], 'odd key': 1 }, { rows: [[1, 3]], 'odd key': 1 }),
+    'At rows[0][1]: Expected 2, received 3: 1 more than expected.',
+  )
+  assert.equal(diff({ 'odd key': 1 }, { 'odd key': 2 }), 'At ["odd key"]: Expected 1, received 2: 1 more than expected.')
+  assert.equal(diff([{ a: 1 }], [{ b: 1 }]), 'At [0]: Key “a” is missing; “b” was not expected.')
+  assert.equal(diff([[1], [2], [3]], [[1], [9], [8]]), 'At [1][0]: Expected 2, received 9: 7 more than expected. 1 more item differs too.')
 })
 
 test('a different kind of value, or no value, is named plainly', () => {

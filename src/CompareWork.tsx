@@ -8,7 +8,8 @@ import { earlierWork, lineDiff, sharedShare, sideBySide } from './compare-work.t
 import type { SideLine } from './compare-work.ts'
 import { Icon } from './Icon'
 import { StatusChip } from './Layout'
-import { repTitle } from './rep-index.ts'
+import { decodeFiles } from './project-files.ts'
+import { repSummaryById, repTitle } from './rep-index.ts'
 import { StepIndicator } from './StepIndicator'
 import { formatDate, plural } from './ui-copy.ts'
 
@@ -112,8 +113,11 @@ export function EarlierWork({ repId, attempt, history }: { repId: string; attemp
         </Button>
       </div>
       {earlier.map(({ record, relation, journeyTitle }) => {
-        const code =
-          relation === 'same' && (record.code.trim() || attempt.code?.trim()) ? sideBySide(record.code, attempt.code ?? '') : null
+        // Code lines compare only for plain source: a multi-file project and a Break it tries table are saved as JSON.
+        const plain = (text: string) => !decodeFiles(text) && repSummaryById.get(repId)?.format !== 'break'
+        const comparable =
+          relation === 'same' && (record.code.trim() || attempt.code?.trim()) && plain(record.code) && plain(attempt.code ?? '')
+        const code = comparable ? sideBySide(record.code, attempt.code ?? '') : null
         const thenTitle = relation === 'same' ? 'first attempt' : `${repTitle(record.repId)}, the step before in “${journeyTitle}”`
         return (
           <section key={record.id} className="then-now-pair" aria-label={`Then and now: ${repTitle(record.repId)}`}>
@@ -138,7 +142,7 @@ export function EarlierWork({ repId, attempt, history }: { repId: string; attemp
               </div>
             </div>
             {code && (
-              <p className="then-now-legend">A bar marks a line found in only one version. Blank lines and comments are left out.</p>
+              <p className="then-now-legend">A bar marks a line found in only one version. Blank lines and // comments are left out.</p>
             )}
           </section>
         )

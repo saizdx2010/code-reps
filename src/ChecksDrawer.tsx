@@ -8,6 +8,7 @@ import type { SqlError, TestResult } from './runner.types'
 import { judgeCalls, noCalls, surprisesFirst } from './check-calls.ts'
 import type { Call, CallVerdict, Calls } from './check-calls.ts'
 import { typeCheckSummary } from './type-issues'
+import { useSessionPreference } from './useSessionPreference'
 import type { TypeIssue } from './type-issues'
 
 type CheckRun = {
@@ -113,6 +114,8 @@ export function ChecksDrawer({
     if (!noCalls(calls)) setCalls({ checks: {} })
   }
   const verdict = results && judged?.results === results ? judged.verdict : null
+  // A run that ends in an error judges nothing; its calls are dropped rather than left unseen for a later run.
+  if (runError && !noCalls(calls)) setCalls({ checks: {} })
   useEffect(() => {
     if (running) void loadCheckResults().catch(() => {})
   }, [running])
@@ -120,9 +123,16 @@ export function ChecksDrawer({
   const [openCase, setOpenCase] = useState<{ run: TestResult[] | null; name: string | null }>({ run: null, name: null })
   const openName = openCase.run === shown ? openCase.name : firstFailed
   const chooseCase = (name: string | null) => setOpenCase({ run: shown, name })
-  // The first all-green run of a never-completed rep says so, once: it remembers that run, so later runs stay quiet.
+  // The first all-green run of a never-completed rep this browser session says so, once. Runs are not stored, so the
+  // claim is limited to the session: the reps it was shown for are a session preference, never part of a backup.
   const [firstGreen, setFirstGreen] = useState<{ repId: string; results: TestResult[] } | null>(null)
-  if (results && allPassed && neverCompleted && !completed && firstGreen?.repId !== repId) setFirstGreen({ repId, results })
+  const [greenReps, setGreenReps] = useSessionPreference<string>('first-green', '')
+  const greenBefore = greenReps.split(',').includes(repId)
+  if (results && allPassed && neverCompleted && !completed && firstGreen?.repId !== repId && !greenBefore) setFirstGreen({ repId, results })
+  useEffect(() => {
+    if (firstGreen && !greenReps.split(',').includes(firstGreen.repId))
+      setGreenReps([greenReps, firstGreen.repId].filter(Boolean).join(','))
+  }, [firstGreen, greenReps, setGreenReps])
   const firstGreenRun = !!results && firstGreen?.repId === repId && firstGreen.results === results
   // One direct lesson for the rep, never a guess from check names, and nothing when the rep has none.
   const lesson = skillSummariesForRep(repId)[0]
@@ -201,7 +211,7 @@ export function ChecksDrawer({
                 </strong>
                 {firstGreenRun && (
                   <p className="first-green">
-                    <StatusChip tone="success">First all-green run on this rep</StatusChip>
+                    <StatusChip tone="success">First all-green run this session</StatusChip>
                   </p>
                 )}
               </div>

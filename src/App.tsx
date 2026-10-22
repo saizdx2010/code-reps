@@ -326,6 +326,10 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     return () => observer.disconnect()
   }, [view, repId])
 
+  // The cool-down belongs to the visit that finished the set: leaving the rep or the workspace (Back included) ends it.
+  useEffect(() => {
+    if (coolDown && (coolDown !== repId || view !== 'workspace')) setCoolDown(null)
+  }, [coolDown, repId, view])
   function openRep(nextId: string) {
     // Opening a rep another way ends a running warm-up or set, so a later completion never names one of its steps.
     if (!warmupNavigation.current) {
@@ -539,6 +543,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     openWarmupRep(items[0].repId)
   }
   function startWarmup() {
+    setTodaySet('')
     if (!warmupChoices.length) return
     setWarmup(formatWarmup(warmupChoices))
     openWarmupRep(warmupChoices[0])
@@ -784,7 +789,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
               review={review}
               onReveal={revealSection}
               code={attempt.code}
-              coolDown={coolDown === repId}
+              coolDown={coolDown === repId && !!attempt.completedAt}
             />
             <ReviewSection
               hidden={activeStep !== 'review'}
@@ -825,6 +830,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
           {rep.format === 'break' ? (
             <Suspense fallback={codeNotice}>
               <BreakIt
+                key={rep.id}
                 rep={full}
                 notice={codeNotice}
                 attempt={attempt}

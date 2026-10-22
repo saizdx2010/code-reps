@@ -36,13 +36,12 @@ test('the score counts only revealed steps with changed variables', () => {
   assert.deepEqual(predictionScore(steps, new Set([4]), {}), { matched: 0, total: 1 })
 })
 
-const table = (
+// A table with the listed cells filled ('r,c'); the current cell is the one being filled.
+const table = (current, filled = [], cols = 2) => ({
+  kind: 'table',
+  cells: [0, 1].map(r => Array.from({ length: cols }, (_, c) => (filled.includes(`${r},${c}`) ? 1 : null))),
   current,
-  cells = [
-    [0, 0],
-    [0, null],
-  ],
-) => ({ kind: 'table', cells, current })
+})
 const tree = current => ({
   kind: 'tree',
   root: {
@@ -57,26 +56,12 @@ const tree = current => ({
 })
 const at = structure => ({ line: 0, vars: {}, note: '', structure })
 
-test('a pick target is the next table cell or tree node, only when it moved and the drawing kept its shape', () => {
-  assert.deepEqual(pickTarget(at(table([1, 1])), at(table([1, 0]))), { kind: 'cell', answer: '1,1' })
-  assert.equal(pickTarget(at(table([1, 1])), at(table([1, 1]))), null, 'the same cell again is not a prediction')
-  assert.equal(
-    pickTarget(
-      at(
-        table(
-          [1, 1],
-          [
-            [0, 0, 0],
-            [0, 0, null],
-          ],
-        ),
-      ),
-      at(table([1, 0])),
-    ),
-    null,
-    'a reshaped table',
-  )
-  assert.equal(pickTarget(at(table([1, 1]))), null, 'the first step')
+test('a pick target is the next filled table cell or the next tree node, only when it moved and the drawing kept its shape', () => {
+  assert.deepEqual(pickTarget(at(table([1, 1], ['1,0', '1,1'])), at(table([1, 0], ['1,0']))), { kind: 'cell', answer: '1,1' })
+  assert.equal(pickTarget(at(table([1, 1], ['1,1'])), at(table([1, 1], ['1,1']))), null, 'the same cell again is not a prediction')
+  assert.equal(pickTarget(at(table([1, 1], ['1,0'])), at(table([1, 0], ['1,0']))), null, 'a cell visited without filling')
+  assert.equal(pickTarget(at(table([1, 1], ['1,1'], 3)), at(table([1, 0]))), null, 'a reshaped table')
+  assert.equal(pickTarget(at(table([1, 1], ['1,1']))), null, 'the first step')
   assert.deepEqual(pickTarget(at(tree('b')), at(tree('a'))), { kind: 'node', answer: 'b' })
   assert.equal(pickTarget(at(tree('a')), at(tree('a'))), null)
   assert.equal(pickTarget(at(tree('z')), at(tree('a'))), null, 'a node the previous drawing does not have')
@@ -84,7 +69,12 @@ test('a pick target is the next table cell or tree node, only when it moved and 
 })
 
 test('the pick score counts revealed steps with a pick', () => {
-  const trace = [at(table([0, 1])), at(table([1, 0])), at(table([1, 1])), at(table([1, 1]))]
+  const trace = [
+    at(table([0, 1], ['0,1'])),
+    at(table([1, 0], ['0,1', '1,0'])),
+    at(table([1, 1], ['0,1', '1,0', '1,1'])),
+    at(table([1, 1], ['0,1', '1,0', '1,1'])),
+  ]
   assert.deepEqual(pickScore(trace, new Set([1, 2, 3]), { 1: '1,0', 2: '0,0' }), { matched: 1, total: 2 })
   assert.deepEqual(pickScore(trace, new Set([1]), {}), { matched: 0, total: 0 })
   assert.deepEqual(pickScore(trace, new Set([3]), { 3: '1,1' }), { matched: 0, total: 0 }, 'no target on an unchanged step')

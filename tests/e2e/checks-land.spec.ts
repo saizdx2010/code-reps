@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { expectChecksFinished, replaceCode, route, solution } from './helpers'
+import { editor, expectChecksFinished, replaceCode, route, solution } from './helpers'
 
 const tieBug = solution.replace(' || (count === counts.get(best)! && number < best)', '')
 
@@ -23,9 +23,15 @@ test('the first all-green run of a never-completed rep says so once', async ({ p
   await page.keyboard.press('ControlOrMeta+Enter')
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
   const checks = page.locator('#checks-section')
-  await expect(checks.getByText('First all-green run on this rep')).toBeVisible()
+  await expect(checks.getByText('First all-green run this session')).toBeVisible()
   // A second green run is not the first one.
   await page.keyboard.press('ControlOrMeta+Enter')
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
-  await expect(checks.getByText('First all-green run on this rep')).toHaveCount(0)
+  await expect(checks.getByText('First all-green run this session')).toHaveCount(0)
+  // A reload keeps the session's memory, so the chip does not claim a first again.
+  await page.reload()
+  await editor(page).focus()
+  await page.keyboard.press('ControlOrMeta+Enter')
+  await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
+  await expect(checks.getByText('First all-green run this session')).toHaveCount(0)
 })

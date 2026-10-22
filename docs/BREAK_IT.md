@@ -21,7 +21,7 @@ Motion follows the [design system](./DESIGN_SYSTEM.md#motion): a new try slides 
 | --- | --- |
 | `format: 'break'` and `breakIt: BreakTask` (suspect, contract, `params` with `min`, `max`, and `rule`, and `bugs` as `{ id, variant }`) | `src/rep-types.ts` |
 | The tries table: reading, writing, input rules, and counting caught bugs | `src/break-it.ts` |
-| Running a table: `runBreakIt`, used by the worker and by `runRep`/`runAsyncRep` | `src/run-rep.ts`, `src/runner.worker.ts` |
+| Running a table: `runBreakIt`, used by the worker and by `runRepChecks`/`runRepChecksAsync` | `src/run-rep.ts`, `src/runner.worker.ts` |
 | The desk, loaded with the first hunt opened, and its stylesheet | `src/BreakIt.tsx`, `src/break-it.css` |
 | The hunt's content and reviews | `src/break-it-reps.ts`, `src/review-break-it.ts` |
 

@@ -92,6 +92,8 @@
   gap: 2px;
   width: 100%;
   max-width: 560px;
+  /* Cells keep a 24 px target; a narrow screen scrolls the board sideways instead of shrinking them. */
+  overflow-x: auto;
   padding: 8px;
   border: 1px solid var(--border);
   border-radius: var(--radius-control);
@@ -99,12 +101,16 @@
 }
 .life-row {
   display: grid;
-  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-columns: minmax(24px, 1fr);
   grid-auto-flow: column;
   gap: 2px;
 }
+.life-slot {
+  display: grid;
+}
 .life-cell {
   aspect-ratio: 1;
+  width: 100%;
   min-width: 0;
   padding: 0;
   border: 1px solid var(--border);
@@ -121,10 +127,6 @@
 .life-cell:hover {
   border-color: var(--accent);
 }
-.life-cell:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
 /* A cell that differs from the rules: diagonal stripes and an outline (shape, not colour alone), plus a label for
    screen readers. A live one keeps its fill under the stripes. */
 .life-cell.is-marked {
@@ -136,6 +138,12 @@
 }
 .life-cell.is-live.is-marked {
   background-color: var(--accent);
+}
+/* Focus stays visible on every cell, marked ones included. */
+.life-cell:focus-visible,
+.life-cell.is-marked:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 1px;
 }
 .life-toy-controls {
   display: flex;

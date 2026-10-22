@@ -47,11 +47,11 @@ test('with every part built, the board steps on the learner’s code and answers
   await toy.getByRole('button', { name: 'Step', exact: true }).click()
   await expect(board).toHaveAccessibleName(/generation 1, 8 live cells/)
   // A cell is a button: click it to switch it; with focus on it, I asks the learner's code about it.
-  const cell = board.getByRole('gridcell', { name: 'Row 1, column 1, dead' })
+  const cell = board.getByRole('button', { name: 'Row 1, column 1, dead' })
   await cell.click()
-  await expect(board.getByRole('gridcell', { name: 'Row 1, column 1, live' })).toBeFocused()
+  await expect(board.getByRole('button', { name: 'Row 1, column 1, live' })).toBeFocused()
   await page.keyboard.press('ArrowRight')
-  await expect(board.getByRole('gridcell', { name: /^Row 1, column 2,/ })).toBeFocused()
+  await expect(board.getByRole('button', { name: /^Row 1, column 2,/ })).toBeFocused()
   await page.keyboard.press('i')
   await expect(toy.getByRole('status')).toContainText(
     /Row 1, column 2: your countNeighbours says \d+, and your nextCell says it will be (live|dead)\./,
@@ -66,10 +66,10 @@ test('a generation that breaks the rules pauses play and marks the cells', async
   const toy = await seed(page, { ...parts, 'life-next-generation': wrapping })
   await toy.getByRole('button', { name: 'Clear' }).click()
   const board = toy.getByRole('grid')
-  for (const row of [1, 2, 3]) await board.getByRole('gridcell', { name: `Row ${row}, column 1, dead` }).click()
+  for (const row of [1, 2, 3]) await board.getByRole('button', { name: `Row ${row}, column 1, dead` }).click()
   await toy.getByRole('button', { name: 'Step', exact: true }).click()
   await expect(toy.getByRole('alert')).toContainText('Generation 1 differs from the rules in')
-  await expect(board.getByRole('gridcell', { name: /differs from the rules/ }).first()).toBeVisible()
+  await expect(board.getByRole('button', { name: /differs from the rules/ }).first()).toBeVisible()
   await expect(toy.getByRole('button', { name: /Open nextGeneration/ })).toBeVisible()
 })
 

@@ -528,7 +528,8 @@ export function ExplainSection({
             </ul>
           </InfoNote>
         )}
-        {allPassed && depth?.traceSteps && (
+        {/* The cool-down opens on a completed attempt, whose checks passed even if this visit has no results yet. */}
+        {(allPassed || coolDown) && depth?.traceSteps && (
           // The trace walks a reference solution, so it only appears once the learner's own checks pass.
           <section className="see-it-run" aria-labelledby="see-it-run-title" ref={seeItRun}>
             <h3 id="see-it-run-title">{coolDown ? 'Cool-down: see it run' : 'See it run'}</h3>

@@ -51,7 +51,10 @@ export function pickTarget(step: TraceStep, previous?: TraceStep): PickTarget | 
   if (now?.kind === 'table' && before?.kind === 'table' && now.current) {
     const sameShape = now.cells.length === before.cells.length && now.cells.every((row, r) => row.length === before.cells[r].length)
     const answer = now.current.join(',')
-    return sameShape && before.current?.join(',') !== answer ? { kind: 'cell', answer } : null
+    // Only a cell whose value changes answers "which cell fills next?"; a scan that merely visits a cell does not.
+    const [r, c] = now.current
+    const fills = sameShape && now.cells[r]?.[c] !== before.cells[r]?.[c]
+    return fills && before.current?.join(',') !== answer ? { kind: 'cell', answer } : null
   }
   if (now?.kind === 'tree' && before?.kind === 'tree' && now.current && now.current !== before.current && hasNode(before.root, now.current))
     return { kind: 'node', answer: now.current }

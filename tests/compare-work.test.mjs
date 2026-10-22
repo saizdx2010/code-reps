@@ -81,3 +81,10 @@ test('side by side keeps each version whole and marks lines found in only one', 
   )
   assert.deepEqual(sideBySide('a()', 'a();'), { then: [{ text: 'a()', changed: false }], now: [{ text: 'a();', changed: false }] })
 })
+
+test('then and now counts calendar days, so last night and this morning are a day apart', () => {
+  const night = new Date(2026, 9, 21, 23, 0).toISOString()
+  const morning = new Date(2026, 9, 22, 8, 0).toISOString()
+  const history = [{ id: 'n', repId: 'count-words', completedAt: night, plan: '', code: '', explanation: '', hintCount: 0 }]
+  assert.equal(earlierWork('count-words', morning, history)[0].days, 1)
+})

@@ -61,14 +61,28 @@ function Hunt({ rep, attempt, save, onResults, onReveal }: Props) {
   const cancelRun = useRef<(() => void) | null>(null)
   const latest = useRef(attempt)
   const firstField = useRef<HTMLInputElement>(null)
+  // Try it and Stop swap places while a try runs; when the run ends, focus that was on either comes back to Try it.
+  const tryButton = useRef<HTMLButtonElement>(null)
+  const stopButton = useRef<HTMLButtonElement>(null)
+  const refocus = useRef(false)
   useLayoutEffect(() => {
     latest.current = attempt
   })
   const running = pending && pending.base === attempt.code ? pending : null
+  useEffect(() => {
+    if (!refocus.current) return
+    const lost = document.activeElement === document.body || document.activeElement === null
+    if (running) {
+      if (lost) stopButton.current?.focus()
+      return
+    }
+    refocus.current = false
+    if (lost) tryButton.current?.focus()
+  }, [running])
   const source = repIndex.find(item => item.id === rep.id)?.source ?? ''
 
   /** Sends the inputs to a fresh worker, which reruns every try. Only the newest run may report, and only for unchanged text. */
-  function run(inputs: number[][], base: string, done: (next: BreakTry[], results: TestResult[]) => void) {
+  function run(inputs: number[][], base: string, done: (next: BreakTry[], results: TestResult[]) => void, stale?: () => void) {
     cancelRun.current?.()
     const table = formatTries(inputs.map(input => ({ input, suspect: '', contract: '', caught: [] })))
     let dispose: (() => void) | undefined
@@ -85,7 +99,7 @@ function Hunt({ rep, attempt, save, onResults, onReveal }: Props) {
       onResults: (results, reply) => {
         finish()
         const next = readTriesValue(reply.tries)
-        if (latest.current.code !== base) return
+        if (latest.current.code !== base) return stale?.()
         if (!next || next.length !== inputs.length)
           return fail('The tries came back unreadable. Your saved tries are unchanged; try again.')
         setProblem('')
@@ -94,6 +108,7 @@ function Hunt({ rep, attempt, save, onResults, onReveal }: Props) {
       onError: message => {
         finish()
         if (latest.current.code === base) fail(message)
+        else stale?.()
       },
     })
     // A run that already reported (it could not start) is disposed, so cancelling it again does nothing.
@@ -120,6 +135,8 @@ function Hunt({ rep, attempt, save, onResults, onReveal }: Props) {
         if (formatTries(next) !== base && !latest.current.completedAt) save('code', formatTries(next))
         onResults(results)
       },
+      // A reset while checking makes the reply stale: drop it, and stop saying the tries are being checked.
+      () => setVerifying(false),
     )
   }
   useEffect(() => {
@@ -153,6 +170,7 @@ function Hunt({ rep, attempt, save, onResults, onReveal }: Props) {
     if (repeat >= 0) return setMessage(`You already tried ${describeInput(task, reading.input)}: it is try #${repeat + 1}.`)
     if (tries.length >= maxTries) return setMessage(`This hunt keeps up to ${maxTries} tries. Reset the rep to start a new table.`)
     const base = attempt.code ?? formatTries([])
+    refocus.current = document.activeElement === event.currentTarget.querySelector('.break-try') || refocus.current
     setPending({ input: reading.input, base })
     setVerifying(false)
     setProblem('')
@@ -175,6 +193,7 @@ function Hunt({ rep, attempt, save, onResults, onReveal }: Props) {
   }
 
   function stop() {
+    refocus.current = true
     cancelRun.current?.()
     cancelRun.current = null
     warmCheckWorker(rep.id, source)
@@ -260,11 +279,11 @@ function Hunt({ rep, attempt, save, onResults, onReveal }: Props) {
           ))}
           {/* Separate keys keep Stop and Try it separate elements: one click on Stop must not also submit the form. */}
           {running ? (
-            <Button key="stop" className="stop-checks-button break-stop" onClick={stop}>
+            <Button key="stop" ref={stopButton} className="stop-checks-button break-stop" onClick={stop}>
               Stop
             </Button>
           ) : (
-            <Button key="try" type="submit" variant="primary" className="break-try">
+            <Button key="try" ref={tryButton} type="submit" variant="primary" className="break-try">
               Try it
               <Icon name="play" />
             </Button>
