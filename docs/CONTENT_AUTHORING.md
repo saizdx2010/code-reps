@@ -110,7 +110,10 @@ tree may mark `cached` ids for calls answered from a memo. An entry may add one
 memoized recursion beside a bottom-up table; it follows the same rules and is also
 run against the checks. Learners can switch any trace to predict mode, which hides
 each later step's drawing and changed variables until they type a guess and reveal
-it. Guesses stay in the viewer and are never saved or counted as evidence.
+it. When a table step's `current` cell or a tree step's `current` node moves (and the
+previous step drew the same shape), the previous drawing stays up as buttons and the
+learner can tap where it changes next (`pickTarget` in `src/trace-predict.ts`), so mark
+`current` accurately. Guesses stay in the viewer and are never saved or counted as evidence.
 
 In development, `#/author/<rep-id>` (for example
 `http://localhost:5173/#/author/algo-binary-search`) previews a rep's brief, hints,

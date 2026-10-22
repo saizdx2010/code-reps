@@ -1,0 +1,53 @@
+/* Predict each step: while a step is hidden, the previous drawing's cells or nodes are buttons. Loaded with the trace. */
+.trace-pick > p {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.trace-pick-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.trace-pick button {
+  display: grid;
+  justify-items: center;
+  min-width: 52px;
+  min-height: 52px;
+  padding: 4px 8px;
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-mono);
+  transition:
+    border-color var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease);
+}
+.trace-pick button:hover {
+  border-color: var(--accent);
+}
+.trace-pick-index {
+  color: var(--muted);
+  font-size: 11px;
+}
+/* The pick is a solid thick outline on the feature fill: shape as well as colour. */
+.trace-pick button[aria-pressed='true'] {
+  border: 3px solid var(--feature-border);
+  background: var(--feature);
+  color: var(--feature-text);
+  font-weight: 700;
+}
+.trace-pick-verdict {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+.trace-pick button[aria-pressed='true'] .trace-pick-index {
+  color: var(--feature-muted);
+}

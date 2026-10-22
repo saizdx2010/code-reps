@@ -4,7 +4,8 @@ import { Input } from './Input'
 import type { RepTrace, TraceStep, TraceStructure, TraceTreeNode } from './rep-depth'
 import { GraphView, ListView } from './TraceShapes'
 import { describeGraph, describeList } from './trace-describe.ts'
-import { changedVariables, predictionMatches, predictionScore } from './trace-predict.ts'
+import { changedVariables, pickScore, pickTarget, predictionMatches, predictionScore } from './trace-predict.ts'
+import './trace-pick.css'
 import { plural } from './ui-copy.ts'
 
 const outline = (node: TraceTreeNode): string => {
@@ -351,6 +352,73 @@ function Structure({ structure, previous }: { structure: TraceStructure; previou
   )
 }
 
+const flatten = (node: TraceTreeNode): TraceTreeNode[] => [node, ...(node.children ?? []).flatMap(flatten)]
+const pickName = (structure: TraceStructure, key: string) => {
+  if (structure.kind === 'table') return tableName(structure, key.split(',').map(Number) as [number, number])
+  return structure.kind === 'tree' ? `node ${nodeValue(structure.root, key) ?? key}` : key
+}
+
+/** While a step is hidden, the previous drawing stays up and each cell or node is a button: tap the one that changes next. */
+function PickBoard({
+  structure,
+  kind,
+  picked,
+  onPick,
+}: {
+  structure: TraceStructure
+  kind: 'cell' | 'node'
+  picked?: string
+  onPick: (key: string) => void
+}) {
+  const button = (key: string, label: string, text: string, index?: string | number) => (
+    <button key={key} type="button" aria-pressed={picked === key} aria-label={label} onClick={() => onPick(key)}>
+      {index !== undefined && <span className="trace-pick-index">{index}</span>}
+      {text}
+    </button>
+  )
+  return (
+    <div className="trace-pick" role="group" aria-label={kind === 'cell' ? 'Which cell fills next?' : 'Which node is next?'}>
+      <p>{kind === 'cell' ? 'Which cell fills next? Tap it, then reveal.' : 'Which node is next? Tap it, then reveal.'}</p>
+      {structure.kind === 'table' &&
+        structure.cells.map((row, r) => (
+          <div key={r} className="trace-pick-row">
+            {structure.rowLabels && <span className="trace-table-rowlabel">{structure.rowLabels[r]}</span>}
+            {row.map((value, c) =>
+              button(
+                `${r},${c}`,
+                `${tableName(structure, [r, c])}, ${value ?? 'empty'}`,
+                value === null ? '–' : String(value),
+                structure.colLabels?.[c] ?? c,
+              ),
+            )}
+          </div>
+        ))}
+      {structure.kind === 'tree' && (
+        <div className="trace-pick-row">
+          {flatten(structure.root).map(node =>
+            button(node.id, `Node ${node.value}${node.note ? `, ${node.note}` : ''}`, String(node.value)),
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** After the reveal: whether the tap matched the authored next cell or node. A guess, not evidence. */
+function PickVerdict({ structure, answer, picked }: { structure: TraceStructure; answer: string; picked: string }) {
+  const name = pickName(structure, answer)
+  const verb = structure.kind === 'table' ? 'fills next' : 'is next'
+  return picked === answer ? (
+    <p className="trace-pick-verdict trace-guess-match">
+      You called it: {name} {verb}.
+    </p>
+  ) : (
+    <p className="trace-pick-verdict trace-guess-miss">
+      Not quite: {name} {verb}. You picked {pickName(structure, picked)}.
+    </p>
+  )
+}
+
 /** Authored snapshots for post-solve comparison, not a live code execution trace. */
 export function TraceViewer({ trace, title = 'Step trace' }: { trace: RepTrace; title?: string }) {
   const [index, setIndex] = useState(0)
@@ -358,11 +426,15 @@ export function TraceViewer({ trace, title = 'Step trace' }: { trace: RepTrace; 
   const [predicting, setPredicting] = useState(false)
   const [revealed, setRevealed] = useState<Set<number>>(() => new Set())
   const [guesses, setGuesses] = useState<Record<number, Record<string, string>>>({})
+  // A tap on the cell or node expected next, for steps whose drawing can check it.
+  const [picks, setPicks] = useState<Record<number, string>>({})
   const step = trace.steps[index]
   const previous = trace.steps[index - 1]
   const hidden = predicting && index > 0 && !revealed.has(index)
   const changed = changedVariables(step, previous)
   const score = predictionScore(trace.steps, revealed, guesses)
+  const picked = pickScore(trace.steps, revealed, picks)
+  const target = predicting && previous ? pickTarget(step, previous) : null
   const reveal = () => setRevealed(current => new Set(current).add(index))
   const move = (delta: number) => {
     if (delta > 0 && hidden) return reveal()
@@ -395,6 +467,7 @@ export function TraceViewer({ trace, title = 'Step trace' }: { trace: RepTrace; 
             setPredicting(!predicting)
             setRevealed(new Set())
             setGuesses({})
+            setPicks({})
             setIndex(0)
           }}
         >
@@ -403,9 +476,14 @@ export function TraceViewer({ trace, title = 'Step trace' }: { trace: RepTrace; 
       </div>
       {predicting && (
         <p className="trace-predict-note" role="status">
-          {score.total
-            ? `Your predictions matched ${score.matched} of ${score.total} changed values.`
-            : 'Each step hides what changes until you reveal it. Type what you expect, then reveal.'}
+          {score.total || picked.total
+            ? [
+                score.total && `Your predictions matched ${score.matched} of ${score.total} changed values.`,
+                picked.total && `You called ${picked.matched} of ${picked.total} next steps in the drawing.`,
+              ]
+                .filter(Boolean)
+                .join(' ')
+            : 'Each step hides what changes until you reveal it. Type what you expect, or tap where the drawing changes next, then reveal.'}
         </p>
       )}
       <p>
@@ -431,9 +509,23 @@ export function TraceViewer({ trace, title = 'Step trace' }: { trace: RepTrace; 
         <div>
           {step.structure &&
             (hidden ? (
-              <p className="trace-hidden-structure">Picture what this line changes in the drawing, then reveal the step.</p>
+              target && previous?.structure ? (
+                <PickBoard
+                  structure={previous.structure}
+                  kind={target.kind}
+                  picked={picks[index]}
+                  onPick={key => setPicks(current => ({ ...current, [index]: key }))}
+                />
+              ) : (
+                <p className="trace-hidden-structure">Picture what this line changes in the drawing, then reveal the step.</p>
+              )
             ) : (
-              <Structure structure={step.structure} previous={previous} />
+              <>
+                {target && revealed.has(index) && picks[index] !== undefined && previous?.structure && (
+                  <PickVerdict structure={previous.structure} answer={target.answer} picked={picks[index]} />
+                )}
+                <Structure structure={step.structure} previous={previous} />
+              </>
             ))}
           <table className="trace-vars">
             <caption>Variables</caption>

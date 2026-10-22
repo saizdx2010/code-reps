@@ -5,31 +5,10 @@ import { reducedMotion } from './ui-motion'
 import { getActiveProfile } from './local-store'
 import { setScreenNavigated } from './screen-focus'
 import { useGlossary } from './useGlossary'
-import { lazy, Suspense, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
-import type { CSSProperties, KeyboardEvent, MouseEvent, PointerEvent, ReactNode } from 'react'
+import { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
+import type { KeyboardEvent, MouseEvent, PointerEvent, ReactNode } from 'react'
 import { searchPalette } from './command-search'
 import type { SearchEntry, SearchTarget } from './command-search'
-import type { TestResult } from './runner.types'
-
-// SQLite row comparisons load with the first failed SQL check. If they cannot load, the check's sentence still shows.
-const SqlPlan = lazy(() =>
-  import('./SqlResults')
-    .then(module => ({ default: module.SqlPlan }))
-    .catch(() => ({ default: ({ lines }: { lines: string[] }) => <pre>{lines.join('\n')}</pre> })),
-)
-// A failed check's details load with the first failure; the check's name stays readable while they arrive.
-const FailedCheck = lazy(() =>
-  import('./FailedCheck')
-    .then(module => ({ default: module.FailedCheck }))
-    .catch(() => ({
-      default: ({ result }: { result: TestResult; stale: boolean }) => (
-        <>
-          <summary>{result.name}</summary>
-          {result.message && <p>{result.message}</p>}
-        </>
-      ),
-    })),
-)
 
 type ScreenState = { windowY: number; scroll: [number, number][]; open: Record<string, boolean>; focusId?: string }
 const screens = new Map<string, ScreenState>()
@@ -367,79 +346,6 @@ export function CommandPalette({ context, onChoose, onClose }: PaletteProps) {
         </span>
       </p>
     </SearchDrawer>
-  )
-}
-
-/** Failed checks first, one diagnostic open at a time, then the passed checks. Stale results are a dimmed reference. */
-export function CheckFeedback({
-  results,
-  stale = false,
-  open,
-  onOpen,
-}: {
-  results: TestResult[]
-  stale?: boolean
-  /** The failed check shown open. Owned by the caller so it survives a run going out of date. */
-  open?: string | null
-  onOpen?: (name: string | null) => void
-}) {
-  const failed = results.filter(result => !result.passed)
-  const passed = results.filter(result => result.passed)
-  const [ownOpen, setOwnOpen] = useState<string | null>(() => failed[0]?.name ?? null)
-  const activeFailed = open === undefined ? ownOpen : open
-  const setActiveFailed = (next: (current: string | null) => string | null) => {
-    const value = next(activeFailed)
-    setOwnOpen(value)
-    onOpen?.(value)
-  }
-  // One running place across both lists, so the cascade reads failed rows first, then passed ones.
-  const row = (result: TestResult, place: number) => (
-    <li key={result.name} style={{ '--row': place } as CSSProperties}>
-      <span
-        className={result.passed ? 'pass-icon' : 'fail-icon'}
-        aria-label={`${result.passed ? 'Passed' : 'Failed'}${stale ? ' in the last run' : ''}`}
-      >
-        <Icon name={result.passed ? 'check' : 'close'} />
-      </span>
-      <div>
-        {result.passed ? (
-          <>
-            <strong>{result.name}</strong>
-            {result.plan && (
-              <Suspense fallback={null}>
-                <SqlPlan lines={result.plan} />
-              </Suspense>
-            )}
-          </>
-        ) : (
-          <details
-            open={activeFailed === result.name}
-            onToggle={event => {
-              const open = event.currentTarget.open
-              setActiveFailed(current => (open ? result.name : current === result.name ? null : current))
-            }}
-          >
-            <Suspense fallback={<summary>{result.name}</summary>}>
-              <FailedCheck result={result} stale={stale} />
-            </Suspense>
-          </details>
-        )}
-      </div>
-      {result.passed && <span className="check-outcome">{stale ? 'Passed last run' : 'Passed'}</span>}
-    </li>
-  )
-  return (
-    <>
-      {!!failed.length && <ul className={`result-list${stale ? ' is-stale' : ''}`}>{failed.map((result, index) => row(result, index))}</ul>}
-      {!!passed.length && (
-        <ul
-          className={`result-list passed-checks${stale ? ' is-stale' : ''}`}
-          aria-label={stale ? 'Passed in the last run' : 'Passed checks'}
-        >
-          {passed.map((result, index) => row(result, failed.length + index))}
-        </ul>
-      )}
-    </>
   )
 }
 

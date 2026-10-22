@@ -2432,6 +2432,69 @@ footer {
 .value-comparison .diff-line {
   background: var(--accent-soft);
 }
+/* Predict, then run: optional calls before a run, judged once after it. Practice only, never saved. */
+.call-overall {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 13px;
+}
+.call-overall > span {
+  flex-basis: 100%;
+  color: var(--muted);
+}
+/* The call sits in the row's top corner, so an open failed check keeps the full width for its values. */
+.result-list li:has(> .check-call) {
+  position: relative;
+}
+.result-list li:has(> .check-call) :is(summary, strong) {
+  display: block;
+  padding-right: 120px;
+}
+.check-call {
+  position: absolute;
+  top: 6px;
+  right: 0;
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+}
+:is(.check-call, .call-overall) button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 13px;
+}
+.check-call button {
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+}
+:is(.check-call, .call-overall) button[aria-pressed='true'] {
+  border-color: var(--action);
+  background: var(--action);
+  color: var(--action-text);
+  font-weight: 600;
+}
+.call-intro,
+.call-verdict {
+  margin: 0 0 10px;
+  font-size: 13px;
+}
+.call-verdict {
+  padding: 8px 12px;
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 600;
+}
 /* A failed check's difference in one sentence, beside the marked line: words, never colour alone. */
 .result-list .value-difference {
   display: flex;

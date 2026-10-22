@@ -1,11 +1,12 @@
 import { Button } from './Button'
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import type { Ref } from 'react'
-import { CheckFeedback } from './Experience'
 import { Icon } from './Icon'
 import { StatusChip } from './Layout'
 import { skillSummariesForRep } from './skill-index.ts'
 import type { SqlError, TestResult } from './runner.types'
+import { judgeCalls, noCalls, surprisesFirst, verdictSentence } from './check-calls.ts'
+import type { Call, CallVerdict, Calls } from './check-calls.ts'
 import { typeCheckSummary } from './type-issues'
 import type { TypeIssue } from './type-issues'
 
@@ -17,6 +18,24 @@ type CheckRun = {
   loadingEngine?: boolean
   runNotice: string
 }
+
+// The result rows load with the first run: starting a run fetches them, so they are ready when results arrive.
+const loadCheckResults = () => import('./CheckResults')
+const CheckFeedback = lazy(() =>
+  loadCheckResults()
+    .then(module => ({ default: module.CheckFeedback }))
+    .catch(() => ({
+      default: ({ results }: { results: TestResult[] }) => (
+        <ul className="result-list">
+          {results.map(result => (
+            <li key={result.name}>
+              {result.passed ? 'Passed' : 'Failed'}: {result.name}
+            </li>
+          ))}
+        </ul>
+      ),
+    })),
+)
 
 const passedCount = (results: TestResult[]) => results.filter(result => result.passed).length
 
@@ -84,7 +103,20 @@ export function ChecksDrawer({
             : 'Not run yet'
   // The open failed case follows the learner from a fresh run into its out-of-date reference.
   const shown = results ?? stale
-  const firstFailed = shown?.find(result => !result.passed)?.name ?? null
+  // Calls made before a run are judged against that run once, then cleared, so each run starts without calls.
+  const [callState, setCallState] = useState<{ repId: string } & Calls>({ repId, checks: {} })
+  const calls: Calls = callState.repId === repId ? callState : { checks: {} }
+  const setCalls = (next: Calls) => setCallState({ repId, ...next })
+  const [judged, setJudged] = useState<{ results: TestResult[]; verdict: CallVerdict | null } | null>(null)
+  if (results && judged?.results !== results) {
+    setJudged({ results, verdict: judgeCalls(calls, results) })
+    if (!noCalls(calls)) setCalls({ checks: {} })
+  }
+  const verdict = results && judged?.results === results ? judged.verdict : null
+  useEffect(() => {
+    if (running) void loadCheckResults().catch(() => {})
+  }, [running])
+  const firstFailed = surprisesFirst(shown?.filter(result => !result.passed) ?? [], verdict)[0]?.name ?? null
   const [openCase, setOpenCase] = useState<{ run: TestResult[] | null; name: string | null }>({ run: null, name: null })
   const openName = openCase.run === shown ? openCase.name : firstFailed
   const chooseCase = (name: string | null) => setOpenCase({ run: shown, name })
@@ -180,7 +212,10 @@ export function ChecksDrawer({
                 </Button>
               )}
             </div>
-            <CheckFeedback results={results} open={openName} onOpen={chooseCase} />
+            {verdict && <p className="call-verdict">{verdictSentence(verdict, results)}</p>}
+            <Suspense fallback={null}>
+              <CheckFeedback results={results} open={openName} onOpen={chooseCase} verdict={verdict} />
+            </Suspense>
             {typeIssues !== null && <TypeCheckNote issues={typeIssues} />}
             {!allPassed && lesson && (
               <p className="mistake-help">
@@ -198,7 +233,27 @@ export function ChecksDrawer({
             <p className="stale-note">
               Your code changed since this run. The results stay here for reference; run again to check your edit.
             </p>
-            <CheckFeedback results={stale} stale open={openName} onOpen={chooseCase} />
+            <p className="call-intro">
+              Optional: call each check for your next run. Afterwards, any surprises come first.{' '}
+              {!noCalls(calls) && (
+                <Button variant="text" onClick={() => setCalls({ checks: {} })}>
+                  Clear calls
+                </Button>
+              )}
+            </p>
+            <Suspense fallback={null}>
+              <CheckFeedback
+                results={stale}
+                stale
+                open={openName}
+                onOpen={chooseCase}
+                calls={calls.checks}
+                onCall={(name: string, call: Call | undefined) => {
+                  const { [name]: _, ...rest } = calls.checks
+                  setCalls({ ...calls, checks: call ? { ...rest, [name]: call } : rest })
+                }}
+              />
+            </Suspense>
           </div>
         ) : (
           <div className="empty-results">
@@ -208,6 +263,19 @@ export function ChecksDrawer({
             <div>
               <strong>{runNotice ? 'Run checks again when ready' : 'Ready when you are'}</strong>
               <p>{runNotice || 'Run checks to see how your solution handles the examples and edge cases.'}</p>
+              <div className="call-overall" role="group" aria-label="Your call: will every check pass?">
+                <span>Your call, if you like: will every check pass?</span>
+                {(['all', 'some'] as const).map(choice => (
+                  <button
+                    key={choice}
+                    type="button"
+                    aria-pressed={calls.overall === choice}
+                    onClick={() => setCalls({ ...calls, overall: calls.overall === choice ? undefined : choice })}
+                  >
+                    {choice === 'all' ? 'Yes, all of them' : 'No, some will fail'}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}

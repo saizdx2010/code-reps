@@ -36,3 +36,37 @@ export function predictionScore(
   }
   return { matched, total }
 }
+
+/**
+ * A step whose drawing has a single answer to "what changes next?" that a tap can check: the table cell being filled,
+ * or the tree's current node. Only offered when the previous step drew the same structure and the answer moved.
+ */
+export type PickTarget = { kind: 'cell' | 'node'; answer: string }
+type TreeNode = { id: string; children?: TreeNode[] }
+const hasNode = (node: TreeNode, id: string): boolean => node.id === id || (node.children ?? []).some(child => hasNode(child, id))
+
+export function pickTarget(step: TraceStep, previous?: TraceStep): PickTarget | null {
+  const now = step.structure
+  const before = previous?.structure
+  if (now?.kind === 'table' && before?.kind === 'table' && now.current) {
+    const sameShape = now.cells.length === before.cells.length && now.cells.every((row, r) => row.length === before.cells[r].length)
+    const answer = now.current.join(',')
+    return sameShape && before.current?.join(',') !== answer ? { kind: 'cell', answer } : null
+  }
+  if (now?.kind === 'tree' && before?.kind === 'tree' && now.current && now.current !== before.current && hasNode(before.root, now.current))
+    return { kind: 'node', answer: now.current }
+  return null
+}
+
+/** Tallies the revealed steps where the learner tapped a pick. Steps without a pick are not counted. */
+export function pickScore(steps: TraceStep[], revealed: ReadonlySet<number>, picks: Readonly<Record<number, string>>) {
+  let matched = 0,
+    total = 0
+  for (const index of revealed) {
+    const target = pickTarget(steps[index], steps[index - 1])
+    if (!target || picks[index] === undefined) continue
+    total++
+    if (picks[index] === target.answer) matched++
+  }
+  return { matched, total }
+}
