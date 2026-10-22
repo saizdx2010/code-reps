@@ -10,7 +10,7 @@ import { preloadEditor } from './editor-loader'
 import { Icon } from './Icon'
 import { InlineCode } from './InlineCode'
 import { Input, Textarea } from './Input'
-import { InfoNote, StatusChip } from './Layout'
+import { InfoNote } from './Layout'
 import { lazyRoute } from './lazy-route'
 import { mistakeTags } from './mistakes'
 import { appendSentenceStarter } from './practice'
@@ -20,7 +20,6 @@ import type { RepLesson } from './rep-content'
 import type { repNotes } from './rep-notes.ts'
 import type { Rep } from './rep-types'
 import { practiceSteps } from './practice-steps'
-import { StepIndicator } from './StepIndicator'
 import type { useRepContent } from './useRepContent'
 import type { useReviewContent } from './useReviewContent'
 import type { Moments } from './LearningMoments'
@@ -574,6 +573,20 @@ export function ExplainSection({
 
 type StepDone = { plan: boolean; solve: boolean; explain: boolean; review: boolean }
 
+/** The completed attempt's reflection in one line, or nothing when the learner skipped it. */
+function reflectionSummary(attempt: Attempt) {
+  const parts = [
+    attempt.difficulty && `Hardest: ${difficultyLabels[attempt.difficulty]}`,
+    attempt.confidence && `Confidence: ${confidenceLabels[attempt.confidence]}`,
+    attempt.mistakes?.length &&
+      `Mistakes: ${mistakeTags
+        .filter(tag => attempt.mistakes?.includes(tag.id))
+        .map(tag => tag.label)
+        .join(', ')}`,
+  ].filter(Boolean)
+  return parts.length ? parts.join(' · ') : undefined
+}
+
 export function ReviewSection({
   hidden,
   rep,
@@ -610,8 +623,8 @@ export function ReviewSection({
   onCompletionNext: () => void
   onDone: () => void
   onFreshAttempt: () => void
-  /** What this attempt counts as, shown once it is complete. */
-  evidence: { chip: { tone: 'neutral' | 'success'; label: string }; text: string }
+  /** What this attempt counts as in journey terms, shown once it is complete; absent outside the journeys. */
+  evidence?: string
   /** The completed record, for the skills it moved up and at most one personal best. */
   moments?: Moments
 }) {
@@ -633,19 +646,43 @@ export function ReviewSection({
     panel.current?.scrollIntoView({ block: 'start', behavior: 'instant' })
     panel.current?.focus({ preventScroll: true })
   }, [attempt.completedAt, completedOnArrival])
-  return (
-    <section id="review-section" hidden={hidden} tabIndex={-1} className="reflection-section">
-      {attempt.completedAt ? (
+  if (attempt.completedAt) {
+    // The attempt's facts, as recorded: the receipt replaces the old "done" chip and sentence.
+    const receipt = [
+      { label: 'Checks', value: rep.checkTotal ? `All ${rep.checkTotal} passed` : 'All passed' },
+      { label: 'Hints', value: attempt.hintCount ? `${attempt.hintCount} of ${rep.hintTotal}` : 'None' },
+      { label: 'Plan', value: stepDone.plan ? 'Written' : 'Skipped' },
+      { label: 'Explanation', value: stepDone.explain ? 'Written' : 'Skipped' },
+    ]
+    const reflection = reflectionSummary(attempt)
+    return (
+      <section id="review-section" hidden={hidden} tabIndex={-1} className="reflection-section">
         <section ref={panel} className="completion-panel" aria-labelledby="completion-title" tabIndex={-1}>
-          <p className="finish-status" role="status">
-            <Icon name="check" />
-            Rep completed
-          </p>
-          <h3 id="completion-title">You finished {rep.title}.</h3>
-          <p className="completion-evidence">
-            <StatusChip tone={evidence.chip.tone}>{evidence.chip.label}</StatusChip>
-            <span>{evidence.text}</span>
-          </p>
+          <div className="completion-head">
+            <span className="completion-mark" aria-hidden="true">
+              <Icon name="check" />
+            </span>
+            <div>
+              <p className="finish-status" role="status">
+                Rep completed
+              </p>
+              <h3 id="completion-title">{rep.title}</h3>
+            </div>
+          </div>
+          {evidence && <p className="completion-evidence">{evidence}</p>}
+          <dl className="completion-receipt" aria-label="This attempt">
+            {receipt.map(({ label, value }) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
+          {reflection && (
+            <p className="completion-reflection">
+              <strong>Reflection</strong> {reflection}
+            </p>
+          )}
           <div ref={badgeSlot} className="badge-slot" />
           {moments && (
             <Suspense fallback={null}>
@@ -661,121 +698,119 @@ export function ReviewSection({
               Done for today
             </Button>
           </div>
-          <p className="completion-saved">Your attempt is saved in the Journal.</p>
-        </section>
-      ) : (
-        <>
-          <h3>Ready to finish?</h3>
-          <ul className="completion-checklist" aria-label="Completion requirements">
-            {checklist
-              .filter(item => item.required || item.done)
-              .map(({ label, done }) => (
-                <li key={label} className={done ? 'done' : 'needed'}>
-                  <Icon name={done ? 'check' : 'circle'} />
-                  {label}
-                  {!done && <span className="visually-hidden"> still needed</span>}
-                </li>
-              ))}
-            <li className="optional">
-              <Icon name="circle" />
-              Reflection <span className="optional-note">optional</span>
-            </li>
-          </ul>
-          <div className="explain-actions">
-            <button
-              className="finish-button"
-              type="button"
-              aria-describedby={finishMissing ? 'finish-note' : undefined}
-              onClick={canComplete ? onComplete : onShowMissing}
-            >
-              Complete rep
-            </button>
-            {finishMissing && (
-              <p className="finish-note" id="finish-note">
-                Still needed: {finishMissing}.
-                {missingLabel && (
-                  <Button variant="text" className="missing-work" onClick={onShowMissing}>
-                    Go to {missingLabel}
-                    <Icon name="arrow" />
-                  </Button>
-                )}
-              </p>
-            )}
+          <div className="completion-foot">
+            <p className="completion-saved">Your attempt is saved in the Journal.</p>
+            <Button variant="text" className="retry-button" onClick={onFreshAttempt}>
+              Start a fresh attempt
+            </Button>
           </div>
-        </>
-      )}
+        </section>
+      </section>
+    )
+  }
+  return (
+    <section id="review-section" hidden={hidden} tabIndex={-1} className="reflection-section">
+      <h3>Ready to finish?</h3>
+      <ul className="completion-checklist" aria-label="Completion requirements">
+        {checklist
+          .filter(item => item.required || item.done)
+          .map(({ label, done }) => (
+            <li key={label} className={done ? 'done' : 'needed'}>
+              <Icon name={done ? 'check' : 'circle'} />
+              {label}
+              {!done && <span className="visually-hidden"> still needed</span>}
+            </li>
+          ))}
+        <li className="optional">
+          <Icon name="circle" />
+          Reflection <span className="optional-note">optional</span>
+        </li>
+      </ul>
+      {/* Reflection comes before Complete rep, so the saved record carries it; nothing on this pane edits a finished attempt. */}
       <div className="reflection-fields" role="group" aria-labelledby="reflect-heading">
         <h4 id="reflect-heading">
-          Reflect <span className="optional-note">Optional · about 20 seconds · never blocks finishing</span>
+          Reflect <span className="optional-note">Optional · about 20 seconds · saved with this attempt</span>
         </h4>
         <div role="group" aria-labelledby="difficulty-label">
           <span className="field-label" id="difficulty-label">
             What was hardest?
           </span>
-          <div id="difficulty-choice" className="segmented-control reflection-choice">
-            <StepIndicator active={attempt.difficulty ?? ''} selector="button[aria-pressed=true]" />
-            {Object.entries(difficultyLabels).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={attempt.difficulty === value}
-                onClick={() => update('difficulty', attempt.difficulty === value ? undefined : (value as Difficulty))}
-              >
-                {label}
-              </button>
-            ))}
+          <div className="choice-chips">
+            {Object.entries(difficultyLabels).map(([value, label]) => {
+              const chosen = attempt.difficulty === value
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={chosen}
+                  onClick={() => update('difficulty', chosen ? undefined : (value as Difficulty))}
+                >
+                  {chosen && <Icon name="check" />}
+                  {label}
+                </button>
+              )
+            })}
           </div>
         </div>
         <div role="group" aria-labelledby="confidence-label">
           <span className="field-label" id="confidence-label">
             How confident do you feel?
           </span>
-          <div className="segmented-control reflection-choice">
-            <StepIndicator active={attempt.confidence ?? ''} selector="button[aria-pressed=true]" />
-            {Object.entries(confidenceLabels).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={attempt.confidence === value}
-                onClick={() => update('confidence', attempt.confidence === value ? undefined : (value as Confidence))}
-              >
-                {label}
-              </button>
-            ))}
+          <div className="choice-chips">
+            {Object.entries(confidenceLabels).map(([value, label]) => {
+              const chosen = attempt.confidence === value
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={chosen}
+                  onClick={() => update('confidence', chosen ? undefined : (value as Confidence))}
+                >
+                  {chosen && <Icon name="check" />}
+                  {label}
+                </button>
+              )
+            })}
           </div>
         </div>
         <div role="group" aria-labelledby="mistakes-label">
           <span className="field-label" id="mistakes-label">
             Mistakes you made <span className="optional-note">choose any; for your Mistakes page</span>
           </span>
-          {attempt.completedAt ? (
-            <p className="mistake-tags is-recorded">
-              {attempt.mistakes?.length
-                ? mistakeTags
-                    .filter(tag => attempt.mistakes?.includes(tag.id))
-                    .map(tag => <StatusChip key={tag.id}>{tag.label}</StatusChip>)
-                : 'None noted for this attempt.'}
-            </p>
-          ) : (
-            <div className="mistake-tags">
-              {mistakeTags.map(tag => {
-                const chosen = attempt.mistakes?.includes(tag.id) ?? false
-                return (
-                  <button key={tag.id} type="button" aria-pressed={chosen} onClick={() => toggleMistake(tag.id, chosen)}>
-                    {chosen && <Icon name="check" />}
-                    {tag.label}
-                  </button>
-                )
-              })}
-            </div>
-          )}
+          <div className="choice-chips">
+            {mistakeTags.map(tag => {
+              const chosen = attempt.mistakes?.includes(tag.id) ?? false
+              return (
+                <button key={tag.id} type="button" aria-pressed={chosen} onClick={() => toggleMistake(tag.id, chosen)}>
+                  {chosen && <Icon name="check" />}
+                  {tag.label}
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
-      {attempt.completedAt && (
-        <Button variant="text" className="retry-button" onClick={onFreshAttempt}>
-          Start a fresh attempt
-        </Button>
-      )}
+      <div className="explain-actions">
+        <button
+          className="finish-button"
+          type="button"
+          aria-describedby={finishMissing ? 'finish-note' : undefined}
+          onClick={canComplete ? onComplete : onShowMissing}
+        >
+          Complete rep
+        </button>
+        {finishMissing && (
+          <p className="finish-note" id="finish-note">
+            Still needed: {finishMissing}.
+            {missingLabel && (
+              <Button variant="text" className="missing-work" onClick={onShowMissing}>
+                Go to {missingLabel}
+                <Icon name="arrow" />
+              </Button>
+            )}
+          </p>
+        )}
+      </div>
     </section>
   )
 }

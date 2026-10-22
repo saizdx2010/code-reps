@@ -105,25 +105,21 @@ export function repPracticeContext(repId: string) {
 /**
  * What a just-completed attempt counts as, in the same terms the journeys use: hints make it practice, a hint-free
  * independent rep after its guided rep is independent evidence, and a hint-free recall after the break is retention.
- * Derived from saved history only; it never predicts or grants anything the records do not show.
+ * Derived from saved history only; it never predicts or grants anything the records do not show. A rep outside the
+ * journeys has nothing to add beyond the attempt's own facts, so it gets no sentence.
  */
-export function completionEvidence(repId: string, hintCount: number, progress: JourneyProgress[]) {
+export function completionEvidence(repId: string, hintCount: number, progress: JourneyProgress[]): string | undefined {
   const hints = hintCount === 1 ? '1 hint' : `${hintCount} hints`
-  const chip = hintCount ? { tone: 'neutral' as const, label: hints } : { tone: 'success' as const, label: 'No hints' }
   const state = progress.find(item => [item.journey.guided, item.journey.independent, item.journey.recall].includes(repId))
-  if (!state) return { chip, text: hintCount ? `Completed with ${hints}.` : 'Completed without hints.' }
+  if (!state) return undefined
   const { journey } = state
-  if (journey.guided === repId) return { chip, text: `Guided practice done. Next, solve ${repTitle(journey.independent)} without hints.` }
-  if (hintCount)
-    return { chip, text: `With ${hints}, this attempt is practice, not ${journey.recall === repId ? 'recall' : 'independent'} evidence.` }
+  if (journey.guided === repId) return `Guided practice done. Next, solve ${repTitle(journey.independent)} without hints.`
+  if (hintCount) return `With ${hints}, this attempt is practice, not ${journey.recall === repId ? 'recall' : 'independent'} evidence.`
   if (journey.independent === repId)
     return state.independent?.repId === repId && state.recallAt
-      ? { chip, text: `Solved without hints, so this skill is independent. Recall opens ${formatDate(state.recallAt)}.` }
-      : {
-          chip,
-          text: `Solved without hints. To count as independent, finish ${repTitle(journey.guided)} first, then solve this again without hints.`,
-        }
+      ? `Solved without hints, so this skill is independent. Recall opens ${formatDate(state.recallAt)}.`
+      : `Solved without hints. To count as independent, finish ${repTitle(journey.guided)} first, then solve this again without hints.`
   return state.retained
-    ? { chip, text: 'Recalled without hints after the break, so this skill is retained.' }
-    : { chip, text: 'Solved without hints. Recall counts once the break after independent practice has passed.' }
+    ? 'Recalled without hints after the break, so this skill is retained.'
+    : 'Solved without hints. Recall counts once the break after independent practice has passed.'
 }

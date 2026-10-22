@@ -1787,30 +1787,83 @@ footer {
   color: var(--feature-muted);
   font-size: 14px;
 }
-.completion-panel .finish-status {
-  min-height: 0;
-  padding: 3px 10px 3px 8px;
-  border-color: var(--feature-border);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface) 55%, transparent);
-  color: var(--feature-text);
-  font-size: 13px;
-}
-.completion-panel .finish-status .ui-icon {
-  width: 14px;
-  height: 14px;
-}
-.completion-evidence {
+/* The head: a check medallion beside the status eyebrow and the rep's title, said once. */
+.completion-head {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  align-items: center;
+  gap: 14px;
+}
+.completion-mark {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--feature-text);
+  color: var(--feature);
+}
+.completion-mark .ui-icon {
+  width: 20px;
+  height: 20px;
+}
+.completion-panel .finish-status {
+  color: var(--feature-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.completion-panel .completion-evidence {
+  color: var(--feature-text);
+  font-size: 15px;
   line-height: 1.5;
 }
-.completion-evidence span:last-child {
-  color: var(--feature-text);
+/* The attempt's facts, as recorded: one row of four, or two by two when the pane is narrow. Hairlines are the gaps. */
+.completion-panel {
+  container: completion / inline-size;
 }
-.completion-evidence .status-chip {
-  flex: none;
+.completion-receipt {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  width: 100%;
+  margin: 0;
+  border: 1px solid var(--feature-border);
+  border-radius: var(--radius-control);
+  background: var(--feature-border);
+  overflow: clip;
+}
+@container completion (max-width: 460px) {
+  .completion-receipt {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.completion-receipt > div {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  padding: 10px 14px;
+  background: var(--feature);
+}
+.completion-receipt dt {
+  color: var(--feature-muted);
+  font-size: 12px;
+}
+.completion-receipt dd {
+  margin: 0;
+  color: var(--feature-text);
+  font-size: 15px;
+  font-weight: 600;
+}
+.completion-panel .completion-reflection {
+  color: var(--feature-text);
+  line-height: 1.5;
+}
+.completion-reflection strong {
+  margin-right: 6px;
+  color: var(--feature-muted);
+  font-weight: 600;
 }
 .completion-actions {
   display: flex;
@@ -1829,8 +1882,23 @@ footer {
 .completion-panel .text-button {
   color: var(--feature-text);
 }
+/* The footer closes the receipt: where it is saved, and the way to start over. */
+.completion-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  width: 100%;
+  padding-top: 10px;
+  border-top: 1px solid var(--feature-border);
+}
 .completion-panel .completion-saved {
   font-size: 13px;
+}
+.completion-panel .retry-button {
+  min-height: 32px;
+  font-size: 14px;
 }
 /* Growth the attempt showed: a skill that moved up, then at most one personal best. */
 .skill-step-notice {
@@ -1921,13 +1989,14 @@ footer {
   margin: 0;
   font-size: 15px;
 }
-.mistake-tags {
+/* Reflection answers are chips that wrap on their own: no tray, and the chosen one keeps a check. */
+.choice-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin: 8px 0 0;
 }
-.mistake-tags button {
+.choice-chips button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1939,22 +2008,19 @@ footer {
   color: var(--text);
   font-size: 14px;
 }
-.mistake-tags button[aria-pressed='true'] {
+.choice-chips button[aria-pressed='true'] {
   border-color: var(--accent);
   background: var(--accent-soft);
   color: var(--accent);
   font-weight: 600;
 }
-.mistake-tags .ui-icon {
+.choice-chips .ui-icon {
   width: 14px;
   height: 14px;
 }
-.mistake-tags.is-recorded {
-  color: var(--muted);
-  font-size: 14px;
-}
-.retry-button {
-  margin-top: 16px;
+/* Complete rep follows the reflection, so it is the last thing on the pane. */
+.reflection-fields + .explain-actions {
+  margin-top: 24px;
 }
 .workspace-split {
   display: grid;
@@ -4021,23 +4087,6 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 }
 .badge-slot:empty {
   display: none;
-}
-.finish-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: var(--control-height);
-  margin: 0;
-  padding: 8px 14px;
-  border: 1px solid var(--success-border);
-  border-radius: var(--radius-control);
-  background: var(--success-soft);
-  color: var(--success);
-  font-weight: 600;
-}
-.reflection-choice {
-  flex-wrap: wrap;
-  margin: 8px 0 0;
 }
 .optional-note {
   margin-left: 6px;

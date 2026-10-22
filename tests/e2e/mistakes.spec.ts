@@ -48,10 +48,9 @@ test('tagging is optional, keyboard operable, and appears on Mistakes at a narro
   await group.getByRole('button', { name: 'Missed the empty case', exact: true }).click()
   await page.getByRole('button', { name: 'Complete rep', exact: true }).click()
   await expect(page.getByText('Your attempt is saved in the Journal.', { exact: true })).toBeVisible()
-  // Once complete, the tags become a read-only record of what was chosen.
-  await expect(group.getByRole('button')).toHaveCount(0)
-  await expect(group).toContainText('Off-by-one')
-  await expect(group).toContainText('Missed the empty case')
+  // Once complete, the chips are gone and the receipt records what was chosen.
+  await expect(group).toHaveCount(0)
+  await expect(page.locator('.completion-reflection')).toContainText('Mistakes: Off-by-one, Missed the empty case')
 
   await expect
     .poll(() =>

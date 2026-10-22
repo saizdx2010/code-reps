@@ -81,11 +81,13 @@ for (const viewport of [
     await page.getByRole('button', { name: 'Complete rep', exact: true }).click()
     const panel = page.locator('.completion-panel')
     await expect(panel).toBeFocused()
-    await expect(panel.locator('.completion-evidence')).toContainText('No hints')
+    // The receipt states the attempt's facts once; nothing on the pane edits the finished attempt.
+    const receipt = panel.getByRole('definition')
+    await expect(receipt.nth(1)).toHaveText('None')
+    await expect(receipt.nth(2)).toHaveText('Written')
     const next = panel.getByRole('button', { name: /^Next rep/ })
     await expect(next).toBeInViewport()
-    // Reflection stays below the reward, and mistake tags become a read-only record.
-    await expect(page.locator('.mistake-tags.is-recorded')).toHaveText('None noted for this attempt.')
+    await expect(page.getByRole('group', { name: 'What was hardest?', exact: true })).toHaveCount(0)
     await expect(steps(page).getByRole('button', { name: 'Finish', exact: true })).toContainText('Done')
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   })
