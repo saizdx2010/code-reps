@@ -25,7 +25,7 @@ To try the production-like local app with SQLite, run `yarn build` then `yarn se
 | `yarn lint` | Oxlint findings across the project, using the rules in `.oxlintrc.json`, then an oxfmt format check (`.oxfmtrc.json`; `yarn format` fixes it) | Every source change |
 | `yarn test` | Node tests: the catalog index is current, each rep has a level, paths keep their reps, references pass their checks, storage and backup contracts hold, and more | Every source change |
 | `yarn build` | TypeScript errors (`tsc -b`), Vite build failures, and JavaScript bundle budgets (`scripts/check-bundle.mjs`) | Every source change |
-| `yarn content:index` | Not a gate: it regenerates `src/catalog-index.ts` after you change a rep or lesson | After any rep or lesson change |
+| `yarn content:index` | Not a gate: it regenerates `src/catalog-index.ts`, the lazy loaders, and `src/review-chunks.ts` after you change a rep, lesson, or review | After any rep, lesson, or review change |
 | `yarn content:check` | Authored content: required rep fields, duplicate IDs, missing self-review guides, lesson and depth coverage, recall variants, and project rubrics | Any content change, and before a release |
 | `yarn test:e2e` | Real Chromium flows: Monaco editing, worker checks, stale feedback, draft reloads, profile separation, and narrow-pane navigation | Changes to practice, editors, navigation, profiles, or persistence |
 | `git diff --check` | Whitespace errors and conflict markers | Before every commit |
@@ -50,7 +50,7 @@ The command checks that the ID is kebab-case (lowercase letters and digits joine
 The output has five blocks, in order:
 
 1. **Rep object**: paste into the rep array exported by the module. Replace every `TODO`. The required fields are listed in the `Rep` type in `src/rep-types.ts`.
-2. **Depth entry**: `reasoning`, `trace`, `alternative`, `counterexample`, and `transfer`. Add it to the matching `src/review-*.ts` depth export; the review registry aggregates it.
+2. **Depth entry**: `reasoning`, `trace`, `alternative`, `counterexample`, and `transfer`. Add it to the matching `src/review-*.ts` depth export; the review registry aggregates it. Run `yarn content:index` so `src/review-chunks.ts` knows which module holds it.
 3. **Self-review guide**: `plan`, `explanation`, and `example`. Add it to the matching `src/review-*.ts` module. `yarn content:check` fails without it.
 4. **Reference solution**: a complete independent implementation in `tests/fixtures/`. Use the fixture file for your module, for example `tests/fixtures/foundations-solutions.mjs`. If you create a new fixture file, add it to the spread in `tests/content.test.mjs`.
 5. **Follow-up checklist**: the steps below, in the same order.

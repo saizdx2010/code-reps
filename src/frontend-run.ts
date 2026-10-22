@@ -1,8 +1,16 @@
-import { buildFrontendFrame } from './frontend-frame.ts'
+import { checkFrontendSize, frontendFrameHtml } from './frontend-frame-html.ts'
+import { compileInWorker } from './practice-worker.ts'
 import type { Rep } from './rep'
 import type { TestResult } from './runner.types'
 
-type FrameEnvironment = { document: Document; window: Window; token: string }
+/** Compiles learner code for the frame. The app compiles in the practice worker; tests may compile synchronously. */
+export type FrontendCompile = (code: string, rep: Rep) => string | Promise<string>
+type FrameEnvironment = { document: Document; window: Window; token: string; compile?: FrontendCompile }
+
+export const compileFrontend: FrontendCompile = (code, rep) => {
+  checkFrontendSize(code)
+  return compileInWorker(code, rep.functionName, Boolean(rep.reactPreview), true)
+}
 
 export function startFrontendRun(
   code: string,
@@ -11,7 +19,7 @@ export function startFrontendRun(
   onError: (message: string) => void,
   environment: FrameEnvironment = { document, window, token: crypto.randomUUID() },
 ): () => void {
-  const { document: frameDocument, window: frameWindow, token } = environment
+  const { document: frameDocument, window: frameWindow, token, compile = compileFrontend } = environment
   const frame = frameDocument.createElement('iframe')
   frame.title = 'Frontend interaction checks'
   // Rendered but offscreen: browsers cannot focus elements inside a display:none frame, and the focus checks need real focus.
@@ -56,10 +64,10 @@ export function startFrontendRun(
       else onError('Browser checks returned incomplete feedback. Your code is still here; try again.')
     }
   }
-  const launch = (runtime = '') => {
+  const launch = (compiled: string, runtime = '') => {
     if (disposed) return
     try {
-      frame.srcdoc = buildFrontendFrame(code, rep, token, 'checks', undefined, runtime)
+      frame.srcdoc = frontendFrameHtml(compiled, rep, token, 'checks', undefined, runtime)
       frameWindow.addEventListener('message', receive)
       timer = frameWindow.setTimeout(() => {
         if (disposed) return
@@ -72,16 +80,32 @@ export function startFrontendRun(
       onError(error instanceof Error ? error.message : 'The browser checks could not start.')
     }
   }
-  if (rep.reactPreview)
-    import('virtual:react-frame').then(
-      module => launch(module.default),
-      error => {
-        if (!disposed) {
-          dispose()
-          onError(error instanceof Error ? error.message : 'React could not load.')
-        }
-      },
+  const fail = (error: unknown, fallback: string) => {
+    if (disposed) return
+    dispose()
+    onError(error instanceof Error ? error.message : fallback)
+  }
+  let compiled: string | Promise<string>
+  try {
+    compiled = compile(code, rep)
+  } catch (error) {
+    fail(error, 'The browser checks could not start.')
+    return dispose
+  }
+  // A synchronous compile with no React runtime starts the frame at once; otherwise both arrive first.
+  if (typeof compiled === 'string' && !rep.reactPreview) launch(compiled)
+  else
+    Promise.all([
+      Promise.resolve(compiled),
+      rep.reactPreview
+        ? import('virtual:react-frame').then(
+            module => module.default,
+            error => Promise.reject(error instanceof Error ? error : new Error('React could not load.')),
+          )
+        : '',
+    ]).then(
+      ([output, runtime]) => launch(output, runtime),
+      error => fail(error, 'The browser checks could not start.'),
     )
-  else launch()
   return dispose
 }

@@ -26,7 +26,7 @@
   top: 12px;
   right: var(--page-gutter);
   margin: 0;
-  font-size: 12px;
+  font-size: var(--type-meta);
   line-height: 1.1;
 }
 .project-list-loading > .page-loading-status {
@@ -183,7 +183,7 @@
   padding-top: 12px;
 }
 .editor-loading .loading-status {
-  font-size: 12px;
+  font-size: var(--type-meta);
   margin: 0 0 20px;
 }
 .loading-code-row {
@@ -246,46 +246,11 @@
   padding-top: 18px;
 }
 .startup-loading {
+  display: grid;
+  place-items: center;
   min-height: 100dvh;
   background: var(--bg);
   color: var(--text);
-}
-.startup-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 68px;
-  padding: 0 max(28px, calc((100vw - 1280px) / 2));
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  font-size: 21px;
-  font-weight: 650;
-  letter-spacing: -0.05em;
-}
-.startup-workbook {
-  max-width: 984px;
-  margin: 0 auto;
-  padding: 64px 28px;
-}
-.startup-workbook h1 {
-  font-size: clamp(26px, 2.6vw, 32px);
-}
-.startup-sheet {
-  margin-top: 36px;
-}
-.startup-columns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  margin-top: 32px;
-}
-.startup-columns .loading-sheet {
-  background: var(--bg);
-  margin-bottom: 0;
-}
-.startup-note {
-  color: var(--muted);
-  font-size: 14px;
 }
 @keyframes loading-breathe {
   from {
@@ -323,15 +288,8 @@
   .loading-sheet {
     padding: 22px 18px;
   }
-  .loading-fields,
-  .startup-columns {
+  .loading-fields {
     grid-template-columns: 1fr;
-  }
-  .startup-workbook {
-    padding: 40px 18px;
-  }
-  .startup-brand {
-    padding: 0 18px;
   }
   .page-loading-status {
     top: 6px;
@@ -385,4 +343,21 @@ div.rep-content-notice[role='alert'] {
   border-radius: var(--radius-control);
   background: var(--error-soft);
   color: var(--error);
+}
+
+/* Inline pieces of the brief that load just after it: same box as the loaded piece, still shapes. */
+.guidance-loading {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+.guidance-loading .skeleton-line {
+  width: 120px;
+  margin: 0;
+}
+.sql-tables-loading {
+  padding: 14px;
+}
+.sql-tables-loading .skeleton-line:last-child {
+  margin-bottom: 0;
 }

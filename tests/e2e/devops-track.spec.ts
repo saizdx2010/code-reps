@@ -14,7 +14,10 @@ test('DevOps is the last track card, builds on Backend, and opens its trail', as
   const devops = cards.filter({ has: page.locator('strong', { hasText: /^DevOps$/ }) })
   await expect(devops).toContainText('Read CI output, ship with rollouts and health checks, and keep a service observable.')
   await expect(devops.locator('small')).toContainText('· Builds on Backend')
-  // Six cards fill the three-column grid: DevOps sits beside Backend on the second row.
+  // Six cards fill the three-column grid: DevOps sits beside Backend on the second row. Measure after the cards' arrival motion.
+  await cards.evaluateAll(elements =>
+    Promise.all(elements.flatMap(element => element.getAnimations()).map(animation => animation.finished)),
+  )
   const backendBox = (await cards.nth(4).boundingBox())!
   const devopsBox = (await devops.boundingBox())!
   expect(Math.abs(devopsBox.y - backendBox.y)).toBeLessThan(2)

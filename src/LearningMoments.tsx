@@ -1,3 +1,4 @@
+import { Button } from './Button'
 import { useEffect, useMemo } from 'react'
 import { Icon } from './Icon'
 import { StatusChip } from './Layout'
@@ -72,10 +73,10 @@ function SkillStepNotice({ steps, onSkillMap }: { steps: SkillStep[]; onSkillMap
           ))}
         </ul>
       </div>
-      <button type="button" className="text-button" onClick={onSkillMap}>
+      <Button variant="text" onClick={onSkillMap}>
         See skill map
         <Icon name="arrow" />
-      </button>
+      </Button>
     </div>
   )
 }

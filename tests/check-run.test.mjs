@@ -261,3 +261,12 @@ test('every rep gets a load allowance, so a slow worker start is not reported as
   callback()
   assert.match(errors[0], /could not load in time.*code is still here/)
 })
+
+test('a run names the rep content chunk, so the worker loads only that chunk', () => {
+  const run = setup({ source: 'sql-reps' })
+  try {
+    assert.deepEqual(run.sent(), { code: 'saved solution', repId: 'rep-id', source: 'sql-reps' })
+  } finally {
+    run.cancel()
+  }
+})

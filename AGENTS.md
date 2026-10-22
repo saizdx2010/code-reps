@@ -33,7 +33,7 @@ Use **Node.js 24 or later** and **Yarn Classic 1.22.22**, as declared in `packag
 | `yarn playwright install chromium` | Install the browser required by the end-to-end suite |
 | `yarn test:e2e` | Run real-browser practice flows in Chromium |
 | `yarn content:check` | Validate authored content and depth coverage |
-| `yarn content:index` | Regenerate `src/catalog-index.ts` after changing reps or lessons (a test fails when it is stale) |
+| `yarn content:index` | Regenerate `src/catalog-index.ts` and the lazy loaders after changing reps, lessons, or reviews (a test fails when they are stale) |
 | `yarn package` | Build a portable web bundle with a Node runtime |
 | `node scripts/verify-portable.mjs` | Smoke-test the generated portable bundle |
 
@@ -49,7 +49,7 @@ For a focused test, use `node --experimental-strip-types --test tests/<name>.tes
 | Trail, tracks, and Journal | `src/HomePage.tsx`, `src/PathsPage.tsx`, `src/Trail.tsx`, `src/trail-map.ts`, `src/curriculum.ts`, `src/Journal.tsx` |
 | Shared page components and styles | `src/Layout.tsx`, `src/ui-status.ts`, `src/layout.css`, `src/trail.css`, `src/index.css` (tokens) |
 | Editors and previews | `src/CodeEditor.tsx`, `src/SolutionEditor.tsx`, `src/ProjectEditor.tsx`, `src/editor-loader.ts`, `src/FrontendPreview.tsx` |
-| Check orchestration and execution | `src/check-run.ts`, `src/runner.worker.ts`, `src/runner.ts`, `src/runner.types.ts`, `src/compile-solution.ts`, `src/frontend-run.ts`, `src/frontend-frame.ts`, `src/project-files.ts` |
+| Check orchestration and execution | `src/check-run.ts`, `src/runner.worker.ts`, `src/runner.ts`, `src/runner.types.ts`, `src/compile-solution.ts`, `src/frontend-run.ts`, `src/frontend-frame.ts`, `src/frontend-frame-html.ts`, `src/practice-worker.ts`, `src/run-rep.ts`, `src/project-files.ts` |
 | Reps and paths | `src/rep.ts`, `src/path.ts`, and focused `*-reps.ts` / content modules |
 | Learning and progress evidence | `src/learning.ts`, `src/fluency.ts`, `src/useFluency.ts`, `src/LearningHub.tsx`, `src/ProgressPage.tsx` |
 | Knowledge and authored reviews | `src/knowledge.ts`, `src/rep-depth.ts`, `src/lesson-depth.ts`, `src/content-depth.ts` |

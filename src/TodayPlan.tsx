@@ -1,5 +1,6 @@
+import { Button } from './Button'
 import { useEffect, useState } from 'react'
-import { preloadEditor } from './editor-loader'
+import { preloadPractice } from './editor-loader'
 import { Icon } from './Icon'
 import { ListRow, StatusChip } from './Layout'
 import type { PortableRecord } from './portability'
@@ -90,16 +91,16 @@ export default function TodayPlan({
               </StatusChip>
             }
             onOpen={() => onOpen(item)}
-            onPreview={preloadEditor}
+            onPreview={() => preloadPractice(item.repId)}
           />
         ))}
       </ul>
       {plan.moreDue > 0 && (
         <p className="today-more">
-          <button type="button" className="text-button" onClick={onAllReviews}>
+          <Button variant="text" onClick={onAllReviews}>
             See all {plan.moreDue + plan.items.filter(item => item.kind === 'review' && !item.done).length} due reviews
             <Icon name="arrow" />
-          </button>
+          </Button>
         </p>
       )}
       {plan.complete && (

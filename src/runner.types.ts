@@ -39,3 +39,5 @@ export type TestResult = {
   /** SQLite checks of an index: the EXPLAIN QUERY PLAN lines SQLite chose for the check's query, passed or not. */
   plan?: string[]
 }
+/** A request to the practice worker to compile learner code without running it, for frontend previews and checks. */
+export type CompileRequest = { id: number; code: string; functionName: string; jsx: boolean; guardLoops: boolean }

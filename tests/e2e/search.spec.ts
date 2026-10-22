@@ -2,6 +2,8 @@ import { expect, test } from '@playwright/test'
 
 test('Search opens in its field, finds lessons by concept, and names results like the navigation', async ({ page }) => {
   await page.goto('/#/home')
+  // The shortcut belongs to the app, so wait for it to replace the startup screen.
+  await expect(page.locator('.startup-loading')).toHaveCount(0)
   await page.keyboard.press('ControlOrMeta+K')
   const search = page.getByRole('dialog', { name: 'Search' })
   const field = search.getByRole('combobox', { name: /^Search pages/ })

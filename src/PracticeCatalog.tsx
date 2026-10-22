@@ -1,8 +1,9 @@
+import { Button } from './Button'
 import { catalogArea, catalogAreas, catalogTopic, formatLabels } from './catalog-labels.ts'
 import { EmptyState, ListGroup, ListRow, PageHeader, StatusChip } from './Layout'
 import { statusTone } from './ui-status'
 import { Input, Select } from './Input'
-import { preloadEditor } from './editor-loader'
+import { preloadPractice } from './editor-loader'
 import { useSessionPreference } from './useSessionPreference'
 import { repIndex as reps } from './catalog-index'
 import type { RepSummary } from './catalog-index'
@@ -82,7 +83,7 @@ export function PracticeCatalog(props: Props) {
             )}
           </>
         }
-        onPreview={preloadEditor}
+        onPreview={() => preloadPractice(item.id)}
         onOpen={() => openRep(item.id)}
       />
     )
@@ -162,9 +163,9 @@ export function PracticeCatalog(props: Props) {
               <option value="review">Review due</option>
             </Select>
           </label>
-          <button type="button" className="text-button" onClick={clearFilters}>
+          <Button variant="text" onClick={clearFilters}>
             Clear filters
-          </button>
+          </Button>
         </div>
       </details>
       {!filtering && startHere.length > 0 && (
@@ -224,9 +225,9 @@ export function PracticeCatalog(props: Props) {
           <EmptyState
             title={`No reps mention “${query}”.`}
             action={
-              <button type="button" className="text-button" onClick={() => onFilter('query', '')}>
+              <Button variant="text" onClick={() => onFilter('query', '')}>
                 Clear search
-              </button>
+              </Button>
             }
           >
             {lessonMatches.length ? (
@@ -254,9 +255,9 @@ export function PracticeCatalog(props: Props) {
           <EmptyState
             title="No reps match these filters."
             action={
-              <button type="button" className="text-button" onClick={clearFilters}>
+              <Button variant="text" onClick={clearFilters}>
                 Clear filters
-              </button>
+              </Button>
             }
           >
             {statusEmpty[filters.status] ?? 'Try a different topic, level, or type of rep.'}

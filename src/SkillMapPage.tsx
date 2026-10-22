@@ -1,8 +1,10 @@
+import { reducedMotion } from './ui-motion'
+import { Button } from './Button'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from './Icon'
 import { Select } from './Input'
 import { EmptyState, InfoNote, PageHeader, StatusChip } from './Layout'
-import { preloadEditor } from './editor-loader'
+import { preloadPractice } from './editor-loader'
 import { paths } from './path'
 import { repTitle } from './rep-index.ts'
 import { buildSkillMap, parseStepKeys, skillStateLabels, skillStateMeaning, skillStepKey } from './skill-map'
@@ -60,8 +62,9 @@ export function SkillMapPage({ goalPathId, progress, openRep, reviewRep }: Props
   useEffect(() => {
     const nodes = Array.from(trail.current?.querySelectorAll<HTMLElement>('[data-stepped]') ?? [])
     if (nodes.length === 0) return
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
-    const frame = requestAnimationFrame(() => nodes[0].scrollIntoView({ block: 'center', behavior: reduced ? 'instant' : 'smooth' }))
+    const frame = requestAnimationFrame(() =>
+      nodes[0].scrollIntoView({ block: 'center', behavior: reducedMotion() ? 'instant' : 'smooth' }),
+    )
     const play = (node: HTMLElement) => {
       node.dataset.step = 'play'
       setAnnouncement(latestAnnouncement.current)
@@ -163,17 +166,16 @@ export function SkillMapPage({ goalPathId, progress, openRep, reviewRep }: Props
                         <StatusChip tone={tones[node.state]}>{skillStateLabels[node.state]}</StatusChip>
                         {detail(node) && <small>{detail(node)}</small>}
                         {node.repId && (
-                          <button
-                            type="button"
-                            className="text-button"
-                            onMouseEnter={preloadEditor}
-                            onFocus={preloadEditor}
+                          <Button
+                            variant="text"
+                            onMouseEnter={() => preloadPractice(node.repId!)}
+                            onFocus={() => preloadPractice(node.repId!)}
                             aria-label={`${node.actionLabel}: ${repTitle(node.repId)} (${node.title})`}
                             onClick={() => (node.mode === 'review' ? reviewRep(node.repId!) : openRep(node.repId!))}
                           >
                             {node.actionLabel}
                             <Icon name="arrow" />
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </li>

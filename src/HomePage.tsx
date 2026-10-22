@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from 'react'
-import { preloadEditor } from './editor-loader'
+import { preloadPractice } from './editor-loader'
 import { Icon } from './Icon'
 import { Button } from './Button'
 import { repCurriculumRole, repPracticeContext } from './curriculum'
@@ -23,9 +23,9 @@ const TodayPlan = lazy(() =>
     default: ({ onAllReviews }: { onAllReviews: () => void }) => (
       <p className="today-more" role="status">
         Today's plan could not load. Reload to try again, or{' '}
-        <button type="button" className="text-button" onClick={onAllReviews}>
+        <Button variant="text" onClick={onAllReviews}>
           see due reviews on Progress
-        </button>
+        </Button>
         .
       </p>
     ),
@@ -126,8 +126,8 @@ export function HomePage(props: Props) {
               </div>
               <Button
                 variant="primary"
-                onMouseEnter={preloadEditor}
-                onFocus={preloadEditor}
+                onMouseEnter={() => preloadPractice(recommendation.repId)}
+                onFocus={() => preloadPractice(recommendation.repId)}
                 onClick={() => openPracticeAction(recommendation)}
               >
                 {actionLabel(recommendation.mode)}
@@ -141,9 +141,9 @@ export function HomePage(props: Props) {
               {asksStart && (
                 <p className="continue-start">
                   <span>Coming back to coding?</span>
-                  <button type="button" className="text-button" onClick={() => chooseStart('returning')}>
+                  <Button variant="text" onClick={() => chooseStart('returning')}>
                     Skip the language basics
-                  </button>
+                  </Button>
                 </p>
               )}
             </section>
@@ -154,9 +154,9 @@ export function HomePage(props: Props) {
                 <h2 id="continue-heading">Your next review can wait.</h2>
                 <p>No unfinished reps or reviews are ready. Check your skill evidence or choose a rep to practice again.</p>
               </div>
-              <button className="primary-button" type="button" onClick={onProgress}>
+              <Button variant="primary" onClick={onProgress}>
                 See progress
-              </button>
+              </Button>
             </section>
           )}
           <p className="visually-hidden" role="status">
@@ -167,13 +167,9 @@ export function HomePage(props: Props) {
               <Icon name="check" />
               <span>
                 {startChange === 'returning' ? 'Starting as returning to coding. ' : 'Starting with the language basics. '}
-                <button
-                  type="button"
-                  className="text-button"
-                  onClick={() => chooseStart(startChange === 'returning' ? 'new' : 'returning')}
-                >
+                <Button variant="text" onClick={() => chooseStart(startChange === 'returning' ? 'new' : 'returning')}>
                   {startChange === 'returning' ? 'Undo' : 'Skip them instead'}
-                </button>
+                </Button>
               </span>
             </p>
           )}
@@ -195,21 +191,21 @@ export function HomePage(props: Props) {
                 meta={moreDrafts > 0 ? `${where(draft.repId)} · ${moreDrafts} more in progress` : where(draft.repId)}
                 status={<StatusChip tone="progress">In progress</StatusChip>}
                 onOpen={() => openPracticeAction(draft)}
-                onPreview={preloadEditor}
+                onPreview={() => preloadPractice(draft.repId)}
               />
             </ListGroup>
           )}
           {moreDrafts > 0 && (
             <p className="trail-more">
-              <button type="button" className="text-button" onClick={onLibrary}>
+              <Button variant="text" onClick={onLibrary}>
                 Find saved drafts in the Library
-              </button>
+              </Button>
             </p>
           )}
           <nav className="trail-links" aria-label="Progress">
-            <button type="button" className="text-button" onClick={onProgress}>
+            <Button variant="text" onClick={onProgress}>
               View your progress
-            </button>
+            </Button>
             {walkthroughSeen && (
               <Button variant="text" onClick={launchWalkthrough}>
                 Replay walkthrough
@@ -223,9 +219,9 @@ export function HomePage(props: Props) {
             title={goal.title}
             description={`${trail.done} of ${trail.total} reps completed. Lessons appear just before the reps that use them.`}
             actions={
-              <button type="button" className="text-button" onClick={() => onPath(goal.id)}>
+              <Button variant="text" onClick={() => onPath(goal.id)}>
                 View or choose goal
-              </button>
+              </Button>
             }
           />
           <div

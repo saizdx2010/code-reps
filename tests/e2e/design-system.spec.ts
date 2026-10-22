@@ -243,19 +243,33 @@ test('a progress disclosure visibly collapses and reverses without losing its ac
   await expect(disclosure.getByRole('button', { name: 'Open rep', exact: true })).not.toBeVisible()
 })
 
-test('startup workbook is styled before external styles and JavaScript arrive', async ({ page }) => {
+test('startup shows a centred breathing logo before external styles and JavaScript arrive', async ({ page }) => {
   await page.route('**/*', route => (['stylesheet', 'script'].includes(route.request().resourceType()) ? route.abort() : route.continue()))
   await page.goto('/#/home')
   const startup = page.locator('.startup-loading')
+  const brand = startup.locator('.startup-brand')
   await expect(startup).toBeVisible()
   await expect(startup).toHaveCSS('background-color', 'rgb(240, 244, 237)')
-  await expect(startup.locator('.startup-sheet')).toHaveCSS('background-color', 'rgb(255, 255, 255)')
-  await expect(startup.locator('.skeleton-title')).toHaveCSS('height', '28px')
+  await expect(brand.locator('.logo-sage')).toBeVisible()
+  await expect(brand.locator('.logo-ocean')).toBeHidden()
+  await expect(page.getByRole('status')).toHaveText('Loading your local progress…')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Getting your practice ready.')
+  // Breathing scales the logo around its own centre, so the centre stays put while it moves.
+  const offCentre = async () => {
+    const box = (await brand.boundingBox())!
+    const viewport = page.viewportSize()!
+    return Math.max(Math.abs(box.x + box.width / 2 - viewport.width / 2), Math.abs(box.y + box.height / 2 - viewport.height / 2))
+  }
+  expect(await offCentre()).toBeLessThan(2)
+  expect(await brand.evaluate(element => getComputedStyle(element).animationName)).toContain('startup-breathe')
   await page.setViewportSize({ width: 320, height: 568 })
+  expect(await offCentre()).toBeLessThan(2)
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect(brand).toHaveCSS('animation-name', 'none')
 })
 
-test('startup progress loading uses the light workbook before storage is ready', async ({ page }) => {
+test('startup progress loading uses the light startup screen before storage is ready', async ({ page }) => {
   let release!: () => void
   const pending = new Promise<void>(resolve => {
     release = resolve

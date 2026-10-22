@@ -1,3 +1,4 @@
+import { Button } from './Button'
 import { repNotes } from './rep-notes.ts'
 import { usePracticeSessions } from './usePracticeSessions'
 import { AppNavigation } from './AppNavigation'
@@ -59,9 +60,9 @@ const FirstRepWalkthrough = lazy(() =>
       default: ({ onDismiss }: { onDismiss: () => void }) => (
         <aside aria-label="First rep walkthrough">
           <p>Guide unavailable. Reload to try again, or continue practice.</p>
-          <button type="button" className="text-button" onClick={onDismiss}>
+          <Button variant="text" onClick={onDismiss}>
             Skip walkthrough
-          </button>
+          </Button>
         </aside>
       ),
     })),
@@ -71,9 +72,9 @@ const FrontendPreview = lazy(() =>
     default: () => (
       <section className="panel frontend-preview" role="alert">
         <p>The preview could not load. Reload to try again; your draft will be kept.</p>
-        <button className="primary-button" type="button" onClick={() => window.location.reload()}>
+        <Button variant="primary" onClick={() => window.location.reload()}>
           Reload app
-        </button>
+        </Button>
       </section>
     ),
   })),
@@ -245,9 +246,18 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   }, [receiptKey])
   const [now, setNow] = useState(Date.now)
 
+  // Due reviews and the Today plan follow the clock. A hidden tab skips the minute tick, which re-renders the whole app,
+  // and catches up as soon as it is shown again.
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 60_000)
-    return () => window.clearInterval(timer)
+    const tick = () => {
+      if (document.visibilityState !== 'hidden') setNow(Date.now())
+    }
+    const timer = window.setInterval(tick, 60_000)
+    document.addEventListener('visibilitychange', tick)
+    return () => {
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', tick)
+    }
   }, [])
 
   // Editing code makes earlier check feedback obsolete.
@@ -397,6 +407,10 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     // eslint-disable-next-line react-hooks/set-state-in-effect -- adopts the starter once its content has loaded.
     if (full && full.id === repId) setAttempt(current => (current.code === undefined ? { ...current, code: full.starter } : current))
   }, [full, repId, setAttempt])
+  const { prepare: prepareChecks } = checks
+  useEffect(() => {
+    if (view === 'workspace' && full && full.id === repId) prepareChecks(full, repId)
+  }, [full, repId, view, prepareChecks])
   const allPassed = !!full && results?.length === full.checks.length && results.every(result => result.passed)
   const contentNotice = <RepContentNotice content={repContent} />
   const writing = practiceWritingPrompts({ id: rep.id, format: rep.format, planPrompt: full?.planPrompt ?? '' })
@@ -431,7 +445,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   const currentStatus = repStatus(rep)
   const currentLesson = repContent.status === 'ready' ? repContent.content.lesson : undefined
   const journeyStates = practicePlan.progress
-  const review = useReviewContent()
+  const review = useReviewContent(repId)
   const recommendation = practicePlan.next
   const recommendedRep = recommendation && repById.get(recommendation.repId)
   const openPracticeAction = (action: { repId: string; mode: string }) =>
@@ -813,9 +827,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
           >
             Retry saving
           </button>
-          <button className="reset-button" type="button" onClick={exportData}>
-            Download backup
-          </button>
+          <Button onClick={exportData}>Download backup</Button>
         </div>
       )}
       <ScreenMemory key={`${view}:${view === 'workspace' ? repId : ''}`} screenKey={`${view}:${view === 'workspace' ? repId : ''}`}>

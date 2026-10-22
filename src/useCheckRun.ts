@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { startCheckRun } from './check-run'
+import { releaseSpareWorker, takeCheckWorker, warmCheckWorker } from './practice-worker'
+import { repIndex } from './catalog-index'
 import type { Rep } from './rep-types'
 import type { TestResult } from './runner.types'
 
@@ -17,15 +19,35 @@ export function useCheckRun() {
   const [loadingEngine, setLoadingEngine] = useState(false)
   const [runNotice, setRunNotice] = useState('')
   const cancelRunRef = useRef<(() => void) | null>(null)
+  // The rep whose checks a spare worker should prepare next. Frontend reps run in a frame and need no spare.
+  const workerRepRef = useRef<string | null>(null)
+  const sourceOf = (repId: string) => repIndex.find(item => item.id === repId)?.source ?? ''
 
   useEffect(() => {
     const activeRun = cancelRunRef
-    return () => activeRun.current?.()
+    return () => {
+      activeRun.current?.()
+      releaseSpareWorker()
+    }
   }, [])
 
+  /** Starts a worker for this rep ahead of Run, so pressing Run does not wait for the checker to load. */
+  const prepare = useCallback((rep: Rep, repId: string) => {
+    workerRepRef.current = rep.format === 'frontend' ? null : repId
+    if (workerRepRef.current) warmCheckWorker(workerRepRef.current, sourceOf(workerRepRef.current))
+    else releaseSpareWorker()
+  }, [])
+
+  // Each run uses its worker once, so the next spare starts after a run ends.
+  function rewarm() {
+    if (workerRepRef.current) warmCheckWorker(workerRepRef.current, sourceOf(workerRepRef.current))
+  }
+
   function stop() {
+    const wasRunning = Boolean(cancelRunRef.current)
     cancelRunRef.current?.()
     cancelRunRef.current = null
+    if (wasRunning) rewarm()
     setRunning(false)
     setLoadingEngine(false)
   }
@@ -93,17 +115,22 @@ export function useCheckRun() {
     }
     setLoadingEngine(Boolean(rep.sql))
     cancelRunRef.current = startCheckRun(code, repId, {
-      createWorker: () => new Worker(new URL('./runner.worker.ts', import.meta.url), { type: 'module' }),
+      createWorker: takeCheckWorker,
+      source: sourceOf(repId),
       schedule: (callback, milliseconds) => window.setTimeout(callback, milliseconds),
       clearTimer: id => window.clearTimeout(id),
       usesSqlite: Boolean(rep.sql),
       onReady: () => setLoadingEngine(false),
       onResults: nextResults => {
+        cancelRunRef.current = null
+        rewarm()
         setRunning(false)
         setLoadingEngine(false)
         setResults(nextResults)
       },
       onError: message => {
+        cancelRunRef.current = null
+        rewarm()
         setRunning(false)
         setLoadingEngine(false)
         setRunError(message)
@@ -116,5 +143,5 @@ export function useCheckRun() {
     setStaleResults(null)
   }
 
-  return { results, staleResults, runError, running, loadingEngine, runNotice, run, stop, cancel, reset, invalidate, clearResults }
+  return { results, staleResults, runError, running, loadingEngine, runNotice, prepare, run, stop, cancel, reset, invalidate, clearResults }
 }

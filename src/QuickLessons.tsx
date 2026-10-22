@@ -1,3 +1,4 @@
+import { Button } from './Button'
 import { coreLessons } from './ai-era-reps'
 import { repIndex as reps } from './catalog-index'
 import { foundations } from './foundations'
@@ -25,9 +26,9 @@ export default function QuickLessons({ openRep, onBrowse }: { openRep: (id: stri
         title="Quick lessons"
         description="Short introductions before your first rep. Full lessons have interactive predictions and learning tools."
         actions={
-          <button type="button" className="text-button" onClick={onBrowse}>
+          <Button variant="text" onClick={onBrowse}>
             Browse lessons
-          </button>
+          </Button>
         }
       />
       <details className="learn-section" open>
@@ -60,9 +61,9 @@ export default function QuickLessons({ openRep, onBrowse }: { openRep: (id: stri
                 <span>
                   {related.length} {plural(related.length, 'rep')}
                 </span>
-                <button className="text-button" type="button" onClick={() => openRep(related[0].id)}>
+                <Button variant="text" onClick={() => openRep(related[0].id)}>
                   Try {related[0].title}
-                </button>
+                </Button>
               </article>
             )
           })}
@@ -76,9 +77,9 @@ export default function QuickLessons({ openRep, onBrowse }: { openRep: (id: stri
         {glossary.status === 'error' && (
           <div role="alert">
             <p>The glossary could not load.</p>
-            <button type="button" className="text-button" onClick={glossary.retry}>
+            <Button variant="text" onClick={glossary.retry}>
               Retry
-            </button>
+            </Button>
           </div>
         )}
         <dl className="glossary-list">
@@ -116,9 +117,9 @@ function LessonList({ lessons, openRep }: { lessons: readonly Lesson[]; openRep:
             <p className="foundation-tip">
               <InlineCode text={lesson.tip} />
             </p>
-            <button className="text-button" type="button" onClick={() => openRep(lesson.repId)}>
+            <Button variant="text" onClick={() => openRep(lesson.repId)}>
               Try the rep
-            </button>
+            </Button>
           </div>
         </details>
       ))}

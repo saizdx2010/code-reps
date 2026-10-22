@@ -1,3 +1,4 @@
+import { Button } from './Button'
 import { lazy, Suspense, useState } from 'react'
 import type { Ref } from 'react'
 import { CheckFeedback } from './Experience'
@@ -106,19 +107,16 @@ export function ChecksDrawer({
       <div id="check-details" hidden={!open}>
         {running ? (
           <div className="result-running">
-            <span className="result-running-track" aria-hidden="true">
-              <span />
-            </span>
             {loadingEngine ? (
               <>
-                <strong>Loading SQLite</strong>
+                <strong className="is-loading">Loading SQLite</strong>
                 <p>
                   The database engine loads before the checks run. Then each of the {checkCount} checks runs against its own fresh database.
                 </p>
               </>
             ) : (
               <>
-                <strong>Running checks</strong>
+                <strong className="is-loading">Running checks</strong>
                 <p>Checking your solution against {checkCount} cases.</p>
               </>
             )}
@@ -159,10 +157,10 @@ export function ChecksDrawer({
                 </strong>
               </div>
               {allPassed && !completed && !explaining && (
-                <button type="button" className="primary-button checks-next" onClick={onExplain}>
+                <Button variant="primary" className="checks-next" onClick={onExplain}>
                   Explain your solution
                   <Icon name="arrow" />
-                </button>
+                </Button>
               )}
             </div>
             <CheckFeedback results={results} open={openName} onOpen={chooseCase} />
@@ -170,10 +168,10 @@ export function ChecksDrawer({
               <p className="mistake-help">
                 <Icon name="book" />
                 <span>Stuck? Review</span>
-                <button type="button" className="text-button" onClick={() => openLesson(lesson.id)}>
+                <Button variant="text" onClick={() => openLesson(lesson.id)}>
                   {lesson.title}
                   <Icon name="arrow" />
-                </button>
+                </Button>
               </p>
             )}
           </>
@@ -244,7 +242,8 @@ export function WorkspaceToolbar({
             Stop checks
           </button>
         ) : (
-          <button className="primary-button" type="button" disabled={!canRun} onClick={onRun}>
+          // Both branches stay a plain button, so React keeps the same element and keyboard focus when Run turns into Stop.
+          <button type="button" className="primary-button" disabled={!canRun} onClick={onRun}>
             <Icon name="play" />
             Run checks
           </button>

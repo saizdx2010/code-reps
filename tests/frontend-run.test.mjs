@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { JSDOM } from 'jsdom'
 import { startFrontendRun } from '../src/frontend-run.ts'
+import { compileSolution } from '../src/compile-solution.ts'
 import { richReps } from '../src/rich-reps.ts'
 
 const rep = richReps.find(item => item.format === 'frontend')
@@ -21,7 +22,13 @@ function setup() {
     rep,
     value => results.push(value),
     value => errors.push(value),
-    { document: window.document, window, token: 'correct-token' },
+    {
+      document: window.document,
+      window,
+      token: 'correct-token',
+      // The app compiles in the practice worker; Node has no Worker, so this compiles synchronously.
+      compile: (code, item) => compileSolution(code, item.functionName, item.reactPreview, { guardLoops: true }),
+    },
   )
   const frame = window.document.querySelector('iframe')
   const send = (data, source = frame.contentWindow) => window.dispatchEvent(new window.MessageEvent('message', { source, data }))
@@ -78,5 +85,60 @@ test('frontend timeout and malformed feedback yield recoverable errors', () => {
   } finally {
     malformed.cancel()
     malformed.dom.window.close()
+  }
+})
+
+function frameless(compile) {
+  const dom = new JSDOM('<!doctype html><body></body>')
+  const errors = []
+  const cancel = startFrontendRun(
+    rep.starter,
+    rep,
+    () => {},
+    value => errors.push(value),
+    {
+      document: dom.window.document,
+      window: dom.window,
+      token: 'correct-token',
+      compile,
+    },
+  )
+  return { dom, errors, cancel }
+}
+
+test('frontend checks start the frame once the worker has compiled the code', async () => {
+  let finish
+  const run = frameless(() => new Promise(resolve => (finish = resolve)))
+  try {
+    assert.equal(run.dom.window.document.querySelector('iframe'), null)
+    finish(compileSolution(rep.starter, rep.functionName, rep.reactPreview, { guardLoops: true }))
+    await new Promise(resolve => setTimeout(resolve, 0))
+    assert.ok(run.dom.window.document.querySelector('iframe'))
+    assert.deepEqual(run.errors, [])
+  } finally {
+    run.cancel()
+    run.dom.window.close()
+  }
+})
+
+test('a failed or stale compile reports once and never starts a frame', async () => {
+  const failed = frameless(() => Promise.reject(new Error('The compiler could not load. Your code is still here; try again.')))
+  try {
+    await new Promise(resolve => setTimeout(resolve, 0))
+    assert.deepEqual(failed.errors, ['The compiler could not load. Your code is still here; try again.'])
+    assert.equal(failed.dom.window.document.querySelector('iframe'), null)
+  } finally {
+    failed.dom.window.close()
+  }
+  let finish
+  const cancelled = frameless(() => new Promise(resolve => (finish = resolve)))
+  try {
+    cancelled.cancel()
+    finish('function late() {}')
+    await new Promise(resolve => setTimeout(resolve, 0))
+    assert.deepEqual(cancelled.errors, [])
+    assert.equal(cancelled.dom.window.document.querySelector('iframe'), null)
+  } finally {
+    cancelled.dom.window.close()
   }
 })

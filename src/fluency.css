@@ -64,7 +64,7 @@
 }
 .knowledge-browser > summary span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--type-meta);
 }
 .knowledge-index {
   max-height: calc(100dvh - 108px);
@@ -78,7 +78,7 @@
   margin-top: 0;
 }
 .knowledge-index .utility-note {
-  font-size: 12px;
+  font-size: var(--type-meta);
 }
 .knowledge-index > .check-label {
   display: flex;
@@ -113,23 +113,31 @@
 .knowledge-group > summary::-webkit-details-marker {
   display: none;
 }
-.knowledge-group > summary::before {
+/* Topic groups read like ListGroup: title, quiet count, and a trailing chevron that turns over when open. */
+.knowledge-group > summary::after {
   content: '';
   display: inline-block;
   width: 18px;
   height: 18px;
   flex: none;
+  margin-left: auto;
   background: currentColor;
+  color: var(--muted);
   mask: var(--icon-chevron) center / contain no-repeat;
   transition: rotate var(--motion-fast) var(--motion-ease);
 }
-.knowledge-group:not([open]) > summary::before {
-  rotate: -90deg;
+.knowledge-group[open] > summary::after {
+  rotate: 180deg;
 }
 .knowledge-group summary > span {
-  margin-left: auto;
-  font-size: 12px;
-  font-weight: 400;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+@media (prefers-reduced-motion: reduce) {
+  .knowledge-group > summary::after {
+    transition: none;
+  }
 }
 .knowledge-topic-list {
   display: grid;
@@ -246,7 +254,7 @@
 }
 .lesson-tab-progress {
   margin-left: 6px;
-  font-size: 12px;
+  font-size: var(--type-meta);
   font-variant-numeric: tabular-nums;
   opacity: 0.75;
 }
@@ -314,7 +322,7 @@
   position: sticky;
   isolation: isolate;
   top: 0;
-  z-index: 5;
+  z-index: var(--layer-sticky);
   padding: 5px;
   border-radius: var(--radius);
   background: var(--surface-2);
@@ -426,7 +434,7 @@
 .lesson-option-note {
   margin-left: auto;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--type-meta);
 }
 .rep-links {
   display: flex;
@@ -686,7 +694,7 @@
     padding: 24px 20px;
   }
   .knowledge-article .hub-heading h2 {
-    font-size: 25px;
+    font-size: var(--type-reading);
   }
   .hub-heading {
     gap: 12px;
@@ -913,7 +921,7 @@
   }
   .lesson-tab-progress {
     margin-left: 0;
-    font-size: 11px;
+    font-size: var(--type-meta);
   }
   .lesson-question pre {
     white-space: pre-wrap;

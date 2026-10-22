@@ -4,6 +4,7 @@ import { confidenceLabels, difficultyLabels } from './attempt-labels.ts'
 import type { Confidence, Difficulty } from './attempt-labels.ts'
 import type { Attempt, AttemptRecord } from './attempt-store'
 import { Button } from './Button'
+import { GuidanceLoading, SqlTablesLoading } from './LoadingStates'
 import { repCurriculumRole } from './curriculum'
 import { preloadEditor } from './editor-loader'
 import { Icon } from './Icon'
@@ -217,7 +218,7 @@ export function BriefSection({
       <div className="panel-heading">
         <h2>The brief</h2>
       </div>
-      <Suspense fallback={null}>
+      <Suspense fallback={<GuidanceLoading />}>
         <RepGuidance repId={repId} history={history} openRep={openRep} openLesson={openLesson} understanding={understanding} />
       </Suspense>
       {full ? (
@@ -262,7 +263,7 @@ export function BriefSection({
             </ul>
           )}
           {full.sql && (
-            <Suspense fallback={null}>
+            <Suspense fallback={<SqlTablesLoading />}>
               <SqlTables repId={full.id} />
             </Suspense>
           )}
@@ -326,9 +327,9 @@ export function BriefSection({
                 <button className="hint-button" type="button" onClick={() => answer(true)}>
                   Reveal hint
                 </button>
-                <button ref={keepTrying} className="text-button" type="button" onClick={() => answer(false)}>
+                <Button variant="text" ref={keepTrying} onClick={() => answer(false)}>
                   Keep trying
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
@@ -370,10 +371,10 @@ export function BriefSection({
       ) : (
         contentNotice
       )}
-      <button className="text-button step-next" type="button" onClick={() => onReveal('plan-section')}>
+      <Button variant="text" className="step-next" onClick={() => onReveal('plan-section')}>
         Plan your approach
         <Icon name="arrow" />
-      </button>
+      </Button>
     </section>
   )
 }
@@ -431,10 +432,10 @@ export function PlanSection({
         rows={writing.rows}
       />
       <div className="field-foot">{writing.planHelp}</div>
-      <button className="text-button plan-to-code" type="button" onClick={() => onReveal('solution-section')}>
+      <Button variant="text" className="plan-to-code" onClick={() => onReveal('solution-section')}>
         Go to code
         <Icon name="arrow" />
-      </button>
+      </Button>
     </section>
   )
 }
@@ -463,8 +464,8 @@ export function ExplainSection({
   review: ReviewContent
   onReveal: Reveal
 }) {
-  const reflectionGuide = review.status === 'ready' ? review.content.reflectionGuides[repId] : undefined
-  const depth = review.status === 'ready' ? review.content.repDepth[repId] : undefined
+  const reflectionGuide = review.status === 'ready' ? review.content.guide : undefined
+  const depth = review.status === 'ready' ? review.content.depth : undefined
   return (
     <section id="explain-section" hidden={hidden} tabIndex={-1} className="panel explain-panel">
       <div className="explain-intro">
@@ -562,10 +563,10 @@ export function ExplainSection({
             )}
           </details>
         )}
-        <button className="primary-button step-next" type="button" onClick={() => onReveal('review-section')}>
+        <Button variant="primary" className="step-next" onClick={() => onReveal('review-section')}>
           Review attempt
           <Icon name="arrow" />
-        </button>
+        </Button>
       </div>
     </section>
   )
@@ -652,19 +653,13 @@ export function ReviewSection({
             </Suspense>
           )}
           <div className="completion-actions">
-            <button
-              type="button"
-              className="primary-button"
-              onMouseEnter={preloadEditor}
-              onFocus={preloadEditor}
-              onClick={onCompletionNext}
-            >
+            <Button variant="primary" onMouseEnter={preloadEditor} onFocus={preloadEditor} onClick={onCompletionNext}>
               {completionLabel}
               <Icon name="arrow" />
-            </button>
-            <button type="button" className="text-button" onClick={onDone}>
+            </Button>
+            <Button variant="text" onClick={onDone}>
               Done for today
-            </button>
+            </Button>
           </div>
           <p className="completion-saved">Your attempt is saved in the Journal.</p>
         </section>
@@ -699,10 +694,10 @@ export function ReviewSection({
               <p className="finish-note" id="finish-note">
                 Still needed: {finishMissing}.
                 {missingLabel && (
-                  <button type="button" className="text-button missing-work" onClick={onShowMissing}>
+                  <Button variant="text" className="missing-work" onClick={onShowMissing}>
                     Go to {missingLabel}
                     <Icon name="arrow" />
-                  </button>
+                  </Button>
                 )}
               </p>
             )}
@@ -777,9 +772,9 @@ export function ReviewSection({
         </div>
       </div>
       {attempt.completedAt && (
-        <button className="text-button retry-button" type="button" onClick={onFreshAttempt}>
+        <Button variant="text" className="retry-button" onClick={onFreshAttempt}>
           Start a fresh attempt
-        </button>
+        </Button>
       )}
     </section>
   )

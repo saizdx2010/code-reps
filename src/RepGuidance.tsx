@@ -1,3 +1,4 @@
+import { Button } from './Button'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from './Icon'
 import { InfoNote } from './Layout'
@@ -39,9 +40,9 @@ export default function RepGuidance({ repId, history, openRep, openLesson, under
     if (!understanding && details?.open) details.open = false
   }, [understanding])
   const lessonButton = (lesson: { id: string; title: string }) => (
-    <button key={lesson.id} type="button" className="text-button" onClick={() => openLesson(lesson.id)}>
+    <Button variant="text" key={lesson.id} onClick={() => openLesson(lesson.id)}>
       {lesson.title}
-    </button>
+    </Button>
   )
   return (
     <div ref={root} className="rep-guidance">
@@ -55,15 +56,15 @@ export default function RepGuidance({ repId, history, openRep, openLesson, under
         )}
         {supporting.length > 0 && (
           <div className="guidance-lessons">
-            <button
-              type="button"
-              className="text-button guidance-more"
+            <Button
+              variant="text"
+              className="guidance-more"
               aria-expanded={showSupporting}
               onClick={() => setShowSupporting(!showSupporting)}
             >
               {showSupporting ? 'Hide' : 'Show'} {supporting.length} {supporting.length === 1 ? 'foundation' : 'foundations'} it builds on
               <Icon name="chevron" />
-            </button>
+            </Button>
             {showSupporting && supporting.map(lessonButton)}
           </div>
         )}
@@ -73,9 +74,9 @@ export default function RepGuidance({ repId, history, openRep, openLesson, under
             {guidance.priorReps.map((rep, index) => (
               <span key={rep.id}>
                 {index > 0 && ', '}
-                <button type="button" className="text-button" onClick={() => openRep(rep.id)}>
+                <Button variant="text" onClick={() => openRep(rep.id)}>
                   {rep.title}
-                </button>
+                </Button>
               </span>
             ))}
           </p>
@@ -87,15 +88,15 @@ export default function RepGuidance({ repId, history, openRep, openLesson, under
             </p>
             <p>
               {checkpoint.bridgeRep && (
-                <button type="button" className="text-button" onClick={() => openRep(checkpoint.bridgeRep!.id)}>
+                <Button variant="text" onClick={() => openRep(checkpoint.bridgeRep!.id)}>
                   Optional bridge rep: {checkpoint.bridgeRep.title}
-                </button>
+                </Button>
               )}
               {checkpoint.bridgeRep && checkpoint.lesson && ' · '}
               {checkpoint.lesson && (
-                <button type="button" className="text-button" onClick={() => openLesson(checkpoint.lesson!.id)}>
+                <Button variant="text" onClick={() => openLesson(checkpoint.lesson!.id)}>
                   Optional lesson: {checkpoint.lesson.title}
-                </button>
+                </Button>
               )}
             </p>
           </div>

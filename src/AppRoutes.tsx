@@ -24,11 +24,15 @@ import { repSearchText, searchWords } from './command-search'
 import type { useFluency } from './useFluency'
 import { useSessionPreference } from './useSessionPreference'
 
-const PathsPage = lazyRoute(() => import('./PathsPage').then(module => module.PathsPage), 'The tracks')
-const ProgressPage = lazyRoute(() => import('./ProgressPage').then(module => module.ProgressPage), 'Progress')
-const MistakesPage = lazyRoute(() => import('./MistakesPage').then(module => module.MistakesPage), 'Mistakes')
-const SkillMapPage = lazyRoute(() => import('./SkillMapPage').then(module => module.SkillMapPage), 'The skill map')
-const PracticeCatalog = lazyRoute(() => import('./PracticeCatalog').then(module => module.PracticeCatalog), 'The library')
+const PathsPage = lazyRoute(() => import('./PathsPage').then(module => module.PathsPage), 'The tracks', 'paths-main')
+const ProgressPage = lazyRoute(() => import('./ProgressPage').then(module => module.ProgressPage), 'Progress', 'progress-main')
+const MistakesPage = lazyRoute(
+  () => import('./MistakesPage').then(module => module.MistakesPage),
+  'Mistakes',
+  'progress-main mistakes-main',
+)
+const SkillMapPage = lazyRoute(() => import('./SkillMapPage').then(module => module.SkillMapPage), 'The skill map', 'skill-map-main')
+const PracticeCatalog = lazyRoute(() => import('./PracticeCatalog').then(module => module.PracticeCatalog), 'The library', 'catalog-main')
 const QuickLessons = lazyRoute(() => import('./QuickLessons').then(module => module.default), 'The lessons', 'learn-main')
 const HistoryPage = lazyRoute(() => import('./HistoryPage').then(module => module.HistoryPage), 'Attempt history', 'history-main')
 const LearningHub = lazyRoute(() => import('./LearningHub').then(module => module.LearningHub), 'Learning tools', 'learning-hub')
@@ -192,13 +196,7 @@ export function AppRoutes(props: Props) {
       )
     case 'catalog':
       return (
-        <Suspense
-          fallback={
-            <main aria-busy="true">
-              <p role="status">Loading the library…</p>
-            </main>
-          }
-        >
+        <Suspense fallback={<RouteLoading title="Find your next rep" status="Opening the library…" className="catalog-main" />}>
           <CatalogRoute
             goalPathId={goalPathId}
             drafts={drafts}
@@ -211,7 +209,7 @@ export function AppRoutes(props: Props) {
       )
     case 'paths':
       return (
-        <Suspense fallback={<RouteLoading title="Choose a track" status="Opening tracks…" />}>
+        <Suspense fallback={<RouteLoading title="Choose a track" status="Opening tracks…" className="paths-main" />}>
           <PathsPage
             goalPathId={goalPathId}
             setGoalPath={setGoalPath}
@@ -232,13 +230,13 @@ export function AppRoutes(props: Props) {
       )
     case 'skillmap':
       return (
-        <Suspense fallback={<RouteLoading title="Skill map" status="Opening the skill map…" />}>
+        <Suspense fallback={<RouteLoading title="Skill map" status="Opening the skill map…" className="skill-map-main" />}>
           <SkillMapPage goalPathId={goalPathId} progress={journeyStates} openRep={openRep} reviewRep={openReview} />
         </Suspense>
       )
     case 'mistakes':
       return (
-        <Suspense fallback={<RouteLoading title="Mistakes" status="Opening mistakes…" />}>
+        <Suspense fallback={<RouteLoading title="Mistakes" status="Opening mistakes…" className="progress-main mistakes-main" />}>
           <MistakesPage history={history} now={now} onOpenRep={openRep} />
         </Suspense>
       )
@@ -253,7 +251,7 @@ export function AppRoutes(props: Props) {
         repId: action.repId,
       }))
       return (
-        <Suspense fallback={<RouteLoading title="Skills" status="Opening your skills…" />}>
+        <Suspense fallback={<RouteLoading title="Skills" status="Opening your skills…" className="progress-main" />}>
           <ProgressPage
             profileName={props.profileName}
             history={history}
@@ -286,13 +284,7 @@ export function AppRoutes(props: Props) {
     }
     case 'learn':
       return (
-        <Suspense
-          fallback={
-            <main className="learn-main" aria-busy="true">
-              <p role="status">Loading the lessons…</p>
-            </main>
-          }
-        >
+        <Suspense fallback={<RouteLoading eyebrow="Lessons" title="Quick lessons" status="Opening the lessons…" className="learn-main" />}>
           <QuickLessons openRep={openRep} onBrowse={() => setView('knowledge')} />
         </Suspense>
       )
@@ -300,9 +292,13 @@ export function AppRoutes(props: Props) {
       return (
         <Suspense
           fallback={
-            <main className="history-main" aria-busy="true">
-              <p role="status">Loading your attempt history…</p>
-            </main>
+            <RouteLoading
+              eyebrow="Journal"
+              title="Attempt history"
+              status="Opening your attempt history…"
+              className="history-main"
+              actions={journalTabs}
+            />
           }
         >
           <HistoryPage history={history} categories={categories} journalTabs={journalTabs} openRep={openRep} />

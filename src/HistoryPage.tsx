@@ -6,7 +6,8 @@ import { confidenceLabels, difficultyLabels } from './attempt-labels.ts'
 import type { Confidence, Difficulty } from './attempt-labels.ts'
 import { DateInput } from './DateInput'
 import { Input, Select } from './Input'
-import { PageHeader } from './Layout'
+import { Button } from './Button'
+import { EmptyState, PageHeader } from './Layout'
 import { formatDate, plural } from './ui-copy.ts'
 import { useSessionPreference } from './useSessionPreference'
 
@@ -112,16 +113,16 @@ export function HistoryPage({ history, categories, journalTabs, openRep }: Props
             Date
             <DateInput value={historyDate} onValueChange={setHistoryDate} />
           </label>
-          <button className="text-button" type="button" onClick={clearFilters}>
+          <Button variant="text" onClick={clearFilters}>
             Clear filters
-          </button>
+          </Button>
         </div>
       </details>
       <p className="utility-note" aria-live="polite">
-        {visibleHistory.length} matching attempts
+        {visibleHistory.length} matching {plural(visibleHistory.length, 'attempt')}
       </p>
       {history.length === 0 ? (
-        <div className="history-empty">No completed attempts yet. Finish a rep to save your first one here.</div>
+        <EmptyState title="No completed attempts yet.">Finish a rep to save your first one here.</EmptyState>
       ) : (
         <ol className="history-list">
           {visibleHistory.map(record => (
@@ -130,7 +131,16 @@ export function HistoryPage({ history, categories, journalTabs, openRep }: Props
         </ol>
       )}
       {history.length > 0 && !visibleHistory.length && (
-        <p className="history-empty">No attempts match these filters. Try another date or clear filters.</p>
+        <EmptyState
+          title="No attempts match these filters."
+          action={
+            <Button variant="text" onClick={clearFilters}>
+              Clear filters
+            </Button>
+          }
+        >
+          Try another search or date.
+        </EmptyState>
       )}
     </main>
   )
@@ -146,9 +156,9 @@ function AttemptRow({ record, previous, openRep }: { record: AttemptRecord; prev
           {formatDate(record.completedAt, true)} · {record.hintCount} {plural(record.hintCount, 'hint')} used
         </span>
         {item && (
-          <button className="text-button" type="button" onClick={() => openRep(item.id)}>
+          <Button variant="text" onClick={() => openRep(item.id)}>
             Open rep
-          </button>
+          </Button>
         )}
       </div>
       <details>

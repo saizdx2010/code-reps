@@ -11,6 +11,8 @@ type RunOptions = {
   usesSqlite?: boolean
   /** The worker and any engine have loaded; the checks themselves are running now. */
   onReady?: () => void
+  /** The rep's content chunk, so the worker loads only that chunk. */
+  source?: string
 }
 
 const isCell = (value: unknown) => value === null || typeof value === 'string' || typeof value === 'number'
@@ -141,7 +143,7 @@ export function startCheckRun(code: string, repId: string, options: RunOptions):
           : 'The checker could not load in time. Your code is still here; try running the checks again.',
       )
     }, 30000)
-    worker.postMessage({ code, repId })
+    worker.postMessage(options.source ? { code, repId, source: options.source } : { code, repId })
   } catch {
     dispose()
     options.onError('The checks could not start. Your code is still here; try running them again.')

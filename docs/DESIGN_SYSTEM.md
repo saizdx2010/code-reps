@@ -46,6 +46,7 @@ Foundations (`typescript`) is the shared root track. The tracks that build on it
 | `--type-feature` | 22px | The recommended rep, the selected track, practice panel titles |
 | `--type-section` | 20px | Section headings within a page |
 | `--type-card` | 17px | Card, row-group, trail-stage, and journey titles |
+| `--type-meta` | 12px | Chips, counts, keyboard hints, and compact labels; nothing smaller except badge artwork |
 
 The workspace title is a dense 22px (20px narrow). Body text is 15–16px; secondary text 13–14px. Text disclosures (Filters, Explore tracks, Set up your local project, Starting as) are 15px; disclosures that act as group headings use the card or section title; dense workspace disclosures are 14px, lesson-index group labels 13px, and `InfoNote` 13px.
 
@@ -65,6 +66,8 @@ The workspace title is a dense 22px (20px narrow). Body text is 15–16px; secon
 | Earned badge | Success surface, border, and icon (`--success-soft`, `--success-border`, `--success`); never the next-action lime |
 | Success / error | Separate semantic text, border, and surface tokens, paired with explicit copy |
 | Controls / panels | 8px / 12px corners |
+| Dialogs | `--shadow-dialog` and `--backdrop`, tinted by the scheme's text colour in light mode and black in dark mode |
+| Stacking | `--layer-sticky`, `--layer-steps`, `--layer-drawer`, `--layer-menu`, `--layer-skip`, `--layer-tooltip`, lowest first; local stacking inside a component stays -1, 0, or 1 |
 | Standard control height | 40px for fields, selects, and buttons; dense workspace header controls are 36px |
 
 Text keeps at least 4.5:1 contrast in every scheme and mode. Supporting text on a selected (`--accent-soft`) or recommended (`--feature`) surface uses `--feature-muted` rather than `--muted`. Status is never conveyed by colour alone; pair it with a label.
@@ -120,7 +123,7 @@ Use `Icon.tsx` for decorative control icons. `icons.css` is the single geometry 
 
 ## Motion
 
-Motion acknowledges interaction and shows where something came from; it never decorates idle screens. Each kind of element has one recognizable interaction, all built from the shared tokens (`--motion-fast` 180ms, `--motion-ease`, `--motion-spring`). Movement stays inside the element's own box, so hovering never shifts neighbours, and nothing animates continuously: the only repeating motion is the next trail node's ring, which plays twice on arrival and stops.
+Motion acknowledges interaction and shows where something came from; it never decorates idle screens. Each kind of element has one recognizable interaction, all built from the shared tokens (`--motion-fast` 180ms, `--motion-ease`, `--motion-spring`). Movement stays inside the element's own box, so hovering never shifts neighbours, and nothing animates continuously: the only repeating motion is the next trail node's ring, which plays twice on arrival and stops, plus the loading signals below (the startup logo's breathing and the small pending-status dot), which last only while real work is pending.
 
 | Element | Interaction |
 | --- | --- |
@@ -171,11 +174,11 @@ Honor `prefers-reduced-motion` for CSS and JavaScript motion: hover and press mo
 
 Learning tools load as a separate local bundle when opened, keeping the initial app within its existing JavaScript budget. `LoadingStates.tsx` owns page-specific pending layouts and renders the same `PageHeader`, including the Journal switch on Notebook; `learning-pages.ts` shares headings with the loaded pages; `loading.css` owns their presentation. Skeleton fields use `--control-height`. Keep the loaded and pending first working surface aligned on desktop and narrow screens.
 
-Place page-loading status within the existing top padding, outside document flow, so its removal does not move the working surface. Skeleton shapes stay still; one small status dot acknowledges real pending work and respects reduced motion. Pending placeholders remain noninteractive and never replace or clear a draft. Never show invented learner records, counts, results, or percentage progress.
+Every lazy page's pending state uses `RouteLoading` with that page's own frame class, eyebrow, title, and header actions (such as the Journal switch), and a failed page load shows the same `PageHeader` with a Reload action. Pieces of the brief that load just after it (the "About this rep" note and the SQL Tables card) hold their space with still skeletons. Running checks show the pending-status dot beside "Running checks", never a looping progress bar. Place page-loading status within the existing top padding, outside document flow, so its removal does not move the working surface. Skeleton shapes stay still; one small status dot acknowledges real pending work and respects reduced motion. Pending placeholders remain noninteractive and never replace or clear a draft. Never show invented learner records, counts, results, or percentage progress.
 
 ## Startup first paint
 
-The initial workbook in `index.html` includes scoped critical styles so its logo header, sage background, white skeleton sheet, and narrow layout render before external styles or JavaScript load. Its title uses the page-title size. Keep this small first-paint subset aligned with `src/loading.css`. Verify it with external scripts and styles blocked, as well as delayed progress loading.
+The startup screen in `index.html` is the selected scheme's background with the logo centred on it. Its scoped critical styles render it before external styles or JavaScript load. The logo fades in after 150ms, so a quick load never flashes it, then breathes slowly (a small scale change with a soft accent halo) until the app replaces the screen; with reduced motion it stays still. Its heading and the "Loading your local progress…" status are visually hidden but announced. Keep `src/loading.css` aligned with this first-paint subset. Verify it with external scripts and styles blocked, as well as delayed progress loading.
 
 ## Colour schemes and dark mode
 
