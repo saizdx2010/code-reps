@@ -4,7 +4,7 @@
 
 | Group | Raw byte budget | Gzip byte budget |
 | --- | ---: | ---: |
-| Initial route JavaScript and static dependencies | 530,000 | 157,500 |
+| Initial route JavaScript and static dependencies | 530,000 | 159,000 |
 | Additional editor JavaScript, including its dynamic language modules | 4,200,000 | 1,050,000 |
 | Additional frontend preview/check JavaScript | 3,900,000 | 1,050,000 |
 | Editor, TypeScript, and practice worker JavaScript | 12,150,000 | 3,100,000 |
@@ -25,6 +25,8 @@ Before the Backend track's second new stage, the startup catalog reclaimed about
 After the Backend track's routing stage (152,507 gzip bytes), the track descriptions and every stage's description and recap moved from `src/path.ts` to `src/path-text.ts`. The trail needs only stage titles and rep lists to draw itself, so Home loads the text beside the trail (`usePathText`) and All tracks imports it with its own lazy chunk; a stage shows its title, level, and progress until the text arrives, or if it cannot load. Initial JavaScript went from 152,507 to 147,770 gzip bytes with no budget changed, and later stages add their text to that 5.9 KB gzip chunk instead of to startup.
 
 The DevOps track crossed the worker's raw budget at its eighth stage: 12,007,529 raw bytes against 12,000,000, while its gzip size, 2,878,355 bytes, stayed well under 3,100,000. The practice worker imports every rep through `src/rep.ts`, so each rep's whole text (brief, notes, hints, and checks) ships in it; the seven DevOps stages before it added 19,543 to 27,046 raw bytes each, the eighth added 22,459, and Backend's API-evolution stage added 29,770. The raw budget was raised once, to 12,150,000, which holds the two remaining DevOps stages with about 90 KB to spare; no other budget changed. Sending only the open rep's checks to the worker would remove most rep text from it, but changes the run request between the page and the worker, so it is left for a separate change with its own browser coverage.
+
+The icon pack (`src/icon-pack.ts`) draws icons as inline SVG so each icon's parts can play their reaction. Its shapes moved from CSS mask images into the startup JavaScript: the `Icon` chunk is 3,649 raw / 1,602 gzip bytes (the design-file notes and reaction descriptions are tree-shaken out), and startup CSS fell by about 200 gzip bytes. Initial JavaScript went from 156,137 to 157,535 gzip bytes, 35 over the 157,500 budget. The rest of startup is React DOM, the app shell, Home, and the practice workspace, so no small split reclaimed it; the gzip budget was raised to 159,000, and the raw budget did not change.
 
 The practice worker now loads one rep at a time. The run request names the rep's content chunk (`source`), and `src/runner.worker.ts` imports that chunk through `src/rep-chunks.ts` and runs it with `src/run-rep.ts`; `src/runner.ts` keeps the by-ID API for tests and scripts. The worker's entry went from 4,807,175 to about 3,540,000 raw bytes, and a run loads the entry plus one rep source instead of every rep. The worker budget still counts every lazy chunk, so its total (12,087,156 raw bytes) barely moved; what each run loads did. `src/practice-worker.ts` also keeps one spare worker that has loaded its script, the open rep's chunk, and (for SQL reps) the SQLite engine before Run is pressed. Each run still uses a fresh worker once and terminates it, so learner code cannot leak state between runs, and the next spare starts after a run ends.
 
