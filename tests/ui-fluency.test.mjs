@@ -149,19 +149,18 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
     assert.equal(document.querySelectorAll('.top-nav button').length, 3)
     assert.ok([...document.querySelectorAll('.top-nav button')].some(button => button.textContent === 'Library'))
     assert.equal(document.querySelectorAll('.knowledge-group').length, knowledgeGroups.length)
-    const topic = document.querySelector('.knowledge-index select')
-    await input(topic, 'async')
-    assert.equal(document.querySelectorAll('.knowledge-group').length, 1)
-    assert.ok(document.querySelector('.knowledge-group summary').textContent.includes('Async & runtime'))
+    // The topic groups are the topic choice; the index carries no separate topic or bookmark filter.
+    assert.equal(document.querySelector('.knowledge-index select'), null)
     await input(document.querySelector('.knowledge-index input[type="search"]'), 'Cancellation and race conditions')
     assert.equal(document.querySelectorAll('.knowledge-topic-list button').length, 1)
-    await click('Clear filters')
+    assert.ok(document.querySelector('.knowledge-group summary').textContent.includes('Async & runtime'))
+    await input(document.querySelector('.knowledge-index input[type="search"]'), '')
     await click('Quick lessons')
     assert.equal(window.location.hash, '#/learn')
     assert.ok(document.body.textContent.includes('Quick lessons'))
     await click('Browse lessons')
     assert.equal(window.location.hash, '#/knowledge')
-    assert.equal(document.querySelector('.knowledge-index select').value, '')
+    assert.equal(document.querySelector('.knowledge-index input[type="search"]').value, '')
     await click('Predict')
     const radios = document.querySelectorAll('input[name="values:return"]')
     await act(async () => radios[1].click())
@@ -260,17 +259,17 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
     await click('Close')
     await click('Library')
     await act(async () => [...document.querySelectorAll('.section-nav button')].find(button => button.textContent === 'Lessons').click())
-    await input(document.querySelector('.knowledge-index select'), 'async')
+    await input(document.querySelector('.knowledge-index input[type="search"]'), 'Cancellation and race conditions')
     await click('Trail')
     await click('Library')
     await click('Lessons')
-    assert.equal(document.querySelector('.knowledge-index select').value, 'async')
+    // The lesson search survives leaving and returning to the page.
+    assert.equal(document.querySelector('.knowledge-index input[type="search"]').value, 'Cancellation and race conditions')
     assert.equal(document.querySelectorAll('.knowledge-group').length, 1)
-    await click('Clear filters')
     const search = document.querySelector('.knowledge-index input[type="search"]')
     await input(search, 'no-such-topic')
     assert.ok(document.body.textContent.includes('No lessons match.'))
-    await click('Clear filters')
+    await click('Clear search')
 
     // Real profile drafts feed the Home queue; expanding must not discard hidden work.
     await click('Library')
@@ -281,6 +280,8 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
       'Refresh a report without losing its data',
       'Reject obsolete request results',
     ]) {
+      // Only the open topic is in the page, so find each rep by name.
+      await input(document.querySelector('#catalog-query'), title)
       const row = [...document.querySelectorAll('.catalog-list .list-row > button')].find(row => row.textContent.includes(title))
       assert.ok(row)
       await act(async () => row.click())

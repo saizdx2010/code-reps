@@ -51,21 +51,6 @@ export function LearningProjects({ state, update, history, openRep, openNotebook
   }
   return (
     <>
-      <Suspense fallback={<ProjectListLoading />}>
-        <BrowserProjects openRep={openRep} recordReflection={recordReflection} />
-      </Suspense>
-      <section className="project-section" aria-labelledby="toy-heading">
-        <h2 id="toy-heading">A toy that runs your code</h2>
-        <Suspense
-          fallback={
-            <p className="loading-status" role="status">
-              Loading the toy…
-            </p>
-          }
-        >
-          <LifeToy history={history} openRep={openRep} />
-        </Suspense>
-      </section>
       <section className="project-section" aria-labelledby="capstone-heading">
         <h2 id="capstone-heading">Projects you can build here</h2>
         {capstones.map(project => (
@@ -109,6 +94,21 @@ export function LearningProjects({ state, update, history, openRep, openNotebook
           </details>
         ))}
       </section>
+      <section className="project-section" aria-labelledby="toy-heading">
+        <h2 id="toy-heading">A toy that runs your code</h2>
+        <Suspense
+          fallback={
+            <p className="loading-status" role="status">
+              Loading the toy…
+            </p>
+          }
+        >
+          <LifeToy history={history} openRep={openRep} />
+        </Suspense>
+      </section>
+      <Suspense fallback={<ProjectListLoading />}>
+        <BrowserProjects openRep={openRep} recordReflection={recordReflection} />
+      </Suspense>
     </>
   )
 }

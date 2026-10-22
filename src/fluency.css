@@ -41,7 +41,7 @@
 }
 .knowledge-layout {
   display: grid;
-  grid-template-columns: 230px minmax(0, 1fr);
+  grid-template-columns: 248px minmax(0, 1fr);
   gap: 40px;
   align-items: start;
 }
@@ -91,6 +91,17 @@
 }
 .knowledge-index nav {
   margin-top: 18px;
+}
+/* The side doors to the lessons sit on one quiet line under the search instead of stacking above the list. */
+.knowledge-more {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 10px 0 0;
+}
+.knowledge-more .text-button {
+  min-height: 32px;
+  font-size: 14px;
 }
 .knowledge-group {
   border-bottom: 1px solid var(--border);

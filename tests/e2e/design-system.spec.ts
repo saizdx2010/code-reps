@@ -216,10 +216,10 @@ test('lesson and path completion rows respond in place without moving their layo
   await expect.poll(() => row.evaluate(element => getComputedStyle(element).transform)).toBe('none')
   expect(await row.evaluate(element => getComputedStyle(element).boxShadow)).toBe('none')
   await page.goto('/#/practice')
-  await page.locator('.catalog-list .list-group summary').first().click()
+  await page.locator('.catalog-rail-group:has(h2) button').first().click()
   await expect.poll(() => page.locator('main').evaluate(element => element.getAnimations().length)).toBe(0)
-  const card = page.locator('.catalog-list .list-group[open] .list-row > button').first()
-  const next = page.locator('.catalog-list .list-group[open] .list-row > button').nth(1)
+  const card = page.locator('.catalog-list .list-row > button').first()
+  const next = page.locator('.catalog-list .list-row > button').nth(1)
   // Bring both rows into view so focus does not scroll the page.
   await next.scrollIntoViewIfNeeded()
   await expect.poll(() => page.locator('main').evaluate(element => element.getAnimations().length)).toBe(0)
@@ -318,7 +318,7 @@ test('each pending learning page keeps its own heading and working surface', asy
     ['notebook', 'Your notebook', '.loading-notebook-surface', '.loading-notebook-heading', '.hub-heading'],
     ['plan', 'Make room for practice', '.loading-week', '.loading-sheet', '.hub-panel'],
     ['assessment', 'Find your starting point', '.loading-rows', '.loading-sheet', '.hub-panel'],
-    ['projects', 'Put your skills together', '.loading-rows', 'h2', '#browser-project-heading'],
+    ['projects', 'Put your skills together', '.loading-rows', 'h2', '#capstone-heading'],
     ['interview', 'Practice an interview', '.loading-interview-sheet', '.loading-sheet', '.hub-panel'],
   ]
   for (const [route, title, surface, pendingSurface, loadedSurface] of pages) {

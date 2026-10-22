@@ -163,39 +163,29 @@ test('all product pages fit a narrow screen and lessons open without the topic l
   await expect(page.getByRole('heading', { name: 'Cancellation and race conditions', exact: true })).toBeVisible()
 })
 
-test('exercise topics start collapsed, remember expansion, and reveal search matches', async ({ page }) => {
+test('exercise topics follow the areas in learning order, easiest first, and reveal search matches', async ({ page }) => {
   await page.goto('/#/practice')
-  const groups = page.locator('.catalog-list .list-group')
-  await expect(groups.first()).toBeVisible()
-  const groupCount = await groups.count()
-  expect(groupCount).toBeGreaterThan(1)
-  await expect(page.locator('.catalog-list .list-group[open]')).toHaveCount(0)
-  // Topics follow the seven areas in learning order, not the alphabet.
+  const topicNames = page.locator('.catalog-rail-group:has(h2) button strong')
+  await expect(topicNames.first()).toBeVisible()
+  // Topics follow the areas in learning order, not the alphabet.
   const topics = new Set(reps.map(catalogTopic))
-  expect(await groups.locator('.list-group-title').allTextContents()).toEqual(
-    catalogAreas.flatMap(area => area.topics).filter(topic => topics.has(topic)),
-  )
-  const first = groups.first()
-  const topic = await first.locator('.list-group-title').innerText()
-  await first.locator('summary').click()
-  await expect(first).toHaveAttribute('open', '')
-  await expect(first.locator('.list-row > button').first()).toBeVisible()
+  expect(await topicNames.allTextContents()).toEqual(catalogAreas.flatMap(area => area.topics).filter(topic => topics.has(topic)))
+  const first = page.locator('.catalog-rail-group:has(h2) button').first()
+  const topic = await first.locator('strong').innerText()
+  await first.click()
+  await expect(page.locator('.catalog-list .list-row > button').first()).toBeVisible()
   // Easiest first within a topic; equal levels keep catalog order.
-  expect(await first.locator('.list-row-text strong').allTextContents()).toEqual(
+  expect(await page.locator('.catalog-list .list-row-text strong').allTextContents()).toEqual(
     reps
       .filter(rep => catalogTopic(rep) === topic)
       .sort((a, b) => (repLevel(a.id) ?? 4) - (repLevel(b.id) ?? 4))
       .map(rep => rep.title),
   )
-  await page.reload()
-  await expect(groups.filter({ has: page.locator('.list-group-title', { hasText: topic }) }).first()).toHaveAttribute('open', '')
   await page.getByLabel('Find a rep', { exact: true }).fill('stock adjustment')
   await expect(page.locator('.catalog-list .list-row > button')).toHaveCount(1)
-  await expect(page.locator('.catalog-list .list-group[open]')).toHaveCount(1)
-  await expect(page.locator('.catalog-list .list-row > button')).toBeVisible()
+  await expect(page.locator('#catalog-pane-title')).toHaveText('Search results')
   await page.getByRole('button', { name: 'Clear Find a rep', exact: true }).click()
-  await expect(groups).toHaveCount(groupCount)
-  await expect(groups.first()).toHaveAttribute('open', '')
+  await expect(page.locator('#catalog-pane-title')).toHaveText(topic)
 })
 
 test('assessment topics disclose skill evidence and preserve the assessment flow', async ({ page }) => {

@@ -538,21 +538,6 @@ main {
 .filter-bar .text-button {
   min-height: var(--control-height);
 }
-.catalog-list-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-  padding-bottom: 12px;
-}
-.catalog-list-heading h2 {
-  margin: 0;
-  font-size: var(--type-section);
-}
-.catalog-list-heading > span {
-  font-size: 13px;
-  color: var(--muted);
-}
 .path-overview {
   display: flex;
   align-items: center;
@@ -3953,33 +3938,6 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   margin-bottom: 0;
   padding: 8px 0;
 }
-.catalog-list {
-  display: grid;
-  gap: 28px;
-  border: 0;
-  outline-offset: 6px;
-}
-/* One column of areas in learning order: opening a topic never moves it or its neighbours. */
-.catalog-area-heading {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 0 0 8px;
-}
-.catalog-area-heading h3 {
-  margin: 0;
-  font-size: var(--type-card);
-}
-.catalog-area-heading > span {
-  color: var(--muted);
-  font-size: 13px;
-}
-/* Topics draw the line above themselves, so the last one never stacks a divider on the footer. */
-.catalog-area > .list-group {
-  border-top: 1px solid var(--border);
-  border-bottom: 0;
-}
 .topic-meter {
   position: relative;
   width: 72px;
@@ -4001,12 +3959,6 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 }
 .catalog-lesson-matches {
   margin: 10px 0 4px;
-}
-.catalog-list-heading {
-  margin-bottom: 4px;
-}
-.catalog-start {
-  margin-bottom: 24px;
 }
 .progress-main .profile-badges {
   margin: 20px 0;

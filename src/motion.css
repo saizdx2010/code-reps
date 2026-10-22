@@ -93,7 +93,8 @@
   }
 }
 .lesson-navigation button,
-.knowledge-topic-list button {
+.knowledge-topic-list button,
+.catalog-rail-group button {
   transform: none !important;
   box-shadow: none !important;
 }
@@ -109,7 +110,8 @@
 .ui-option,
 .ui-calendar-day,
 .top-nav button,
-.knowledge-topic-list button {
+.knowledge-topic-list button,
+.catalog-rail-group button {
   transition:
     background-color var(--motion-fast) var(--motion-ease),
     border-color var(--motion-fast) var(--motion-ease),
@@ -727,26 +729,26 @@ summary {
   }
 }
 
-/* Opened groups cascade their rows in: trail stages and exercise topics. */
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows) > li {
+/* Opened groups cascade their rows in: trail stages, topic groups, and the exercise topic just chosen. */
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .catalog-list) > li {
   animation: row-arrive 280ms var(--motion-ease) both;
 }
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows) > li:nth-child(2) {
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .catalog-list) > li:nth-child(2) {
   animation-delay: 30ms;
 }
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows) > li:nth-child(3) {
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .catalog-list) > li:nth-child(3) {
   animation-delay: 60ms;
 }
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows) > li:nth-child(4) {
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .catalog-list) > li:nth-child(4) {
   animation-delay: 90ms;
 }
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows) > li:nth-child(5) {
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .catalog-list) > li:nth-child(5) {
   animation-delay: 120ms;
 }
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows) > li:nth-child(6) {
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .catalog-list) > li:nth-child(6) {
   animation-delay: 150ms;
 }
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows) > li:nth-child(n + 7) {
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .catalog-list) > li:nth-child(n + 7) {
   animation-delay: 180ms;
 }
 /* Check results land in reading order once the summary is up: failed rows, then passed ones, as one cascade.

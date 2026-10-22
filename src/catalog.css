@@ -1,0 +1,196 @@
+/* Library → Exercises: a topic rail beside one open topic, so choosing a rep is a pick, not a scroll. */
+.catalog-browser {
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  gap: 40px;
+  align-items: start;
+}
+.catalog-rail {
+  position: sticky;
+  top: 24px;
+  min-width: 0;
+}
+.catalog-rail-picker {
+  display: none;
+}
+.catalog-rail-list {
+  display: grid;
+  gap: 18px;
+  max-height: calc(100dvh - 48px);
+  padding: 0 12px 28px 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  /* Like the lesson index, the rail fades at its lower edge instead of cutting a topic in half. */
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+}
+.catalog-rail-group {
+  display: grid;
+  gap: 2px;
+}
+.catalog-rail-group + .catalog-rail-group {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.catalog-rail-group h2 {
+  margin: 0 0 4px;
+  padding: 0 12px;
+  color: var(--muted);
+  font-size: var(--type-meta);
+  font-weight: 600;
+  line-height: 1.4;
+}
+.catalog-rail-group button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  line-height: 1.35;
+}
+.catalog-rail-group button strong {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+.catalog-rail-count {
+  flex: none;
+  color: var(--muted);
+  font-size: var(--type-meta);
+  font-variant-numeric: tabular-nums;
+}
+.catalog-rail-group button[aria-current='page'] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+/* The count keeps 4.5:1 on the selected tint: it takes the selected text colour rather than the muted grey. */
+.catalog-rail-group button[aria-current='page'] .catalog-rail-count {
+  color: var(--accent);
+}
+@media (hover: hover) and (pointer: fine) {
+  .catalog-rail-group button:hover:not([aria-current='page']) {
+    background: var(--surface);
+    color: var(--accent);
+  }
+}
+.catalog-rail-group button:focus-visible:not([aria-current='page']) {
+  background: var(--surface);
+  color: var(--accent);
+}
+.catalog-rail-group button:active {
+  background: var(--accent-soft);
+}
+
+.catalog-pane {
+  min-width: 0;
+  scroll-margin-top: 16px;
+}
+.catalog-pane-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.catalog-pane-header > div:first-child {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.catalog-pane-area {
+  color: var(--muted);
+  font-size: var(--type-meta);
+}
+.catalog-pane-header h2 {
+  margin: 0;
+  font-size: var(--type-section);
+}
+.catalog-pane-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: var(--type-meta);
+}
+.catalog-pane-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.catalog-pane-filters label {
+  width: 168px;
+}
+.catalog-list {
+  margin: 12px 0 0;
+}
+.catalog-pane > .empty-state {
+  margin-top: 24px;
+}
+/* The end of a topic points at the next one, so working through an area never means returning to the rail. */
+.catalog-next-topic {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--text);
+  text-align: right;
+}
+.catalog-next-topic span {
+  color: var(--muted);
+  font-size: var(--type-meta);
+}
+.catalog-next-topic strong {
+  font-size: 15px;
+}
+.catalog-next-topic strong::after {
+  content: ' →';
+}
+@media (hover: hover) and (pointer: fine) {
+  .catalog-next-topic:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+.catalog-next-topic:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+@media (max-width: 900px) {
+  .catalog-browser {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .catalog-rail {
+    position: static;
+  }
+  .catalog-rail-list {
+    display: none;
+  }
+  .catalog-rail-picker {
+    display: grid;
+    gap: 7px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .catalog-pane-filters,
+  .catalog-pane-filters label {
+    width: 100%;
+  }
+  .catalog-pane-filters label {
+    flex: 1 1 140px;
+  }
+}

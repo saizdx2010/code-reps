@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { chooseOption, expectNoStackedDividers } from './helpers'
+import { expectNoStackedDividers } from './helpers'
 
 test('fresh Trail avoids a duplicate practice list and Progress explains its zeros', async ({ page }) => {
   await page.goto('/#/home')
@@ -34,12 +34,13 @@ test('brief and lessons style identifiers and use one evidence note', async ({ p
 
 test('Library topic filtering includes related reps from old overlapping categories', async ({ page }) => {
   await page.goto('/#/practice')
-  await expect(page.getByLabel('Topic', { exact: true })).toBeVisible()
-  await chooseOption(page.getByLabel('Topic', { exact: true }), 'Arrays')
+  const topic = (name: string) =>
+    page.locator('.catalog-rail-list button', { has: page.locator('strong', { hasText: new RegExp(`^${name}$`) }) })
+  await topic('Arrays').click()
   await expect(page.getByRole('button', { name: /Total available prices/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /Find the first long word/ })).toBeVisible()
   await expect(page.getByText('Algorithm / TypeScript', { exact: true })).toHaveCount(0)
-  await chooseOption(page.getByLabel('Topic', { exact: true }), 'Maps and sets')
+  await topic('Maps and sets').click()
   await expect(page.getByRole('button', { name: /Find a duplicate/ })).toBeVisible()
 })
 
