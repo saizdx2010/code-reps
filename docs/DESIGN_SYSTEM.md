@@ -163,7 +163,8 @@ Motion acknowledges interaction and shows where something came from; it never de
 | Menus, tooltips, dialogs | Menus enter over 240ms; tooltips 110ms; dialogs 380ms with native close and focus |
 | Page change | The page arrives over 380ms |
 | Out-of-date checks | Run invites a fresh run with one lime ring when an edit puts results out of date, then stays still |
-| Completion panel | Rises into the top of the Finish pane once; a finished step's check pops into the step bar |
+| Completion panel | Rises into the top of the Finish pane once and its check medallion pops in; a finished step's check pops into the step bar |
+| Reflection chips | Hover takes the accent border and accent-soft wash; choosing one pops its check in |
 | Hint question | The inline first-hint question settles in where the hint control was |
 | Checks sheet (phones) | Opening the sheet raises its contents into place once; closing is immediate |
 | Restore preview and receipt | The merge preview, an import error, and the post-merge receipt each rise in once where they appear |

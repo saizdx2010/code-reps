@@ -49,29 +49,24 @@ test('completion evidence says what an attempt counts as, in journey terms, from
   const progress = records => getAllJourneys(records, Date.parse(at(10)))
   const done = (repId, day, hintCount = 0) => ({ repId, completedAt: at(day), hintCount })
   // A guided rep points to the independent one, whatever the hint count.
-  assert.match(completionEvidence(journey.guided, 2, progress([done(journey.guided, 1, 2)])).text, /^Guided practice done/)
-  // Hints make an independent attempt practice, and the chip says how many.
+  assert.match(completionEvidence(journey.guided, 2, progress([done(journey.guided, 1, 2)])), /^Guided practice done/)
+  // Hints make an independent attempt practice.
   const hinted = completionEvidence(journey.independent, 1, progress([done(journey.guided, 1), done(journey.independent, 2, 1)]))
-  assert.deepEqual(hinted.chip, { tone: 'neutral', label: '1 hint' })
-  assert.match(hinted.text, /practice, not independent evidence/)
+  assert.match(hinted, /practice, not independent evidence/)
   // Hint-free after the guided rep is independent and names when recall opens.
   const independent = completionEvidence(journey.independent, 0, progress([done(journey.guided, 1), done(journey.independent, 2)]))
-  assert.equal(independent.chip.label, 'No hints')
-  assert.match(independent.text, /independent\. Recall opens /)
+  assert.match(independent, /independent\. Recall opens /)
   // Hint-free without the guided rep does not claim independence.
-  assert.match(
-    completionEvidence(journey.independent, 0, progress([done(journey.independent, 2)])).text,
-    /To count as independent, finish /,
-  )
+  assert.match(completionEvidence(journey.independent, 0, progress([done(journey.independent, 2)])), /To count as independent, finish /)
   // Recall only claims retention when the records show it.
   const early = completionEvidence(
     journey.recall,
     0,
     progress([done(journey.guided, 1), done(journey.independent, 2), done(journey.recall, 3)]),
   )
-  assert.doesNotMatch(early.text, /retained/)
+  assert.doesNotMatch(early, /retained/)
   const later = progress([done(journey.guided, 1), done(journey.independent, 2), done(journey.recall, 2 + journey.delayDays + 1)])
-  assert.match(completionEvidence(journey.recall, 0, later).text, /retained/)
-  // Reps outside a journey only report hint use.
-  assert.equal(completionEvidence('declare-variables', 0, progress([])).text, 'Completed without hints.')
+  assert.match(completionEvidence(journey.recall, 0, later), /retained/)
+  // Reps outside a journey add nothing beyond the attempt's own facts.
+  assert.equal(completionEvidence('declare-variables', 0, progress([])), undefined)
 })

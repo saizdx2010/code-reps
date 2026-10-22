@@ -650,6 +650,27 @@ summary {
 .practice-steps button[data-done] > span::after {
   animation: mark-pop 260ms var(--motion-spring) both;
 }
+/* Its check medallion pops in once the panel has risen. */
+.completion-mark {
+  animation: mark-pop 320ms var(--motion-spring) 120ms both;
+}
+
+/* Reflection chips take an accent border on hover; choosing one pops its check in. */
+.choice-chips button {
+  transition:
+    border-color var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .choice-chips button:hover:not([aria-pressed='true']) {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+}
+.choice-chips button[aria-pressed='true'] .ui-icon {
+  animation: mark-pop 260ms var(--motion-spring) both;
+}
 /* Its growth notes rise in just after the panel, and the new skill state settles in after the old one. */
 .skill-step-notice {
   animation: notice-rise 240ms var(--motion-ease) 160ms both;
