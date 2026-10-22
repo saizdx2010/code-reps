@@ -95,6 +95,7 @@ Your work stays local: separate profiles keep each learner's work apart, **Progr
 | **Stop checks** | Cancel the active run and keep your code |
 | **Edit code** | Cancel an active run and clear obsolete feedback |
 | **Tab** | Move focus out of the editor |
+| **Tools → Vim keys** | Edit with Vim keys; `:make` runs checks, and Escape stays with Vim |
 
 Monaco is the code editor, with a plain text fallback if it cannot load. Desktop layouts keep writing steps beside the editor; narrow screens show one pane at a time and keep save feedback visible. See the [UI guide](./docs/UI_GUIDE.md) for navigation, keyboard controls, and saved-state behavior.
 

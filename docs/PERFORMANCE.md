@@ -6,11 +6,12 @@
 | --- | ---: | ---: |
 | Initial route JavaScript and static dependencies | 530,000 | 161,500 |
 | Additional editor JavaScript, including its dynamic language modules | 4,200,000 | 1,050,000 |
+| Vim keys (`monaco-vim`), loaded only when a learner turns them on | 110,000 | 34,000 |
 | Additional frontend preview/check JavaScript | 3,900,000 | 1,050,000 |
 | Editor, TypeScript, and practice worker JavaScript | 12,150,000 | 3,100,000 |
 | Initial CSS (every stylesheet the startup chunks import) | 165,000 | 30,200 |
 
-The script deduplicates shared chunks within each group, excludes initial-route dependencies from the additional groups (and does not follow the lazy imports of any startup chunk, so a chunk split out of the app entry does not pull every route into the editor's total), and requires all three local workers. Worker totals also include their shared and dynamically imported JavaScript chunks. It also rejects unused CSS, HTML, and JSON language workers. Editor and frontend groups describe separate features; their totals are not a sum of every possible network request.
+The script deduplicates shared chunks within each group, excludes initial-route dependencies from the additional groups (and does not follow the lazy imports of any startup chunk, so a chunk split out of the app entry does not pull every route into the editor's total), and requires all three local workers. Worker totals also include their shared and dynamically imported JavaScript chunks. It also rejects unused CSS, HTML, and JSON language workers. The Vim keys group holds only the `monaco-vim` chunk (30,703 gzip / 100,124 raw bytes for 0.4.4, budgeted about 10% above); it reuses the editor's Monaco chunks, which stay in the editor group, so it is excluded from the editor total. Vite aliases its ES module build, because its browser export is a UMD build with an old Monaco copy, and maps its `monaco-editor/esm/vs/…` imports to the locked Monaco files. Editor and frontend groups describe separate features; their totals are not a sum of every possible network request.
 
 Monaco remains lazy, with existing hover/focus preloading and a plain text recovery editor. `src/monaco.ts` retains editor contributions from the locked Monaco release but registers only TypeScript, JavaScript, and SQL language support; the SQL registration is a few hundred bytes and its keyword tokenizer loads only when a SQL model opens. The previous general import also bundled CSS, HTML, and JSON workers plus many unused language modules. Removing those workers alone avoids approximately 2.26 MB of raw build output. This does not imply a corresponding startup-speed improvement: unused workers were not necessarily loaded on the first route.
 

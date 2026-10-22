@@ -7,6 +7,7 @@ import { useFluency } from './useFluency'
 import { Fragment, lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { CommandPalette, GlossaryDrawer, ScreenMemory, WorkspaceSplit } from './Experience'
 import { useSessionPreference } from './useSessionPreference'
+import { readVimMode, writeVimMode } from './vim-mode'
 import { useNavigation } from './useNavigation'
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
 import type { View } from './ui-navigation'
@@ -158,6 +159,13 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   // Search can open Appearance or switch dark mode, which the navigation owns.
   const [navigationRequest, setNavigationRequest] = useState<NavigationRequest | undefined>(undefined)
   const [focusMode, setFocusMode] = useState(false)
+  const [vimKeys, setVimKeys] = useState(readVimMode)
+  const vimKeysRef = useRef(vimKeys)
+  const toggleVimKeys = () => {
+    vimKeysRef.current = !vimKeys
+    writeVimMode(!vimKeys)
+    setVimKeys(!vimKeys)
+  }
   const [checksOpen, setChecksOpen] = useState(false)
   const workspaceRef = useRef<HTMLElement | null>(null)
   const toolbarRef = useRef<HTMLDivElement | null>(null)
@@ -351,7 +359,9 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
         event.preventDefault()
         setCommandsOpen(current => !current)
       }
-      if (event.key === 'Escape' && !document.querySelector('dialog[open]')) setFocusMode(false)
+      // With Vim keys, Escape in the editor belongs to Vim: it leaves insert mode, not focus mode.
+      const inVim = vimKeysRef.current && (event.target as Element | null)?.closest?.('.monaco-editor, .vim-status')
+      if (event.key === 'Escape' && !inVim && !document.querySelector('dialog[open]')) setFocusMode(false)
     }
     window.addEventListener('keydown', keyboard)
     return () => window.removeEventListener('keydown', keyboard)
@@ -566,6 +576,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     run: runChecks,
     editor: focusEditor,
     'focus-mode': toggleFocusMode,
+    vim: toggleVimKeys,
     brief: () => revealSection('brief-section'),
     checks: () => revealSection('checks-section'),
     explain: () => revealSection('explain-section'),
@@ -599,6 +610,9 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     action('Pages', 'glossary', 'Glossary', 'terms vocabulary words'),
     action('Settings', 'appearance', 'Appearance', 'colors color scheme palette theme'),
     action('Settings', 'theme', 'Dark mode', 'theme light appearance', { detail: 'Switch on or off' }),
+    action('Settings', 'vim', vimKeys ? 'Turn off Vim keys' : 'Turn on Vim keys', 'vim keybindings editor modal', {
+      detail: 'Code editor',
+    }),
     ...(onManageProfiles ? [action('Settings', 'profiles', 'Manage profiles', 'learner profile switch rename export')] : []),
     action('Settings', 'backup', 'Download practice backup', 'export save file'),
   ]
@@ -691,6 +705,8 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
         status={currentStatus}
         saveState={saveState}
         focusMode={focusMode}
+        vimKeys={vimKeys}
+        onVimKeys={toggleVimKeys}
         onLibrary={() => (originLesson ? openKnowledge(originLesson) : setView('catalog'))}
         backLabel={originLesson ? skillSummaryById(originLesson)?.title : undefined}
         onGlossary={() => setGlossaryOpen(true)}
@@ -857,6 +873,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
                       value={attempt.code}
                       onChange={value => update('code', value ?? '')}
                       onRunChecks={runChecks}
+                      vim={vimKeys}
                       onTypeIssues={issues => setTypeIssues({ repId: rep.id, issues })}
                       options={{ ariaLabel: editorLabel, ...editorOptions }}
                     />

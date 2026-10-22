@@ -27,6 +27,8 @@ export function WorkspaceHeader({
   status,
   saveState,
   focusMode,
+  vimKeys,
+  onVimKeys,
   onLibrary,
   backLabel,
   onGlossary,
@@ -39,6 +41,9 @@ export function WorkspaceHeader({
   status: string
   saveState: string
   focusMode: boolean
+  /** Vim keys in the code editor, a setting kept on this device. */
+  vimKeys: boolean
+  onVimKeys: () => void
   onLibrary: () => void
   /** The lesson this rep was opened from; the back link returns there instead of the Library. */
   backLabel?: string
@@ -94,6 +99,7 @@ export function WorkspaceHeader({
           <summary>Tools</summary>
           <div>
             <Button onClick={onFocusMode}>{focusMode ? 'Exit focus' : 'Focus mode'}</Button>
+            <Button onClick={onVimKeys}>{vimKeys ? 'Turn off Vim keys' : 'Vim keys'}</Button>
             <Button onClick={onReset}>Reset rep</Button>
             {skills.length > 0 && (
               <div className="workspace-knowledge">
