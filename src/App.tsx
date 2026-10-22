@@ -4,7 +4,7 @@ import { usePracticeSessions } from './usePracticeSessions'
 import { AppNavigation } from './AppNavigation'
 import { InterviewStatus } from './InterviewStatus'
 import { useFluency } from './useFluency'
-import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { CommandPalette, GlossaryDrawer, ScreenMemory, WorkspaceSplit } from './Experience'
 import { useSessionPreference } from './useSessionPreference'
 import { useNavigation } from './useNavigation'
@@ -621,20 +621,29 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
         <div className="task-pane">
           <div ref={tabsRef} className="practice-steps" role="navigation" aria-label="Practice steps">
             <StepIndicator active={activeStep} />
-            {practiceSteps.map(step => (
-              <button
-                key={step.id}
-                type="button"
-                aria-label={step.label}
-                aria-current={activeStep === step.id ? 'step' : undefined}
-                aria-describedby={`step-status-${step.id}`}
-                aria-controls={step.section}
-                data-done={stepComplete(step.id) || undefined}
-                onClick={() => revealSection(step.section)}
-              >
-                <span>{step.label}</span>
-                <small id={`step-status-${step.id}`}>{stepStatus(step.id)}</small>
-              </button>
+            {practiceSteps.map((step, index) => (
+              <Fragment key={step.id}>
+                {index > 0 && (
+                  <span
+                    className="step-link"
+                    aria-hidden="true"
+                    data-done={(stepComplete(practiceSteps[index - 1].id) && stepComplete(step.id)) || undefined}
+                  />
+                )}
+                <button
+                  type="button"
+                  aria-label={step.label}
+                  aria-current={activeStep === step.id ? 'step' : undefined}
+                  aria-describedby={`step-status-${step.id}`}
+                  aria-controls={step.section}
+                  data-done={stepComplete(step.id) || undefined}
+                  data-status={stepStatus(step.id).toLowerCase().replace(' ', '-')}
+                  onClick={() => revealSection(step.section)}
+                >
+                  <span>{step.label}</span>
+                  <small id={`step-status-${step.id}`}>{stepStatus(step.id)}</small>
+                </button>
+              </Fragment>
             ))}
           </div>
           <div

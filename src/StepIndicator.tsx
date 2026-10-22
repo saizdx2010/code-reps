@@ -2,7 +2,8 @@ import { useLayoutEffect, useRef } from 'react'
 
 /**
  * Follows the real active button without replacing it or changing its focus behavior. It measures both axes,
- * so the same indicator serves the horizontal bar, the vertical desktop rail, and segmented switches.
+ * so the same indicator serves the practice step bar (an underline, or a wash in the vertical focus strip), lesson
+ * sections, and segmented switches.
  * It glides only when the selection changes; first placement and layout resizes snap into place.
  */
 export function StepIndicator({ active, selector = 'button[aria-current]' }: { active: string; selector?: string }) {
