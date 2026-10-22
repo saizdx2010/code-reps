@@ -102,13 +102,13 @@ Home is the learner's trail: the chosen track drawn as stages of connected nodes
 
 ## Practice workspace
 
-Practice gives the working surfaces priority: one compact header row (back to Library, title, status chip, category, save status, Glossary, Tools), a slim vertical step rail on the left edge of the brief pane, and a resizable 40/60 reading/code split by default. Existing divider preferences remain in effect. On narrow screens the same moving indicator and buttons become a horizontal step bar above the selected pane, and both panes stay mounted. On phones the header takes two rows (back link with Glossary and Tools, then the title) and one quiet line of chips with the save status, and checks become a bottom sheet over the editor, resting on a run toolbar fixed to the screen edge.
+Practice gives the working surfaces priority: one compact header row (back to Library, title, status chip, category, save status, Glossary, Tools), a step bar across the top of the brief pane, and a resizable 40/60 reading/code split by default. Existing divider preferences remain in effect. The step bar is one design at every width: each step is a marker and a label, joined by links, and an accent underline marks the current step. Markers show a number for steps to come (a dashed ring when the step is optional, an accent ring when Finish is ready), a check once done, and the strong action fill for the current step; a link turns accent once the steps on both sides are done. Status words (needed, optional, to do, ready) stay available to assistive technology and appear beside the labels only when the bar is wide enough. The bar sizes itself as a container: below 500px each marker sits above its label. On narrow screens the bar sits above the selected pane and both panes stay mounted; in focus mode it becomes a slim vertical strip beside the editor with a sage wash on the current step. On phones the header takes two rows (back link with Glossary and Tools, then the title) and one quiet line of chips with the save status, and checks become a bottom sheet over the editor, resting on a run toolbar fixed to the screen edge.
 
 SQL reps add three pieces, all drawn from existing tokens. The brief has a Tables disclosure (leading chevron, open by default, remembered for the session) listing each table's name, row count, columns with types and keys in the code font, and the first three rows in a mini table that scrolls inside its own box. The editor tab reads `query.sql` and a footer line names SQLite and the rep's contract. A failed SQL check shows Expected and Received tables on the desk's `--surface-2` (stacked on phones) with a pinned row-number column, a wrong cell outlined in `--error` with the expected value beside it, extra and missing rows outlined with a text pill, NULL in muted italics, and one semibold sentence naming the first difference; SQLite's own error replaces the check list with the message, the line, and a caret.
 
 Check results open as a drawer inside the dark coding desk, anchored above the run toolbar and limited to about half the desk (about a third beside a frontend preview); the editor shrinks rather than being covered. Use the desk's semantic surfaces for running, failed, and passed states. Keep passed cases visible with a status at the right; failed cases reveal one diagnostic at a time. After an edit the drawer turns neutral with an Out of date chip and dimmed outcomes, keeping the open diagnostic readable. The inline frontend preview is padded like the desk's other panels and keeps its state, viewport, Update, and Expand controls in one compact row.
 
-Practice step tabs are direct buttons without tooltips. Active primary navigation uses a quiet sage surface; active practice and lesson steps use the stronger green fill with lime text. Do not make every navigation item a primary action. Written work and behavioral checks remain separate evidence.
+Practice step tabs are direct buttons without tooltips. Active primary navigation uses a quiet sage surface; active lesson steps use the stronger green fill with lime text, and the current practice step takes the accent underline with a filled marker. Do not make every navigation item a primary action. Written work and behavioral checks remain separate evidence.
 
 ## Disclosures and icons
 
@@ -137,7 +137,8 @@ Motion acknowledges interaction and shows where something came from; it never de
 | Text link | Underline fades in while rising toward the text |
 | Main navigation tab | Sage wash scales in behind the label |
 | Section tab | Underline grows from the centre; the current tab keeps it |
-| Practice steps, lesson sections, segmented switches, Journal | Selected fill glides between options (`StepIndicator`); first placement and layout resizes snap |
+| Practice steps | Underline glides and resizes to the selected step (`StepIndicator`); markers ease into their new state; a link fills from the left once both neighbouring steps are done; first placement and layout resizes snap |
+| Lesson sections, segmented switches, Journal | Selected fill glides between options (`StepIndicator`); first placement and layout resizes snap |
 | Trail node | Marker grows to 114% with an accent ring; title takes the accent; press washes the row |
 | Next trail node | Lime ring pulses twice when the trail arrives or the next rep moves, then stays still |
 | Next-practice panel | When its rep changes in place (a starting choice or Undo), its words rise in over 320ms and a short confirmation rises beneath it; nothing moves on page arrival |
@@ -162,7 +163,7 @@ Motion acknowledges interaction and shows where something came from; it never de
 | Menus, tooltips, dialogs | Menus enter over 240ms; tooltips 110ms; dialogs 380ms with native close and focus |
 | Page change | The page arrives over 380ms |
 | Out-of-date checks | Run invites a fresh run with one lime ring when an edit puts results out of date, then stays still |
-| Completion panel | Rises into the top of the Finish pane once; a finished step's check pops into the rail |
+| Completion panel | Rises into the top of the Finish pane once; a finished step's check pops into the step bar |
 | Hint question | The inline first-hint question settles in where the hint control was |
 | Checks sheet (phones) | Opening the sheet raises its contents into place once; closing is immediate |
 | Restore preview and receipt | The merge preview, an import error, and the post-merge receipt each rise in once where they appear |

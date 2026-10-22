@@ -28,6 +28,26 @@ test('moving practice indicator follows the selected step across layouts without
   await expect(page.getByRole('region', { name: 'Task and plan' })).toBeVisible()
 })
 
+test('the practice step bar heads the brief, marks optional steps, and fits every width', async ({ page }) => {
+  await page.goto('/#/practice/declare-variables')
+  const bar = page.locator('.practice-steps')
+  await expect(bar.locator('.step-link')).toHaveCount(4)
+  await expect(bar.getByRole('button', { name: 'Plan', exact: true })).toHaveAttribute('data-status', 'optional')
+  await expect(bar.getByRole('button', { name: 'Solve', exact: true })).toContainText('Needed')
+  for (const width of [1280, 1000, 390, 320]) {
+    await page.setViewportSize({ width, height: 800 })
+    await expect
+      .poll(() =>
+        bar.evaluate(element => {
+          const box = element.getBoundingClientRect()
+          const brief = document.querySelector('#task-workspace')!.getBoundingClientRect()
+          return element.scrollWidth <= element.clientWidth && box.bottom <= brief.top + 1 && box.left <= brief.left + 1
+        }),
+      )
+      .toBe(true)
+  }
+})
+
 test('reduced motion keeps buttons and dialogs usable without animated feedback', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/#/home')

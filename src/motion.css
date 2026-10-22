@@ -498,6 +498,24 @@ summary {
   text-underline-offset: 4px;
 }
 
+/* Practice steps: the underline glides and resizes to the selected step, a marker eases into its new state, and a
+   link fills from the left (top in the focus strip) when the steps on both sides are done. */
+.practice-steps .step-indicator {
+  transition:
+    transform 220ms var(--motion-ease),
+    width 220ms var(--motion-ease),
+    height 220ms var(--motion-ease);
+}
+.practice-steps button > span::before {
+  transition:
+    background-color var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+.step-link {
+  transition: background-size 320ms var(--motion-ease);
+}
+
 /* Segmented switches: the selected fill slides between options. */
 .segmented-control .step-indicator {
   transition:

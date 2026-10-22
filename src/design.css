@@ -1147,46 +1147,171 @@ footer {
   text-align: left;
   font-size: 14px;
 }
-/* The step bar is horizontal by default; desktop turns it into a rail beside the brief. */
+/* The practice loop is one step bar at every width: on desktop it heads the brief pane, on narrow screens it sits
+   above the selected pane. Each step is a marker and a label joined by links; the underline glides to the current step.
+   The bar is its own size container, so its density follows the room it has, including a narrow split. */
 .practice-steps {
   position: relative;
   isolation: isolate;
+  container: steps / inline-size;
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: 4px;
   flex: none;
-  padding: 5px;
+  min-width: 0;
+  padding: 0 12px;
   margin-bottom: 18px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: var(--surface-2);
+  background: var(--surface);
+  overflow-x: auto;
+  scrollbar-width: none;
   counter-reset: step;
+}
+.practice-steps .step-indicator {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: inset 0 -2px 0 var(--accent);
 }
 .practice-steps button {
   position: relative;
   z-index: 1;
-  flex: 1;
-  justify-content: center;
-  border-radius: var(--radius-control);
+  flex: none;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
-  min-height: 44px;
-  padding: 9px 4px;
+  min-height: 48px;
+  padding: 0 8px;
   border: 0;
+  border-radius: var(--radius-control);
   background: transparent;
-  color: var(--text);
-  font-size: 15px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 550;
+  white-space: nowrap;
   counter-increment: step;
 }
-.practice-steps button[aria-current='step'] {
-  color: var(--action-text);
-  font-weight: 600;
+/* The hover wash stays a pill inside the bar, clear of the underline. */
+.practice-steps > button::before {
+  inset: 7px 0;
 }
-.practice-steps button:hover:not([aria-current]),
-.practice-steps button:focus-visible:not([aria-current]) {
+.practice-steps button[aria-current='step'] {
+  color: var(--text);
+}
+.practice-steps button > span {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+/* The marker: a number for steps to come, a check once done, the strong fill for the current step. */
+.practice-steps button > span::before {
+  content: counter(step);
+  display: grid;
+  place-items: center;
+  flex: none;
+  box-sizing: border-box;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: var(--type-meta);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+/* An optional step has a dashed ring; Finish takes the accent ring once nothing is missing. */
+.practice-steps button[data-status='optional'] > span::before {
+  border-style: dashed;
+}
+.practice-steps button[data-status='ready'] > span::before {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.practice-steps button[data-done] > span::before {
+  content: '';
+  border-color: transparent;
   background: var(--accent-soft);
+}
+.practice-steps button[aria-current='step'] > span::before {
+  border-color: var(--action);
+  background: var(--action);
+  color: var(--action-text);
+}
+.practice-steps button[data-done] > span::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 4px;
+  width: 14px;
+  height: 14px;
+  translate: 0 -50%;
+  background: var(--accent);
+  mask: var(--icon-check) center / contain no-repeat;
+}
+.practice-steps button[data-done][aria-current='step'] > span::after {
+  background: var(--action-text);
+}
+/* Status words stay with assistive technology; they show beside the label when the bar has room. */
+.practice-steps button small {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  color: var(--muted);
+  font-size: var(--type-meta);
+  font-weight: 400;
+  text-transform: lowercase;
+}
+/* A link turns green, filling from the left, once the steps on both sides are done. */
+.step-link {
+  flex: 1 1 0;
+  min-width: 6px;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(var(--accent), var(--accent)) left / 0 100% no-repeat var(--border);
+}
+.step-link[data-done] {
+  background-size: 100% 100%;
+}
+@container steps (min-width: 680px) {
+  .practice-steps button:not([data-done], [data-status='read']) small {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    clip-path: none;
+  }
+}
+/* Short of room, each marker sits above its label and the links meet the markers. */
+@container steps (max-width: 499px) {
+  .practice-steps button {
+    flex-direction: column;
+    justify-content: center;
+    min-height: 56px;
+    padding: 0 2px;
+    font-size: var(--type-meta);
+  }
+  .practice-steps button > span {
+    flex-direction: column;
+    gap: 3px;
+  }
+  .practice-steps button[data-done] > span::after {
+    top: 4px;
+    left: 50%;
+    translate: -50% 0;
+  }
+  .practice-steps > button::before {
+    inset: 4px 0;
+  }
+  .step-link {
+    align-self: flex-start;
+    margin-top: 18px;
+  }
 }
 .workspace-layout {
   display: grid;
@@ -1198,8 +1323,8 @@ footer {
 }
 .task-pane {
   display: grid;
-  grid-template-columns: 84px minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -2950,19 +3075,10 @@ dialog.preview-inline {
     position: sticky;
     top: 0;
     z-index: var(--layer-steps);
-    justify-content: space-between;
-    gap: 4px;
-    background: var(--surface-2);
-    padding: 5px;
   }
   /* The completion panel lands just below the sticky step bar, not underneath it. */
   .completion-panel {
     scroll-margin-top: 76px;
-  }
-  .practice-steps button {
-    min-height: 44px;
-    padding: 9px 4px;
-    font-size: 14px;
   }
   .workspace-layout {
     grid-template-columns: minmax(0, 1fr) !important;
@@ -3241,14 +3357,6 @@ dialog.preview-inline {
     min-height: 0;
     overflow-y: auto;
   }
-  .practice-steps {
-    gap: 2px;
-  }
-  .practice-steps button {
-    flex: 1 1 auto;
-    font-size: 13px;
-    padding: 8px 4px;
-  }
   .task-panel,
   .plan-panel,
   .explain-panel,
@@ -3339,68 +3447,43 @@ dialog.preview-inline {
     height: auto;
     min-height: 0;
   }
+  /* The bar heads the brief pane; its bottom line is a shadow so the underline can sit on it. */
   .practice-steps {
-    flex-direction: column;
-    gap: 4px;
     margin-bottom: 0;
-    padding: 6px;
-    overflow-y: auto;
-    border-width: 0 1px 0 0;
+    border: 0;
     border-radius: 0;
-    scrollbar-width: none;
+    box-shadow: inset 0 -1px 0 var(--border);
   }
-  .practice-steps button {
-    flex: none;
+  /* Focus mode hides the brief, so the steps become a slim strip beside the editor. */
+  .focus-mode .practice-steps {
     flex-direction: column;
-    justify-content: center;
+    align-items: stretch;
     gap: 0;
-    min-height: 58px;
-    padding: 6px 2px;
-    font-size: var(--type-meta);
+    width: 84px;
+    padding: 8px 6px;
+    overflow: hidden auto;
+    box-shadow: none;
   }
-  .practice-steps button > span::before {
-    content: counter(step);
-    display: grid;
-    place-items: center;
-    width: 22px;
-    height: 22px;
-    margin: 0 auto 4px;
-    border: 1px solid currentColor;
-    border-radius: 50%;
-    font-size: var(--type-meta);
-    font-weight: 550;
-    opacity: 0.75;
-  }
-  .practice-steps button[aria-current='step'] > span::before {
-    opacity: 1;
-  }
-  /* A finished step trades its number for a check, so the rail shows progress at a glance. */
-  .practice-steps button > span {
-    position: relative;
-  }
-  .practice-steps button[data-done] > span::before {
-    content: '';
-    border-color: var(--accent);
+  .focus-mode .practice-steps .step-indicator {
+    border-radius: var(--radius-control);
     background: var(--accent-soft);
-    opacity: 1;
+    box-shadow: none;
   }
-  .practice-steps button[data-done][aria-current='step'] > span::before {
-    border-color: currentColor;
-    background: transparent;
+  .focus-mode .practice-steps button {
+    min-height: 54px;
   }
-  .practice-steps button[data-done] > span::after {
-    content: '';
-    position: absolute;
-    top: 4px;
-    left: 50%;
-    width: 14px;
-    height: 14px;
-    translate: -50% 0;
-    background: var(--accent);
-    mask: var(--icon-check) center / contain no-repeat;
+  .focus-mode .step-link {
+    flex: none;
+    align-self: center;
+    width: 2px;
+    min-width: 0;
+    height: 10px;
+    margin: 0;
+    background-position: top;
+    background-size: 100% 0;
   }
-  .practice-steps button[data-done][aria-current='step'] > span::after {
-    background: currentColor;
+  .focus-mode .step-link[data-done] {
+    background-size: 100% 100%;
   }
   .task-column {
     border-radius: 0;
@@ -3569,18 +3652,6 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 }
 
 /* The session record is a compact control in the workspace header; its reflection opens as a row below it. */
-
-/* Let longer step labels claim their natural width on the shortest screens. */
-@media (max-width: 380px) {
-  .practice-steps > button {
-    flex: 1 0 auto;
-  }
-  .practice-steps button {
-    font-size: var(--type-meta);
-    padding: 8px 2px;
-    white-space: nowrap;
-  }
-}
 
 /* App-wide feedback and small view switches share workbook tokens. */
 .feedback-note {
@@ -4414,17 +4485,6 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   .trace-panes {
     grid-template-columns: minmax(0, 1fr);
   }
-}
-
-/* Requirement labels belong to the existing step rail and narrow step bar. */
-.practice-steps button {
-  flex-direction: column;
-  gap: 2px;
-}
-.practice-steps button small {
-  font-size: var(--type-meta);
-  line-height: 1.2;
-  color: inherit;
 }
 
 .progress-quiet-links,
