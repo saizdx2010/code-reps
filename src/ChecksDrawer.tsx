@@ -45,6 +45,7 @@ export function ChecksDrawer({
   openLesson,
   onExplain,
   explaining,
+  neverCompleted = false,
   probes = false,
   typeIssues,
 }: {
@@ -59,6 +60,8 @@ export function ChecksDrawer({
   onExplain: () => void
   /** The Explain step is open or already written, so the drawer does not offer to go there. */
   explaining: boolean
+  /** No attempt at this rep has ever been completed, so its first all-green run can say so. */
+  neverCompleted?: boolean
   /** Every check of a schema rep is a probe of one rule, so the summary counts probes. */
   probes?: boolean
   /** The editor's TypeScript errors; undefined until the editor reports, and null when the rep is not TypeScript. */
@@ -85,6 +88,10 @@ export function ChecksDrawer({
   const [openCase, setOpenCase] = useState<{ run: TestResult[] | null; name: string | null }>({ run: null, name: null })
   const openName = openCase.run === shown ? openCase.name : firstFailed
   const chooseCase = (name: string | null) => setOpenCase({ run: shown, name })
+  // The first all-green run of a never-completed rep says so, once: it remembers that run, so later runs stay quiet.
+  const [firstGreen, setFirstGreen] = useState<{ repId: string; results: TestResult[] } | null>(null)
+  if (results && allPassed && neverCompleted && !completed && firstGreen?.repId !== repId) setFirstGreen({ repId, results })
+  const firstGreenRun = !!results && firstGreen?.repId === repId && firstGreen.results === results
   // One direct lesson for the rep, never a guess from check names, and nothing when the rep has none.
   const lesson = skillSummariesForRep(repId)[0]
   return (
@@ -160,6 +167,11 @@ export function ChecksDrawer({
                       ? 'All checks passed'
                       : `${passedCount(results)} of ${results.length} checks passed`}
                 </strong>
+                {firstGreenRun && (
+                  <p className="first-green">
+                    <StatusChip tone="success">First all-green run on this rep</StatusChip>
+                  </p>
+                )}
               </div>
               {allPassed && !completed && !explaining && (
                 <Button variant="primary" className="checks-next" onClick={onExplain}>

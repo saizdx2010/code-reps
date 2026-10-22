@@ -6,10 +6,10 @@ import { getActiveProfile } from './local-store'
 import { setScreenNavigated } from './screen-focus'
 import { useGlossary } from './useGlossary'
 import { lazy, Suspense, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
-import type { KeyboardEvent, MouseEvent, PointerEvent, ReactNode } from 'react'
+import type { CSSProperties, KeyboardEvent, MouseEvent, PointerEvent, ReactNode } from 'react'
 import { searchPalette } from './command-search'
 import type { SearchEntry, SearchTarget } from './command-search'
-import type { ResultTable, TestResult } from './runner.types'
+import type { TestResult } from './runner.types'
 
 // SQLite row comparisons load with the first failed SQL check. If they cannot load, the check's sentence still shows.
 const SqlPlan = lazy(() =>
@@ -17,11 +17,17 @@ const SqlPlan = lazy(() =>
     .then(module => ({ default: module.SqlPlan }))
     .catch(() => ({ default: ({ lines }: { lines: string[] }) => <pre>{lines.join('\n')}</pre> })),
 )
-const SqlComparison = lazy(() =>
-  import('./SqlResults')
-    .then(module => ({ default: module.SqlComparison }))
+// A failed check's details load with the first failure; the check's name stays readable while they arrive.
+const FailedCheck = lazy(() =>
+  import('./FailedCheck')
+    .then(module => ({ default: module.FailedCheck }))
     .catch(() => ({
-      default: ({ table }: { table: ResultTable; stale: boolean }) => <p>{[table.columnNote, table.first].filter(Boolean).join(' ')}</p>,
+      default: ({ result }: { result: TestResult; stale: boolean }) => (
+        <>
+          <summary>{result.name}</summary>
+          {result.message && <p>{result.message}</p>}
+        </>
+      ),
     })),
 )
 
@@ -364,29 +370,6 @@ export function CommandPalette({ context, onChoose, onClose }: PaletteProps) {
   )
 }
 
-function formatValue(value: string) {
-  try {
-    return JSON.stringify(JSON.parse(value), null, 2)
-  } catch {
-    return value
-  }
-}
-
-function ValueDifference({ value, other }: { value: string; other: string }) {
-  const lines = formatValue(value).split('\n')
-  const comparison = formatValue(other).split('\n')
-  return (
-    <pre>
-      {lines.map((line, index) => (
-        <span key={index} className={line === comparison[index] ? '' : 'diff-line'}>
-          {line}
-          {index < lines.length - 1 ? '\n' : ''}
-        </span>
-      ))}
-    </pre>
-  )
-}
-
 /** Failed checks first, one diagnostic open at a time, then the passed checks. Stale results are a dimmed reference. */
 export function CheckFeedback({
   results,
@@ -409,8 +392,9 @@ export function CheckFeedback({
     setOwnOpen(value)
     onOpen?.(value)
   }
-  const row = (result: TestResult) => (
-    <li key={result.name}>
+  // One running place across both lists, so the cascade reads failed rows first, then passed ones.
+  const row = (result: TestResult, place: number) => (
+    <li key={result.name} style={{ '--row': place } as CSSProperties}>
       <span
         className={result.passed ? 'pass-icon' : 'fail-icon'}
         aria-label={`${result.passed ? 'Passed' : 'Failed'}${stale ? ' in the last run' : ''}`}
@@ -435,7 +419,9 @@ export function CheckFeedback({
               setActiveFailed(current => (open ? result.name : current === result.name ? null : current))
             }}
           >
-            <FailedCheck result={result} stale={stale} />
+            <Suspense fallback={<summary>{result.name}</summary>}>
+              <FailedCheck result={result} stale={stale} />
+            </Suspense>
           </details>
         )}
       </div>
@@ -444,63 +430,15 @@ export function CheckFeedback({
   )
   return (
     <>
-      {!!failed.length && <ul className={`result-list${stale ? ' is-stale' : ''}`}>{failed.map(row)}</ul>}
+      {!!failed.length && <ul className={`result-list${stale ? ' is-stale' : ''}`}>{failed.map((result, index) => row(result, index))}</ul>}
       {!!passed.length && (
         <ul
           className={`result-list passed-checks${stale ? ' is-stale' : ''}`}
           aria-label={stale ? 'Passed in the last run' : 'Passed checks'}
         >
-          {passed.map(row)}
+          {passed.map((result, index) => row(result, failed.length + index))}
         </ul>
       )}
-    </>
-  )
-}
-
-/** The input, expected and actual values, and message for one failed check. */
-function FailedCheck({ result, stale }: { result: TestResult; stale: boolean }) {
-  const actual = result.actual ?? 'No returned value'
-  return (
-    <>
-      <summary>{result.name}</summary>
-      {result.input?.startsWith('Starting data: ') ? (
-        <p className="sql-starting">{result.input}</p>
-      ) : (
-        result.input && (
-          <div>
-            <span className="field-label">Input</span>
-            <pre>{result.input}</pre>
-          </div>
-        )
-      )}
-      {!!result.tables?.length && (
-        <Suspense fallback={<p className="utility-note">Loading the row comparison…</p>}>
-          {result.tables.map(table => (
-            <SqlComparison key={table.label} table={table} stale={stale} />
-          ))}
-        </Suspense>
-      )}
-      {result.plan && (
-        <Suspense fallback={<pre>{result.plan.join('\n')}</pre>}>
-          <SqlPlan lines={result.plan} />
-        </Suspense>
-      )}
-      {result.expected !== undefined && (
-        <div className="value-comparison">
-          <div>
-            <span className="field-label">Expected</span>
-            <ValueDifference value={result.expected} other={actual} />
-          </div>
-          <div>
-            <span className="field-label">{stale ? 'Actual (last run)' : 'Actual'}</span>
-            <ValueDifference value={actual} other={result.expected} />
-          </div>
-        </div>
-      )}
-      {result.message &&
-        (!result.tables?.length || result.plan) &&
-        !(result.expected !== undefined && result.message.startsWith('Expected ')) && <p>{result.message}</p>}
-      {!stale && <p className="utility-note">Trace this input through your code, then try again.</p>}
     </>
   )
 }

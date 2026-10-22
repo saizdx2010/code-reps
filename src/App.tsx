@@ -821,6 +821,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
             openLesson={openKnowledge}
             onExplain={() => revealSection('explain-section')}
             explaining={activeStep === 'explain' || stepDone.explain}
+            neverCompleted={!completedPathIds.has(repId)}
             probes={Boolean(full?.sql && full.checks.every(check => check.sql?.probes?.length))}
             typeIssues={sqlRep ? null : typeIssues?.repId === repId ? typeIssues.issues : undefined}
           />

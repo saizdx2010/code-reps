@@ -727,27 +727,36 @@ summary {
   }
 }
 
-/* Opened groups cascade their rows in: trail stages, exercise topics, and check results. */
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li {
+/* Opened groups cascade their rows in: trail stages and exercise topics. */
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows) > li {
   animation: row-arrive 280ms var(--motion-ease) both;
 }
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(2) {
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows) > li:nth-child(2) {
   animation-delay: 30ms;
 }
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(3) {
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows) > li:nth-child(3) {
   animation-delay: 60ms;
 }
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(4) {
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows) > li:nth-child(4) {
   animation-delay: 90ms;
 }
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(5) {
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows) > li:nth-child(5) {
   animation-delay: 120ms;
 }
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(6) {
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows) > li:nth-child(6) {
   animation-delay: 150ms;
 }
-:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows, .result-list) > li:nth-child(n + 7) {
+:is(.path-stage[open] .trail-nodes, .list-group[open] .list-rows) > li:nth-child(n + 7) {
   animation-delay: 180ms;
+}
+/* Check results land in reading order once the summary is up: failed rows, then passed ones, as one cascade.
+   Each row carries its place (--row); after eight, the rest land together. Rows from an out-of-date run stay still. */
+.result-list > li {
+  animation: row-arrive var(--motion-fast) var(--motion-ease) both;
+  animation-delay: calc(min(var(--row, 0), 8) * 40ms);
+}
+.result-list.is-stale > li {
+  animation: none;
 }
 @keyframes row-arrive {
   from {

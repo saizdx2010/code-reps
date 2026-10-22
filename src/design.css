@@ -2514,6 +2514,23 @@ footer {
 .value-comparison .diff-line {
   background: var(--accent-soft);
 }
+/* A failed check's difference in one sentence, beside the marked line: words, never colour alone. */
+.result-list .value-difference {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 12px 0 4px;
+  padding: 8px 12px;
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius-control);
+  background: var(--warning-soft);
+  color: var(--warning);
+  font-weight: 600;
+}
+.result-list .value-difference .ui-icon {
+  flex: none;
+  margin-top: 2px;
+}
 /* SQLite checks: expected and received rows as small tables on the desk. Differences carry words, not colour alone. */
 .sql-comparison {
   margin: 10px 0 4px;
@@ -2755,6 +2772,14 @@ footer {
   flex: none;
   margin: -6px 0 0 auto;
   font-size: 14px;
+}
+/* On a narrow desk, Explain drops below the summary instead of running past the edge. */
+.result-summary {
+  flex-wrap: wrap;
+  row-gap: 10px;
+}
+.result-summary .first-green {
+  margin-top: 8px;
 }
 /* An authored error message and stack trace in the brief. It scrolls sideways rather than wrapping frames. */
 .error-report {
