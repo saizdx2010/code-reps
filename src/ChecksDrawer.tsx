@@ -143,7 +143,7 @@ export function ChecksDrawer({
           <>
             <div className={`result-summary ${allPassed ? 'passed' : 'failed'}`}>
               <span>
-                <Icon name={allPassed ? 'check' : 'alert'} />
+                <Icon name={allPassed ? 'check' : 'alert'} play={allPassed ? 'passed' : 'failed'} />
               </span>
               <div>
                 <strong>

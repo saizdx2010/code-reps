@@ -112,7 +112,11 @@ Practice step tabs are direct buttons without tooltips. Active primary navigatio
 
 ## Disclosures and icons
 
-Use `Icon.tsx` for decorative control icons. `icons.css` is the single geometry source for both components and native disclosure markers: a 24px view box, 1.8px rounded outline strokes, and an 18px display size. Icons inherit the control color and are hidden from assistive technology; keep visible labels and accessible names. Do not substitute Unicode glyphs or separate inline SVG drawings. Preserve the original logo as its own brand asset.
+Use `Icon.tsx` for decorative control icons. They come from the Code Reps icon pack, drawn for this app from the logo: `src/icon-pack.ts` is the single source for every shape and reaction, for components, native disclosure markers, and the design file. The pack uses a 24px grid with 2px of air, 1.8px rounded strokes, soft 2.5–3px corners, and an 18px display size. Shapes come from the logo's code bracket and code line. The part that matters in an icon (the line in the lesson, the middle code line, the stems of info and alert, the search handle, and the calendar's day dot) is the *rep line*: at most one per icon, drawn at the same weight as the rest (as in the logo) and set apart only by `var(--icon-mark, currentColor)`. In the app the rep line stays `currentColor` unless a surface sets `--icon-mark`; only quiet, neutral controls opt in (the Search trigger and InfoNote summaries use `--accent`, in `icons.css`). Never opt in on filled buttons, where the accent would vanish, or on status messages, where it would contradict the status. Icons inherit the control color and are hidden from assistive technology; keep visible labels and accessible names. Do not substitute Unicode glyphs or separate inline SVG drawings. Preserve the original logo as its own brand asset.
+
+After changing the pack, run `yarn icons` to regenerate `src/icon-pack.css` (reaction keyframes and the `--icon-chevron` / `--icon-check` mask images; `tests/icon-pack.test.mjs` fails when it is stale). Run `yarn design:icons` to redraw the Icon component set, the Icons page (`Icons/Pack`, `Icons/Reactions`), and the previews in `design/code-reps-design-system.figcraft`; it needs `figcraft-cli`. The script keeps each instance's colour and owns only those boards.
+
+Each icon has one reaction: its moving parts play once when the link or button around it is hovered (fine pointers), focused with the keyboard, or pressed. Reactions last 240–560ms, move a few px with transforms only, and stay inside the icon's 24px box. `<Icon play={value} />` plays the reaction on mount and whenever the value changes; result summaries use it. `<Icon still />` never reacts; arrows that already slide in with their row (ListRow, the lesson topic list) are `still`, so the row keeps one hover movement. Reduced motion turns reactions off. The Icons/Reactions board in the design file is a prototype: present it and hover an icon to play it.
 
 - **Arrow:** forward actions and row navigation.
 - **Chevron:** every expand/collapse control. Collapsible groups and cards (topic groups, trail stages, journeys, project overviews, path picker, the Plan step brief) use a trailing chevron that points down and rotates 180° when open. Inline text disclosures (Quick vocabulary, Starting as) use the leading native marker. Buttons with `aria-expanded` rotate their chevron the same way; the checks drawer opens upward, so its chevron points up while closed.
@@ -127,7 +131,8 @@ Motion acknowledges interaction and shows where something came from; it never de
 
 | Element | Interaction |
 | --- | --- |
-| Primary action | Lifts 2px with a soft shadow and a single shine sweep; arrow and play icons nudge forward; press compresses to 97%; a ripple marks the press point |
+| Primary action | Lifts 2px with a soft shadow and a single shine sweep; press compresses to 97%; a ripple marks the press point |
+| Icons | Each icon plays its own reaction once when its control is hovered, focused, or pressed (arrow and play nudge forward, close turns a quarter, info tilts, the hint filament lights up); result summaries play theirs when the result arrives |
 | Secondary action | Lifts 1px and takes an accent border; no shine |
 | Text link | Underline fades in while rising toward the text |
 | Main navigation tab | Sage wash scales in behind the label |
@@ -148,9 +153,8 @@ Motion acknowledges interaction and shows where something came from; it never de
 | Progress statistics, track cards | Rise in a short cascade |
 | Status chip | Settles in (scale and fade) when it appears or its status changes; an unchanged status stays still |
 | Checkbox and radio | Mark pops in |
-| Info note | Icon tilts on hover; the note takes the accent when open |
+| Info note | Its icon tilts (the icon reaction); the note takes the accent when open |
 | Disclosure | Native content expands and collapses over 420ms; chevron rotates over 180ms; with reduced motion it opens and closes at once |
-| Close and clear icons | Quarter-turn on hover |
 | Number stepper | Presses down |
 | Workspace divider | Grip lengthens on hover and focus |
 | Logo, appearance symbol | Logo tilts slightly; the light/dark symbol half-turns |

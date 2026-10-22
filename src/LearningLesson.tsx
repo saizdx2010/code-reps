@@ -350,7 +350,7 @@ function LessonQuestions({ skill, state, update }: { skill: Skill; state: Fluenc
         )}
         {shown && (
           <div className="lesson-feedback feedback-note" data-state={shown.correct ? 'success' : 'error'} role="status">
-            <Icon name={shown.correct ? 'check' : 'alert'} />
+            <Icon name={shown.correct ? 'check' : 'alert'} play={shown.correct ? 'correct' : 'revisit'} />
             <div>
               <p>
                 <strong>{shown.correct ? 'Correct prediction.' : 'Revisit this idea.'}</strong>{' '}

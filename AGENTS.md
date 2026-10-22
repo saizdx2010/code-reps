@@ -34,6 +34,8 @@ Use **Node.js 24 or later** and **Yarn Classic 1.22.22**, as declared in `packag
 | `yarn test:e2e` | Run real-browser practice flows in Chromium |
 | `yarn content:check` | Validate authored content and depth coverage |
 | `yarn content:index` | Regenerate `src/catalog-index.ts` and the lazy loaders after changing reps, lessons, or reviews (a test fails when they are stale) |
+| `yarn icons` | Regenerate `src/icon-pack.css` after changing the icon pack in `src/icon-pack.ts` (a test fails when it is stale) |
+| `yarn design:icons` | Redraw the icon pack into `design/code-reps-design-system.figcraft` and its previews (needs `figcraft-cli`) |
 | `yarn package` | Build a portable web bundle with a Node runtime |
 | `node scripts/verify-portable.mjs` | Smoke-test the generated portable bundle |
 

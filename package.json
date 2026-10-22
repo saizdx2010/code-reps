@@ -19,6 +19,8 @@
     "content:index": "node --experimental-strip-types scripts/catalog-index.mjs",
     "content:check": "node --experimental-strip-types scripts/validate-content.mjs",
     "rep:new": "node --experimental-strip-types scripts/new-rep.mjs",
+    "icons": "node --experimental-strip-types scripts/icon-pack.mjs",
+    "design:icons": "node --experimental-strip-types design/tools/build-icons.mjs",
     "test:e2e": "playwright test"
   },
   "dependencies": {
