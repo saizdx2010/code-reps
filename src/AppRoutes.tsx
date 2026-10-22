@@ -213,7 +213,6 @@ export function AppRoutes(props: Props) {
         <Suspense fallback={<RouteLoading title="Find your next rep" status="Opening the library…" className="catalog-main" />}>
           <CatalogRoute
             goalPathId={goalPathId}
-            drafts={drafts}
             practicePlan={practicePlan}
             repStatus={repStatus}
             openRep={openRep}
@@ -347,14 +346,12 @@ export function AppRoutes(props: Props) {
 /** The library with its session-only filters. */
 function CatalogRoute({
   goalPathId,
-  drafts,
   practicePlan,
   repStatus,
   openRep,
   openLesson,
 }: {
   goalPathId: string
-  drafts: Record<string, Attempt>
   practicePlan: PracticePlan
   repStatus: (rep: RepSummary) => string
   openRep: (id: string) => void
@@ -362,23 +359,17 @@ function CatalogRoute({
 }) {
   const [query, setQuery] = useSessionPreference<string>('catalogQuery', '')
   const [level, setLevel] = useSessionPreference<string>('catalogLevel', '')
-  const [skill, setSkill] = useSessionPreference<string>('catalogSkill', '')
+  // The open topic or progress shelf; an older saved topic that no longer exists falls back inside the catalog.
+  const [shelf, setShelf] = useSessionPreference<string>('catalogSkill', '')
   const [format, setFormat] = useSessionPreference<string>('catalogFormat', '')
-  const [status, setStatus] = useSessionPreference<string>('catalogStatus', '')
   const dueIds = useMemo(() => new Set(practicePlan.due.map(item => item.repId)), [practicePlan])
-  // A topic saved under an older label no longer exists; it is ignored rather than hiding every rep.
-  const topic = libraryTopics.includes(skill) ? skill : ''
+  const browseReps = useMemo(
+    () => reps.filter(item => (!level || String(repLevel(item.id)) === level) && (!format || (item.format ?? 'algorithm') === format)),
+    [level, format],
+  )
   const visibleReps = useMemo(
-    () =>
-      reps.filter(
-        item =>
-          searchWords(query).every(word => searchText.get(item.id)!.includes(word)) &&
-          (!topic || catalogTopic(item) === topic) &&
-          (!level || String(repLevel(item.id)) === level) &&
-          (!format || (item.format ?? 'algorithm') === format) &&
-          (!status || (status === 'review' ? dueIds.has(item.id) : attemptStatus(item.id, drafts[item.id]) === status)),
-      ),
-    [query, topic, level, format, status, dueIds, drafts],
+    () => browseReps.filter(item => searchWords(query).every(word => searchText.get(item.id)!.includes(word))),
+    [query, browseReps],
   )
   const lessonMatches = useMemo(
     () =>
@@ -389,23 +380,24 @@ function CatalogRoute({
         : [],
     [query, visibleReps.length],
   )
-  const setters = { query: setQuery, skill: setSkill, format: setFormat, status: setStatus, level: setLevel }
+  const setters = { query: setQuery, format: setFormat, level: setLevel }
   return (
     <PracticeCatalog
       goalPathId={goalPathId}
-      filters={{ query, skill: topic, format, status, level }}
+      filters={{ query, format, level }}
       onFilter={(field, value) => setters[field](value)}
       clearFilters={() => {
         setQuery('')
-        setSkill('')
         setFormat('')
-        setStatus('')
         setLevel('')
       }}
+      shelf={shelf}
+      onShelf={setShelf}
       categories={libraryTopics}
       lessonMatches={lessonMatches}
       openLesson={openLesson}
       visibleReps={visibleReps}
+      browseReps={browseReps}
       dueIds={dueIds}
       repStatus={repStatus}
       openRep={openRep}

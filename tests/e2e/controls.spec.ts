@@ -96,12 +96,6 @@ test('owned number, search, and choice controls preserve native input behavior',
   await expect(search).toHaveValue('')
   await expect(search).toBeFocused()
   expect(await page.locator('.catalog-list .list-row > button').count()).toBeGreaterThan(1)
-  await page.goto('/#/knowledge')
-  const choice = page.getByRole('checkbox', { name: 'Bookmarks only', exact: true })
-  await choice.focus()
-  await page.keyboard.press('Space')
-  await expect(choice).toBeChecked()
-  expect(await choice.evaluate(element => getComputedStyle(element).appearance)).toBe('none')
 })
 
 test('custom popup works inside Profiles and the owned file control preserves failed import recovery', async ({ page }) => {

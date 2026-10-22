@@ -6,7 +6,7 @@ test('all project levels are freely accessible and self-review preserves an exis
   await page.getByLabel('Title', { exact: true }).fill('Existing draft')
   await page.getByRole('textbox', { name: 'What you learned', exact: true }).fill('Keep this unfinished reflection.')
   await page.goto('/#/projects')
-  await expect(page.getByRole('heading', { name: 'Build outside Code Reps' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Build on your own machine' })).toBeVisible()
   await page.screenshot({ path: 'test-results/browser-projects-desktop.png' })
   const level = page
     .locator('.project-overview')
@@ -46,7 +46,7 @@ test('project requirements and preparation work at narrow widths', async ({ page
 test('the DevOps hero project opens, links its preparation, and records a learner-reported note', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 740 })
   await page.goto('/#/projects')
-  await expect(page.getByRole('heading', { name: 'Ship a service on your own machine' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Build on your own machine' })).toBeVisible()
   const project = page
     .locator('.project-overview')
     .filter({ has: page.getByRole('heading', { name: 'DevOps hero project: Containerize an app and add CI on your own machine' }) })

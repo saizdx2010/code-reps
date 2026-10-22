@@ -41,7 +41,7 @@ function Rows({ count = 3 }: { count?: number }) {
 function ProjectSkeleton() {
   return (
     <div aria-hidden="true">
-      <h2>Build outside Code Reps</h2>
+      <h2>Build on your own machine</h2>
       <div className="loading-project-intro">
         <span className="skeleton-label" />
       </div>

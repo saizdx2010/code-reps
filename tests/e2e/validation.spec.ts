@@ -106,7 +106,8 @@ test('validation prompts and catalogue remain usable at 320 CSS pixels', async (
   await page.getByRole('button', { name: 'Plan', exact: true }).click()
   await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue('Small-screen plan with precedence cases.')
   await page.goto('/#/practice')
-  await page.locator('.catalog-filters > summary').click()
+  // A narrow screen swaps the topic rail for one menu.
+  await expect(page.getByLabel('Topic', { exact: true })).toBeVisible()
   await chooseOption(page.getByLabel('Type of rep', { exact: true }), 'backend')
   await page.getByLabel('Find a rep', { exact: true }).fill('stock adjustment')
   await expect(page.getByRole('button', { name: /Validate a stock adjustment/ })).toBeVisible()

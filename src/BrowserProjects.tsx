@@ -51,7 +51,7 @@ export function BrowserProjects({ openRep, recordReflection }: Props) {
       <summary>
         <h3>{projectHeading(project)}</h3>
         <p>{project.brief}</p>
-        <span>External project · Self-review</span>
+        <span>{browserProjects.includes(project) ? 'Browser app' : 'Service and CI'}</span>
       </summary>
       <p>{project.readiness}</p>
       <details className="project-review">
@@ -109,52 +109,37 @@ export function BrowserProjects({ openRep, recordReflection }: Props) {
       </details>
     </details>
   )
+  // One section for everything built outside the app: one note on evidence, one setup guide, then every project in order.
   return (
-    <>
-      <section className="project-section" aria-labelledby="browser-project-heading">
-        <h2 id="browser-project-heading">Build outside Code Reps</h2>
-        <InfoNote>
-          <p>
-            Three levels for plain TypeScript and the DOM. Open any level; readiness guidance is optional. Each level includes a complete
-            project with requirements and a self-review.
-          </p>
-          <p>
-            Use documentation, choose your implementation, and write your own tests. You record and review your work here yourself.
-            Independent and Retained skills need separate in-app reps.
-          </p>
-        </InfoNote>
-        <details className="project-review">
-          <summary>Set up your local project</summary>
-          <ol>
-            {externalSetup.map(point => (
-              <li key={point}>{point}</li>
-            ))}
-          </ol>
-        </details>
-        {browserProjects.map(overview)}
-      </section>
-      <section className="project-section" aria-labelledby="service-project-heading">
-        <h2 id="service-project-heading">Ship a service on your own machine</h2>
-        <InfoNote>
-          <p>
-            The DevOps track ends here: containerize a service you wrote and add CI, using your own tools. Code Reps never builds, runs, or
-            checks it.
-          </p>
-          <p>
-            You run every command and record the results in a self-review note. That note is learner-reported evidence, kept apart from the
-            checked reps and from Independent and Retained skills.
-          </p>
-        </InfoNote>
-        <details className="project-review">
-          <summary>Set up your local project</summary>
-          <ol>
-            {serviceProjectSetup.map(point => (
-              <li key={point}>{point}</li>
-            ))}
-          </ol>
-        </details>
-        {serviceProjects.map(overview)}
-      </section>
-    </>
+    <section className="project-section" aria-labelledby="own-machine-heading">
+      <h2 id="own-machine-heading">Build on your own machine</h2>
+      <InfoNote>
+        <p>
+          Three browser-app levels in plain TypeScript and the DOM, then the DevOps track's finale: containerize a service you wrote and add
+          CI. Open any project; readiness guidance is optional.
+        </p>
+        <p>
+          You use your own tools and documentation, write your own tests, and record the results in a self-review note. Code Reps never
+          builds, runs, or checks these projects; that note is learner-reported evidence, kept apart from checked reps and from Independent
+          and Retained skills.
+        </p>
+      </InfoNote>
+      <details className="project-review">
+        <summary>Set up your local project</summary>
+        <h4>For the browser app</h4>
+        <ol>
+          {externalSetup.map(point => (
+            <li key={point}>{point}</li>
+          ))}
+        </ol>
+        <h4>For the service</h4>
+        <ol>
+          {serviceProjectSetup.map(point => (
+            <li key={point}>{point}</li>
+          ))}
+        </ol>
+      </details>
+      {[...browserProjects, ...serviceProjects].map(overview)}
+    </section>
   )
 }

@@ -83,7 +83,7 @@ All components are app-owned. Extend these before writing page-specific markup. 
 | `InfoNote` | `Layout.tsx` | “ⓘ How evidence works” and other secondary explanation; never body paragraphs of caveats |
 | `StatusChip` + `statusTone` | `Layout.tsx`, `ui-status.ts` | Rep and path status: neutral, progress, success, attention |
 | `EmptyState` | `Layout.tsx` | Empty lists and no-match results, with one recovery action |
-| `ListGroup` / `ListRow` | `Layout.tsx` | Collapsible topic groups and their rows (exercises, path badges, assessment skills) |
+| `ListGroup` / `ListRow` | `Layout.tsx` | Collapsible topic groups and their rows (path badges, assessment skills); exercise rows use `ListRow` beside the topic rail |
 | `Trail` | `Trail.tsx`, `trail.css`, `trail-map.ts` | Path stages and nodes on Home and All tracks |
 | `JournalTabs` | `Journal.tsx` | The Journal switch |
 | Segmented control | `.segmented-control` | Small view switches with a visible selected state |
@@ -144,7 +144,7 @@ Motion acknowledges interaction and shows where something came from; it never de
 | Trail node | Marker grows to 114% with an accent ring; title takes the accent; press washes the row |
 | Next trail node | Lime ring pulses twice when the trail arrives or the next rep moves, then stays still |
 | Next-practice panel | When its rep changes in place (a starting choice or Undo), its words rise in over 320ms and a short confirmation rises beneath it; nothing moves on page arrival |
-| Trail stage, topic group, check results | Rows cascade in (30ms apart, capped at 180ms) when the group opens or results arrive |
+| Trail stage, topic group, chosen exercise topic, check results | Rows cascade in (30ms apart, capped at 180ms) when the group opens or results arrive |
 | List row | Stays in place; the arrow slides into its reserved space; press settles to 99.5% |
 | Track and starting cards | Lift 2px on hover; settle on press |
 | Progress bars | Fill grows from the left when the page arrives (path progress, topic meters, and the skill-ladder bar) |
