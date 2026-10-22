@@ -30,13 +30,14 @@ export default function FrontendPreview({ code, rep }: Props) {
     requestAnimationFrame(() => expandRef.current?.focus())
   }
   const previewRequest = useRef(0)
-  useEffect(() => {
-    // The compiler loads while the learner reads the brief, so the first preview does not wait for it.
-    warmCompileWorker()
-    return () => {
+  useEffect(
+    () => () => {
       previewRequest.current++
-    }
-  }, [])
+    },
+    [],
+  )
+  // The compiler loads while the learner reads the brief, so the first preview does not wait for it.
+  useEffect(() => warmCompileWorker(), [])
   const frameRef = useRef<HTMLIFrameElement | null>(null)
   useEffect(() => {
     const receive = (event: MessageEvent) => {
