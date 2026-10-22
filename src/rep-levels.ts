@@ -66,6 +66,7 @@ export const repLevels: Record<string, RepLevel> = {
   'maintain-room-booking': 3,
   'expose-page-bugs': 2,
   'repair-range-label': 2,
+  'break-page-count': 2,
   'expose-overlap-bugs': 2,
   'connected-note-state': 2,
   'connected-note-render': 2,

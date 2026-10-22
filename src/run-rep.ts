@@ -3,11 +3,67 @@ import { createAsyncFixture } from './async-fixture.ts'
 import { expectedOutcome, judgeSql, observeSql, observeSqlFunction, type SqliteFactory } from './sqlite-task.ts'
 import { compileSolution } from './compile-solution.ts'
 import { sameValue } from './compare.ts'
+import { followsRules, readTries, showValue, type BreakTry } from './break-it.ts'
 import type { Rep } from './rep-types.ts'
 import type { TestResult } from './runner.types'
 
 const missingSqlite: SqliteFactory = () => {
   throw new Error('SQLite must be loaded before running this rep.')
+}
+
+/** Compiles one function from TypeScript text: the learner's solution, or an authored suspect, contract, or variant. */
+function compileFunction(code: string, functionName: string): (...values: unknown[]) => unknown {
+  const output = compileSolution(code, functionName)
+  const solve: unknown = new Function(`${output}\nreturn typeof ${functionName} === 'function' ? ${functionName} : undefined`)()
+  if (typeof solve !== 'function') throw new Error(`Define a function named ${functionName}.`)
+  return solve as (...values: unknown[]) => unknown
+}
+
+/**
+ * Runs a Break it rep's saved tries. Every try runs the suspect, the contract, and each bug's one-bug variant on its own
+ * fresh copy of the input. A try catches a bug when the suspect disagrees with the contract and that bug's variant does
+ * too, so a catch is always credited to an authored bug. Returns the authored checks' results and each try as recomputed
+ * here, which the hunt saves in place of what the page sent.
+ */
+export function runBreakIt(code: string, rep: Rep): { results: TestResult[]; tries: BreakTry[] } {
+  const task = rep.breakIt
+  if (!task) throw new Error('This rep is not a Break it hunt.')
+  const saved = readTries(code)
+  if (!saved) throw new Error('The saved tries could not be read.')
+  const call = (solve: (...values: unknown[]) => unknown, input: number[]) => {
+    try {
+      return { value: solve(...structuredClone(input)) }
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'It threw an error.' }
+    }
+  }
+  const suspect = compileFunction(task.suspect, rep.functionName)
+  const contract = compileFunction(task.contract, rep.functionName)
+  const variants = task.bugs.map(bug => ({ id: bug.id, solve: compileFunction(bug.variant, rep.functionName) }))
+  const tries = saved.map(({ input }) => {
+    if (!followsRules(task, input)) return { input, suspect: '', contract: '', caught: [] }
+    const expected = call(contract, input)
+    if ('error' in expected) throw new Error(`The contract threw for ${JSON.stringify(input)}: ${expected.error}`)
+    const differs = (outcome: { value?: unknown; error?: string }) => 'error' in outcome || !sameValue(outcome.value, expected.value)
+    const actual = call(suspect, input)
+    return {
+      input,
+      suspect: 'error' in actual ? `throws: ${actual.error}`.slice(0, 200) : showValue(actual.value),
+      contract: showValue(expected.value),
+      caught: differs(actual) ? variants.filter(variant => differs(call(variant.solve, input))).map(variant => variant.id) : [],
+    }
+  })
+  const outside = saved.findIndex(item => !followsRules(task, item.input))
+  const results = rep.checks.map(({ name, bug }): TestResult => {
+    if (bug)
+      return tries.some(item => item.caught.includes(bug))
+        ? { name, passed: true }
+        : { name, passed: false, message: 'No try has caught this bug yet.' }
+    return outside < 0
+      ? { name, passed: true }
+      : { name, passed: false, message: `Try #${outside + 1} is outside the contract, so it cannot count as a catch.` }
+  })
+  return { results, tries }
 }
 
 /** Learner SQL text runs as written against each check's fresh database; there is no function to compile. */
@@ -47,11 +103,8 @@ export function runRepChecks(code: string, rep: Rep, createDatabase?: SqliteFact
   if (rep.sql && rep.format === 'sql') return runSqlRep(code, { ...rep, sql: rep.sql }, createDatabase ?? missingSqlite)
   if (rep.format === 'frontend') throw new Error('This exercise uses browser interaction checks. Run it in the workspace.')
   if (typeof code !== 'string' || code.length > 100_000) throw new Error('The solution is too large to run.')
-  const outputText = compileSolution(code, rep.functionName)
-  const solve = new Function(
-    `${outputText}\nreturn typeof ${rep.functionName} === 'function' ? ${rep.functionName} : undefined`,
-  )() as unknown
-  if (typeof solve !== 'function') throw new Error(`Define a function named ${rep.functionName}.`)
+  if (rep.breakIt) return runBreakIt(code, rep).results
+  const solve = compileFunction(code, rep.functionName)
   return rep.checks.map(({ name, input, expected, sql }) => {
     // A SQLite function receives the database first; its starting data is part of the input the learner needs to see.
     const seed = rep.sql && sql ? rep.sql.seeds[sql.seed] : undefined
@@ -98,9 +151,8 @@ export async function runRepChecksAsync(code: string, rep: Rep, createDatabase?:
   if (rep.sql) return runRepChecks(code, rep, createDatabase)
   if (rep.format === 'frontend') throw new Error('This exercise uses browser interaction checks. Run it in the workspace.')
   if (typeof code !== 'string' || code.length > 100_000) throw new Error('The solution is too large to run.')
-  const output = compileSolution(code, rep.functionName)
-  const solve = new Function(`${output}\nreturn typeof ${rep.functionName} === 'function' ? ${rep.functionName} : undefined`)()
-  if (typeof solve !== 'function') throw new Error(`Define a function named ${rep.functionName}.`)
+  if (rep.breakIt) return runBreakIt(code, rep).results
+  const solve = compileFunction(code, rep.functionName)
   const results: TestResult[] = []
   for (const check of rep.checks) {
     if (rep.runtime && !check.fixture) throw new Error('Missing asynchronous fixture specification.')

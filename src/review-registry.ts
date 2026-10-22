@@ -28,6 +28,7 @@ import { richDepth, richGuides } from './review-rich.ts'
 import { sqliteDepth, sqliteGuides } from './review-sqlite.ts'
 import { sqlDepth, sqlGuides } from './review-sql.ts'
 import { backendDepth, backendGuides } from './review-backend.ts'
+import { breakItDepth, breakItGuides } from './review-break-it.ts'
 import { devopsDepth, devopsGuides } from './review-devops.ts'
 import { stackTraceDepth, stackTraceGuides } from './review-stack-traces.ts'
 import { testingJourneyDepth, testingJourneyGuides } from './review-testing-journey.ts'
@@ -68,4 +69,5 @@ export const reviews: Review[] = [
   { depth: coreDepth, guides: coreGuides },
   { depth: richDepth, guides: richGuides },
   { depth: fluencyDepth, guides: fluencyGuides },
+  { depth: breakItDepth, guides: breakItGuides },
 ]

@@ -34,6 +34,7 @@ export const reviewLoaders: (() => Promise<Review>)[] = [
   () => import('./review-core.ts').then(module => ({ depth: module.coreDepth, guides: module.coreGuides })),
   () => import('./review-rich.ts').then(module => ({ depth: module.richDepth, guides: module.richGuides })),
   () => import('./review-fluency.ts').then(module => ({ depth: module.fluencyDepth, guides: module.fluencyGuides })),
+  () => import('./review-break-it.ts').then(module => ({ depth: module.breakItDepth, guides: module.breakItGuides })),
 ]
 
 // Rep ID -> [index of the loader with its depth, index of the loader with its guide]; -1 when there is none.
@@ -426,4 +427,5 @@ export const reviewOwners: Record<string, [number, number]> = {
   "validate-page-query": [30,30],
   "derive-task-summary": [30,30],
   "debug-page-offset": [30,30],
+  "break-page-count": [31,31],
 }

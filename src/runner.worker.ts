@@ -1,6 +1,6 @@
 import { compileSolution } from './compile-solution.ts'
 import { repSourceLoaders } from './rep-chunks.ts'
-import { runRepChecksAsync } from './run-rep.ts'
+import { runBreakIt, runRepChecksAsync } from './run-rep.ts'
 import type { SqliteFactory } from './sqlite-task.ts'
 import type { Rep } from './rep-types.ts'
 import type { CompileRequest } from './runner.types'
@@ -60,7 +60,12 @@ self.onmessage = async (event: MessageEvent<RunRequest | PrepareRequest | { comp
       throw new Error('This rep could not be loaded. Your code is still here; try running the checks again.')
     }
     self.postMessage({ ready: true })
-    self.postMessage({ results: await runRepChecksAsync(data.code, ready.rep, ready.createDatabase) })
+    // A Break it hunt also sends back each try as recomputed here, which the hunt saves and shows.
+    self.postMessage(
+      ready.rep.breakIt
+        ? runBreakIt(data.code, ready.rep)
+        : { results: await runRepChecksAsync(data.code, ready.rep, ready.createDatabase) },
+    )
   } catch (error) {
     self.postMessage({ error: error instanceof Error ? error.message : 'Could not run the solution.' })
   }

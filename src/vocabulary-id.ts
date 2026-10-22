@@ -294,6 +294,8 @@ export const indonesianGlossary: Record<string, string> = {
   Integration: 'kesepakatan antar bagian saat satu fitur dipakai utuh',
   'Faulty variant': 'versi fungsi dengan satu kesalahan yang disengaja',
   'Case table': 'daftar input beserta jawaban yang diharapkan',
+  Suspect: 'kode yang sedang diuji; bisa dibaca dan dijalankan, tetapi tidak bisa diubah',
+  Catch: 'input yang membuat kode yang diuji dan kontraknya memberi jawaban berbeda',
   Reproduce: 'memunculkan lagi bug dengan input tertentu',
   'Unfamiliar code': 'kode yang belum kamu tulis dan belum kamu telusuri',
   'Billable weight': 'berat yang dipakai untuk menghitung harga setelah dibulatkan',

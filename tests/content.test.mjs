@@ -33,6 +33,7 @@ import { validationSolutions } from './fixtures/validation-solutions.mjs'
 import { appSolutions } from './fixtures/app-solutions.mjs'
 import { domSolutions } from './fixtures/dom-solutions.mjs'
 import { testingJourneySolutions } from './fixtures/testing-journey-solutions.mjs'
+import { breakItSolutions } from './fixtures/break-it-solutions.mjs'
 import { maintenanceSolutions } from './fixtures/maintenance-journey-solutions.mjs'
 import { stackTraceSolutions } from './fixtures/stack-trace-solutions.mjs'
 import { assertMutantsFail } from './helpers/checks.mjs'
@@ -59,6 +60,7 @@ const solutions = {
   ...practicalSolutions,
   ...fluencySolutions,
   ...testingJourneySolutions,
+  ...breakItSolutions,
   ...maintenanceSolutions,
   ...stackTraceSolutions,
   ...coreSolutions,

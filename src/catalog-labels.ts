@@ -11,6 +11,7 @@ export const formatLabels: Record<string, string> = {
   sql: 'SQL',
   devops: 'DevOps',
   refactor: 'Improving code',
+  break: 'Break it',
 }
 
 const topicLabels: Record<string, string> = {

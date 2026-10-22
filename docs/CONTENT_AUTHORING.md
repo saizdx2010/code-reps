@@ -25,7 +25,7 @@ Output checks do not prove a learner used a particular declaration, type, or app
 
 AI-era content should make verification a learner action: trace a proposed answer, name a boundary case, run checks, and explain any correction. Avoid treating generated code as an authority. Frontend and backend interview reps should explicitly prompt for clarification, planning, implementation, explanation, and review; current interview practice is untimed and uses the same TypeScript function runner as other reps.
 
-For a substantial new format, add one complete playable task and its self-review flow before adding a large catalog.
+For a substantial new format, add one complete playable task and its self-review flow before adding a large catalog. Break it hunts (`format: 'break'`) have no learner code: their starter is an empty tries table, and [Break it](./BREAK_IT.md) describes the suspect, contract, one-bug variants, and checks they need.
 
 ## Knowledge lessons and fluency evidence
 

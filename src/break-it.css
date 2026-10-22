@@ -1,0 +1,306 @@
+/* Break it: the hunt's desk replaces the editor inside the dark coding desk (src/BreakIt.tsx). Loaded with the desk. */
+.break-desk {
+  /* The desk is dark in both modes, so its success and error surfaces use the dark-mode values. */
+  --success: #b4dea0;
+  --success-soft: #2b402a;
+  --success-border: #62835a;
+  --error: #ffbba6;
+  --error-soft: #452f28;
+  --error-border: #986b58;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  color: var(--text);
+}
+.break-desk > .break-problem {
+  margin: 18px;
+}
+.break-suspect {
+  flex: none;
+  margin: 0;
+  border-bottom: 1px solid var(--border);
+}
+.break-suspect pre {
+  margin: 0;
+  padding: 14px 18px 16px 0;
+  font: 14px/24px var(--font-mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+/* One block per line: a long line wraps under its own text, as the editor's word wrap does, not under the number. */
+.break-line {
+  display: block;
+  padding-left: 3.4em;
+  text-indent: -3.4em;
+}
+.break-ln {
+  display: inline-block;
+  width: 3.4em;
+  padding-right: 1.4em;
+  color: var(--muted);
+  text-align: right;
+  text-indent: 0;
+  user-select: none;
+}
+.break-hunt {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  padding: 18px;
+  container-type: inline-size;
+}
+.break-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.break-head h2 {
+  margin: 0;
+  font-size: var(--type-card);
+}
+.break-lead {
+  margin: -6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.break-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+.break-field {
+  display: grid;
+  flex: 1 1 140px;
+  gap: 6px;
+}
+.break-field label {
+  color: var(--muted);
+  font: 12px var(--font-mono);
+}
+.break-field .ui-input {
+  background: var(--surface-2);
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+.break-field .ui-input[aria-invalid='true'] {
+  border-color: var(--warning);
+}
+.break-form .ui-button {
+  min-height: var(--control-height);
+}
+.break-form .break-stop {
+  min-width: 96px;
+}
+.break-refusal,
+.break-problem {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius-control);
+  background: var(--warning-soft);
+  color: var(--warning);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.break-refusal .ui-icon {
+  flex: none;
+  margin-top: 2px;
+}
+.break-problem {
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  border-color: var(--error-border);
+  background: var(--error-soft);
+  color: var(--error);
+}
+.break-problem p {
+  flex: 1 1 220px;
+  margin: 0;
+}
+.break-notice,
+.break-empty,
+.break-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.break-note {
+  font-size: var(--type-meta);
+}
+/* The catch card: how many authored bugs are caught, the latest catch, and the learner's one-sentence naming. */
+.break-caught {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--success-border);
+  border-radius: var(--radius);
+  background: var(--success-soft);
+}
+.break-caught h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--success);
+  font-size: 16px;
+}
+.break-caught p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.break-caught .field-label {
+  margin: 4px 0 -4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.break-caught .ui-textarea {
+  background: var(--surface);
+  resize: vertical;
+}
+.break-meter {
+  display: flex;
+  gap: 4px;
+}
+.break-meter > span {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border);
+}
+.break-meter > [data-done] {
+  background: var(--success);
+}
+.break-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  margin-top: 2px;
+}
+/* The log of tries, newest first. A catch strikes the suspect's value and says so in its chip, never by colour alone. */
+.break-log {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border);
+}
+.break-row {
+  display: grid;
+  grid-template-columns: 3ch minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 6px 16px;
+  min-height: 48px;
+  padding: 8px 2px;
+  border-bottom: 1px solid var(--border);
+}
+.break-n {
+  color: var(--muted);
+  font: 13px var(--font-mono);
+}
+.break-input {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font: 14px var(--font-mono);
+}
+.break-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  color: var(--muted);
+  font: 13px var(--font-mono);
+  white-space: nowrap;
+}
+.break-strike {
+  color: var(--error);
+  text-decoration: none;
+  background: linear-gradient(currentColor, currentColor) 0 55% / 100% 1.5px no-repeat;
+}
+.break-row .status-chip .ui-icon {
+  width: 14px;
+  height: 14px;
+}
+.break-row .status-chip:has(.ui-icon)::before {
+  display: none;
+}
+/* On a narrow desk the answers and the chip move under the input. */
+@container (max-width: 520px) {
+  .break-row {
+    grid-template-columns: 3ch minmax(0, 1fr);
+  }
+  .break-values,
+  .break-row > .status-chip {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+@media (forced-colors: active) {
+  .break-strike {
+    text-decoration: line-through;
+  }
+}
+
+/* A new try slides into the top of the log; a catch strikes the value and fills its meter segment once. */
+.break-row.is-new {
+  animation: break-row-arrive var(--motion-fast) var(--motion-ease) both;
+}
+.break-row.is-new .break-strike {
+  animation: break-strike 240ms var(--motion-ease) 140ms both;
+}
+.break-meter > .is-fresh {
+  transform-origin: left center;
+  animation: fill-grow 560ms var(--motion-ease) 220ms both;
+}
+@keyframes break-row-arrive {
+  from {
+    opacity: 0;
+    translate: 0 -6px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes break-strike {
+  from {
+    background-size: 0 1.5px;
+  }
+  to {
+    background-size: 100% 1.5px;
+  }
+}
+
+/* The hunt grows with its log on narrow screens, and nothing below it needs room for a run bar. */
+@media (max-width: 900px) {
+  .code-panel:has(.break-desk) {
+    height: auto;
+    min-height: 0;
+  }
+  .break-desk {
+    overflow: visible;
+  }
+}
+@media (max-width: 600px) {
+  .code-column.mobile-active:has(.break-desk) {
+    padding-bottom: 0;
+  }
+  /* The editor hides its keyboard hint on phones; the suspect keeps saying it is read only. */
+  .break-suspect .editor-hint {
+    display: inline;
+  }
+  .break-hunt {
+    padding: 16px 14px;
+  }
+}
