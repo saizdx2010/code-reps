@@ -36,6 +36,7 @@ import { maintenanceJourneyReps } from './maintenance-journey-reps.ts'
 import { practicalReps } from './practical-concepts.ts'
 import { asyncReps } from './async-reps.ts'
 import { richReps } from './rich-reps.ts'
+import { stackTraceReps } from './stack-trace-reps.ts'
 import { testingJourneyReps } from './testing-journey-reps.ts'
 import { transferReps } from './transfer-reps.ts'
 import { validationReps } from './validation-reps.ts'
@@ -63,6 +64,7 @@ export const repSources: { name: string; reps: Rep[]; lessons?: readonly RepLess
   { name: 'journey-reps', reps: journeyReps },
   { name: 'transfer-reps', reps: transferReps },
   { name: 'rich-reps', reps: richReps },
+  { name: 'stack-trace-reps', reps: stackTraceReps },
   { name: 'fluency-reps', reps: fluencyReps },
   { name: 'capstone-reps', reps: capstoneReps },
   { name: 'validation-reps', reps: validationReps },

@@ -42,6 +42,10 @@ export const firstPath = {
       repIds: ['repair-visible-count', 'read-unique-names', 'transform-active-labels', 'verify-generated-code'],
     },
     {
+      title: 'Read an error message',
+      repIds: ['stack-trace-missing-field', 'stack-trace-wrong-caller', 'stack-trace-null-lookup'],
+    },
+    {
       title: 'TypeScript boundaries',
       repIds: ['guard-contact-input', 'exhaustive-delivery-label', 'generic-prefix-copy', 'typed-record-lookup', 'sensor-import-report'],
     },
@@ -347,6 +351,7 @@ export const paths = [
           'sql-delete-scope',
           'sql-upsert-stock',
           'sqlite-customer-totals',
+          'sqlite-spend-report',
           'sqlite-stock-transfer',
           'sqlite-restock-upsert',
           'sql-archive-orders',
@@ -410,7 +415,7 @@ export const paths = [
       },
       {
         title: 'Query and change local data',
-        repIds: ['sqlite-stock-transfer', 'sqlite-customer-totals', 'sqlite-restock-upsert'],
+        repIds: ['sqlite-stock-transfer', 'sqlite-customer-totals', 'sqlite-spend-report', 'sqlite-restock-upsert'],
       },
       {
         title: 'Decide who may act',

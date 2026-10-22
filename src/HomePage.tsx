@@ -53,6 +53,8 @@ type Props = {
   onLearnerStart: (value: LearnerStart) => void
   history: PortableRecord[]
   now: number
+  warmup: string[]
+  startWarmup: () => void
 }
 
 const modeLabel = (mode?: string) =>
@@ -72,7 +74,7 @@ const shortEffort = (repId: string) =>
 /** Home is the learner's trail: the goal drawn as connected stages, with the next useful action beside it. */
 export function HomePage(props: Props) {
   const { walkthroughSeen, launchWalkthrough, goalPathId, onPath, practicePlan, openPracticeAction, actionLabel } = props
-  const { onProgress, onLibrary, trail, evidence, openRep, openLesson, learnerStart, onLearnerStart } = props
+  const { onProgress, onLibrary, trail, evidence, openRep, openLesson, learnerStart, onLearnerStart, warmup, startWarmup } = props
   const pathText = usePathText()
   const goal = paths.find(path => path.id === goalPathId) ?? paths[0]
   const recommendation = practicePlan.next
@@ -201,6 +203,18 @@ export function HomePage(props: Props) {
                 Find saved drafts in the Library
               </Button>
             </p>
+          )}
+          {warmup.length >= 2 && (
+            <section className="warmup-panel" aria-labelledby="warmup-heading">
+              <h2 id="warmup-heading">Quick warm-up</h2>
+              <p>
+                {warmup.length} short reps you finished before, least recent first: {warmup.map(repTitle).join(', ')}. Each starts from the
+                starter, and finishing one counts like any other attempt.
+              </p>
+              <Button onMouseEnter={() => preloadPractice(warmup[0])} onFocus={() => preloadPractice(warmup[0])} onClick={startWarmup}>
+                Start warm-up
+              </Button>
+            </section>
           )}
           <nav className="trail-links" aria-label="Progress">
             <Button variant="text" onClick={onProgress}>

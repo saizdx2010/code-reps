@@ -46,6 +46,7 @@ export const pageEntries: { view: View; label: string }[] = [
   { view: 'catalog', label: 'Library › Exercises' },
   { view: 'knowledge', label: 'Library › Lessons' },
   { view: 'learn', label: 'Library › Lessons › Quick lessons' },
+  { view: 'patterns', label: 'Library › Lessons › Pattern cards' },
   { view: 'projects', label: 'Library › Projects' },
   { view: 'interview', label: 'Library › Projects › Timed interview' },
   { view: 'progress', label: 'Progress › Skills' },
@@ -55,6 +56,7 @@ export const pageEntries: { view: View; label: string }[] = [
   { view: 'history', label: 'Progress › Journal › Attempts' },
   { view: 'notebook', label: 'Progress › Journal › Notebook' },
   { view: 'mistakes', label: 'Progress › Journal › Mistakes' },
+  { view: 'stuck', label: 'Progress › Journal › Stuck points' },
 ]
 
 const repEntries: SearchEntry[] = reps.map(rep => ({

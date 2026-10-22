@@ -1,13 +1,15 @@
 import { formatDate } from './ui-copy.ts'
 import { InfoNote } from './Layout'
 import { Button } from './Button'
-import { Input, NumberInput, Select } from './Input'
+import { Input, NumberInput, Select, Textarea } from './Input'
 import { useEffect, useMemo, useState } from 'react'
 import { recurringReviews, weeklyPlan } from './fluency'
 import type { FluencyState } from './fluency'
 import type { PortableRecord } from './portability'
 import { paths } from './path'
 import { repTitle } from './rep-index.ts'
+import { retroNoteBody, retroQuestions, weeklyRetro } from './retro.ts'
+import { goToView } from './ui-navigation'
 
 type Props = {
   state: FluencyState
@@ -34,6 +36,7 @@ export function LearningPlan({ state, update, history, openRep, reviewRep, candi
   const toggleDay = (day: number) => setGoal({ days: goal.days.includes(day) ? goal.days.filter(d => d !== day) : [...goal.days, day] })
   return (
     <>
+      <WeekInReview state={state} update={update} history={history} now={now} />
       <section className="hub-panel">
         <h2>A manageable practice week</h2>
         <InfoNote>
@@ -126,5 +129,102 @@ export function LearningPlan({ state, update, history, openRep, reviewRep, candi
         )}
       </section>
     </>
+  )
+}
+
+/** A short look back at the last seven days. Saving writes one ordinary Notebook note; nothing else is stored. */
+function WeekInReview({ state, update, history, now }: Pick<Props, 'state' | 'update' | 'history'> & { now: number }) {
+  const retro = useMemo(() => weeklyRetro(history, now), [history, now])
+  const [answers, setAnswers] = useState<string[]>(() => retroQuestions.map(() => ''))
+  const [message, setMessage] = useState('')
+  const written = answers.some(answer => answer.trim())
+  const change = retro.attempts - retro.previousAttempts
+  function save() {
+    const note = {
+      id: crypto.randomUUID(),
+      title: `Week in review · ${formatDate(now)}`,
+      body: retroNoteBody(retro, answers),
+      skillId: '',
+      repId: '',
+      kind: 'note' as const,
+      updatedAt: new Date(now).toISOString(),
+    }
+    if (update({ ...state, notes: [note, ...state.notes] })) {
+      setAnswers(retroQuestions.map(() => ''))
+      setMessage('Saved to your Notebook.')
+    } else setMessage('Your review could not be saved. Your writing is still here.')
+  }
+  return (
+    <section className="hub-panel week-review" aria-labelledby="week-review-title">
+      <h2 id="week-review-title">Look back at the last seven days</h2>
+      <InfoNote label="What this shows">
+        <p>
+          Counts come from completed attempts; mistakes and the hardest part are your own answers. This is a reflection prompt, not a score.
+        </p>
+      </InfoNote>
+      <dl className="week-review-facts">
+        <div>
+          <dt>Completed attempts</dt>
+          <dd>
+            {retro.attempts}
+            <small>
+              {change === 0 ? ' same as the week before' : ` ${Math.abs(change)} ${change > 0 ? 'more' : 'fewer'} than the week before`}
+            </small>
+          </dd>
+        </div>
+        <div>
+          <dt>Practice days</dt>
+          <dd>{retro.practiceDays}</dd>
+        </div>
+        <div>
+          <dt>Without hints</dt>
+          <dd>
+            {retro.unhinted}
+            <small> of {retro.attempts}</small>
+          </dd>
+        </div>
+        <div>
+          <dt>Most tagged mistake</dt>
+          <dd>{retro.topMistake ? `${retro.topMistake.label} (${retro.topMistake.count})` : 'None tagged'}</dd>
+        </div>
+        <div>
+          <dt>Hardest most often</dt>
+          <dd>{retro.topStuck ? `${retro.topStuck.label} (${retro.topStuck.count})` : 'Not answered'}</dd>
+        </div>
+      </dl>
+      {retro.attempts === 0 ? (
+        <p>No completed attempts in the last seven days. A short rep is enough to restart; the plan below suggests one.</p>
+      ) : (
+        <p className="week-review-reps">Reps this week: {retro.reps.map(repTitle).join(', ')}.</p>
+      )}
+      {retroQuestions.map((question, index) => (
+        <label key={question} className="week-review-question">
+          {question}
+          <Textarea
+            rows={2}
+            value={answers[index]}
+            onChange={event => {
+              setMessage('')
+              setAnswers(current => current.map((answer, at) => (at === index ? event.target.value : answer)))
+            }}
+          />
+        </label>
+      ))}
+      <div className="week-review-actions">
+        <Button variant="primary" disabled={!written} onClick={save}>
+          Save to Notebook
+        </Button>
+        {message && (
+          <p role="status">
+            {message}{' '}
+            {message.startsWith('Saved') && (
+              <Button variant="text" onClick={() => goToView('notebook')}>
+                Open Notebook
+              </Button>
+            )}
+          </p>
+        )}
+      </div>
+    </section>
   )
 }

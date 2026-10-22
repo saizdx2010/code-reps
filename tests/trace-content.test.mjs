@@ -64,6 +64,7 @@ test('traces cover collection operations, stacks, sets, recursion, trees, tables
     'leading-throttle',
     'list-insert-sorted',
     'list-merge-sorted',
+    'list-remove-value',
     'list-rotate-route',
     'longest-shared-sequence',
     'loop-while',
@@ -85,6 +86,7 @@ test('traces cover collection operations, stacks, sets, recursion, trees, tables
     'shortest-run-reaching-target',
     'simplify-file-path',
     'smallest-daily-capacity',
+    'stack-trace-missing-field',
     'sum-positive-numbers',
     'terminal-folder-paths',
     'text-normalized-palindrome',
@@ -266,6 +268,79 @@ test('DP snapshots match intermediate values from executing the traced reference
         actual[index].slice(0, row.filter(value => value !== null).length),
         `${id}: update ${index}`,
       )
+    }
+  }
+})
+
+test('alternative traces run as correct solutions and end on the executed result', () => {
+  const alternatives = Object.entries(repDepth).filter(([, depth]) => depth.alternativeTrace)
+  assert.deepEqual(
+    alternatives.map(([id]) => id),
+    ['algo-climb-stairs'],
+  )
+  for (const [id, depth] of alternatives) {
+    const { code, input, steps } = depth.alternativeTrace.trace
+    const rep = reps.find(rep => rep.id === id)
+    const source = code.join('\n')
+    assert.ok(
+      runRep(source, id).every(check => check.passed),
+      `${id}: alternative trace code must pass the checks`,
+    )
+    const solve = new Function(`${compileSolution(source, rep.functionName)}\nreturn ${rep.functionName}`)()
+    assert.equal(steps.at(-1).vars.result, solve(...traceArguments(input)))
+    assert.match(code[steps.at(-1).line], /\breturn\b/)
+  }
+  const cached = repDepth['algo-climb-stairs'].alternativeTrace.trace.steps.filter(step => step.structure?.cached?.length)
+  assert.ok(cached.length > 0, 'the memoized trace should show a call answered from the memo')
+})
+
+// Follows next links from a node id and returns the values, guarding against cycles.
+function listValues(structure, id) {
+  const byId = new Map(structure.rows.flatMap(row => row.nodes).map(node => [node.id, node]))
+  const values = []
+  for (let at = id; at !== null && values.length <= byId.size; at = byId.get(at).next) values.push(byId.get(at).value)
+  return values
+}
+
+test('linked-list traces keep the input row intact and return the drawn copy', () => {
+  for (const id of ['algo-linked-list-reverse', 'list-insert-sorted', 'list-remove-value']) {
+    const { input, steps } = repDepth[id].traceSteps
+    const lists = steps.map(step => step.structure).filter(structure => structure?.kind === 'list')
+    assert.equal(lists.length, steps.length, `${id}: every step should draw the list`)
+    const head = traceArguments(input)[0]
+    const expectedInput = []
+    for (let node = head; node; node = node.next) expectedInput.push(node.value)
+    for (const list of lists) assert.deepEqual(listValues(list, list.rows[0].nodes[0].id), expectedInput, `${id}: input row changed`)
+    const last = lists.at(-1)
+    const resultId = last.pointers.result ?? last.pointers.reversed
+    const expected = []
+    for (let node = JSON.parse(steps.at(-1).vars.result); node; node = node.next) expected.push(node.value)
+    assert.deepEqual(listValues(last, resultId), expected, `${id}: the drawn result differs from the returned list`)
+  }
+})
+
+test('graph traces keep every node in place and draw the traced edges', () => {
+  for (const id of ['algo-graph-reachable', 'graph-shortest-hops', 'graph-connected-groups', 'course-order']) {
+    const graphs = repDepth[id].traceSteps.steps.map(step => step.structure).filter(structure => structure?.kind === 'graph')
+    assert.equal(graphs.length, repDepth[id].traceSteps.steps.length, `${id}: every step should draw the graph`)
+    const layout = graph => JSON.stringify(graph.nodes.map(node => [node.id, node.at]))
+    assert.equal(new Set(graphs.map(layout)).size, 1, `${id}: a node moved between steps`)
+  }
+  for (const id of ['algo-graph-reachable', 'graph-shortest-hops', 'graph-connected-groups']) {
+    const [graph] = traceArguments(repDepth[id].traceSteps.input)
+    const drawn = repDepth[id].traceSteps.steps[0].structure
+    const listed = graph.flatMap((targets, from) => targets.map(to => [String(from), String(to)]))
+    const key = ([a, b]) => (drawn.directed ? `${a}>${b}` : [a, b].sort().join('-'))
+    assert.deepEqual([...new Set(listed.map(key))].sort(), drawn.edges.map(key).sort(), `${id}: drawn edges differ from the input`)
+  }
+})
+
+test('window brackets sit between the traced start and end pointers', () => {
+  for (const id of ['algo-window-sum', 'count-unique-windows', 'quiet-sensor-span', 'shortest-run-reaching-target']) {
+    for (const step of repDepth[id].traceSteps.steps) {
+      const { pointers, window } = step.structure ?? {}
+      if (pointers?.start === undefined) continue
+      assert.deepEqual(window, [pointers.start, pointers.end], `${id}: window should match start and end`)
     }
   }
 })

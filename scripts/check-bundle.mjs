@@ -43,9 +43,10 @@ for (const file of workerFiles) {
 }
 const groups = [
   // The startup catalog and path data grow with each track's stages, journeys, lessons, and rep entries; raised from
-  // 153,000 for the SQL track after moving track introductions out of startup and compacting the catalog rows, and from
-  // 157,500 for the icon pack, whose inline SVG shapes replaced CSS mask images (see docs/PERFORMANCE.md).
-  { name: 'Initial JavaScript', files: [...initial], limit: 159_000, rawLimit: 530_000 },
+  // 153,000 for the SQL track after moving track introductions out of startup and compacting the catalog rows, from
+  // 157,500 for the icon pack, whose inline SVG shapes replaced CSS mask images, and from 159,000 for the Trail warm-up
+  // and the drawer's type-check note after the comparisons and mistake habits moved out of startup (see docs/PERFORMANCE.md).
+  { name: 'Initial JavaScript', files: [...initial], limit: 160_500, rawLimit: 530_000 },
   { name: 'Additional editor JavaScript', files: [...editor], limit: 1_050_000, rawLimit: 4_200_000 },
   { name: 'Additional frontend JavaScript', files: [...frontend], limit: 1_050_000, rawLimit: 3_900_000 },
   // The practice worker bundles every rep's checks and text, so its raw size grows with the catalog. Raised from 12,000,000

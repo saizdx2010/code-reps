@@ -224,7 +224,7 @@ export function ProgressPage(props: Props) {
       </section>
       <nav className="progress-quiet-links" aria-label="More ways to practice">
         <Button variant="text" onClick={() => goToView('plan')}>
-          Plan a practice week
+          Look back and plan a practice week
           <Icon name="arrow" />
         </Button>
         <Button variant="text" onClick={() => goToView('assessment')}>

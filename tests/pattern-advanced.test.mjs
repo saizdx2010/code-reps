@@ -126,11 +126,18 @@ test('visual traces show equality, ordered tie buckets, changing eligibility, an
     courses.slice(3, 7).map(step => step.vars.next),
     [0, 1, 2, 3],
   )
-  assert.deepEqual(courses[4].structure.entries, [
-    ['0', 'done'],
-    ['1', 'done'],
-    ['2', 0],
-    ['3', 0],
+  assert.deepEqual(
+    courses[4].structure.nodes.map(node => [node.id, node.note]),
+    [
+      ['0', 'taken'],
+      ['1', 'taken'],
+      ['2', 'needs 0'],
+      ['3', 'needs 0'],
+    ],
+  )
+  assert.deepEqual(courses[2].structure.edges, [
+    ['0', '2'],
+    ['1', '2'],
   ])
   const dp = repDepth['longest-shared-sequence'].traceSteps.steps
   assert.deepEqual(

@@ -128,7 +128,7 @@ test('reps are not duplicated across tracks except recognition practice, intervi
   const backend = paths.find(path => path.id === 'backend')
   assert.deepEqual(
     backend.stages.filter(stage => linkedElsewhere('backend', stage)).map(stage => stage.repIds),
-    [['sqlite-stock-transfer', 'sqlite-customer-totals', 'sqlite-restock-upsert']],
+    [['sqlite-stock-transfer', 'sqlite-customer-totals', 'sqlite-spend-report', 'sqlite-restock-upsert']],
   )
 })
 

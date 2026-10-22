@@ -31,6 +31,12 @@ const MistakesPage = lazyRoute(
   'Mistakes',
   'progress-main mistakes-main',
 )
+const StuckPage = lazyRoute(() => import('./StuckPage').then(module => module.StuckPage), 'Stuck points', 'progress-main stuck-main')
+const PatternCardsPage = lazyRoute(
+  () => import('./PatternCardsPage').then(module => module.PatternCardsPage),
+  'Pattern cards',
+  'learn-main pattern-cards-main',
+)
 const SkillMapPage = lazyRoute(() => import('./SkillMapPage').then(module => module.SkillMapPage), 'The skill map', 'skill-map-main')
 const PracticeCatalog = lazyRoute(() => import('./PracticeCatalog').then(module => module.PracticeCatalog), 'The library', 'catalog-main')
 const QuickLessons = lazyRoute(() => import('./QuickLessons').then(module => module.default), 'The lessons', 'learn-main')
@@ -79,6 +85,9 @@ type Props = {
   openReview: (id: string) => void
   openLesson: (id: string) => void
   openPracticeAction: (action: Action) => void
+  /** Reps a warm-up would start with now, least recently practiced first. */
+  warmup: string[]
+  startWarmup: () => void
   onExport: () => void
   onImport: (file: File) => void
   transferMessage: string
@@ -192,6 +201,8 @@ export function AppRoutes(props: Props) {
           onLearnerStart={props.onLearnerStart}
           history={history}
           now={now}
+          warmup={props.warmup}
+          startWarmup={props.startWarmup}
         />
       )
     case 'catalog':
@@ -237,7 +248,13 @@ export function AppRoutes(props: Props) {
     case 'mistakes':
       return (
         <Suspense fallback={<RouteLoading title="Mistakes" status="Opening mistakes…" className="progress-main mistakes-main" />}>
-          <MistakesPage history={history} now={now} onOpenRep={openRep} />
+          <MistakesPage history={history} now={now} onOpenRep={openRep} onOpenLesson={openLesson} />
+        </Suspense>
+      )
+    case 'stuck':
+      return (
+        <Suspense fallback={<RouteLoading title="Stuck points" status="Opening stuck points…" className="progress-main stuck-main" />}>
+          <StuckPage history={history} drafts={drafts} now={now} onOpenRep={openRep} onOpenLesson={openLesson} />
         </Suspense>
       )
     case 'progress': {
@@ -282,6 +299,21 @@ export function AppRoutes(props: Props) {
         </Suspense>
       )
     }
+    case 'patterns':
+      return (
+        <Suspense
+          fallback={
+            <RouteLoading
+              eyebrow="Lessons"
+              title="Pattern cards"
+              status="Opening pattern cards…"
+              className="learn-main pattern-cards-main"
+            />
+          }
+        >
+          <PatternCardsPage openRep={openRep} onLessons={() => setView('knowledge')} />
+        </Suspense>
+      )
     case 'learn':
       return (
         <Suspense fallback={<RouteLoading eyebrow="Lessons" title="Quick lessons" status="Opening the lessons…" className="learn-main" />}>

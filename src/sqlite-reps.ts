@@ -475,4 +475,123 @@ function restock(db: Database, deliveries: { sku: string; units: number }[]): bo
       },
     ],
   },
+  {
+    id: 'sqlite-spend-report',
+    title: 'Report paid spending with a SQL query',
+    category: 'Backend',
+    format: 'backend',
+    functionName: 'spendReport',
+    sql: {
+      schema:
+        "CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT NOT NULL); CREATE TABLE orders (id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL REFERENCES customers(id), cents INTEGER NOT NULL CHECK(cents >= 0), status TEXT NOT NULL CHECK(status IN ('paid', 'cancelled')));",
+      seeds: {
+        shop: {
+          about: "Ana (paid 500 and 250, cancelled 100), Bo (paid 900, cancelled 400), Cy (paid 750), Di (none), and O'Neil (paid 750)",
+          sql: "INSERT INTO customers VALUES (1,'Ana'),(2,'Bo'),(3,'Cy'),(4,'Di'),(5,'O''Neil'); INSERT INTO orders VALUES (1,1,500,'paid'),(2,1,250,'paid'),(3,2,900,'paid'),(4,2,400,'cancelled'),(5,3,750,'paid'),(6,1,100,'cancelled'),(7,5,750,'paid');",
+        },
+        quiet: {
+          about: 'Ana (one cancelled order of 300) and Bo (one paid order of 0)',
+          sql: "INSERT INTO customers VALUES (1,'Ana'),(2,'Bo'); INSERT INTO orders VALUES (1,2,0,'paid'),(2,1,300,'cancelled');",
+        },
+        empty: { about: 'no customers and no orders', sql: '' },
+      },
+      compare: 'state',
+      returns: 'report',
+      unchanged: true,
+    },
+    prompt:
+      "Write spendReport(db, minimumCents). Use one SQL query to report, for every customer, their name, how many paid orders they have, and the total cents of those paid orders. Count only orders whose status is 'paid'. A customer with no paid orders still appears, with 0 orders and 0 cents. Keep only customers whose paid total is at least minimumCents, and sort by paid total from highest to lowest, then by name in ascending order. Return the rows as arrays [name, paidOrders, paidCents]. The runner supplies a fresh in-memory SQLite database for every check. customers has id INTEGER PRIMARY KEY and name TEXT NOT NULL. orders has id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, cents INTEGER NOT NULL CHECK(cents >= 0), and status TEXT that is 'paid' or 'cancelled'. db.query(sql, parameters?) returns rows as arrays; db.run(sql, parameters?) executes SQL. Bind minimumCents with a ? placeholder. The report must not change any row; checks compare every stored row before and after.",
+    brief: {
+      summary:
+        'Write spendReport(db, minimumCents) with one SQL query: each customer’s name, paid order count, and paid total, filtered and sorted. Do not change any row.',
+      rules: [
+        "customers(id INTEGER PRIMARY KEY, name TEXT NOT NULL) and orders(id INTEGER PRIMARY KEY, customer_id INTEGER NOT NULL, cents INTEGER NOT NULL CHECK(cents >= 0), status TEXT 'paid' or 'cancelled'). Each check gets a fresh in-memory database with its own rows.",
+        "Count only orders with status 'paid'. A customer with no paid orders appears with 0 orders and 0 cents.",
+        'Keep customers whose paid total is at least minimumCents. Bind minimumCents with a ? placeholder.',
+        'Sort by paid total from highest to lowest, then by name in ascending order. Return rows as [name, paidOrders, paidCents].',
+        'db.query(sql, parameters?) returns rows as arrays of numbers, strings, or null. Do not change, add, or delete rows; checks compare all stored rows afterwards.',
+      ],
+      edgeCases: [
+        'A customer whose only orders are cancelled, or who has no orders at all',
+        'A paid order of 0 cents still counts as a paid order',
+        'Customers tied on total, including a name with an apostrophe',
+      ],
+    },
+    example: {
+      input: "spendReport(db, 751), customers Ana, Bo, Cy; Bo's paid orders total 900 and Ana's 750",
+      output: '[["Bo", 1, 900]]',
+    },
+    note: 'minimumCents is a whole number from 0 to 100000. Names are ASCII text and may contain apostrophes; sorting by name uses SQLite’s default binary order. Checks run real SQLite in the existing timed worker and never open the learner progress database. They establish the returned rows and unchanged data, not that you used one query or bound the parameter; review those yourself.',
+    vocabulary: [
+      { term: 'LEFT JOIN', meaning: 'a join that keeps every row of the left table, filling the missing right side with null' },
+      { term: 'Aggregate', meaning: 'a SQL function, such as COUNT or SUM, that combines many rows into one value' },
+      { term: 'GROUP BY', meaning: 'the SQL clause that makes one result row for each group of rows sharing a value' },
+      { term: 'COALESCE', meaning: 'a SQL function that returns its first argument that is not null' },
+    ],
+    planPrompt:
+      'Which customers would an inner join lose? Where must the paid-only condition go so they still appear, and what do COUNT and SUM give for a customer with no matching orders?',
+    starter: `type SqlValue = number | string | null
+type Database = {
+  run(sql: string, parameters?: SqlValue[]): void
+  query(sql: string, parameters?: SqlValue[]): SqlValue[][]
+}
+
+function spendReport(db: Database, minimumCents: number): SqlValue[][] {
+  // Write one SQL query here.
+  return []
+}
+`,
+    hints: [
+      'Start from customers so every customer can appear, then attach their orders.',
+      "A condition on orders in WHERE removes customers whose orders do not match. Put status = 'paid' in the join condition instead.",
+      'Group by customer, count matching order ids rather than rows, turn a missing sum into 0, filter the groups with HAVING and a bound value, then ORDER BY the total and the name.',
+    ],
+    checks: [
+      {
+        name: 'Every customer when the minimum is zero',
+        input: [0],
+        sql: { seed: 'shop' },
+        expected: {
+          report: [
+            ['Bo', 1, 900],
+            ['Ana', 2, 750],
+            ['Cy', 1, 750],
+            ["O'Neil", 1, 750],
+            ['Di', 0, 0],
+          ],
+          unchanged: true,
+        },
+      },
+      {
+        name: 'Minimum is inclusive and ties sort by name',
+        input: [750],
+        sql: { seed: 'shop' },
+        expected: {
+          report: [
+            ['Bo', 1, 900],
+            ['Ana', 2, 750],
+            ['Cy', 1, 750],
+            ["O'Neil", 1, 750],
+          ],
+          unchanged: true,
+        },
+      },
+      { name: 'Just above a tie', input: [751], sql: { seed: 'shop' }, expected: { report: [['Bo', 1, 900]], unchanged: true } },
+      { name: 'Nobody reaches a high minimum', input: [901], sql: { seed: 'shop' }, expected: { report: [], unchanged: true } },
+      {
+        name: 'Cancelled-only and zero-cent customers',
+        input: [0],
+        sql: { seed: 'quiet' },
+        expected: {
+          report: [
+            ['Ana', 0, 0],
+            ['Bo', 1, 0],
+          ],
+          unchanged: true,
+        },
+      },
+      { name: 'A minimum of one leaves zero totals out', input: [1], sql: { seed: 'quiet' }, expected: { report: [], unchanged: true } },
+      { name: 'No customers', input: [0], sql: { seed: 'empty' }, expected: { report: [], unchanged: true } },
+    ],
+  },
 ]

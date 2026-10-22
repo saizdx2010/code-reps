@@ -433,7 +433,7 @@ export const backendServiceReps: Rep[] = [
     planPrompt:
       'List the checks in order with their statuses. Which response does a 2000-character body of broken JSON sent as text/plain get, and why?',
     starter:
-      'type Request = { method: string; headers: [string, string][]; body: string }\ntype BodyResult =\n  | { ok: true; data: Record<string, unknown> | null }\n  | { ok: false; status: number; error: string }\n\nfunction readJsonBody(request: Request): BodyResult {\n  // Check the method, media type, size, and JSON in order.\n  return { ok: false, status: 400, error: "INVALID_JSON" }\n}\n',
+      'type HttpRequest = { method: string; headers: [string, string][]; body: string }\ntype BodyResult =\n  | { ok: true; data: Record<string, unknown> | null }\n  | { ok: false; status: number; error: string }\n\nfunction readJsonBody(request: HttpRequest): BodyResult {\n  // Check the method, media type, size, and JSON in order.\n  return { ok: false, status: 400, error: "INVALID_JSON" }\n}\n',
     functionName: 'readJsonBody',
     preserveInput: true,
     hints: [
@@ -1042,7 +1042,7 @@ export const backendServiceReps: Rep[] = [
     planPrompt:
       'The table gives viewer ["notes:read"] and editor ["notes:*"]. Decide each answer: a viewer reading notes, a viewer deleting notes, an editor deleting notes, an editor reading notes-archive, and a request with no session.',
     starter:
-      "type User = { id: string; roles: string[] }\ntype Permissions = { [role: string]: string[] }\n\nfunction authorize(user: User | null, action: string, permissions: Permissions): { status: 200 | 401 | 403 } {\n  // Allow only what one of the user's roles grants.\n  return { status: 403 }\n}\n",
+      "type User = { id: string; roles: string[] }\ntype RolePermissions = { [role: string]: string[] }\n\nfunction authorize(user: User | null, action: string, permissions: RolePermissions): { status: 200 | 401 | 403 } {\n  // Allow only what one of the user's roles grants.\n  return { status: 403 }\n}\n",
     functionName: 'authorize',
     preserveInput: true,
     hints: [
@@ -1636,7 +1636,7 @@ export const backendServiceReps: Rep[] = [
     planPrompt:
       'For the example, write after each event who wrote the stored value, at which position, and when each client last read. Which write replaces something its author never saw?',
     starter:
-      'type Event = { client: string; type: "read" | "write" }\n\nfunction lostUpdates(events: Event[]): number[] {\n  // Track who wrote the stored value and when each client last read.\n  return []\n}\n',
+      'type EditEvent = { client: string; type: "read" | "write" }\n\nfunction lostUpdates(events: EditEvent[]): number[] {\n  // Track who wrote the stored value and when each client last read.\n  return []\n}\n',
     functionName: 'lostUpdates',
     preserveInput: true,
     hints: [
@@ -1833,7 +1833,7 @@ export const backendServiceReps: Rep[] = [
     planPrompt:
       "Trace the example in a table with a row per event: the stored value, the current version, and each client's known version. Which row refuses a write, and why?",
     starter:
-      'type Event = { client: string; type: "read" } | { client: string; type: "write"; value: string }\n\nfunction replayWrites(initial: { value: string; version: number }, events: Event[]) {\n  // Track each client\'s known version as you go.\n  return { value: initial.value, version: initial.version, refused: [] as number[] }\n}\n',
+      'type EditEvent = { client: string; type: "read" } | { client: string; type: "write"; value: string }\n\nfunction replayWrites(initial: { value: string; version: number }, events: EditEvent[]) {\n  // Track each client\'s known version as you go.\n  return { value: initial.value, version: initial.version, refused: [] as number[] }\n}\n',
     functionName: 'replayWrites',
     preserveInput: true,
     hints: [
@@ -2928,7 +2928,7 @@ export const backendServiceReps: Rep[] = [
     planPrompt:
       'With capacity 2 and one token per 1000 ms, key k1 sends requests at 0, 0, 1500, 1999, and 2000. Trace its tokens and refill time after each one.',
     starter:
-      'type Request = { key: string; at: number }\n\nfunction limitRequests(requests: Request[], capacity: number, refillMs: number): { allowed: boolean; retryAfterMs: number }[] {\n  // Keep one bucket per key.\n  return requests.map(() => ({ allowed: true, retryAfterMs: 0 }))\n}\n',
+      'type CallerRequest = { key: string; at: number }\n\nfunction limitRequests(requests: CallerRequest[], capacity: number, refillMs: number): { allowed: boolean; retryAfterMs: number }[] {\n  // Keep one bucket per key.\n  return requests.map(() => ({ allowed: true, retryAfterMs: 0 }))\n}\n',
     functionName: 'limitRequests',
     preserveInput: true,
     hints: [

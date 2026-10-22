@@ -6,6 +6,8 @@ import { Icon } from './Icon'
 import { StatusChip } from './Layout'
 import { skillSummariesForRep } from './skill-index.ts'
 import type { SqlError, TestResult } from './runner.types'
+import { typeCheckSummary } from './type-issues'
+import type { TypeIssue } from './type-issues'
 
 type CheckRun = {
   results: TestResult[] | null
@@ -44,6 +46,7 @@ export function ChecksDrawer({
   onExplain,
   explaining,
   probes = false,
+  typeIssues,
 }: {
   run: CheckRun
   allPassed: boolean
@@ -58,6 +61,8 @@ export function ChecksDrawer({
   explaining: boolean
   /** Every check of a schema rep is a probe of one rule, so the summary counts probes. */
   probes?: boolean
+  /** The editor's TypeScript errors; undefined until the editor reports, and null when the rep is not TypeScript. */
+  typeIssues?: TypeIssue[] | null
 }) {
   const { results, staleResults, runError, running, loadingEngine, runNotice } = run
   const stale = !running && !results && !runError ? staleResults : null
@@ -164,6 +169,7 @@ export function ChecksDrawer({
               )}
             </div>
             <CheckFeedback results={results} open={openName} onOpen={chooseCase} />
+            {typeIssues !== null && <TypeCheckNote issues={typeIssues} />}
             {!allPassed && lesson && (
               <p className="mistake-help">
                 <Icon name="book" />
@@ -249,6 +255,32 @@ export function WorkspaceToolbar({
           </button>
         )}
       </div>
+    </div>
+  )
+}
+
+/** Editor type errors, shown beside the check results but never counted as a check. */
+function TypeCheckNote({ issues }: { issues?: TypeIssue[] }) {
+  const shown = issues?.slice(0, 5) ?? []
+  return (
+    <div className={`type-check ${issues?.length ? 'type-check-errors' : ''}`}>
+      <p>
+        <Icon name={issues && !issues.length ? 'check' : 'alert'} /> {typeCheckSummary(issues)}
+      </p>
+      {shown.length > 0 && (
+        <ul>
+          {shown.map(issue => (
+            <li key={`${issue.file}:${issue.line}:${issue.message}`}>
+              <code>
+                {issue.file}:{issue.line}
+              </code>{' '}
+              {issue.message}
+            </li>
+          ))}
+          {issues!.length > shown.length && <li>…and {issues!.length - shown.length} more; hover the red underlines in the editor.</li>}
+        </ul>
+      )}
+      <p className="type-check-note">Separate from the checks above. It does not prove the types the brief asks for.</p>
     </div>
   )
 }

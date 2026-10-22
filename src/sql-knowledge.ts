@@ -521,6 +521,7 @@ export const sqlSkills: Skill[] = [
       'sql-delete-scope',
       'sql-upsert-stock',
       'sqlite-customer-totals',
+      'sqlite-spend-report',
       'sqlite-stock-transfer',
       'sqlite-restock-upsert',
       'sql-archive-orders',

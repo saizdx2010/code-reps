@@ -179,6 +179,14 @@ export const journeys: Journey[] = [
     delayDays: 3,
   },
   {
+    id: 'stack-traces',
+    title: 'Read an error and its stack trace',
+    guided: 'stack-trace-missing-field',
+    independent: 'stack-trace-wrong-caller',
+    recall: 'stack-trace-null-lookup',
+    delayDays: 3,
+  },
+  {
     id: 'binary-search-trees',
     title: 'Search ordered trees',
     guided: 'bst-search-path',

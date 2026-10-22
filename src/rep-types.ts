@@ -42,6 +42,8 @@ export type Rep = {
   category: string
   format?: 'debug' | 'read' | 'transform' | 'frontend' | 'backend' | 'refactor' | 'sql' | 'devops'
   context?: string
+  /** An error message and stack trace, shown as preformatted text in the brief. Must match what the starter throws. */
+  errorReport?: string
   acceptanceCriteria?: string[]
   prompt: string
   /** Optional structured brief: shown in place of `prompt`; `prompt` stays the full contract text. */

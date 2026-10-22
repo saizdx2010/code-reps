@@ -211,6 +211,7 @@ export const recallVariants: Record<string, string[]> = {
   trees: ['tree-value-path', 'tree-depth-sum', 'algo-tree-depth', 'terminal-folder-paths'],
   'binary-search-trees': ['bst-check-order', 'bst-latest-at-or-before', 'bst-search-path', 'bst-nearest-slot'],
   'linked-lists': ['list-rotate-route', 'list-split-at-first', 'list-merge-sorted', 'algo-linked-list-reverse'],
+  'stack-traces': ['stack-trace-null-lookup', 'stack-trace-wrong-caller', 'stack-trace-missing-field'],
   heaps: ['heap-rooms-needed', 'heap-merge-log-streams', 'algo-min-heap'],
   'dynamic-programming': ['dp-tag-edits', 'dp-stall-revenue', 'dp-garage-paths', 'algo-coin-change'],
   'string-building': ['text-normalized-palindrome', 'text-anagram-groups', 'text-run-length'],

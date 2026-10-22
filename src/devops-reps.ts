@@ -1743,7 +1743,7 @@ export const devopsReps: Rep[] = [
     planPrompt:
       'With an exact match from yesterday and a partial match from today, which do you restore? Which prefix wins when both prefixes match?',
     starter:
-      "type Cache = { key: string; createdAt: number }\n\nfunction restoreCache(key: string, restoreKeys: string[], caches: Cache[]): { hit: 'exact' | 'partial' | 'miss'; key: string | null } {\n  return { hit: 'miss', key: null }\n}\n",
+      "type SavedCache = { key: string; createdAt: number }\n\nfunction restoreCache(key: string, restoreKeys: string[], caches: SavedCache[]): { hit: 'exact' | 'partial' | 'miss'; key: string | null } {\n  return { hit: 'miss', key: null }\n}\n",
     functionName: 'restoreCache',
     preserveInput: true,
     hints: [
@@ -2819,7 +2819,7 @@ export const devopsReps: Rep[] = [
     ],
     planPrompt: 'Why is switch refused right after a deploy, and why does a deploy clear the rollback target?',
     starter:
-      "type Event = { type: 'deploy'; version: string } | { type: 'check'; passed: boolean } | { type: 'switch' } | { type: 'rollback' }\n\nfunction blueGreen(events: Event[]) {\n  return { live: 'blue', versions: { blue: 'v1' as string | null, green: null as string | null }, refused: [] as number[] }\n}\n",
+      "type DeployEvent = { type: 'deploy'; version: string } | { type: 'check'; passed: boolean } | { type: 'switch' } | { type: 'rollback' }\n\nfunction blueGreen(events: DeployEvent[]) {\n  return { live: 'blue', versions: { blue: 'v1' as string | null, green: null as string | null }, refused: [] as number[] }\n}\n",
     functionName: 'blueGreen',
     preserveInput: true,
     hints: [
@@ -3592,7 +3592,7 @@ export const devopsReps: Rep[] = [
     planPrompt:
       'In the example, why is c accepted although it arrives after shutdownAt, and why does the instance exit at 130 rather than when b finishes?',
     starter:
-      'type Request = { id: string; arrives: number; finishes: number }\n\nfunction gracefulDrain(requests: Request[], shutdownAt: number, policy: { acceptForSeconds: number; graceSeconds: number }) {\n  return { completed: [] as string[], rejected: [] as string[], cutOff: [] as string[], exitAt: shutdownAt }\n}\n',
+      'type InFlightRequest = { id: string; arrives: number; finishes: number }\n\nfunction gracefulDrain(requests: InFlightRequest[], shutdownAt: number, policy: { acceptForSeconds: number; graceSeconds: number }) {\n  return { completed: [] as string[], rejected: [] as string[], cutOff: [] as string[], exitAt: shutdownAt }\n}\n',
     functionName: 'gracefulDrain',
     preserveInput: true,
     hints: [

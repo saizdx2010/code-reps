@@ -53,6 +53,11 @@ export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
       description: "Fix a bug, read a teammate's function, transform data for a screen, and check a suggested answer.",
       recap: 'You can now read unfamiliar code, find bugs, and check a proposed answer.',
     },
+    'Read an error message': {
+      description:
+        'Use an error and its stack trace to find where code failed, which caller chose the bad value, and what a missing result means.',
+      recap: 'You can now read a stack trace from the top frame down and repair the code that caused the error.',
+    },
     'TypeScript boundaries': {
       description: 'Validate unknown data and preserve types in reusable APIs.',
       recap: 'You can now practice typed boundaries, reviewing compiler guarantees separately from behavior.',
@@ -308,7 +313,7 @@ export const stageTexts: Record<PathId, Readonly<Record<string, StageText>>> = {
     },
     'Query and change local data': {
       description:
-        'Run real SQLite from TypeScript: undo a failed stock transfer, total orders per customer with a join, and restock inventory all or nothing. These reps live in the SQL track.',
+        'Run real SQLite from TypeScript: undo a failed stock transfer, total orders per customer with a join, report only paid spending, and restock inventory all or nothing. These reps live in the SQL track.',
       recap: 'You can now write joins and aggregates and keep multi-statement changes atomic.',
     },
     'Decide who may act': {

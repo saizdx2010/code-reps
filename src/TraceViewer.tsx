@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { Button } from './Button'
+import { Input } from './Input'
 import type { RepTrace, TraceStep, TraceStructure, TraceTreeNode } from './rep-depth'
+import { GraphView, ListView } from './TraceShapes'
+import { describeGraph, describeList } from './trace-describe.ts'
+import { changedVariables, predictionMatches, predictionScore } from './trace-predict.ts'
 import { plural } from './ui-copy.ts'
 
 const outline = (node: TraceTreeNode): string => {
@@ -63,11 +67,14 @@ function describeCalls(calls: Extract<TraceStructure, { kind: 'calls' }>) {
 
 function describe(structure: TraceStructure) {
   if (structure.kind === 'table') return describeTable(structure)
+  if (structure.kind === 'list') return describeList(structure)
+  if (structure.kind === 'graph') return describeGraph(structure)
   if (structure.kind === 'map') return `Map entries: ${structure.entries.map(([key, value]) => `${key}: ${value}`).join(', ') || 'empty'}.`
   if (structure.kind === 'tree') {
     const current = nodeValue(structure.root, structure.current) ?? 'none'
     const visited = nodeValues(structure.root, structure.visited)
-    return `Tree, root first: ${outline(structure.root)}. Current node: ${current}. Visited nodes: ${visited}.`
+    const cached = structure.cached?.length ? ` Answered from the cache: ${nodeValues(structure.root, structure.cached)}.` : ''
+    return `Tree, root first: ${outline(structure.root)}. Current node: ${current}. Visited nodes: ${visited}.${cached}`
   }
   if (structure.kind === 'calls') return describeCalls(structure)
   if (structure.kind === 'state') {
@@ -83,7 +90,10 @@ function describe(structure: TraceStructure) {
     Object.entries(structure.pointers ?? {})
       .map(([name, index]) => `${name} at index ${index}`)
       .join(', ') || 'none'
-  return `Array: ${values}. Pointers: ${pointers}. Dimmed indices: ${structure.dimmed?.join(', ') || 'none'}.`
+  const window = structure.window
+    ? ` ${structure.windowLabel ?? 'Window'} covers indices ${structure.window[0]} to ${structure.window[1]}.`
+    : ''
+  return `Array: ${values}. Pointers: ${pointers}. Dimmed indices: ${structure.dimmed?.join(', ') || 'none'}.${window}`
 }
 
 type Placed = { node: TraceTreeNode; x: number; y: number; parent?: Placed }
@@ -125,9 +135,16 @@ function TreeView({ structure }: { structure: Extract<TraceStructure, { kind: 't
         ))}
       {placed.map(({ node, x, y }) => {
         const state =
-          node.id === structure.current ? 'trace-node-current' : structure.visited?.includes(node.id) ? 'trace-dimmed' : undefined
+          node.id === structure.current
+            ? 'trace-node-current'
+            : structure.cached?.includes(node.id)
+              ? 'trace-node-cached'
+              : structure.visited?.includes(node.id)
+                ? 'trace-dimmed'
+                : undefined
         return (
           <g key={node.id} className={state}>
+            {structure.cached?.includes(node.id) && <circle className="trace-node-ring" cx={x} cy={y} r={TREE_RADIUS + 5} />}
             <circle cx={x} cy={y} r={TREE_RADIUS} />
             <text x={x} y={y + 5}>
               {node.value}
@@ -255,12 +272,14 @@ function TableView({ structure }: { structure: TableStructure }) {
 
 function Structure({ structure, previous }: { structure: TraceStructure; previous?: TraceStep }) {
   if (structure.kind === 'table') return <TableView structure={structure} />
+  if (structure.kind === 'list') return <ListView structure={structure} />
+  if (structure.kind === 'graph') return <GraphView structure={structure} />
   if (structure.kind === 'tree')
     return (
       <div className="trace-structure trace-tree">
         <TreeView structure={structure} />
         <p className="trace-legend" aria-hidden="true">
-          Filled outline: current node. Dashed: visited.
+          Filled outline: current node. Dashed: visited.{structure.cached?.length ? ' Double ring: answered from the cache.' : ''}
         </p>
         <p className="sr-only">{describe(structure)}</p>
       </div>
@@ -282,8 +301,10 @@ function Structure({ structure, previous }: { structure: TraceStructure; previou
   const cells = structure.kind === 'map' ? structure.entries.map(([key, value]) => `${key}: ${value}`) : structure.values.map(String)
   const vertical = structure.kind !== 'array'
   const pointers = structure.kind === 'array' ? Object.entries(structure.pointers ?? {}) : []
+  const window = structure.kind === 'array' ? structure.window : undefined
+  const windowSpace = window ? 30 : 0
   const width = vertical ? 260 : Math.max(100, cells.length * 90)
-  const height = vertical ? Math.max(60, cells.length * 54) : 100 + pointers.length * 28
+  const height = vertical ? Math.max(60, cells.length * 54) : 100 + windowSpace + pointers.length * 28
   return (
     <div className="trace-structure">
       <svg viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
@@ -305,8 +326,16 @@ function Structure({ structure, previous }: { structure: TraceStructure; previou
             </g>
           )
         })}
+        {window && structure.kind === 'array' && (
+          <g className="trace-window">
+            <path d={`M ${window[0] * 90 + 5} 64 L ${window[0] * 90 + 5} 72 L ${window[1] * 90 + 85} 72 L ${window[1] * 90 + 85} 64`} />
+            <text x={((window[0] + window[1]) * 90 + 90) / 2} y={90}>
+              {structure.windowLabel ?? 'window'}
+            </text>
+          </g>
+        )}
         {pointers.map(([name, index], row) => (
-          <g key={name} className="trace-pointer" transform={`translate(${index * 90 + 45}, ${70 + row * 28})`}>
+          <g key={name} className="trace-pointer" transform={`translate(${index * 90 + 45}, ${70 + windowSpace + row * 28})`}>
             <path d="M 0 0 L -6 10 L 6 10 Z" />
             <text y={25}>{name}</text>
           </g>
@@ -323,19 +352,31 @@ function Structure({ structure, previous }: { structure: TraceStructure; previou
 }
 
 /** Authored snapshots for post-solve comparison, not a live code execution trace. */
-export function TraceViewer({ trace }: { trace: RepTrace }) {
+export function TraceViewer({ trace, title = 'Step trace' }: { trace: RepTrace; title?: string }) {
   const [index, setIndex] = useState(0)
+  // Predict mode hides each later step until the learner reveals it. Guesses stay in this component and are never saved.
+  const [predicting, setPredicting] = useState(false)
+  const [revealed, setRevealed] = useState<Set<number>>(() => new Set())
+  const [guesses, setGuesses] = useState<Record<number, Record<string, string>>>({})
   const step = trace.steps[index]
   const previous = trace.steps[index - 1]
-  const move = (delta: number) => setIndex(current => Math.max(0, Math.min(trace.steps.length - 1, current + delta)))
+  const hidden = predicting && index > 0 && !revealed.has(index)
+  const changed = changedVariables(step, previous)
+  const score = predictionScore(trace.steps, revealed, guesses)
+  const reveal = () => setRevealed(current => new Set(current).add(index))
+  const move = (delta: number) => {
+    if (delta > 0 && hidden) return reveal()
+    setIndex(current => Math.max(0, Math.min(trace.steps.length - 1, current + delta)))
+  }
+  const guess = (name: string, value: string) => setGuesses(current => ({ ...current, [index]: { ...current[index], [name]: value } }))
   return (
     <section
       className="trace-viewer"
-      aria-label="Step trace"
+      aria-label={title}
       tabIndex={0}
       onKeyDown={event => {
         if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
-        if (event.target instanceof Element && event.target.closest('.trace-table-scroll')) return
+        if (event.target instanceof Element && event.target.closest('.trace-table-scroll, input')) return
         if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
           event.preventDefault()
           event.stopPropagation()
@@ -343,8 +384,30 @@ export function TraceViewer({ trace }: { trace: RepTrace }) {
         }
       }}
     >
-      <h4>Step trace</h4>
-      <p className="utility-note">Authored reference snapshots</p>
+      <div className="trace-heading">
+        <div>
+          <h4>{title}</h4>
+          <p className="utility-note">Authored reference snapshots</p>
+        </div>
+        <Button
+          aria-pressed={predicting}
+          onClick={() => {
+            setPredicting(!predicting)
+            setRevealed(new Set())
+            setGuesses({})
+            setIndex(0)
+          }}
+        >
+          {predicting ? 'Stop predicting' : 'Predict each step'}
+        </Button>
+      </div>
+      {predicting && (
+        <p className="trace-predict-note" role="status">
+          {score.total
+            ? `Your predictions matched ${score.matched} of ${score.total} changed values.`
+            : 'Each step hides what changes until you reveal it. Type what you expect, then reveal.'}
+        </p>
+      )}
       <p>
         <strong>Input:</strong> <code>{trace.input}</code>
       </p>
@@ -366,7 +429,12 @@ export function TraceViewer({ trace }: { trace: RepTrace }) {
           ))}
         </div>
         <div>
-          {step.structure && <Structure structure={step.structure} previous={previous} />}
+          {step.structure &&
+            (hidden ? (
+              <p className="trace-hidden-structure">Picture what this line changes in the drawing, then reveal the step.</p>
+            ) : (
+              <Structure structure={step.structure} previous={previous} />
+            ))}
           <table className="trace-vars">
             <caption>Variables</caption>
             <thead>
@@ -377,13 +445,41 @@ export function TraceViewer({ trace }: { trace: RepTrace }) {
             </thead>
             <tbody>
               {Object.entries(step.vars).map(([name, value]) => {
-                const changed = Boolean(previous) && (!Object.hasOwn(previous.vars, name) || previous.vars[name] !== value)
+                const isChanged = changed.includes(name)
+                const typed = guesses[index]?.[name] ?? ''
+                if (hidden && isChanged)
+                  return (
+                    <tr key={name} className="trace-predict-row">
+                      <th scope="row">{name}</th>
+                      <td>
+                        <Input
+                          value={typed}
+                          aria-label={`Predict ${name}`}
+                          placeholder="Your prediction"
+                          onChange={event => guess(name, event.target.value)}
+                          onKeyDown={event => {
+                            if (event.key === 'Enter') {
+                              event.preventDefault()
+                              reveal()
+                            }
+                          }}
+                        />
+                      </td>
+                    </tr>
+                  )
+                const checked = predicting && isChanged && revealed.has(index)
+                const matched = checked && predictionMatches(typed, value)
                 return (
-                  <tr key={name} className={changed ? 'trace-changed' : undefined}>
+                  <tr key={name} className={isChanged ? 'trace-changed' : undefined}>
                     <th scope="row">{name}</th>
                     <td>
                       <code>{String(value)}</code>
-                      {changed && <span className="trace-change-label"> changed</span>}
+                      {isChanged && <span className="trace-change-label"> changed</span>}
+                      {checked && (
+                        <span className={`trace-guess ${matched ? 'trace-guess-match' : 'trace-guess-miss'}`}>
+                          {matched ? ' Your prediction matched.' : typed.trim() ? ` You predicted ${typed.trim()}.` : ' No prediction.'}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 )
@@ -393,7 +489,12 @@ export function TraceViewer({ trace }: { trace: RepTrace }) {
         </div>
       </div>
       <p className="trace-note" aria-live="polite" aria-atomic="true">
-        Step {index + 1} of {trace.steps.length}: {step.note}
+        Step {index + 1} of {trace.steps.length}:{' '}
+        {hidden
+          ? changed.length
+            ? `Line ${step.line + 1} runs next. Predict ${changed.join(', ')}.`
+            : `Line ${step.line + 1} runs next. Predict what it does.`
+          : step.note}
       </p>
       <div className="trace-controls">
         <Button disabled={index === 0} onClick={() => move(-1)}>
@@ -412,8 +513,8 @@ export function TraceViewer({ trace }: { trace: RepTrace }) {
             </Button>
           ))}
         </div>
-        <Button disabled={index === trace.steps.length - 1} onClick={() => move(1)}>
-          Next
+        <Button variant={hidden ? 'primary' : undefined} disabled={!hidden && index === trace.steps.length - 1} onClick={() => move(1)}>
+          {hidden ? 'Reveal step' : 'Next'}
         </Button>
       </div>
       <p className="utility-note">Use Left and Right arrow keys while focused here.</p>

@@ -1,5 +1,5 @@
 import { reactSolutions } from './fixtures/react-solution.mjs'
-import { sqliteSolution, sqliteCustomerTotalsSolution, sqliteRestockSolution } from './fixtures/sqlite-solution.mjs'
+import { sqliteSolution, sqliteCustomerTotalsSolution, sqliteRestockSolution, spendReportSolution } from './fixtures/sqlite-solution.mjs'
 import { sqlSolutions } from './fixtures/sql-solutions.mjs'
 import { backendSolutions } from './fixtures/backend-solutions.mjs'
 import { devopsSolutions } from './fixtures/devops-solutions.mjs'
@@ -34,6 +34,7 @@ import { appSolutions } from './fixtures/app-solutions.mjs'
 import { domSolutions } from './fixtures/dom-solutions.mjs'
 import { testingJourneySolutions } from './fixtures/testing-journey-solutions.mjs'
 import { maintenanceSolutions } from './fixtures/maintenance-journey-solutions.mjs'
+import { stackTraceSolutions } from './fixtures/stack-trace-solutions.mjs'
 import { assertMutantsFail } from './helpers/checks.mjs'
 
 // These independent implementations check authored expected results, not learner prose.
@@ -42,6 +43,7 @@ const solutions = {
   'sqlite-stock-transfer': sqliteSolution,
   'sqlite-customer-totals': sqliteCustomerTotalsSolution,
   'sqlite-restock-upsert': sqliteRestockSolution,
+  'sqlite-spend-report': spendReportSolution,
   ...sqlSolutions,
   ...backendSolutions,
   ...devopsSolutions,
@@ -58,6 +60,7 @@ const solutions = {
   ...fluencySolutions,
   ...testingJourneySolutions,
   ...maintenanceSolutions,
+  ...stackTraceSolutions,
   ...coreSolutions,
   ...expansionSolutions,
 }

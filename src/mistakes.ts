@@ -11,7 +11,8 @@ export const mistakeTags = [
   { id: 'other', label: 'Something else' },
 ] as const
 
-type MistakeTagId = (typeof mistakeTags)[number]['id']
+export type MistakeTagId = (typeof mistakeTags)[number]['id']
+
 const known = new Set<string>(mistakeTags.map(tag => tag.id))
 const isMistakeTag = (value: unknown): value is MistakeTagId => typeof value === 'string' && known.has(value)
 

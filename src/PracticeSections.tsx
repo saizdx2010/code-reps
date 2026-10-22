@@ -13,6 +13,7 @@ import { Input, Textarea } from './Input'
 import { InfoNote } from './Layout'
 import { lazyRoute } from './lazy-route'
 import { mistakeTags } from './mistakes'
+import { decodeFiles } from './project-files.ts'
 import { appendSentenceStarter } from './practice'
 import type { practiceWritingPrompts } from './practice'
 import type { RepSummary } from './catalog-index'
@@ -40,6 +41,14 @@ const SqlExample = lazy<ComponentType<{ repId: string; children: ReactNode }>>((
     .catch(() => ({ default: ({ children }: { children: ReactNode }) => children })),
 )
 const TraceViewer = lazyRoute(() => import('./TraceViewer').then(module => module.TraceViewer), 'The trace')
+// The comparisons appear only after every check passes or the rep is complete, so they load then. If they cannot load,
+// the trace and the receipt still show; nothing about the attempt depends on them.
+const ReferenceComparison = lazy<ComponentType<{ yours: string; reference: string }>>(() =>
+  import('./CompareWork').then(module => ({ default: module.ReferenceComparison })).catch(() => ({ default: () => null })),
+)
+const EarlierWork = lazy<ComponentType<{ repId: string; attempt: Attempt; history: AttemptRecord[] }>>(() =>
+  import('./CompareWork').then(module => ({ default: module.EarlierWork })).catch(() => ({ default: () => null })),
+)
 
 const exampleBlock = (rep: Rep) => (
   <div className="example">
@@ -226,6 +235,14 @@ export function BriefSection({
             <p className="rep-context">
               <InlineCode text={full.context} />
             </p>
+          )}
+          {full.errorReport && (
+            <figure className="error-report">
+              <figcaption>Error report</figcaption>
+              <pre tabIndex={0}>
+                <code>{full.errorReport}</code>
+              </pre>
+            </figure>
           )}
           {full.brief ? (
             <div className="brief-structure">
@@ -452,10 +469,12 @@ export function ExplainSection({
   allPassed,
   review,
   onReveal,
+  code,
 }: {
   hidden: boolean
   repId: string
   writing: Writing
+  code?: string
   explanation: string
   onExplanation: (explanation: string) => void
   englishTips?: readonly string[]
@@ -507,6 +526,11 @@ export function ExplainSection({
             >
               <TraceViewer key={repId} trace={depth.traceSteps} />
             </Suspense>
+            {code !== undefined && !decodeFiles(code) && (
+              <Suspense fallback={null}>
+                <ReferenceComparison yours={code} reference={depth.traceSteps.code.join('\n')} />
+              </Suspense>
+            )}
           </section>
         )}
         {allPassed && (
@@ -553,6 +577,17 @@ export function ExplainSection({
                 <p>{depth.trace}</p>
                 <h3>Compare approaches</h3>
                 <p>{depth.alternative}</p>
+                {depth.alternativeTrace && (
+                  <Suspense
+                    fallback={
+                      <p className="loading-status" role="status">
+                        Opening trace…
+                      </p>
+                    }
+                  >
+                    <TraceViewer key={`${repId}-alternative`} trace={depth.alternativeTrace.trace} title={depth.alternativeTrace.title} />
+                  </Suspense>
+                )}
                 <h3>A tempting mistake</h3>
                 <p>{depth.counterexample}</p>
                 <h3>Try a variation</h3>
@@ -606,9 +641,11 @@ export function ReviewSection({
   onFreshAttempt,
   evidence,
   moments,
+  history,
 }: {
   hidden: boolean
   rep: RepSummary
+  history: AttemptRecord[]
   attempt: Attempt
   update: UpdateAttempt
   stepDone: StepDone
@@ -705,6 +742,9 @@ export function ReviewSection({
             </Button>
           </div>
         </section>
+        <Suspense fallback={null}>
+          <EarlierWork repId={rep.id} attempt={attempt} history={history} />
+        </Suspense>
       </section>
     )
   }

@@ -1,15 +1,40 @@
-import type { RepDepth, TraceTreeNode } from './rep-depth.ts'
+import type { RepDepth, TraceStructure, TraceTreeNode } from './rep-depth.ts'
 import type { ReflectionGuide } from './reflection-guides.ts'
 
-const insertState = (copy: string, inserted: boolean, eventIndex?: number) => ({
-  kind: 'state' as const,
-  entries: [
-    ['copy', copy],
-    ['inserted', inserted],
-  ] as [string, string | boolean][],
-  events: ['2', '4', '6'],
-  ...(eventIndex === undefined ? {} : { eventIndex }),
+// Input nodes stay on the first row; the copy grows on the second, behind a placeholder ("ph") that is never returned.
+const copyRows = (
+  input: [string, number][],
+  copied: number[],
+  pointers: Record<string, string | null>,
+  label = 'copy',
+): TraceStructure => ({
+  kind: 'list',
+  rows: [
+    {
+      label: 'input (only read)',
+      nodes: input.map(([id, value], index) => ({ id, value, next: input[index + 1]?.[0] ?? null })),
+    },
+    {
+      label,
+      nodes: [
+        { id: 'ph', value: 'ph', next: copied.length ? 'c0' : null },
+        ...copied.map((value, index) => ({ id: `c${index}`, value, next: index + 1 < copied.length ? `c${index + 1}` : null })),
+      ],
+    },
+  ],
+  pointers,
 })
+const insertInput: [string, number][] = [
+  ['i2', 2],
+  ['i4', 4],
+  ['i6', 6],
+]
+const removeInput: [string, number][] = [
+  ['i3a', 3],
+  ['i1', 1],
+  ['i3b', 3],
+  ['i5', 5],
+]
 
 // The search tree from bst-search-path, drawn with its children in left-to-right order.
 // 10 has only a right child (14), and 14 only a left child (13); the first step note says so.
@@ -91,44 +116,44 @@ export const dsaLinkedDepth: Record<string, RepDepth> = {
       steps: [
         {
           line: 5,
-          vars: { value: 5 },
-          structure: insertState('(empty)', false),
+          vars: { value: 5, inserted: false },
+          structure: copyRows(insertInput, [], { tail: 'ph' }),
           note: 'The placeholder sits before the real head of the copy, so appending the first node needs no special case.',
         },
         {
           line: 8,
-          vars: { current: 2 },
-          structure: insertState('2', false, 0),
+          vars: { current: 2, inserted: false },
+          structure: copyRows(insertInput, [2], { current: 'i2', tail: 'c0' }),
           note: '5 is not smaller than 2, so copy 2 into a new node and attach it at the tail.',
         },
         {
           line: 8,
-          vars: { current: 4 },
-          structure: insertState('2 → 4', false, 1),
+          vars: { current: 4, inserted: false },
+          structure: copyRows(insertInput, [2, 4], { current: 'i4', tail: 'c1' }),
           note: '5 is not smaller than 4 either. The input nodes are only read, never relinked.',
         },
         {
           line: 7,
-          vars: { current: 6 },
-          structure: insertState('2 → 4 → 5', true, 2),
+          vars: { current: 6, inserted: true },
+          structure: copyRows(insertInput, [2, 4, 5], { current: 'i6', tail: 'c2' }),
           note: '6 is the first value greater than 5, so 5 goes in now, before 6 is copied.',
         },
         {
           line: 8,
-          vars: { current: 6 },
-          structure: insertState('2 → 4 → 5 → 6', true, 2),
+          vars: { current: 6, inserted: true },
+          structure: copyRows(insertInput, [2, 4, 5, 6], { current: 'i6', tail: 'c3' }),
           note: 'Then copy 6. inserted stops 5 from being added again later.',
         },
         {
           line: 10,
           vars: { inserted: true },
-          structure: insertState('2 → 4 → 5 → 6', true, 2),
+          structure: copyRows(insertInput, [2, 4, 5, 6], { current: null, tail: 'c3' }),
           note: 'The loop has ended. 5 was already placed, so nothing is appended at the end.',
         },
         {
           line: 11,
           vars: { result: '{"value":2,"next":{"value":4,"next":{"value":5,"next":{"value":6,"next":null}}}}' },
-          structure: insertState('2 → 4 → 5 → 6', true, 2),
+          structure: copyRows(insertInput, [2, 4, 5, 6], { result: 'c0' }),
           note: 'Return the node after the placeholder. Every returned node is new; the input still reads 2 → 4 → 6.',
         },
       ],
@@ -145,6 +170,65 @@ export const dsaLinkedDepth: Record<string, RepDepth> = {
       'After each input node, the copy holds exactly the non-matching values visited so far, in order. The placeholder makes the first kept node an ordinary append, so a matching head needs no special branch.',
     trace:
       'For 1 → 2 → 2 → 2 → 5 removing 2: keep 1, skip three 2s, keep 5, giving 1 → 5. For 4 → 4 removing 4, nothing is kept, so placeholder.next is still null.',
+    traceSteps: {
+      code: [
+        'type ListNode = { value: number; next: ListNode | null }',
+        'function removeValue(head: ListNode | null, value: number): ListNode | null {',
+        '  const placeholder: ListNode = { value: 0, next: null }',
+        '  let tail = placeholder',
+        '  for (let current = head; current !== null; current = current.next) {',
+        '    if (current.value === value) continue',
+        '    tail = tail.next = { value: current.value, next: null }',
+        '  }',
+        '  return placeholder.next',
+        '}',
+      ],
+      input: 'head = {value: 3, next: {value: 1, next: {value: 3, next: {value: 5, next: null}}}}, value = 3',
+      steps: [
+        {
+          line: 3,
+          vars: { value: 3 },
+          structure: copyRows(removeInput, [], { tail: 'ph' }, 'kept copy'),
+          note: 'The copy starts with only the placeholder, and tail points at it. Whatever comes first in the result is attached after it.',
+        },
+        {
+          line: 5,
+          vars: { current: 3 },
+          structure: copyRows(removeInput, [], { current: 'i3a', tail: 'ph' }, 'kept copy'),
+          note: 'The head matches, so skip it. No special case is needed: nothing has been attached yet, and placeholder.next is still null.',
+        },
+        {
+          line: 6,
+          vars: { current: 1 },
+          structure: copyRows(removeInput, [1], { current: 'i1', tail: 'c0' }, 'kept copy'),
+          note: '1 does not match. Attach a fresh node holding 1 after the tail, then move the tail to it.',
+        },
+        {
+          line: 5,
+          vars: { current: 3 },
+          structure: copyRows(removeInput, [1], { current: 'i3b', tail: 'c0' }, 'kept copy'),
+          note: 'This 3 matches too, so skip it. The input node keeps its own next link; only the copy is built.',
+        },
+        {
+          line: 6,
+          vars: { current: 5 },
+          structure: copyRows(removeInput, [1, 5], { current: 'i5', tail: 'c1' }, 'kept copy'),
+          note: '5 is kept and attached after 1.',
+        },
+        {
+          line: 4,
+          vars: { current: null },
+          structure: copyRows(removeInput, [1, 5], { current: null, tail: 'c1' }, 'kept copy'),
+          note: 'current is null, so the loop ends. The input still reads 3 → 1 → 3 → 5.',
+        },
+        {
+          line: 8,
+          vars: { result: '{"value":1,"next":{"value":5,"next":null}}' },
+          structure: copyRows(removeInput, [1, 5], { result: 'c0' }, 'kept copy'),
+          note: 'Return the node after the placeholder. If every node had matched, placeholder.next would still be null.',
+        },
+      ],
+    },
     alternative:
       'A recursive copy returns the rest of the result and prepends the current value only when it does not match. Building an array of kept values and then linking it is easy to check but stores the values twice.',
     counterexample:
