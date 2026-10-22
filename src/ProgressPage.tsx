@@ -200,9 +200,14 @@ export function ProgressPage(props: Props) {
       </InfoNote>
       <h2 className="progress-skills-title">Your skill journeys</h2>
       <div className="journey-groups">
+        {/* Before any evidence, a list of every skill on its first rung says nothing; it stays folded behind its count. */}
+        {groups.every(group => group.title === 'Not started') && (
+          <EmptyState title="No skill journeys started yet.">
+            Finishing a guided rep starts its skill on the ladder. Every skill waits in Not started until then.
+          </EmptyState>
+        )}
         {groups.map(group => (
-          // With nothing started yet, the journeys are the page, so that group starts open.
-          <ListGroup key={group.title} title={group.title} count={group.items.length} open={group.open || groups.length === 1}>
+          <ListGroup key={group.title} title={group.title} count={group.items.length} open={group.open}>
             {group.items.map(item => (
               <li key={item.journey.id}>
                 <JourneyEvidence progress={item} onOpenRep={onOpenRep} onReviewRep={onReviewRep} />
