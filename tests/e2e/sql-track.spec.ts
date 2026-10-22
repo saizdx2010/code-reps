@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
-import { chooseOption, editor, expectChecksFinished, replaceCode, saved } from './helpers'
+import { editor, expectChecksFinished, replaceCode, saved, chooseTrack } from './helpers'
 import { sqlSolutions } from '../fixtures/sql-solutions.mjs'
 
 const route = '/#/practice/sql-select-columns'
@@ -205,7 +205,7 @@ test('a schema rep counts probes and names the row a rule let through', async ({
 
 test('Backend links its SQLite stage to the SQL track instead of repeating it', async ({ page }) => {
   await page.goto('/#/paths')
-  await chooseOption(page.getByRole('combobox', { name: 'Choose track', exact: true }), 'backend')
+  await chooseTrack(page, 'backend')
   const linked = page.locator('.path-stage').filter({ hasText: 'Covered in SQL' })
   await expect(linked).toHaveCount(1)
   await linked.locator('summary').click()

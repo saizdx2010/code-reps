@@ -477,14 +477,21 @@
 }
 
 /* All tracks: Foundations first, then grouped tracks. */
-.page-header .path-select {
-  width: min(100%, 320px);
-  margin: 0;
-}
 .track-map {
   display: grid;
   gap: 20px;
-  margin-top: 8px;
+  margin: 8px 0 28px;
+}
+.track-menu {
+  display: none;
+}
+@media (max-width: 900px) {
+  .track-map {
+    display: none;
+  }
+  .track-menu {
+    display: grid;
+  }
 }
 .track-map .home-label {
   margin-bottom: 8px;
@@ -515,11 +522,11 @@
   margin-top: 20px;
   padding: 22px 24px;
 }
-.path-overview .home-label {
-  margin-bottom: 4px;
+.path-overview h2 {
+  margin-bottom: 0;
 }
 .path-overview .path-goal {
-  margin-top: 8px;
+  margin-top: 6px;
 }
 .path-overview-action {
   display: grid;

@@ -48,7 +48,7 @@ Foundations (`typescript`) is the shared root track. The tracks that build on it
 | `--type-card` | 17px | Card, row-group, trail-stage, and journey titles |
 | `--type-meta` | 12px | Chips, counts, keyboard hints, and compact labels; nothing smaller except badge artwork |
 
-The workspace title is a dense 22px (20px narrow). Body text is 15–16px; secondary text 13–14px. Text disclosures (Filters, Explore tracks, Set up your local project, Starting as) are 15px; disclosures that act as group headings use the card or section title; dense workspace disclosures are 14px, lesson-index group labels 13px, and `InfoNote` 13px.
+The workspace title is a dense 22px (20px narrow). Body text is 15–16px; secondary text 13–14px. Text disclosures (Filters, Set up your local project, Starting as) are 15px; disclosures that act as group headings use the card or section title; dense workspace disclosures are 14px, lesson-index group labels 13px, and `InfoNote` 13px.
 
 ## Tokens and colour
 

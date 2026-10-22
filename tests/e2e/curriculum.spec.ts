@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test'
-import { chooseOption } from './helpers'
+import { chooseTrack } from './helpers'
 
 for (const width of [1280, 320]) {
   test(`path goal is explicit and survives reload at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/#/paths')
-    await chooseOption(page.getByRole('combobox', { name: 'Choose track', exact: true }), 'frontend')
+    await chooseTrack(page, 'frontend')
     await expect(page.getByText('Browsing this track does not change your learning goal.')).toBeVisible()
     await page.reload()
     await expect(page.getByText('Browsing this track does not change your learning goal.')).toBeVisible()
@@ -64,7 +64,7 @@ for (const width of [1280, 390]) {
     await expect(page).toHaveURL(/practice\/declare-variables/)
     await expect(page.locator('.workspace-title')).toContainText('Beginner')
     await page.goto('/#/paths')
-    await chooseOption(page.getByRole('combobox', { name: 'Choose track', exact: true }), 'algorithms-data-structures')
+    await chooseTrack(page, 'algorithms-data-structures')
     const covered = page.locator('.path-stage').filter({ hasText: 'Covered in Foundations' }).first()
     await expect(covered).toContainText('Covered in Foundations')
     await covered.locator('summary').click()

@@ -207,10 +207,6 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     })
   }
   const [pathId, setPathId] = useSessionPreference<(typeof paths)[number]['id']>('path', 'typescript')
-  const [pathPicker, setPathPicker] = useSessionPreference<'open' | 'closed'>(
-    'path-picker',
-    matchMedia('(min-width: 901px)').matches ? 'open' : 'closed',
-  )
   const [learnerStart, setLearnerStart] = useState(readLearnerStart)
   const [mobileTab, setMobileTab] = useSessionPreference<'task' | 'workspace'>('workspace-tab', 'task')
   const [walkthrough, setWalkthrough] = useSessionPreference<'new' | 'active' | 'dismissed'>('first-rep-walkthrough', 'new')
@@ -989,8 +985,6 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
           repStatus={repStatus}
           pathId={pathId}
           setPathId={setPathId}
-          pathPicker={pathPicker}
-          setPathPicker={setPathPicker}
           knowledgeSkill={knowledgeSkill}
           setKnowledgeSkill={openKnowledge}
           walkthroughSeen={walkthrough !== 'new'}

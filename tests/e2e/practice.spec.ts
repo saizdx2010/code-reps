@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { expectChecksFinished, chooseOption, chooseSegment, editor, replaceCode, route, saved, solution } from './helpers'
+import { expectChecksFinished, chooseOption, chooseSegment, editor, replaceCode, route, saved, solution, chooseTrack } from './helpers'
 
 test('real Monaco editing, keyboard checks, and obsolete feedback', async ({ page }) => {
   await page.goto(route)
@@ -244,19 +244,13 @@ test('lesson section navigation preserves predictions and opens self-review', as
 test('narrow path discovery selects a path without horizontal scrolling', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/#/paths')
-  await expect(page.locator('.path-picker')).not.toHaveAttribute('open', '')
-  await page.locator('.path-picker > summary').click()
-  await page
-    .locator('.path-choices')
-    .getByRole('button', { name: /^Backend/ })
-    .click()
+  // A phone gets one Choose track menu instead of the card grid.
+  await expect(page.locator('.track-map')).toBeHidden()
+  await chooseTrack(page, 'backend')
   await expect(page.locator('#path-title')).toHaveText('Backend')
-  await expect(page.locator('#path-title')).toBeFocused()
-  await expect(page.locator('.path-picker')).not.toHaveAttribute('open', '')
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await page.reload()
   await expect(page.locator('#path-title')).toHaveText('Backend')
-  await expect(page.locator('.path-picker')).not.toHaveAttribute('open', '')
 })
 
 test('local profile progress is readable on narrow screens and links to the skill map', async ({ page }) => {

@@ -1,14 +1,14 @@
 import { expect, test } from '@playwright/test'
 import { devopsSolutions } from '../fixtures/devops-solutions.mjs'
-import { expectChecksFinished, replaceCode } from './helpers'
+import { chooseTrack, expectChecksFinished, replaceCode } from './helpers'
 
 const tracks = ['Problem solving', 'Pattern Recognition', 'Frontend', 'SQL', 'Backend', 'DevOps']
 
 test('DevOps is the last track card, builds on Backend, and opens its trail', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto('/#/paths')
-  // The picker starts open on wide screens.
-  await expect(page.locator('.path-picker')).toHaveAttribute('open', '')
+  // Every track card is in view on a wide screen; there is no menu to open.
+  await expect(page.getByRole('combobox', { name: 'Choose track', exact: true })).toBeHidden()
   const cards = page.locator('.track-group .path-choices > button')
   await expect(cards.locator('strong')).toHaveText(tracks)
   const devops = cards.filter({ has: page.locator('strong', { hasText: /^DevOps$/ }) })
@@ -24,7 +24,6 @@ test('DevOps is the last track card, builds on Backend, and opens its trail', as
   expect(devopsBox.x).toBeGreaterThan(backendBox.x)
   await devops.click()
   await expect(page.locator('#path-title')).toHaveText('DevOps')
-  await expect(page.locator('.path-overview .home-label')).toHaveText('Builds on Backend')
   await expect(page.locator('.path-stage').first()).toContainText('Read CI output')
   await expect(page.getByRole('button', { name: /Read an exit code/ })).toBeVisible()
   await page.reload()
@@ -59,13 +58,8 @@ test('the DevOps trail ends with its own-machine project, which opens expanded i
 test('DevOps can be chosen at a phone width without horizontal scrolling', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/#/paths')
-  await page.locator('.path-picker > summary').click()
-  await page
-    .locator('.path-choices')
-    .getByRole('button', { name: /^DevOps/ })
-    .click()
+  await chooseTrack(page, 'devops')
   await expect(page.locator('#path-title')).toHaveText('DevOps')
-  await expect(page.locator('#path-title')).toBeFocused()
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
 

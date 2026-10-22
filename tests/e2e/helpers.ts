@@ -122,3 +122,14 @@ export async function expectNoStackedDividers(page: Page, label = page.url()) {
   })
   expect(stacked, label).toEqual([])
 }
+
+/** Chooses a track on All tracks: its card on a wide screen, the Choose track menu on a narrow one. */
+export async function chooseTrack(page: Page, id: string) {
+  const menu = page.getByRole('combobox', { name: 'Choose track', exact: true })
+  // Wait for the page, so the choice between menu and cards is made on what the learner sees.
+  await expect(page.locator('#path-title')).toBeVisible()
+  if (await menu.isVisible()) return chooseOption(menu, id)
+  const { paths } = await import('../../src/path')
+  const title = paths.find(path => path.id === id)!.title
+  await page.locator('.track-map .path-choices > button', { has: page.locator('strong', { hasText: new RegExp(`^${title}$`) }) }).click()
+}
