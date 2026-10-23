@@ -22,14 +22,9 @@ export default function QuickLessons({ openRep, onBrowse }: { openRep: (id: stri
   return (
     <main className="learn-main">
       <PageHeader
-        eyebrow="Lessons"
+        back={{ label: 'Lessons', onClick: onBrowse }}
         title="Quick lessons"
         description="Short introductions before your first rep. Full lessons have interactive predictions and learning tools."
-        actions={
-          <Button variant="text" onClick={onBrowse}>
-            Browse lessons
-          </Button>
-        }
       />
       <details className="learn-section" open>
         <summary>

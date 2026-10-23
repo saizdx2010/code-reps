@@ -92,7 +92,6 @@ export function SkillMapPage({ goalPathId, progress, openRep, reviewRep }: Props
   return (
     <main className="skill-map-main">
       <PageHeader
-        eyebrow="Skills"
         title="Skill map"
         description="Every skill in a track, shown by the practice evidence recorded so far."
         actions={<SkillsSwitch view="skillmap" />}

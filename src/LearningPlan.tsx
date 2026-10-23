@@ -37,9 +37,9 @@ export function LearningPlan({ state, update, history, openRep, reviewRep, candi
   return (
     <>
       <WeekInReview state={state} update={update} history={history} now={now} />
-      <section className="hub-panel">
+      <section className="hub-panel hub-section">
         <h2>A manageable practice week</h2>
-        <InfoNote>
+        <InfoNote label="How suggestions are chosen">
           <p>
             Choose a goal and time budget. Suggestions mix due reviews, saved work, and your chosen track. Time is a budget, not an estimate
             of mastery.
@@ -99,9 +99,9 @@ export function LearningPlan({ state, update, history, openRep, reviewRep, candi
         </ol>
         {!goal.days.length && <p>Select at least one day to make a plan. Nothing is scheduled until you do.</p>}
       </section>
-      <section className="hub-panel">
+      <section className="hub-panel hub-section">
         <h2>Keep skills available</h2>
-        <InfoNote>
+        <InfoNote label="How reviews are spaced">
           <p>
             After first delayed recall, additional reviews rotate through different applications. Successful independent scheduled recalls
             extend the interval; difficult or hinted recalls shorten it. These intervals are starting rules to validate with learners.
@@ -155,7 +155,7 @@ function WeekInReview({ state, update, history, now }: Pick<Props, 'state' | 'up
     } else setMessage('Your review could not be saved. Your writing is still here.')
   }
   return (
-    <section className="hub-panel week-review" aria-labelledby="week-review-title">
+    <section className="hub-panel hub-section week-review" aria-labelledby="week-review-title">
       <h2 id="week-review-title">Look back at the last seven days</h2>
       <InfoNote label="What this shows">
         <p>

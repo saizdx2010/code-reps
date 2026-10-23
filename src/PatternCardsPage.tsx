@@ -31,14 +31,9 @@ export function PatternCardsPage({ openRep, onLessons }: { openRep: (id: string)
   return (
     <main className="learn-main pattern-cards-main">
       <PageHeader
-        eyebrow="Lessons"
+        back={{ label: 'Lessons', onClick: onLessons }}
         title="Pattern cards"
         description="Read a short contract and choose the tool that fits it best."
-        actions={
-          <Button variant="text" onClick={onLessons}>
-            Browse lessons
-          </Button>
-        }
       />
       <InfoNote label="What this practices">
         <p>

@@ -113,7 +113,7 @@ export function BrowserProjects({ openRep, recordReflection }: Props) {
   return (
     <section className="project-section" aria-labelledby="own-machine-heading">
       <h2 id="own-machine-heading">Build on your own machine</h2>
-      <InfoNote>
+      <InfoNote label="How these projects count">
         <p>
           Three browser-app levels in plain TypeScript and the DOM, then the DevOps track's finale: containerize a service you wrote and add
           CI. Open any project; readiness guidance is optional.

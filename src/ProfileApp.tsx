@@ -1,3 +1,4 @@
+import { Icon } from './Icon'
 import { Button } from './Button'
 import { PageHeader } from './Layout'
 import { Input, Select } from './Input'
@@ -210,14 +211,16 @@ export default function ProfileApp() {
     <>
       <App key={active} profileName={current?.name ?? 'My learning'} onManageProfiles={openProfiles} />
       <dialog ref={dialog} className="profile-dialog" aria-labelledby="profiles-title">
-        <div className="hub-dialog-heading">
+        {/* The same close control as Search and the glossary: icon, word, and the Esc key that also closes it. */}
+        <div className="utility-heading">
           <div>
             <span className="home-label">On this device</span>
             <h2 id="profiles-title">Local profiles</h2>
           </div>
-          <Button variant="text" disabled={disabled} onClick={() => dialog.current?.close()}>
-            Close
-          </Button>
+          <button type="button" aria-label="Close" disabled={disabled} onClick={() => dialog.current?.close()}>
+            <Icon name="close" />
+            Close <kbd>Esc</kbd>
+          </button>
         </div>
         <p>
           No signup or connection required. Profiles separate learning data; they do not hide it from people with access to this machine.

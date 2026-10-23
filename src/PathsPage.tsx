@@ -172,7 +172,7 @@ export function PathsPage(props: Props) {
       >
         <span style={{ width: `${trail.total ? (trail.done / trail.total) * 100 : 0}%` }} />
       </div>
-      <InfoNote>
+      <InfoNote label="What track progress counts">
         <p>
           Track completion records finished reps, including hinted work. Independence and retention use separate skill evidence: a guided
           rep, a related rep without hints, then a fresh recall after a break.

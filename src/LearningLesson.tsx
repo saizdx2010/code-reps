@@ -411,7 +411,7 @@ function LessonSelfReview({ skillId, state, update }: { skillId: string; state: 
   return (
     <section>
       <h3>Assess yourself</h3>
-      <InfoNote>
+      <InfoNote label="How self-review works">
         <p>
           Use the criteria and name the attempt or example supporting your judgment. These are your assessments, separate from checked
           behavior.

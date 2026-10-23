@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { PageHeader } from './Layout'
-import { learningPageTitles } from './learning-pages'
+import { learningPageBack, learningPageTitles } from './learning-pages'
+import { goToView } from './ui-navigation'
 import type { HubTab } from './learning-pages'
 
 function Lines() {
@@ -67,7 +68,7 @@ export function PageLoading({ page, notebookHasDraft = false, notebookHasEntries
   return (
     <main className={`learning-hub page-loading loading-${page}`} aria-busy="true">
       <PageHeader
-        eyebrow={page === 'notebook' ? 'Journal' : undefined}
+        back={learningPageBack[page] && { label: learningPageBack[page].label, onClick: () => goToView(learningPageBack[page]!.view) }}
         title={copy.title}
         description={copy.description}
         actions={page === 'notebook' ? journalTabs : undefined}
@@ -243,17 +244,19 @@ export function RouteLoading({
   status,
   className,
   eyebrow,
+  back,
   actions,
 }: {
   title: string
   status: string
   className?: string
   eyebrow?: string
+  back?: { label: string; onClick: () => void }
   actions?: ReactNode
 }) {
   return (
     <main className={className} aria-busy="true">
-      <PageHeader title={title} eyebrow={eyebrow} actions={actions} />
+      <PageHeader title={title} eyebrow={eyebrow} back={back} actions={actions} />
       <p className="loading-status page-loading-status" role="status">
         {status}
       </p>
