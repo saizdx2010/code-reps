@@ -660,9 +660,26 @@ main {
 .foundation-list > .foundation-lesson:last-child {
   border-bottom: 0;
 }
+/* Lesson groups are collapsible groups: a trailing chevron, like the lessons inside them. */
 .learn-section > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   padding: 22px 0;
   cursor: pointer;
+}
+.learn-section > summary::after {
+  content: '';
+  flex: none;
+  width: 18px;
+  height: 18px;
+  background: var(--muted);
+  mask: var(--icon-chevron) center / contain no-repeat;
+  transition: rotate var(--motion-fast) var(--motion-ease);
+}
+.learn-section[open] > summary::after {
+  rotate: 180deg;
 }
 .learn-section > summary h2 {
   display: inline;
@@ -3720,7 +3737,9 @@ summary::marker {
 }
 details:not(.site-menu):not(.workspace-options):not(.knowledge-browser):not(.knowledge-group):not(.path-stage):not(.progress-journey):not(
     .evidence-card
-  ):not(.project-overview):not(.foundation-lesson):not(.info-note):not(.list-group):not(.plan-brief):not(.practice-history):not(.then-now)
+  ):not(.project-overview):not(.foundation-lesson):not(.info-note):not(.list-group):not(.plan-brief):not(.practice-history):not(.then-now):not(
+    .learn-section
+  )
   > summary::before {
   content: '';
   display: inline-block;
@@ -3737,7 +3756,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
     .progress-journey
   ):not(.evidence-card):not(.project-overview):not(.foundation-lesson):not(.info-note):not(.list-group):not(.plan-brief):not(
     .practice-history
-  ):not(.then-now)
+  ):not(.then-now):not(.learn-section)
   > summary::before {
   transform: rotate(0deg);
 }

@@ -465,3 +465,19 @@ button[aria-expanded='true'] > span > .icon-chevron {
   gap: 8px;
   margin-top: 12px;
 }
+
+/* One quiet line that points elsewhere: a short muted lead, then a text link (Open the glossary, Open Your trail). */
+.quiet-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 16px 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+.quiet-line .text-button {
+  min-height: 32px;
+  padding: 4px 0;
+}

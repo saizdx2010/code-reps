@@ -971,6 +971,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
       <ScreenMemory key={`${view}:${view === 'workspace' ? repId : ''}`} screenKey={`${view}:${view === 'workspace' ? repId : ''}`}>
         <AppRoutes
           view={view}
+          onGlossary={() => setGlossaryOpen(true)}
           journalTabs={journalTabs}
           profileName={profileName}
           onManageProfiles={onManageProfiles}
