@@ -21,6 +21,7 @@ const views = [
   'interview',
   'finished',
   'first-weeks',
+  'request-console',
 ] as const
 export type View = (typeof views)[number]
 // A lesson has its own address, #/knowledge/<skill-id>, so it can be bookmarked and Back returns to it; so does a
@@ -45,8 +46,9 @@ export const navigationSections = {
 } satisfies Record<string, { view: View; label: string }[]>
 
 // Pages reached from another page rather than a tab: the Journal switch, quick lessons, the skill map (a view of Skills),
-// the weekly plan, self-assessment, first four weeks, and finished tracks (reached from Skills), and timed interview
-// practice (an opt-in inside Projects). Their routes still resolve, so old bookmarks keep working.
+// the weekly plan, self-assessment, first four weeks, and finished tracks (reached from Skills), timed interview
+// practice (an opt-in inside Projects), and the Request console (a toy listed in Projects and linked from Backend trail
+// stages). Their routes still resolve, so old bookmarks keep working.
 const sectionAliases: Partial<Record<View, View>> = {
   sessions: 'history',
   notebook: 'history',
@@ -60,6 +62,7 @@ const sectionAliases: Partial<Record<View, View>> = {
   finished: 'progress',
   'first-weeks': 'progress',
   interview: 'projects',
+  'request-console': 'projects',
 }
 export const sectionView = (view: View): View => sectionAliases[view] ?? view
 

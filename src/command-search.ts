@@ -49,6 +49,7 @@ export const pageEntries: { view: View; label: string }[] = [
   { view: 'patterns', label: 'Library › Lessons › Pattern cards' },
   { view: 'projects', label: 'Library › Projects' },
   { view: 'interview', label: 'Library › Projects › Timed interview' },
+  { view: 'request-console', label: 'Library › Projects › Request console' },
   { view: 'progress', label: 'Progress › Skills' },
   { view: 'skillmap', label: 'Progress › Skills › Skill map' },
   { view: 'plan', label: 'Progress › Skills › Plan a practice week' },

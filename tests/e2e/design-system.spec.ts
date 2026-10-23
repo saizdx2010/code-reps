@@ -470,6 +470,7 @@ test('every page shares one frame, type scale, and control height', async ({ pag
     'knowledge',
     'projects',
     'interview',
+    'request-console',
     'progress',
     'history',
     'sessions',

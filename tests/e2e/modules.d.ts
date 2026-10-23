@@ -1,4 +1,7 @@
 // Types for the plain .mjs fixtures and server the browser specs import, so tsc -b can check the specs.
+declare module '*/fixtures/backend-solutions.mjs' {
+  export const backendSolutions: Record<string, string>
+}
 declare module '*/fixtures/connected-feature-solutions.mjs' {
   export const connectedSolutions: Record<string, string>[]
 }

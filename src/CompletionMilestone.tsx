@@ -12,7 +12,7 @@ import { skillStateLabels } from './skill-map'
 import { closeout } from './stage-closeout'
 import { plural } from './ui-copy.ts'
 import { goToView } from './ui-navigation'
-import { usePathText } from './usePathText'
+import { usePathText } from './useTrailExtras'
 
 type Props = {
   history: PortableRecord[]

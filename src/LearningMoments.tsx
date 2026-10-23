@@ -7,6 +7,7 @@ import type { PersonalBest } from './personal-best'
 import type { PortableRecord } from './portability'
 import { parseStepKeys, skillStateLabels, skillStepKey, skillSteps } from './skill-map'
 import type { SkillState, SkillStep } from './skill-map'
+import { NewPartNotice } from './ToyRewards'
 import { formatDate, plural } from './ui-copy'
 import type { ChipTone } from './ui-status'
 import { useSessionPreference } from './useSessionPreference'
@@ -28,8 +29,8 @@ export type Moments = {
 
 /**
  * What one completed attempt shows about growth, in the completion panel: the stage or track it finished, the skills it
- * moved up, and at most one personal best. All are worked out from saved attempts, so nothing is stored and backups are
- * unchanged.
+ * moved up, at most one personal best, and a toy part it lit for the first time. All are worked out from saved attempts,
+ * so nothing is stored and backups are unchanged.
  */
 export default function LearningMoments({ history, recordId, now, fresh, onSkillMap, ...milestone }: Moments) {
   // Worked out once per saved history, not on every keystroke elsewhere in the completion panel.
@@ -47,6 +48,7 @@ export default function LearningMoments({ history, recordId, now, fresh, onSkill
       <CompletionMilestone history={history} recordId={recordId} {...milestone} />
       <SkillStepNotice steps={steps} onSkillMap={onSkillMap} />
       <PersonalBestNote best={best} />
+      <NewPartNotice history={history} recordId={recordId} fresh={fresh} />
     </>
   )
 }

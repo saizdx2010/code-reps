@@ -50,6 +50,7 @@ const StarterProgramPage = lazyRoute(
   'Your first 4 weeks',
   'progress-main',
 )
+const RequestConsole = lazyRoute(() => import('./RequestConsole').then(module => module.default), 'The Request console', 'console-main')
 
 const categories = [...new Set(reps.map(catalogTopic))].sort()
 // The Library lists topics in learning order inside their areas; other pages keep the alphabetical list.
@@ -273,6 +274,7 @@ export function AppRoutes(props: Props) {
             learnerStart={learnerStart}
             onLearnerStart={props.onLearnerStart}
             completedPathIds={completedPathIds}
+            history={history}
             trail={browsedTrail}
             evidence={trailEvidence}
             openRep={openRep}
@@ -408,6 +410,21 @@ export function AppRoutes(props: Props) {
           }
         >
           <QuickLessons openRep={openRep} onBrowse={() => setView('knowledge')} onGlossary={props.onGlossary} />
+        </Suspense>
+      )
+    case 'request-console':
+      return (
+        <Suspense
+          fallback={
+            <RouteLoading
+              back={{ label: 'Projects', onClick: () => setView('projects') }}
+              title="Request console"
+              status="Opening the console…"
+              className="console-main"
+            />
+          }
+        >
+          <RequestConsole history={history} openRep={openRep} onProjects={() => setView('projects')} />
         </Suspense>
       )
     case 'history':

@@ -4,8 +4,8 @@ import { Button } from './Button'
 import { Icon } from './Icon'
 import { InfoNote, StatusChip } from './Layout'
 import { lifeParts, lifeSources, settled, startingBoard } from './life-toy.ts'
-import type { LifeResult, LifeSources } from './life-toy.ts'
-import { lifeSession } from './life-toy-client'
+import type { LifeResult, LifeSources, LifeStep } from './life-toy.ts'
+import { toySession } from './toy-session'
 import type { PortableRecord } from './portability'
 import { repTitle } from './rep-index.ts'
 import { reducedMotion } from './ui-motion'
@@ -71,7 +71,10 @@ function Parts({ found, openRep }: { found: ReturnType<typeof lifeSources>; open
 type Failure = { kind: 'differs'; generation: number; cells: [number, number][] } | { kind: 'error'; message: string }
 
 function Board({ sources, openRep }: { sources: LifeSources; openRep: (id: string) => void }) {
-  const session = useMemo(() => lifeSession(sources), [sources.countNeighbours, sources.nextCell, sources.nextGeneration])
+  const session = useMemo(
+    () => toySession<LifeStep, LifeResult>('life', sources),
+    [sources.countNeighbours, sources.nextCell, sources.nextGeneration],
+  )
   useEffect(() => () => session.close(), [session])
   const [board, setBoard] = useState(startingBoard)
   const [generation, setGeneration] = useState(0)
@@ -94,7 +97,7 @@ function Board({ sources, openRep }: { sources: LifeSources; openRep: (id: strin
     const { board: before, generation: count } = current.current
     const started = version.current
     setBusy(true)
-    const result = await session.step({ grid: before })
+    const result = await session.run({ grid: before })
     setBusy(false)
     if (version.current !== started) return false
     if ('error' in result) {
@@ -154,7 +157,7 @@ function Board({ sources, openRep }: { sources: LifeSources; openRep: (id: strin
   }
   async function inspect(r: number, c: number) {
     const started = version.current
-    const result = await session.step({ grid: current.current.board, inspect: [r, c] })
+    const result = await session.run({ grid: current.current.board, inspect: [r, c] })
     if (version.current !== started) return
     if ('error' in result) {
       if (result.error) setFailure({ kind: 'error', message: result.error })

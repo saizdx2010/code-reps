@@ -1,0 +1,92 @@
+/* Playable rewards outside their toys (src/ToyRewards.tsx): a trail stage's line, a card in Library → Projects, and the
+   completion panel's note. They load after the page they sit on, so startup never pays for them. */
+
+/* The stage line sits under the stage heading, aligned with the nodes, and rises in with the stage's description when
+   the stage opens (or when the line arrives on an open stage). */
+.stage-reward {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+  padding: 6px 4px 6px 12px;
+  border-radius: var(--radius-control);
+  background: var(--accent-soft);
+  color: var(--feature-muted);
+  font-size: 14px;
+}
+/* Aligned with the stage's nodes, on Home (whose goal paragraphs set their own margins) and on All tracks alike. */
+.path-stage > .stage-reward {
+  margin: -4px 0 10px 52px;
+}
+.path-stage[open] > .stage-reward {
+  animation: notice-rise 240ms var(--motion-ease) both;
+}
+:is(.stage-reward, .new-part-notice) > .ui-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--accent);
+}
+.stage-reward > span {
+  flex: 1 1 16rem;
+}
+:is(.stage-reward, .new-part-notice) .text-button {
+  min-height: 32px;
+  padding-block: 4px;
+  color: var(--accent);
+}
+@media (max-width: 640px) {
+  .path-stage > .stage-reward {
+    margin-left: 40px;
+  }
+}
+
+/* The card reads like the Game of Life card beside it. */
+.toy-card {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+}
+.toy-card header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.toy-card h3 {
+  margin: 0;
+  font-size: var(--type-card);
+}
+.toy-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.toy-card header p {
+  margin-top: 2px;
+}
+.toy-card > .primary-button {
+  justify-self: start;
+}
+
+/* In the completion panel, after the skill and personal-best notes, rising in last. */
+.new-part-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 10px 16px 10px 14px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  color: var(--feature-text);
+  font-size: 14px;
+  line-height: 1.5;
+  animation: notice-rise 240ms var(--motion-ease) 320ms both;
+}
+.new-part-notice > .ui-icon {
+  margin-top: 3px;
+}
+.new-part-notice strong {
+  font-weight: 700;
+}

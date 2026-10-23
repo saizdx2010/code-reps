@@ -1,4 +1,5 @@
 import type { PortableRecord } from './portability.ts'
+import { latestCompletedCode } from './toy-rewards.ts'
 
 // The Game of Life toy in Library → Projects runs the learner's own saved solutions to three ordinary reps. It runs them
 // in the practice worker, never on the page, and compares each generation with the reference rules. It records nothing:
@@ -15,11 +16,10 @@ export type LifeSources = Record<LifePartName, string>
 
 /** Each part's latest completed code, or null for a part not completed yet. */
 export function lifeSources(history: PortableRecord[]): Record<LifePartName, string | null> {
-  const latest = (repId: string) =>
-    history
-      .filter(record => record.repId === repId && Number.isFinite(Date.parse(record.completedAt)))
-      .sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt))[0]?.code ?? null
-  return Object.fromEntries(lifeParts.map(part => [part.functionName, latest(part.id)])) as Record<LifePartName, string | null>
+  return Object.fromEntries(lifeParts.map(part => [part.functionName, latestCompletedCode(history, part.id)])) as Record<
+    LifePartName,
+    string | null
+  >
 }
 
 const live = (grid: string[], r: number, c: number) => grid[r]?.charAt(c) === '#'
