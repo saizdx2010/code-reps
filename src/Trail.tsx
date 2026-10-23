@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Button } from './Button'
 import { Icon } from './Icon'
 import { StatusChip } from './Layout'
@@ -17,6 +18,8 @@ type Props = {
   onOpenTrack?: (pathId: string) => void
   /** Each stage's description and recap by title. They load after the trail, so a stage may have none yet. */
   text?: Readonly<Record<string, StageText>>
+  /** A stage's playable reward line (src/ToyRewards.tsx), which also loads after the trail. */
+  reward?: (stage: TrailStage) => ReactNode
 }
 
 const stateLabels: Record<string, string> = {
@@ -50,7 +53,7 @@ const levelRange = (stage: TrailStage) =>
   stageLevelRange(stage.nodes.flatMap(node => (node.kind === 'rep' || node.kind === 'project' ? [node.repId] : [])))
 
 /** A path drawn as stages of connected nodes: lessons before the reps that use them, then recall and projects. */
-export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenTrack, text }: Props) {
+export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenTrack, text, reward }: Props) {
   // One stage opens: the current one, or the first unfinished stage when nothing is current yet.
   const hasCurrent = stages.some(stage => stage.current)
   return (
@@ -81,6 +84,7 @@ export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenTrack, 
                 Open {stage.coveredBy.title}
               </Button>
             )}
+            {reward?.(stage)}
             <ol className="trail-nodes">
               {stage.nodes.map(node => (
                 <li key={node.id} className={`trail-node node-${node.kind} is-${node.state}`}>

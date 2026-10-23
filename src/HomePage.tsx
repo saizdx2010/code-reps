@@ -11,7 +11,7 @@ import { Trail } from './Trail'
 import type { buildTrail } from './trail-map'
 import { repSummaryById, repTitle } from './rep-index.ts'
 import { paths } from './path'
-import { usePathText } from './usePathText'
+import { usePathText, useStageRewards } from './useTrailExtras'
 import type { getPracticePlan, PracticeAction } from './practice'
 import { withoutGoal } from './practice-actions'
 import type { PortableRecord } from './portability'
@@ -88,6 +88,7 @@ export function HomePage(props: Props) {
   const { walkthroughSeen, launchWalkthrough, goalPathId, onPath, practicePlan, openPracticeAction, actionLabel } = props
   const { onProgress, onLibrary, trail, evidence, openRep, openLesson, learnerStart, onLearnerStart, warmup, startWarmup } = props
   const pathText = usePathText()
+  const rewards = useStageRewards()
   const goal = paths.find(path => path.id === goalPathId) ?? paths[0]
   const recommendation = practicePlan.next
   const recommendedRep = recommendation && repSummaryById.get(recommendation.repId)
@@ -258,6 +259,7 @@ export function HomePage(props: Props) {
           <Trail
             stages={trail.stages}
             text={pathText?.stageTexts[goal.id]}
+            reward={rewards && (stage => <rewards.StageRewardLine trackId={goal.id} stage={stage} history={props.history} />)}
             evidence={evidence}
             onOpenRep={openRep}
             onOpenLesson={openLesson}

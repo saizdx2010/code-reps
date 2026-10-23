@@ -5,6 +5,7 @@ import { lazy, Suspense } from 'react'
 import { capstones } from './fluency'
 import type { FluencyState, LearningNote } from './fluency'
 import type { PortableRecord } from './portability'
+import { ToyCards } from './ToyRewards'
 
 const BrowserProjects = lazy(() =>
   import('./BrowserProjects')
@@ -95,7 +96,8 @@ export function LearningProjects({ state, update, history, openRep, openNotebook
         ))}
       </section>
       <section className="project-section" aria-labelledby="toy-heading">
-        <h2 id="toy-heading">A toy that runs your code</h2>
+        <h2 id="toy-heading">Toys that run your code</h2>
+        <ToyCards history={history} />
         <Suspense
           fallback={
             <p className="loading-status" role="status">

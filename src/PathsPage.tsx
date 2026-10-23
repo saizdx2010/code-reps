@@ -14,6 +14,8 @@ import { pathIntroductions } from './path-introductions'
 import { goToView } from './ui-navigation'
 import { stageTexts, trackDescriptions } from './path-text'
 import type { LearnerStart } from './learning'
+import type { PortableRecord } from './portability'
+import { StageRewardLine } from './ToyRewards'
 
 type PathId = (typeof paths)[number]['id']
 type Props = {
@@ -25,6 +27,7 @@ type Props = {
   learnerStart: LearnerStart | null
   startingPoint?: ReactNode
   completedPathIds: Set<string>
+  history: PortableRecord[]
   trail: ReturnType<typeof buildTrail>
   evidence: (repId: string) => string
   openRep: (id: string) => void
@@ -197,6 +200,7 @@ export function PathsPage(props: Props) {
         <Trail
           stages={trail.stages}
           text={stageTexts[selectedPath.id]}
+          reward={stage => <StageRewardLine trackId={selectedPath.id} stage={stage} history={props.history} />}
           evidence={evidence}
           onOpenRep={openRep}
           onOpenLesson={openLesson}

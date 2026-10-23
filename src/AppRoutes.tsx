@@ -233,6 +233,7 @@ export function AppRoutes(props: Props) {
             learnerStart={learnerStart}
             startingPoint={<StartingPoint learnerStart={learnerStart} onChoose={props.onLearnerStart} />}
             completedPathIds={completedPathIds}
+            history={history}
             trail={browsedTrail}
             evidence={trailEvidence}
             openRep={openRep}
