@@ -202,12 +202,7 @@ test('practice steps preserve work, explain missing requirements, and record com
   await expect(page.getByLabel('Your plan', { exact: true })).toHaveValue(/Count occurrences/)
   await page.locator('.site-menu > summary').click()
   await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('button', { name: 'Progress', exact: true }).click()
-  await expect(
-    page
-      .locator('[aria-label="Practice summary"] > div')
-      .filter({ has: page.locator('dt', { hasText: 'Completed reps' }) })
-      .locator('dd'),
-  ).toHaveText('1')
+  await expect(page.locator('.rhythm-stat').filter({ hasText: 'Completed reps' }).locator('b')).toHaveText('1')
   const streak = page.locator('.rhythm-stat').first()
   await expect(streak.locator('b')).toHaveText('1')
   await expect(streak.locator('small')).toHaveText('Longest 1')
@@ -256,6 +251,24 @@ test('narrow path discovery selects a path without horizontal scrolling', async 
 test('local profile progress is readable on narrow screens and links to the skill map', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/#/progress')
+  // One finished guided rep, so Skills shows its journeys rather than the first-rep welcome.
+  await page.evaluate(() =>
+    localStorage.setItem(
+      'code-reps:profile:default:history:v1',
+      JSON.stringify([
+        {
+          id: 'seed',
+          repId: 'sum-positive-numbers',
+          completedAt: new Date(Date.now() - 86_400_000).toISOString(),
+          plan: 'p',
+          code: 'c',
+          explanation: 'e',
+          hintCount: 1,
+        },
+      ]),
+    ),
+  )
+  await page.reload()
   await expect(page.getByRole('heading', { level: 1, name: 'Skills', exact: true })).toBeVisible()
   await expect(page.locator('.page-eyebrow')).toHaveText('My learning · local profile')
   await expect(page.locator('.rhythm-week li')).toHaveCount(7)

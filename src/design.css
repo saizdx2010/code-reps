@@ -3971,13 +3971,31 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   color: var(--text);
   font-size: 14px;
 }
+.badge-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 12px;
+}
+.badge-groups .badge-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+.badge-groups .badge-card {
+  width: 280px;
+  max-width: 100%;
+}
+@media (max-width: 600px) {
+  .badge-groups,
+  .badge-groups .badge-group,
+  .badge-groups .badge-card {
+    width: 100%;
+  }
+}
 .badge-group-title {
   margin: 4px 0 10px;
   color: var(--muted);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  font-size: var(--type-meta);
+  font-weight: 600;
 }
 /*
  * Badge art: a tile of the coding desk with the logo's brackets and rep bars. The desk tokens stay dark in light and
@@ -4792,10 +4810,9 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   font-weight: 600;
 }
 .progress-main .progress-summary {
-  /* Two compact counts stacked in the first column; the calendar and the ladder take full-height cards beside them. */
+  /* Two cards: the rhythm (with the completed count among its stats) and the ladder. */
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr) minmax(0, 1.2fr);
-  grid-template-rows: auto auto;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
   gap: 12px;
   margin: 0 0 12px;
   padding: 0;
@@ -4833,18 +4850,6 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   font-weight: 400;
   line-height: 1.45;
 }
-/* A compact count: the number beside its label. */
-.progress-main .progress-summary .progress-stat {
-  display: grid;
-  grid-template-columns: 3ch minmax(0, 1fr);
-  align-items: center;
-  align-content: center;
-  gap: 4px 16px;
-}
-.progress-main .progress-summary .progress-stat dd,
-.progress-main .progress-summary .progress-stat dt {
-  grid-row: 1;
-}
 .progress-main .progress-summary .progress-days,
 .progress-main .progress-summary .skill-ladder {
   grid-row: 1 / span 2;
@@ -4854,10 +4859,10 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   gap: 4px;
 }
 .progress-main .progress-summary .progress-days {
-  grid-column: 2;
+  grid-column: 1;
 }
 .progress-main .progress-summary .skill-ladder {
-  grid-column: 3;
+  grid-column: 2;
   grid-template-rows: auto 1fr;
 }
 .progress-main .progress-summary .skill-ladder dt {
@@ -4883,7 +4888,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
 }
 .rhythm-stats {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px 24px;
 }
 .rhythm-stat {
@@ -5240,14 +5245,6 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   .progress-main .progress-summary .skill-ladder {
     grid-column: 1 / -1;
     grid-row: auto;
-  }
-}
-@media (max-width: 600px) {
-  .progress-main .progress-summary .progress-stat {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .progress-main .progress-summary .progress-stat dt {
-    grid-row: 2;
   }
 }
 @media (max-width: 600px) {

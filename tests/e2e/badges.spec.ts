@@ -124,7 +124,8 @@ test('badges follow the active profile across a profile switch and stay after sw
   await createProfile(page, 'Badge check learner')
   await switchProfile(page, 'Badge check learner')
   await expect(page.locator('.page-eyebrow')).toHaveText('Badge check learner · local profile')
-  await expect(page.locator('.badge-count')).toHaveText(/^0 earned/)
+  // A profile with nothing finished shows Skills' first-rep welcome instead of an empty badge shelf.
+  await expect(page.getByText('Your skills show up here after your first rep.', { exact: true })).toBeVisible()
   await expect(page.locator('.badge-notice')).toHaveCount(0)
   await switchProfile(page, 'My learning')
   await expect(page.locator('.badge-count')).toHaveText(/^1 earned/)
@@ -137,7 +138,8 @@ test('a backup exported from one profile earns the same badges after import into
   const backup = await downloadBackup(page)
   await createProfile(page, 'Imported learner')
   await switchProfile(page, 'Imported learner')
-  await expect(page.locator('.badge-count')).toHaveText(/^0 earned/)
+  // A profile with nothing finished shows Skills' first-rep welcome instead of an empty badge shelf.
+  await expect(page.getByText('Your skills show up here after your first rep.', { exact: true })).toBeVisible()
   const directory = await mkdtemp(join(tmpdir(), 'code-reps-badges-'))
   const file = join(directory, 'practice-backup.json')
   await writeFile(file, backup)

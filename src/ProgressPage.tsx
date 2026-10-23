@@ -6,6 +6,7 @@ import { withoutGoal } from './practice-actions'
 import { profileBadges } from './badges'
 import type { Badge } from './badges'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 import { BadgeArt } from './BadgeArt'
 import { useSessionPreference } from './useSessionPreference'
 import type { paths } from './path'
@@ -80,6 +81,9 @@ export function ProgressPage(props: Props) {
     { title: 'Retained', items: progress.filter(item => item.retained), open: false },
     { title: 'Not started', items: progress.filter(item => !item.guided && !item.independent && !item.retained), open: false },
   ].filter(group => group.items.length)
+  // Before any finished rep, every count is zero and every skill sits on its first rung: one welcome note says what
+  // will collect here instead of a wall of zeros.
+  const empty = summary.completedReps === 0 && dueReviews.length === 0 && groups.every(group => group.title === 'Not started')
   return (
     <main className="progress-main">
       <PageHeader
@@ -126,107 +130,104 @@ export function ProgressPage(props: Props) {
           )}
         </section>
       )}
-      <dl className="progress-summary profile-summary" aria-label="Practice summary">
-        <div className="progress-stat">
-          <dd>{summary.completedReps}</dd>
-          <dt>
-            Completed reps
-            <small>
-              {summary.completedReps
-                ? `${summary.attempts} ${plural(summary.attempts, 'attempt')} in all`
-                : 'Finish a rep by passing its checks.'}
-            </small>
-          </dt>
-        </div>
-        <div className="progress-stat">
-          <dd>{dueReviews.length}</dd>
-          <dt>
-            Reviews ready
-            <small>
-              {dueReviews.length
-                ? 'Start the first one at the top of this page.'
-                : nextRecall
-                  ? `Next one opens ${formatDate(nextRecall)}.`
-                  : summary.completedReps
-                    ? 'None scheduled yet.'
-                    : 'Reviews open a few days after a rep.'}
-            </small>
-          </dt>
-        </div>
-        <div className="progress-days practice-rhythm">
-          <dt className="visually-hidden">Practice rhythm</dt>
-          <dd>
-            <PracticeRhythm summary={summary} />
-            <details className="practice-history">
-              <summary>
-                Last 12 weeks
-                <Icon name="chevron" />
-              </summary>
-              <PracticeCalendar history={history} now={now} />
-            </details>
-          </dd>
-        </div>
-        <div className="skill-ladder">
-          <dt>
-            Skill ladder
-            <small>Each of the {progress.length} journey skills on its highest rung</small>
-          </dt>
-          <dd>
-            <span className="skill-ladder-bar" aria-hidden="true">
-              {rungs.map(rung => (rung.count ? <span key={rung.id} data-rung={rung.id} style={{ flexGrow: rung.count }} /> : null))}
-            </span>
-            <ul className="skill-ladder-legend" aria-label="Skills on each rung">
-              {rungs.map(rung => (
-                <li key={rung.id} data-rung={rung.id}>
-                  <span>{rung.label}</span>
-                  <b>{rung.count}</b>
-                </li>
-              ))}
-            </ul>
-          </dd>
-        </div>
-      </dl>
-      <InfoNote>
-        <p>
-          The ladder goes Not started, Guided (a guided rep finished, hints allowed), Independent (a related rep solved without hints after
-          the guided one), then Retained (a fresh recall rep solved without hints after a break). Each skill is counted once, on its highest
-          rung. Checks show behavior; you review your writing. These records are not an overall coding score.
-        </p>
-        <p>
-          Finishing a rep or a review records a practice day. A streak counts practice days and carries over one missed day in any seven;
-          two missed days in a row end it, and if you practiced yesterday it stays active through today. Breaks are welcome; your milestones
-          stay.
-        </p>
-      </InfoNote>
-      <h2 className="progress-skills-title">Your skill journeys</h2>
-      <div className="journey-groups">
-        {/* Before any evidence, a list of every skill on its first rung says nothing; it stays folded behind its count. */}
-        {groups.every(group => group.title === 'Not started') && (
-          <EmptyState title="No skill journeys started yet.">
-            Finishing a guided rep starts its skill on the ladder. Every skill waits in Not started until then.
-          </EmptyState>
-        )}
-        {groups.map(group => (
-          <ListGroup key={group.title} title={group.title} count={group.items.length} open={group.open}>
-            {group.items.map(item => (
-              <li key={item.journey.id}>
-                <JourneyEvidence progress={item} onOpenRep={onOpenRep} onReviewRep={onReviewRep} />
-              </li>
+      {empty ? (
+        <EmptyState title="Your skills show up here after your first rep.">
+          Each finished rep places its skill on a ladder: Guided, then Independent without hints, then Retained after a break. Practice
+          days, reviews, and badges collect here too.
+        </EmptyState>
+      ) : (
+        <>
+          <dl className="progress-summary profile-summary" aria-label="Practice summary">
+            <div className="progress-days practice-rhythm">
+              <dt className="visually-hidden">Practice rhythm</dt>
+              <dd>
+                <PracticeRhythm
+                  summary={summary}
+                  completed={
+                    <p className="rhythm-stat">
+                      <b>{summary.completedReps}</b>
+                      <span>Completed reps</span>
+                      <small>
+                        {/* Ready reviews lead the page above; when none is ready, this says when the next one opens. */}
+                        {!dueReviews.length && nextRecall
+                          ? `Next review opens ${formatDate(nextRecall)}`
+                          : `${summary.attempts} ${plural(summary.attempts, 'attempt')} in all`}
+                      </small>
+                    </p>
+                  }
+                />
+                <details className="practice-history">
+                  <summary>
+                    Last 12 weeks
+                    <Icon name="chevron" />
+                  </summary>
+                  <PracticeCalendar history={history} now={now} />
+                </details>
+              </dd>
+            </div>
+            <div className="skill-ladder">
+              <dt>
+                Skill ladder
+                <small>Each of the {progress.length} journey skills on its highest rung</small>
+              </dt>
+              <dd>
+                <span className="skill-ladder-bar" aria-hidden="true">
+                  {rungs.map(rung => (rung.count ? <span key={rung.id} data-rung={rung.id} style={{ flexGrow: rung.count }} /> : null))}
+                </span>
+                <ul className="skill-ladder-legend" aria-label="Skills on each rung">
+                  {rungs.map(rung => (
+                    <li key={rung.id} data-rung={rung.id}>
+                      <span>{rung.label}</span>
+                      <b>{rung.count}</b>
+                    </li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
+          </dl>
+          <InfoNote>
+            <p>
+              The ladder goes Not started, Guided (a guided rep finished, hints allowed), Independent (a related rep solved without hints
+              after the guided one), then Retained (a fresh recall rep solved without hints after a break). Each skill is counted once, on
+              its highest rung. Checks show behavior; you review your writing. These records are not an overall coding score.
+            </p>
+            <p>
+              Finishing a rep or a review records a practice day. A streak counts practice days and carries over one missed day in any
+              seven; two missed days in a row end it, and if you practiced yesterday it stays active through today. Breaks are welcome; your
+              milestones stay.
+            </p>
+          </InfoNote>
+          <h2 className="progress-skills-title">Your skill journeys</h2>
+          <div className="journey-groups">
+            {/* Before any evidence, a list of every skill on its first rung says nothing; it stays folded behind its count. */}
+            {groups.every(group => group.title === 'Not started') && (
+              <EmptyState title="No skill journeys started yet.">
+                Finishing a guided rep starts its skill on the ladder. Every skill waits in Not started until then.
+              </EmptyState>
+            )}
+            {groups.map(group => (
+              <ListGroup key={group.title} title={group.title} count={group.items.length} open={group.open}>
+                {group.items.map(item => (
+                  <li key={item.journey.id}>
+                    <JourneyEvidence progress={item} onOpenRep={onOpenRep} onReviewRep={onReviewRep} />
+                  </li>
+                ))}
+              </ListGroup>
             ))}
-          </ListGroup>
-        ))}
-      </div>
-      <section className="profile-badges" aria-labelledby="profile-badges-title">
-        <h2 id="profile-badges-title">Badges earned</h2>
-        <p className="badge-count" role="status">
-          {earned.length} earned. Evidence first, then completion; each links to the work that earned it.
-        </p>
-        {earned.length > 0 ? (
-          <EarnedBadges earned={earned} onOpen={open} />
-        ) : (
-          <EmptyState title="No badges yet.">Finish one rep to earn the first.</EmptyState>
-        )}
-      </section>
+          </div>
+          <section className="profile-badges" aria-labelledby="profile-badges-title">
+            <h2 id="profile-badges-title">Badges earned</h2>
+            <p className="badge-count" role="status">
+              {earned.length} earned. Evidence first, then completion; each links to the work that earned it.
+            </p>
+            {earned.length > 0 ? (
+              <EarnedBadges earned={earned} onOpen={open} />
+            ) : (
+              <EmptyState title="No badges yet.">Finish one rep to earn the first.</EmptyState>
+            )}
+          </section>
+        </>
+      )}
       <nav className="progress-quiet-links" aria-label="More ways to practice">
         <Button variant="text" onClick={() => goToView('plan')}>
           Look back and plan a practice week
@@ -320,7 +321,7 @@ const dayKindText = { new: 'new practice', review: 'reviews only', rest: 'rest d
  * The forgiving streak beside the last seven days. Reviews count as practice, and a single missed day can be carried
  * over once in any seven, so the tile shows consistency without a number to lose.
  */
-function PracticeRhythm({ summary }: { summary: ReturnType<typeof profileProgress> }) {
+function PracticeRhythm({ summary, completed }: { summary: ReturnType<typeof profileProgress>; completed: ReactNode }) {
   const { currentStreak, longestStreak, restDays, recentDays, practiceDays, week } = summary
   const streakNote = currentStreak
     ? [`Longest ${longestStreak}`, restDays ? `${restDays} rest ${plural(restDays, 'day')}` : ''].filter(Boolean).join(' · ')
@@ -342,6 +343,7 @@ function PracticeRhythm({ summary }: { summary: ReturnType<typeof profileProgres
             {practiceDays} practice {plural(practiceDays, 'day')} in all
           </small>
         </p>
+        {completed}
       </div>
       <ol className="rhythm-week" aria-label="The last seven days">
         {week.map(day => (
@@ -398,18 +400,23 @@ function EarnedBadges({ earned, onOpen }: { earned: Badge[]; onOpen: (badge: Bad
     { title: 'Evidence', badges: earned.filter(badge => badge.kind === 'evidence') },
     { title: 'Completion', badges: earned.filter(badge => badge.kind !== 'evidence') },
   ].filter(group => group.badges.length > 0)
-  return groups.map(group => (
-    <div key={group.title} className="badge-group">
-      <h3 className="badge-group-title">
-        {group.title} · {group.badges.length}
-      </h3>
-      <ul className="badge-grid" aria-label={`Earned ${group.title.toLowerCase()} badges`}>
-        {group.badges.map(badge => (
-          <EarnedBadge key={badge.id} badge={badge} earning={fresh.has(badge.id)} onOpen={onOpen} />
-        ))}
-      </ul>
+  // The groups sit side by side when they fit, so a few badges never leave half the width empty.
+  return (
+    <div className="badge-groups">
+      {groups.map(group => (
+        <div key={group.title} className="badge-group">
+          <h3 className="badge-group-title">
+            {group.title} · {group.badges.length}
+          </h3>
+          <ul className="badge-grid" aria-label={`Earned ${group.title.toLowerCase()} badges`}>
+            {group.badges.map(badge => (
+              <EarnedBadge key={badge.id} badge={badge} earning={fresh.has(badge.id)} onOpen={onOpen} />
+            ))}
+          </ul>
+        </div>
+      ))}
     </div>
-  ))
+  )
 }
 
 function EarnedBadge({ badge, earning, onOpen }: { badge: Badge; earning: boolean; onOpen: (badge: Badge) => void }) {

@@ -236,8 +236,25 @@ test('lesson and path completion rows respond in place without moving their layo
 
 test('a progress disclosure visibly collapses and reverses without losing its actions', async ({ page }) => {
   await page.goto('/#/progress')
-  // A new learner's journeys wait folded in Not started; open the group to reach one.
-  await page.locator('.journey-groups > .list-group > summary').first().click()
+  // One finished guided rep, so Skills shows its journeys rather than the first-rep welcome.
+  await page.evaluate(() =>
+    localStorage.setItem(
+      'code-reps:profile:default:history:v1',
+      JSON.stringify([
+        {
+          id: 'seed',
+          repId: 'sum-positive-numbers',
+          completedAt: new Date(Date.now() - 86_400_000).toISOString(),
+          plan: 'p',
+          code: 'c',
+          explanation: 'e',
+          hintCount: 1,
+        },
+      ]),
+    ),
+  )
+  await page.reload()
+  // In progress starts open with the seeded journey.
   const disclosure = page.locator('.progress-journey').first()
   const summary = disclosure.locator('summary')
   await summary.click()
