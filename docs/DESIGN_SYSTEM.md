@@ -141,9 +141,9 @@ Motion acknowledges interaction and shows where something came from; it never de
 | Icons | Each icon plays its own reaction once when its control is hovered, focused, or pressed (arrow and play nudge forward, close turns a quarter, info tilts, the hint filament lights up); result summaries play theirs when the result arrives |
 | Secondary action | Lifts 1px and takes an accent border; no shine |
 | Text link | Underline fades in while rising toward the text |
-| Back link (`PageHeader` back) | Takes an accent-soft wash and its left chevron nudges 2px back on hover |
+| Back link (`PageHeader` back, practice breadcrumb) | Takes an accent-soft wash and its left chevron nudges 2px back on hover; the breadcrumb's wash is inset so it never meets the divider after it |
 | Main navigation tab | Sage wash scales in behind the label |
-| Section tab | Underline grows from the centre; the current tab keeps it |
+| Section tab | Underline grows from the centre; the current tab keeps it. Moving to another area, its tabs rise in a short cascade; tabs that stay in the same area keep still |
 | Practice steps | Underline glides and resizes to the selected step (`StepIndicator`); markers ease into their new state; a link fills from the left once both neighbouring steps are done; first placement and layout resizes snap |
 | Lesson sections, segmented switches, Journal | Selected fill glides between options (`StepIndicator`); first placement and layout resizes snap |
 | Trail node | Marker grows to 114% with an accent ring; title takes the accent; press washes the row |
@@ -169,7 +169,11 @@ Motion acknowledges interaction and shows where something came from; it never de
 | Logo, appearance symbol | Logo tilts slightly; the light/dark symbol half-turns |
 | Dark mode toggle | The page crossfades over 260ms (View Transitions where supported). Colour-scheme radios apply immediately so their checked state never lags |
 | Menus, tooltips, dialogs | Menus enter over 240ms and fade out over 140ms (select lists also lift 4px); tooltips 110ms; dialogs 380ms with native close and focus, settling out over 180ms while their backdrop fades |
-| Page change | The page arrives over 380ms |
+| Page change | The page arrives over 380ms; returning from practice, the main navigation, section bar, and footer fade in with it instead of snapping |
+| Appearing in place | Checked feedback, a refused or failed Break it try, an empty result, the pattern verdict, the new Journal entry form, an opened preview and its out-of-date note, a newly planned day, and a track's intro and goal line rise 8px in over 240ms once, when inserted; typing and re-rendering never replay them |
+| Controls that appear | A search's clear button, Clear filters, the results link after a run, Close preview, an answer's tag, and the goal button settle in as a status chip does |
+| Search results | In the command palette, a result group fades and rises in when it first appears; rows inside it stay still while you type |
+| Checked answers | A lesson option marked Answer or Your choice, and a pattern choice marked Best fit, wash into their colours over 240ms in place; the heavier edge is an inset ring, so nothing shifts |
 | Out-of-date checks | Run invites a fresh run with one lime ring when an edit puts results out of date, then stays still |
 | Completion panel | Rises into the top of the Finish pane once and its check medallion pops in; a finished step's check pops into the step bar |
 | Reflection and sentence-starter chips | Hover takes the accent border and accent-soft wash; choosing a reflection chip pops its check in |
@@ -179,6 +183,7 @@ Motion acknowledges interaction and shows where something came from; it never de
 | Restore preview and receipt | The merge preview, an import error, and the post-merge receipt each rise in once where they appear |
 | Break it log | A new try slides into the top of the log over 180ms; on a catch the suspect's answer takes a strike, the check icon plays its reaction, and the catch card's meter segment fills once. No shaking or confetti; reduced motion shows the final state |
 | Hints and real check feedback | Reveal over 320ms. Results appear as soon as they arrive: no simulated checks, delayed acknowledgements, or artificial progress |
+| Closing | Only menus, select lists, dialogs and their backdrops, disclosures, and the checks drawer animate out. Everything else (feedback, forms, previews, notices) leaves at once, so the next state is never delayed |
 
 Practice steps select immediately; new pane content fades from 80% opacity for 120ms without translating, and rapid selections leave focus on the latest pane. Lesson rows, reading sheets, and editable forms stay stable: text fields and code never move on hover, and rows never inherit raised button shadows. Disabled controls stay still.
 
