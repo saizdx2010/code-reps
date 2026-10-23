@@ -43,6 +43,12 @@ const PracticeCatalog = lazyRoute(() => import('./PracticeCatalog').then(module 
 const QuickLessons = lazyRoute(() => import('./QuickLessons').then(module => module.default), 'The lessons', 'learn-main')
 const HistoryPage = lazyRoute(() => import('./HistoryPage').then(module => module.HistoryPage), 'Attempt history', 'history-main')
 const LearningHub = lazyRoute(() => import('./LearningHub').then(module => module.LearningHub), 'Learning tools', 'learning-hub')
+const TrackFinishPage = lazyRoute(() => import('./TrackFinish').then(module => module.default), 'Your finished track', 'progress-main')
+const StarterProgramPage = lazyRoute(
+  () => import('./StarterProgram').then(module => module.StarterProgramPage),
+  'Your first 4 weeks',
+  'progress-main',
+)
 
 const categories = [...new Set(reps.map(catalogTopic))].sort()
 // The Library lists topics in learning order inside their areas; other pages keep the alphabetical list.
@@ -79,6 +85,8 @@ type Props = {
   setPathId: (id: PathId) => void
   knowledgeSkill: string
   setKnowledgeSkill: (id: string) => void
+  /** The track a finished-track page shows. */
+  finishedPathId?: string
   walkthroughSeen: boolean
   launchWalkthrough: () => void
   setView: (view: View) => void
@@ -210,6 +218,7 @@ export function AppRoutes(props: Props) {
           onLearnerStart={props.onLearnerStart}
           history={history}
           now={now}
+          learning={fluency.state}
           warmup={props.warmup}
           startWarmup={props.startWarmup}
           startSet={props.startSet}
@@ -303,6 +312,44 @@ export function AppRoutes(props: Props) {
             restore={props.restore}
             serverReady={isServerReady()}
           />
+        </Suspense>
+      )
+    }
+    case 'finished':
+    case 'first-weeks': {
+      // Two pages reached from Skills; each loads with its own chunk and keeps the Skills back link while it does.
+      const title =
+        view === 'finished' ? (paths.find(path => path.id === props.finishedPathId)?.title ?? 'Finished track') : 'Your first 4 weeks'
+      return (
+        <Suspense
+          fallback={
+            <RouteLoading
+              back={{ label: 'Skills', onClick: () => setView('progress') }}
+              title={title}
+              status={`Opening ${title}…`}
+              className="progress-main"
+            />
+          }
+        >
+          {view === 'finished' ? (
+            <TrackFinishPage
+              pathId={props.finishedPathId ?? ''}
+              history={history}
+              now={now}
+              notes={fluency.state.notes}
+              openRep={openRep}
+              onOpenPath={openPath}
+            />
+          ) : (
+            <StarterProgramPage
+              history={history}
+              now={now}
+              fluency={fluency}
+              stages={goalTrail.stages}
+              openRep={openRep}
+              openLesson={openLesson}
+            />
+          )}
         </Suspense>
       )
     }

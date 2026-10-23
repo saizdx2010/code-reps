@@ -1,0 +1,86 @@
+/* The first four weeks (src/StarterProgram.tsx), loaded beside the trail and with its page. The Trail card reuses the
+   Today card's head, meter, and rows, so the two read as one family. */
+.starter-card {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.starter-card .today-rows {
+  margin: 0;
+  padding: 6px;
+}
+.starter-card .today-done {
+  border-bottom: 1px solid var(--success-border);
+}
+/* Straight after the head, the done note's own top line would double the head's divider. */
+.starter-card .today-plan-head + .today-done {
+  border-top: 0;
+}
+.starter-card .today-more {
+  margin: 0;
+  padding: 6px 16px 10px;
+}
+.starter-quiet {
+  margin: 0;
+  padding: 12px 16px;
+  color: var(--muted);
+  font-size: 14px;
+  list-style: none;
+}
+.starter-main .starter-facts {
+  margin: 4px 0 16px;
+}
+.starter-weeks {
+  margin-top: 12px;
+}
+.starter-weeks .starter-quiet {
+  padding: 8px 12px 14px;
+}
+.starter-reflection {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.starter-reflection h2 {
+  margin: 0 0 8px;
+  font-size: var(--type-section);
+}
+.starter-reflection .starter-lead {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 15px;
+}
+.starter-reflection .week-review-question {
+  max-width: 720px;
+}
+.starter-saved {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  max-width: 720px;
+}
+.starter-saved p {
+  margin: 0;
+}
+.starter-reflection .starter-reflection-body {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.starter-saved .text-button {
+  min-height: 32px;
+  padding: 2px 0;
+}
+
+/* Motion: the summary rises in a short cascade when the page arrives; a saved reflection rises in where the form was. */
+.starter-facts > div {
+  animation: rise-arrive 320ms var(--motion-ease) both;
+}
+.starter-facts > div:nth-child(2) {
+  animation-delay: 35ms;
+}
+.starter-facts > div:nth-child(3) {
+  animation-delay: 70ms;
+}

@@ -15,6 +15,7 @@ import { usePathText } from './usePathText'
 import type { getPracticePlan, PracticeAction } from './practice'
 import { withoutGoal } from './practice-actions'
 import type { PortableRecord } from './portability'
+import type { FluencyState } from './fluency'
 import type { SetItem } from './warmup'
 
 // Today's plan loads beside the trail; it starts loading as soon as Trail renders. If it cannot load, due reviews stay
@@ -43,6 +44,9 @@ const TodayPlan = lazy(() =>
   })),
 )
 
+// The first four weeks load beside the trail too; without them the trail and Today are unchanged.
+const StarterProgramCard = lazy(() => import('./StarterProgram').catch(() => ({ default: () => null })))
+
 // The first-rep walkthrough is authored for this rep only.
 const walkthroughRepId = 'declare-variables'
 
@@ -64,6 +68,7 @@ type Props = {
   onLearnerStart: (value: LearnerStart) => void
   history: PortableRecord[]
   now: number
+  learning: FluencyState
   warmup: string[]
   startWarmup: () => void
   startSet: (items: SetItem[]) => void
@@ -243,6 +248,16 @@ export function HomePage(props: Props) {
               </Button>
             </p>
           )}
+          <Suspense fallback={null}>
+            <StarterProgramCard
+              history={props.history}
+              now={props.now}
+              state={props.learning}
+              stages={trail.stages}
+              openRep={openRep}
+              openLesson={openLesson}
+            />
+          </Suspense>
           <nav className="trail-links" aria-label="Progress">
             <Button variant="text" onClick={onProgress}>
               View your progress

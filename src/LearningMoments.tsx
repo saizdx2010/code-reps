@@ -10,6 +10,8 @@ import type { SkillState, SkillStep } from './skill-map'
 import { formatDate, plural } from './ui-copy'
 import type { ChipTone } from './ui-status'
 import { useSessionPreference } from './useSessionPreference'
+import { CompletionMilestone } from './CompletionMilestone'
+import type { LearnerStart } from './learning'
 
 export type Moments = {
   history: PortableRecord[]
@@ -18,13 +20,18 @@ export type Moments = {
   /** The rep was completed in this view, so its steps are new and the skill map should replay them once. */
   fresh: boolean
   onSkillMap: () => void
+  /** The goal track, whose stage this attempt may finish. */
+  goalPathId: string
+  learnerStart: LearnerStart | null
+  onOpenRep: (repId: string) => void
 }
 
 /**
- * What one completed attempt shows about growth, in the completion panel: the skills it moved up and at most one
- * personal best. Both are worked out from saved attempts, so nothing is stored and backups are unchanged.
+ * What one completed attempt shows about growth, in the completion panel: the stage or track it finished, the skills it
+ * moved up, and at most one personal best. All are worked out from saved attempts, so nothing is stored and backups are
+ * unchanged.
  */
-export default function LearningMoments({ history, recordId, now, fresh, onSkillMap }: Moments) {
+export default function LearningMoments({ history, recordId, now, fresh, onSkillMap, ...milestone }: Moments) {
   // Worked out once per saved history, not on every keystroke elsewhere in the completion panel.
   const steps = useMemo(() => skillSteps(history, recordId, now), [history, recordId, now])
   const best = useMemo(() => personalBest(history, recordId, now), [history, recordId, now])
@@ -37,6 +44,7 @@ export default function LearningMoments({ history, recordId, now, fresh, onSkill
   }, [keys, pending, setPending])
   return (
     <>
+      <CompletionMilestone history={history} recordId={recordId} {...milestone} />
       <SkillStepNotice steps={steps} onSkillMap={onSkillMap} />
       <PersonalBestNote best={best} />
     </>

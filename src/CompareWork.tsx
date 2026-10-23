@@ -3,6 +3,7 @@ import './compare-work.css'
 import { confidenceLabels } from './attempt-labels'
 import type { Confidence } from './attempt-labels'
 import type { Attempt, AttemptRecord } from './attempt-store'
+import type { PortableRecord } from './portability'
 import { Button } from './Button'
 import { earlierWork, lineDiff, sharedShare, sideBySide } from './compare-work.ts'
 import type { SideLine } from './compare-work.ts'
@@ -13,7 +14,8 @@ import { repSummaryById, repTitle } from './rep-index.ts'
 import { StepIndicator } from './StepIndicator'
 import { formatDate, plural } from './ui-copy.ts'
 
-// Post-check and post-completion comparisons, loaded with the first one shown (src/PracticeSections.tsx).
+// Post-check and post-completion comparisons, loaded with the first one shown (src/PracticeSections.tsx), and a finished
+// track's first and last reps (src/TrackFinish.tsx).
 
 /** The learner's code beside the authored reference, shown only after every check passes. */
 export function ReferenceComparison({ yours, reference }: { yours: string; reference: string }) {
@@ -149,5 +151,42 @@ export function EarlierWork({ repId, attempt, history }: { repId: string; attemp
       })}
       <p className="then-now-prompt">What do you understand now that you did not then?</p>
     </details>
+  )
+}
+
+/**
+ * A finished track's first and last reps side by side, on its finish page. They are different tasks, so only the evidence
+ * and the writing compare, not the code. Only you against you: nothing here scores which is better.
+ */
+export function FirstAndLast({ first, last }: { first: PortableRecord; last: PortableRecord }) {
+  const [side, setSide] = useState<'now' | 'then'>('then')
+  const column = (record: PortableRecord, label: string, className: string) => (
+    <div className={className}>
+      <h4>
+        <Icon name="calendar" />
+        {formatDate(record.completedAt)} <span>{label}</span>
+      </h4>
+      <p className="first-last-rep">{repTitle(record.repId)}</p>
+      {attemptChips(record)}
+      {writing(record)}
+    </div>
+  )
+  return (
+    <div className="then-now first-last" data-side={side}>
+      <div className="segmented-control then-now-switch" role="group" aria-label="Show rep">
+        <StepIndicator active={side} selector="button[aria-pressed=true]" />
+        <Button aria-pressed={side === 'then'} onClick={() => setSide('then')}>
+          First rep
+        </Button>
+        <Button aria-pressed={side === 'now'} onClick={() => setSide('now')}>
+          Last rep
+        </Button>
+      </div>
+      <div className="then-now-columns">
+        {column(first, 'Your first rep in the track', 'then-now-then')}
+        {column(last, 'The rep that finished it', 'then-now-now')}
+      </div>
+      <p className="then-now-prompt">What do you understand now that you did not then?</p>
+    </div>
   )
 }
