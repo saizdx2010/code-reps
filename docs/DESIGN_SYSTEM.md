@@ -78,7 +78,8 @@ All components are app-owned. Extend these before writing page-specific markup. 
 
 | Component | Owner | Use |
 | --- | --- | --- |
-| `Button`, `Input`, `Select`, `DateInput`, `Tooltip`, `Icon` | `Button.tsx`, `Input.tsx`, `Select.tsx`, `DateInput.tsx`, `Tooltip.tsx`, `Icon.tsx` | All controls. Keep the existing action classes (`primary-button`, `reset-button`, `text-button`). |
+| `Button`, `Input`, `Select`, `DateInput`, `Tooltip`, `Icon` | `Button.tsx`, `Input.tsx`, `Select.tsx`, `DateInput.tsx`, `Tooltip.tsx`, `Icon.tsx` | All controls. Keep the existing action classes (`primary-button`, `reset-button`, `text-button`, `danger-button`). |
+| `Toggle` | `Button.tsx` | An on/off setting (Focus mode, Vim keys, Show Indonesian help): an `aria-pressed` button named by its setting, with an On or Off chip at its end, as Appearance's Dark mode row reads. Never a round checkbox or a label that changes its name |
 | `PageHeader` | `Layout.tsx` | Every page title, description, and header actions |
 | `InfoNote` | `Layout.tsx` | “ⓘ How evidence works” and other secondary explanation; never body paragraphs of caveats |
 | `StatusChip` + `statusTone` | `Layout.tsx`, `ui-status.ts` | Rep and path status: neutral, progress, success, attention |
@@ -107,6 +108,8 @@ Practice gives the working surfaces priority: one compact header row (back to th
 SQL reps add three pieces, all drawn from existing tokens. The brief has a Tables disclosure (leading chevron, open by default, remembered for the session) listing each table's name, row count, columns with types and keys in the code font, and the first three rows in a mini table that scrolls inside its own box. The editor tab reads `query.sql` and a footer line names SQLite and the rep's contract. A failed SQL check shows Expected and Received tables on the desk's `--surface-2` (stacked on phones) with a pinned row-number column, a wrong cell outlined in `--error` with the expected value beside it, extra and missing rows outlined with a text pill, NULL in muted italics, and one semibold sentence naming the first difference; SQLite's own error replaces the check list with the message, the line, and a caret.
 
 A Break it hunt replaces the editor, checks drawer, and run bar with its own desk in the same dark column (`src/BreakIt.tsx`, styles in `src/break-it.css`, loaded with the first hunt): the suspect under an editor-style `suspect.ts · Read only` bar, wrapped like the editor; **Your move** with a bugs-hidden `StatusChip`; one 40px field per parameter in the code font with a lime **Try it**; a refusal in the warning surface; the catch card on the desk's success surface with a segment per authored bug; and the log, one row per try with the number, the input in the code font, both answers, and a chip. A catch strikes the suspect's answer in the error colour and names it in the chip, so colour is never the only signal. On a narrow desk the answers and the chip drop under the input.
+
+The practice steps share one set of patterns. Sentence starters in Plan and Explain are the same pill chips as Finish's reflection answers (`.choice-chips` owns the shape). Understand, Plan, and Explain end with one footer: a divider, then a secondary **Go to {step}** button with an arrow at the right, as lesson sections end. The brief reads task, example, and task limits first in every format, then supporting material; the lesson before a rep follows them as a disclosure in the Plan brief's style. Finish's requirement chips name their state (Checks passed or Checks not passed yet) and only a met one carries a check; Complete rep is disabled, in a neutral fill, until nothing is missing, with the reason and a Go to link beside it. Tools keeps one order and left-aligned rows at every width: the two settings as `Toggle` rows, related concepts, then Reset rep in the danger style after a divider.
 
 Check results open as a drawer inside the dark coding desk, anchored above the run toolbar and limited to about half the desk (about a third beside a frontend preview); the editor shrinks rather than being covered. Use the desk's semantic surfaces for running, failed, and passed states. Keep passed cases visible with a status at the right; failed cases reveal one diagnostic at a time. After an edit the drawer turns neutral with an Out of date chip and dimmed outcomes, keeping the open diagnostic readable. The inline frontend preview is padded like the desk's other panels and keeps its state, viewport, Update, and Expand controls in one compact row.
 
@@ -166,7 +169,8 @@ Motion acknowledges interaction and shows where something came from; it never de
 | Page change | The page arrives over 380ms |
 | Out-of-date checks | Run invites a fresh run with one lime ring when an edit puts results out of date, then stays still |
 | Completion panel | Rises into the top of the Finish pane once and its check medallion pops in; a finished step's check pops into the step bar |
-| Reflection chips | Hover takes the accent border and accent-soft wash; choosing one pops its check in |
+| Reflection and sentence-starter chips | Hover takes the accent border and accent-soft wash; choosing a reflection chip pops its check in |
+| On/off setting (`Toggle`) | Hover takes the accent border and accent-soft wash; its On or Off chip settles in (as a status chip does) when the setting changes |
 | Hint question | The inline first-hint question settles in where the hint control was |
 | Checks sheet (phones) | Opening the sheet raises its contents into place once; closing is immediate |
 | Restore preview and receipt | The merge preview, an import error, and the post-merge receipt each rise in once where they appear |

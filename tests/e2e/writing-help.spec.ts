@@ -6,13 +6,17 @@ for (const width of [1280, 320]) {
     await page.setViewportSize({ width, height: 900 })
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('/#/practice/frontend-sort-table')
-    const help = page.getByRole('checkbox', { name: 'Show Indonesian help' })
-    await expect(help).not.toBeChecked()
+    // Indonesian help is an on/off toggle that says its state, like the other settings.
+    const help = page.getByRole('button', { name: 'Show Indonesian help', exact: true })
+    await expect(help).toHaveAttribute('aria-pressed', 'false')
+    await expect(help).toContainText('Off')
     await page.locator('.vocab > summary').click()
     await expect(page.locator('.vocab')).toContainText('Mutation')
     await expect(page.locator('.indonesian-gloss')).toHaveCount(0)
     await help.focus()
     await help.press('Space')
+    await expect(help).toHaveAttribute('aria-pressed', 'true')
+    await expect(help).toContainText('On')
     await expect(
       page
         .locator('.vocab p > span')
@@ -23,6 +27,12 @@ for (const width of [1280, 320]) {
     const plan = page.getByLabel('Your plan', { exact: true })
     await plan.fill('Keep the input unchanged.')
     const starter = page.getByRole('button', { name: 'My approach is', exact: true })
+    // Starters share the reflection chips' pill shape, and the step ends with the way to the next one.
+    const reflectionChip = page.locator('#review-section .choice-chips button').first()
+    expect(await starter.evaluate(element => getComputedStyle(element).borderRadius)).toBe(
+      await reflectionChip.evaluate(element => getComputedStyle(element).borderRadius),
+    )
+    await expect(page.locator('#plan-section > .step-next').getByRole('button')).toHaveText('Go to Solve')
     await starter.focus()
     await starter.press('Enter')
     await expect(plan).toBeFocused()
@@ -42,8 +52,9 @@ for (const width of [1280, 320]) {
     await page.reload()
     await expect(explanation).toHaveValue('This works because ')
     await page.getByRole('button', { name: 'Understand', exact: true }).click()
-    await expect(help).toBeChecked()
-    await help.uncheck()
+    await expect(help).toHaveAttribute('aria-pressed', 'true')
+    await help.click()
+    await expect(help).toHaveAttribute('aria-pressed', 'false')
     await expect(page.locator('.indonesian-gloss')).toHaveCount(0)
     await page.getByRole('button', { name: 'Explain', exact: true }).click()
     await expect(tips).toHaveCount(0)

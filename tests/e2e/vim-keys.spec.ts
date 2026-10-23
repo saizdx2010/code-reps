@@ -27,6 +27,10 @@ test('Vim keys edit the draft, run checks with :make, and survive a reload until
   await useTool(page, 'Vim keys')
   await expect(vimStatus(page)).toBeVisible()
   await expect(page.getByText('Vim keys · :make or Ctrl / ⌘ Enter to run')).toBeVisible()
+  // Tools shows the setting's state: the toggle keeps its name and reads On (the menu has closed, so find it by class).
+  const vimToggle = page.locator('.workspace-options .toggle-button', { hasText: 'Vim keys' })
+  await expect(vimToggle).toHaveAttribute('aria-pressed', 'true')
+  await expect(vimToggle).toContainText('On')
 
   await editor(page).focus()
   await expect(page.getByText('Vim normal mode')).toBeAttached()
@@ -65,8 +69,9 @@ test('Vim keys edit the draft, run checks with :make, and survive a reload until
   await expect.poll(() => savedCode(page)).toBe(`${solution}\n// vim`)
 
   // Turning it off restores ordinary typing without remounting the editor.
-  await useTool(page, 'Turn off Vim keys')
+  await useTool(page, 'Vim keys')
   await expect(vimStatus(page)).toHaveCount(0)
+  await expect(vimToggle).toHaveAttribute('aria-pressed', 'false')
   await editor(page).focus()
   // The cursor is still on the last line, where Vim left it.
   await page.keyboard.press('End')

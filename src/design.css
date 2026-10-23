@@ -390,6 +390,37 @@ main {
 .ui-button {
   max-width: 100%;
 }
+/* On/off settings (Toggle): the setting's name, then a chip reading On or Off, like Appearance's Dark mode. */
+.toggle-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: var(--control-height);
+  padding: 6px 8px 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  text-align: left;
+}
+.toggle-button > span {
+  min-width: 42px;
+  padding: 2px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: var(--type-meta);
+  font-weight: 600;
+  text-align: center;
+}
+.toggle-button[aria-pressed='true'] > span {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
 .starting-point h2 {
   font-size: var(--type-section);
 }
@@ -1083,12 +1114,19 @@ footer {
   background: var(--surface);
   box-shadow: var(--shadow-menu);
 }
-.workspace-knowledge {
+/* Settings first, then related concepts, then Reset rep apart from the rest: a divider starts each later group, and every
+   row reads from the left at every width. */
+.workspace-knowledge,
+.workspace-reset {
   display: grid;
   gap: 8px;
-  padding-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
   font-size: 13px;
   color: var(--muted);
+}
+.workspace-reset .danger-button {
+  text-align: left;
 }
 .workspace-knowledge button {
   min-height: 36px;
@@ -1522,17 +1560,10 @@ footer {
   font-size: 14px;
   line-height: 1.7;
 }
+/* The lesson before a rep follows the task as the Plan step's brief disclosure, between dividers. */
 .rep-lesson {
-  margin-bottom: 28px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--border);
-}
-.rep-lesson h2 {
-  font-size: var(--type-section);
-}
-.rep-lesson p {
-  font-size: 15px;
-  color: var(--muted);
+  margin-top: 22px;
+  border-top: 1px solid var(--border);
 }
 .rep-lesson pre {
   white-space: pre;
@@ -1553,9 +1584,13 @@ footer {
   font-size: 13px;
   margin-top: 10px;
 }
-.plan-to-code,
+/* Each step ends the same way, like a lesson's sections: a divider, then Go to the next step at the right. */
 .step-next {
-  margin-top: 22px;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 28px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
 }
 .plan-brief {
   margin: 0 0 22px;
@@ -1614,13 +1649,14 @@ footer {
   list-style: none;
   font-size: 13px;
 }
-/* Requirements read as chips: done in the success tone, still needed outlined, reflection dashed and optional. */
+/* Requirements read as chips that say where they stand: done in the success tone with a check, still needed outlined
+   and named as needed, reflection dashed and optional. Only a met requirement carries a mark. */
 .completion-checklist li {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   min-height: 28px;
-  padding: 3px 10px 3px 8px;
+  padding: 3px 10px;
   border: 1px solid var(--border-strong);
   border-radius: 999px;
   color: var(--text);
@@ -1630,6 +1666,7 @@ footer {
   height: 14px;
 }
 .completion-checklist .done {
+  padding-left: 8px;
   border-color: var(--success-border);
   background: var(--success-soft);
   color: var(--success);
@@ -1641,30 +1678,28 @@ footer {
 .completion-checklist .optional .optional-note {
   margin-left: 0;
 }
-.explain-actions {
-  display: grid;
-  gap: 10px;
-}
+/* Complete rep and, while it waits, the reason beside it with a link to the missing step. */
+.explain-actions,
 .finish-note {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  gap: 10px 16px;
+}
+.finish-note {
   gap: 2px 12px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
 }
 .finish-note .missing-work {
   min-height: 32px;
   padding: 4px 0;
 }
-.explain-actions .finish-button {
-  justify-self: start;
-}
-.finish-note {
-  margin: 6px 0;
+.finish-button:disabled {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
   color: var(--muted);
-  font-size: 14px;
-}
-.finish-note.success {
-  color: var(--success);
 }
 /* After passing, the reference trace leads the Explain step instead of hiding inside the model answer. */
 .see-it-run {
@@ -3459,7 +3494,7 @@ dialog.preview-inline {
     order: 1;
     border-right: 0;
   }
-  .workspace-actions .reset-button {
+  .workspace-actions > .reset-button {
     order: 2;
     margin-left: auto;
   }
@@ -4720,27 +4755,15 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
   border-bottom: 0;
 }
 
+/* Sentence starters use the reflection chips (.choice-chips), between the field's label and the field. */
 .sentence-starters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-.sentence-starters .ui-button {
-  padding-inline: 10px;
-  font-size: 13px;
+  margin: 0 0 10px;
 }
 .indonesian-help {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: var(--control-height);
   margin-top: 18px;
-  color: var(--muted);
-  font-size: 14px;
 }
 .indonesian-help + .vocab {
-  margin-top: 6px;
+  margin-top: 14px;
 }
 .indonesian-gloss {
   color: var(--muted);

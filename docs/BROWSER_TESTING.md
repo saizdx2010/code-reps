@@ -24,7 +24,8 @@ Use `E2E_PORT=4203 yarn test:e2e` to select another dedicated port. Ordinary ass
 - Switch practice steps and task/code panes at a 390px viewport, preserve the plan, run checks, exit the editor with Tab, and check for page overflow.
 - Choose and revise a first-run starting point, preserve it on reload, and navigate back from the recommended rep.
 - Open failed checks one at a time with the keyboard, keeping structured input and value comparisons.
-- Follow the practice steps through missing requirements, explanation, reflection, completion, and reload. An unhinted solve before its guided journey must not establish independence.
+- Follow the practice steps through missing requirements, explanation, reflection, completion, and reload. While a requirement is missing, its chip says so without a check and Complete rep stays disabled with the reason beside it. An unhinted solve before its guided journey must not establish independence.
+- Read the brief of a core, SQL, Break it, frontend, and Game of Life rep in the same order: the task and example before the lesson before the rep and How this is checked (`tests/e2e/practice.spec.ts`). Open Tools at 1440px and 390px: the same rows in the same order, reading from the left, with Focus mode and Vim keys reading On or Off and Reset rep in the danger style (`tests/e2e/practice-nav.spec.ts`).
 - Navigate lesson sections, preserve checked predictions and self-review evidence on reload, and select a path through the narrow-screen chooser.
 - Use app-owned dropdowns with label clicks, arrow keys, typeahead, Escape cancellation, Tab selection, and reload persistence; verify their popup fits a narrow viewport and opens inside the Profiles dialog.
 - Navigate the history calendar across month boundaries and leap days, cancel without changing the filter, select and reload a date, and clear it.

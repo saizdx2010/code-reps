@@ -58,3 +58,46 @@ test('a phone keeps the back link, the stepper, Glossary, and Tools on one row',
   await back.click()
   await expect(page).toHaveURL(/#\/home$/)
 })
+
+for (const width of [1440, 390]) {
+  test(`Tools keeps one order and reads from the left at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/#/practice/count-above-threshold')
+    const tools = page.locator('.workspace-options')
+    await tools.locator('> summary').click()
+    // Settings, related concepts, then Reset rep apart from the rest, in that order at every width.
+    const rows = await tools.locator('> div > *').evaluateAll(elements =>
+      elements.map(element => {
+        const box = element.getBoundingClientRect()
+        // A toggle's first text is its name; its On or Off chip follows.
+        const text = element.matches('.workspace-knowledge') ? 'Related concepts' : element.firstChild?.textContent
+        return { text, top: box.top, left: box.left, width: box.width }
+      }),
+    )
+    expect(rows.map(row => row.text)).toEqual(['Focus mode', 'Vim keys', 'Related concepts', 'Reset rep'])
+    expect(rows.map(row => row.top)).toEqual([...rows.map(row => row.top)].sort((a, b) => a - b))
+    for (const row of rows) {
+      expect(Math.abs(row.left - rows[0].left)).toBeLessThan(1)
+      expect(Math.abs(row.width - rows[0].width)).toBeLessThan(1)
+    }
+    const reset = tools.getByRole('button', { name: 'Reset rep', exact: true })
+    await expect(reset).toHaveClass(/danger-button/)
+    const resetText = await reset.evaluate(element => {
+      const range = document.createRange()
+      range.selectNodeContents(element)
+      return range.getBoundingClientRect().left - element.getBoundingClientRect().left
+    })
+    expect(resetText).toBeLessThan(20)
+    // Focus mode and Vim keys are settings: each says whether it is on.
+    const focus = tools.getByRole('button', { name: 'Focus mode', exact: true })
+    await expect(focus).toHaveAttribute('aria-pressed', 'false')
+    await expect(focus).toContainText('Off')
+    await focus.click()
+    await expect(page.locator('main.focus-mode')).toBeVisible()
+    await tools.locator('> summary').click()
+    await expect(focus).toHaveAttribute('aria-pressed', 'true')
+    await expect(focus).toContainText('On')
+    await page.keyboard.press('Escape')
+    await expect(tools).not.toHaveAttribute('open', '')
+  })
+}

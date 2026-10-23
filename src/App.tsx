@@ -459,7 +459,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   const canFinish = allPassed && !planMissing && !explainMissing
   const finishMissing = planMissing ? 'a plan' : !stepDone.solve ? 'passing checks' : explainMissing ? 'an explanation' : undefined
   const canComplete = !!canFinish && !attempt.completedAt
-  // Complete stays a normal button. When something is missing, it moves the learner to that step instead of doing nothing.
+  // Complete is disabled while something is missing; the note beside it links to that step.
   function showMissingStep() {
     if (missingStep) revealSection(stepSection(missingStep))
   }
