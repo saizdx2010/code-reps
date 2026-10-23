@@ -96,7 +96,7 @@ Home is the learner's trail: the chosen track drawn as stages of connected nodes
 - Node shapes: square for a lesson (placed once, immediately before the first rep that uses it), circle for a rep, flag for a project milestone or an external project (whose stage count reads "Self-review" instead of a number), repeat icon for a recall rep.
 - Node states: completed nodes use the dark action fill with a check; the single next rep uses the lime ring, a Next chip, and `aria-current="step"` (Next · In progress when it is also a draft); drafts use the accent outline and an In progress chip; recall that is not yet due uses a dashed outline and says when it becomes available. The next node is the recommended rep whenever that rep is on the trail.
 - Rows are one line: the title, a level chip only when the rep's level differs from its stage's range, and the state at the far edge (wrapping below the title on phones). Not started is announced but not printed; journey evidence appears once a journey has some.
-- Stages are native disclosures. The current stage and an unfinished first stage start open; project stages stay open. Completed stages show a check in their index.
+- Stages are native disclosures. One stage starts open: the current stage, or an unfinished first stage when none is current; project stages stay open. A folded stage is a single line (index, title, count); its description and level chip show only while open. Completed stages show a check in their index.
 - Returning learners start after the leading language-basics stages, the same reps the practice plan skips.
 - Generic “Application” roles are not labelled; Guided, Independent, and Recall are.
 

@@ -34,6 +34,7 @@ export default function TodayPlan({
   now,
   practicePlan,
   hasNext,
+  nextRepId,
   where,
   onOpen,
   onAllReviews,
@@ -45,6 +46,8 @@ export default function TodayPlan({
   now: number
   practicePlan: Pick<ReturnType<typeof getPracticePlan>, 'next' | 'recommended' | 'due'>
   hasNext: boolean
+  /** The rep the panel above recommends; its row here says so instead of repeating its due state. */
+  nextRepId?: string
   where: (repId: string) => string
   onOpen: (item: TodayItem) => void
   onAllReviews: () => void
@@ -69,15 +72,21 @@ export default function TodayPlan({
   const isFresh = (item: TodayItem) => item.done && fresh.has(item.repId)
   const set = setOrder(plan.items)
   // Offered beside Today's plan; on its own when there is no plan to show.
+  // One quiet line, not a third card: the reps it holds are named once it starts.
   const warmupPanel = warmup.length >= 2 && (
     <section className="warmup-panel" aria-labelledby="warmup-heading">
-      <h2 id="warmup-heading">Quick warm-up</h2>
-      <p>
-        {warmup.length} short reps you finished before, least recent first: {warmup.map(repTitle).join(', ')}. Each starts from the starter,
-        and finishing one counts like any other attempt.
-      </p>
-      <Button onMouseEnter={() => preloadPractice(warmup[0])} onFocus={() => preloadPractice(warmup[0])} onClick={startWarmup}>
+      <div>
+        <h2 id="warmup-heading">Quick warm-up</h2>
+        <p title={warmup.map(repTitle).join(', ')}>{warmup.length} short reps you finished before</p>
+      </div>
+      <Button
+        variant="text"
+        onMouseEnter={() => preloadPractice(warmup[0])}
+        onFocus={() => preloadPractice(warmup[0])}
+        onClick={startWarmup}
+      >
         Start warm-up
+        <Icon name="arrow" />
       </Button>
     </section>
   )
@@ -109,9 +118,13 @@ export default function TodayPlan({
               title={repTitle(item.repId)}
               meta={`${item.kind === 'new' ? 'New rep' : 'Review'} · ${where(item.repId)}`}
               status={
-                <StatusChip tone={item.done ? 'success' : item.kind === 'review' ? 'attention' : 'neutral'}>
-                  {item.done ? 'Done' : item.kind === 'review' ? 'Due' : 'New'}
-                </StatusChip>
+                item.done ? (
+                  <StatusChip tone="success">Done</StatusChip>
+                ) : item.repId === nextRepId ? (
+                  <StatusChip tone="progress">Up next</StatusChip>
+                ) : (
+                  <StatusChip tone={item.kind === 'review' ? 'attention' : 'neutral'}>{item.kind === 'review' ? 'Due' : 'New'}</StatusChip>
+                )
               }
               onOpen={() => onOpen(item)}
               onPreview={() => preloadPractice(item.repId)}
@@ -128,8 +141,8 @@ export default function TodayPlan({
         )}
         {set.length >= 2 && (
           <p className="today-set">
+            {/* The panel above holds the one primary action; the set is the secondary way through all of Today. */}
             <Button
-              variant="primary"
               onMouseEnter={() => preloadPractice(set[0].repId)}
               onFocus={() => preloadPractice(set[0].repId)}
               onClick={() => onStartSet(set)}
@@ -139,8 +152,8 @@ export default function TodayPlan({
             </Button>
             <span>
               {set.some(item => item.kind === 'review') && set.some(item => item.kind === 'new')
-                ? 'Warm up with the reviews, then the new rep. Each one leads to the next.'
-                : 'Each one leads to the next.'}
+                ? 'Reviews first, then the new rep, one after another.'
+                : 'One after another.'}
             </span>
           </p>
         )}

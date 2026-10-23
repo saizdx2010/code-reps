@@ -89,7 +89,8 @@ test("Trail's Today plan lists the new rep and due reviews, then says when today
   await expect(rows.nth(0)).toContainText('New rep')
   await expect(rows.nth(0).locator('.status-chip')).toHaveText('New')
   await expect(rows.nth(1)).toContainText('Count values above a limit')
-  await expect(rows.nth(1).locator('.status-chip')).toHaveText('Due')
+  // The review the panel above recommends says so, rather than repeating its due state.
+  await expect(rows.nth(1).locator('.status-chip')).toHaveText('Up next')
   await expect(rows.nth(2)).toContainText('Declare a value')
   await rows.nth(1).getByRole('button').click()
   await expect(page).toHaveURL(/#\/practice\/count-above-threshold$/)

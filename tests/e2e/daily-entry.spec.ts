@@ -7,7 +7,7 @@ for (const width of [1280, 390]) {
     await page.locator('.starting-point-settings > summary').click()
     await page.getByRole('button', { name: /New to coding/ }).click()
     await page.goto('/#/home')
-    await expect(page.getByText('Your trail · Active learning goal')).toBeVisible()
+    await expect(page.locator('.page-header').getByText('Your goal', { exact: true })).toBeVisible()
     await expect(page.getByText('Browsing another track does not change your learning goal.')).toHaveCount(0)
     await expect(page.getByText('Plan this week')).toHaveCount(0)
     await expect(page.getByText('How a rep works', { exact: true })).toHaveCount(0)

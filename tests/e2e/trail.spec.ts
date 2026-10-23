@@ -54,8 +54,9 @@ test('with two drafts, the panel, the trail, and Also waiting never disagree', a
 test('Back to Trail restores the scroll position and puts focus on the page', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/#/home')
-  await page.locator('.path-stage').nth(2).locator('summary').click()
+  // The current stage starts open; open two more so the page can scroll that far.
   await page.locator('.path-stage').nth(3).locator('summary').click()
+  await page.locator('.path-stage').nth(4).locator('summary').click()
   await page.evaluate(() => window.scrollTo(0, 900))
   await expect.poll(() => page.evaluate(() => Math.round(scrollY))).toBe(900)
   // A pointer click would first scroll the tab at the top into view, which really does move the page; dispatch the click

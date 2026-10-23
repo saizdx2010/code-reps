@@ -122,6 +122,29 @@ export function HomePage(props: Props) {
   return (
     <main className="home-main trail-home" id="top">
       <div className="trail-layout">
+        {/* The goal's heading comes first in reading order, so on a phone the page starts with its title, not a panel. */}
+        <div className="trail-head">
+          <PageHeader
+            eyebrow="Your goal"
+            title={goal.title}
+            description={`${trail.done} of ${trail.total} reps completed`}
+            actions={
+              <Button variant="text" onClick={() => onPath(goal.id)}>
+                View or choose goal
+              </Button>
+            }
+          />
+          <div
+            className="path-progress"
+            role="progressbar"
+            aria-label="Trail progress"
+            aria-valuenow={trail.done}
+            aria-valuemin={0}
+            aria-valuemax={trail.total}
+          >
+            <span style={{ width: `${trail.total ? (trail.done / trail.total) * 100 : 0}%` }} />
+          </div>
+        </div>
         <aside className="trail-aside" aria-label="Up next">
           {recommendation && recommendedRep ? (
             <section className="continue-panel" aria-labelledby="continue-heading">
@@ -193,7 +216,8 @@ export function HomePage(props: Props) {
               now={props.now}
               practicePlan={practicePlan}
               hasNext={Boolean(recommendation)}
-              where={where}
+              nextRepId={recommendation?.repId}
+              where={repId => (stageOf(repId) >= 0 ? stageNumber(stageOf(repId)) : where(repId))}
               onOpen={item => (item.action ? openPracticeAction(item.action) : props.openRep(item.repId))}
               onAllReviews={props.onProgress}
               onStartSet={props.startSet}
@@ -231,26 +255,6 @@ export function HomePage(props: Props) {
           </nav>
         </aside>
         <section className="trail-column home-goal" aria-label="Learning goal">
-          <PageHeader
-            eyebrow="Your trail · Active learning goal"
-            title={goal.title}
-            description={`${trail.done} of ${trail.total} reps completed. Lessons appear just before the reps that use them.`}
-            actions={
-              <Button variant="text" onClick={() => onPath(goal.id)}>
-                View or choose goal
-              </Button>
-            }
-          />
-          <div
-            className="path-progress"
-            role="progressbar"
-            aria-label="Trail progress"
-            aria-valuenow={trail.done}
-            aria-valuemin={0}
-            aria-valuemax={trail.total}
-          >
-            <span style={{ width: `${trail.total ? (trail.done / trail.total) * 100 : 0}%` }} />
-          </div>
           <Trail
             stages={trail.stages}
             text={pathText?.stageTexts[goal.id]}
