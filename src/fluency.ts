@@ -36,8 +36,12 @@ export type InterviewRound = {
 export type NextUp = { repId: string; note: string; setAt: string }
 export type FluencyState = {
   version: 1
-  /** `weekly` is the practice days a week the learner aims for; without it, the number of practice days (or three). */
-  goal: { pathId: string; minutes: number; days: number[]; weekly?: number }
+  /**
+   * `weekly` is the practice days a week the learner aims for; without it, the number of practice days (or three).
+   * `time` is the practice time on those days (24-hour HH:MM) for a calendar file and reminders; `remind` asks for a
+   * reminder at that time while Code Reps is open.
+   */
+  goal: { pathId: string; minutes: number; days: number[]; weekly?: number; time?: string; remind?: boolean }
   answers: Record<string, { choice: number; correct: boolean; answeredAt: string; response?: string }>
   reviews: Record<string, SelfReview>
   notes: LearningNote[]
@@ -46,7 +50,10 @@ export type FluencyState = {
   diagnosticStartedAt?: string
   rounds: InterviewRound[]
   nextUp?: NextUp
+  /** One line on why the learner practices, shown when they come back after a break. */
+  reason?: string
 }
+export const reasonLimit = 160
 export const fluencyKey = 'code-reps:fluency:v1'
 export const emptyFluency = (): FluencyState => ({
   version: 1,
@@ -91,6 +98,9 @@ export function parseFluency(raw: unknown): FluencyState {
     raw.goal.days.some(d => !Number.isInteger(d) || d < 0 || d > 6) ||
     new Set(raw.goal.days).size !== raw.goal.days.length ||
     (raw.goal.weekly !== undefined && (!Number.isInteger(raw.goal.weekly) || Number(raw.goal.weekly) < 1 || Number(raw.goal.weekly) > 7)) ||
+    (raw.goal.time !== undefined && (typeof raw.goal.time !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(raw.goal.time))) ||
+    (raw.goal.remind !== undefined && typeof raw.goal.remind !== 'boolean') ||
+    (raw.reason !== undefined && !text(raw.reason, reasonLimit)) ||
     !isPlainObject(raw.answers) ||
     !isPlainObject(raw.reviews) ||
     !Array.isArray(raw.notes) ||
@@ -201,6 +211,7 @@ export function mergeFluency(base: FluencyState, mine: FluencyState, theirs: Flu
     noteDraft: field('noteDraft'),
     diagnosticStartedAt: field('diagnosticStartedAt'),
     nextUp: field('nextUp'),
+    reason: field('reason'),
     answers: mergeRecord(base.answers, mine.answers, theirs.answers),
     reviews: mergeRecord(base.reviews, mine.reviews, theirs.reviews),
     notes: mergeById(base.notes, mine.notes, theirs.notes),
@@ -210,6 +221,7 @@ export function mergeFluency(base: FluencyState, mine: FluencyState, theirs: Flu
   if (merged.noteDraft === undefined) delete merged.noteDraft
   if (merged.diagnosticStartedAt === undefined) delete merged.diagnosticStartedAt
   if (merged.nextUp === undefined) delete merged.nextUp
+  if (merged.reason === undefined) delete merged.reason
   return merged
 }
 export const recallVariants: Record<string, string[]> = {

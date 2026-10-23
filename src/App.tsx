@@ -494,6 +494,30 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
       : reps.find(item => item.id === nextRepInPath(fluency.state.goal.pathId, repId, id => completedPathIds.has(id) || !recallReady(id)))
   const completionNext = pathNextRep ? { repId: pathNextRep.id, mode: 'start' } : recommendation
   const today = String(dayNumber(new Date(now)))
+  // Signals outside the page, loaded only when there is one to send: the installed app's badge counts due reviews,
+  // and an optional reminder waits for the practice time while Code Reps is open (src/reminders.ts).
+  const dueCount = practicePlan.due.length
+  const goal = fluency.state.goal
+  const reminder = goal.remind ? JSON.stringify({ days: goal.days, time: goal.time, reason: fluency.state.reason }) : ''
+  const practicedToday = useRef(false)
+  useEffect(() => {
+    practicedToday.current = history.some(record => String(dayNumber(new Date(record.completedAt))) === today)
+  }, [history, today])
+  useEffect(() => {
+    if (!reminder && !('setAppBadge' in navigator)) return
+    let stop: (() => void) | undefined
+    let active = true
+    import('./reminders').then(
+      module => {
+        if (active) stop = module.appSignals({ dueCount, reminder, practicedToday: () => practicedToday.current })
+      },
+      () => {},
+    )
+    return () => {
+      active = false
+      stop?.()
+    }
+  }, [dueCount, reminder])
   const closeDay = () => setClosedDay(today)
   const warmupAt = warmupPosition(parseWarmup(warmup), repId)
   const setItems = parseSet(todaySet)

@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script>
       try {
@@ -12,6 +14,18 @@
         document.querySelector('link[rel=icon]').href = document.documentElement.dataset.palette === 'sage' ? '/favicon.svg' : '/favicon-' + document.documentElement.dataset.palette + '.svg'
         document.documentElement.dataset.theme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
       } catch { document.documentElement.dataset.theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light' }
+    </script>
+    <script>
+      // The browser's install offer fires once, early; it is kept for the practice plan page (src/install-prompt.ts).
+      addEventListener('beforeinstallprompt', event => {
+        event.preventDefault()
+        window.codeRepsInstall = event
+        dispatchEvent(new Event('code-reps-install'))
+      })
+      addEventListener('appinstalled', () => {
+        window.codeRepsInstall = null
+        dispatchEvent(new Event('code-reps-install'))
+      })
     </script>
     <!-- First-paint styles must work before external CSS or JavaScript arrives. -->
     <style>

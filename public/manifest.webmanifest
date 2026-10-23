@@ -1,0 +1,15 @@
+{
+  "name": "Code Reps",
+  "short_name": "Code Reps",
+  "description": "Free, local coding practice: understand, plan, solve, explain, review.",
+  "start_url": "/#/home",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f0f4ed",
+  "theme_color": "#303f38",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

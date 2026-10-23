@@ -953,3 +953,27 @@
     overflow-wrap: anywhere;
   }
 }
+/* Come back on time: the learner's reason, the practice time, and the bridges out of the app. */
+.come-back-settings {
+  display: grid;
+  gap: 18px;
+}
+.come-back-reason {
+  display: grid;
+  gap: 8px;
+}
+.come-back-settings .hub-form-row {
+  max-width: 220px;
+}
+.come-back-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+.come-back-settings [role='status'] {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  animation: notice-rise 240ms var(--motion-ease) both;
+}

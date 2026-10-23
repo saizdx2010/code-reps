@@ -223,6 +223,9 @@ export function AppRoutes(props: Props) {
           dayClosed={props.dayClosed}
           onCloseDay={props.onCloseDay}
           onReopenDay={props.onReopenDay}
+          reason={fluency.state.reason}
+          onSaveReason={reason => fluency.update({ ...fluency.state, reason })}
+          onWeeklyTarget={setWeeklyTarget}
         />
       )
     case 'catalog':

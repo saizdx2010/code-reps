@@ -1,0 +1,94 @@
+/* Coming back on Trail: the welcome after a break, and the note when the rhythm slows. */
+.welcome-back {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--feature-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  animation: rise-arrive 320ms var(--motion-ease) both;
+}
+.welcome-back .home-label {
+  margin: 0;
+  color: var(--muted);
+}
+.welcome-back h2 {
+  margin: 0;
+  font-size: var(--type-card);
+}
+.welcome-back > p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.welcome-back-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 4px;
+}
+.welcome-back-actions .text-button {
+  min-height: 32px;
+  padding: 4px 0;
+}
+.welcome-back .welcome-reason figcaption {
+  color: var(--muted);
+}
+.welcome-back .welcome-reason blockquote {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.reason-prompt {
+  display: grid;
+  gap: 6px;
+}
+.reason-prompt label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 550;
+}
+.reason-prompt > div {
+  display: flex;
+  gap: 8px;
+}
+.reason-prompt .ui-input {
+  flex: 1;
+}
+.reason-prompt [role='alert'] {
+  margin: 0;
+  color: var(--error);
+  font-size: 13px;
+}
+.rhythm-nudge {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  animation: notice-rise 240ms var(--motion-ease) both;
+}
+.rhythm-nudge h2 {
+  margin: 0;
+  font-size: 15px;
+}
+.rhythm-nudge p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.rhythm-nudge-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 4px;
+}
+.rhythm-nudge-actions .text-button {
+  min-height: 32px;
+  padding: 4px 0;
+}

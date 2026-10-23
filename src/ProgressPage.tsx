@@ -13,6 +13,9 @@ import './progress.css'
 import type { paths } from './path'
 import { profileProgress } from './profile-progress'
 import { weekProgress } from './week-progress'
+import { rhythmDrop } from './come-back'
+import { RhythmNudge } from './ComeBack'
+import { dayNumber } from './dates'
 import { Select } from './Select'
 import type { PortableRecord } from './portability'
 import type { BackupPreview, RestoreFlow } from './backup'
@@ -65,6 +68,9 @@ export function ProgressPage(props: Props) {
   // Worked out once per saved history and clock tick, not on every render of the restore controls below.
   const summary = useMemo(() => profileProgress(history, new Date(now)), [history, now])
   const week = useMemo(() => weekProgress(history, props.weeklyTarget, new Date(now)), [history, props.weeklyTarget, now])
+  const drop = useMemo(() => rhythmDrop(history, new Date(now)), [history, now])
+  const today = String(dayNumber(new Date(now)))
+  const [nudgeSkipped, setNudgeSkipped] = useSessionPreference<string>('rhythm-nudge', '')
   const badges = useMemo(() => profileBadges(history, new Date(now)), [history, now])
   const earned = badges.filter(badge => badge.earned)
   const open = (badge: Badge) =>
@@ -144,6 +150,15 @@ export function ProgressPage(props: Props) {
         </EmptyState>
       ) : (
         <>
+          {drop && nudgeSkipped !== today && (
+            <RhythmNudge
+              drop={drop}
+              target={props.weeklyTarget}
+              onTarget={props.onWeeklyTarget}
+              onOpen={onOpenRep}
+              onDismiss={() => setNudgeSkipped(today)}
+            />
+          )}
           <dl className="progress-summary profile-summary" aria-label="Practice summary">
             <div className="progress-days practice-rhythm">
               <dt className="visually-hidden">Practice rhythm</dt>

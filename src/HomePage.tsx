@@ -48,6 +48,9 @@ const TodayPlan = lazy(() =>
 // Done for today replaces the aside once the learner stops; it loads only then.
 const DayClosed = lazy(() => import('./DayClosed'))
 
+// Coming back after a break, or when the rhythm slows: the slot decides whether it has anything to say.
+const ComeBackSlot = lazy(() => import('./ComeBack'))
+
 // The first-rep walkthrough is authored for this rep only.
 const walkthroughRepId = 'declare-variables'
 
@@ -81,6 +84,9 @@ type Props = {
   dayClosed: boolean
   onCloseDay: () => void
   onReopenDay: () => void
+  reason?: string
+  onSaveReason: (reason: string) => boolean
+  onWeeklyTarget: (days: number) => void
 }
 
 const modeLabel = (mode?: string) =>
@@ -142,6 +148,22 @@ export function HomePage(props: Props) {
         mode: props.history.some(record => record.repId === planned.repId) ? 'review' : 'start',
       })
     : null
+  // A rep finished before, other than the one the panel below suggests, to ease back in with.
+  const familiar = [
+    ...warmup,
+    ...[...props.history].sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt)).map(record => record.repId),
+  ].find(repId => repId !== recommendation?.repId && repSummaryById.has(repId))
+  const comeBack = {
+    history: props.history,
+    now: props.now,
+    reason: props.reason,
+    onSaveReason: props.onSaveReason,
+    familiar,
+    target: props.weeklyTarget,
+    onTarget: props.onWeeklyTarget,
+    onOpenReview: (repId: string) => openPracticeAction({ repId, reason: '', mode: 'review' }),
+    onOpenRep: openRep,
+  }
   const nextChoices = [...(recommendation ? [recommendation] : []), ...practicePlan.due, ...practicePlan.unfinished]
     .filter((action, index, list) => list.findIndex(other => other.repId === action.repId) === index)
     .slice(0, 6)
@@ -192,6 +214,9 @@ export function HomePage(props: Props) {
             </Suspense>
           ) : (
             <>
+              <Suspense fallback={null}>
+                <ComeBackSlot place="welcome" {...comeBack} />
+              </Suspense>
               {planned && plannedAction ? (
                 <section className="continue-panel planned-panel" aria-labelledby="continue-heading">
                   <div>
@@ -302,6 +327,9 @@ export function HomePage(props: Props) {
                   startWarmup={startWarmup}
                   onCloseDay={props.onCloseDay}
                 />
+              </Suspense>
+              <Suspense fallback={null}>
+                <ComeBackSlot place="rhythm" {...comeBack} />
               </Suspense>
               {draft && (
                 <ListGroup title="Also waiting" open>
