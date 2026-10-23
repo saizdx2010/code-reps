@@ -6,7 +6,19 @@ import { repIndex as reps } from './catalog-index.ts'
 type TrailNodeState = 'done' | 'next' | 'draft' | 'later' | 'open'
 export type TrailNode =
   | { kind: 'lesson'; id: string; skillId: string; title: string; state: 'done' | 'open' }
-  | { kind: 'rep'; id: string; repId: string; title: string; role: string; state: TrailNodeState; inProgress: boolean }
+  | {
+      kind: 'rep'
+      id: string
+      repId: string
+      title: string
+      role: string
+      state: TrailNodeState
+      inProgress: boolean
+      /** When the rep was first completed (ms), for the walked part of the line. */
+      completedAt?: number
+      /** When a recall rep that is waiting opens (ms). */
+      recallAt?: number
+    }
   | { kind: 'project'; id: string; repId: string; title: string; reason: string; state: 'done' | 'open' }
   /** A self-reviewed project outside Code Reps: shown on the trail, never counted, never marked done. */
   | { kind: 'external'; id: string; projectId: string; title: string; reason: string; state: 'open' }
@@ -30,6 +42,10 @@ type TrailInput = {
   skipStages?: number
   /** The recommended rep. When it is on this trail and available, it is the trail's next node, so the two never disagree. */
   focusRepId?: string
+  /** First completion time of a rep (ms), when known. */
+  completedAt?: (repId: string) => number | undefined
+  /** When a waiting recall rep opens (ms), when known. */
+  recallAt?: (repId: string) => number | undefined
 }
 
 /** Interleave lessons before the first rep that needs them, mark each rep's state, and end with project milestones. */
@@ -71,7 +87,19 @@ export function buildTrail(pathId: string, input: TrailInput): { stages: TrailSt
             : inProgress
               ? 'draft'
               : 'open'
-      nodes.push({ kind: 'rep', id: `rep:${repId}`, repId, title: rep.title, role: repCurriculumRole(repId), state, inProgress })
+      const completedAt = state === 'done' ? input.completedAt?.(repId) : undefined
+      const recallAt = state === 'later' ? input.recallAt?.(repId) : undefined
+      nodes.push({
+        kind: 'rep',
+        id: `rep:${repId}`,
+        repId,
+        title: rep.title,
+        role: repCurriculumRole(repId),
+        state,
+        inProgress,
+        ...(completedAt === undefined ? {} : { completedAt }),
+        ...(recallAt === undefined ? {} : { recallAt }),
+      })
     }
     const repNodes = nodes.filter(node => node.kind === 'rep')
     return {

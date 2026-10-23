@@ -157,6 +157,41 @@
 .trail-node.is-later .trail-marker {
   border-style: dashed;
 }
+/* The walked part of the line: solid between completed nodes, stronger where the later one was completed this month. */
+.trail-node[data-walk-up]::before,
+.trail-node[data-walk-down]::after {
+  content: '';
+  position: absolute;
+  left: -33px;
+  width: 2px;
+  background: var(--action);
+}
+.trail-node[data-walk-up]::before {
+  top: -2px;
+  height: 26px;
+}
+.trail-node[data-walk-down]::after {
+  top: 24px;
+  bottom: 0;
+}
+.trail-node[data-walk-up='recent']::before,
+.trail-node[data-walk-down='recent']::after {
+  left: -34px;
+  width: 4px;
+  border-radius: 2px;
+}
+/* The next node is where the learner stands. */
+.trail-here {
+  flex-basis: 100%;
+  color: var(--feature-muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+.trail .path-stage-heading .trail-left {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 550;
+}
 /* One line per node: title (and a level chip only when it differs from the stage), then the state at the far edge. */
 .trail-node > button {
   display: flex;
@@ -239,6 +274,14 @@
   }
   .trail-marker {
     left: -40px;
+  }
+  .trail-node[data-walk-up]::before,
+  .trail-node[data-walk-down]::after {
+    left: -27px;
+  }
+  .trail-node[data-walk-up='recent']::before,
+  .trail-node[data-walk-down='recent']::after {
+    left: -28px;
   }
   .trail-covered {
     margin-left: 40px;

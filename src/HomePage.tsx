@@ -119,6 +119,11 @@ export function HomePage(props: Props) {
   }
   const reason = recommendation && context ? (recommendation.mode === 'start' ? context.reason : withoutGoal(recommendation.reason)) : ''
   const recommendedStage = recommendation ? stageOf(recommendation.repId) : -1
+  // The distance walked this month, which the trail draws as the stronger part of its line.
+  const monthStart = new Date(new Date(props.now).getFullYear(), new Date(props.now).getMonth(), 1).getTime()
+  const thisMonth = trail.stages
+    .flatMap(stage => stage.nodes)
+    .filter(node => node.kind === 'rep' && (node.completedAt ?? 0) >= monthStart).length
   return (
     <main className="home-main trail-home" id="top">
       <div className="trail-layout">
@@ -127,7 +132,7 @@ export function HomePage(props: Props) {
           <PageHeader
             eyebrow="Your goal"
             title={goal.title}
-            description={`${trail.done} of ${trail.total} reps completed`}
+            description={`${trail.done} of ${trail.total} reps completed${thisMonth ? ` · ${thisMonth} this month` : ''}`}
             actions={
               <Button variant="text" onClick={() => onPath(goal.id)}>
                 View or choose goal

@@ -953,3 +953,27 @@
     overflow-wrap: anywhere;
   }
 }
+/* The month's look back: short lists of what moved, side by side where there is room. */
+.month-review-lists {
+  display: grid;
+  max-width: 720px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 12px;
+  margin: 4px 0 16px;
+}
+.month-review-lists section {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+}
+.month-review-lists h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+.month-review-lists ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.5;
+}

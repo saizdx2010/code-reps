@@ -1,0 +1,104 @@
+/* The skill map over time, fading skills, and a retained skill's then and now. */
+.skill-timeline {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 20px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.skill-timeline h2 {
+  margin: 0;
+  font-size: var(--type-card);
+}
+.skill-timeline-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+.skill-timeline-controls input[type='range'] {
+  flex: 1 1 220px;
+  min-width: 0;
+  accent-color: var(--action);
+}
+.skill-timeline-controls output {
+  min-width: 9ch;
+  color: var(--muted);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.skill-timeline-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  animation: notice-rise 240ms var(--motion-ease) both;
+}
+.skill-timeline-note .text-button {
+  min-height: 28px;
+  padding: 2px 0;
+}
+/* Replaying the weeks: a skill whose state changes pops its marker in again (the marker is keyed by state). */
+.skill-trail.is-scrubbing .trail-marker {
+  animation: mark-pop 300ms var(--motion-spring) both;
+}
+
+/* A retained skill whose spaced review is due: the evidence stays, the colour softens until it is used again. */
+.skill-node.is-fading .trail-marker {
+  opacity: 0.55;
+  border-style: dashed;
+}
+.skill-node.is-fading .skill-node-body > .status-chip {
+  opacity: 0.75;
+}
+
+.skill-then-now {
+  width: 100%;
+  margin-top: 4px;
+}
+.skill-then-now > summary {
+  min-height: 32px;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.skill-then-now-gap {
+  margin: 4px 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.skill-then-now-sides {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 10px;
+}
+.skill-then-now-sides section {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--bg);
+  animation: rise-arrive 280ms var(--motion-ease) both;
+}
+.skill-then-now-sides section + section {
+  animation-delay: 60ms;
+}
+.skill-then-now-sides h3 {
+  margin: 0 0 2px;
+  font-size: 14px;
+}
+.skill-then-now-sides p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.skill-then-now-sides .skill-then-now-meta {
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.skill-then-now-empty {
+  color: var(--muted);
+}
