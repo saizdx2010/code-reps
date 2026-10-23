@@ -51,6 +51,8 @@ const levelRange = (stage: TrailStage) =>
 
 /** A path drawn as stages of connected nodes: lessons before the reps that use them, then recall and projects. */
 export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenTrack, text }: Props) {
+  // One stage opens: the current one, or the first unfinished stage when nothing is current yet.
+  const hasCurrent = stages.some(stage => stage.current)
   return (
     <ol className="trail path-stages">
       {stages.map((stage, index) => (
@@ -59,7 +61,7 @@ export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenTrack, 
             className="path-stage"
             open={
               stage.current ||
-              (index === 0 && !stage.covered && stage.done < stage.total) ||
+              (!hasCurrent && index === 0 && !stage.covered && stage.done < stage.total) ||
               stage.nodes.every(node => node.kind === 'project' || node.kind === 'external')
             }
           >

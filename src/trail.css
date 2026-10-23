@@ -44,6 +44,13 @@
   font-size: 14px;
   line-height: 1.45;
 }
+/* A folded stage is one line, its title and count; the description and level range appear once it opens. */
+.trail .path-stage:not([open]) > .path-stage-heading {
+  padding-block: 12px;
+}
+.trail .path-stage:not([open]) > .path-stage-heading :is(p, .status-chip) {
+  display: none;
+}
 .trail .path-stage-heading::after {
   content: '';
   width: 18px;
@@ -243,16 +250,26 @@
   }
 }
 
-/* Trail home: the trail on the left, the next action beside it. On narrow screens the next action comes first. */
+/* Trail home: the goal's heading and trail on the left, the next action beside them. On narrow screens the heading
+   comes first, then the next action, then the trail. */
 .trail-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
-  gap: 24px 44px;
+  grid-template-rows: auto 1fr;
+  gap: 0 44px;
   align-items: start;
+}
+.trail-head {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+}
+.trail-head .path-progress {
+  margin: -8px 0 8px;
 }
 .trail-column {
   grid-column: 1;
-  grid-row: 1;
+  grid-row: 2;
   min-width: 0;
 }
 .trail-column.home-goal {
@@ -260,12 +277,9 @@
   padding: 0;
   border: 0;
 }
-.trail-column .path-progress {
-  margin: -8px 0 8px;
-}
 .trail-aside {
   grid-column: 2;
-  grid-row: 1;
+  grid-row: 1 / span 2;
   display: grid;
   gap: 18px;
   min-width: 0;
@@ -468,7 +482,10 @@
 @media (max-width: 900px) {
   .trail-layout {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    gap: 24px;
   }
+  .trail-head,
   .trail-column,
   .trail-aside {
     grid-column: 1;
@@ -651,19 +668,25 @@
   color: var(--feature-text);
 }
 
-/* A quiet daily option beside the next action: a short warm-up of reps finished before. */
+/* A quiet daily option beside the next action: one line offering a short warm-up of reps finished before. */
 .trail-aside .warmup-panel {
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding: 2px 4px;
 }
 .warmup-panel h2 {
-  margin: 0 0 6px;
-  font-size: var(--type-card);
+  margin: 0;
+  font-size: 15px;
 }
 .warmup-panel p {
-  margin: 0 0 12px;
+  margin: 0;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 13px;
+}
+.warmup-panel .text-button {
+  min-height: 32px;
+  padding: 4px 0;
 }

@@ -46,7 +46,7 @@ for (const width of [1280, 390]) {
     await page.getByRole('button', { name: /New to coding/ }).click()
     await page.goto('/#/home')
     const trail = page.getByRole('region', { name: 'Learning goal' })
-    await expect(trail.getByRole('heading', { level: 1 })).toHaveText('Foundations')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Foundations')
     const firstStage = trail.locator('.path-stage').first()
     const nodes = firstStage.locator('.trail-node')
     await expect(nodes.first()).toHaveClass(/node-lesson/)

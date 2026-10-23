@@ -17,7 +17,7 @@ test('Home offers a warm-up of earlier Beginner reps that starts the first one f
   await page.reload()
   const panel = page.getByRole('region', { name: 'Quick warm-up' })
   await expect(panel).toContainText('3 short reps you finished before')
-  await expect(panel).toContainText(/Read an array.*Sum positive numbers.*Count words/)
+  await expect(panel.locator('p')).toHaveAttribute('title', /Read an array.*Sum positive numbers.*Count words/)
   await panel.getByRole('button', { name: 'Start warm-up', exact: true }).click()
   await expect(page).toHaveURL(/#\/practice\/make-arrays$/)
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
