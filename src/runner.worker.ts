@@ -6,6 +6,7 @@ import type { Rep } from './rep-types.ts'
 import type { CompileRequest } from './runner.types'
 import { lifeStepper } from './life-toy.ts'
 import type { LifeSources, LifeStep } from './life-toy.ts'
+import type { ToyKind } from './toy-session'
 
 // `source` names the rep's content chunk, so the worker does not need the catalog to find it.
 type RunRequest = { code: string; repId: string; source?: string }
@@ -36,25 +37,30 @@ function prepare(repId: string, source: string | undefined): Promise<Prepared> {
   return prepared.promise
 }
 
-// The Game of Life toy keeps one worker while it is open and steps the learner's saved code here, never on the page.
-// The compiled parts are kept until the sources change; the page stops the worker if a step runs past five seconds.
-type LifeRequest = { life: { id: number; sources: LifeSources; step: LifeStep } }
-let life: { key: string; step: ReturnType<typeof lifeStepper> } | undefined
+// A toy (the Game of Life) keeps one worker while it is open and runs the learner's saved code here,
+// never on the page. The compiled parts are kept until the sources change; the page stops the worker if a run takes
+// more than five seconds.
+type ToyRequest = { toy: { id: number; kind: ToyKind; sources: Record<string, string>; input: unknown } }
+const compile = (source: string, functionName: string) => compileSolution(source, functionName)
+const toys: Record<ToyKind, (sources: Record<string, string>) => (input: never) => unknown> = {
+  life: sources => lifeStepper(sources as LifeSources, compile) as (step: LifeStep) => unknown,
+}
+let toy: { key: string; run: (input: never) => unknown } | undefined
 
-self.onmessage = async (event: MessageEvent<RunRequest | PrepareRequest | { compile: CompileRequest } | LifeRequest>) => {
+self.onmessage = async (event: MessageEvent<RunRequest | PrepareRequest | { compile: CompileRequest } | ToyRequest>) => {
   const data = event.data
-  if ('life' in data) {
-    const { id, sources, step } = data.life
+  if ('toy' in data) {
+    const { id, kind, sources, input } = data.toy
     // The time limit starts here, once the worker has loaded, as check runs start theirs after preparing.
-    self.postMessage({ life: { id, started: true } })
+    self.postMessage({ toy: { id, started: true } })
     try {
-      const key = JSON.stringify(sources)
-      if (life?.key !== key) life = { key, step: lifeStepper(sources, (source, functionName) => compileSolution(source, functionName)) }
-      self.postMessage({ life: { id, result: life.step(step) } })
+      const key = `${kind}:${JSON.stringify(sources)}`
+      if (toy?.key !== key) toy = { key, run: toys[kind](sources) }
+      self.postMessage({ toy: { id, result: toy.run(input as never) } })
     } catch (error) {
-      life = undefined
+      toy = undefined
       self.postMessage({
-        life: { id, result: { error: error instanceof Error ? error.message : 'Your saved code could not be prepared.' } },
+        toy: { id, result: { error: error instanceof Error ? error.message : 'Your saved code could not be prepared.' } },
       })
     }
     return
