@@ -939,9 +939,21 @@ summary {
   }
 }
 
-/* Choices pop their mark in; the info note tilts its icon on hover and takes the accent when open. */
+/* Choices pop their mark in and fade it out when cleared; the box presses slightly. The info note tilts its icon on hover
+   and takes the accent when open. */
 .ui-choice:checked::before {
   animation: mark-pop 260ms var(--motion-spring);
+}
+.ui-choice::before {
+  transition:
+    opacity 120ms ease,
+    scale 120ms ease;
+}
+.ui-choice:not(:checked)::before {
+  scale: 0.6;
+}
+.ui-choice:active:not(:disabled) {
+  scale: 0.9;
 }
 @keyframes mark-pop {
   from {
@@ -1074,4 +1086,71 @@ summary {
   .badge-notice {
     animation: none !important;
   }
+}
+
+/* Closing mirrors opening, briefly: header and Tools menus, select lists, dialog backdrops, and the checks drawer's
+   details fade out instead of vanishing. Opening stays immediate where focus must land at once (menus), so only the
+   closing state carries the transition. The global reduced-motion reset turns all of it off. */
+@supports (interpolate-size: allow-keywords) {
+  .site-menu:not([open])::details-content,
+  .workspace-options:not([open])::details-content {
+    opacity: 0;
+    transition:
+      opacity 140ms ease,
+      content-visibility 140ms allow-discrete;
+  }
+}
+.ui-select-popup {
+  transition:
+    opacity 140ms ease,
+    translate 140ms ease,
+    display 140ms allow-discrete,
+    overlay 140ms allow-discrete;
+}
+.ui-select-popup:not(:popover-open) {
+  opacity: 0;
+  translate: 0 -4px;
+}
+.utility-dialog::backdrop,
+.reset-dialog::backdrop,
+.profile-dialog::backdrop,
+.ui-calendar::backdrop {
+  opacity: 0;
+  transition:
+    opacity 180ms ease,
+    display 180ms allow-discrete,
+    overlay 180ms allow-discrete;
+}
+.utility-dialog[open]::backdrop,
+.reset-dialog[open]::backdrop,
+.profile-dialog[open]::backdrop,
+.ui-calendar[open]::backdrop {
+  opacity: 1;
+}
+/* The checks drawer's details fade and rise in, and fade out before the drawer folds; its height (which sizes the
+   editor) changes once, at the end, so the editor never relays out frame by frame. */
+#check-details {
+  transition:
+    opacity 160ms ease,
+    translate 160ms ease,
+    display 160ms allow-discrete;
+}
+#check-details[hidden] {
+  opacity: 0;
+  translate: 0 6px;
+}
+@starting-style {
+  #check-details:not([hidden]) {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-choice:active:not(:disabled) {
+    scale: 1;
+  }
+}
+/* A trail stage that opens shows its description and level range by rising them in with its rows. */
+.trail .path-stage[open] > .path-stage-heading :is(p, .status-chip) {
+  animation: notice-rise 240ms var(--motion-ease) both;
 }

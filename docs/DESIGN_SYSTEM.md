@@ -141,6 +141,7 @@ Motion acknowledges interaction and shows where something came from; it never de
 | Icons | Each icon plays its own reaction once when its control is hovered, focused, or pressed (arrow and play nudge forward, close turns a quarter, info tilts, the hint filament lights up); result summaries play theirs when the result arrives |
 | Secondary action | Lifts 1px and takes an accent border; no shine |
 | Text link | Underline fades in while rising toward the text |
+| Back link (`PageHeader` back) | Takes an accent-soft wash and its left chevron nudges 2px back on hover |
 | Main navigation tab | Sage wash scales in behind the label |
 | Section tab | Underline grows from the centre; the current tab keeps it |
 | Practice steps | Underline glides and resizes to the selected step (`StepIndicator`); markers ease into their new state; a link fills from the left once both neighbouring steps are done; first placement and layout resizes snap |
@@ -150,6 +151,7 @@ Motion acknowledges interaction and shows where something came from; it never de
 | Next-practice panel | When its rep changes in place (a starting choice or Undo), its words rise in over 320ms and a short confirmation rises beneath it; nothing moves on page arrival |
 | Trail stage, topic group, chosen exercise topic, check results | Rows cascade in (30ms apart, capped at 180ms) when the group opens or results arrive |
 | List row | Stays in place; the arrow slides into its reserved space; press settles to 99.5% |
+| Journal attempt row | The rep name and its trailing chevron take the accent on hover and focus; the review opens as a disclosure |
 | Track and starting cards | Lift 2px on hover; settle on press |
 | Progress bars | Fill grows from the left when the page arrives (path progress, topic meters, and the skill-ladder bar) |
 | Skill moved up, personal best | In the completion panel, the notice rises in just after the panel, the arrow slides in, and the new state's chip settles in after the old one; the personal-best note rises in last. Static text: reopening the finished rep shows it without replaying the skill map |
@@ -159,21 +161,21 @@ Motion acknowledges interaction and shows where something came from; it never de
 | Milestone notice | Shows the earned badge's art (up to three) before its words. Rises 8px once when a badge is newly earned in this session; sits in the section bar inside the page frame (or in the completion panel) so the page heading does not move; never takes focus; is acknowledged as soon as it is shown, so moving on never repeats it; clears itself after 8 seconds |
 | Progress statistics, track cards | Rise in a short cascade |
 | Status chip | Settles in (scale and fade) when it appears or its status changes; an unchanged status stays still |
-| Checkbox and radio | Mark pops in |
+| Checkbox and radio | Mark pops in when chosen and fades out over 120ms when cleared; the box presses to 90% |
 | Info note | Its icon tilts (the icon reaction); the note takes the accent when open |
-| Disclosure | Native content expands and collapses over 420ms; chevron rotates over 180ms; with reduced motion it opens and closes at once |
+| Disclosure | Native content expands and collapses over 420ms; chevron rotates over 180ms; an opening trail stage also rises in its description and level range; with reduced motion it opens and closes at once |
 | Number stepper | Presses down |
 | Workspace divider | Grip lengthens on hover and focus |
 | Logo, appearance symbol | Logo tilts slightly; the light/dark symbol half-turns |
 | Dark mode toggle | The page crossfades over 260ms (View Transitions where supported). Colour-scheme radios apply immediately so their checked state never lags |
-| Menus, tooltips, dialogs | Menus enter over 240ms; tooltips 110ms; dialogs 380ms with native close and focus |
+| Menus, tooltips, dialogs | Menus enter over 240ms and fade out over 140ms (select lists also lift 4px); tooltips 110ms; dialogs 380ms with native close and focus, settling out over 180ms while their backdrop fades |
 | Page change | The page arrives over 380ms |
 | Out-of-date checks | Run invites a fresh run with one lime ring when an edit puts results out of date, then stays still |
 | Completion panel | Rises into the top of the Finish pane once and its check medallion pops in; a finished step's check pops into the step bar |
 | Reflection and sentence-starter chips | Hover takes the accent border and accent-soft wash; choosing a reflection chip pops its check in |
 | On/off setting (`Toggle`) | Hover takes the accent border and accent-soft wash; its On or Off chip settles in (as a status chip does) when the setting changes |
 | Hint question | The inline first-hint question settles in where the hint control was |
-| Checks sheet (phones) | Opening the sheet raises its contents into place once; closing is immediate |
+| Checks drawer and sheet | Its details fade and rise 6px in over 160ms and fade out before the drawer folds; the drawer's height (which sizes the editor) changes once, never frame by frame. On phones the sheet's contents also rise into place when it opens |
 | Restore preview and receipt | The merge preview, an import error, and the post-merge receipt each rise in once where they appear |
 | Break it log | A new try slides into the top of the log over 180ms; on a catch the suspect's answer takes a strike, the check icon plays its reaction, and the catch card's meter segment fills once. No shaking or confetti; reduced motion shows the final state |
 | Hints and real check feedback | Reveal over 320ms. Results appear as soon as they arrive: no simulated checks, delayed acknowledgements, or artificial progress |

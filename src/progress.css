@@ -1,0 +1,352 @@
+/* Progress → Skills: the summary cards, practice rhythm, calendar, and skill ladder. Loaded with the page. */
+.progress-main .progress-summary {
+  /* Two cards: the rhythm (with the completed count among its stats) and the ladder. */
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 0;
+  border: 0;
+}
+.progress-main .progress-summary > div {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  margin: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.progress-main .progress-summary dd {
+  grid-row: 1;
+  margin: 0;
+  font-size: 28px;
+  font-weight: 650;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.progress-main .progress-summary dt {
+  grid-row: 2;
+  display: grid;
+  gap: 2px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+.progress-main .progress-summary dt small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+.progress-main .progress-summary .progress-days,
+.progress-main .progress-summary .skill-ladder {
+  grid-row: 1 / span 2;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  align-content: start;
+  gap: 4px;
+}
+.progress-main .progress-summary .progress-days {
+  grid-column: 1;
+}
+.progress-main .progress-summary .skill-ladder {
+  grid-column: 2;
+  grid-template-rows: auto 1fr;
+}
+.progress-main .progress-summary .skill-ladder dt {
+  grid-row: 1;
+}
+.progress-main .progress-summary .skill-ladder dd {
+  grid-row: 2;
+}
+.progress-main .progress-summary .practice-rhythm {
+  grid-template-rows: auto;
+}
+.progress-main .progress-summary .practice-rhythm dd {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+/* The rhythm: the forgiving streak and recent days, then the last seven days drawn as one row. */
+.rhythm {
+  display: grid;
+  gap: 16px;
+}
+.rhythm-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 24px;
+}
+.rhythm-stat {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  margin: 0;
+}
+.rhythm-stat b {
+  font-size: 28px;
+  font-weight: 650;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.rhythm-stat span {
+  margin-top: 2px;
+  font-weight: 600;
+}
+.rhythm-stat small {
+  color: var(--muted);
+  font-size: 13px;
+}
+.rhythm-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rhythm-week li {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.rhythm-day {
+  display: grid;
+  place-items: center;
+  width: min(100%, 36px);
+  aspect-ratio: 1;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--action-text);
+}
+.rhythm-day .ui-icon {
+  width: 16px;
+  height: 16px;
+}
+.rhythm-week [data-kind='new'] .rhythm-day,
+.rhythm-week [data-kind='review'] .rhythm-day {
+  border-color: var(--action);
+  background: var(--action);
+}
+.rhythm-week [data-kind='rest'] .rhythm-day {
+  border: 1.5px dashed var(--border-strong);
+  background: transparent;
+}
+.rhythm-week [data-today][data-kind='none'] .rhythm-day {
+  border-color: var(--feature-border);
+  background: var(--feature);
+}
+.rhythm-week small {
+  overflow: hidden;
+  max-width: 100%;
+  color: var(--muted);
+  font-size: var(--type-meta);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .rhythm-week small {
+    display: grid;
+    justify-items: center;
+    line-height: 1.25;
+  }
+}
+.rhythm-week [data-today] small {
+  color: var(--text);
+  font-weight: 700;
+}
+.rhythm-key {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--type-meta);
+  line-height: 1.5;
+}
+/* The longer history stays one click away, so the rhythm card keeps the height of the cards beside it. */
+.practice-history {
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
+}
+.practice-history > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 36px;
+  margin-block: 3px 0;
+  padding: 6px 8px;
+  border-radius: var(--radius-control);
+  list-style: none;
+  cursor: pointer;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.practice-history > summary::-webkit-details-marker {
+  display: none;
+}
+.practice-history > summary:hover,
+.practice-history > summary:focus-visible {
+  background: var(--bg);
+}
+.practice-history > summary .ui-icon {
+  color: var(--muted);
+  transition: rotate var(--motion-fast) var(--motion-ease);
+}
+.practice-history[open] > summary .ui-icon {
+  rotate: 180deg;
+}
+.practice-history .practice-calendar {
+  padding: 6px 8px 0;
+}
+.practice-calendar {
+  display: grid;
+  gap: 10px;
+  align-self: end;
+  padding-top: 12px;
+}
+.practice-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 4px;
+  max-width: 264px;
+}
+.practice-calendar-grid > span {
+  display: grid;
+  gap: 4px;
+}
+.practice-calendar .practice-calendar-grid i {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+.practice-calendar i {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.practice-calendar i[data-day='any'] {
+  background: transparent;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.practice-calendar i[data-day='clean'] {
+  background: var(--accent);
+  box-shadow: none;
+}
+.practice-calendar-grid i[data-day='future'] {
+  opacity: 0.35;
+}
+.practice-calendar-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  color: var(--muted);
+  font-size: var(--type-meta);
+}
+.practice-calendar-key > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.practice-calendar-key > span:first-child {
+  margin-right: auto;
+}
+.practice-calendar-key i {
+  width: 10px;
+  height: 10px;
+}
+/* The ladder: one bar of skills by rung, then each rung as a row with its count, lowest rung last. */
+.progress-main .progress-summary .skill-ladder dd {
+  display: grid;
+  align-content: end;
+  gap: 14px;
+  padding-top: 14px;
+  font-size: 14px;
+  font-weight: 400;
+}
+.skill-ladder-bar {
+  display: flex;
+  gap: 2px;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.skill-ladder-bar > span {
+  min-width: 8px;
+  flex-basis: 0;
+}
+/* The end segments take the bar's rounding, so an outlined rung's inset edge follows the curve instead of being
+   cut off by the bar's clip. */
+.skill-ladder-bar > span:first-child {
+  border-top-left-radius: inherit;
+  border-bottom-left-radius: inherit;
+}
+.skill-ladder-bar > span:last-child {
+  border-top-right-radius: inherit;
+  border-bottom-right-radius: inherit;
+}
+/* Four rungs that stay distinct in every scheme and mode: solid, mid, outlined, and empty. */
+.skill-ladder-bar [data-rung='retained'],
+.skill-ladder-legend [data-rung='retained']::before {
+  background: var(--action);
+}
+.skill-ladder-bar [data-rung='independent'],
+.skill-ladder-legend [data-rung='independent']::before {
+  background: color-mix(in srgb, var(--accent) 55%, var(--surface));
+}
+.skill-ladder-bar [data-rung='practising'],
+.skill-ladder-legend [data-rung='practising']::before {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+.skill-ladder-bar [data-rung='learning'],
+.skill-ladder-legend [data-rung='learning']::before {
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+.skill-ladder-legend {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+.skill-ladder-legend li {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-top: 1px solid var(--border);
+  color: var(--text);
+}
+.skill-ladder-legend li::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+.skill-ladder-legend b {
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 900px) {
+  .progress-main .progress-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .progress-main .progress-summary .progress-days,
+  .progress-main .progress-summary .skill-ladder {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+}

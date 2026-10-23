@@ -55,7 +55,8 @@
   height: 18px;
   margin: 0;
   border: 1px solid var(--border);
-  border-radius: var(--radius-control);
+  /* A small square corner, so a checkbox never reads as a radio button. */
+  border-radius: 4px;
   background: var(--surface);
   vertical-align: middle;
   cursor: pointer;
