@@ -29,9 +29,16 @@ export function useNavigation(repIds: string[], onRestore: (route: Route) => voi
       window.removeEventListener('hashchange', receive)
     }
   }, [repIds])
-  /** The id is the rep for the workspace and the lesson for Lessons; other pages ignore it. */
+  /** The id is the rep for the workspace, the lesson for Lessons, and the track for a finished track; other pages ignore it. */
   function navigate(view: View, id?: string) {
-    const next: Route = view === 'workspace' ? { view, repId: id } : view === 'knowledge' && id ? { view, skillId: id } : { view }
+    const next: Route =
+      view === 'workspace'
+        ? { view, repId: id }
+        : view === 'knowledge' && id
+          ? { view, skillId: id }
+          : view === 'finished' && id
+            ? { view, pathId: id }
+            : { view }
     if (location.hash !== routeHash(next)) history.pushState(null, '', routeHash(next))
     setRoute(next)
   }

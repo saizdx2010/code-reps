@@ -1,0 +1,141 @@
+/* A finished track's page (src/TrackFinish.tsx), loaded with that page. Sections are divided by a rule, not boxed; the
+   first and last reps reuse the Then and now columns, notes and badges keep their cards. */
+.track-finish-main .finish-facts {
+  margin: 4px 0 16px;
+}
+.finish-section {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.finish-section h2 {
+  margin: 0 0 10px;
+  font-size: var(--type-section);
+}
+.finish-section .finish-lead {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 15px;
+}
+.first-last {
+  margin-top: 0;
+  padding-top: 16px;
+}
+.first-last .first-last-rep {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 650;
+  white-space: normal;
+}
+.finish-skills {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 0 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.finish-skills li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  min-height: 44px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+}
+.finish-notes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.finish-notes li {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.finish-note-head {
+  display: grid;
+  gap: 2px;
+}
+.finish-note-head small {
+  color: var(--muted);
+  font-size: 13px;
+}
+.finish-notes p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+.finish-notes .text-button {
+  min-height: 32px;
+  padding: 2px 0;
+}
+.finish-badges {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.finish-badges .badge-card {
+  grid-column: 1 / -1;
+  max-width: 560px;
+}
+.finish-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 12px 8px 8px;
+  border: 1px solid var(--success-border);
+  border-radius: var(--radius);
+  background: var(--success-soft);
+}
+.finish-badge .badge-art {
+  flex: none;
+  width: 44px;
+  height: 44px;
+}
+.finish-badge .badge-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.35;
+}
+.finish-badge small {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Motion: the facts rise in a short cascade when the page arrives, as Progress statistics do. */
+.finish-facts > div {
+  animation: rise-arrive 320ms var(--motion-ease) both;
+}
+.finish-facts > div:nth-child(2) {
+  animation-delay: 35ms;
+}
+.finish-facts > div:nth-child(3) {
+  animation-delay: 70ms;
+}
+.finish-facts > div:nth-child(4) {
+  animation-delay: 105ms;
+}

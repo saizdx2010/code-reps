@@ -44,6 +44,12 @@ const PracticeCatalog = lazyRoute(() => import('./PracticeCatalog').then(module 
 const QuickLessons = lazyRoute(() => import('./QuickLessons').then(module => module.default), 'The lessons', 'learn-main')
 const HistoryPage = lazyRoute(() => import('./HistoryPage').then(module => module.HistoryPage), 'Attempt history', 'history-main')
 const LearningHub = lazyRoute(() => import('./LearningHub').then(module => module.LearningHub), 'Learning tools', 'learning-hub')
+const TrackFinishPage = lazyRoute(() => import('./TrackFinish').then(module => module.default), 'Your finished track', 'progress-main')
+const StarterProgramPage = lazyRoute(
+  () => import('./StarterProgram').then(module => module.StarterProgramPage),
+  'Your first 4 weeks',
+  'progress-main',
+)
 
 const categories = [...new Set(reps.map(catalogTopic))].sort()
 // The Library lists topics in learning order inside their areas; other pages keep the alphabetical list.
@@ -80,6 +86,8 @@ type Props = {
   setPathId: (id: PathId) => void
   knowledgeSkill: string
   setKnowledgeSkill: (id: string) => void
+  /** The track a finished-track page shows. */
+  finishedPathId?: string
   walkthroughSeen: boolean
   launchWalkthrough: () => void
   setView: (view: View) => void
@@ -224,6 +232,7 @@ export function AppRoutes(props: Props) {
           onLearnerStart={props.onLearnerStart}
           history={history}
           now={now}
+          learning={fluency.state}
           warmup={props.warmup}
           startWarmup={props.startWarmup}
           startSet={props.startSet}
@@ -262,7 +271,7 @@ export function AppRoutes(props: Props) {
             pathId={pathId}
             setPathId={setPathId}
             learnerStart={learnerStart}
-            startingPoint={<StartingPoint learnerStart={learnerStart} onChoose={props.onLearnerStart} />}
+            onLearnerStart={props.onLearnerStart}
             completedPathIds={completedPathIds}
             trail={browsedTrail}
             evidence={trailEvidence}
@@ -330,6 +339,44 @@ export function AppRoutes(props: Props) {
             weeklyTarget={target}
             onWeeklyTarget={setWeeklyTarget}
           />
+        </Suspense>
+      )
+    }
+    case 'finished':
+    case 'first-weeks': {
+      // Two pages reached from Skills; each loads with its own chunk and keeps the Skills back link while it does.
+      const title =
+        view === 'finished' ? (paths.find(path => path.id === props.finishedPathId)?.title ?? 'Finished track') : 'Your first 4 weeks'
+      return (
+        <Suspense
+          fallback={
+            <RouteLoading
+              back={{ label: 'Skills', onClick: () => setView('progress') }}
+              title={title}
+              status={`Opening ${title}…`}
+              className="progress-main"
+            />
+          }
+        >
+          {view === 'finished' ? (
+            <TrackFinishPage
+              pathId={props.finishedPathId ?? ''}
+              history={history}
+              now={now}
+              notes={fluency.state.notes}
+              openRep={openRep}
+              onOpenPath={openPath}
+            />
+          ) : (
+            <StarterProgramPage
+              history={history}
+              now={now}
+              fluency={fluency}
+              stages={goalTrail.stages}
+              openRep={openRep}
+              openLesson={openLesson}
+            />
+          )}
         </Suspense>
       )
     }
@@ -446,27 +493,5 @@ function CatalogRoute({
       repStatus={repStatus}
       openRep={openRep}
     />
-  )
-}
-
-function StartingPoint({ learnerStart, onChoose }: { learnerStart: LearnerStart | null; onChoose: (value: LearnerStart) => void }) {
-  return (
-    <section className="starting-point" aria-labelledby="starting-point-title">
-      <div>
-        <span className="home-label">Your starting point</span>
-        <h2 id="starting-point-title">Where are you starting?</h2>
-        <p>This only changes your next suggested rep. You can open any rep at any time.</p>
-      </div>
-      <div className="starting-options">
-        <button type="button" aria-pressed={learnerStart === 'new'} onClick={() => onChoose('new')}>
-          <strong>New to coding</strong>
-          <span>Start with TypeScript building blocks.</span>
-        </button>
-        <button type="button" aria-pressed={learnerStart === 'returning'} onClick={() => onChoose('returning')}>
-          <strong>Returning to coding</strong>
-          <span>Start with guided problem solving.</span>
-        </button>
-      </div>
-    </section>
   )
 }

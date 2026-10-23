@@ -1001,3 +1001,7 @@
   font-size: 14px;
   line-height: 1.5;
 }
+/* Browsers draw time fields a pixel taller than text fields; keep the shared control height. */
+.come-back-settings input[type='time'] {
+  height: var(--control-height);
+}

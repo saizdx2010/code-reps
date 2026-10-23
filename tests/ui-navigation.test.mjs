@@ -23,6 +23,7 @@ test('exercise bookmarks, library, and every product page round-trip', () => {
     'stuck',
     'patterns',
     'plan',
+    'first-weeks',
   ]) {
     assert.deepEqual(readRoute(routeHash({ view }), ['one']), { view })
   }
@@ -62,6 +63,8 @@ test('every tool has one navigation home while legacy lessons and exercises stay
     skillmap: 'progress',
     plan: 'progress',
     assessment: 'progress',
+    'first-weeks': 'progress',
+    finished: 'progress',
     interview: 'projects',
   }
   for (const [view, home] of Object.entries(homes)) assert.equal(sectionView(view), home)
@@ -104,4 +107,13 @@ test('each lesson has its own address, and unknown lessons fall back to the less
   assert.deepEqual(readRoute('#/knowledge/not-a-lesson', []), { view: 'knowledge' })
   assert.deepEqual(readRoute('#/knowledge/%E0%A4%A', []), { view: 'knowledge' })
   assert.equal(routeHash({ view: 'knowledge' }), '#/knowledge')
+})
+
+test('a finished track has its own address under Progress; without a track it opens Skills', () => {
+  assert.equal(routeHash({ view: 'finished', pathId: 'typescript' }), '#/finished/typescript')
+  assert.deepEqual(readRoute('#/finished/typescript', []), { view: 'finished', pathId: 'typescript' })
+  assert.deepEqual(readRoute('#/finished', []), { view: 'progress' })
+  // The page itself says when an id names no track, so an old bookmark still lands somewhere that explains it.
+  assert.deepEqual(readRoute('#/finished/not-a-track', []), { view: 'finished', pathId: 'not-a-track' })
+  assert.equal(navigationArea('finished'), 'progress')
 })

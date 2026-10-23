@@ -61,7 +61,10 @@ test('the practice rhythm shows the streak and the last seven days, with the lon
   const streak = page.locator('.rhythm-stat').first()
   await expect(streak.locator('b')).toHaveText('2')
   await expect(streak.locator('small')).toHaveText('Longest 3')
-  await expect(page.locator('.rhythm-stat').nth(1).locator('b')).toHaveText('3 of 7')
+  // This Monday-to-Sunday week against the default target of three days; how many fall in it depends on today's weekday.
+  await expect(page.locator('.rhythm-stat').nth(1).locator('b')).toHaveText(/^\d of 3$/)
+  await expect(page.locator('.rhythm-stat').nth(1)).toContainText('Days this week')
+  await expect(page.locator('.rhythm-key')).toContainText('Last seven days: 3 practiced')
   const week = page.getByRole('list', { name: 'The last seven days' }).locator('li')
   await expect(week).toHaveCount(7)
   await expect(week.last()).toHaveAttribute('data-today', 'true')

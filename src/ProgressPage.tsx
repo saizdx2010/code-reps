@@ -24,6 +24,7 @@ import { stageLabels } from './learning'
 import type { JourneyProgress } from './learning'
 import { StepIndicator } from './StepIndicator'
 import { goToView } from './ui-navigation'
+import { finishedTracks } from './track-finish'
 
 /** Skills has two views: the journey list and the skill map. Both keep their own routes. */
 export function SkillsSwitch({ view }: { view: 'progress' | 'skillmap' }) {
@@ -72,6 +73,7 @@ export function ProgressPage(props: Props) {
   const today = String(dayNumber(new Date(now)))
   const [nudgeSkipped, setNudgeSkipped] = useSessionPreference<string>('rhythm-nudge', '')
   const badges = useMemo(() => profileBadges(history, new Date(now)), [history, now])
+  const finished = useMemo(() => finishedTracks(history, now), [history, now])
   const earned = badges.filter(badge => badge.earned)
   const open = (badge: Badge) =>
     badge.kind === 'path' && badge.pathId ? onOpenPath(badge.pathId as (typeof paths)[number]['id']) : onOpenRep(badge.repId)
@@ -240,6 +242,24 @@ export function ProgressPage(props: Props) {
               </ListGroup>
             ))}
           </div>
+          {finished.length > 0 && (
+            <section className="finished-tracks" aria-labelledby="finished-tracks-title">
+              <h2 id="finished-tracks-title" className="progress-skills-title">
+                Finished tracks
+              </h2>
+              <ul className="list-rows">
+                {finished.map(track => (
+                  <ListRow
+                    key={track.pathId}
+                    title={track.title}
+                    meta={`Finished ${formatDate(track.last.completedAt)} · ${track.repCount} reps in ${track.days} ${plural(track.days, 'day')}`}
+                    status={<StatusChip tone="success">Finished</StatusChip>}
+                    onOpen={() => goToView('finished', track.pathId)}
+                  />
+                ))}
+              </ul>
+            </section>
+          )}
           <section className="profile-badges" aria-labelledby="profile-badges-title">
             <h2 id="profile-badges-title">Badges earned</h2>
             <p className="badge-count" role="status">
@@ -254,6 +274,10 @@ export function ProgressPage(props: Props) {
         </>
       )}
       <nav className="progress-quiet-links" aria-label="More ways to practice">
+        <Button variant="text" onClick={() => goToView('first-weeks')}>
+          Your first 4 weeks
+          <Icon name="arrow" />
+        </Button>
         <Button variant="text" onClick={() => goToView('plan')}>
           Look back and plan a practice week
           <Icon name="arrow" />

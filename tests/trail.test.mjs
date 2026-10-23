@@ -148,3 +148,17 @@ test('returning learners skip every leading language-basics stage, matching the 
   const plan = getPracticePlan({}, [], 'returning', '', Date.now(), 'typescript')
   assert.equal(trail.nextRepId, plan.next.repId)
 })
+
+test('a finished stage is dated by the latest first completion of its reps; unfinished stages have no date', () => {
+  const firstStage = paths[0].stages[0].repIds
+  const times = new Map(firstStage.map((id, index) => [id, Date.UTC(2026, 0, 1 + index)]))
+  const trail = buildTrail('typescript', {
+    ...fresh,
+    completed: id => times.has(id),
+    completedAt: id => times.get(id),
+  })
+  assert.equal(trail.stages[0].finishedAt, Date.UTC(2026, 0, firstStage.length))
+  assert.equal(trail.stages[1].finishedAt, undefined)
+  // Without completion times the trail still draws, undated.
+  assert.equal(buildTrail('typescript', { ...fresh, completed: id => times.has(id) }).stages[0].finishedAt, undefined)
+})

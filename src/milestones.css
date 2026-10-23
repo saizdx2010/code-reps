@@ -1,0 +1,106 @@
+/* Closing a stage, a track, or a lesson: one quiet card that names what finished, what it showed, and the way on.
+   Loaded with the completion panel's growth notes and with lessons, never at startup. */
+.closeout {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  width: 100%;
+  padding: 14px 16px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+.closeout h4 {
+  margin: 0;
+  font-size: var(--type-card);
+  line-height: 1.35;
+}
+.closeout p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.closeout .closeout-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--success);
+  font-size: var(--type-meta);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.closeout-label .ui-icon {
+  width: 16px;
+  height: 16px;
+}
+.closeout .closeout-skills-label {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.closeout-skills {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 2px;
+  padding: 0;
+  list-style: none;
+}
+.closeout-skills li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.closeout .closeout-note {
+  font-size: 13px;
+}
+.closeout .text-button {
+  min-height: 36px;
+  padding: 4px 0;
+}
+
+/* In the completion panel the card sits on the pale feature surface, like the personal-best note. */
+.completion-panel .closeout {
+  border-color: var(--feature-border);
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  color: var(--feature-text);
+}
+.completion-panel .closeout p {
+  color: var(--feature-muted);
+}
+.completion-panel .closeout .text-button {
+  color: var(--accent);
+}
+
+/* A lesson's close-out ends the Predict section: the first-check score, then the rep that uses the lesson next. */
+.lesson-closeout {
+  gap: 8px;
+  margin-top: 20px;
+  padding: 16px 18px 16px;
+}
+.lesson-closeout .closeout-action {
+  margin-top: 6px;
+  white-space: normal;
+  text-align: left;
+}
+.lesson-closeout .closeout-also {
+  font-size: 13px;
+}
+.lesson-closeout .closeout-also .text-button {
+  min-height: 0;
+  padding: 0;
+  font-size: 13px;
+}
+
+/* Motion: the card rises in once where it lands, just after the completion panel or the last checked prediction. */
+.closeout {
+  animation: notice-rise 240ms var(--motion-ease) 160ms both;
+}
+.closeout-skills .status-chip {
+  animation: chip-settle 260ms var(--motion-spring) 360ms both;
+}

@@ -16,7 +16,9 @@ import type { FluencyState, SelfReview } from './fluency'
 import { judgmentLabels } from './learning-pages'
 import type { PortableRecord } from './portability'
 import { repTitle } from './rep-index.ts'
+import { preloadPractice } from './editor-loader'
 import { useSessionPreference } from './useSessionPreference'
+import './milestones.css'
 
 const defaultReview = (): SelfReview => ({
   understanding: 'not-yet',
@@ -210,7 +212,18 @@ export function LearningLesson({ skillId, state, update, openRep, onSkill, histo
         <h3>Predict, then check</h3>
         <p>Predict what happens and check your answer. These questions help you read code; independent coding needs a rep without hints.</p>
         <LessonQuestions skill={skill} state={state} update={update} />
-        {next(practiceSection, `Next: Practice · ${skill.repIds.length} ${skill.repIds.length === 1 ? 'rep' : 'reps'}`)}
+        {/* Once every prediction is checked, the lesson closes: the first-check score, then the rep that uses it next. */}
+        {skill.questions.length > 0 && checked === skill.questions.length ? (
+          <LessonCloseout
+            skill={skill}
+            state={state}
+            history={history}
+            openRep={openRep}
+            onPractice={() => revealLesson(practiceSection)}
+          />
+        ) : (
+          next(practiceSection, `Next: Practice · ${skill.repIds.length} ${skill.repIds.length === 1 ? 'rep' : 'reps'}`)
+        )}
       </section>
       <section id="lesson-practise" hidden={section !== 'practise'} tabIndex={-1}>
         <h3>Apply the skill</h3>
@@ -255,6 +268,74 @@ export function LearningLesson({ skillId, state, update, openRep, onSkill, histo
         </div>
       </section>
     </article>
+  )
+}
+
+/**
+ * The close of a lesson's Predict section, once every question has a first check: how many first predictions were right,
+ * and the reps that use the lesson next, with the first one not yet completed as the one primary action.
+ */
+function LessonCloseout({
+  skill,
+  state,
+  history,
+  openRep,
+  onPractice,
+}: {
+  skill: Skill
+  state: FluencyState
+  history: PortableRecord[]
+  openRep: (id: string) => void
+  onPractice: () => void
+}) {
+  const right = skill.questions.filter(question => state.answers[`${skill.id}:${question.id}`]?.correct).length
+  const total = skill.questions.length
+  const open = skill.repIds.filter(id => !history.some(record => record.repId === id))
+  const [first, ...later] = open
+  return (
+    <section className="closeout lesson-closeout" aria-labelledby={`lesson-closeout-${skill.id}`}>
+      <p className="closeout-label">
+        <Icon name="check" />
+        Lesson checked
+      </p>
+      <h4 id={`lesson-closeout-${skill.id}`}>
+        {right} of {total} {total === 1 ? 'prediction' : 'predictions'} right on the first check
+      </h4>
+      <p>
+        {right === total ? 'Every first prediction held. ' : 'Your first checks stay as they were; checking again above is practice. '}
+        Predictions show you can read the idea. Using it in a rep without hints shows you can apply it.
+      </p>
+      {first ? (
+        <>
+          <Button
+            variant="primary"
+            className="closeout-action"
+            onMouseEnter={() => preloadPractice(first)}
+            onFocus={() => preloadPractice(first)}
+            onClick={() => openRep(first)}
+          >
+            Use it next: {repTitle(first)}
+            <Icon name="arrow" />
+          </Button>
+          {later.length > 0 && (
+            <p className="closeout-also">
+              Then {later.slice(0, 2).map(repTitle).join(' and ')}
+              {later.length > 2 ? `, and ${later.length - 2} more` : ''}.{' '}
+              <Button variant="text" onClick={onPractice}>
+                See every rep
+              </Button>
+            </p>
+          )}
+        </>
+      ) : (
+        <p className="closeout-also">
+          Every rep that uses this lesson is completed.{' '}
+          <Button variant="text" onClick={onPractice}>
+            See them in Practice
+          </Button>
+        </p>
+      )}
+    </section>
   )
 }
 

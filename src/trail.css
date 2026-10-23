@@ -87,6 +87,20 @@
   background: var(--action);
   color: var(--action-text);
 }
+/* A finished stage folds to one row: when it was finished, then its recap on one line. Its trail line is drawn solid. */
+.trail-stage-finished {
+  display: block;
+  font-size: 13px;
+}
+.trail .is-done > .path-stage:not([open]) > .path-stage-heading p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.trail-stage.is-done .trail-nodes::before {
+  background: var(--action);
+}
 .trail-stage-count {
   flex: none;
   color: var(--muted);

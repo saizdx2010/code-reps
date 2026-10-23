@@ -153,7 +153,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   function setView(next: View, id?: string) {
     if (next !== 'workspace') setEditorFocusRequest(0)
     if (next === 'workspace' && id) setRepOrigin(encodeRepOrigin(id, originFrom(route.view, knowledgeSkill, origin)))
-    navigate(next, next === 'workspace' ? (id ?? repId) : next === 'knowledge' ? id : undefined)
+    navigate(next, next === 'workspace' ? (id ?? repId) : id)
   }
   const [glossaryOpen, setGlossaryOpen] = useState(false)
   const [commandsOpen, setCommandsOpen] = useState(false)
@@ -876,7 +876,16 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
               evidence={completionEvidence(repId, attempt.hintCount, journeyStates)}
               moments={
                 completedRecord
-                  ? { history, recordId: completedRecord.id, now, fresh: completedHere === repId, onSkillMap: () => setView('skillmap') }
+                  ? {
+                      history,
+                      recordId: completedRecord.id,
+                      now,
+                      fresh: completedHere === repId,
+                      onSkillMap: () => setView('skillmap'),
+                      goalPathId: fluency.state.goal.pathId,
+                      learnerStart,
+                      onOpenRep: openRep,
+                    }
                   : undefined
               }
               history={history}
@@ -1035,6 +1044,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
           pathId={pathId}
           setPathId={setPathId}
           knowledgeSkill={knowledgeSkill}
+          finishedPathId={route.pathId}
           setKnowledgeSkill={openKnowledge}
           walkthroughSeen={walkthrough !== 'new'}
           launchWalkthrough={() => {

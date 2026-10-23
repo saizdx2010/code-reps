@@ -19,10 +19,13 @@ const views = [
   'patterns',
   'projects',
   'interview',
+  'finished',
+  'first-weeks',
 ] as const
 export type View = (typeof views)[number]
-// A lesson has its own address, #/knowledge/<skill-id>, so it can be bookmarked and Back returns to it.
-export type Route = { view: View; repId?: string; skillId?: string }
+// A lesson has its own address, #/knowledge/<skill-id>, so it can be bookmarked and Back returns to it; so does a
+// finished track, #/finished/<path-id>.
+export type Route = { view: View; repId?: string; skillId?: string; pathId?: string }
 const skillIds = new Set(skillIndex.map(skill => skill.id))
 
 export const navigationSections = {
@@ -42,8 +45,8 @@ export const navigationSections = {
 } satisfies Record<string, { view: View; label: string }[]>
 
 // Pages reached from another page rather than a tab: the Journal switch, quick lessons, the skill map (a view of Skills),
-// the weekly plan and self-assessment (quiet links on Skills), and timed interview practice (an opt-in inside Projects).
-// Their routes still resolve, so old bookmarks keep working.
+// the weekly plan, self-assessment, first four weeks, and finished tracks (reached from Skills), and timed interview
+// practice (an opt-in inside Projects). Their routes still resolve, so old bookmarks keep working.
 const sectionAliases: Partial<Record<View, View>> = {
   sessions: 'history',
   notebook: 'history',
@@ -54,13 +57,15 @@ const sectionAliases: Partial<Record<View, View>> = {
   skillmap: 'progress',
   plan: 'progress',
   assessment: 'progress',
+  finished: 'progress',
+  'first-weeks': 'progress',
   interview: 'projects',
 }
 export const sectionView = (view: View): View => sectionAliases[view] ?? view
 
 /** Moves to a page from a component that does not own navigation state; the hash change updates the route. */
-export function goToView(view: View) {
-  location.hash = routeHash({ view })
+export function goToView(view: View, pathId?: string) {
+  location.hash = routeHash({ view, pathId })
 }
 
 /** Session key naming the project that Library → Projects opens and scrolls to once, after a trail link. */
@@ -106,10 +111,14 @@ export function readRoute(hash: string, repIds: string[]): Route {
     }
     return { view: 'knowledge' }
   }
+  // A finished track's page needs a track; without one, the Skills page lists the finished tracks. The page itself says
+  // when a track id is unknown.
+  if (page === 'finished') return rawId ? { view: 'finished', pathId: rawId } : { view: 'progress' }
   return { view: views.includes(page as View) && page !== 'workspace' ? (page as View) : 'home' }
 }
 export function routeHash(route: Route): string {
   if (route.view === 'workspace' && route.repId) return `#/practice/${encodeURIComponent(route.repId)}`
   if (route.view === 'knowledge' && route.skillId) return `#/knowledge/${encodeURIComponent(route.skillId)}`
+  if (route.view === 'finished' && route.pathId) return `#/finished/${route.pathId}`
   return `#/${route.view === 'catalog' ? 'practice' : route.view}`
 }

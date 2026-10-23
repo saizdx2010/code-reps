@@ -15,6 +15,7 @@ import { usePathText } from './usePathText'
 import type { getPracticePlan, PracticeAction } from './practice'
 import { withoutGoal } from './practice-actions'
 import type { PortableRecord } from './portability'
+import type { FluencyState } from './fluency'
 import type { SetItem } from './warmup'
 import type { NextUp } from './fluency'
 import { formatDate } from './ui-copy'
@@ -51,6 +52,9 @@ const DayClosed = lazy(() => import('./DayClosed'))
 // Coming back after a break, or when the rhythm slows: the slot decides whether it has anything to say.
 const ComeBackSlot = lazy(() => import('./ComeBack'))
 
+// The first four weeks load beside the trail too; without them the trail and Today are unchanged.
+const StarterProgramCard = lazy(() => import('./StarterProgram').catch(() => ({ default: () => null })))
+
 // The first-rep walkthrough is authored for this rep only.
 const walkthroughRepId = 'declare-variables'
 
@@ -72,6 +76,7 @@ type Props = {
   onLearnerStart: (value: LearnerStart) => void
   history: PortableRecord[]
   now: number
+  learning: FluencyState
   warmup: string[]
   startWarmup: () => void
   startSet: (items: SetItem[]) => void
@@ -355,6 +360,19 @@ export function HomePage(props: Props) {
                 </p>
               )}
             </>
+          )}
+          {/* Once the day is closed its card already shows the week, so the first weeks wait for the next visit. */}
+          {!dayClosed && (
+            <Suspense fallback={null}>
+              <StarterProgramCard
+                history={props.history}
+                now={props.now}
+                state={props.learning}
+                stages={trail.stages}
+                openRep={openRep}
+                openLesson={openLesson}
+              />
+            </Suspense>
           )}
           <nav className="trail-links" aria-label="Progress">
             <Button variant="text" onClick={onProgress}>
