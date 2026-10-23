@@ -158,7 +158,7 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
     await click('Quick lessons')
     assert.equal(window.location.hash, '#/learn')
     assert.ok(document.body.textContent.includes('Quick lessons'))
-    await click('Browse lessons')
+    await click('Back to Lessons')
     assert.equal(window.location.hash, '#/knowledge')
     assert.equal(document.querySelector('.knowledge-index input[type="search"]').value, '')
     await click('Predict')

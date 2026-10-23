@@ -2,7 +2,7 @@ import { PageHeader } from './Layout'
 import { goToView } from './ui-navigation'
 import { Button } from './Button'
 import { Icon } from './Icon'
-import { learningPageTitles } from './learning-pages'
+import { learningPageBack, learningPageTitles } from './learning-pages'
 import type { HubTab } from './learning-pages'
 import { screenNavigated } from './screen-focus'
 import { useEffect, useState } from 'react'
@@ -46,7 +46,7 @@ export function LearningHub(props: Props) {
   return (
     <main className="learning-hub">
       <PageHeader
-        eyebrow={tab === 'notebook' ? 'Journal' : undefined}
+        back={learningPageBack[tab] && { label: learningPageBack[tab].label, onClick: () => goToView(learningPageBack[tab]!.view) }}
         title={learningPageTitles[tab].title}
         description={learningPageTitles[tab].description}
         actions={tab === 'notebook' ? props.journalTabs : undefined}
@@ -98,20 +98,6 @@ export function LearningHub(props: Props) {
           minutes={interviewMinutes}
           setMinutes={setInterviewMinutes}
         />
-      )}
-      {(tab === 'plan' || tab === 'assessment') && (
-        <p className="projects-more">
-          <Button variant="text" onClick={() => goToView('progress')}>
-            Back to Skills
-          </Button>
-        </p>
-      )}
-      {tab === 'interview' && (
-        <p className="projects-more">
-          <Button variant="text" onClick={() => setTab('projects')}>
-            Back to Projects
-          </Button>
-        </p>
       )}
       {tab === 'projects' && (
         <p className="projects-more">

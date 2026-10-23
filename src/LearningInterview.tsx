@@ -34,9 +34,9 @@ export function LearningInterview({ state, update, openRep, reviewRep, minutes, 
   }
   return (
     <>
-      <section className="hub-panel">
+      <section className="hub-panel hub-section">
         <h2>Optional timed practice</h2>
-        <InfoNote>
+        <InfoNote label="How a round works">
           <p>
             Clarify, plan, implement, explain, and review. Timing is recorded separately from checks and your self-assessment. The timer
             does not submit or erase your work.

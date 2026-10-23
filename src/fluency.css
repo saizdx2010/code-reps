@@ -233,11 +233,9 @@
   min-width: 0;
   scroll-margin-top: 24px;
 }
+/* The lesson reads on the page itself, like the Library's other panes, rather than inside a card. */
 .knowledge-article {
-  border: 1px solid var(--border);
-  padding: 32px;
-  border-radius: var(--radius);
-  background: var(--surface);
+  min-width: 0;
 }
 .knowledge-article .hub-heading h2 {
   font-size: var(--type-reading);
@@ -492,6 +490,26 @@
   border-radius: var(--radius);
   background: var(--surface);
 }
+/* A page's own sections (Practice week, Self-assessment, Interview) are divided, not boxed; cards stay for objects such as
+   notes, project overviews, and interview rounds. Fields keep a reading width instead of stretching across the page. */
+.hub-panel.hub-section {
+  margin: 0;
+  padding: 24px 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: none;
+}
+.hub-panel.hub-section:first-of-type {
+  padding-top: 0;
+  border-top: 0;
+}
+.hub-section :is(label, .hub-form-row, .day-picker, textarea, select, .ui-select) {
+  max-width: 720px;
+}
+.hub-section .ui-number-control {
+  max-width: 200px;
+}
 .hub-panel h2 {
   font-size: var(--type-section);
 }
@@ -696,14 +714,8 @@
   .knowledge-index nav {
     margin-top: 12px;
   }
-  .knowledge-article {
-    padding: 28px;
-  }
 }
 @media (max-width: 600px) {
-  .knowledge-article {
-    padding: 24px 20px;
-  }
   .knowledge-article .hub-heading h2 {
     font-size: var(--type-reading);
   }
@@ -833,7 +845,7 @@
   font-size: 14px;
   line-height: 1.6;
 }
-.learning-hub .hub-panel:not(.evidence-card):not(.project-overview) {
+.learning-hub .hub-panel:not(.evidence-card):not(.project-overview):not(.hub-section) {
   padding: 20px;
   margin-bottom: 16px;
 }

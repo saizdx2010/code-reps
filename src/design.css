@@ -2843,16 +2843,14 @@ footer {
 dialog::backdrop {
   background: var(--backdrop);
 }
-.utility-heading,
-.hub-dialog-heading {
+.utility-heading {
   display: flex;
   justify-content: space-between;
   align-items: start;
   gap: 20px;
   margin-bottom: 22px;
 }
-.utility-heading h2,
-.hub-dialog-heading h2 {
+.utility-heading h2 {
   font-size: var(--type-reading);
   margin: 0;
 }

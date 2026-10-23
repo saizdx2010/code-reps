@@ -26,7 +26,6 @@ export function MistakesPage({ history, now, onOpenRep, onOpenLesson }: Props) {
     <main className="progress-main mistakes-main">
       <PageHeader
         title="Mistakes"
-        eyebrow="Journal"
         description="Tags you chose while reviewing finished reps, grouped over time."
         actions={<JournalTabs view="mistakes" onNavigate={goToView} />}
       />

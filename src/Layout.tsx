@@ -3,12 +3,28 @@ import { Icon } from './Icon'
 import type { ChipTone } from './ui-status'
 import './layout.css'
 
-/** Compact page title with one line of context and optional actions. Owns the page h1 used by skip links. */
-type PageHeaderProps = { title: ReactNode; description?: ReactNode; actions?: ReactNode; eyebrow?: ReactNode }
-export function PageHeader({ title, description, actions, eyebrow }: PageHeaderProps) {
+/**
+ * Compact page title with one line of context and optional actions. Owns the page h1 used by skip links. A page reached
+ * from another page in its section (Practice week from Skills, Quick lessons from Lessons) names that page in a back link
+ * above the title, where an eyebrow would sit; the section tab already names the area, so eyebrows carry only page context.
+ */
+type PageHeaderProps = {
+  title: ReactNode
+  description?: ReactNode
+  actions?: ReactNode
+  eyebrow?: ReactNode
+  back?: { label: string; onClick: () => void }
+}
+export function PageHeader({ title, description, actions, eyebrow, back }: PageHeaderProps) {
   return (
     <header className="page-header">
       <div>
+        {back && (
+          <button type="button" className="page-back" onClick={back.onClick} aria-label={`Back to ${back.label}`}>
+            <Icon name="left" />
+            {back.label}
+          </button>
+        )}
         {eyebrow && <span className="page-eyebrow">{eyebrow}</span>}
         <h1 tabIndex={-1}>{title}</h1>
         {description && <p>{description}</p>}

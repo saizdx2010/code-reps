@@ -30,9 +30,9 @@ export function LearningAssessment({ state, update, history, reviewRep, onReview
     : 'You completed these tasks without revealed hints. Try a practical project and later recall to gather broader evidence.'
   return (
     <>
-      <section className="hub-panel">
+      <section className="hub-panel hub-section">
         <h2>A short self-assessment</h2>
-        <InfoNote>
+        <InfoNote label="What this assessment shows">
           <p>
             Optional: solve four short tasks before using hints. Your code checks show behavior; review your reasoning separately. This is a
             snapshot of these skills, not an overall coding score.

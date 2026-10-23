@@ -31,7 +31,8 @@ Foundations (`typescript`) is the shared root track. The tracks that build on it
 ## Page frame and layout
 
 - Every page uses one frame: `main` is `max-width: var(--page-width)` (1224px) with `var(--page-gutter)` side padding (28px, 22px at ≤900px, 18px at ≤600px). The section tabs use the same frame, so the page title, section tabs, and content share one left edge. Do not set per-page `max-width` on `main`; narrow a reading block inside the page instead (for example, 65ch prose).
-- Each page starts with `PageHeader`: an optional eyebrow, exactly one `h1`, one line of description, and optional actions on the right (search, a track chooser, `JournalTabs`). There are no hero headings.
+- Each page starts with `PageHeader`: an optional eyebrow, exactly one `h1`, one line of description, and optional actions on the right (search, a track chooser, `JournalTabs`). There are no hero headings. The section tab already names the area, so an eyebrow carries only page context (Your goal on Your trail, the profile name on Skills), never the section's name. A page reached from another page in its section (Practice week and Self-assessment from Skills, Interview practice from Projects, Quick lessons and Pattern cards from Lessons) has a back link above its title instead (`back` on `PageHeader`: ‹ Skills, ‹ Projects, ‹ Lessons), never a link at the bottom or at the top right.
+- A page's own sections are divided by a rule, not boxed in cards; cards hold objects (a note, a project overview, an interview round, a badge). Form fields keep a reading width (720px; number fields 200px) rather than stretching across the frame. The lesson reads on the page beside its index, not inside a card.
 - The practice workspace is the one exception: it uses the full window width with its own compact header row.
 - Two-column pages (Trail) put the primary content on the left and the next action on the right; on narrow screens the next action comes first.
 
@@ -66,7 +67,7 @@ The workspace title is a dense 22px (20px narrow). Body text is 15–16px; secon
 | Earned badge | Success surface, border, and icon (`--success-soft`, `--success-border`, `--success`); never the next-action lime |
 | Success / error | Separate semantic text, border, and surface tokens, paired with explicit copy |
 | Controls / panels | 8px / 12px corners |
-| Dialogs | `--shadow-dialog` and `--backdrop`, tinted by the scheme's text colour in light mode and black in dark mode |
+| Dialogs | `--shadow-dialog` and `--backdrop`, tinted by the scheme's text colour in light mode and black in dark mode; every dialog and drawer closes with the same control at its top right: ✕ Close with an Esc key hint (Search, the glossary, Local profiles) |
 | Stacking | `--layer-sticky`, `--layer-steps`, `--layer-drawer`, `--layer-menu`, `--layer-skip`, `--layer-tooltip`, lowest first; local stacking inside a component stays -1, 0, or 1 |
 | Standard control height | 40px for fields, selects, and buttons; dense workspace header controls are 36px |
 
@@ -80,7 +81,7 @@ All components are app-owned. Extend these before writing page-specific markup. 
 | --- | --- | --- |
 | `Button`, `Input`, `Select`, `DateInput`, `Tooltip`, `Icon` | `Button.tsx`, `Input.tsx`, `Select.tsx`, `DateInput.tsx`, `Tooltip.tsx`, `Icon.tsx` | All controls. Keep the existing action classes (`primary-button`, `reset-button`, `text-button`). |
 | `PageHeader` | `Layout.tsx` | Every page title, description, and header actions |
-| `InfoNote` | `Layout.tsx` | “ⓘ How evidence works” and other secondary explanation; never body paragraphs of caveats |
+| `InfoNote` | `Layout.tsx` | Secondary explanation, never body paragraphs of caveats. Its label names what it explains (“How evidence works” on Skills, “How these projects count”, “How reviews are spaced”), so two notes never share a label |
 | `StatusChip` + `statusTone` | `Layout.tsx`, `ui-status.ts` | Rep and path status: neutral, progress, success, attention |
 | `EmptyState` | `Layout.tsx` | Empty lists and no-match results, with one recovery action |
 | `ListGroup` / `ListRow` | `Layout.tsx` | Collapsible topic groups and their rows (path badges, assessment skills); exercise rows use `ListRow` beside the topic rail |
@@ -183,7 +184,7 @@ Honor `prefers-reduced-motion` for CSS and JavaScript motion: hover and press mo
 
 Learning tools load as a separate local bundle when opened, keeping the initial app within its existing JavaScript budget. `LoadingStates.tsx` owns page-specific pending layouts and renders the same `PageHeader`, including the Journal switch on Notebook; `learning-pages.ts` shares headings with the loaded pages; `loading.css` owns their presentation. Skeleton fields use `--control-height`. Keep the loaded and pending first working surface aligned on desktop and narrow screens.
 
-Every lazy page's pending state uses `RouteLoading` with that page's own frame class, eyebrow, title, and header actions (such as the Journal switch), and a failed page load shows the same `PageHeader` with a Reload action. Pieces of the brief that load just after it (the "About this rep" note and the SQL Tables card) hold their space with still skeletons. Running checks show the pending-status dot beside "Running checks", never a looping progress bar. Place page-loading status within the existing top padding, outside document flow, so its removal does not move the working surface. Skeleton shapes stay still; one small status dot acknowledges real pending work and respects reduced motion. Pending placeholders remain noninteractive and never replace or clear a draft. Never show invented learner records, counts, results, or percentage progress.
+Every lazy page's pending state uses `RouteLoading` with that page's own frame class, eyebrow or back link, title, and header actions (such as the Journal switch), and a failed page load shows the same `PageHeader` with a Reload action. Pieces of the brief that load just after it (the "About this rep" note and the SQL Tables card) hold their space with still skeletons. Running checks show the pending-status dot beside "Running checks", never a looping progress bar. Place page-loading status within the existing top padding, outside document flow, so its removal does not move the working surface. Skeleton shapes stay still; one small status dot acknowledges real pending work and respects reduced motion. Pending placeholders remain noninteractive and never replace or clear a draft. Never show invented learner records, counts, results, or percentage progress.
 
 ## Startup first paint
 

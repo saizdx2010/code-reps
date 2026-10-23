@@ -37,6 +37,34 @@
   font-size: 13px;
   font-weight: 550;
 }
+.page-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 28px;
+  margin: 0 0 2px -4px;
+  padding: 0 6px 0 2px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 550;
+  transition: background-color var(--motion-fast) var(--motion-ease);
+}
+.page-back .ui-icon {
+  width: 16px;
+  height: 16px;
+  transition: translate var(--motion-fast) var(--motion-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .page-back:hover {
+    background: var(--accent-soft);
+  }
+  .page-back:hover .ui-icon {
+    translate: -2px 0;
+  }
+}
 .page-header-actions {
   display: flex;
   flex-wrap: wrap;

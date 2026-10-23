@@ -39,7 +39,6 @@ export function StuckPage({ history, drafts, now, onOpenRep, onOpenLesson }: Pro
     <main className="progress-main stuck-main">
       <PageHeader
         title="Stuck points"
-        eyebrow="Journal"
         description="Where you said a rep was hardest, grouped by kind and by topic."
         actions={<JournalTabs view="stuck" onNavigate={goToView} />}
       />

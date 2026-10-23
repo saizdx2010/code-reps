@@ -16,5 +16,12 @@ export const learningPageTitles: Record<HubTab, { title: string; description: st
   interview: { title: 'Practice an interview', description: 'A timed round with space to clarify, code, and reflect.' },
 }
 
+/** Hub pages reached from another page in their section, and the page their back link returns to. */
+export const learningPageBack: Partial<Record<HubTab, { label: string; view: View }>> = {
+  plan: { label: 'Skills', view: 'progress' },
+  assessment: { label: 'Skills', view: 'progress' },
+  interview: { label: 'Projects', view: 'projects' },
+}
+
 /** Self-assessment judgments as lessons and the assessment summary name them. */
 export const judgmentLabels: Record<Judgment, string> = { 'not-yet': 'Not yet', 'with-help': 'With help', independent: 'Independently' }

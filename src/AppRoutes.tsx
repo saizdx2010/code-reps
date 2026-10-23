@@ -302,7 +302,7 @@ export function AppRoutes(props: Props) {
         <Suspense
           fallback={
             <RouteLoading
-              eyebrow="Lessons"
+              back={{ label: 'Lessons', onClick: () => setView('knowledge') }}
               title="Pattern cards"
               status="Opening pattern cards…"
               className="learn-main pattern-cards-main"
@@ -314,7 +314,16 @@ export function AppRoutes(props: Props) {
       )
     case 'learn':
       return (
-        <Suspense fallback={<RouteLoading eyebrow="Lessons" title="Quick lessons" status="Opening the lessons…" className="learn-main" />}>
+        <Suspense
+          fallback={
+            <RouteLoading
+              back={{ label: 'Lessons', onClick: () => setView('knowledge') }}
+              title="Quick lessons"
+              status="Opening the lessons…"
+              className="learn-main"
+            />
+          }
+        >
           <QuickLessons openRep={openRep} onBrowse={() => setView('knowledge')} />
         </Suspense>
       )
@@ -322,13 +331,7 @@ export function AppRoutes(props: Props) {
       return (
         <Suspense
           fallback={
-            <RouteLoading
-              eyebrow="Journal"
-              title="Attempt history"
-              status="Opening your attempt history…"
-              className="history-main"
-              actions={journalTabs}
-            />
+            <RouteLoading title="Attempt history" status="Opening your attempt history…" className="history-main" actions={journalTabs} />
           }
         >
           <HistoryPage history={history} categories={categories} journalTabs={journalTabs} openRep={openRep} />

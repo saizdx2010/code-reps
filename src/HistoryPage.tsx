@@ -72,7 +72,6 @@ export function HistoryPage({ history, categories, journalTabs, openRep }: Props
   return (
     <main className="history-main">
       <PageHeader
-        eyebrow="Journal"
         title="Attempt history"
         description="Completed reps stay here so you can compare your thinking over time."
         actions={journalTabs}
