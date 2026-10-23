@@ -81,20 +81,21 @@ export function LearningNotebook({ state, update }: Props) {
   const visible = state.notes.filter(note =>
     `${note.title} ${note.body} ${note.kind} ${skillById(note.skillId)?.title ?? ''}`.toLowerCase().includes(query.toLowerCase()),
   )
+  // An empty notebook is one empty state with one action; search and the header button arrive with the first entry.
+  const empty = state.notes.length === 0
   return (
     <>
-      <div className="hub-heading">
-        <div>
-          <p>Keep recurring mistakes, questions, and ideas next to the skill or attempt they concern.</p>
+      {!empty && (
+        <div className="hub-heading notebook-heading">
+          <label>
+            Search notes
+            <Input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search a concept or mistake" />
+          </label>
+          <Button variant="primary" type="button" onClick={newNote}>
+            New entry
+          </Button>
         </div>
-        <Button variant="primary" type="button" onClick={newNote}>
-          New entry
-        </Button>
-      </div>
-      <label>
-        Search notes
-        <Input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search a concept or mistake" />
-      </label>
+      )}
       {replacement && editing && (
         <div className="delete-confirm" role="group" aria-labelledby="notebook-unsaved">
           <p id="notebook-unsaved">Your open entry has unsaved changes. Discard them and open another entry?</p>
@@ -122,44 +123,46 @@ export function LearningNotebook({ state, update }: Props) {
           {message}
         </p>
       )}
-      <div className="hub-cards">
-        {visible.map(note => (
-          <article className="hub-panel" key={note.id}>
-            <span className="home-label">{note.kind}</span>
-            <h3>{note.title}</h3>
-            <p className="note-body">{note.body}</p>
-            <p className="utility-note">
-              {skillById(note.skillId)?.title} {note.repId && ` · ${repTitle(note.repId)}`} · {formatDate(note.updatedAt)}
-            </p>
-            <div className="hub-actions">
-              <Button type="button" onClick={() => openEntry(note)}>
-                Edit
-              </Button>
-              {confirm === note.id ? (
-                <>
-                  <Button
-                    variant="danger"
-                    type="button"
-                    onClick={() => {
-                      update({ ...state, notes: state.notes.filter(n => n.id !== note.id) })
-                      setConfirm('')
-                    }}
-                  >
-                    Confirm delete
-                  </Button>
-                  <Button type="button" onClick={() => setConfirm('')}>
-                    Keep entry
-                  </Button>
-                </>
-              ) : (
-                <Button type="button" onClick={() => setConfirm(note.id)}>
-                  Delete…
+      {visible.length > 0 && (
+        <div className="hub-cards">
+          {visible.map(note => (
+            <article className="hub-panel" key={note.id}>
+              <span className="home-label">{note.kind}</span>
+              <h3>{note.title}</h3>
+              <p className="note-body">{note.body}</p>
+              <p className="utility-note">
+                {skillById(note.skillId)?.title} {note.repId && ` · ${repTitle(note.repId)}`} · {formatDate(note.updatedAt)}
+              </p>
+              <div className="hub-actions">
+                <Button type="button" onClick={() => openEntry(note)}>
+                  Edit
                 </Button>
-              )}
-            </div>
-          </article>
-        ))}
-      </div>
+                {confirm === note.id ? (
+                  <>
+                    <Button
+                      variant="danger"
+                      type="button"
+                      onClick={() => {
+                        update({ ...state, notes: state.notes.filter(n => n.id !== note.id) })
+                        setConfirm('')
+                      }}
+                    >
+                      Confirm delete
+                    </Button>
+                    <Button type="button" onClick={() => setConfirm('')}>
+                      Keep entry
+                    </Button>
+                  </>
+                ) : (
+                  <Button type="button" onClick={() => setConfirm(note.id)}>
+                    Delete…
+                  </Button>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
       {!visible.length &&
         (query ? (
           <EmptyState
@@ -173,14 +176,18 @@ export function LearningNotebook({ state, update }: Props) {
             Try another concept or mistake.
           </EmptyState>
         ) : (
-          <div className="hub-empty">
-            <span className="home-label">Your notebook</span>
-            <h3>Make your next attempt useful.</h3>
-            <p>Your notebook is empty. Save an idea or mistake after your next attempt.</p>
-            <Button variant="primary" onClick={newNote}>
-              Write your first entry
-            </Button>
-          </div>
+          !editing && (
+            <EmptyState
+              title="No notebook entries yet."
+              action={
+                <Button variant="primary" type="button" onClick={newNote}>
+                  New entry
+                </Button>
+              }
+            >
+              Keep recurring mistakes, questions, and ideas next to the skill or attempt they concern.
+            </EmptyState>
+          )
         ))}
     </>
   )

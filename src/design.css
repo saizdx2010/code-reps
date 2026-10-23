@@ -905,37 +905,65 @@ main {
   list-style: none;
 }
 .history-list > li {
+  position: relative;
   border-bottom: 1px solid var(--border);
-  padding: 20px 0 14px;
 }
-.history-list > li > div {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px 24px;
-}
-.history-list > li > div > strong {
-  flex: 1 1 auto;
-  font-size: var(--type-section);
-  font-weight: 600;
-}
-/* One header line per attempt: the rep, when and with how many hints, and the way back to it. */
-.history-list > li > div > .text-button {
-  flex: none;
-}
-.history-list > li > div > span {
-  font-size: 13px;
-  color: var(--muted);
-}
-.history-list details {
-  margin: 8px 0 0;
-}
+/* One line per attempt: the rep and when it was finished open its review; Open rep sits at the line's end. */
 .history-list summary {
-  color: var(--accent);
-  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 16px;
   min-height: var(--control-height);
-  padding: 8px 0;
+  padding: 14px 140px 14px 0;
+  list-style: none;
+  cursor: pointer;
+}
+.history-list summary::-webkit-details-marker {
+  display: none;
+}
+.history-list summary::after {
+  content: '';
+  position: absolute;
+  top: 22px;
+  right: 8px;
+  width: 18px;
+  height: 18px;
+  background: var(--muted);
+  mask: var(--icon-chevron) center / contain no-repeat;
+  transition: rotate var(--motion-fast) var(--motion-ease);
+}
+.history-list details[open] > summary::after {
+  rotate: 180deg;
+}
+.history-list summary > strong {
+  font-size: var(--type-card);
+  font-weight: 600;
+  transition: color var(--motion-fast) var(--motion-ease);
+}
+/* Hover and focus turn the rep name and its chevron accent, the row's one interaction. */
+@media (hover: hover) and (pointer: fine) {
+  .history-list summary:hover > strong {
+    color: var(--accent);
+  }
+  .history-list summary:hover::after {
+    background: var(--accent);
+  }
+}
+.history-list summary:focus-visible > strong {
+  color: var(--accent);
+}
+.history-list summary > span {
+  color: var(--muted);
+  font-size: 13px;
+}
+.history-list .attempt-open {
+  position: absolute;
+  top: 12px;
+  right: 36px;
+}
+.history-list details[open] {
+  padding-bottom: 16px;
 }
 .history-list h3 {
   font-size: var(--type-card);
@@ -3720,7 +3748,9 @@ summary::marker {
 }
 details:not(.site-menu):not(.workspace-options):not(.knowledge-browser):not(.knowledge-group):not(.path-stage):not(.progress-journey):not(
     .evidence-card
-  ):not(.project-overview):not(.foundation-lesson):not(.info-note):not(.list-group):not(.plan-brief):not(.practice-history):not(.then-now)
+  ):not(.project-overview):not(.foundation-lesson):not(.info-note):not(.list-group):not(.plan-brief):not(.practice-history):not(
+    .then-now
+  ):not(.attempt-review)
   > summary::before {
   content: '';
   display: inline-block;
@@ -3737,7 +3767,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
     .progress-journey
   ):not(.evidence-card):not(.project-overview):not(.foundation-lesson):not(.info-note):not(.list-group):not(.plan-brief):not(
     .practice-history
-  ):not(.then-now)
+  ):not(.then-now):not(.attempt-review)
   > summary::before {
   transform: rotate(0deg);
 }
@@ -5269,7 +5299,6 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
     .catalog-filters,
     .progress-reviews,
     .local-data,
-    .history-list details,
     .vocab,
     .reflection-guide,
     .progress-more-reviews,

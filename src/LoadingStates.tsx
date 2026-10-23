@@ -111,14 +111,13 @@ function PageSkeleton({ page, notebookHasDraft, notebookHasEntries }: Required<O
   if (page === 'notebook')
     return (
       <div className="loading-notebook-surface">
-        <div className="hub-heading loading-notebook-heading">
-          <div>
-            <span className="skeleton-line" />
-            <span className="skeleton-line skeleton-short" />
+        {/* An empty notebook is only its empty state; search and New entry arrive with the first entry. */}
+        {(notebookHasDraft || notebookHasEntries) && (
+          <div className="hub-heading loading-notebook-heading">
+            <Fields count={1} />
+            <span className="skeleton-action" />
           </div>
-          <span className="skeleton-action" />
-        </div>
-        <Fields count={1} />
+        )}
         {notebookHasDraft ? (
           <div className="hub-panel loading-sheet">
             <Lines />
@@ -136,7 +135,7 @@ function PageSkeleton({ page, notebookHasDraft, notebookHasEntries }: Required<O
             ))}
           </div>
         ) : (
-          <div className="hub-empty loading-notebook-empty">
+          <div className="empty-state loading-notebook-empty">
             <Lines />
             <span className="skeleton-action" />
           </div>

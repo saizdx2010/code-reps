@@ -39,6 +39,17 @@
 .hub-heading > button {
   flex: none;
 }
+/* Notebook: search and New entry share one row. */
+.notebook-heading {
+  align-items: end;
+}
+.notebook-heading > label {
+  display: grid;
+  flex: 0 1 420px;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 14px;
+}
 .knowledge-layout {
   display: grid;
   grid-template-columns: 248px minmax(0, 1fr);
@@ -656,18 +667,6 @@
 .note-body {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-}
-.hub-empty {
-  padding: 32px 0;
-}
-.hub-empty .home-label {
-  display: none;
-}
-.hub-empty p {
-  max-width: 55ch;
-}
-.hub-empty .primary-button {
-  margin-top: 8px;
 }
 .hub-message:not([data-state]) {
   color: var(--error) !important;
