@@ -38,23 +38,22 @@
 }
 .life-toy-parts {
   display: grid;
-  gap: 8px;
+  gap: 0;
   margin: 0;
   padding: 0;
   list-style: none;
 }
+/* The parts read as a divided list like the project rows around them; the chip, not a dashed box, says what is built. */
 .life-toy-parts li {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px 12px;
-  padding: 10px 12px;
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--radius-control);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
 }
-.life-toy-parts li.is-built {
-  border-style: solid;
-  border-color: var(--border);
+.life-toy-parts li:last-child {
+  border-bottom: 0;
 }
 .life-toy-parts li > div {
   display: grid;

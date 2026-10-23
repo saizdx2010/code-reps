@@ -4,7 +4,7 @@ import { repIndex as reps } from './catalog-index'
 import { foundations } from './foundations'
 import { InlineCode } from './InlineCode'
 import { PageHeader } from './Layout'
-import { useGlossary } from './useGlossary'
+import { Icon } from './Icon'
 import { plural } from './ui-copy.ts'
 
 type Lesson = { repId: string; title: string; explanation: string; example: string; tip: string }
@@ -16,9 +16,16 @@ const problemSkills: { name: string; summary: string; matches: (category: string
   { name: 'Stacks', summary: 'Track the most recent unmatched opening item.', matches: c => c.includes('Stacks') },
 ]
 
-/** The quick-lessons page. It owns the short lesson text and the glossary, so neither ships with startup. */
-export default function QuickLessons({ openRep, onBrowse }: { openRep: (id: string) => void; onBrowse: () => void }) {
-  const glossary = useGlossary()
+/** The quick-lessons page. It owns the short lesson text, so it does not ship with startup. */
+export default function QuickLessons({
+  openRep,
+  onBrowse,
+  onGlossary,
+}: {
+  openRep: (id: string) => void
+  onBrowse: () => void
+  onGlossary: () => void
+}) {
   return (
     <main className="learn-main">
       <PageHeader
@@ -64,29 +71,14 @@ export default function QuickLessons({ openRep, onBrowse }: { openRep: (id: stri
           })}
         </div>
       </details>
-      <details className="learn-section">
-        <summary>
-          <h2>Glossary</h2>
-        </summary>
-        {glossary.status === 'loading' && <p role="status">Loading the glossary…</p>}
-        {glossary.status === 'error' && (
-          <div role="alert">
-            <p>The glossary could not load.</p>
-            <Button variant="text" onClick={glossary.retry}>
-              Retry
-            </Button>
-          </div>
-        )}
-        <dl className="glossary-list">
-          {glossary.status === 'ready' &&
-            glossary.terms.map(item => (
-              <div key={item.term}>
-                <dt>{item.term}</dt>
-                <dd>{item.meaning}</dd>
-              </div>
-            ))}
-        </dl>
-      </details>
+      {/* The glossary is one drawer for the whole app (Search › Glossary, or Glossary in a rep), not another lesson group. */}
+      <p className="quiet-line">
+        <span>Looking up a word?</span>
+        <Button variant="text" aria-haspopup="dialog" onClick={onGlossary}>
+          Open the glossary
+          <Icon name="arrow" />
+        </Button>
+      </p>
     </main>
   )
 }

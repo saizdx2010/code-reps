@@ -69,6 +69,8 @@ type Props = {
   now: number
   learnerStart: LearnerStart | null
   onLearnerStart: (value: LearnerStart) => void
+  /** Opens the app-wide glossary drawer. */
+  onGlossary: () => void
   drafts: Record<string, Attempt>
   practicePlan: PracticePlan
   completedPathIds: Set<string>
@@ -324,7 +326,7 @@ export function AppRoutes(props: Props) {
             />
           }
         >
-          <QuickLessons openRep={openRep} onBrowse={() => setView('knowledge')} />
+          <QuickLessons openRep={openRep} onBrowse={() => setView('knowledge')} onGlossary={props.onGlossary} />
         </Suspense>
       )
     case 'history':

@@ -124,8 +124,8 @@ export function BrowserProjects({ openRep, recordReflection }: Props) {
           and Retained skills.
         </p>
       </InfoNote>
-      <details className="project-review">
-        <summary>Set up your local project</summary>
+      {/* Both notes under this heading are the same quiet disclosure: what counts, then how to set up. */}
+      <InfoNote label="Set up your local project">
         <h4>For the browser app</h4>
         <ol>
           {externalSetup.map(point => (
@@ -138,7 +138,7 @@ export function BrowserProjects({ openRep, recordReflection }: Props) {
             <li key={point}>{point}</li>
           ))}
         </ol>
-      </details>
+      </InfoNote>
       {[...browserProjects, ...serviceProjects].map(overview)}
     </section>
   )
