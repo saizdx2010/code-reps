@@ -265,7 +265,7 @@ export function PracticeCatalog(props: Props) {
                 </Select>
               </label>
               {(narrowed || query) && (
-                <Button variant="text" onClick={clearFilters}>
+                <Button variant="text" className="clear-filters" onClick={clearFilters}>
                   Clear filters
                 </Button>
               )}

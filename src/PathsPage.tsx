@@ -130,7 +130,10 @@ export function PathsPage(props: Props) {
           {refresher && <p>Start with guided problems, then revisit skills without hints after a break.</p>}
           <div className="path-goal">
             <p ref={goalLine} tabIndex={-1} role="status">
-              {isGoal ? 'Your learning goal.' : 'Browsing this track does not change your learning goal.'}
+              {/* Keyed so a newly chosen goal settles in; the live region itself stays mounted and announces it. */}
+              <span key={isGoal ? 'goal' : 'browsing'}>
+                {isGoal ? 'Your learning goal.' : 'Browsing this track does not change your learning goal.'}
+              </span>
             </p>
             {!isGoal && (
               <Button

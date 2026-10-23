@@ -456,6 +456,11 @@ button[aria-expanded='true'] > span > .icon-chevron {
   font: inherit;
   text-align: left;
   cursor: pointer;
+  transition:
+    border-color var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
 }
 .pattern-choice:hover:not(:disabled) {
   border-color: var(--accent);
@@ -468,8 +473,10 @@ button[aria-expanded='true'] > span > .icon-chevron {
   cursor: default;
   color: var(--muted);
 }
+/* The answer's heavier edge is an inset ring, so marking it never shifts the choices. */
 .pattern-choice[data-result='answer'] {
-  border: 2px solid var(--success);
+  border-color: var(--success);
+  box-shadow: inset 0 0 0 1px var(--success);
   background: var(--success-soft);
   font-weight: 700;
 }

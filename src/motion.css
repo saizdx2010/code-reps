@@ -204,6 +204,26 @@
   }
 }
 
+/* The practice back link washes like the page header's back link; the wash is inset so it never meets the divider
+   that follows it, and its chevron nudges back. */
+.breadcrumb-link {
+  position: relative;
+  isolation: isolate;
+}
+.breadcrumb-link::before {
+  content: '';
+  position: absolute;
+  inset: 4px 6px 4px -4px;
+  z-index: -1;
+  border-radius: var(--radius-control);
+  background: var(--accent-soft);
+  opacity: 0;
+  transition: opacity var(--motion-fast) var(--motion-ease);
+}
+.breadcrumb-link > .icon-left {
+  transition: translate var(--motion-fast) var(--motion-ease);
+}
+
 /* Rows and small controls respond in place; cards use a softer depth than actions. */
 .section-nav button,
 .text-button,
@@ -268,9 +288,14 @@ summary {
     border-color: var(--accent);
   }
   .section-nav button:hover,
-  .commands-trigger:hover,
-  .breadcrumb-link:hover {
+  .commands-trigger:hover {
     color: var(--accent);
+  }
+  .breadcrumb-link:hover::before {
+    opacity: 1;
+  }
+  .breadcrumb-link:hover > .icon-left {
+    translate: -2px 0;
   }
   .ui-choice:hover:not(:disabled),
   .storage-recovery button:hover:not(:disabled),
@@ -717,6 +742,61 @@ summary {
 .restore-receipt,
 .transfer-message {
   animation: notice-rise 240ms var(--motion-ease) both;
+}
+
+/* Whatever appears in place rises in once where it lands: checked feedback, a refused try, an empty result, the
+   pattern verdict, a new Journal entry form, an opened preview, a newly planned day, and a track's intro and goal line.
+   Each animates only when it is inserted, so typing or re-rendering never replays it. */
+.feedback-note,
+.break-refusal,
+.break-problem,
+.empty-state,
+.command-empty,
+.pattern-feedback,
+form.hub-panel,
+.preview-viewport,
+.preview-stale,
+.plan-days > li,
+.paths-main > .quiet-line,
+.path-overview h2 + p,
+.path-goal p > span {
+  animation: notice-rise 240ms var(--motion-ease) both;
+}
+/* Small things that appear beside a control settle in, as a status chip does: a search's clear button, Clear filters,
+   the results link after a run, Close preview, an answer's tag, and the goal button. */
+.ui-search-clear,
+.clear-filters,
+.workspace-toolbar-links button,
+.preview-controls .stop-checks-button,
+.pattern-choice-tag,
+.lesson-option-note,
+.path-goal .text-button {
+  animation: chip-settle 240ms var(--motion-spring) both;
+}
+/* Search result groups fade in when they first appear; the rows inside stay put while you type. */
+.command-results [role='group'] {
+  animation: rise-arrive 200ms var(--motion-ease) both;
+}
+/* Coming back from practice, the page chrome fades in with the page instead of snapping; a new area's section tabs
+   rise in a short cascade (tabs that stay in the same area keep still). */
+.top-nav,
+.section-bar,
+.app-shell > footer {
+  animation: chrome-arrive 260ms ease both;
+}
+.section-nav button {
+  animation: rise-arrive 240ms var(--motion-ease) both;
+}
+.section-nav button:nth-child(2) {
+  animation-delay: 35ms;
+}
+.section-nav button:nth-child(n + 3) {
+  animation-delay: 70ms;
+}
+@keyframes chrome-arrive {
+  from {
+    opacity: 0;
+  }
 }
 
 /* When an edit puts the last run out of date, Run invites a fresh run with one lime ring, then stays still. */

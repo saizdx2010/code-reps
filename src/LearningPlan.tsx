@@ -70,7 +70,7 @@ export function LearningPlan({ state, update, history, openRep, reviewRep, candi
             </label>
           ))}
         </fieldset>
-        <ol className="milestone-list">
+        <ol className="milestone-list plan-days">
           {weeklyPlan(goal, candidates).map(session => {
             const action = session.action
             return (
