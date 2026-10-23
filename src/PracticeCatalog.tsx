@@ -1,3 +1,4 @@
+import { Icon } from './Icon'
 import { useRef } from 'react'
 import { Button } from './Button'
 import { catalogArea, catalogAreas, catalogTopic, formatLabels } from './catalog-labels.ts'
@@ -31,6 +32,8 @@ type Props = {
   browseReps: RepSummary[]
   dueIds: Set<string>
   repStatus: (rep: RepSummary) => string
+  /** The fewest hints on any completed attempt, by rep. */
+  bestHints: ReadonlyMap<string, number>
   openRep: (id: string) => void
   goalPathId?: string
   /** Lessons that mention the search, offered when no rep does. */
@@ -58,6 +61,7 @@ export function PracticeCatalog(props: Props) {
     browseReps,
     dueIds,
     repStatus,
+    bestHints,
     openRep,
     goalPathId = foundationsPathId,
   } = props
@@ -108,6 +112,11 @@ export function PracticeCatalog(props: Props) {
       !shelfTitle && !query ? '' : catalogTopic(item),
       format,
       dueIds.has(item.id) && shelf !== shelves.review.id ? 'Review due' : '',
+      status === 'Completed' && bestHints.has(item.id)
+        ? bestHints.get(item.id)
+          ? `Best: ${bestHints.get(item.id)} ${bestHints.get(item.id) === 1 ? 'hint' : 'hints'}`
+          : 'Best: no hints'
+        : '',
     ]
       .filter(Boolean)
       .join(' · ')
@@ -116,6 +125,12 @@ export function PracticeCatalog(props: Props) {
         key={item.id}
         title={item.title}
         meta={meta || undefined}
+        marker={
+          // The Library as a collection: an empty mark for each rep still to do, a filled check for each one finished.
+          <span className="today-mark collection-mark" data-done={status === 'Completed' || undefined}>
+            {status === 'Completed' && <Icon name="check" />}
+          </span>
+        }
         status={
           <>
             {repLevelLabel(item.id) && <span className="list-row-level">{repLevelLabel(item.id)}</span>}

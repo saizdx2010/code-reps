@@ -13,6 +13,8 @@ import { retroNoteBody, retroQuestions, weeklyRetro } from './retro.ts'
 import { goToView } from './ui-navigation'
 import { calendarFile } from './calendar-file'
 import { canInstall, install, installed, onInstallChange } from './install-prompt'
+import { monthLookBack } from './month-look-back'
+import { plural } from './ui-copy'
 
 type Props = {
   state: FluencyState
@@ -40,6 +42,7 @@ export function LearningPlan({ state, update, history, openRep, reviewRep, candi
   return (
     <>
       <WeekInReview state={state} update={update} history={history} now={now} />
+      <MonthLookBack state={state} update={update} history={history} now={now} />
       <section className="hub-panel hub-section">
         <h2>A manageable practice week</h2>
         <InfoNote label="How suggestions are chosen">
@@ -329,6 +332,93 @@ function ComeBackOnTime({ state, update }: Pick<Props, 'state' | 'update'>) {
       </div>
       {!goal.days.length && <p>Choose practice days above to make a calendar file.</p>}
       {message && <p role="status">{message}</p>}
+    </section>
+  )
+}
+
+const monthQuestion = 'What are you proudest of this month?'
+
+/**
+ * The last thirty days next to the week: skills that moved up, badges earned, tagged mistakes that came up less, and
+ * reps that went cleanly after needing hints. Saving writes one ordinary Notebook note; nothing else is stored.
+ */
+function MonthLookBack({ state, update, history, now }: Pick<Props, 'state' | 'update' | 'history'> & { now: number }) {
+  const look = useMemo(() => monthLookBack(history, now), [history, now])
+  const [answer, setAnswer] = useState('')
+  const [message, setMessage] = useState('')
+  const facts = [
+    `${look.attempts} completed ${plural(look.attempts, 'attempt')} on ${look.practiceDays} ${plural(look.practiceDays, 'day')}`,
+    look.skills.length ? `skills moved up: ${look.skills.map(skill => `${skill.title} (${skill.to})`).join(', ')}` : '',
+    look.badges.length ? `badges: ${look.badges.join(', ')}` : '',
+    look.fewerMistakes.length ? `fewer mistakes: ${look.fewerMistakes.map(item => item.label).join(', ')}` : '',
+    look.nowClean.length ? `now without hints: ${look.nowClean.map(repTitle).join(', ')}` : '',
+  ].filter(Boolean)
+  function save() {
+    const note = {
+      id: crypto.randomUUID(),
+      title: `Month in review · ${formatDate(now)}`,
+      body: [`30 days from ${formatDate(look.from)}: ${facts.join('; ')}.`, answer.trim() ? `${monthQuestion}\n${answer.trim()}` : '']
+        .filter(Boolean)
+        .join('\n\n'),
+      skillId: '',
+      repId: '',
+      kind: 'note' as const,
+      updatedAt: new Date(now).toISOString(),
+    }
+    if (update({ ...state, notes: [note, ...state.notes] })) {
+      setAnswer('')
+      setMessage('Saved to your Notebook.')
+    } else setMessage('Your look back could not be saved. Your writing is still here.')
+  }
+  const lists = [
+    { title: 'Skills that moved up', items: look.skills.map(skill => `${skill.title} · ${skill.to}`) },
+    { title: 'Badges earned', items: look.badges },
+    {
+      title: 'Mistakes you tagged less',
+      items: look.fewerMistakes.map(item => `${item.label}: ${item.before} before, ${item.now} this month`),
+    },
+    { title: 'Now without hints', items: look.nowClean.map(repTitle) },
+  ].filter(list => list.items.length)
+  return (
+    <section className="hub-panel hub-section month-review" aria-labelledby="month-review-title">
+      <h2 id="month-review-title">Look back at the last 30 days</h2>
+      <p>
+        {look.attempts} completed {plural(look.attempts, 'attempt')} on {look.practiceDays} practice {plural(look.practiceDays, 'day')}
+        {look.previousAttempts ? `, against ${look.previousAttempts} in the 30 days before.` : '.'}
+      </p>
+      {lists.length ? (
+        <div className="month-review-lists">
+          {lists.map(list => (
+            <section key={list.title} aria-label={list.title}>
+              <h3>{list.title}</h3>
+              <ul>
+                {list.items.map(item => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <p>Nothing moved up this month yet. Skills, badges, and cleaner reps collect here as you practice.</p>
+      )}
+      <label className="week-review-question">
+        {monthQuestion}
+        <Textarea
+          rows={2}
+          value={answer}
+          onChange={event => {
+            setMessage('')
+            setAnswer(event.target.value)
+          }}
+        />
+      </label>
+      <div className="week-review-actions">
+        <Button variant="primary" disabled={look.attempts === 0} onClick={save}>
+          Save to Notebook
+        </Button>
+        {message && <p role="status">{message}</p>}
+      </div>
     </section>
   )
 }

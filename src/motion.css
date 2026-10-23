@@ -885,6 +885,19 @@ form.hub-panel,
   transform-origin: left center;
   animation: fill-grow 720ms var(--motion-ease) 160ms both;
 }
+/* A rep finished since the trail last showed it: its check pops in and the walked line grows into it, once. */
+.trail-node.is-fresh .trail-marker {
+  animation: mark-pop 360ms var(--motion-spring) 240ms both;
+}
+.trail-node.is-fresh[data-walk-up]::before {
+  transform-origin: top center;
+  animation: line-grow 320ms var(--motion-ease) both;
+}
+@keyframes line-grow {
+  from {
+    transform: scaleY(0);
+  }
+}
 /* Today's plan: an item finished since the last visit pops its check in and fills its meter segment, once. */
 .today-mark.is-fresh {
   animation: mark-pop 320ms var(--motion-spring) 180ms both;

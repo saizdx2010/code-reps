@@ -132,6 +132,15 @@ export function AppRoutes(props: Props) {
         .filter(key => key.includes(':'))
         .map(key => key.slice(0, key.indexOf(':'))),
     )
+    // First completion of each rep, and when each waiting recall opens, for the walked line and recall countdowns.
+    const firstDone = new Map<string, number>()
+    for (const record of history) {
+      const time = Date.parse(record.completedAt)
+      if (Number.isFinite(time) && time < (firstDone.get(record.repId) ?? Infinity)) firstDone.set(record.repId, time)
+    }
+    const recallOpens = new Map(
+      journeyStates.flatMap(state => (state.recallAt && !state.retained ? [[state.journey.recall, state.recallAt]] : [])),
+    )
     const input = (id: string) => ({
       completed: (repId: string) => completedPathIds.has(repId),
       inProgress: (repId: string) => attemptStatus(repId, drafts[repId]) === 'In progress',
@@ -139,9 +148,11 @@ export function AppRoutes(props: Props) {
       lessonChecked: (skillId: string) => checkedSkills.has(skillId),
       skipStages: learnerStart === 'returning' ? returningSkipStages(id) : 0,
       focusRepId: practicePlan.next?.repId,
+      completedAt: (repId: string) => firstDone.get(repId),
+      recallAt: (repId: string) => recallOpens.get(repId),
     })
     return [buildTrail(goalPathId, input(goalPathId)), buildTrail(pathId, input(pathId))]
-  }, [goalPathId, pathId, completedPathIds, journeyStates, drafts, answers, learnerStart, practicePlan.next?.repId])
+  }, [goalPathId, pathId, completedPathIds, journeyStates, drafts, answers, learnerStart, practicePlan.next?.repId, history])
   const trailEvidence = (id: string) => repCurriculumEvidence(id, journeyStates)
   const openPath = (id: PathId) => {
     setPathId(id)
@@ -232,6 +243,7 @@ export function AppRoutes(props: Props) {
       return (
         <Suspense fallback={<RouteLoading title="Find your next rep" status="Opening the library…" className="catalog-main" />}>
           <CatalogRoute
+            history={history}
             goalPathId={goalPathId}
             practicePlan={practicePlan}
             repStatus={repStatus}
@@ -262,7 +274,7 @@ export function AppRoutes(props: Props) {
     case 'skillmap':
       return (
         <Suspense fallback={<RouteLoading title="Skill map" status="Opening the skill map…" className="skill-map-main" />}>
-          <SkillMapPage goalPathId={goalPathId} progress={journeyStates} openRep={openRep} reviewRep={openReview} />
+          <SkillMapPage goalPathId={goalPathId} progress={journeyStates} history={history} openRep={openRep} reviewRep={openReview} />
         </Suspense>
       )
     case 'mistakes':
@@ -368,12 +380,14 @@ export function AppRoutes(props: Props) {
 
 /** The library with its session-only filters. */
 function CatalogRoute({
+  history,
   goalPathId,
   practicePlan,
   repStatus,
   openRep,
   openLesson,
 }: {
+  history: AttemptRecord[]
   goalPathId: string
   practicePlan: PracticePlan
   repStatus: (rep: RepSummary) => string
@@ -386,6 +400,12 @@ function CatalogRoute({
   const [shelf, setShelf] = useSessionPreference<string>('catalogSkill', '')
   const [format, setFormat] = useSessionPreference<string>('catalogFormat', '')
   const dueIds = useMemo(() => new Set(practicePlan.due.map(item => item.repId)), [practicePlan])
+  // The fewest hints on any completed attempt of each rep: the Library shows its best evidence beside the check.
+  const bestHints = useMemo(() => {
+    const best = new Map<string, number>()
+    for (const record of history) best.set(record.repId, Math.min(best.get(record.repId) ?? Infinity, record.hintCount))
+    return best
+  }, [history])
   const browseReps = useMemo(
     () => reps.filter(item => (!level || String(repLevel(item.id)) === level) && (!format || (item.format ?? 'algorithm') === format)),
     [level, format],
@@ -406,6 +426,7 @@ function CatalogRoute({
   const setters = { query: setQuery, format: setFormat, level: setLevel }
   return (
     <PracticeCatalog
+      bestHints={bestHints}
       goalPathId={goalPathId}
       filters={{ query, format, level }}
       onFilter={(field, value) => setters[field](value)}
