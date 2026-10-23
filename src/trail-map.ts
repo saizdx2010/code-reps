@@ -21,9 +21,13 @@ export type TrailStage = {
   done: number
   total: number
   current: boolean
+  /** When a finished stage was finished: the latest of its reps' first completions. */
+  finishedAt?: number
 }
 type TrailInput = {
   completed: (repId: string) => boolean
+  /** A rep's first completion time, which dates a finished stage. */
+  completedAt?: (repId: string) => number | undefined
   inProgress: (repId: string) => boolean
   recallReady: (repId: string) => boolean
   lessonChecked: (skillId: string) => boolean
@@ -74,6 +78,8 @@ export function buildTrail(pathId: string, input: TrailInput): { stages: TrailSt
       nodes.push({ kind: 'rep', id: `rep:${repId}`, repId, title: rep.title, role: repCurriculumRole(repId), state, inProgress })
     }
     const repNodes = nodes.filter(node => node.kind === 'rep')
+    const finishedAt =
+      repNodes.every(node => node.state === 'done') && Math.max(0, ...repNodes.map(node => input.completedAt?.(node.repId) ?? 0))
     return {
       title: stage.title,
       nodes,
@@ -82,6 +88,7 @@ export function buildTrail(pathId: string, input: TrailInput): { stages: TrailSt
       done: repNodes.filter(node => node.state === 'done').length,
       total: repNodes.length,
       current: repNodes.some(node => node.state === 'next'),
+      ...(finishedAt ? { finishedAt } : {}),
     }
   })
   const projects = (pathApplications[path.id] ?? []).flatMap((application): TrailNode[] => {

@@ -7,6 +7,7 @@ import { repLevelLabel, stageLevelRange } from './rep-levels.ts'
 import type { StageText } from './path-text'
 import type { TrailNode, TrailStage } from './trail-map'
 import { openExternalProject } from './ui-navigation'
+import { formatDate, plural } from './ui-copy.ts'
 
 type Props = {
   stages: TrailStage[]
@@ -71,10 +72,22 @@ export function Trail({ stages, evidence, onOpenRep, onOpenLesson, onOpenTrack, 
               </span>
               <div>
                 <h3>{stage.title}</h3>
-                {stageSummary(stage, text?.[stage.title]) && <p>{stageSummary(stage, text?.[stage.title])}</p>}
+                {/* A finished stage folds to one row: when it was finished, then its recap on one line. */}
+                {(stage.finishedAt || stageSummary(stage, text?.[stage.title])) && (
+                  <p>
+                    {stage.finishedAt && <span className="trail-stage-finished">Completed {formatDate(stage.finishedAt)}</span>}
+                    {stageSummary(stage, text?.[stage.title])}
+                  </p>
+                )}
                 {levelRange(stage) && <StatusChip>{levelRange(stage)}</StatusChip>}
               </div>
-              <span className="trail-stage-count">{stage.total ? `${stage.done}/${stage.total}` : 'Self-review'}</span>
+              <span className="trail-stage-count">
+                {stage.finishedAt
+                  ? `${stage.total} ${plural(stage.total, 'rep')}`
+                  : stage.total
+                    ? `${stage.done}/${stage.total}`
+                    : 'Self-review'}
+              </span>
             </summary>
             {stage.coveredBy && onOpenTrack && (
               <Button variant="text" className="trail-covered" onClick={() => onOpenTrack(stage.coveredBy!.id)}>

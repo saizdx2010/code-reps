@@ -128,8 +128,15 @@ export function AppRoutes(props: Props) {
         .filter(key => key.includes(':'))
         .map(key => key.slice(0, key.indexOf(':'))),
     )
+    // Each rep's first completion dates the stage it finished.
+    const firstDone = new Map<string, number>()
+    for (const { repId, completedAt } of history) {
+      const time = Date.parse(completedAt)
+      if (time < (firstDone.get(repId) ?? Infinity)) firstDone.set(repId, time)
+    }
     const input = (id: string) => ({
       completed: (repId: string) => completedPathIds.has(repId),
+      completedAt: (repId: string) => firstDone.get(repId),
       inProgress: (repId: string) => attemptStatus(repId, drafts[repId]) === 'In progress',
       recallReady: ready,
       lessonChecked: (skillId: string) => checkedSkills.has(skillId),
@@ -137,7 +144,7 @@ export function AppRoutes(props: Props) {
       focusRepId: practicePlan.next?.repId,
     })
     return [buildTrail(goalPathId, input(goalPathId)), buildTrail(pathId, input(pathId))]
-  }, [goalPathId, pathId, completedPathIds, journeyStates, drafts, answers, learnerStart, practicePlan.next?.repId])
+  }, [goalPathId, pathId, completedPathIds, history, journeyStates, drafts, answers, learnerStart, practicePlan.next?.repId])
   const trailEvidence = (id: string) => repCurriculumEvidence(id, journeyStates)
   const openPath = (id: PathId) => {
     setPathId(id)
