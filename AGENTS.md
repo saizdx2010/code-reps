@@ -54,6 +54,8 @@ For a focused test, use `node --experimental-strip-types --test tests/<name>.tes
 | Check orchestration and execution | `src/check-run.ts`, `src/runner.worker.ts`, `src/runner.ts`, `src/runner.types.ts`, `src/compile-solution.ts`, `src/frontend-run.ts`, `src/frontend-frame.ts`, `src/frontend-frame-html.ts`, `src/practice-worker.ts`, `src/run-rep.ts`, `src/project-files.ts` |
 | Reps and paths | `src/rep.ts`, `src/path.ts`, and focused `*-reps.ts` / content modules |
 | Learning and progress evidence | `src/learning.ts`, `src/fluency.ts`, `src/useFluency.ts`, `src/LearningHub.tsx`, `src/ProgressPage.tsx` |
+| Completion, progress, and coming back | `src/daily-loop.ts`, `src/week-progress.ts`, `src/DayClosed.tsx`, `src/come-back.ts`, `src/ComeBack.tsx`, `src/calendar-file.ts`, `src/reminders.ts`, `src/stage-closeout.ts`, `src/track-finish.ts`, `src/starter-program.ts`, `src/skill-growth.ts`, `src/month-look-back.ts` |
+| Toys that run learner code | `src/toy-rewards.ts`, `src/toy-session.ts`, `src/life-toy.ts`, `src/LifeToy.tsx`, `src/request-console.ts`, `src/RequestConsole.tsx` |
 | Knowledge and authored reviews | `src/knowledge.ts`, `src/rep-depth.ts`, `src/lesson-depth.ts`, `src/content-depth.ts` |
 | Persistence and backup contracts | `src/local-store.ts`, `src/portability.ts`, `src/profile-backup.ts`, `server/store.mjs`, `server/index.mjs` |
 | Distribution | `scripts/package.mjs`, `scripts/verify-portable.mjs`, `.github/workflows/portable-bundles.yml` |
