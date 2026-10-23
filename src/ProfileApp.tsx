@@ -8,7 +8,7 @@ import { repIndex as reps } from './catalog-index'
 import { useRef, useState } from 'react'
 import App from './App'
 import { activateProfile, flushStorage, rawLocalStore } from './local-store'
-import { legacyMigration, parseProfiles, profilePrefix, profileRegistryKey } from './profiles'
+import { legacyMigration, parseProfiles, profileClearEntries, profilePrefix, profileRegistryKey } from './profiles'
 import type { LocalProfile } from './profiles'
 import './fluency.css'
 import { useAppMotion } from './useAppMotion'
@@ -61,6 +61,9 @@ export default function ProfileApp() {
   const [name, setName] = useState('')
   const [newName, setNewName] = useState('')
   const [deleteRequested, setDeleteRequested] = useState(false)
+  const [resetRequested, setResetRequested] = useState(false)
+  // Bumped by a reset so the workspace remounts and rereads the now-empty profile.
+  const [resets, setResets] = useState(0)
   const dialog = useRef<HTMLDialogElement>(null)
   const current = profiles.find(p => p.id === active)
   function readCurrentProfiles() {
@@ -107,6 +110,7 @@ export default function ProfileApp() {
       setProfiles(fresh)
       enterProfile(id)
       setDeleteRequested(false)
+      setResetRequested(false)
     })
   }
   async function create() {
@@ -138,18 +142,30 @@ export default function ProfileApp() {
       const fresh = readCurrentProfiles()
       if (fresh.length <= 1) throw new Error('Keep at least one local profile.')
       const remaining = fresh.filter(p => p.id !== active)
-      const prefix = profilePrefix(active)
-      const deletes = Object.fromEntries(
-        Object.keys(cachedEntries())
-          .filter(k => k.startsWith(prefix))
-          .map(k => [k, null]),
-      )
-      rawLocalStore.setEntries({ ...deletes, [profileRegistryKey]: registryValue(remaining) })
+      rawLocalStore.setEntries({
+        ...profileClearEntries(active, Object.keys(cachedEntries())),
+        [profileRegistryKey]: registryValue(remaining),
+      })
       await flushStorage()
       setProfiles(remaining)
       enterProfile(remaining[0].id)
       setDeleteRequested(false)
       setMessage('Profile deleted from this installation. Automatic backups may retain earlier copies.')
+    })
+  }
+  /** Clear this profile's practice data but keep the profile and its name, then reopen it on Home. */
+  async function reset() {
+    await withBusy('Resetting progress…', 'Could not reset progress.', async () => {
+      await saveCurrent()
+      const fresh = readCurrentProfiles()
+      if (!fresh.some(p => p.id === active)) throw new Error('That profile was removed.')
+      rawLocalStore.setEntries(profileClearEntries(active, Object.keys(cachedEntries())))
+      await flushStorage()
+      setProfiles(fresh)
+      setResets(n => n + 1)
+      enterProfile(active)
+      setResetRequested(false)
+      setMessage('Progress reset. Automatic backups may retain earlier copies.')
     })
   }
   async function exportProfile() {
@@ -209,7 +225,7 @@ export default function ProfileApp() {
   const disabled = Boolean(busy)
   return (
     <>
-      <App key={active} profileName={current?.name ?? 'My learning'} onManageProfiles={openProfiles} />
+      <App key={`${active}:${resets}`} profileName={current?.name ?? 'My learning'} onManageProfiles={openProfiles} />
       <dialog ref={dialog} className="profile-dialog" aria-labelledby="profiles-title">
         {/* The same close control as Search and the glossary: icon, word, and the Esc key that also closes it. */}
         <div className="utility-heading">
@@ -289,6 +305,28 @@ export default function ProfileApp() {
           {busy || message}
         </p>
         <div className="profile-delete">
+          {resetRequested ? (
+            <div className="delete-confirm">
+              <p>
+                Reset {current?.name}? This clears its drafts, attempts, notes, lesson answers, assessments, and preferences, and keeps the
+                profile. Export it first if you want to keep them.
+              </p>
+              <Button variant="danger" type="button" disabled={disabled} onClick={() => void reset()}>
+                Reset progress
+              </Button>
+              <Button type="button" disabled={disabled} onClick={() => setResetRequested(false)}>
+                Keep progress
+              </Button>
+            </div>
+          ) : (
+            !deleteRequested && (
+              <div className="profile-reset">
+                <Button type="button" disabled={disabled} onClick={() => setResetRequested(true)}>
+                  Reset {current?.name} progress…
+                </Button>
+              </div>
+            )
+          )}
           {deleteRequested ? (
             <div className="delete-confirm">
               <p>Delete {current?.name} and its drafts, attempts, notes, and assessments? Export it first if you want to keep them.</p>
@@ -299,7 +337,7 @@ export default function ProfileApp() {
                 Keep profile
               </Button>
             </div>
-          ) : profiles.length <= 1 ? (
+          ) : resetRequested ? null : profiles.length <= 1 ? (
             <p>This is the only profile, so it cannot be deleted. Create another profile first.</p>
           ) : (
             <Button type="button" disabled={disabled} onClick={() => setDeleteRequested(true)}>

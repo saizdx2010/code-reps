@@ -3025,6 +3025,9 @@ dialog::backdrop {
 .profile-delete > p {
   margin: 0;
 }
+.profile-reset {
+  margin-bottom: 12px;
+}
 .delete-confirm {
   padding: 18px;
   border-radius: var(--radius-control);

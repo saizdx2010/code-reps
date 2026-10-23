@@ -19,6 +19,8 @@ Most lessons are reference material rather than complete courses. React and data
 
 Use **Profiles** in the app header to create, switch, rename, export, import, or delete a local profile. Each profile owns its attempts, drafts, history, starting choice, learning-tool data, selected exercise, and workspace preference. Session UI preferences and editor paths are separated too.
 
+**Reset {profile} progress…** clears everything stored in the current profile (the same data a full profile file exports) and keeps the profile's name and id, so it works even when there is only one profile. It asks for confirmation first, saves the open exercise, and waits for pending server writes before clearing; the workspace then reopens on Home. Automatic server backups may still hold earlier copies.
+
 On first upgrade, existing `code-reps:*` learner keys move into the default **My learning** profile in a single batch. Storage infrastructure keys are excluded. Switching saves the active exercise and waits for pending server writes before changing the profile. Failed saves leave the current profile open.
 
 Profiles separate data; they do not provide authentication or privacy from someone with access to the machine. Each browser tab remembers its selected profile for its session. Simultaneous editing of the same profile in multiple tabs is not a collaborative editing workflow; the existing store uses last writes rather than conflict merging.

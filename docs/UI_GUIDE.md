@@ -104,7 +104,7 @@ Plan and Explain offer optional English sentence starters above the writing fiel
 
 ## Profiles
 
-- Manage profiles opens **Local profiles**: switch profile, then three disclosures. **New profile** and **Rename {profile}** each have their own name field, so a name typed for one never applies to the other. **Full profile file** exports everything in the current profile or imports a file as a new, separate profile; it explains how it differs from merging a practice backup on Progress. With one profile, the delete control is replaced by the reason it cannot be deleted.
+- Manage profiles opens **Local profiles**: switch profile, then three disclosures. **New profile** and **Rename {profile}** each have their own name field, so a name typed for one never applies to the other. **Full profile file** exports everything in the current profile or imports a file as a new, separate profile; it explains how it differs from merging a practice backup on Progress. **Reset {profile} progress…** sits above the delete control and opens an inline confirmation (**Reset progress** or **Keep progress**); it clears the profile's data but keeps the profile, so it is available with one profile too. With one profile, the delete control is replaced by the reason it cannot be deleted.
 
 ## Retired practice sessions
 

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { legacyMigration, parseProfiles, scopedKey } from '../src/profiles.ts'
+import { legacyMigration, parseProfiles, profileClearEntries, scopedKey } from '../src/profiles.ts'
 import { createLocalStore } from '../src/local-store.ts'
 class MemoryStorage {
   data = new Map()
@@ -87,4 +87,17 @@ test('full profile imports validate attempts, notes, assessments and preferences
     () => parseProfileBackup(JSON.stringify({ ...profile, entries: { ...profile.entries, 'fluency:v1': '{}' } }), ids),
     /invalid/,
   )
+})
+test('clearing a profile removes only that profile’s keys', () => {
+  const keys = [
+    scopedKey('default', 'code-reps:history:v1'),
+    scopedKey('default', 'code-reps:attempt:sum-positive-numbers:v1'),
+    scopedKey('other', 'code-reps:history:v1'),
+    'code-reps:profiles:v1',
+    'code-reps:pending-writes:v1',
+  ]
+  assert.deepEqual(profileClearEntries('default', keys), {
+    [scopedKey('default', 'code-reps:history:v1')]: null,
+    [scopedKey('default', 'code-reps:attempt:sum-positive-numbers:v1')]: null,
+  })
 })

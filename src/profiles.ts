@@ -46,3 +46,10 @@ export function legacyMigration(entries: Record<string, string>) {
   }
   return updates
 }
+/** Removal entries for every stored key in one profile; the registry entry (name and id) is left to the caller. */
+export function profileClearEntries(id: string, keys: Iterable<string>) {
+  const prefix = profilePrefix(id)
+  const updates: Record<string, null> = {}
+  for (const key of keys) if (key.startsWith(prefix)) updates[key] = null
+  return updates
+}
