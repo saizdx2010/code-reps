@@ -6,6 +6,8 @@ import type { Rep } from './rep-types.ts'
 import type { CompileRequest } from './runner.types'
 import { lifeStepper } from './life-toy.ts'
 import type { LifeSources, LifeStep } from './life-toy.ts'
+import { requestConsole } from './request-console.ts'
+import type { ConsoleSources, RawRequest } from './request-console.ts'
 import type { ToyKind } from './toy-session'
 
 // `source` names the rep's content chunk, so the worker does not need the catalog to find it.
@@ -37,13 +39,14 @@ function prepare(repId: string, source: string | undefined): Promise<Prepared> {
   return prepared.promise
 }
 
-// A toy (the Game of Life) keeps one worker while it is open and runs the learner's saved code here,
+// A toy (the Game of Life, the Request console) keeps one worker while it is open and runs the learner's saved code here,
 // never on the page. The compiled parts are kept until the sources change; the page stops the worker if a run takes
 // more than five seconds.
 type ToyRequest = { toy: { id: number; kind: ToyKind; sources: Record<string, string>; input: unknown } }
 const compile = (source: string, functionName: string) => compileSolution(source, functionName)
 const toys: Record<ToyKind, (sources: Record<string, string>) => (input: never) => unknown> = {
   life: sources => lifeStepper(sources as LifeSources, compile) as (step: LifeStep) => unknown,
+  'request-console': sources => requestConsole(sources as ConsoleSources, compile) as (request: RawRequest) => unknown,
 }
 let toy: { key: string; run: (input: never) => unknown } | undefined
 

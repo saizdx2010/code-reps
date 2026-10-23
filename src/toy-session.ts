@@ -5,8 +5,8 @@ export const toyRunLimitMs = 5000
 /** How long a new worker may take to load (it brings the TypeScript compiler) before the toy gives up on it. */
 export const toyLoadLimitMs = 30_000
 
-/** The toys the practice worker runs. */
-export type ToyKind = 'life'
+/** The toys the practice worker runs: the Game of Life and the Request console. */
+export type ToyKind = 'life' | 'request-console'
 
 /**
  * One worker for an open toy, which runs the learner's saved sources there and never on the page. A run that throws

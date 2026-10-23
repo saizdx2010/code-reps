@@ -144,6 +144,7 @@ test('all product pages fit a narrow screen and lessons open without the topic l
     'plan',
     'projects',
     'interview',
+    'request-console',
     'assessment',
     'progress',
     'history',

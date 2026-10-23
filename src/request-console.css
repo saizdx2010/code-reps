@@ -1,0 +1,339 @@
+/* The Request console (src/RequestConsole.tsx). Loaded with the page, so startup never pays for it. */
+.console-layout {
+  display: grid;
+  gap: 32px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+/* Wide screens put the request beside the parts it flows through; narrow ones stack the request first. */
+@media (min-width: 1000px) {
+  .console-layout {
+    grid-template-columns: minmax(320px, 5fr) minmax(0, 7fr);
+    gap: 40px;
+  }
+}
+.console-request,
+.console-flow {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+}
+.console-request h2,
+.console-flow h2 {
+  margin: 0;
+  font-size: var(--type-section);
+}
+.console-field {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.console-field > .ui-select-control {
+  max-width: 320px;
+}
+/* The request keeps its lines as typed; a long line scrolls inside the field instead of wrapping into the next one. */
+.console-text {
+  min-height: 210px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.6;
+  white-space: pre;
+  resize: vertical;
+}
+.console-help {
+  margin: -6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.console-request > .primary-button {
+  justify-self: start;
+}
+.console-routes {
+  font-size: 14px;
+}
+.console-routes summary {
+  min-height: 40px;
+  padding: 8px 0;
+  color: var(--muted);
+  cursor: pointer;
+}
+.console-routes ul {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.console-routes li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+.console-routes li span,
+.console-routes p {
+  color: var(--muted);
+}
+.console-routes p {
+  margin: 8px 0 0;
+  font-size: 13px;
+}
+.console-problem,
+.console-failure,
+.console-difference {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius-control);
+  background: var(--warning-soft);
+  color: var(--warning);
+  font-size: 14px;
+  animation: notice-rise 240ms var(--motion-ease) both;
+}
+:is(.console-problem, .console-failure, .console-difference) > .ui-icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+}
+.console-failure p,
+.console-difference p {
+  margin: 0;
+}
+.console-difference > div {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.console-difference .primary-button {
+  justify-self: start;
+}
+
+.console-flow-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+.console-flow-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.console-flow-head .console-summary {
+  flex-basis: 100%;
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* The parts, drawn as the trail draws a stage: markers on one line. A lit part has the trail's completed fill, and the
+   line fills in the accent as far as a request reached. */
+.console-parts {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.console-part {
+  position: relative;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 14px;
+  padding: 0 0 18px;
+}
+.console-part::before {
+  content: '';
+  position: absolute;
+  top: 34px;
+  bottom: 2px;
+  left: 15px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--border);
+  transition: background-color var(--motion-fast) var(--motion-ease);
+}
+.console-part:last-child::before {
+  display: none;
+}
+.has-result .console-part.is-agrees::before {
+  background: var(--accent);
+}
+.console-marker {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--muted);
+}
+.console-marker .ui-icon {
+  width: 16px;
+  height: 16px;
+}
+.console-part.is-lit .console-marker {
+  border-color: var(--action);
+  background: var(--action);
+  color: var(--action-text);
+}
+/* Where a request stopped, the marker takes a ring in the warning colour; the chip and the note say why. */
+.console-part:is(.is-differs, .is-threw) .console-marker {
+  box-shadow: 0 0 0 3px var(--warning-border);
+}
+.has-result .console-part.is-unlit:has(.console-stop) .console-marker {
+  border-style: dashed;
+}
+.console-part-body {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+}
+.console-part-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  min-height: 32px;
+}
+.console-part-head h3 {
+  margin: 0;
+  font-size: var(--type-card);
+}
+.console-part-head code {
+  color: var(--muted);
+}
+.console-part-head .status-chip {
+  margin-left: auto;
+}
+.console-part-source,
+.console-stop,
+.console-calls-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.console-part-source .text-button {
+  min-height: 32px;
+  padding-block: 4px;
+}
+.console-stop {
+  color: var(--text);
+  font-weight: 600;
+}
+.console-result {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+.console-calls {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  list-style: none;
+  font-size: 13px;
+}
+.console-calls li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  overflow-wrap: anywhere;
+}
+.console-calls code,
+.console-difference code,
+.console-response code {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.console-calls .ui-icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--muted);
+}
+.console-difference dl,
+.console-received {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+:is(.console-difference dl, .console-received) > div {
+  display: grid;
+  grid-template-columns: 5.5em minmax(0, 1fr);
+  gap: 8px;
+}
+:is(.console-difference dl, .console-received) dt {
+  font-weight: 600;
+}
+:is(.console-difference dl, .console-received) dd {
+  margin: 0;
+  min-width: 0;
+}
+
+/* What the service sends back; a request a handler received has the success surface. */
+.console-response {
+  display: grid;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 14px;
+  animation: notice-rise 240ms var(--motion-ease) 120ms both;
+}
+.console-response.is-handled {
+  border-color: var(--success-border);
+  background: var(--success-soft);
+}
+.console-response h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: var(--type-card);
+}
+.console-status {
+  font-family: var(--font-mono);
+  font-size: var(--type-feature);
+}
+.console-response p {
+  margin: 0;
+}
+
+/* Results land in reading order, part by part, as check results do (40ms apart, the rest together after eight). */
+.console-result {
+  animation: row-arrive var(--motion-fast) var(--motion-ease) both;
+  animation-delay: calc(min(var(--part, 0), 8) * 40ms);
+}
+/* A part lit since the console was last open this session lights up once: the marker grows into a lime ring and
+   settles, and its check pops in. */
+.console-part[data-fresh] .console-marker {
+  animation: skill-step 820ms var(--motion-ease) calc(120ms + min(var(--part, 0), 8) * 60ms) backwards;
+}
+.console-part[data-fresh] .console-marker .ui-icon {
+  animation: mark-pop 320ms var(--motion-spring) calc(260ms + min(var(--part, 0), 8) * 60ms) both;
+}
+@media (max-width: 600px) {
+  .console-part {
+    gap: 10px;
+  }
+  .console-part-head .status-chip {
+    margin-left: 0;
+  }
+}
