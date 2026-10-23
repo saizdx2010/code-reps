@@ -691,22 +691,6 @@
   padding: 4px 0;
 }
 
-/* All tracks with the goal selected: the goal's stages live on Your trail, so one line points there. */
-.path-goal-trail {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 16px;
-  margin: 8px 0 0;
-  padding: 16px 0;
-  border-top: 1px solid var(--border);
-  color: var(--muted);
-  font-size: 15px;
-}
-.path-goal-trail .text-button {
-  min-height: 32px;
-  padding: 4px 0;
-}
 @media (min-width: 901px) {
   /* The track cards already show this count. */
   .path-overview-count {

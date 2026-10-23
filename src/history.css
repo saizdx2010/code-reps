@@ -1,0 +1,109 @@
+/* Journal → Attempts. Loaded with the page, so its styles stay out of the startup bundle. */
+.history-main .filter-bar {
+  margin-bottom: 16px;
+}
+.history-list {
+  padding: 0;
+  margin: 26px 0 0;
+  list-style: none;
+}
+.history-list > li {
+  position: relative;
+  border-bottom: 1px solid var(--border);
+}
+/* One line per attempt: the rep and when it was finished open its review; Open rep sits at the line's end. */
+.history-list summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 16px;
+  min-height: var(--control-height);
+  padding: 14px 140px 14px 0;
+  list-style: none;
+  cursor: pointer;
+}
+.history-list summary::-webkit-details-marker {
+  display: none;
+}
+.history-list summary::after {
+  content: '';
+  position: absolute;
+  top: 22px;
+  right: 8px;
+  width: 18px;
+  height: 18px;
+  background: var(--muted);
+  mask: var(--icon-chevron) center / contain no-repeat;
+  transition: rotate var(--motion-fast) var(--motion-ease);
+}
+.history-list details[open] > summary::after {
+  rotate: 180deg;
+}
+.history-list summary > strong {
+  font-size: var(--type-card);
+  font-weight: 600;
+  transition: color var(--motion-fast) var(--motion-ease);
+}
+/* Hover and focus turn the rep name and its chevron accent, the row's one interaction. */
+@media (hover: hover) and (pointer: fine) {
+  .history-list summary:hover > strong {
+    color: var(--accent);
+  }
+  .history-list summary:hover::after {
+    background: var(--accent);
+  }
+}
+.history-list summary:focus-visible > strong {
+  color: var(--accent);
+}
+.history-list summary > span {
+  color: var(--muted);
+  font-size: 13px;
+}
+.history-list .attempt-open {
+  position: absolute;
+  top: 12px;
+  right: 36px;
+}
+.history-list details[open] {
+  padding-bottom: 16px;
+}
+.history-list h3 {
+  font-size: var(--type-card);
+  margin: 20px 0 8px;
+}
+.history-list p {
+  margin: 0;
+  color: var(--muted);
+  white-space: pre-wrap;
+}
+.history-list pre {
+  max-height: 400px;
+}
+.attempt-comparison {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.attempt-comparison > div {
+  min-width: 0;
+}
+.attempt-comparison h5 {
+  color: var(--muted);
+  margin: 20px 0 8px;
+  font-size: 14px;
+}
+/* Journal: search stays in view; its filters share the Library's disclosure. */
+.history-search {
+  display: grid;
+  gap: 7px;
+  max-width: 420px;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+@media (max-width: 600px) {
+  .attempt-comparison {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

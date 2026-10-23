@@ -10,6 +10,7 @@ import { Button } from './Button'
 import { EmptyState, PageHeader } from './Layout'
 import { formatDate, plural } from './ui-copy.ts'
 import { useSessionPreference } from './useSessionPreference'
+import './history.css'
 
 type AttemptRecord = {
   id: string

@@ -183,7 +183,7 @@ export function PathsPage(props: Props) {
         <PathIntroduction introduction={pathIntroduction} onStart={() => firstRepId && openRep(firstRepId)} />
       </details>
       {isGoal ? (
-        <p className="path-goal-trail">
+        <p className="quiet-line">
           <span>Its stages are drawn on Your trail.</span>
           <Button variant="text" onClick={() => goToView('home')}>
             Open Your trail
