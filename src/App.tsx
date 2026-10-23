@@ -4,6 +4,7 @@ import { usePracticeSessions } from './usePracticeSessions'
 import { AppNavigation } from './AppNavigation'
 import { InterviewStatus } from './InterviewStatus'
 import { useFluency } from './useFluency'
+import { dayNumber } from './dates'
 import { Fragment, lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { CommandPalette, GlossaryDrawer, ScreenMemory, WorkspaceSplit } from './Experience'
 import { useSessionPreference } from './useSessionPreference'
@@ -214,6 +215,9 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
   // A running warm-up takes over the completion button until its last rep. Opening any rep another way ends it.
   const [warmup, setWarmup] = useSessionPreference<string>('warmup', '')
   const [todaySet, setTodaySet] = useSessionPreference<string>('today-set', '')
+  // The day the learner finished on (Done for today, a finished set, or a paused plan): Trail shows its close until
+  // they reopen it or the date changes. Session UI state, never in backups.
+  const [closedDay, setClosedDay] = useSessionPreference<string>('day-closed', '')
   // The rep whose trace opens in predict mode as the set's cool-down.
   const [coolDown, setCoolDown] = useState<string | null>(null)
   const warmupNavigation = useRef(false)
@@ -489,6 +493,8 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
       ? undefined
       : reps.find(item => item.id === nextRepInPath(fluency.state.goal.pathId, repId, id => completedPathIds.has(id) || !recallReady(id)))
   const completionNext = pathNextRep ? { repId: pathNextRep.id, mode: 'start' } : recommendation
+  const today = String(dayNumber(new Date(now)))
+  const closeDay = () => setClosedDay(today)
   const warmupAt = warmupPosition(parseWarmup(warmup), repId)
   const setItems = parseSet(todaySet)
   const setAt = warmupPosition(
@@ -526,7 +532,10 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     if (setAt?.next) return openWarmupRep(setAt.next)
     if (setAt) {
       setTodaySet('')
-      if (!setCoolDownReady) return setView('home')
+      if (!setCoolDownReady) {
+        closeDay()
+        return setView('home')
+      }
       setCoolDown(repId)
       return revealSection('explain-section')
     }
@@ -537,6 +546,16 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     }
     if (completionNext) openPracticeAction(completionNext)
     else setView('home')
+  }
+  // A longer rep can stop once its plan is written: the draft keeps the plan, the rep waits on Trail for next time,
+  // and the day closes.
+  function pauseAfterPlan() {
+    fluency.update({
+      ...fluency.state,
+      nextUp: { repId, note: fluency.state.nextUp?.repId === repId ? fluency.state.nextUp.note : '', setAt: new Date().toISOString() },
+    })
+    closeDay()
+    setView('home')
   }
   const warmupChoices = useMemo(
     () => pickWarmup(history, journeyStates, id => attemptStatus(id, drafts[id]) === 'In progress', now),
@@ -785,6 +804,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
                 setMobileTab('task')
               }}
               onReveal={revealSection}
+              plannedNote={fluency.state.nextUp?.repId === repId && !attempt.completedAt ? fluency.state.nextUp : undefined}
             />
             <PlanSection
               hidden={activeStep !== 'plan'}
@@ -794,6 +814,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
               plan={attempt.plan}
               onPlan={plan => update('plan', plan)}
               onReveal={revealSection}
+              onPause={writingRequired && stepDone.plan && !stepDone.solve && !attempt.completedAt ? pauseAfterPlan : undefined}
             />
             <ExplainSection
               hidden={activeStep !== 'explain'}
@@ -823,7 +844,10 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
               badgeSlot={setBadgeSlot}
               completionLabel={completionLabel}
               onCompletionNext={continueAfterCompletion}
-              onDone={() => setView('home')}
+              onDone={() => {
+                closeDay()
+                setView('home')
+              }}
               onFreshAttempt={startNewAttempt}
               evidence={completionEvidence(repId, attempt.hintCount, journeyStates)}
               moments={
@@ -998,6 +1022,9 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
           openReview={openReview}
           openLesson={openKnowledge}
           openPracticeAction={openPracticeAction}
+          dayClosed={closedDay === today}
+          onCloseDay={closeDay}
+          onReopenDay={() => setClosedDay('')}
           warmup={warmupChoices}
           startWarmup={startWarmup}
           startSet={startSet}

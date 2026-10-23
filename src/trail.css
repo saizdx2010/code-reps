@@ -462,6 +462,65 @@
   margin-top: 1px;
   color: var(--success);
 }
+/* Today's plan done: the line ends the day on Trail. */
+.today-done {
+  flex-wrap: wrap;
+}
+.today-done > span {
+  flex: 1 1 200px;
+}
+.today-done .text-button {
+  min-height: 28px;
+  padding: 2px 0;
+}
+/* The smallest day that still counts: one quiet line, like the warm-up offer. */
+.today-one {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.today-one .text-button {
+  justify-self: start;
+  min-height: 32px;
+  padding: 4px 0;
+  text-align: left;
+}
+/* A rep chosen for next time, with the learner's own note. */
+.planned-note {
+  margin: 0;
+}
+.planned-note figcaption {
+  margin-bottom: 4px;
+  color: var(--feature-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.planned-note blockquote {
+  margin: 0;
+  padding: 8px 12px;
+  border-left: 3px solid var(--feature-border);
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  color: var(--feature-text);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+/* The same note at the top of the brief, on an ordinary panel. */
+.rep-planned-note {
+  margin: 0 0 16px;
+}
+.rep-planned-note figcaption {
+  color: var(--muted);
+}
+.rep-planned-note blockquote {
+  background: var(--surface-2);
+  color: var(--text);
+}
 .trail-links {
   display: flex;
   flex-wrap: wrap;

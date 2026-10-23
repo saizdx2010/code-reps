@@ -41,6 +41,7 @@ export default function TodayPlan({
   onStartSet,
   warmup,
   startWarmup,
+  onCloseDay,
 }: {
   history: PortableRecord[]
   now: number
@@ -55,6 +56,8 @@ export default function TodayPlan({
   /** Earlier Beginner reps for a quick warm-up (src/warmup.ts). */
   warmup: string[]
   startWarmup: () => void
+  /** Ends the day on Trail: what today held and the rep for next time. */
+  onCloseDay: () => void
 }) {
   const plan = todayPlan(history, practicePlan, new Date(now))
   const day = dayNumber(new Date(now))
@@ -70,6 +73,28 @@ export default function TodayPlan({
     if (seenValue !== record) setSeen(record)
   }, [record, seenValue, setSeen])
   const isFresh = (item: TodayItem) => item.done && fresh.has(item.repId)
+  // The smallest day that still counts: before anything is finished today, one due review (or one short rep finished
+  // before) is offered on its own, since any completed attempt makes a practice day.
+  const practicedToday = history.some(record => dayNumber(new Date(record.completedAt)) === day)
+  const oneReview = practicePlan.due[0]
+  const oneRep = oneReview?.repId ?? warmup[0]
+  // When the panel above already offers a review, it is the small step; this line is for a day that starts with a new rep.
+  const smallest = !practicedToday && oneRep && practicePlan.next?.mode !== 'review' && oneRep !== nextRepId && (
+    <p className="today-one">
+      <span>Short on time? One {oneReview ? 'review' : 'short rep'} still makes today a practice day.</span>
+      <Button
+        variant="text"
+        onMouseEnter={() => preloadPractice(oneRep)}
+        onFocus={() => preloadPractice(oneRep)}
+        onClick={() =>
+          onOpen({ repId: oneRep, kind: 'review', done: false, action: oneReview ?? { repId: oneRep, reason: '', mode: 'review' } })
+        }
+      >
+        Just one {oneReview ? 'review' : 'rep'}: {repTitle(oneRep)}
+        <Icon name="arrow" />
+      </Button>
+    </p>
+  )
   const set = setOrder(plan.items)
   // Offered beside Today's plan; on its own when there is no plan to show.
   // One quiet line, not a third card: the reps it holds are named once it starts.
@@ -90,7 +115,13 @@ export default function TodayPlan({
       </Button>
     </section>
   )
-  if (!plan.shown) return warmupPanel || null
+  if (!plan.shown)
+    return warmupPanel || smallest ? (
+      <>
+        {warmupPanel}
+        {smallest}
+      </>
+    ) : null
   return (
     <>
       <section className="today-plan" aria-labelledby="today-heading">
@@ -164,10 +195,14 @@ export default function TodayPlan({
               <strong>Today's practice is done.</strong>{' '}
               {hasNext ? 'You can stop here; the next rep above is there if you want more.' : 'You can stop here.'}
             </span>
+            <Button variant="text" onClick={onCloseDay}>
+              Finish for today
+            </Button>
           </p>
         )}
       </section>
       {warmupPanel}
+      {smallest}
     </>
   )
 }

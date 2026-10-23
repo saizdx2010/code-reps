@@ -1,11 +1,8 @@
 import type { PortableRecord } from './portability.ts'
-import { DAY_MS } from './dates.ts'
+import { DAY_MS, dayNumber } from './dates.ts'
 import { journeys } from './learning.ts'
 
-// Calendar dates use the learner's current local timezone, rather than 24-hour gaps.
-export function dayNumber(date: Date) {
-  return Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / DAY_MS
-}
+export { dayNumber }
 
 /** Local midnight of a day number, so formatting it shows that calendar day in any timezone. */
 export function dayDate(day: number) {

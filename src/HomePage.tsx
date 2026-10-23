@@ -16,6 +16,8 @@ import type { getPracticePlan, PracticeAction } from './practice'
 import { withoutGoal } from './practice-actions'
 import type { PortableRecord } from './portability'
 import type { SetItem } from './warmup'
+import type { NextUp } from './fluency'
+import { formatDate } from './ui-copy'
 
 // Today's plan loads beside the trail; it starts loading as soon as Trail renders. If it cannot load, due reviews stay
 // one link away on Progress.
@@ -43,6 +45,9 @@ const TodayPlan = lazy(() =>
   })),
 )
 
+// Done for today replaces the aside once the learner stops; it loads only then.
+const DayClosed = lazy(() => import('./DayClosed'))
+
 // The first-rep walkthrough is authored for this rep only.
 const walkthroughRepId = 'declare-variables'
 
@@ -67,6 +72,15 @@ type Props = {
   warmup: string[]
   startWarmup: () => void
   startSet: (items: SetItem[]) => void
+  weeklyTarget: number
+  /** The rep chosen for next time, while it is still to do. */
+  planned: NextUp | null
+  onPlanNext: (repId: string, note: string) => void
+  onClearPlan: () => void
+  /** The learner finished for today (Done for today, a finished set, or a paused plan); Trail shows the day's close. */
+  dayClosed: boolean
+  onCloseDay: () => void
+  onReopenDay: () => void
 }
 
 const modeLabel = (mode?: string) =>
@@ -118,6 +132,20 @@ export function HomePage(props: Props) {
     return [repLevelLabel(repId), role === 'Application' ? '' : role, shortEffort(repId)].filter(Boolean)
   }
   const reason = recommendation && context ? (recommendation.mode === 'start' ? context.reason : withoutGoal(recommendation.reason)) : ''
+  const { planned, dayClosed } = props
+  // A chosen rep reopens as it stands: its draft, a due review, a fresh attempt at a finished rep, or a first start.
+  const plannedAction: PracticeAction | null = planned
+    ? (practicePlan.unfinished.find(action => action.repId === planned.repId) ??
+      practicePlan.due.find(action => action.repId === planned.repId) ?? {
+        repId: planned.repId,
+        reason: '',
+        mode: props.history.some(record => record.repId === planned.repId) ? 'review' : 'start',
+      })
+    : null
+  const nextChoices = [...(recommendation ? [recommendation] : []), ...practicePlan.due, ...practicePlan.unfinished]
+    .filter((action, index, list) => list.findIndex(other => other.repId === action.repId) === index)
+    .slice(0, 6)
+    .map(action => ({ repId: action.repId, label: `${repTitle(action.repId)} · ${modeLabel(action.mode)}` }))
   const recommendedStage = recommendation ? stageOf(recommendation.repId) : -1
   return (
     <main className="home-main trail-home" id="top">
@@ -146,102 +174,154 @@ export function HomePage(props: Props) {
           </div>
         </div>
         <aside className="trail-aside" aria-label="Up next">
-          {recommendation && recommendedRep ? (
-            <section className="continue-panel" aria-labelledby="continue-heading">
-              <div key={recommendation.repId} className={`continue-body${changedRep === recommendation.repId ? ' is-changed' : ''}`}>
-                <span className="home-label">
-                  {modeLabel(recommendation.mode)}
-                  {recommendedStage >= 0 ? ` · ${stageNumber(recommendedStage)}` : ''}
-                </span>
-                <h2 id="continue-heading">{recommendedRep.title}</h2>
-                <p>{reason}</p>
-                <span className="continue-chips">
-                  {chips(recommendation.repId).map(chip => (
-                    <StatusChip key={chip}>{chip}</StatusChip>
-                  ))}
-                </span>
-              </div>
-              <Button
-                variant="primary"
-                onMouseEnter={() => preloadPractice(recommendation.repId)}
-                onFocus={() => preloadPractice(recommendation.repId)}
-                onClick={() => openPracticeAction(recommendation)}
-              >
-                {actionLabel(recommendation.mode)}
-                <Icon name="arrow" />
-              </Button>
-              {!walkthroughSeen && recommendation.repId === walkthroughRepId && (
-                <Button variant="text" className="continue-guide" onClick={launchWalkthrough}>
-                  Show me how a rep works
-                </Button>
+          {dayClosed ? (
+            <Suspense fallback={null}>
+              <DayClosed
+                history={props.history}
+                now={props.now}
+                weeklyTarget={props.weeklyTarget}
+                planned={planned}
+                choices={nextChoices}
+                onPlan={props.onPlanNext}
+                onClearPlan={props.onClearPlan}
+                more={
+                  recommendation ? { title: repTitle(recommendation.repId), open: () => openPracticeAction(recommendation) } : undefined
+                }
+                onReopen={props.onReopenDay}
+              />
+            </Suspense>
+          ) : (
+            <>
+              {planned && plannedAction ? (
+                <section className="continue-panel planned-panel" aria-labelledby="continue-heading">
+                  <div>
+                    <span className="home-label">
+                      You planned this
+                      {stageOf(planned.repId) >= 0 ? ` · ${stageNumber(stageOf(planned.repId))}` : ''}
+                    </span>
+                    <h2 id="continue-heading">{repTitle(planned.repId)}</h2>
+                    <p>
+                      Chosen {formatDate(planned.setAt)}.{plannedAction.mode === 'resume' ? ' Your draft is saved where you left it.' : ''}
+                    </p>
+                    {planned.note && (
+                      <figure className="planned-note">
+                        <figcaption>Your note</figcaption>
+                        <blockquote>{planned.note}</blockquote>
+                      </figure>
+                    )}
+                  </div>
+                  <Button
+                    variant="primary"
+                    onMouseEnter={() => preloadPractice(planned.repId)}
+                    onFocus={() => preloadPractice(planned.repId)}
+                    onClick={() => openPracticeAction(plannedAction)}
+                  >
+                    {actionLabel(plannedAction.mode)}
+                    <Icon name="arrow" />
+                  </Button>
+                  <Button variant="text" className="continue-guide" onClick={props.onClearPlan}>
+                    Choose something else
+                  </Button>
+                </section>
+              ) : recommendation && recommendedRep ? (
+                <section className="continue-panel" aria-labelledby="continue-heading">
+                  <div key={recommendation.repId} className={`continue-body${changedRep === recommendation.repId ? ' is-changed' : ''}`}>
+                    <span className="home-label">
+                      {modeLabel(recommendation.mode)}
+                      {recommendedStage >= 0 ? ` · ${stageNumber(recommendedStage)}` : ''}
+                    </span>
+                    <h2 id="continue-heading">{recommendedRep.title}</h2>
+                    <p>{reason}</p>
+                    <span className="continue-chips">
+                      {chips(recommendation.repId).map(chip => (
+                        <StatusChip key={chip}>{chip}</StatusChip>
+                      ))}
+                    </span>
+                  </div>
+                  <Button
+                    variant="primary"
+                    onMouseEnter={() => preloadPractice(recommendation.repId)}
+                    onFocus={() => preloadPractice(recommendation.repId)}
+                    onClick={() => openPracticeAction(recommendation)}
+                  >
+                    {actionLabel(recommendation.mode)}
+                    <Icon name="arrow" />
+                  </Button>
+                  {!walkthroughSeen && recommendation.repId === walkthroughRepId && (
+                    <Button variant="text" className="continue-guide" onClick={launchWalkthrough}>
+                      Show me how a rep works
+                    </Button>
+                  )}
+                  {asksStart && (
+                    <p className="continue-start">
+                      <span>Coming back to coding?</span>
+                      <Button variant="text" onClick={() => chooseStart('returning')}>
+                        Skip the language basics
+                      </Button>
+                    </p>
+                  )}
+                </section>
+              ) : (
+                <section className="continue-panel" aria-labelledby="continue-heading">
+                  <div>
+                    <span className="home-label">Caught up for now</span>
+                    <h2 id="continue-heading">Your next review can wait.</h2>
+                    <p>No unfinished reps or reviews are ready. Check your skill evidence or choose a rep to practice again.</p>
+                  </div>
+                  <Button variant="primary" onClick={onProgress}>
+                    See progress
+                  </Button>
+                </section>
               )}
-              {asksStart && (
-                <p className="continue-start">
-                  <span>Coming back to coding?</span>
-                  <Button variant="text" onClick={() => chooseStart('returning')}>
-                    Skip the language basics
+              <p className="visually-hidden" role="status">
+                {startChange && recommendedRep ? `Your next rep is now ${recommendedRep.title}.` : ''}
+              </p>
+              {startChange && (
+                <p className="trail-notice">
+                  <Icon name="check" />
+                  <span>
+                    {startChange === 'returning' ? 'Starting as returning to coding. ' : 'Starting with the language basics. '}
+                    <Button variant="text" onClick={() => chooseStart(startChange === 'returning' ? 'new' : 'returning')}>
+                      {startChange === 'returning' ? 'Undo' : 'Skip them instead'}
+                    </Button>
+                  </span>
+                </p>
+              )}
+              <Suspense fallback={null}>
+                <TodayPlan
+                  history={props.history}
+                  now={props.now}
+                  practicePlan={practicePlan}
+                  hasNext={Boolean(recommendation)}
+                  nextRepId={recommendation?.repId}
+                  where={repId => (stageOf(repId) >= 0 ? stageNumber(stageOf(repId)) : where(repId))}
+                  onOpen={item => (item.action ? openPracticeAction(item.action) : props.openRep(item.repId))}
+                  onAllReviews={props.onProgress}
+                  onStartSet={props.startSet}
+                  warmup={warmup}
+                  startWarmup={startWarmup}
+                  onCloseDay={props.onCloseDay}
+                />
+              </Suspense>
+              {draft && (
+                <ListGroup title="Also waiting" open>
+                  <ListRow
+                    title={repTitle(draft.repId)}
+                    meta={moreDrafts > 0 ? `${where(draft.repId)} · ${moreDrafts} more in progress` : where(draft.repId)}
+                    status={<StatusChip tone="progress">In progress</StatusChip>}
+                    onOpen={() => openPracticeAction(draft)}
+                    onPreview={() => preloadPractice(draft.repId)}
+                  />
+                </ListGroup>
+              )}
+              {moreDrafts > 0 && (
+                <p className="trail-more">
+                  <Button variant="text" onClick={onLibrary}>
+                    Find saved drafts in the Library
                   </Button>
                 </p>
               )}
-            </section>
-          ) : (
-            <section className="continue-panel" aria-labelledby="continue-heading">
-              <div>
-                <span className="home-label">Caught up for now</span>
-                <h2 id="continue-heading">Your next review can wait.</h2>
-                <p>No unfinished reps or reviews are ready. Check your skill evidence or choose a rep to practice again.</p>
-              </div>
-              <Button variant="primary" onClick={onProgress}>
-                See progress
-              </Button>
-            </section>
-          )}
-          <p className="visually-hidden" role="status">
-            {startChange && recommendedRep ? `Your next rep is now ${recommendedRep.title}.` : ''}
-          </p>
-          {startChange && (
-            <p className="trail-notice">
-              <Icon name="check" />
-              <span>
-                {startChange === 'returning' ? 'Starting as returning to coding. ' : 'Starting with the language basics. '}
-                <Button variant="text" onClick={() => chooseStart(startChange === 'returning' ? 'new' : 'returning')}>
-                  {startChange === 'returning' ? 'Undo' : 'Skip them instead'}
-                </Button>
-              </span>
-            </p>
-          )}
-          <Suspense fallback={null}>
-            <TodayPlan
-              history={props.history}
-              now={props.now}
-              practicePlan={practicePlan}
-              hasNext={Boolean(recommendation)}
-              nextRepId={recommendation?.repId}
-              where={repId => (stageOf(repId) >= 0 ? stageNumber(stageOf(repId)) : where(repId))}
-              onOpen={item => (item.action ? openPracticeAction(item.action) : props.openRep(item.repId))}
-              onAllReviews={props.onProgress}
-              onStartSet={props.startSet}
-              warmup={warmup}
-              startWarmup={startWarmup}
-            />
-          </Suspense>
-          {draft && (
-            <ListGroup title="Also waiting" open>
-              <ListRow
-                title={repTitle(draft.repId)}
-                meta={moreDrafts > 0 ? `${where(draft.repId)} · ${moreDrafts} more in progress` : where(draft.repId)}
-                status={<StatusChip tone="progress">In progress</StatusChip>}
-                onOpen={() => openPracticeAction(draft)}
-                onPreview={() => preloadPractice(draft.repId)}
-              />
-            </ListGroup>
-          )}
-          {moreDrafts > 0 && (
-            <p className="trail-more">
-              <Button variant="text" onClick={onLibrary}>
-                Find saved drafts in the Library
-              </Button>
-            </p>
+            </>
           )}
           <nav className="trail-links" aria-label="Progress">
             <Button variant="text" onClick={onProgress}>

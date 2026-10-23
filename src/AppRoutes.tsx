@@ -24,6 +24,7 @@ import { repSearchText, searchWords } from './command-search'
 import type { useFluency } from './useFluency'
 import type { SetItem } from './warmup'
 import { useSessionPreference } from './useSessionPreference'
+import { plannedNext, weeklyTarget } from './daily-loop'
 
 const PathsPage = lazyRoute(() => import('./PathsPage').then(module => module.PathsPage), 'The tracks', 'paths-main')
 const ProgressPage = lazyRoute(() => import('./ProgressPage').then(module => module.ProgressPage), 'Progress', 'progress-main')
@@ -90,6 +91,9 @@ type Props = {
   warmup: string[]
   startWarmup: () => void
   startSet: (items: SetItem[]) => void
+  dayClosed: boolean
+  onCloseDay: () => void
+  onReopenDay: () => void
   onExport: () => void
   onImport: (file: File) => void
   transferMessage: string
@@ -144,6 +148,12 @@ export function AppRoutes(props: Props) {
     setView('paths')
   }
   const setGoalPath = (id: PathId) => fluency.update({ ...fluency.state, goal: { ...fluency.state.goal, pathId: id } })
+  const target = weeklyTarget(fluency.state.goal)
+  const setWeeklyTarget = (weekly: number) => fluency.update({ ...fluency.state, goal: { ...fluency.state.goal, weekly } })
+  const planned = plannedNext(fluency.state.nextUp, history, id => reps.some(rep => rep.id === id))
+  const planNext = (repId: string, note: string) =>
+    fluency.update({ ...fluency.state, nextUp: { repId, note, setAt: new Date().toISOString() } })
+  const clearPlan = () => fluency.update({ ...fluency.state, nextUp: undefined })
 
   if (isHubTab(view)) {
     const goalPath = paths.find(path => path.id === goalPathId) ?? paths[0]
@@ -206,6 +216,13 @@ export function AppRoutes(props: Props) {
           warmup={props.warmup}
           startWarmup={props.startWarmup}
           startSet={props.startSet}
+          weeklyTarget={target}
+          planned={planned}
+          onPlanNext={planNext}
+          onClearPlan={clearPlan}
+          dayClosed={props.dayClosed}
+          onCloseDay={props.onCloseDay}
+          onReopenDay={props.onReopenDay}
         />
       )
     case 'catalog':
@@ -295,6 +312,8 @@ export function AppRoutes(props: Props) {
             transferTone={props.transferTone}
             restore={props.restore}
             serverReady={isServerReady()}
+            weeklyTarget={target}
+            onWeeklyTarget={setWeeklyTarget}
           />
         </Suspense>
       )

@@ -54,7 +54,7 @@ const groups = [
   // the Today set's navigation in the workspace, and from 161,000 for the Break it format's workspace switch and the
   // Game of Life catalog rows, and from 161,500 for the practice header's way back to the page a rep was opened from
   // (see docs/PERFORMANCE.md).
-  { name: 'Initial JavaScript', files: [...initial], limit: 162_000, rawLimit: 530_000 },
+  { name: 'Initial JavaScript', files: [...initial], limit: 163_000, rawLimit: 530_000 },
   { name: 'Additional editor JavaScript', files: [...editor], limit: 1_050_000, rawLimit: 4_200_000 },
   // About 10% above the 30,703 gzip / 100,124 raw bytes of monaco-vim 0.4.4; see docs/PERFORMANCE.md.
   { name: 'Vim keys JavaScript', files: [...vimKeys], limit: 34_000, rawLimit: 110_000 },

@@ -1,0 +1,207 @@
+/* The daily loop on Trail: Done for today, the week against its target, and the rep chosen for next time. */
+.day-closed {
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+  border: 1px solid var(--success-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  animation: rise-arrive 320ms var(--motion-ease) both;
+}
+.day-closed-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.day-closed-head h2 {
+  margin: 0;
+  font-size: var(--type-card);
+}
+.day-closed-head p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.day-closed-mark {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--action);
+  color: var(--action-text);
+  animation: mark-pop 320ms var(--motion-spring) 120ms both;
+}
+.day-closed-mark .ui-icon {
+  width: 18px;
+  height: 18px;
+}
+.day-closed-receipt {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+}
+.day-closed-receipt > div {
+  padding: 10px 12px;
+}
+.day-closed-receipt > div + div {
+  border-left: 1px solid var(--border);
+}
+.day-closed-receipt dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 550;
+}
+.day-closed-receipt dd {
+  margin: 2px 0 0;
+  font-size: 20px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Seven marks, Monday to Sunday; a practiced day is filled, today is ringed, and days to come are dashed. */
+.week-meter {
+  display: grid;
+  gap: 10px;
+}
+.week-meter-text {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+  margin: 0;
+  font-size: 14px;
+}
+.week-meter-text span {
+  color: var(--muted);
+  font-size: 13px;
+}
+.week-meter ol {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.week-meter li {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+.week-meter small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+.week-meter-dot {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 50%;
+  color: var(--action-text);
+}
+.week-meter [data-future] .week-meter-dot {
+  border-style: dashed;
+  border-color: var(--border);
+}
+.week-meter [data-practiced] .week-meter-dot {
+  border-color: var(--action);
+  background: var(--action);
+  animation: mark-pop 280ms var(--motion-spring) both;
+}
+.week-meter [data-today] .week-meter-dot {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--feature-border);
+}
+.week-meter [data-today] small {
+  color: var(--text);
+}
+.week-meter-dot .ui-icon {
+  width: 13px;
+  height: 13px;
+}
+
+.next-time {
+  display: grid;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.next-time h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.next-time label {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 550;
+}
+.next-time-lead {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.next-time-planned {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.next-time-planned > .ui-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
+  color: var(--success);
+}
+.next-time-note {
+  margin: 0;
+  padding: 8px 12px;
+  border-left: 3px solid var(--feature-border);
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+  background: var(--surface-2);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.next-time-saved {
+  margin: 0;
+  color: var(--success);
+  font-size: 13px;
+  font-weight: 550;
+  animation: notice-rise 240ms var(--motion-ease) both;
+}
+.next-time-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 4px 0 0;
+}
+.next-time-actions .text-button,
+.day-closed-more .text-button {
+  min-height: 32px;
+  padding: 4px 0;
+}
+.day-closed-more {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}

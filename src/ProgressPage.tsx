@@ -12,6 +12,8 @@ import { useSessionPreference } from './useSessionPreference'
 import './progress.css'
 import type { paths } from './path'
 import { profileProgress } from './profile-progress'
+import { weekProgress } from './week-progress'
+import { Select } from './Select'
 import type { PortableRecord } from './portability'
 import type { BackupPreview, RestoreFlow } from './backup'
 import { Button } from './Button'
@@ -53,12 +55,16 @@ type Props = {
   transferTone: 'success' | 'error'
   restore: RestoreFlow
   serverReady: boolean
+  /** Practice days a week the learner aims for (src/daily-loop.ts). */
+  weeklyTarget: number
+  onWeeklyTarget: (days: number) => void
 }
 
 export function ProgressPage(props: Props) {
   const { profileName, history, now, onOpenPath, progress, recommendation, dueReviews, onOpenRep, onReviewRep } = props
   // Worked out once per saved history and clock tick, not on every render of the restore controls below.
   const summary = useMemo(() => profileProgress(history, new Date(now)), [history, now])
+  const week = useMemo(() => weekProgress(history, props.weeklyTarget, new Date(now)), [history, props.weeklyTarget, now])
   const badges = useMemo(() => profileBadges(history, new Date(now)), [history, now])
   const earned = badges.filter(badge => badge.earned)
   const open = (badge: Badge) =>
@@ -144,6 +150,8 @@ export function ProgressPage(props: Props) {
               <dd>
                 <PracticeRhythm
                   summary={summary}
+                  week={week}
+                  onWeeklyTarget={props.onWeeklyTarget}
                   completed={
                     <p className="rhythm-stat">
                       <b>{summary.completedReps}</b>
@@ -193,9 +201,10 @@ export function ProgressPage(props: Props) {
               its highest rung. Checks show behavior; you review your writing. These records are not an overall coding score.
             </p>
             <p>
-              Finishing a rep or a review records a practice day. A streak counts practice days and carries over one missed day in any
-              seven; two missed days in a row end it, and if you practiced yesterday it stays active through today. Breaks are welcome; your
-              milestones stay.
+              Finishing a rep or a review records a practice day. Days this week counts Monday to Sunday against the target you choose; a
+              missed day only matters if the week falls short, and a week that is still open never breaks your run of met weeks. A streak
+              counts practice days and carries over one missed day in any seven; two missed days in a row end it, and if you practiced
+              yesterday it stays active through today. Breaks are welcome; your milestones stay.
             </p>
           </InfoNote>
           <h2 className="progress-skills-title">Your skill journeys</h2>
@@ -322,8 +331,24 @@ const dayKindText = { new: 'new practice', review: 'reviews only', rest: 'rest d
  * The forgiving streak beside the last seven days. Reviews count as practice, and a single missed day can be carried
  * over once in any seven, so the tile shows consistency without a number to lose.
  */
-function PracticeRhythm({ summary, completed }: { summary: ReturnType<typeof profileProgress>; completed: ReactNode }) {
+function PracticeRhythm({
+  summary,
+  week: thisWeek,
+  onWeeklyTarget,
+  completed,
+}: {
+  summary: ReturnType<typeof profileProgress>
+  week: ReturnType<typeof weekProgress>
+  onWeeklyTarget: (days: number) => void
+  completed: ReactNode
+}) {
   const { currentStreak, longestStreak, restDays, recentDays, practiceDays, week } = summary
+  const left = thisWeek.target - thisWeek.done
+  const weekNote = thisWeek.met
+    ? thisWeek.weeksMet > 1
+      ? `Target met · ${thisWeek.weeksMet} weeks in a row`
+      : 'Target met this week'
+    : `${left} more ${plural(left, 'day')} to reach it`
   const streakNote = currentStreak
     ? [`Longest ${longestStreak}`, restDays ? `${restDays} rest ${plural(restDays, 'day')}` : ''].filter(Boolean).join(' · ')
     : longestStreak
@@ -338,14 +363,24 @@ function PracticeRhythm({ summary, completed }: { summary: ReturnType<typeof pro
           <small>{streakNote}</small>
         </p>
         <p className="rhythm-stat">
-          <b>{recentDays} of 7</b>
-          <span>Recent days practiced</span>
-          <small>
-            {practiceDays} practice {plural(practiceDays, 'day')} in all
-          </small>
+          <b>
+            {Math.min(thisWeek.done, 7)} of {thisWeek.target}
+          </b>
+          <span>Days this week</span>
+          <small>{weekNote}</small>
         </p>
         {completed}
       </div>
+      <label className="weekly-target">
+        <span>Weekly target</span>
+        <Select value={String(thisWeek.target)} onChange={event => onWeeklyTarget(Number(event.target.value))}>
+          {[1, 2, 3, 4, 5, 6, 7].map(days => (
+            <option key={days} value={days}>
+              {days} {plural(days, 'day')} a week
+            </option>
+          ))}
+        </Select>
+      </label>
       <ol className="rhythm-week" aria-label="The last seven days">
         {week.map(day => (
           <li key={day.date.toISOString()} data-kind={day.kind} data-today={day.today || undefined}>
@@ -366,7 +401,8 @@ function PracticeRhythm({ summary, completed }: { summary: ReturnType<typeof pro
         ))}
       </ol>
       <p className="rhythm-key">
-        Check: a new rep. Arrows: reviews only. Dashed: a rest day the streak carried over. Today fills in once you finish anything.
+        Last seven days: {recentDays} practiced, {practiceDays} practice {plural(practiceDays, 'day')} in all. Check: a new rep. Arrows:
+        reviews only. Dashed: a rest day the streak carried over. Today fills in once you finish anything.
       </p>
     </div>
   )

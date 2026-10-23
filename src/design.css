@@ -1700,6 +1700,21 @@ footer {
   font-size: var(--type-card);
 }
 /* The reward lands at the top of the Finish pane on the next-action surface, with one primary way forward. */
+/* A longer rep may stop once its plan is written; the line stays quiet under the plan. */
+.plan-pause {
+  display: grid;
+  gap: 2px;
+  margin: 16px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 14px;
+}
+.plan-pause .text-button {
+  justify-self: start;
+  min-height: 32px;
+  padding: 4px 0;
+}
 .completion-panel {
   display: grid;
   justify-items: start;

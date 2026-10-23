@@ -32,9 +32,12 @@ export type InterviewRound = {
   clarification: string
   debrief: string
 }
+/** The rep a learner chose for next time, with an optional note to their future self. */
+export type NextUp = { repId: string; note: string; setAt: string }
 export type FluencyState = {
   version: 1
-  goal: { pathId: string; minutes: number; days: number[] }
+  /** `weekly` is the practice days a week the learner aims for; without it, the number of practice days (or three). */
+  goal: { pathId: string; minutes: number; days: number[]; weekly?: number }
   answers: Record<string, { choice: number; correct: boolean; answeredAt: string; response?: string }>
   reviews: Record<string, SelfReview>
   notes: LearningNote[]
@@ -42,6 +45,7 @@ export type FluencyState = {
   bookmarks: string[]
   diagnosticStartedAt?: string
   rounds: InterviewRound[]
+  nextUp?: NextUp
 }
 export const fluencyKey = 'code-reps:fluency:v1'
 export const emptyFluency = (): FluencyState => ({
@@ -86,6 +90,7 @@ export function parseFluency(raw: unknown): FluencyState {
     raw.goal.days.length > 7 ||
     raw.goal.days.some(d => !Number.isInteger(d) || d < 0 || d > 6) ||
     new Set(raw.goal.days).size !== raw.goal.days.length ||
+    (raw.goal.weekly !== undefined && (!Number.isInteger(raw.goal.weekly) || Number(raw.goal.weekly) < 1 || Number(raw.goal.weekly) > 7)) ||
     !isPlainObject(raw.answers) ||
     !isPlainObject(raw.reviews) ||
     !Array.isArray(raw.notes) ||
@@ -94,7 +99,14 @@ export function parseFluency(raw: unknown): FluencyState {
     raw.bookmarks.some(id => !skillIds.has(id)) ||
     !Array.isArray(raw.rounds) ||
     raw.rounds.length > 1000 ||
-    (raw.diagnosticStartedAt !== undefined && !isDateString(raw.diagnosticStartedAt, 100))
+    (raw.diagnosticStartedAt !== undefined && !isDateString(raw.diagnosticStartedAt, 100)) ||
+    // A chosen rep that later leaves the catalog is ignored where it is shown, so its ID is only checked for shape.
+    (raw.nextUp !== undefined &&
+      (!isPlainObject(raw.nextUp) ||
+        !text(raw.nextUp.repId, 100) ||
+        !raw.nextUp.repId ||
+        !text(raw.nextUp.note, 280) ||
+        !isDateString(raw.nextUp.setAt, 100)))
   )
     throw new Error('Learning data is invalid. Your saved copy has been kept.')
   for (const [id, answer] of Object.entries(raw.answers)) {
@@ -188,6 +200,7 @@ export function mergeFluency(base: FluencyState, mine: FluencyState, theirs: Flu
     goal: field('goal'),
     noteDraft: field('noteDraft'),
     diagnosticStartedAt: field('diagnosticStartedAt'),
+    nextUp: field('nextUp'),
     answers: mergeRecord(base.answers, mine.answers, theirs.answers),
     reviews: mergeRecord(base.reviews, mine.reviews, theirs.reviews),
     notes: mergeById(base.notes, mine.notes, theirs.notes),
@@ -196,6 +209,7 @@ export function mergeFluency(base: FluencyState, mine: FluencyState, theirs: Flu
   }
   if (merged.noteDraft === undefined) delete merged.noteDraft
   if (merged.diagnosticStartedAt === undefined) delete merged.diagnosticStartedAt
+  if (merged.nextUp === undefined) delete merged.nextUp
   return merged
 }
 export const recallVariants: Record<string, string[]> = {

@@ -5,6 +5,7 @@ import { confidenceLabels, difficultyLabels } from './attempt-labels.ts'
 import type { Confidence, Difficulty } from './attempt-labels.ts'
 import type { Attempt, AttemptRecord } from './attempt-store'
 import { Button, Toggle } from './Button'
+import { formatDate } from './ui-copy'
 import { GuidanceLoading, SqlTablesLoading } from './LoadingStates'
 import { repCurriculumRole } from './curriculum'
 import { preloadEditor } from './editor-loader'
@@ -182,9 +183,12 @@ export function BriefSection({
   onRevealHint,
   onReveal,
   understanding,
+  plannedNote,
 }: {
   hidden: boolean
   understanding: boolean
+  /** The learner's note to themselves when they chose this rep for next time. */
+  plannedNote?: { note: string; setAt: string }
   repId: string
   full?: Rep
   lesson?: RepLesson
@@ -226,6 +230,12 @@ export function BriefSection({
       <div className="panel-heading">
         <h2>The brief</h2>
       </div>
+      {plannedNote?.note && (
+        <figure className="planned-note rep-planned-note">
+          <figcaption>Your note from {formatDate(plannedNote.setAt)}</figcaption>
+          <blockquote>{plannedNote.note}</blockquote>
+        </figure>
+      )}
       <Suspense fallback={<GuidanceLoading />}>
         <RepGuidance repId={repId} history={history} openRep={openRep} openLesson={openLesson} understanding={understanding} />
       </Suspense>
@@ -417,6 +427,7 @@ export function PlanSection({
   plan,
   onPlan,
   onReveal,
+  onPause,
 }: {
   hidden: boolean
   full?: Rep
@@ -425,6 +436,8 @@ export function PlanSection({
   plan: string
   onPlan: (plan: string) => void
   onReveal: Reveal
+  /** Offered on a longer rep once its plan is written: stop for today and solve it fresh next time. */
+  onPause?: () => void
 }) {
   return (
     <section id="plan-section" hidden={hidden} tabIndex={-1} className="panel plan-panel">
@@ -463,6 +476,14 @@ export function PlanSection({
       />
       <div className="field-foot">{writing.planHelp}</div>
       <StepNext step="solve" onReveal={onReveal} />
+      {onPause && (
+        <p className="plan-pause">
+          <span>Out of time? Your plan is saved, and solving it fresh tomorrow is good practice.</span>
+          <Button variant="text" onClick={onPause}>
+            Stop here and solve it next time
+          </Button>
+        </p>
+      )}
     </section>
   )
 }

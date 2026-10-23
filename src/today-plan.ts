@@ -64,3 +64,17 @@ export const setOrder = (items: TodayItem[]): SetItem[] =>
   [...items.filter(item => !item.done && item.kind === 'review'), ...items.filter(item => !item.done && item.kind === 'new')].map(
     ({ repId, kind }) => ({ repId, kind }),
   )
+
+/** What today held: each completed attempt once, new reps apart from reviews (as Today and the streak count them). */
+export function todayReceipt(history: PortableRecord[], now = new Date()) {
+  const today = dayNumber(now)
+  const kinds = attemptKinds(history, now)
+  const records = history.filter(record => kinds.has(record.id) && dayNumber(new Date(record.completedAt)) === today)
+  return {
+    attempts: records.length,
+    newReps: records.filter(record => kinds.get(record.id) === 'new').length,
+    reviews: records.filter(record => kinds.get(record.id) === 'review').length,
+    withoutHints: records.filter(record => record.hintCount === 0).length,
+    repIds: [...new Set(records.map(record => record.repId))],
+  }
+}
