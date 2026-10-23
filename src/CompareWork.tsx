@@ -51,7 +51,7 @@ function attemptChips(record: { hintCount: number; confidence?: string }) {
   return (
     <p className="then-now-chips">
       <StatusChip tone={record.hintCount ? 'neutral' : 'success'}>
-        {record.hintCount ? plural(record.hintCount, 'hint') : 'No hints'}
+        {record.hintCount ? `${record.hintCount} ${plural(record.hintCount, 'hint')}` : 'No hints'}
       </StatusChip>
       {confidence && <StatusChip>{`Confidence: ${confidenceLabels[confidence]}`}</StatusChip>}
     </p>
