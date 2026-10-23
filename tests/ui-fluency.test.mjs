@@ -191,7 +191,7 @@ test('local profiles isolate learning drafts, knowledge checks, notes and goal p
     await click('Progress')
     await click('Journal')
     await click('Notebook')
-    assert.ok(document.body.textContent.includes('Your notebook is empty.'))
+    assert.ok(document.body.textContent.includes('No notebook entries yet.'))
     assert.equal(localStorage.getItem('code-reps:profile:default:fluency:v1'), savedWithDraft)
     await click('Manage profiles')
     await input(document.querySelector('.profile-dialog select'), 'default')

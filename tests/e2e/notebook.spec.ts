@@ -4,7 +4,7 @@ test('opening another notebook entry asks before discarding unsaved writing', as
   await page.goto('/#/notebook')
   const title = page.getByLabel('Title', { exact: true })
   const body = page.getByRole('textbox', { name: 'What you learned', exact: true })
-  await page.getByRole('button', { name: 'Write your first entry' }).click()
+  await page.getByRole('button', { name: 'New entry', exact: true }).click()
   await title.fill('Saved idea')
   await page.getByRole('button', { name: 'Save entry' }).click()
   await expect(page.getByText('Entry saved.')).toBeVisible()

@@ -334,7 +334,7 @@ test('startup progress loading uses the light startup screen before storage is r
 test('each pending learning page keeps its own heading and working surface', async ({ context }) => {
   const pages = [
     ['knowledge', 'Learn a concept', '.loading-lesson-layout', '.loading-lesson-layout > .loading-sheet', '.knowledge-article'],
-    ['notebook', 'Your notebook', '.loading-notebook-surface', '.loading-notebook-heading', '.hub-heading'],
+    ['notebook', 'Your notebook', '.loading-notebook-surface', '.loading-notebook-empty', '.empty-state'],
     ['plan', 'Make room for practice', '.loading-week', '.loading-sheet', '.hub-panel'],
     ['assessment', 'Find your starting point', '.loading-rows', '.loading-sheet', '.hub-panel'],
     ['projects', 'Put your skills together', '.loading-rows', 'h2', '#capstone-heading'],

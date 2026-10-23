@@ -39,7 +39,24 @@ test('custom calendar handles month boundaries, leap days, cancellation, and rel
   await page.clock.setFixedTime(new Date('2026-01-31T12:00:00Z'))
   await page.setViewportSize({ width: 320, height: 568 })
   await page.goto('/#/history')
-  // Narrow screens fold the Journal filters away; the open state is remembered for the session.
+  // The Journal offers search and filters once there is an attempt to find; they start folded.
+  await page.evaluate(() =>
+    localStorage.setItem(
+      'code-reps:profile:default:history:v1',
+      JSON.stringify([
+        {
+          id: 'seed',
+          repId: 'sum-positive-numbers',
+          completedAt: '2026-01-20T12:00:00Z',
+          plan: '',
+          code: 'c',
+          explanation: '',
+          hintCount: 0,
+        },
+      ]),
+    ),
+  )
+  await page.reload()
   await page.locator('.history-filters > summary').click()
   const date = page.getByRole('button', { name: 'Date', exact: true })
   await date.click()
