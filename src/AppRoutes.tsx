@@ -230,7 +230,7 @@ export function AppRoutes(props: Props) {
             pathId={pathId}
             setPathId={setPathId}
             learnerStart={learnerStart}
-            startingPoint={<StartingPoint learnerStart={learnerStart} onChoose={props.onLearnerStart} />}
+            onLearnerStart={props.onLearnerStart}
             completedPathIds={completedPathIds}
             trail={browsedTrail}
             evidence={trailEvidence}
@@ -403,27 +403,5 @@ function CatalogRoute({
       repStatus={repStatus}
       openRep={openRep}
     />
-  )
-}
-
-function StartingPoint({ learnerStart, onChoose }: { learnerStart: LearnerStart | null; onChoose: (value: LearnerStart) => void }) {
-  return (
-    <section className="starting-point" aria-labelledby="starting-point-title">
-      <div>
-        <span className="home-label">Your starting point</span>
-        <h2 id="starting-point-title">Where are you starting?</h2>
-        <p>This only changes your next suggested rep. You can open any rep at any time.</p>
-      </div>
-      <div className="starting-options">
-        <button type="button" aria-pressed={learnerStart === 'new'} onClick={() => onChoose('new')}>
-          <strong>New to coding</strong>
-          <span>Start with TypeScript building blocks.</span>
-        </button>
-        <button type="button" aria-pressed={learnerStart === 'returning'} onClick={() => onChoose('returning')}>
-          <strong>Returning to coding</strong>
-          <span>Start with guided problem solving.</span>
-        </button>
-      </div>
-    </section>
   )
 }

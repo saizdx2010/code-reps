@@ -1,7 +1,6 @@
 import { reducedMotion } from './ui-motion'
 import { Button } from './Button'
 import { useRef } from 'react'
-import type { ReactNode } from 'react'
 import { Icon } from './Icon'
 import { foundationsPathId, trackBuildsOn, trackGroups } from './curriculum'
 import { Select } from './Input'
@@ -23,7 +22,8 @@ type Props = {
   pathId: PathId
   setPathId: (id: PathId) => void
   learnerStart: LearnerStart | null
-  startingPoint?: ReactNode
+  /** Chooses where the learner starts; the choice shows in a disclosure above the tracks. */
+  onLearnerStart?: (value: LearnerStart) => void
   completedPathIds: Set<string>
   trail: ReturnType<typeof buildTrail>
   evidence: (repId: string) => string
@@ -33,7 +33,7 @@ type Props = {
 
 /** All tracks: Foundations first, then the tracks that build on it, and the selected track's trail. */
 export function PathsPage(props: Props) {
-  const { goalPathId, setGoalPath, goalError, pathId, setPathId, learnerStart, startingPoint } = props
+  const { goalPathId, setGoalPath, goalError, pathId, setPathId, learnerStart, onLearnerStart } = props
   const { completedPathIds, trail, evidence, openRep, openLesson } = props
   const goalLine = useRef<HTMLParagraphElement>(null)
   const selectedPath = paths.find(path => path.id === pathId) ?? paths[0]
@@ -85,7 +85,7 @@ export function PathsPage(props: Props) {
         title="Choose a track"
         description="Every track builds on Foundations. Follow one as your goal or browse any of them freely."
       />
-      {startingPoint && (
+      {onLearnerStart && (
         <details className="starting-point-settings">
           <summary>
             Starting as:{' '}
@@ -94,7 +94,7 @@ export function PathsPage(props: Props) {
             </strong>{' '}
             · {learnerStart ? 'Change' : 'Choose'}
           </summary>
-          {startingPoint}
+          <StartingPoint learnerStart={learnerStart} onChoose={onLearnerStart} />
         </details>
       )}
       {/* Every track at a glance on a wide screen; a narrow screen gets the same choice as one menu. */}
@@ -204,5 +204,28 @@ export function PathsPage(props: Props) {
         />
       )}
     </main>
+  )
+}
+
+/** The starting question: new to coding or returning. It only changes the suggested next rep. */
+function StartingPoint({ learnerStart, onChoose }: { learnerStart: LearnerStart | null; onChoose: (value: LearnerStart) => void }) {
+  return (
+    <section className="starting-point" aria-labelledby="starting-point-title">
+      <div>
+        <span className="home-label">Your starting point</span>
+        <h2 id="starting-point-title">Where are you starting?</h2>
+        <p>This only changes your next suggested rep. You can open any rep at any time.</p>
+      </div>
+      <div className="starting-options">
+        <button type="button" aria-pressed={learnerStart === 'new'} onClick={() => onChoose('new')}>
+          <strong>New to coding</strong>
+          <span>Start with TypeScript building blocks.</span>
+        </button>
+        <button type="button" aria-pressed={learnerStart === 'returning'} onClick={() => onChoose('returning')}>
+          <strong>Returning to coding</strong>
+          <span>Start with guided problem solving.</span>
+        </button>
+      </div>
+    </section>
   )
 }
