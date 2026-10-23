@@ -20,10 +20,6 @@ async function useTool(page: Page, name: string) {
 
 const vimStatus = (page: Page) => page.locator('.vim-status')
 
-// Keys at a person's pace. Machine-speed typing on a loaded machine can lose characters with or without Vim: the editor
-// takes a value a keystroke behind its model and writes it back. That race is separate from Vim keys.
-const keys = (page: Page, text: string) => page.keyboard.type(text, { delay: 40 })
-
 test('Vim keys edit the draft, run checks with :make, and survive a reload until turned off', async ({ page }) => {
   await page.goto(route)
   // The draft goes in before Vim is on: in Vim, Ctrl+A increments a number instead of selecting all.
@@ -35,31 +31,31 @@ test('Vim keys edit the draft, run checks with :make, and survive a reload until
   await editor(page).focus()
   await expect(page.getByText('Vim normal mode')).toBeAttached()
   // Delete the first line, then undo it.
-  await keys(page, 'ggdd')
+  await page.keyboard.type('ggdd')
   await expect.poll(() => savedCode(page)).toBe(solution.split('\n').slice(1).join('\n'))
-  await keys(page, 'u')
+  await page.keyboard.type('u')
   await expect.poll(() => savedCode(page)).toBe(solution)
 
   // Open a line below the last, type, and leave insert mode. Escape stays with Vim and does not leave focus mode.
   await useTool(page, 'Focus mode')
   await expect(page.locator('main.focus-mode')).toBeVisible()
   await editor(page).focus()
-  await keys(page, 'Go')
+  await page.keyboard.type('Go')
   await expect(page.getByText('Vim insert mode')).toBeAttached()
   await expect(vimStatus(page)).toContainText('--INSERT--')
-  await keys(page, '// vim')
+  await page.keyboard.type('// vim')
   await page.keyboard.press('Escape')
   await expect(vimStatus(page)).toContainText('--NORMAL--')
   await expect(page.locator('main.focus-mode')).toBeVisible()
   await expect.poll(() => savedCode(page)).toBe(`${solution}\n// vim`)
 
   // :w explains that drafts already save; :make runs the checks.
-  await keys(page, ':w')
+  await page.keyboard.type(':w')
   await expect(page.getByRole('textbox', { name: 'Vim command line' })).toBeFocused()
   await page.keyboard.press('Enter')
   await expect(vimStatus(page)).toContainText('Your draft saves as you type.')
   await editor(page).focus()
-  await keys(page, ':make')
+  await page.keyboard.type(':make')
   await page.keyboard.press('Enter')
   await expectChecksFinished(page.getByText('All checks passed', { exact: true }))
 
@@ -74,7 +70,7 @@ test('Vim keys edit the draft, run checks with :make, and survive a reload until
   await editor(page).focus()
   // The cursor is still on the last line, where Vim left it.
   await page.keyboard.press('End')
-  await keys(page, 'x')
+  await page.keyboard.type('x')
   await expect.poll(() => savedCode(page)).toBe(`${solution}\n// vimx`)
 })
 
@@ -87,9 +83,9 @@ test('Vim keys follow the learner between the files of a project', async ({ page
   // Each file has its own editor, so Vim attaches again once it opens.
   await editor(page).focus()
   await expect(page.getByText('Vim normal mode')).toBeAttached()
-  await keys(page, 'O')
+  await page.keyboard.type('O')
   await expect(vimStatus(page)).toContainText('--INSERT--')
-  await keys(page, '// first')
+  await page.keyboard.type('// first')
   await page.keyboard.press('Escape')
   await expect(vimStatus(page)).toContainText('--NORMAL--')
   await expect.poll(async () => String(await savedCode(page, 'fix-quote-bug'))).toContain('// first')
@@ -104,6 +100,6 @@ test('a failed Vim keys load leaves the usual editor and the draft', async ({ pa
   await editor(page).focus()
   await page.keyboard.press('ControlOrMeta+ArrowDown')
   await page.keyboard.press('End')
-  await keys(page, 'x')
+  await page.keyboard.type('x')
   await expect.poll(() => savedCode(page)).toBe(`${solution}x`)
 })

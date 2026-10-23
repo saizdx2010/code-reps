@@ -138,7 +138,16 @@ function saveViewState(editor: monaco.editor.IStandaloneCodeEditor, path: string
   }
 }
 
-export default function CodeEditor({ onRunChecks, focusRequest = 0, siblingFiles, onTypeIssues, vim = false, ...props }: Props) {
+export default function CodeEditor({
+  onRunChecks,
+  focusRequest = 0,
+  siblingFiles,
+  onTypeIssues,
+  vim = false,
+  value,
+  onChange,
+  ...props
+}: Props) {
   const typeIssuesRef = useRef(onTypeIssues)
   useLayoutEffect(() => {
     typeIssuesRef.current = onTypeIssues
@@ -210,6 +219,36 @@ export default function CodeEditor({ onRunChecks, focusRequest = 0, siblingFiles
     runRef.current = onRunChecks
   }, [onRunChecks])
   const [mounted, setMounted] = useState<monaco.editor.IStandaloneCodeEditor | null>(null)
+  // The editor owns its text; `value` only brings in changes from elsewhere, such as Reset rep. A render can lag the
+  // model by a keystroke or more, so drafts the editor itself reported are echoes, not changes: writing one back would
+  // drop the keys typed since. Echoes arrive in order, and the queue empties once the value catches up with the model.
+  const reported = useRef<string[]>([])
+  const applyingValue = useRef(false)
+  const changeRef = useRef(onChange)
+  useLayoutEffect(() => {
+    changeRef.current = onChange
+  }, [onChange])
+  useLayoutEffect(() => {
+    const model = mounted?.getModel()
+    if (!mounted || !model || value === undefined) return
+    if (value === model.getValue()) {
+      reported.current = []
+      return
+    }
+    const echo = reported.current.indexOf(value)
+    if (echo !== -1) {
+      reported.current.splice(0, echo + 1)
+      return
+    }
+    reported.current = []
+    applyingValue.current = true
+    try {
+      mounted.executeEdits('', [{ range: model.getFullModelRange(), text: value, forceMoveMarkers: true }])
+      mounted.pushUndoStop()
+    } finally {
+      applyingValue.current = false
+    }
+  }, [value, mounted])
   const vimStatusRef = useRef<HTMLDivElement>(null)
   const [vimState, setVimState] = useState<{ mode: string; failed: boolean }>({ mode: '', failed: false })
   useEffect(() => {
@@ -250,8 +289,25 @@ export default function CodeEditor({ onRunChecks, focusRequest = 0, siblingFiles
   const editor = (
     <MonacoEditor
       {...props}
+      defaultValue={value}
+      onChange={(next, event) => {
+        if (applyingValue.current) return
+        // Bounded in case a parent never passes a draft back.
+        reported.current = [...reported.current.slice(-99), next ?? '']
+        changeRef.current?.(next, event)
+      }}
       onMount={(editor, instance) => {
         editorRef.current = editor
+        // A model kept for this path (a project's other file) may hold older text than the draft.
+        const model = editor.getModel()
+        if (value !== undefined && model && model.getValue() !== value) {
+          applyingValue.current = true
+          try {
+            model.setValue(value)
+          } finally {
+            applyingValue.current = false
+          }
+        }
         setMounted(editor)
         if (focusRequestRef.current) requestAnimationFrame(() => editor.focus())
         try {
