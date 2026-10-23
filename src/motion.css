@@ -657,15 +657,18 @@ summary {
   animation: mark-pop 320ms var(--motion-spring) 120ms both;
 }
 
-/* Reflection chips take an accent border on hover; choosing one pops its check in. */
-.choice-chips button {
+/* Reflection and sentence-starter chips, and on/off settings, take an accent border and wash on hover; choosing a chip
+   pops its check in, and a setting's On or Off chip settles in (with the status chips below). */
+.choice-chips button,
+.toggle-button {
   transition:
     border-color var(--motion-fast) var(--motion-ease),
     background-color var(--motion-fast) var(--motion-ease),
     color var(--motion-fast) var(--motion-ease);
 }
 @media (hover: hover) and (pointer: fine) {
-  .choice-chips button:hover:not([aria-pressed='true']) {
+  .choice-chips button:hover:not([aria-pressed='true']),
+  .toggle-button:hover {
     border-color: var(--accent);
     background: var(--accent-soft);
   }
@@ -974,7 +977,8 @@ summary {
 }
 
 /* Status chips settle in when a status changes. */
-.status-chip {
+.status-chip,
+.toggle-button > span {
   animation: chip-settle 240ms var(--motion-spring);
 }
 @keyframes chip-settle {

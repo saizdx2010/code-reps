@@ -191,7 +191,7 @@ export const ICON_SHAPES = Object.keys(ICONS) as IconShape[]
 export const ICON_NOTES: Record<IconShape, { note: string; use: string }> = {
   arrow: {
     note: 'Forward. The head nudges on and the shaft, the rep line, follows it.',
-    use: 'Forward actions and row navigation (ListRow, Start rep, Plan your approach); down is the same arrow turned 90°',
+    use: 'Forward actions and row navigation (ListRow, Start rep, Go to Plan); down is the same arrow turned 90°',
   },
   chevron: {
     note: 'Disclosure. Dips the way it opens.',

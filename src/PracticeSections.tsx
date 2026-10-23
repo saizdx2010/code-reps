@@ -4,13 +4,13 @@ import { reducedMotion } from './ui-motion'
 import { confidenceLabels, difficultyLabels } from './attempt-labels.ts'
 import type { Confidence, Difficulty } from './attempt-labels.ts'
 import type { Attempt, AttemptRecord } from './attempt-store'
-import { Button } from './Button'
+import { Button, Toggle } from './Button'
 import { GuidanceLoading, SqlTablesLoading } from './LoadingStates'
 import { repCurriculumRole } from './curriculum'
 import { preloadEditor } from './editor-loader'
 import { Icon } from './Icon'
 import { InlineCode } from './InlineCode'
-import { Input, Textarea } from './Input'
+import { Textarea } from './Input'
 import { InfoNote } from './Layout'
 import { lazyRoute } from './lazy-route'
 import { mistakeTags } from './mistakes'
@@ -127,15 +127,29 @@ function WritingField({
       <label className="field-label" htmlFor={id}>
         {label}
       </label>
-      <div className="sentence-starters" role="group" aria-label={`${kind} sentence starters`}>
+      {/* Starters are the same pill chips as Finish's reflection answers; they append rather than select. */}
+      <div className="choice-chips sentence-starters" role="group" aria-label={`${kind} sentence starters`}>
         {starters.map(starter => (
-          <Button key={starter} onClick={() => insertStarter(starter)}>
+          <button key={starter} type="button" onClick={() => insertStarter(starter)}>
             {starter}
-          </Button>
+          </button>
         ))}
       </div>
       <Textarea ref={field} id={id} value={value} onChange={event => onChange(event.target.value)} placeholder={placeholder} rows={rows} />
     </>
+  )
+}
+
+/** Every step ends the same way: a divider, then one button to the step that follows. */
+function StepNext({ step, onReveal }: { step: 'plan' | 'solve' | 'review'; onReveal: Reveal }) {
+  const next = practiceSteps.find(item => item.id === step)!
+  return (
+    <div className="step-next">
+      <Button onClick={() => onReveal(next.section)}>
+        Go to {next.label}
+        <Icon name="arrow" />
+      </Button>
+    </div>
   )
 }
 
@@ -209,21 +223,6 @@ export function BriefSection({
   }
   return (
     <section id="brief-section" hidden={hidden} tabIndex={-1} className="panel task-panel">
-      {lesson && (
-        <div className="rep-lesson">
-          <span className="home-label">Lesson before this rep</span>
-          <h2>{lesson.title}</h2>
-          <p>
-            <InlineCode text={lesson.explanation} />
-          </p>
-          <pre>
-            <code>{lesson.example}</code>
-          </pre>
-          <p className="foundation-tip">
-            <InlineCode text={lesson.tip} />
-          </p>
-        </div>
-      )}
       <div className="panel-heading">
         <h2>The brief</h2>
       </div>
@@ -296,6 +295,23 @@ export function BriefSection({
               <InlineCode text={notes.brief} />
             </p>
           )}
+          {/* Every format reads the same way: the task and its example first, then supporting material. */}
+          {lesson && (
+            <details className="plan-brief rep-lesson" open>
+              <summary>Lesson before this rep: {lesson.title}</summary>
+              <div>
+                <p>
+                  <InlineCode text={lesson.explanation} />
+                </p>
+                <pre>
+                  <code>{lesson.example}</code>
+                </pre>
+                <p className="foundation-tip">
+                  <InlineCode text={lesson.tip} />
+                </p>
+              </div>
+            </details>
+          )}
           <InfoNote label="How this is checked">
             <p>
               Checks show how your code behaves in the tested cases. You review your plan and explanation yourself, including any
@@ -307,10 +323,9 @@ export function BriefSection({
               </p>
             )}
           </InfoNote>
-          <label className="indonesian-help">
-            <Input type="checkbox" checked={indonesianHelp} onChange={event => onIndonesianHelp(event.target.checked)} />
+          <Toggle className="indonesian-help" on={indonesianHelp} onClick={() => onIndonesianHelp(!indonesianHelp)}>
             Show Indonesian help
-          </label>
+          </Toggle>
           <details className="vocab">
             <summary>Quick vocabulary</summary>
             <div>
@@ -388,10 +403,8 @@ export function BriefSection({
       ) : (
         contentNotice
       )}
-      <Button variant="text" className="step-next" onClick={() => onReveal('plan-section')}>
-        Plan your approach
-        <Icon name="arrow" />
-      </Button>
+      {/* During Solve the brief is reference material, and Solve's next step is not Plan. */}
+      {understanding && <StepNext step="plan" onReveal={onReveal} />}
     </section>
   )
 }
@@ -449,10 +462,7 @@ export function PlanSection({
         rows={writing.rows}
       />
       <div className="field-foot">{writing.planHelp}</div>
-      <Button variant="text" className="plan-to-code" onClick={() => onReveal('solution-section')}>
-        Go to code
-        <Icon name="arrow" />
-      </Button>
+      <StepNext step="solve" onReveal={onReveal} />
     </section>
   )
 }
@@ -618,10 +628,7 @@ export function ExplainSection({
             )}
           </details>
         )}
-        <Button variant="primary" className="step-next" onClick={() => onReveal('review-section')}>
-          Review attempt
-          <Icon name="arrow" />
-        </Button>
+        <StepNext step="review" onReveal={onReveal} />
       </div>
     </section>
   )
@@ -690,10 +697,16 @@ export function ReviewSection({
     const next = chosen ? (attempt.mistakes ?? []).filter(tag => tag !== id) : [...(attempt.mistakes ?? []), id]
     update('mistakes', next.length ? next : undefined)
   }
+  // Each requirement says where it stands in words, so one still to do never reads as met.
   const checklist = [
-    { label: 'Plan', done: stepDone.plan, required: writingRequired },
-    { label: 'Checks passed', done: stepDone.solve, required: true },
-    { label: 'Explanation', done: stepDone.explain, required: writingRequired },
+    { id: 'plan', done: stepDone.plan, required: writingRequired, label: stepDone.plan ? 'Plan written' : 'Plan needed' },
+    { id: 'solve', done: stepDone.solve, required: true, label: stepDone.solve ? 'Checks passed' : 'Checks not passed yet' },
+    {
+      id: 'explain',
+      done: stepDone.explain,
+      required: writingRequired,
+      label: stepDone.explain ? 'Explanation written' : 'Explanation needed',
+    },
   ]
   const missingLabel = practiceSteps.find(step => step.id === missingStep)?.label
   // Completing moves the learner to the reward: the panel takes the top of the pane and focus, once.
@@ -775,15 +788,13 @@ export function ReviewSection({
       <ul className="completion-checklist" aria-label="Completion requirements">
         {checklist
           .filter(item => item.required || item.done)
-          .map(({ label, done }) => (
-            <li key={label} className={done ? 'done' : 'needed'}>
-              <Icon name={done ? 'check' : 'circle'} />
+          .map(({ id, label, done }) => (
+            <li key={id} className={done ? 'done' : 'needed'}>
+              {done && <Icon name="check" />}
               {label}
-              {!done && <span className="visually-hidden"> still needed</span>}
             </li>
           ))}
         <li className="optional">
-          <Icon name="circle" />
           Reflection <span className="optional-note">optional</span>
         </li>
       </ul>
@@ -851,12 +862,14 @@ export function ReviewSection({
           </div>
         </div>
       </div>
+      {/* Complete rep waits until nothing is missing; the note beside it names what is and links to that step. */}
       <div className="explain-actions">
         <button
           className="finish-button"
           type="button"
+          disabled={!canComplete}
           aria-describedby={finishMissing ? 'finish-note' : undefined}
-          onClick={canComplete ? onComplete : onShowMissing}
+          onClick={onComplete}
         >
           Complete rep
         </button>

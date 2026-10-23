@@ -390,3 +390,27 @@ test('desktop desk stays fixed while task and checks scroll', async ({ page }) =
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
   }
 })
+
+test('every format reads task and example first, then supporting material such as the lesson before the rep', async ({ page }) => {
+  for (const id of ['count-above-threshold', 'frontend-visible-items', 'sql-above-average', 'break-page-count', 'life-next-cell']) {
+    await page.goto(`/#/practice/${id}`)
+    const brief = page.locator('#brief-section')
+    // A SQL rep's example becomes rows for its tables once they load.
+    await expect(brief.locator('.example, .sql-example').first()).toBeVisible()
+    await expect(brief.locator('.info-note').filter({ hasText: 'How this is checked' })).toBeVisible()
+    const order = await brief.evaluate(section => {
+      const before = (a: Element | null | undefined, b: Element | null | undefined) =>
+        !!a && !!b && !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
+      const heading = section.querySelector('.panel-heading')
+      const example = section.querySelector('.example, .sql-example')
+      const lesson = section.querySelector('.rep-lesson')
+      const checked = [...section.querySelectorAll('.info-note')].find(note => note.textContent?.includes('How this is checked'))
+      return {
+        taskFirst: before(heading, example) && before(example, checked),
+        lessonAfterTask: !lesson || (before(example, lesson) && before(lesson, checked)),
+        lesson: !!lesson,
+      }
+    })
+    expect(order, id).toEqual({ taskFirst: true, lessonAfterTask: true, lesson: id === 'frontend-visible-items' })
+  }
+})
