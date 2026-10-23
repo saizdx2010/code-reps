@@ -11,6 +11,7 @@ import { Trail } from './Trail'
 import type { buildTrail } from './trail-map'
 import { paths } from './path'
 import { pathIntroductions } from './path-introductions'
+import { goToView } from './ui-navigation'
 import { stageTexts, trackDescriptions } from './path-text'
 import type { LearnerStart } from './learning'
 
@@ -37,6 +38,8 @@ export function PathsPage(props: Props) {
   const goalLine = useRef<HTMLParagraphElement>(null)
   const selectedPath = paths.find(path => path.id === pathId) ?? paths[0]
   const refresher = learnerStart === 'returning' && selectedPath.id === foundationsPathId
+  // The goal's trail is already drawn on Your trail, so this page links there instead of drawing it twice.
+  const isGoal = goalPathId === selectedPath.id
   const pathIntroduction = refresher
     ? {
         ...pathIntroductions[selectedPath.id],
@@ -127,9 +130,9 @@ export function PathsPage(props: Props) {
           {refresher && <p>Start with guided problems, then revisit skills without hints after a break.</p>}
           <div className="path-goal">
             <p ref={goalLine} tabIndex={-1} role="status">
-              {goalPathId === selectedPath.id ? 'Your current learning goal.' : 'Browsing this track does not change your learning goal.'}
+              {isGoal ? 'Your learning goal.' : 'Browsing this track does not change your learning goal.'}
             </p>
-            {goalPathId !== selectedPath.id && (
+            {!isGoal && (
               <Button
                 variant="text"
                 onClick={() => {
@@ -147,7 +150,8 @@ export function PathsPage(props: Props) {
           </div>
         </div>
         <div className="path-overview-action">
-          <span className="continue-status">
+          {/* The cards already show each track's count; the menu on narrow screens does not, so the bar does there. */}
+          <span className="continue-status path-overview-count">
             {trail.done} of {trail.total} reps completed
           </span>
           {trail.nextRepId && (
@@ -178,14 +182,24 @@ export function PathsPage(props: Props) {
         <summary>Introduction: {pathIntroduction.title}</summary>
         <PathIntroduction introduction={pathIntroduction} onStart={() => firstRepId && openRep(firstRepId)} />
       </details>
-      <Trail
-        stages={trail.stages}
-        text={stageTexts[selectedPath.id]}
-        evidence={evidence}
-        onOpenRep={openRep}
-        onOpenLesson={openLesson}
-        onOpenTrack={id => choose(id as PathId)}
-      />
+      {isGoal ? (
+        <p className="path-goal-trail">
+          <span>Its stages are drawn on Your trail.</span>
+          <Button variant="text" onClick={() => goToView('home')}>
+            Open Your trail
+            <Icon name="arrow" />
+          </Button>
+        </p>
+      ) : (
+        <Trail
+          stages={trail.stages}
+          text={stageTexts[selectedPath.id]}
+          evidence={evidence}
+          onOpenRep={openRep}
+          onOpenLesson={openLesson}
+          onOpenTrack={id => choose(id as PathId)}
+        />
+      )}
     </main>
   )
 }
