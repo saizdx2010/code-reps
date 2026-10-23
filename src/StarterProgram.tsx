@@ -36,7 +36,7 @@ const itemMeta = (item: ProgramItem) =>
 const weekDates = (week: ProgramWeek) =>
   `${new Date(week.startsAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} – ${new Date(week.endsAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`
 
-function ItemRow({ item, openRep, openLesson }: { item: ProgramItem } & Pick<Common, 'openRep' | 'openLesson'>) {
+function ItemRow({ item, meta, openRep, openLesson }: { item: ProgramItem; meta?: string } & Pick<Common, 'openRep' | 'openLesson'>) {
   return (
     <ListRow
       className={item.done ? 'is-done' : undefined}
@@ -46,7 +46,7 @@ function ItemRow({ item, openRep, openLesson }: { item: ProgramItem } & Pick<Com
         </span>
       }
       title={item.kind === 'lesson' ? `Lesson: ${item.title}` : item.title}
-      meta={itemMeta(item)}
+      meta={meta ?? itemMeta(item)}
       status={item.done ? <StatusChip tone="success">Done</StatusChip> : <span className="visually-hidden">Not done yet</span>}
       onOpen={() => (item.kind === 'lesson' ? openLesson(item.id) : openRep(item.id))}
       onPreview={item.kind === 'rep' ? () => preloadPractice(item.id) : undefined}
@@ -65,7 +65,8 @@ function WeekMeter({ program }: { program: StarterProgram }) {
 }
 
 /**
- * The first four weeks on Trail, while they run: this week's targets with their done checks. After week four it shows
+ * The first four weeks on Trail, while they run: the week, its meter, and this week's next target (the full list is on
+ * the page, so Trail's aside stays short beside Today). After week four it shows
  * the finish state until the reflection is saved, or for one more week, then leaves Trail; the page under Progress stays.
  */
 export default function StarterProgramCard(props: Common & { state: FluencyState }) {
@@ -88,21 +89,24 @@ export default function StarterProgramCard(props: Common & { state: FluencyState
           </span>
         </p>
       ) : week.items.length ? (
-        <>
-          <ul className="list-rows today-rows" aria-label={`Week ${week.number} targets`}>
-            {week.items.map(item => (
-              <ItemRow key={`${item.kind}:${item.id}`} item={item} openRep={props.openRep} openLesson={props.openLesson} />
-            ))}
+        // Trail holds only the next target: Today's rows sit just above, so the week's full list is on its page.
+        week.done === week.items.length ? (
+          <p className="today-done">
+            <Icon name="check" />
+            <span>
+              <strong>This week's targets are done.</strong> You can stop here; next week's are on the page.
+            </span>
+          </p>
+        ) : (
+          <ul className="list-rows today-rows" aria-label={`Week ${week.number}: next target`}>
+            <ItemRow
+              item={week.items.find(item => !item.done)!}
+              meta={`Next this week · ${week.done} of ${week.items.length} done`}
+              openRep={props.openRep}
+              openLesson={props.openLesson}
+            />
           </ul>
-          {week.done === week.items.length && (
-            <p className="today-done">
-              <Icon name="check" />
-              <span>
-                <strong>This week's targets are done.</strong> You can stop here; next week's are on the page.
-              </span>
-            </p>
-          )}
-        </>
+        )
       ) : (
         <p className="starter-quiet">No new reps this week. Reviews and recall keep what you learned.</p>
       )}
