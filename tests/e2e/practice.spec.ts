@@ -188,6 +188,19 @@ test('failed checks open one case at a time with keyboard access', async ({ page
   expect(checks!.width).toBeLessThanOrEqual(desk!.width)
 })
 
+test('a check whose code throws shows the input, the expected value, and the error', async ({ page }) => {
+  await page.goto(route)
+  await replaceCode(page, 'function mostFrequent(numbers: number[]): number | null { throw new Error("not written yet") }')
+  await page.keyboard.press('ControlOrMeta+Enter')
+  await expectChecksFinished(page.getByText(/^0 of \d+ checks passed$/))
+  const open = page.locator('#checks-section .result-list details[open]')
+  await expect(open).toHaveCount(1)
+  await expect(open.locator('.field-label')).toHaveText(['Input', 'Expected'])
+  await expect(open).toContainText('mostFrequent(')
+  await expect(open).toContainText('Your code threw an error: not written yet')
+  await expect(open.locator('.value-comparison')).toHaveCount(0)
+})
+
 test('practice steps preserve work, explain missing requirements, and record completion', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto(route)

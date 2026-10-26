@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { navigationArea, navigationSections, readRoute, routeHash, sectionView } from '../src/ui-navigation.ts'
-import { runRep } from '../src/runner.ts'
+import { runAsyncRep, runRep } from '../src/runner.ts'
 import { hubTabs, isHubTab, learningPageTitles } from '../src/learning-pages.ts'
 
 test('exercise bookmarks, library, and every product page round-trip', () => {
@@ -97,7 +97,22 @@ test('failed checks expose structured expected and actual feedback', () => {
   assert.equal(result.actual, '123')
   assert.match(result.input, /mostFrequent/)
   const thrown = runRep('function mostFrequent() { throw new Error("Try again") }', 'most-frequent-number')[0]
-  assert.equal(thrown.message, 'Try again')
+  assert.equal(thrown.message, 'Your code threw an error: Try again')
+})
+
+test('a check whose code throws still shows the input and the expected value, in the worker path too', async () => {
+  const code = 'function mostFrequent(numbers: number[]) { if (numbers.length === 0) throw new Error("empty"); return numbers[0] }'
+  for (const results of [runRep(code, 'most-frequent-number'), await runAsyncRep(code, 'most-frequent-number')]) {
+    const empty = results.find(result => !result.passed && result.message?.includes('empty'))
+    assert.ok(empty, 'the empty-array check fails with the thrown message')
+    assert.equal(empty.message, 'Your code threw an error: empty')
+    assert.equal(empty.input, 'mostFrequent([])')
+    assert.equal(empty.expected, 'null')
+    assert.equal(empty.actual, undefined)
+  }
+  const [bare] = await runAsyncRep('function mostFrequent() { throw "nope" }', 'most-frequent-number')
+  assert.equal(bare.message, 'Your code threw an error.')
+  assert.match(bare.input, /^mostFrequent\(/)
 })
 
 test('each lesson has its own address, and unknown lessons fall back to the lessons page', () => {
