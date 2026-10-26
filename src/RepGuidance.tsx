@@ -5,6 +5,9 @@ import { InfoNote } from './Layout'
 import { getRepGuidance } from './rep-guidance.ts'
 import { skillSummariesForRep } from './skill-index.ts'
 
+// The brief's "Something unclear here?" rides in this chunk, so it adds no loader of its own to startup.
+export { UnclearFlag } from './UnclearFlag'
+
 type Props = {
   repId: string
   history: readonly { repId: string }[]

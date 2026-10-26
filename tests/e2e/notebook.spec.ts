@@ -40,3 +40,27 @@ test('opening another notebook entry asks before discarding unsaved writing', as
   await expect(body).toHaveValue('')
   await expect(page.getByRole('heading', { name: 'Edit entry' })).toBeVisible()
 })
+
+test('a rep flagged as unclear from its brief lands in the Notebook and is remembered on the rep', async ({ page }) => {
+  await page.goto('/#/practice/most-frequent-number')
+  const flag = page.getByRole('button', { name: 'Something unclear here?' })
+  await flag.click()
+  await expect(flag).toHaveAttribute('aria-expanded', 'true')
+  const form = page.getByRole('form', { name: 'Something unclear in this rep' })
+  await form.getByRole('button', { name: 'Save to Notebook' }).click()
+  await expect(page.getByText('Choose a part or write a few words first.')).toBeVisible()
+
+  await form.getByRole('button', { name: 'The example', exact: true }).click()
+  await expect(form.getByRole('button', { name: 'The example', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await form.getByRole('textbox', { name: /What was unclear/ }).fill('Which number wins a tie?')
+  await form.getByRole('button', { name: 'Save to Notebook' }).click()
+  await expect(page.getByText('Saved to your Notebook. Carry on with the rep.')).toBeVisible()
+  await expect(form).toHaveCount(0)
+  await expect(flag).toHaveAttribute('aria-expanded', 'false')
+
+  await page.reload()
+  await expect(page.getByText(/You flagged this rep once, last on/)).toBeVisible()
+  await page.getByRole('button', { name: 'Open the Notebook' }).click()
+  await expect(page).toHaveURL(/#\/notebook$/)
+  await expect(page.getByText('Unclear: Find the most frequent number')).toBeVisible()
+})

@@ -84,7 +84,7 @@ Follow what will be practised first, one stage ahead of practice:
 6. **Frontend.**
 7. **Library-only reps.** For each: place it on a track, keep it in the Library, or retire it from navigation.
 
-If something in daily practice feels unclear, that rep goes to the front of the queue.
+If something in daily practice feels unclear, flag it with **Something unclear here?** at the end of the rep's brief; that rep goes to the front of the queue. Find the flags in Journal → Notebook by searching for "Unclear".
 
 ## Progress
 
