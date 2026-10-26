@@ -54,13 +54,13 @@ export const lessonDepth: Record<string, LessonDepth> = {
       'Trimmed case-sensitive comparison keeps Ada and ada. Case-insensitive comparison collapses them; the contract must then specify which display form survives. Normalization is a domain decision, not a universal cleanup step.',
   },
   lookup: {
-    title: 'Choose what first actually means',
-    code: 'const input = [8, 3, 3, 8];\n// Earliest original value that eventually repeats: 8.\n// Earliest second occurrence during a scan: 3.',
+    title: 'Ask whether a key exists, not whether its value is truthy',
+    code: 'function hasRepeat(numbers: number[]): boolean {\n  const firstIndex = new Map<number, number>()\n  for (let i = 0; i < numbers.length; i++) {\n    if (firstIndex.get(numbers[i])) return true\n    firstIndex.set(numbers[i], i)\n  }\n  return false\n}',
     reasoning:
-      'A frequency map answers how often. A seen Set answers whether a previous occurrence exists at this point. Choosing the structure follows the question. A nested search can use less explicit bookkeeping but repeat work; expected efficient lookup trades storage for time.',
-    challenge: 'Trace seen before and after each visit. Then explain why adding before checking produces a false duplicate.',
+      '`get` returns the stored value, or undefined for a key that was never set. An `if` treats undefined as false, but it also treats a stored 0, an empty string, or false as false. Here each value is an index, and the first number is stored with index 0, so a repeat of that number reads as missing. `has` asks the question the code means: was this key stored at all?',
+    challenge: 'Predict hasRepeat([3, 1, 3]) and hasRepeat([1, 3, 3]). Then repair the function with one change.',
     answer:
-      'Before visits the sets are {}, {8}, {8,3}, then the scan stops on 3. Inserting first guarantees that has(current) is true even on a new value. The order of operations encodes the invariant.',
+      '[3, 1, 3] returns false: 3 is stored with index 0, and `if (0)` skips the return. [1, 3, 3] returns true, because 3 is stored with index 1. Testing `firstIndex.has(numbers[i])` fixes both. Since the index is never used, a Set would do the same job with less to misread.',
   },
   stacks: {
     title: 'Why counts lose nested order',
@@ -106,7 +106,7 @@ export const lessonDepth: Record<string, LessonDepth> = {
     challenge:
       'Compare a loop count with filter(...).length, and a frequency map with repeated counting. Name time and storage separately.',
     answer:
-      'Loop counting and filtering both visit n values, but the loop uses constant working storage while filtering stores up to n matches. A map count uses expected O(n) time and O(k) storage; repeated full counts can take O(n squared) time. Readability and workload still affect the choice.',
+      'Loop counting and filtering both visit n values, but the loop uses constant working storage while filtering stores up to n matches. A map count uses expected O(n) time and O(k) storage; repeated full counts can take O(n²) time. Readability and workload still affect the choice.',
   },
   async: {
     title: 'Trace an out-of-order response',

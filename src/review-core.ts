@@ -4,19 +4,248 @@ import type { ReflectionGuide } from './reflection-guides.ts'
 // Core, journey, and transfer reps.
 export const coreDepth: Record<string, RepDepth> = {
   'most-frequent-number': {
-    reasoning: 'A winner depends on final frequency and an explicit tie rule, not first appearance.',
-    trace: 'For [9,2,9,2], counts finish at 9:2 and 2:2; choose 2 because it is smaller. Empty input has no winner.',
+    traceSteps: {
+      code: [
+        'function mostFrequent(numbers: number[]): number | null {',
+        '  const counts = new Map<number, number>()',
+        '  for (const n of numbers) counts.set(n, (counts.get(n) ?? 0) + 1)',
+        '  let best: number | null = null',
+        '  let bestCount = 0',
+        '  for (const [n, count] of counts) {',
+        '    if (count > bestCount || (count === bestCount && n < best!)) {',
+        '      best = n',
+        '      bestCount = count',
+        '    }',
+        '  }',
+        '  return best',
+        '}',
+      ],
+      input: 'numbers = [7, 2, 7, 2, 5]',
+      steps: [
+        {
+          line: 1,
+          vars: {},
+          structure: { kind: 'map', entries: [] },
+          note: 'This input has a tie. Start with an empty Map: each key will be a number, and its value how many times it has appeared.',
+        },
+        {
+          line: 2,
+          vars: { n: 7 },
+          structure: { kind: 'map', entries: [['7', 1]] },
+          note: '7 is new, so counts.get(7) is undefined and ?? 0 supplies 0. Its count becomes 1.',
+        },
+        {
+          line: 2,
+          vars: { n: 2 },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['7', 1],
+              ['2', 1],
+            ],
+          },
+          note: '2 is new too. Its count becomes 1.',
+        },
+        {
+          line: 2,
+          vars: { n: 7 },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['7', 2],
+              ['2', 1],
+            ],
+          },
+          note: '7 was counted before, so its count goes from 1 to 2.',
+        },
+        {
+          line: 2,
+          vars: { n: 2 },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['7', 2],
+              ['2', 2],
+            ],
+          },
+          note: '2 reaches 2 as well. 7 and 2 now tie.',
+        },
+        {
+          line: 2,
+          vars: { n: 5 },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['7', 2],
+              ['2', 2],
+              ['5', 1],
+            ],
+          },
+          note: '5 appears once. Every number is counted, so no later copy can change a count.',
+        },
+        {
+          line: 7,
+          vars: { n: 7, count: 2, best: 7, bestCount: 2 },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['7', 2],
+              ['2', 2],
+              ['5', 1],
+            ],
+          },
+          note: 'Now choose. The first entry, 7 with count 2, beats the starting count of 0, so 7 is the best so far.',
+        },
+        {
+          line: 7,
+          vars: { n: 2, count: 2, best: 2, bestCount: 2 },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['7', 2],
+              ['2', 2],
+              ['5', 1],
+            ],
+          },
+          note: '2 also has count 2: a tie. 2 is smaller than 7, so 2 replaces it.',
+        },
+        {
+          line: 6,
+          vars: { n: 5, count: 1, best: 2, bestCount: 2 },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['7', 2],
+              ['2', 2],
+              ['5', 1],
+            ],
+          },
+          note: '5 has count 1, lower than 2. The best stays 2.',
+        },
+        {
+          line: 11,
+          vars: { best: 2, bestCount: 2, result: 2 },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['7', 2],
+              ['2', 2],
+              ['5', 1],
+            ],
+          },
+          note: 'Return 2. Keeping the first number to reach the top count would have returned 7, which the tie rule rejects.',
+        },
+      ],
+    },
+    reasoning:
+      'The winner depends on each number’s final count and on the tie rule, not on which number appears first. Counting the whole array before choosing means no later copy can change a decision. The choice then keeps the highest count and, on an equal count, the lower value.',
+    trace:
+      'For the example [4, 2, 4, 2, 4, 3], the counts finish at 4: 3, 2: 2, and 3: 1, so 4 wins outright. For the tie [9, 2, 9, 2], both counts are 2 and the smaller 2 is returned. An empty array never sets a best, so the result is null.',
     alternative:
-      'Count then select separates responsibilities. Online best tracking can also work if every update handles ties; repeated counting scans can become quadratic.',
-    counterexample: 'Keeping the first maximum gives 9 on the tie case. Using zero as an empty sentinel confuses a valid winning zero.',
-    transfer: 'Change ties to earliest original occurrence. Explain which extra information must be retained.',
+      'Tracking the best while counting takes one pass, but every update must apply the tie rule, because a number can catch up later. Sorting a copy and counting runs of equal values also works, in O(n log n) time. Counting each number with filter inside a loop rescans the array and takes O(n²) time.',
+    counterexample:
+      'Keeping the first number to reach the top count returns 9 for [9, 2, 9, 2]. Keeping the last one, with >=, returns -1 for [-3, -1, -3, -1]. Sorting the keys with sort() and no comparator compares them as text, so -1 comes before -3. Returning best || null turns a winning 0 into null.',
+    transfer: 'Change the tie rule so the number that appeared first wins. Explain what extra information you must keep beside each count.',
   },
   'first-unique-character': {
-    reasoning: 'Uniqueness requires knowledge of later occurrences, while first requires original order.',
-    trace: 'In swiss, s occurs three times, w once and i once. Scan from index zero: s fails, w succeeds at index 1.',
+    traceSteps: {
+      code: [
+        'function firstUnique(text: string): number {',
+        '  const counts = new Map<string, number>()',
+        '  for (const character of text) counts.set(character, (counts.get(character) ?? 0) + 1)',
+        '  for (let i = 0; i < text.length; i++) {',
+        '    if (counts.get(text[i]) === 1) return i',
+        '  }',
+        '  return -1',
+        '}',
+      ],
+      input: "text = 'swiss'",
+      steps: [
+        {
+          line: 1,
+          vars: {},
+          structure: { kind: 'map', entries: [] },
+          note: 'First pass: count every character. Start with an empty Map from character to count.',
+        },
+        {
+          line: 2,
+          vars: { character: 's' },
+          structure: { kind: 'map', entries: [['s', 1]] },
+          note: 's is new: count 1. It looks unique for now, but the rest of the text has not been read.',
+        },
+        {
+          line: 2,
+          vars: { character: 'w' },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['s', 1],
+              ['w', 1],
+            ],
+          },
+          note: 'w is new: count 1.',
+        },
+        {
+          line: 2,
+          vars: { character: 'i' },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['s', 1],
+              ['w', 1],
+              ['i', 1],
+            ],
+          },
+          note: 'i is new: count 1.',
+        },
+        {
+          line: 2,
+          vars: { character: 's' },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['s', 2],
+              ['w', 1],
+              ['i', 1],
+            ],
+          },
+          note: 'The second s raises its count to 2. The s at index 0 is not unique after all.',
+        },
+        {
+          line: 2,
+          vars: { character: 's' },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['s', 3],
+              ['w', 1],
+              ['i', 1],
+            ],
+          },
+          note: 'The third s makes its count 3. Every character is counted.',
+        },
+        {
+          line: 4,
+          vars: { i: 0, count: 3 },
+          structure: { kind: 'array', values: ['s', 'w', 'i', 's', 's'], pointers: { i: 0 } },
+          note: 'Second pass, in the original order. s at index 0 has count 3, so it is not unique.',
+        },
+        {
+          line: 4,
+          vars: { i: 1, count: 1, result: 1 },
+          structure: { kind: 'array', values: ['s', 'w', 'i', 's', 's'], pointers: { i: 1 }, dimmed: [0] },
+          note: 'w at index 1 has count 1. Return 1. i at index 2 is unique too, but it comes later.',
+        },
+      ],
+    },
+    reasoning:
+      'Whether a character is unique depends on the characters after it, so one left-to-right pass cannot decide. Counting the whole text first settles every character. A second pass in the original order then finds the first character with a count of 1.',
+    trace:
+      'In swiss, the counts finish at s: 3, w: 1, and i: 1. The second pass rejects s at index 0 and returns 1 for w. In aAbba, a appears twice but A once, so the answer is 1; lowercasing first would merge them and return -1. An empty string skips both loops and returns -1.',
     alternative:
-      'A frequency map plus a second scan is expected linear time. Comparing first and last positions is compact but repeated searches can be quadratic.',
-    counterexample: 'Returning the first character not yet seen accepts s before discovering its later repetitions.',
+      'Checking whether indexOf and lastIndexOf agree for each character needs no Map, but each check searches the text again, so long text takes O(n²) time. The Map needs two passes of O(n) and O(k) extra space for k different characters.',
+    counterexample:
+      'Returning the first character not seen before returns 0 for swiss: s looks new at index 0, and its repeats come later. Keeping the last unique index instead of returning the first gives 2, the i.',
     transfer: 'Return every unique character in original order. Keep the basic Latin assumption explicit.',
   },
   'balanced-brackets': {
@@ -409,96 +638,155 @@ export const coreDepth: Record<string, RepDepth> = {
         },
       ],
     },
-    reasoning: 'Whitespace runs are separators, not words, and blank text needs an explicit zero result.',
-    trace: 'Trim spaces around Ada followed by a tab and Bo; splitting the remaining text on whitespace yields [Ada,Bo], so return 2.',
-    alternative: 'Splitting is clear but allocates words. A character scan can count transitions into words using constant working space.',
-    counterexample: 'Splitting only on a single space misses tabs and can count empty pieces from repeated spaces.',
-    transfer: 'Count words without allocating a word array. Describe the state needed while scanning.',
+    reasoning:
+      'A word is a run of characters that are not whitespace, so any run of whitespace is one gap, and whitespace at either end separates nothing. Trimming removes the ends, and splitting at each run then gives one piece per word. Empty text is the exception: splitting it still gives one empty piece, so it needs its own 0.',
+    trace:
+      "Trimming the example removes the two spaces at each end and leaves code, three spaces, and reps. Splitting at each run of whitespace gives ['code', 'reps'], so the result is 2. For text of only spaces, trimming leaves '', and the early return gives 0 before any split. 'one\\ntwo\\nthree' splits at both newlines into 3 words.",
+    alternative:
+      'Splitting is clear but builds an array of words first. The character scan in the step trace counts each place where a word starts and needs only a count and one flag, whatever the length of the text.',
+    counterexample:
+      "split(' ') cuts at single spaces only: the example gives ['', '', 'code', '', '', 'reps', '', ''], and 'a\\tb' stays one piece. Splitting at runs without trimming gives 4 pieces for the example. Skipping the empty check makes '' return 1, because splitting '' gives [''].",
+    transfer: 'Return the length of the longest word instead of the count. Decide what text with no words should return, and say why.',
   },
   'has-duplicate': {
     traceSteps: {
       code: [
         'function hasDuplicate(numbers: number[]): boolean {',
-        '  const seen = new Map<number, number>()',
+        '  const seen = new Set<number>()',
         '  for (let i = 0; i < numbers.length; i++) {',
         '    if (seen.has(numbers[i])) return true',
-        '    seen.set(numbers[i], i)',
+        '    seen.add(numbers[i])',
         '  }',
         '  return false',
         '}',
       ],
-      input: 'numbers = [4, 0, -1, 4]',
+      input: 'numbers = [3, 1, 3]',
       steps: [
         {
           line: 1,
-          vars: {},
-          structure: { kind: 'map', entries: [] },
-          note: 'Start with an empty map. Each number seen so far is stored with the index where it first appeared.',
+          vars: { seen: '{}' },
+          structure: { kind: 'array', values: [3, 1, 3] },
+          note: 'Start with an empty Set. It will hold every number visited so far.',
         },
         {
           line: 3,
-          vars: { i: 0 },
-          structure: { kind: 'map', entries: [] },
-          note: '4 is not in the map, so it is not a duplicate. It is stored next.',
+          vars: { i: 0, seen: '{}' },
+          structure: { kind: 'array', values: [3, 1, 3], pointers: { i: 0 } },
+          note: '3 is not in the Set, so it is not a repeat yet. Check before adding.',
+        },
+        {
+          line: 4,
+          vars: { i: 0, seen: '{3}' },
+          structure: { kind: 'array', values: [3, 1, 3], pointers: { i: 0 } },
+          note: 'Remember 3 by adding it to the Set.',
         },
         {
           line: 3,
-          vars: { i: 1 },
-          structure: { kind: 'map', entries: [['4', 0]] },
-          note: '0 is not in the map yet, so it is new. It is stored with index 1.',
+          vars: { i: 1, seen: '{3}' },
+          structure: { kind: 'array', values: [3, 1, 3], pointers: { i: 1 }, dimmed: [0] },
+          note: '1 is not in the Set, so it is new.',
+        },
+        {
+          line: 4,
+          vars: { i: 1, seen: '{3, 1}' },
+          structure: { kind: 'array', values: [3, 1, 3], pointers: { i: 1 }, dimmed: [0] },
+          note: 'Add 1. The Set now holds both numbers visited so far.',
         },
         {
           line: 3,
-          vars: { i: 2 },
-          structure: {
-            kind: 'map',
-            entries: [
-              ['4', 0],
-              ['0', 1],
-            ],
-          },
-          note: '-1 is new too. Negative numbers are stored the same way as any other number.',
-        },
-        {
-          line: 3,
-          vars: { i: 3 },
-          structure: {
-            kind: 'map',
-            entries: [
-              ['4', 0],
-              ['0', 1],
-              ['-1', 2],
-            ],
-          },
-          note: '4 is already in the map, stored at index 0. This is a repeat, so this line returns true.',
-        },
-        {
-          line: 3,
-          vars: { i: 3, result: true },
-          structure: {
-            kind: 'map',
-            entries: [
-              ['4', 0],
-              ['0', 1],
-              ['-1', 2],
-            ],
-          },
-          note: 'The function returns true right away. Later numbers are not checked.',
+          vars: { i: 2, seen: '{3, 1}', result: true },
+          structure: { kind: 'array', values: [3, 1, 3], pointers: { i: 2 }, dimmed: [0, 1] },
+          note: '3 is already in the Set: it appeared at index 0. Return true at once, even though the two copies are not side by side.',
         },
       ],
     },
-    reasoning: 'Before each visit, seen contains exactly the values in the visited prefix.',
-    trace: 'For [5,2,2], save 5, save 2, then find 2 already saved and return true.',
-    alternative: 'A Set uses expected efficient lookup and O(k) space; nested comparisons avoid a Set but can take quadratic time.',
-    counterexample: 'Adding before testing membership makes the very first value appear duplicated.',
+    reasoning:
+      'Before each number is checked, seen holds exactly the numbers visited so far. A number already in seen therefore appeared earlier, which makes it a repeat. If the loop ends without a match, every number was new when it was visited.',
+    trace:
+      'For the example [3, 1, 3], seen grows from {} to {3} to {3, 1}. The last 3 is already in seen, so the result is true. An empty array never enters the loop and returns false, and a single number is added once and never matched.',
+    alternative:
+      'Comparing every pair with two nested loops needs no extra storage but makes about n² comparisons. Sorting a copy puts equal numbers side by side in O(n log n) time; sorting the array itself changes the caller’s data. A Set takes one pass with expected fast lookup and O(n) extra storage.',
+    counterexample:
+      'Adding before checking makes every number look repeated: [1, 2, 3] returns true. Comparing only neighbors misses the example, where the two 3s are apart. Storing each index in a Map and testing whether get returns a truthy value misses a repeat of the first number, because its stored index is 0.',
     transfer: 'Detect duplicates by record ID instead of object identity. Explain which key enters the Set.',
   },
   'missing-number': {
-    reasoning: 'The complete range is determined by length, under the guaranteed no-duplicate contract.',
-    trace: 'For [3,0,1], n is 3, expected sum is 6 and actual sum is 4; missing is 2. [] gives zero.',
+    traceSteps: {
+      code: [
+        'function missingNumber(numbers: number[]): number {',
+        '  const n = numbers.length',
+        '  let remaining = 0',
+        '  for (let k = 0; k <= n; k++) remaining += k',
+        '  for (let i = 0; i < n; i++) remaining -= numbers[i]',
+        '  return remaining',
+        '}',
+      ],
+      input: 'numbers = [3, 0, 1]',
+      steps: [
+        {
+          line: 2,
+          vars: { n: 3, remaining: 0 },
+          structure: { kind: 'array', values: [0, 1, 2, 3] },
+          note: 'n is 3, the array’s length, so the full range is 0 to 3: these four boxes. The total starts at 0.',
+        },
+        {
+          line: 3,
+          vars: { n: 3, k: 0, remaining: 0 },
+          structure: { kind: 'array', values: [0, 1, 2, 3], pointers: { k: 0 } },
+          note: 'Add 0. The total stays 0.',
+        },
+        {
+          line: 3,
+          vars: { n: 3, k: 1, remaining: 1 },
+          structure: { kind: 'array', values: [0, 1, 2, 3], pointers: { k: 1 }, dimmed: [0] },
+          note: 'Add 1. The total is 1.',
+        },
+        {
+          line: 3,
+          vars: { n: 3, k: 2, remaining: 3 },
+          structure: { kind: 'array', values: [0, 1, 2, 3], pointers: { k: 2 }, dimmed: [0, 1] },
+          note: 'Add 2. The total is 3.',
+        },
+        {
+          line: 3,
+          vars: { n: 3, k: 3, remaining: 6 },
+          structure: { kind: 'array', values: [0, 1, 2, 3], pointers: { k: 3 }, dimmed: [0, 1, 2] },
+          note: 'Add 3, which is n itself, because k <= n includes it. The whole range adds up to 6.',
+        },
+        {
+          line: 4,
+          vars: { n: 3, i: 0, remaining: 3 },
+          structure: { kind: 'array', values: [3, 0, 1], pointers: { i: 0 } },
+          note: 'Now the boxes are the array. Subtract 3: 6 - 3 = 3.',
+        },
+        {
+          line: 4,
+          vars: { n: 3, i: 1, remaining: 3 },
+          structure: { kind: 'array', values: [3, 0, 1], pointers: { i: 1 }, dimmed: [0] },
+          note: 'Subtract 0. The total stays 3.',
+        },
+        {
+          line: 4,
+          vars: { n: 3, i: 2, remaining: 2 },
+          structure: { kind: 'array', values: [3, 0, 1], pointers: { i: 2 }, dimmed: [0, 1] },
+          note: 'Subtract 1. The total is 2.',
+        },
+        {
+          line: 5,
+          vars: { n: 3, remaining: 2, result: 2 },
+          structure: { kind: 'array', values: [3, 0, 1], dimmed: [0, 1, 2] },
+          note: 'Every number present has been taken back out. What remains, 2, is the one number the array never held.',
+        },
+      ],
+    },
+    reasoning:
+      'The range 0 to n has n + 1 numbers and the array holds n of them, each once, so exactly one is absent. Adding the whole range and then subtracting every number present cancels each present number, which leaves only the missing one. This relies on the contract: with repeats, the difference would no longer name one missing number.',
+    trace:
+      'For the example [3, 0, 1], n is 3: 0 + 1 + 2 + 3 = 6, the array adds up to 4, and 6 - 4 = 2. For [0, 1], n is 2, so the range is 0 to 2 and the answer is 2 itself. An empty array has n = 0: the range is only 0, nothing is subtracted, and the result is 0.',
     alternative:
-      'A Set makes membership visible but uses O(n) storage. Sum subtraction uses constant storage; safe numeric range matters if the contract expands.',
-    counterexample: 'Treating the maximum supplied value as n fails when n itself is missing, such as [0,1].',
+      'A Set of the numbers present makes membership visible: check 0 to n in order and return the first one missing, with O(n) extra storage. Sorting a copy and finding the first index whose value differs takes O(n log n) time. Subtracting totals needs constant storage; a much larger range would need care with number precision.',
+    counterexample:
+      'Treating the largest number as n fails when n itself is missing: [0, 1] gives 0 instead of 2. Adding 0 through n - 1 leaves n out of the total and returns -1 for the example. Sorting a copy with sort() and no comparator puts 10 before 2, so the gap among ten numbers is found in the wrong place.',
     transfer: 'Now permit duplicate inputs. Explain why the sum argument no longer proves one missing value and define validation.',
   },
   'valid-parentheses': {
