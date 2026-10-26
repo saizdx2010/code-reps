@@ -162,7 +162,7 @@ export const skills: Skill[] = [
     sections: [
       {
         title: 'Order and position',
-        body: 'An array stores ordered values. Position zero holds the first item. Reading past the end produces undefined. Before reading an item, decide what an empty array means for your contract: zero, null, an empty result, or an error.',
+        body: 'An array stores ordered values. Position zero holds the first item. Reading past the end produces undefined. `for (const n of numbers)` visits each item in order; a loop over the indexes also gives you each position. Before reading an item, decide what an empty array means for your contract: zero, null, an empty result, or an error.',
       },
       {
         title: 'Keep an invariant',
@@ -170,7 +170,7 @@ export const skills: Skill[] = [
       },
       {
         title: 'Choose the operation',
-        body: 'Use `filter` to select existing items, `map` to transform every item, and `reduce` to accumulate a result. A plain loop is often easiest to trace. Use the clearest form for the task. One scan over n items is O(n); an output array can require O(n) space.',
+        body: 'A sum or a count must visit every item before it returns. To find the first match, return as soon as an item qualifies: a later item cannot change which one came first. Use `filter` to select existing items, `map` to transform every item, and `reduce` to accumulate a result. A plain loop is often easiest to trace. One scan over n items is O(n); an output array can require O(n) space.',
       },
     ],
     example:
@@ -184,8 +184,8 @@ export const skills: Skill[] = [
     ],
     mistakes: [
       'Using >= when the contract says strictly greater.',
-      'Returning inside the loop before all items are visited.',
-      'Mutating the source while deriving a result.',
+      'Returning from a counting or summing loop before all items are visited.',
+      'Mutating the source while deriving a result, such as removing items with shift() as you read them.',
     ],
     questions: [
       q(

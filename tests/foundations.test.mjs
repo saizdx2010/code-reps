@@ -128,3 +128,55 @@ test('Foundations stage 2 checks reject plausible wrong answers', () => {
     ],
   ])
 })
+
+test('Foundations stage 3 checks reject plausible wrong answers', () => {
+  assertMutantsFail([
+    // Empties the caller's array with shift() while summing.
+    [
+      'sum-positive-numbers',
+      'function sumPositive(numbers: number[]) { let total = 0; while (numbers.length > 0) { const n = numbers.shift()!; if (n > 0) total += n } return total }',
+    ],
+    // Returns after the first positive number.
+    [
+      'sum-positive-numbers',
+      'function sumPositive(numbers: number[]) { let total = 0; for (const n of numbers) { if (n > 0) { total += n; return total } } return total }',
+    ],
+    // Reduces without a starting value.
+    ['sum-positive-numbers', 'function sumPositive(numbers: number[]) { return numbers.filter(n => n > 0).reduce((a, b) => a + b) }'],
+    // Treats -3 as even, because -3 % 2 is -1.
+    [
+      'count-even-numbers',
+      'function countEvens(numbers: number[]) { let count = 0; for (const n of numbers) if (n % 2 !== 1) count++; return count }',
+    ],
+    // Leaves out zero and negative evens.
+    ['count-even-numbers', 'function countEvens(numbers: number[]) { return numbers.filter(n => n > 0 && n % 2 === 0).length }'],
+    // Counts distinct values only.
+    ['count-even-numbers', 'function countEvens(numbers: number[]) { return new Set(numbers.filter(n => n % 2 === 0)).size }'],
+    // Counts values equal to the limit.
+    ['count-above-threshold', 'function countAbove(numbers: number[], limit: number) { return numbers.filter(n => n >= limit).length }'],
+    // Counts distinct values only.
+    [
+      'count-above-threshold',
+      'function countAbove(numbers: number[], limit: number) { return [...new Set(numbers)].filter(n => n > limit).length }',
+    ],
+    // Sorts the caller's array to stop early.
+    [
+      'count-above-threshold',
+      'function countAbove(numbers: number[], limit: number) { numbers.sort((a, b) => b - a); let count = 0; while (count < numbers.length && numbers[count] > limit) count++; return count }',
+    ],
+    // Excludes a word of exactly the minimum length.
+    [
+      'first-long-word',
+      'function firstLongWord(words: string[], minimum: number) { for (const word of words) if (word.length > minimum) return word; return null }',
+    ],
+    // Returns undefined instead of null.
+    ['first-long-word', 'function firstLongWord(words: string[], minimum: number) { return words.find(w => w.length >= minimum) }'],
+    // Returns the shortest qualifying word.
+    [
+      'first-long-word',
+      'function firstLongWord(words: string[], minimum: number) { return [...words].sort((a, b) => a.length - b.length).find(w => w.length >= minimum) ?? null }',
+    ],
+    // Turns an empty match into null.
+    ['first-long-word', 'function firstLongWord(words: string[], minimum: number) { return words.find(w => w.length >= minimum) || null }'],
+  ])
+})
