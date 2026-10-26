@@ -42,7 +42,6 @@ function ValueDifference({ value, other }: { value: string; other: string }) {
 
 /** The input, expected and actual values, and message for one failed check. */
 export function FailedCheck({ result, stale }: { result: TestResult; stale: boolean }) {
-  const actual = result.actual ?? 'No returned value'
   return (
     <>
       <summary>{result.name}</summary>
@@ -68,21 +67,28 @@ export function FailedCheck({ result, stale }: { result: TestResult; stale: bool
           <SqlPlan lines={result.plan} />
         </Suspense>
       )}
-      {result.expected !== undefined && (
+      {/* Code that threw returned nothing to compare: show what was expected, then the error itself. */}
+      {result.expected !== undefined && result.actual === undefined && (
+        <div>
+          <span className="field-label">Expected</span>
+          <pre>{result.expected}</pre>
+        </div>
+      )}
+      {result.expected !== undefined && result.actual !== undefined && (
         <div className="value-comparison">
           <div>
             <span className="field-label">Expected</span>
-            <ValueDifference value={result.expected} other={actual} />
+            <ValueDifference value={result.expected} other={result.actual} />
           </div>
           <div>
             <span className="field-label">{stale ? 'Actual (last run)' : 'Actual'}</span>
-            <ValueDifference value={actual} other={result.expected} />
+            <ValueDifference value={result.actual} other={result.expected} />
           </div>
         </div>
       )}
       {/* SQLite checks compare rows in their own tables, so only plain values get a sentence. */}
-      {result.expected !== undefined && !result.tables?.length && (
-        <DifferenceNote expected={result.expected} actual={result.actual ?? 'undefined'} />
+      {result.expected !== undefined && result.actual !== undefined && !result.tables?.length && (
+        <DifferenceNote expected={result.expected} actual={result.actual} />
       )}
       {result.message &&
         (!result.tables?.length || result.plan) &&

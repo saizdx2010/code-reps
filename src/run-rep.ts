@@ -141,7 +141,16 @@ export function runRepChecks(code: string, rep: Rep, createDatabase?: SqliteFact
             : `Expected ${format(expected)}, received ${format(actual)}.`,
       }
     } catch (error) {
-      return { name, passed: false, input: inputPreview, message: error instanceof Error ? error.message : 'The solution threw an error.' }
+      // No returned value to compare: the input and the expected value are what the learner traces from.
+      // SQLite checks throw their own learner-facing messages, so those keep their wording.
+      if (rep.sql)
+        return {
+          name,
+          passed: false,
+          input: inputPreview,
+          message: error instanceof Error ? error.message : 'The solution threw an error.',
+        }
+      return { name, passed: false, input: inputPreview, expected: formatResult(expected), message: thrown(error) }
     }
   })
 }
@@ -159,6 +168,10 @@ export async function runRepChecksAsync(code: string, rep: Rep, createDatabase?:
     const args = structuredClone(check.input)
     const local = check.fixture ? createAsyncFixture(check.fixture) : undefined
     const events = local?.events
+    const input = `${rep.functionName}(${check.input.map(value => JSON.stringify(value)).join(', ')}${local ? ', fixture' : ''})`.slice(
+      0,
+      200,
+    )
     try {
       const actual = await solve(...args, ...(local ? [local.fixture] : []))
       const changed = rep.preserveInput && !sameValue(args, check.input)
@@ -169,10 +182,7 @@ export async function runRepChecksAsync(code: string, rep: Rep, createDatabase?:
         ...(passed
           ? {}
           : {
-              input: `${rep.functionName}(${check.input.map(value => JSON.stringify(value)).join(', ')}${local ? ', fixture' : ''})`.slice(
-                0,
-                200,
-              ),
+              input,
               expected: formatResult(local ? { value: check.expected, events: check.fixture?.events } : check.expected),
               actual: formatResult(local ? { value: actual, events } : actual),
               message: changed
@@ -183,10 +193,21 @@ export async function runRepChecksAsync(code: string, rep: Rep, createDatabase?:
             }),
       })
     } catch (error) {
-      results.push({ name: check.name, passed: false, message: error instanceof Error ? error.message : 'The solution rejected.' })
+      results.push({
+        name: check.name,
+        passed: false,
+        input,
+        ...(local ? {} : { expected: formatResult(check.expected) }),
+        message: thrown(error),
+      })
     }
   }
   return results
+}
+
+/** A thrown error or rejection, said as what the learner's code did. */
+function thrown(error: unknown) {
+  return error instanceof Error && error.message ? `Your code threw an error: ${error.message}` : 'Your code threw an error.'
 }
 
 function formatResult(value: unknown): string {
