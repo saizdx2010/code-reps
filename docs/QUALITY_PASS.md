@@ -90,7 +90,7 @@ If something in daily practice feels unclear, that rep goes to the front of the 
 
 - [ ] Foundations (11 stages)
   - [x] Stage 1: Learn the language
-  - [ ] Stage 2: Make decisions and repeat
+  - [x] Stage 2: Make decisions and repeat
   - [ ] Stage 3: Work through arrays
 - [ ] Problem solving (20 stages)
 - [ ] SQL

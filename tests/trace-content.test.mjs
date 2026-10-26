@@ -88,6 +88,7 @@ test('traces cover collection operations, stacks, sets, recursion, trees, tables
     'simplify-file-path',
     'smallest-daily-capacity',
     'stack-trace-missing-field',
+    'string-basics',
     'sum-positive-numbers',
     'terminal-folder-paths',
     'text-normalized-palindrome',

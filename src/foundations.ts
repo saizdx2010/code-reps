@@ -80,9 +80,10 @@ export const foundations = [
     repId: 'string-basics',
     title: 'Work with text',
     explanation:
-      'Strings have methods that return new strings. trim removes spaces at the ends, toUpperCase changes letter case, and slice(start, end) copies part of the text. The original string stays the same.',
-    example: 'const name = "  ada  "\nconst clean = name.trim()       // "ada"\nconst first = clean.slice(0, 1) // "a"',
-    tip: 'slice(0, 1) returns the first character. On an empty string it returns an empty string instead of an error.',
+      'Strings have methods that return new values. trim removes spaces at the ends, toUpperCase changes letter case, and slice(start, end) copies part of the text. split cuts text into an array of pieces at a separator, and join glues an array of strings back into one string. The original string stays the same.',
+    example:
+      'const name = "  ada  "\nconst clean = name.trim()       // "ada"\nconst first = clean.slice(0, 1) // "a"\n"a b".split(" ")                // ["a", "b"]\n"a  b".split(" ")               // ["a", "", "b"]\n["a", "b"].join("")             // "ab"',
+    tip: 'Two separators in a row leave an empty piece `""` between them. slice(0, 1) on `""` returns `""` instead of an error.',
   },
   {
     repId: 'object-update',
@@ -279,7 +280,12 @@ export const foundationReps: Rep[] = [
     title: 'Pass or retry a quiz score',
     category: 'TypeScript basics',
     prompt:
-      'Return "Pass" when a quiz score is 50 or more, and "Retry" when it is below 50. A score of exactly 50 passes. Scores are whole numbers from 0 to 100.',
+      'Return a label for a quiz score: "Pass" or "Retry". Scores are whole numbers from 0 to 100. A score of 50 or more returns "Pass". A score below 50 returns "Retry". A score of exactly 50 passes. 0 returns "Retry" and 100 returns "Pass".',
+    brief: {
+      summary: 'Return a label for a quiz score: `"Pass"` or `"Retry"`.',
+      rules: ['Scores are whole numbers from 0 to 100.', 'A score of 50 or more returns `"Pass"`.', 'A score below 50 returns `"Retry"`.'],
+      edgeCases: ['A score of exactly 50 passes.', '0 returns `"Retry"` and 100 returns `"Pass"`.'],
+    },
     example: { input: 'passLabel(72)', output: "'Pass'" },
     note: 'Checks cover both branches and the edge at 50. Review your comparison yourself.',
     vocabulary: [
@@ -290,9 +296,9 @@ export const foundationReps: Rep[] = [
     starter: 'function passLabel(score: number): string {\n  // Return "Pass" at 50 or more, otherwise "Retry".\n  return ""\n}\n',
     functionName: 'passLabel',
     hints: [
-      'Write one if statement that tests the score against 50.',
-      'Use >= so that exactly 50 is included in the passing branch.',
-      'Return "Pass" inside the if. After it, return "Retry".',
+      'The result changes at 50, and 50 itself belongs to Pass. 49 is the highest score that retries.',
+      'One comparison is enough: choose the one that is true for 50 and for every score above it. Every other score retries.',
+      'Inside an if with that comparison, return "Pass". After the if, return "Retry" for everything else.',
     ],
     checks: [
       { name: 'Passes the example', input: [72], expected: 'Pass' },
@@ -307,7 +313,19 @@ export const foundationReps: Rep[] = [
     title: 'Choose a grade from a score',
     category: 'TypeScript basics',
     prompt:
-      'Return a grade label for a score. A score from 90 to 100 is "A". A score from 80 up to 90 is "B", with 80 included and 90 excluded. A score from 70 up to 80 is "C", and a score from 60 up to 70 is "D". A score below 60 is "F". Return "Invalid" for any score below 0 or above 100. Decimal scores use the same boundaries.',
+      'Return a grade label for a score, or "Invalid" for a score outside 0 to 100. A score from 90 to 100 is "A". A score from 80 up to 90 is "B": 80 is included, 90 is not. A score from 70 up to 80 is "C", and from 60 up to 70 is "D", each including its lower edge. A score below 60 is "F". A score below 0 or above 100 is "Invalid". Decimal scores use the same boundaries. 90 is "A" and 89.9 is "B". 60 is "D" and 59.9 is "F". 0 is "F" and 100 is "A".',
+    brief: {
+      summary: 'Return a grade label for a score, or `"Invalid"` for a score outside 0 to 100.',
+      rules: [
+        'A score from 90 to 100 is `"A"`.',
+        'A score from 80 up to 90 is `"B"`: 80 is included, 90 is not.',
+        'A score from 70 up to 80 is `"C"`, and from 60 up to 70 is `"D"`, each including its lower edge.',
+        'A score below 60 is `"F"`.',
+        'A score below 0 or above 100 is `"Invalid"`.',
+        'Decimal scores use the same boundaries.',
+      ],
+      edgeCases: ['90 is `"A"` and 89.9 is `"B"`.', '60 is `"D"` and 59.9 is `"F"`.', '0 is `"F"` and 100 is `"A"`.'],
+    },
     example: { input: 'gradeLabel(85)', output: "'B'" },
     note: 'Checks cover the band boundaries and out-of-range scores. Review your branch order yourself.',
     vocabulary: [
@@ -318,9 +336,9 @@ export const foundationReps: Rep[] = [
     starter: 'function gradeLabel(score: number): string {\n  // Check the invalid range, then the grade bands.\n  return ""\n}\n',
     functionName: 'gradeLabel',
     hints: [
-      'Give scores below 0 and above 100 their own branch before any grade check.',
-      'Check the highest band first. If score >= 90 is false, the score is below 90.',
-      'Return the letter in each branch. The last return handles every score below 60.',
+      'Two questions hide in this task: is the score valid at all, and if it is, which band holds it? -1 and 101 must never reach a band.',
+      'Handle the invalid range first. Then test the bands from the highest down, so each test only checks a lower edge: a score that fails the 90 test is already below 90.',
+      'Return the letter inside each band test, with a comparison that includes the lower edge. The last return covers every score below 60.',
     ],
     checks: [
       { name: 'Labels the example', input: [85], expected: 'B' },
@@ -341,7 +359,12 @@ export const foundationReps: Rep[] = [
     title: 'Sum numbers with a for loop',
     category: 'TypeScript basics',
     prompt:
-      'Return the sum of the whole numbers from 1 through n, including n. Use a for loop that counts up from 1. Inputs are whole numbers from 0 to 1000. When n is 0, there are no numbers to add, so return 0.',
+      'Return the sum of the whole numbers from 1 through n. Use a for loop that counts up from 1 to n. Include n itself. n is a whole number from 0 to 1000. n = 0 returns 0: there is nothing to add. n = 1 returns 1.',
+    brief: {
+      summary: 'Return the sum of the whole numbers from 1 through n.',
+      rules: ['Use a for loop that counts up from 1 to n.', 'Include n itself.', 'n is a whole number from 0 to 1000.'],
+      edgeCases: ['n = 0 returns 0: there is nothing to add.', 'n = 1 returns 1.'],
+    },
     example: { input: 'sumUpTo(4)', output: '10' },
     note: 'The example is 1 + 2 + 3 + 4. Checks cover zero, one, and the largest allowed input. Review where your loop starts and stops yourself.',
     vocabulary: [
@@ -352,9 +375,9 @@ export const foundationReps: Rep[] = [
     starter: 'function sumUpTo(n: number): number {\n  // Add 1 through n with a for loop.\n  return 0\n}\n',
     functionName: 'sumUpTo',
     hints: [
-      'Create a total variable and start it at 0 before the loop.',
-      'A for loop can start with let i = 1 and keep going while i is less than or equal to n.',
-      'Inside the loop, add i to total. Return total after the loop finishes.',
+      'Before any number is added the sum is 0, and for n = 0 nothing is ever added. Each number from 1 to n is added exactly once.',
+      'Keep a running total that starts at 0, and use a for loop whose counter goes from 1 up to and including n.',
+      'Inside the loop, add the counter to the total. After the loop ends, return the total.',
     ],
     checks: [
       { name: 'Sums the example', input: [4], expected: 10 },
@@ -370,7 +393,17 @@ export const foundationReps: Rep[] = [
     title: 'Count halving steps with while',
     category: 'TypeScript basics',
     prompt:
-      'Count how many steps it takes to reach 1 by halving. Start with the given whole number n. Each step replaces the current value with Math.floor(value / 2), which rounds down, and counts as one step. Stop when the value is 1, then return the number of steps. Inputs are whole numbers from 1 to 1000000. When n is 1, return 0.',
+      'Return how many halving steps it takes to bring the whole number n down to 1. Each step replaces the current value with Math.floor(value / 2), which rounds down. Each replacement counts as one step. Stop as soon as the value is 1. n is a whole number from 1 to 1000000. When n is 1, no step is needed: return 0. Odd values round down: 7 becomes 3, then 1.',
+    brief: {
+      summary: 'Return how many halving steps it takes to bring the whole number n down to 1.',
+      rules: [
+        'Each step replaces the current value with `Math.floor(value / 2)`, which rounds down.',
+        'Each replacement counts as one step.',
+        'Stop as soon as the value is 1.',
+        'n is a whole number from 1 to 1000000.',
+      ],
+      edgeCases: ['When n is 1, no step is needed: return 0.', 'Odd values round down: 7 becomes 3, then 1.'],
+    },
     example: { input: 'stepsToOne(9)', output: '3' },
     note: 'Math.floor keeps every value whole. Checks cover the smallest input, the example, and the largest allowed input. Review your stopping condition yourself.',
     vocabulary: [
@@ -381,9 +414,9 @@ export const foundationReps: Rep[] = [
     starter: 'function stepsToOne(n: number): number {\n  // Halve with Math.floor until the value is 1.\n  return 0\n}\n',
     functionName: 'stepsToOne',
     hints: [
-      'Keep a steps counter that starts at 0.',
-      'A while loop can keep going as long as the value is greater than 1.',
-      'Keep the current value and the count separate. Check that the starting value 1 needs no steps.',
+      'Each halving is one step, and n = 1 needs no steps, so the loop may run zero times. Odd values lose their half when rounded down.',
+      'Keep the current value and a step count separately. Repeat while the value is still greater than 1.',
+      'In each pass, replace the value with its rounded-down half and add one to the count. Return the count after the loop.',
     ],
     checks: [
       { name: 'Counts the example', input: [9], expected: 3 },
@@ -399,7 +432,16 @@ export const foundationReps: Rep[] = [
     title: 'Build initials from a name',
     category: 'TypeScript basics',
     prompt:
-      'Return the initials of a full name as uppercase letters with no spaces between them. Ignore spaces at the start and end of the name. Words are separated by one or more spaces. Use the first letter of each word. Inputs use basic Latin letters and spaces only. An empty name, or a name with only spaces, returns an empty string.',
+      'Return the initials of a full name: the first letter of each word, in uppercase, with nothing between them. Ignore spaces at the start and end of the name. Words are separated by one or more spaces. Inputs use basic Latin letters and spaces only. An empty name, or a name with only spaces, returns an empty string. A one-word name returns one letter.',
+    brief: {
+      summary: 'Return the initials of a full name: the first letter of each word, in uppercase, with nothing between them.',
+      rules: [
+        'Ignore spaces at the start and end of the name.',
+        'Words are separated by one or more spaces.',
+        'Inputs use basic Latin letters and spaces only.',
+      ],
+      edgeCases: ['An empty name, or a name with only spaces, returns an empty string.', 'A one-word name returns one letter.'],
+    },
     example: { input: "initials('ada lovelace')", output: "'AL'" },
     note: 'Checks cover extra spaces, a middle name, and empty input. Review how you split the words yourself.',
     vocabulary: [
@@ -412,9 +454,9 @@ export const foundationReps: Rep[] = [
     starter: 'function initials(fullName: string): string {\n  // Trim, split into words, then take each first letter.\n  return ""\n}\n',
     functionName: 'initials',
     hints: [
-      'Remove spaces at the ends first so they do not create extra words.',
-      'Split into words while treating repeated spaces as one separator.',
-      'Build one initial per word. Check that a blank name does not add a letter.',
+      'Spaces at the ends, or two spaces in a row, leave empty pieces when you split at a space. An empty piece has no first letter.',
+      'Trim the ends, split the name at spaces, and take the first character of each piece in uppercase. Empty pieces must add nothing.',
+      'Loop over the pieces and add the uppercased first character of each to a result string. Slicing an empty piece gives empty text. Return the result.',
     ],
     checks: [
       { name: 'Uses the example', input: ['ada lovelace'], expected: 'AL' },
@@ -431,12 +473,21 @@ export const foundationReps: Rep[] = [
     title: 'Update an object without changing it',
     category: 'TypeScript basics',
     prompt:
-      'A task has a title, a done flag, and a priority number. Return a new task with the same title and priority, and with done set to the supplied value. Do not change the task you received. If done already has the requested value, still return a new object.',
+      'Return a new task with done set to the supplied value. A task has a title, a done flag, and a priority number. Keep the same title and priority. Do not change the task you received. If done already has the requested value, still return a new object. A priority of 0 stays 0.',
+    brief: {
+      summary: 'Return a new task with done set to the supplied value.',
+      rules: [
+        'A task has a title, a done flag, and a priority number. Keep the same title and priority.',
+        'Do not change the task you received.',
+        'If done already has the requested value, still return a new object.',
+      ],
+      edgeCases: ['A priority of 0 stays 0.'],
+    },
     example: {
       input: "setDone({ title: 'Write', done: false, priority: 2 }, true)",
       output: "{ title: 'Write', done: true, priority: 2 }",
     },
-    note: 'The supplied task must stay unchanged. Checks compare the returned task and also detect changes made to the supplied object.',
+    note: 'Checks compare the returned task and also detect changes made to the supplied object. They cannot tell a new object from the one you received, so review that rule yourself.',
     vocabulary: [
       { term: 'Spread', meaning: 'copy the fields of an object into a new object with three dots' },
       { term: 'Mutation', meaning: 'changing an existing value instead of creating a new one' },
@@ -447,9 +498,9 @@ export const foundationReps: Rep[] = [
     functionName: 'setDone',
     preserveInput: true,
     hints: [
-      'Create a new object instead of returning the task you received.',
-      'A spread such as { ...task } copies title and priority into the new object.',
-      'Put done after the spread so it replaces the copied done value, then return the new object.',
+      'The caller keeps using the task it gave you, so that object must look the same after your function returns, even when done changes.',
+      'Build a new object: copy every field of the task into it with a spread, then give done its new value in the same object.',
+      'List done after the spread so it replaces the copied value, then return the new object. Never assign to the received task.',
     ],
     checks: [
       {

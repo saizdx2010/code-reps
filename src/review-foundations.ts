@@ -244,7 +244,7 @@ export const foundationsDepth: Record<string, RepDepth> = {
     reasoning:
       'Checking the invalid range first keeps out-of-range scores away from the grade bands. Each grade test assumes every higher band has already failed, so the order defines the boundaries.',
     trace:
-      'For 90, the 90 test passes first and returns A. For 89.9 that test fails, the 80 test fails, the 70 test fails, the 60 test passes, and the result is B only if 89.9 is at least 80. For 101 the range guard returns Invalid before any grade test runs.',
+      'For the example 85, the range guard and the 90 test fail, and the 80 test passes, so the result is B. For 90 the A test passes first. For 89.9 the A test fails and the B test passes. For 59.9 every band test fails and the final return gives F. For 101 the range guard returns Invalid before any band is tested.',
     alternative:
       'A table of score ranges is compact, but each inclusive or exclusive edge must be written correctly. Separate if statements make each boundary visible when you trace a value.',
     counterexample:
@@ -326,102 +326,175 @@ export const foundationsDepth: Record<string, RepDepth> = {
       'Repeat the halving rule until the value is 0 instead. Explain why an input of 1 never reaches 0 under floor division, and what this means for the loop.',
   },
   'string-basics': {
+    traceSteps: {
+      code: [
+        'function initials(fullName: string): string {',
+        "  const words = fullName.trim().split(' ')",
+        "  let result = ''",
+        '  for (let i = 0; i < words.length; i++) {',
+        '    result += words[i].slice(0, 1).toUpperCase()',
+        '  }',
+        '  return result',
+        '}',
+      ],
+      input: "fullName = ' ada  lovelace'",
+      steps: [
+        {
+          line: 1,
+          vars: {},
+          structure: { kind: 'array', values: ['ada', '""', 'lovelace'] },
+          note: 'trim drops the leading space. split at each space gives three pieces: the two spaces between the words leave an empty piece, "".',
+        },
+        {
+          line: 2,
+          vars: { result: '' },
+          structure: { kind: 'array', values: ['ada', '""', 'lovelace'] },
+          note: 'The result starts as empty text. No piece has been read yet.',
+        },
+        {
+          line: 4,
+          vars: { i: 0, result: 'A' },
+          structure: { kind: 'array', values: ['ada', '""', 'lovelace'], pointers: { i: 0 } },
+          note: 'Piece 0 is ada. Its first character, uppercased, is A, so the result becomes A.',
+        },
+        {
+          line: 4,
+          vars: { i: 1, result: 'A' },
+          structure: { kind: 'array', values: ['ada', '""', 'lovelace'], pointers: { i: 1 }, dimmed: [0] },
+          note: 'Piece 1 is empty. slice(0, 1) gives empty text, so the result stays A and nothing breaks.',
+        },
+        {
+          line: 4,
+          vars: { i: 2, result: 'AL' },
+          structure: { kind: 'array', values: ['ada', '""', 'lovelace'], pointers: { i: 2 }, dimmed: [0, 1] },
+          note: 'Piece 2 is lovelace. Its first character, uppercased, is L, so the result becomes AL.',
+        },
+        {
+          line: 3,
+          vars: { i: 3, result: 'AL' },
+          structure: { kind: 'array', values: ['ada', '""', 'lovelace'], dimmed: [0, 1, 2] },
+          note: 'i is 3, which is not less than the 3 pieces, so the loop stops.',
+        },
+        {
+          line: 6,
+          vars: { result: 'AL' },
+          structure: { kind: 'array', values: ['ada', '""', 'lovelace'], dimmed: [0, 1, 2] },
+          note: 'Return AL: the same answer as the example, even with the extra spaces.',
+        },
+      ],
+    },
     reasoning:
-      'Trimming removes display padding before words are split. Each initial comes from the first character of an actual word, so the empty name gives an empty result rather than a special error.',
+      'Splitting at single spaces can leave empty pieces, but slice(0, 1) turns each of them into empty text, so they add nothing. Only real words contribute a letter, and an empty or blank name gives an empty result without a special case.',
     trace:
-      "For '  grace   hopper ', trim gives 'grace   hopper'. Splitting on whitespace runs gives grace and hopper, so the first letters give GH. For an empty name the split result is one empty word, and slice(0, 1) gives an empty string.",
+      'For the example ada lovelace the pieces are ada and lovelace, giving A and then AL. For grace   hopper the pieces are grace, "", "", and hopper; the empty pieces add nothing, so the result is GH. For a name of only spaces, trim leaves "", which splits into one empty piece, so the result is empty.',
     alternative:
-      'A regular expression that matches word starts can extract initials in one step. Splitting is easier to trace, but it still needs a rule for repeated separators.',
+      'Splitting on runs of spaces with split(/\\s+/) after trimming gives only real words, except that an empty name still gives one empty piece. A regular expression that matches the start of each word can collect initials in one step, but it is harder to trace.',
     counterexample:
-      "Splitting '  grace   hopper' on single spaces creates empty words. Calling word[0].toUpperCase() on an empty word throws an error. slice(0, 1) returns an empty string for those words instead.",
+      'Reading word[0].toUpperCase() instead of slicing throws on an empty piece, because word[0] is undefined there: grace   hopper fails with an error. Joining the letters with a space returns A L instead of AL.',
     transfer:
-      'Return the first letter of the first and last words only. Decide what a one-word name should return before you change the code.',
+      'Return the first letter of the first and last words only. Decide what a one-word name should return before you change the code. This changed contract is self-reviewed, not checked by the original cases.',
   },
   'object-update': {
     traceSteps: {
       code: [
         'type Task = { title: string; done: boolean; priority: number }',
         'function setDone(task: Task, done: boolean): Task {',
-        '  const before = task.done',
-        '  const copy: Task = { ...task }',
-        '  copy.done = done',
-        '  const changed = before !== done',
-        '  return copy',
+        '  const updated: Task = { ...task, done }',
+        '  return updated',
         '}',
       ],
       input: "task = { title: 'Write', done: false, priority: 2 }, done = true",
       steps: [
         {
           line: 1,
-          vars: {},
+          vars: { done: true },
           structure: {
             kind: 'state',
             entries: [
-              ['original done', false],
-              ['copy done', 'not made'],
+              ['task.title', 'Write'],
+              ['task.done', false],
+              ['task.priority', 2],
+              ['updated', 'not made yet'],
             ],
           },
-          note: 'The function receives the task and the requested done value. The task must stay unchanged.',
+          note: 'The function receives the task and the requested value true. The task must look the same when the function returns.',
         },
         {
           line: 2,
-          vars: {},
+          vars: { done: true },
           structure: {
             kind: 'state',
             entries: [
-              ['original done', false],
-              ['copy done', 'not made'],
+              ['task.title', 'Write'],
+              ['task.done', false],
+              ['task.priority', 2],
+              ['updated.title', 'Write'],
             ],
           },
-          note: 'Save the original done flag, false, so it can be compared later.',
+          note: 'The spread starts a new object and copies the first field, title.',
+        },
+        {
+          line: 2,
+          vars: { done: true },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['task.title', 'Write'],
+              ['task.done', false],
+              ['task.priority', 2],
+              ['updated.title', 'Write'],
+              ['updated.done', false],
+            ],
+          },
+          note: 'It copies done as it is in the task: false for now.',
+        },
+        {
+          line: 2,
+          vars: { done: true },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['task.title', 'Write'],
+              ['task.done', false],
+              ['task.priority', 2],
+              ['updated.title', 'Write'],
+              ['updated.done', false],
+              ['updated.priority', 2],
+            ],
+          },
+          note: 'It copies priority. The new object now matches the task field for field.',
+        },
+        {
+          line: 2,
+          vars: { done: true },
+          structure: {
+            kind: 'state',
+            entries: [
+              ['task.title', 'Write'],
+              ['task.done', false],
+              ['task.priority', 2],
+              ['updated.title', 'Write'],
+              ['updated.done', true],
+              ['updated.priority', 2],
+            ],
+          },
+          note: 'done is listed after the spread, so it replaces the copied false with true. Only the new object changes.',
         },
         {
           line: 3,
-          vars: { before: false },
+          vars: { done: true, result: '{"title": "Write", "done": true, "priority": 2}' },
           structure: {
             kind: 'state',
             entries: [
-              ['original done', false],
-              ['copy done', 'not made'],
+              ['task.title', 'Write'],
+              ['task.done', false],
+              ['task.priority', 2],
+              ['updated.title', 'Write'],
+              ['updated.done', true],
+              ['updated.priority', 2],
             ],
           },
-          note: 'Make a new object with the same title, done flag, and priority.',
-        },
-        {
-          line: 4,
-          vars: { before: false },
-          structure: {
-            kind: 'state',
-            entries: [
-              ['original done', false],
-              ['copy done', false],
-            ],
-          },
-          note: 'The copy starts with done false. Next, set done on the copy only.',
-        },
-        {
-          line: 5,
-          vars: { before: false },
-          structure: {
-            kind: 'state',
-            entries: [
-              ['original done', false],
-              ['copy done', true],
-            ],
-          },
-          note: 'Only the copy now has true. The original still has false.',
-        },
-        {
-          line: 6,
-          vars: { before: false, changed: true, result: '{"title": "Write", "done": true, "priority": 2}' },
-          structure: {
-            kind: 'state',
-            entries: [
-              ['original done', false],
-              ['copy done', true],
-            ],
-          },
-          note: 'The flag changed, so changed is true. Return the new copy.',
+          note: 'Return the new object. The task still has done false, so the caller sees no surprise.',
         },
       ],
     },
@@ -432,7 +505,7 @@ export const foundationsDepth: Record<string, RepDepth> = {
     alternative:
       "Object.assign({}, task, { done }) gives the same result and is more verbose. Assigning task.done directly is shorter but changes the caller's object.",
     counterexample:
-      'task.done = done; return task can return the right value. It fails because the supplied object changed, which the input check detects.',
+      'task.done = done; return task returns the right value, but the supplied object changed, which the input check reports. { ...task, done: !task.done } flips the flag instead of setting it, so a task that is already done gets reopened.',
     transfer:
       'Update one field inside a nested settings object. Explain why one spread is no longer enough and which nested objects must be copied.',
   },
@@ -557,7 +630,7 @@ export const foundationsGuides: Record<string, ReflectionGuide> = {
     plan: ['Trim the name before splitting it.', 'Decide what an empty name returns.'],
     explanation: ['Explain why one or more spaces separate words.', 'Explain how slice(0, 1) behaves on an empty word.'],
     example:
-      'I trim the name, split it on runs of whitespace, take the first character of each word, uppercase it, and join the letters. An empty name becomes one empty word, so the result is an empty string. The checks verify the output; I review the splitting rule myself.',
+      'I trim the name and split it at spaces. Repeated spaces leave empty pieces, but slice(0, 1) turns them into empty text, so only real words add a letter. I uppercase each first letter and add it to the result. An empty name gives one empty piece, so the result is an empty string. The checks verify the output; I review the splitting rule myself.',
   },
   'object-update': {
     plan: ['Name the one field that changes.', 'Decide how the received task stays unchanged.'],
