@@ -1,0 +1,55 @@
+/* "Something unclear here?" closes the brief: a quiet text disclosure, then a short form on the brief's own surface.
+   No divider of its own, since Understand's footer draws one just below. It loads with the rep guidance chunk. */
+.unclear-flag {
+  margin-top: 20px;
+  font-size: 14px;
+}
+.unclear-flag > .ui-button {
+  gap: 4px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.unclear-flag .ui-icon {
+  width: 16px;
+  height: 16px;
+}
+.unclear-flag form {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  animation: unclear-arrive var(--motion-fast) var(--motion-ease);
+}
+.unclear-flag-intro,
+.unclear-flag-status {
+  margin: 0;
+  color: var(--muted);
+}
+.unclear-flag-status:not(:empty) {
+  margin-top: 8px;
+}
+.unclear-flag .choice-chips {
+  margin: 0;
+}
+.unclear-flag .field-label {
+  margin-top: 4px;
+}
+.unclear-flag-optional {
+  color: var(--muted);
+  font-weight: 400;
+}
+.unclear-flag-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+@keyframes unclear-arrive {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .unclear-flag form {
+    animation: none;
+  }
+}

@@ -829,6 +829,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
               }}
               onReveal={revealSection}
               plannedNote={fluency.state.nextUp?.repId === repId && !attempt.completedAt ? fluency.state.nextUp : undefined}
+              fluency={fluency}
             />
             <PlanSection
               hidden={activeStep !== 'plan'}

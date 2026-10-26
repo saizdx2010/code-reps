@@ -26,11 +26,16 @@ import { practiceSteps } from './practice-steps'
 import type { useRepContent } from './useRepContent'
 import type { useReviewContent } from './useReviewContent'
 import type { Moments } from './LearningMoments'
+import type { useFluency } from './useFluency'
 
 const RepGuidance = lazy(() =>
   import('./RepGuidance').catch(() => ({
     default: () => <p role="status">This rep's guidance could not load. Reload to try again; your draft is kept.</p>,
   })),
+)
+// "Something unclear here?" closes the brief. It saves a Notebook question, so without it the rep still works.
+const UnclearFlag = lazy<ComponentType<{ repId: string; repTitle: string; fluency: ReturnType<typeof useFluency> }>>(() =>
+  import('./RepGuidance').then(module => ({ default: module.UnclearFlag })).catch(() => ({ default: () => null })),
 )
 // Growth notes appear only after a completion, so they load with it rather than with the app. They describe a saved
 // attempt, so if they cannot load the completion panel simply goes without them.
@@ -184,9 +189,11 @@ export function BriefSection({
   onReveal,
   understanding,
   plannedNote,
+  fluency,
 }: {
   hidden: boolean
   understanding: boolean
+  fluency: ReturnType<typeof useFluency>
   /** The learner's note to themselves when they chose this rep for next time. */
   plannedNote?: { note: string; setAt: string }
   repId: string
@@ -409,6 +416,9 @@ export function BriefSection({
               </ol>
             </div>
           )}
+          <Suspense>
+            <UnclearFlag repId={repId} repTitle={full.title} fluency={fluency} />
+          </Suspense>
         </>
       ) : (
         contentNotice
