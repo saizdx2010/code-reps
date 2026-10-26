@@ -74,6 +74,7 @@ test('traces cover collection operations, stacks, sets, recursion, trees, tables
     'longest-shared-sequence',
     'loop-while',
     'loop-with-for',
+    'missing-number',
     'most-frequent-number',
     'nested-parcel-load',
     'next-warmer-day',

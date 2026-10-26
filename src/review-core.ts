@@ -638,11 +638,15 @@ export const coreDepth: Record<string, RepDepth> = {
         },
       ],
     },
-    reasoning: 'Whitespace runs are separators, not words, and blank text needs an explicit zero result.',
-    trace: 'Trim spaces around Ada followed by a tab and Bo; splitting the remaining text on whitespace yields [Ada,Bo], so return 2.',
-    alternative: 'Splitting is clear but allocates words. A character scan can count transitions into words using constant working space.',
-    counterexample: 'Splitting only on a single space misses tabs and can count empty pieces from repeated spaces.',
-    transfer: 'Count words without allocating a word array. Describe the state needed while scanning.',
+    reasoning:
+      'A word is a run of characters that are not whitespace, so any run of whitespace is one gap, and whitespace at either end separates nothing. Trimming removes the ends, and splitting at each run then gives one piece per word. Empty text is the exception: splitting it still gives one empty piece, so it needs its own 0.',
+    trace:
+      "Trimming the example removes the two spaces at each end and leaves code, three spaces, and reps. Splitting at each run of whitespace gives ['code', 'reps'], so the result is 2. For text of only spaces, trimming leaves '', and the early return gives 0 before any split. 'one\\ntwo\\nthree' splits at both newlines into 3 words.",
+    alternative:
+      'Splitting is clear but builds an array of words first. The character scan in the step trace counts each place where a word starts and needs only a count and one flag, whatever the length of the text.',
+    counterexample:
+      "split(' ') cuts at single spaces only: the example gives ['', '', 'code', '', '', 'reps', '', ''], and 'a\\tb' stays one piece. Splitting at runs without trimming gives 4 pieces for the example. Skipping the empty check makes '' return 1, because splitting '' gives [''].",
+    transfer: 'Return the length of the longest word instead of the count. Decide what text with no words should return, and say why.',
   },
   'has-duplicate': {
     traceSteps: {
@@ -707,11 +711,82 @@ export const coreDepth: Record<string, RepDepth> = {
     transfer: 'Detect duplicates by record ID instead of object identity. Explain which key enters the Set.',
   },
   'missing-number': {
-    reasoning: 'The complete range is determined by length, under the guaranteed no-duplicate contract.',
-    trace: 'For [3,0,1], n is 3, expected sum is 6 and actual sum is 4; missing is 2. [] gives zero.',
+    traceSteps: {
+      code: [
+        'function missingNumber(numbers: number[]): number {',
+        '  const n = numbers.length',
+        '  let remaining = 0',
+        '  for (let k = 0; k <= n; k++) remaining += k',
+        '  for (let i = 0; i < n; i++) remaining -= numbers[i]',
+        '  return remaining',
+        '}',
+      ],
+      input: 'numbers = [3, 0, 1]',
+      steps: [
+        {
+          line: 2,
+          vars: { n: 3, remaining: 0 },
+          structure: { kind: 'array', values: [0, 1, 2, 3] },
+          note: 'n is 3, the array’s length, so the full range is 0 to 3: these four boxes. The total starts at 0.',
+        },
+        {
+          line: 3,
+          vars: { n: 3, k: 0, remaining: 0 },
+          structure: { kind: 'array', values: [0, 1, 2, 3], pointers: { k: 0 } },
+          note: 'Add 0. The total stays 0.',
+        },
+        {
+          line: 3,
+          vars: { n: 3, k: 1, remaining: 1 },
+          structure: { kind: 'array', values: [0, 1, 2, 3], pointers: { k: 1 }, dimmed: [0] },
+          note: 'Add 1. The total is 1.',
+        },
+        {
+          line: 3,
+          vars: { n: 3, k: 2, remaining: 3 },
+          structure: { kind: 'array', values: [0, 1, 2, 3], pointers: { k: 2 }, dimmed: [0, 1] },
+          note: 'Add 2. The total is 3.',
+        },
+        {
+          line: 3,
+          vars: { n: 3, k: 3, remaining: 6 },
+          structure: { kind: 'array', values: [0, 1, 2, 3], pointers: { k: 3 }, dimmed: [0, 1, 2] },
+          note: 'Add 3, which is n itself, because k <= n includes it. The whole range adds up to 6.',
+        },
+        {
+          line: 4,
+          vars: { n: 3, i: 0, remaining: 3 },
+          structure: { kind: 'array', values: [3, 0, 1], pointers: { i: 0 } },
+          note: 'Now the boxes are the array. Subtract 3: 6 - 3 = 3.',
+        },
+        {
+          line: 4,
+          vars: { n: 3, i: 1, remaining: 3 },
+          structure: { kind: 'array', values: [3, 0, 1], pointers: { i: 1 }, dimmed: [0] },
+          note: 'Subtract 0. The total stays 3.',
+        },
+        {
+          line: 4,
+          vars: { n: 3, i: 2, remaining: 2 },
+          structure: { kind: 'array', values: [3, 0, 1], pointers: { i: 2 }, dimmed: [0, 1] },
+          note: 'Subtract 1. The total is 2.',
+        },
+        {
+          line: 5,
+          vars: { n: 3, remaining: 2, result: 2 },
+          structure: { kind: 'array', values: [3, 0, 1], dimmed: [0, 1, 2] },
+          note: 'Every number present has been taken back out. What remains, 2, is the one number the array never held.',
+        },
+      ],
+    },
+    reasoning:
+      'The range 0 to n has n + 1 numbers and the array holds n of them, each once, so exactly one is absent. Adding the whole range and then subtracting every number present cancels each present number, which leaves only the missing one. This relies on the contract: with repeats, the difference would no longer name one missing number.',
+    trace:
+      'For the example [3, 0, 1], n is 3: 0 + 1 + 2 + 3 = 6, the array adds up to 4, and 6 - 4 = 2. For [0, 1], n is 2, so the range is 0 to 2 and the answer is 2 itself. An empty array has n = 0: the range is only 0, nothing is subtracted, and the result is 0.',
     alternative:
-      'A Set makes membership visible but uses O(n) storage. Sum subtraction uses constant storage; safe numeric range matters if the contract expands.',
-    counterexample: 'Treating the maximum supplied value as n fails when n itself is missing, such as [0,1].',
+      'A Set of the numbers present makes membership visible: check 0 to n in order and return the first one missing, with O(n) extra storage. Sorting a copy and finding the first index whose value differs takes O(n log n) time. Subtracting totals needs constant storage; a much larger range would need care with number precision.',
+    counterexample:
+      'Treating the largest number as n fails when n itself is missing: [0, 1] gives 0 instead of 2. Adding 0 through n - 1 leaves n out of the total and returns -1 for the example. Sorting a copy with sort() and no comparator puts 10 before 2, so the gap among ten numbers is found in the wrong place.',
     transfer: 'Now permit duplicate inputs. Explain why the sum argument no longer proves one missing value and define validation.',
   },
   'valid-parentheses': {

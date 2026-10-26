@@ -235,7 +235,7 @@ export const skills: Skill[] = [
       },
       {
         title: 'Words and characters',
-        body: 'For a whitespace-separated word exercise, trim first, handle empty input, then split on one or more whitespace characters. JavaScript strings use UTF-16 code units; length and index access are not a general count of human-visible characters. State a restricted alphabet when the exercise depends on that distinction.',
+        body: 'For a whitespace-separated word exercise, trim first, handle empty input, then split on one or more whitespace characters. The pattern `/\\s+/` matches one or more spaces, tabs, or newlines in a row, so `"a \\t b".split(/\\s+/)` gives `["a", "b"]`; `"".split(/\\s+/)` still gives `[""]`, one empty piece. JavaScript strings use UTF-16 code units; length and index access are not a general count of human-visible characters. State a restricted alphabet when the exercise depends on that distinction.',
       },
       {
         title: 'Cost includes string work',

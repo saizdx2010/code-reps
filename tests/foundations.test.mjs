@@ -245,3 +245,39 @@ test('Foundations stage 4 checks reject plausible wrong answers', () => {
     ],
   ])
 })
+
+test('Foundations stage 5 checks reject plausible wrong answers', () => {
+  assertMutantsFail([
+    // Splits at single spaces, so a tab does not separate words.
+    ['count-words', "function countWords(text: string) { return text.split(' ').filter(word => word !== '').length }"],
+    // Splits at whitespace runs without trimming, so the outer spaces leave empty pieces.
+    ['count-words', 'function countWords(text: string) { return text.split(/\\s+/).length }'],
+    // Trims and splits but counts the one empty piece left by empty text.
+    ['count-words', 'function countWords(text: string) { return text.trim().split(/\\s+/).length }'],
+    // Splits at each single whitespace character, so repeated spaces add empty pieces.
+    [
+      'count-words',
+      "function countWords(text: string) { const trimmed = text.trim(); return trimmed === '' ? 0 : trimmed.split(/\\s/).length }",
+    ],
+    // Uses the largest number as n, so a missing n is never found.
+    [
+      'missing-number',
+      'function missingNumber(numbers: number[]) { const n = Math.max(0, ...numbers); let total = 0; for (let k = 0; k <= n; k++) total += k; for (const value of numbers) total -= value; return total }',
+    ],
+    // Adds 0 through n - 1, leaving n out of the total.
+    [
+      'missing-number',
+      'function missingNumber(numbers: number[]) { let total = 0; for (let k = 0; k < numbers.length; k++) total += k; for (const value of numbers) total -= value; return total }',
+    ],
+    // Sorts a copy with sort() and no comparator, which puts 10 before 2.
+    [
+      'missing-number',
+      'function missingNumber(numbers: number[]) { const sorted = [...numbers].sort(); for (let i = 0; i < sorted.length; i++) if (sorted[i] !== i) return i; return sorted.length }',
+    ],
+    // Sorts the caller's array to find the gap.
+    [
+      'missing-number',
+      'function missingNumber(numbers: number[]) { numbers.sort((a, b) => a - b); for (let i = 0; i < numbers.length; i++) if (numbers[i] !== i) return i; return numbers.length }',
+    ],
+  ])
+})
