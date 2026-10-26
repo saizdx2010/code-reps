@@ -47,7 +47,7 @@ export const skills: Skill[] = [
       },
       {
         title: 'Types describe expectations',
-        body: 'The types `string`, `number`, and `boolean` describe common values. TypeScript checks your program before it runs, but its types do not validate data received over a network. A function signature describes expected inputs and the value it returns.',
+        body: 'The types `string`, `number`, and `boolean` describe common values. Types also describe groups of values: `{ name: string; age: number }` is an object with two named properties, and `string[]` is an array of strings. TypeScript checks your program before it runs, but its types do not validate data received over a network. A function signature describes expected inputs and the value it returns.',
       },
       {
         title: 'A function is a boundary',

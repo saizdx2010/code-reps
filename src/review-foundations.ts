@@ -78,44 +78,64 @@ export const foundationsDepth: Record<string, RepDepth> = {
       'Write makeMultiplier(factor) and use it to scale each value. Decide what stays fixed and what arrives later. This changed contract is self-reviewed, not checked by the original cases.',
   },
   'declare-variables': {
-    reasoning: 'A name and its value are different: const protects the binding, not every value reachable through it.',
-    trace: 'With name Ada, greeting remains Hello plus a space; message becomes Hello, Ada. With an empty name the space remains.',
+    reasoning:
+      'greeting is fixed text, so const states that this name will never point at another value. message really does change: it starts as the greeting and then gains the name, so it needs let. The function returns whatever message holds at the end.',
+    trace:
+      'For Ada, greeting is "Hello, " and message starts as "Hello, ". Reassigning adds the name, so message becomes "Hello, Ada" and that is returned. For an empty name, adding "" leaves message as "Hello, ", trailing space included.',
     alternative:
-      'Returning the concatenation directly is shorter but does not practice the requested declarations. let is justified when reassignment is needed, not merely because a value is calculated.',
-    counterexample: 'Removing the trailing space produces HelloAda. Output checks still cannot prove which declarations you used.',
-    transfer: 'Change the task to build a message in two assignments. Which binding now needs let?',
+      'const message = greeting + name, or returning greeting + name directly, gives the same output. In real code that is the better choice, because nothing is reassigned. This rep adds the reassignment so you practice the one case where let is needed.',
+    counterexample:
+      'const greeting = "Hello," without the trailing space returns "Hello,Ada", and the first check points at character 7. Declaring message with const and then reassigning it stops with an error, because a const name cannot be reassigned.',
+    transfer:
+      'Build the message in three steps: start with greeting, add the name, then add "!" at the end. Which names change, and which can stay const? This changed contract is self-reviewed, not checked by the original cases.',
   },
   'basic-types': {
-    reasoning: 'Formatting must preserve the values supplied, including falsy values.',
-    trace: 'For Bo, 0, false the sentence is Bo is 0. Active: false. Neither 0 nor false disappears.',
+    reasoning:
+      'Each value has one fixed place in the sentence. A template string turns the number and the boolean into text exactly as they are, so 0 and false need no special handling.',
+    trace:
+      'For Ada, 28, true the template fills in Ada, then 28, then true: Ada is 28. Active: true. For Bo, 0, true the age slot shows 0, and for Lee, 42, false the last slot shows false.',
     alternative:
-      'Concatenation and template strings can both work; template strings make the punctuation easier to inspect. Neither validates unknown runtime data.',
-    counterexample: 'Using age || 18 replaces a legitimate zero. Explain why a default would change the contract.',
-    transfer: 'Add an optional nickname with a documented missing-value rule. Distinguish absent text from an empty string.',
+      'Joining with +, as in name + " is " + age + ". Active: " + active, gives the same text, but the spaces and the period are harder to check by eye. Neither version checks that values arriving from outside the program really have these types.',
+    counterexample:
+      'Writing ${age || "unknown"} looks like a safe default, but || treats 0 as missing, so Bo becomes Bo is unknown. Writing active ? "yes" : "no" changes the required words true and false.',
+    transfer:
+      'Add an optional nickname shown in brackets after the name. Decide what an empty nickname shows, and how that differs from no nickname at all. This changed contract is self-reviewed, not checked by the original cases.',
   },
   'create-objects': {
-    reasoning: 'An object gives related properties one identity and a documented shape.',
-    trace: 'Create {name: Ada, age: 28}, read person.name and person.age, then form Ada is 28 years old.',
+    reasoning:
+      'The object groups the two values under one name, and the Person type says exactly which properties it must have. Reading person.name and person.age gets back what you stored, so the sentence comes from the object rather than from loose variables.',
+    trace:
+      'For Ada and 28, person becomes { name: "Ada", age: 28 }. person.name is Ada and person.age is 28, so the sentence is Ada is 28 years old. For Bo and 0 the age property holds 0, and the sentence is Bo is 0 years old.',
     alternative:
-      'Using parameters directly gives the same sentence but bypasses the object-learning goal. A type documents shape without validating network input.',
-    counterexample: 'A correct sentence alone does not prove an object was created. Inspect the code as well as the result.',
-    transfer: 'Add a city property and explain which type and construction sites must change.',
+      'Using the parameters directly gives the same sentence with less code, but skips the object this rep practices. The shorthand { name, age } and the long form { name: name, age: age } build the same object.',
+    counterexample:
+      'Writing { name: name } without age is a type error, because Person requires both properties. If it runs anyway, person.age is undefined and the sentence becomes Ada is undefined years old. Writing year instead of years fails every check.',
+    transfer:
+      'Add a city property and end the sentence with "and lives in {city}". Name every place in the code that must change. This changed contract is self-reviewed, not checked by the original cases.',
   },
   'make-arrays': {
-    reasoning: 'Absence of an item differs from an item containing empty text.',
-    trace: '[] has length zero and returns null; [empty string, Ada] has an item at zero and returns that empty string.',
+    reasoning:
+      'No item is different from an item that holds empty text. The length tells you which case you have, and index 0 reads the first item without changing the array.',
+    trace:
+      'For ["Ada", "Sam"] the length is 2, so index 0 gives Ada. [] has length 0 and returns null. ["", "Ada"] has length 2, so index 0 gives the empty string, which is returned as it is.',
     alternative:
-      'names[0] ?? null can express absence compactly under this contract. An explicit length check makes the empty-array rule visible.',
-    counterexample: 'names[0] || null incorrectly turns an empty first name into null.',
-    transfer: 'Return the last item instead. Explain how the empty case changes the index calculation.',
+      'names[0] ?? null also works: reading past the end gives undefined, and ?? swaps only undefined or null for null. An explicit length check makes the empty-array rule easier to see.',
+    counterexample:
+      'names[0] || null turns an empty first name into null, because "" counts as false. names.shift() returns the right name but removes it from the caller’s array, which the checks report as a changed input.',
+    transfer:
+      'Return the last item instead. Work out its index from the length, and decide what an empty array returns. This changed contract is self-reviewed, not checked by the original cases.',
   },
   'write-functions': {
-    reasoning: 'Returning transfers a computed value to a caller that can use it again.',
-    trace: 'price 2.5 and quantity 2 produce 5; quantity zero produces zero without a special branch.',
+    reasoning:
+      'return hands the computed total back to the caller, which can store it or use it in another calculation. One multiplication covers every case, including 0 items and decimal prices.',
+    trace:
+      'totalPrice(5, 3) computes 5 times 3 and returns 15. totalPrice(1.25, 3) returns 3.75, and totalPrice(8, 0) returns 0 without a special branch.',
     alternative:
-      'Printing the product helps inspection but is not a replacement for return. Extra state is unnecessary for one expression.',
-    counterexample: 'Hardcoding 15 passes the example but fails price 2.5 and quantity 2.',
-    transfer: 'Use the returned total in a second calculation and explain why console.log cannot supply that value.',
+      'Storing the product in const total and returning total is equally correct and gives the value a name. console.log(price * quantity) shows the number but the function then returns undefined, so the caller has nothing to use.',
+    counterexample:
+      'Hardcoding return 15 passes the example but fails every other check. Writing price + quantity returns 8 for the example instead of 15.',
+    transfer:
+      'Write a second function that adds a fixed shipping charge of 2 to totalPrice(price, quantity). Explain why it needs totalPrice to return its value rather than print it. This changed contract is self-reviewed, not checked by the original cases.',
   },
   'pass-or-retry': {
     reasoning:
@@ -471,7 +491,7 @@ export const foundationsGuides: Record<string, ReflectionGuide> = {
       'Explain what happens with an empty name.',
     ],
     example:
-      'The greeting stays the same, so I write const greeting = "Hello, " with the trailing space. I store the combined text in let message = greeting + name and return message. The checks verify the output, while I review the declarations myself.',
+      'The greeting never changes, so I write const greeting = "Hello, " with its trailing space. message changes once, so it is a let: it starts as greeting, then message = message + name adds the name. I return message. The checks verify the output, while I review the declarations myself.',
   },
   'basic-types': {
     plan: ['Identify the string, number, and boolean inputs.', 'Match the punctuation and spacing in the example.'],

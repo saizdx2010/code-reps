@@ -7,15 +7,16 @@ export const foundations = [
     explanation:
       'A variable gives a value a name. Use const when you will not reassign that name. Use let when its value needs to change. TypeScript usually infers the type from the first value.',
     example: 'const name = "Ada" // inferred as string\nlet score = 0     // inferred as number\nscore = score + 1',
-    tip: 'const prevents reassignment. It does not make an object or array immutable.',
+    tip: 'The `+` operator also joins strings: `"Hi, " + "Bo"` is `"Hi, Bo"`. const prevents reassignment, but it does not make an object or array immutable.',
   },
   {
     repId: 'basic-types',
     title: 'Strings, numbers, and booleans',
     explanation:
-      'A string is text, a number is numeric, and a boolean is true or false. Add a type after a colon when it makes the code clearer or when there is no starting value to infer from.',
-    example: 'const city: string = "Jakarta"\nconst visits: number = 3\nconst isOpen: boolean = true',
-    tip: 'Use quotes for strings. The values true and false have no quotes.',
+      'A string is text, a number is numeric, and a boolean is true or false. Add a type after a colon when it makes the code clearer or when there is no starting value to infer from. A template string, written in backticks, places values inside text.',
+    example:
+      'const city: string = "Jakarta"\nconst visits: number = 3\nconst isOpen: boolean = true\nconst line = `${city}: ${visits} visits` // "Jakarta: 3 visits"',
+    tip: 'Use quotes for strings. The values true and false have no quotes. Inside a template string, ${value} turns a number or boolean into text.',
   },
   {
     repId: 'create-objects',
@@ -99,25 +100,34 @@ export const foundationReps: Rep[] = [
     title: 'Declare a value',
     category: 'TypeScript basics',
     prompt:
-      'Create a const named greeting with the text "Hello, ". Create a let named message, combine greeting and the given name, and return message.',
+      'Return `"Hello, "` followed by the given name. Store `"Hello, "` in a const named greeting; it ends with a space after the comma. Create a let named message that starts as greeting, then reassign message so the name is added at its end. Return message. An empty name returns `"Hello, "` with its trailing space.',
+    brief: {
+      summary: 'Return `"Hello, "` followed by the given name.',
+      rules: [
+        'Store `"Hello, "` in a const named greeting. It ends with a space after the comma.',
+        'Create a let named message that starts as greeting. Then reassign message so the name is added at its end.',
+        'Return message.',
+      ],
+      edgeCases: ['An empty name returns `"Hello, "` with its trailing space.'],
+    },
     example: { input: "makeGreeting('Ada')", output: "'Hello, Ada'" },
     note: 'Keep the function name and parameter from the starter code. Checks verify the greeting; review your own use of const and let.',
     vocabulary: [
       { term: 'Variable', meaning: 'a name for a value' },
       { term: 'Reassign', meaning: 'give an existing variable a new value' },
     ],
-    planPrompt: 'Which value stays the same? Which variable will receive the combined message?',
+    planPrompt: 'Which value stays the same? Which variable changes, and what does it hold before and after the change?',
     starter: 'function makeGreeting(name: string): string {\n  // Create greeting with const and message with let.\n  return ""\n}\n',
     functionName: 'makeGreeting',
     hints: [
-      'Text values go inside quotes. The greeting ends with a space after the comma.',
-      'const names a value you will not reassign; let names one you might. The + operator joins two strings.',
-      'Build message from greeting followed by name, then return message itself.',
+      'Look closely at the example output: there is a space between the comma and the name. That space belongs to the greeting.',
+      'greeting never changes, so it is a const. message changes once, from the greeting alone to the full greeting, so it is a let.',
+      'Start message as greeting, reassign it to message joined with name by the + operator, then return message.',
     ],
     checks: [
       { name: 'Greets Ada', input: ['Ada'], expected: 'Hello, Ada' },
-      { name: 'Greets another name', input: ['Sam'], expected: 'Hello, Sam' },
-      { name: 'Handles an empty name', input: [''], expected: 'Hello, ' },
+      { name: 'Greets Sam', input: ['Sam'], expected: 'Hello, Sam' },
+      { name: 'Keeps the space for an empty name', input: [''], expected: 'Hello, ' },
     ],
   },
   {
@@ -125,25 +135,34 @@ export const foundationReps: Rep[] = [
     title: 'Use basic types',
     category: 'TypeScript basics',
     prompt:
-      'Return a sentence describing the given name, age, and whether the person is active. Use the exact format "{name} is {age}. Active: {active}", substituting the supplied values and writing the boolean as true or false.',
+      'Return one sentence about a person in the exact format `"{name} is {age}. Active: {active}"`. Put the supplied name, age, and active values in place of the braces. Keep the spaces, the period, and the colon exactly as in the format. Write the boolean as the word true or false. An age of 0 appears as 0, and an inactive person shows Active: false.',
+    brief: {
+      summary: 'Return one sentence about a person in the exact format `"{name} is {age}. Active: {active}"`.',
+      rules: [
+        'Put the supplied name, age, and active values in place of the braces.',
+        'Keep the spaces, the period, and the colon exactly as in the format.',
+        'Write the boolean as the word true or false.',
+      ],
+      edgeCases: ['An age of 0 appears as 0.', 'An inactive person shows Active: false.'],
+    },
     example: { input: "describePerson('Ada', 28, true)", output: "'Ada is 28. Active: true'" },
-    note: 'The starter shows string, number, and boolean parameter types. A template string can combine them.',
+    note: 'The starter shows string, number, and boolean parameter types. Checks cover an age of 0 and an inactive person.',
     vocabulary: [
       { term: 'Boolean', meaning: 'a value that is either true or false' },
       { term: 'Type annotation', meaning: 'a type written after a colon' },
     ],
-    planPrompt: 'Which input is text, which is a number, and which is a boolean?',
+    planPrompt: 'Which input is text, which is a number, and which is a boolean? Where does each one go in the sentence?',
     starter: 'function describePerson(name: string, age: number, active: boolean): string {\n  // Use all three values.\n  return ""\n}\n',
     functionName: 'describePerson',
     hints: [
-      'The output must be one string, with the same spaces and punctuation as the format.',
-      'A template string uses backticks, and ${value} places a value inside the text.',
-      'Place name, age, and active in that order. Numbers and booleans become text, so 0 and false still appear.',
+      'Compare your output with the format one character at a time: the period after the age and the space after the colon are part of the sentence.',
+      'Build the sentence from fixed text and the three values. A template string, written in backticks, places each value where you write ${value}.',
+      'Put name, age, and active into the template in that order. A number or boolean becomes text there, so 0 and false appear as written.',
     ],
     checks: [
       { name: 'Describes Ada', input: ['Ada', 28, true], expected: 'Ada is 28. Active: true' },
-      { name: 'Handles false', input: ['Bo', 0, false], expected: 'Bo is 0. Active: false' },
-      { name: 'Uses the supplied values', input: ['Lee', 42, true], expected: 'Lee is 42. Active: true' },
+      { name: 'Shows an age of 0', input: ['Bo', 0, true], expected: 'Bo is 0. Active: true' },
+      { name: 'Shows false for an inactive person', input: ['Lee', 42, false], expected: 'Lee is 42. Active: false' },
     ],
   },
   {
@@ -151,7 +170,16 @@ export const foundationReps: Rep[] = [
     title: 'Create an object',
     category: 'TypeScript basics',
     prompt:
-      'Inside the function, create a person object with name and age properties from the inputs. Return a sentence using those properties in the exact format "{name} is {age} years old", substituting the supplied values.',
+      'Return the sentence `"{name} is {age} years old"` for the given name and age. Inside the function, create a person object of type Person with name and age properties from the inputs. Read the name and age properties of person to build the sentence. Keep the words and single spaces exactly as in the format. An age of 0 appears as 0: `"Bo is 0 years old"`.',
+    brief: {
+      summary: 'Return the sentence `"{name} is {age} years old"` for the given name and age.',
+      rules: [
+        'Inside the function, create a person object of type Person with name and age properties from the inputs.',
+        'Read the name and age properties of person to build the sentence.',
+        'Keep the words and single spaces exactly as in the format.',
+      ],
+      edgeCases: ['An age of 0 appears as 0: `"Bo is 0 years old"`.'],
+    },
     example: { input: "introduce('Ada', 28)", output: "'Ada is 28 years old'" },
     note: 'Use the Person type supplied in the starter code. Checks verify the returned sentence; review your own use of the object and its properties.',
     vocabulary: [
@@ -163,23 +191,33 @@ export const foundationReps: Rep[] = [
       'type Person = { name: string; age: number }\n\nfunction introduce(name: string, age: number): string {\n  // Create a person object, then read its properties.\n  return ""\n}\n',
     functionName: 'introduce',
     hints: [
-      'Create the object from the two parameters and annotate it with the Person type from the starter.',
-      'Read each value back from the object with dot notation, not from the parameters.',
-      'Match the format exactly: the name, the word is, the age, then years old, separated by single spaces.',
+      'The Person type in the starter already lists the two properties your object needs, and the parameters hold their values.',
+      'Create a Person object from the parameters first. Then build the sentence from the properties of that object, not from the parameters.',
+      'Read each property with a dot after the object name. Place the name, the word is, the age, and then years old in one template string, with single spaces between them.',
     ],
     checks: [
       { name: 'Introduces Ada', input: ['Ada', 28], expected: 'Ada is 28 years old' },
-      { name: 'Uses another person', input: ['Sam', 19], expected: 'Sam is 19 years old' },
-      { name: 'Handles age zero', input: ['Bo', 0], expected: 'Bo is 0 years old' },
+      { name: 'Introduces Sam', input: ['Sam', 19], expected: 'Sam is 19 years old' },
+      { name: 'Shows an age of 0', input: ['Bo', 0], expected: 'Bo is 0 years old' },
     ],
   },
   {
     id: 'make-arrays',
     title: 'Read an array',
     category: 'TypeScript basics',
-    prompt: 'Return the first item of the names array. Return null when the array is empty.',
+    prompt:
+      'Return the first item of the names array. Return the item exactly as it is stored. Return null when the array has no items. Read the item without removing it: the array must stay unchanged. An empty string is still an item, so `["", "Ada"]` returns `""`. An array with one name returns that name.',
+    brief: {
+      summary: 'Return the first item of the names array.',
+      rules: [
+        'Return the item exactly as it is stored.',
+        'Return null when the array has no items.',
+        'Read the item without removing it: the array must stay unchanged.',
+      ],
+      edgeCases: ['An empty string is still an item, so `["", "Ada"]` returns `""`.', 'An array with one name returns that name.'],
+    },
     example: { input: "firstName(['Ada', 'Sam'])", output: "'Ada'" },
-    note: 'Arrays start at index 0. Check length before reading the first item.',
+    note: 'Checks cover an empty array, a single name, and an empty first name, and they detect changes to the array.',
     vocabulary: [
       { term: 'Array', meaning: 'an ordered list of values' },
       { term: 'Index', meaning: 'the position of an item, starting at zero' },
@@ -187,15 +225,16 @@ export const foundationReps: Rep[] = [
     planPrompt: 'How will you detect an empty array? Which index contains its first item?',
     starter: 'function firstName(names: string[]): string | null {\n  // Check whether the array is empty.\n  return null\n}\n',
     functionName: 'firstName',
+    preserveInput: true,
     hints: [
-      'The length of the array tells you how many items it holds.',
-      'If that count is zero, the answer is null.',
-      'Otherwise, read the item at index zero, the first position.',
+      'An empty array has no first item to read, but an array whose first item is "" does have one.',
+      'Use the length of the array to tell those cases apart: no items means null; otherwise read the first position.',
+      'If the length is 0, return null. Otherwise return the item at index 0, whatever text it holds.',
     ],
     checks: [
       { name: 'Returns the first name', input: [['Ada', 'Sam']], expected: 'Ada' },
-      { name: 'Handles an empty array', input: [[]], expected: null },
-      { name: 'Handles one name', input: [['Bo']], expected: 'Bo' },
+      { name: 'Returns null for an empty array', input: [[]], expected: null },
+      { name: 'Returns the only name', input: [['Bo']], expected: 'Bo' },
       { name: 'Keeps an empty first name', input: [['', 'Ada']], expected: '' },
     ],
   },
@@ -203,9 +242,19 @@ export const foundationReps: Rep[] = [
     id: 'write-functions',
     title: 'Return from a function',
     category: 'TypeScript basics',
-    prompt: 'Complete the function so it returns the price multiplied by the quantity.',
+    prompt:
+      'Return the total price: the price of one item multiplied by the quantity. price is the cost of one item and may be a decimal, such as 2.5. quantity is a whole number of items, 0 or more. Return the total to the caller; printing it is not enough. A quantity of 0 returns 0. A decimal price keeps its fraction: 1.25 times 3 is 3.75.',
+    brief: {
+      summary: 'Return the total price: the price of one item multiplied by the quantity.',
+      rules: [
+        'price is the cost of one item. It may be a decimal, such as 2.5.',
+        'quantity is a whole number of items, 0 or more.',
+        'Return the total to the caller; printing it is not enough.',
+      ],
+      edgeCases: ['A quantity of 0 returns 0.', 'A decimal price keeps its fraction: 1.25 times 3 is 3.75.'],
+    },
     example: { input: 'totalPrice(5, 3)', output: '15' },
-    note: 'The values passed to a function are arguments. Its parameter names let you use them inside.',
+    note: 'The values passed to a function are arguments. Its parameter names let you use them inside. Checks cover a zero quantity and decimal prices.',
     vocabulary: [
       { term: 'Parameter', meaning: 'an input named in a function definition' },
       { term: 'Return', meaning: 'send a value back from a function' },
@@ -214,14 +263,15 @@ export const foundationReps: Rep[] = [
     starter: 'function totalPrice(price: number, quantity: number): number {\n  // Return the total.\n  return 0\n}\n',
     functionName: 'totalPrice',
     hints: [
-      'Use the two parameter names inside the function.',
-      'Decide which operation turns a price and a quantity into a total.',
-      'Return the result of multiplying the two parameters so the caller receives it.',
+      'The starter already returns, but always 0. Whatever follows return is the value the caller receives.',
+      'Buying 3 items at 5 each costs 5 three times over. That is one multiplication of the price by the quantity.',
+      'Replace the 0 after return with the two parameter names joined by the multiplication operator.',
     ],
     checks: [
-      { name: 'Calculates the example', input: [5, 3], expected: 15 },
-      { name: 'Handles zero quantity', input: [8, 0], expected: 0 },
-      { name: 'Handles a decimal', input: [2.5, 2], expected: 5 },
+      { name: 'Multiplies the example', input: [5, 3], expected: 15 },
+      { name: 'Returns 0 for a zero quantity', input: [8, 0], expected: 0 },
+      { name: 'Handles a decimal price', input: [2.5, 2], expected: 5 },
+      { name: 'Keeps the fraction in the total', input: [1.25, 3], expected: 3.75 },
     ],
   },
   {
