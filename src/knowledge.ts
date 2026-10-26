@@ -289,11 +289,11 @@ export const skills: Skill[] = [
     sections: [
       {
         title: 'Membership versus counting',
-        body: 'A Set stores distinct values and answers whether one was seen. A Map associates a key with a value, such as a count. For each item, read the previous count or zero, then add one. Object keys have reference identity; two separate objects with identical fields are different keys.',
+        body: 'A Set stores distinct values: `seen.has(n)` asks whether n is already stored, and `seen.add(n)` stores it. A Map stores a value for each key, such as a count: `counts.get(key)` reads it and `counts.set(key, value)` replaces it. A key that was never set reads as undefined. `??` uses its right side only when the left side is null or undefined, so `counts.get(key) ?? 0` gives 0 for a new key. `for (const [key, value] of counts)` visits every entry in the order the keys were first set. Object keys have reference identity; two separate objects with identical fields are different keys.',
       },
       {
         title: 'Order belongs to the question',
-        body: 'The first value that repeats is identified by its second occurrence, not the first position of any value that eventually repeats. Scan in input order and check membership before inserting. A most-frequent task needs an explicit rule for ties.',
+        body: 'The first value that repeats is identified by its second occurrence, not the first position of any value that eventually repeats. Scan in input order and check membership before inserting. When the answer depends on items not reached yet, such as whether a value ever appears again, count everything first and then scan again in input order. A most-frequent task needs an explicit rule for ties.',
       },
       {
         title: 'Tradeoffs',
@@ -309,8 +309,8 @@ export const skills: Skill[] = [
       'The later 5 does not change which repeat happened first.',
     ],
     mistakes: [
-      'Adding before checking membership.',
-      'Forgetting the tie rule.',
+      'Adding before checking membership: after `seen.add(n)`, `seen.has(n)` is always true, so every value looks repeated.',
+      'Forgetting the tie rule: in [5, 1, 5, 1] both values appear twice, and only the contract says which one wins.',
       'Comparing separate object keys as if equal fields imply equal identity.',
     ],
     questions: [
@@ -628,7 +628,7 @@ export const skills: Skill[] = [
     sections: [
       {
         title: 'Growth, not a stopwatch',
-        body: 'Big O describes how resource use grows with input size. O(n) is a bound on growth, not a promise about milliseconds. Define n: item count, total character count, or another relevant size. Two consecutive scans are still O(n); nested scans can be O(n²).',
+        body: 'Big O describes how resource use grows with input size. O(n) is a bound on growth, not a promise about milliseconds. Define n: item count, total character count, or another relevant size. Two consecutive scans are still O(n); nested scans can be O(n²). `includes`, `indexOf`, and `filter` each scan the whole array, so calling one inside a loop over the same array is a nested scan, even though only one loop is written.',
       },
       {
         title: 'Storage has a purpose',
@@ -646,7 +646,12 @@ export const skills: Skill[] = [
       'The loops run consecutively, for 2n visits.',
       'Constant factors do not change linear growth.',
     ],
-    mistakes: ['Multiplying costs of consecutive loops.', 'Ignoring a growing output array.', 'Treating Big O as measured runtime.'],
+    mistakes: [
+      'Calling a loop over n items O(n) when its body calls `includes` or `indexOf` on the same items: each call is another scan, so the total is O(n²).',
+      'Multiplying costs of consecutive loops.',
+      'Ignoring a growing output array.',
+      'Treating Big O as measured runtime.',
+    ],
     questions: [
       q(
         'loops',

@@ -92,6 +92,7 @@ If something in daily practice feels unclear, flag it with **Something unclear h
   - [x] Stage 1: Learn the language
   - [x] Stage 2: Make decisions and repeat
   - [x] Stage 3: Work through arrays
+  - [x] Stage 4: Count and remember
 - [ ] Problem solving (20 stages)
 - [ ] SQL
 - [ ] Pattern Recognition (5 stages)

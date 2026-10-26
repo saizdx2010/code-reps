@@ -180,3 +180,68 @@ test('Foundations stage 3 checks reject plausible wrong answers', () => {
     ['first-long-word', 'function firstLongWord(words: string[], minimum: number) { return words.find(w => w.length >= minimum) || null }'],
   ])
 })
+
+test('Foundations stage 4 checks reject plausible wrong answers', () => {
+  assertMutantsFail([
+    // Compares only neighbors, so the two 3s in [3, 1, 3] are missed.
+    [
+      'has-duplicate',
+      'function hasDuplicate(numbers: number[]) { for (let i = 0; i + 1 < numbers.length; i++) if (numbers[i] === numbers[i + 1]) return true; return false }',
+    ],
+    // Sorts the caller's array so that repeats sit side by side.
+    [
+      'has-duplicate',
+      'function hasDuplicate(numbers: number[]) { numbers.sort((a, b) => a - b); for (let i = 1; i < numbers.length; i++) if (numbers[i] === numbers[i - 1]) return true; return false }',
+    ],
+    // Adds before checking, so every number looks repeated.
+    [
+      'has-duplicate',
+      'function hasDuplicate(numbers: number[]) { const seen = new Set<number>(); for (const n of numbers) { seen.add(n); if (seen.has(n)) return true } return false }',
+    ],
+    // Tests the stored index for truthiness: a repeat of the first number reads index 0 as missing.
+    [
+      'has-duplicate',
+      'function hasDuplicate(numbers: number[]) { const firstIndex = new Map<number, number>(); for (let i = 0; i < numbers.length; i++) { if (firstIndex.get(numbers[i])) return true; firstIndex.set(numbers[i], i) } return false }',
+    ],
+    // Lets the last number to reach the highest count win a tie.
+    [
+      'most-frequent-number',
+      'function mostFrequent(numbers: number[]) { const counts = new Map<number, number>(); let best: number | null = null; for (const n of numbers) { counts.set(n, (counts.get(n) ?? 0) + 1); if (best === null || counts.get(n)! >= counts.get(best)!) best = n } return best }',
+    ],
+    // Sorts the keys with sort() and no comparator, which orders -1 before -3.
+    [
+      'most-frequent-number',
+      'function mostFrequent(numbers: number[]) { if (numbers.length === 0) return null; const counts = new Map<number, number>(); for (const n of numbers) counts.set(n, (counts.get(n) ?? 0) + 1); const keys = [...counts.keys()].sort(); let best = keys[0]; for (const key of keys) if (counts.get(key)! > counts.get(best)!) best = key; return best }',
+    ],
+    // Turns a winning 0 into null.
+    [
+      'most-frequent-number',
+      'function mostFrequent(numbers: number[]) { const counts = new Map<number, number>(); let best = 0; let bestCount = 0; for (const n of numbers) { const count = (counts.get(n) ?? 0) + 1; counts.set(n, count); if (count > bestCount || (count === bestCount && n < best)) { best = n; bestCount = count } } return best || null }',
+    ],
+    // Sorts the caller's array, then counts runs of equal values.
+    [
+      'most-frequent-number',
+      'function mostFrequent(numbers: number[]) { numbers.sort((a, b) => a - b); let best: number | null = null; let bestRun = 0; let run = 0; for (let i = 0; i < numbers.length; i++) { run = i > 0 && numbers[i] === numbers[i - 1] ? run + 1 : 1; if (run > bestRun) { best = numbers[i]; bestRun = run } } return best }',
+    ],
+    // Lowercases before counting, so a and A count as one character.
+    [
+      'first-unique-character',
+      'function firstUnique(text: string) { const lower = text.toLowerCase(); for (let i = 0; i < lower.length; i++) if (lower.indexOf(lower[i]) === lower.lastIndexOf(lower[i])) return i; return -1 }',
+    ],
+    // Returns null instead of -1 when no character is unique.
+    [
+      'first-unique-character',
+      'function firstUnique(text: string) { const counts = new Map<string, number>(); for (const c of text) counts.set(c, (counts.get(c) ?? 0) + 1); for (let i = 0; i < text.length; i++) if (counts.get(text[i]) === 1) return i; return null }',
+    ],
+    // Decides in one pass, before later repeats are seen.
+    [
+      'first-unique-character',
+      'function firstUnique(text: string) { const seen = new Set<string>(); for (let i = 0; i < text.length; i++) { if (!seen.has(text[i])) return i; seen.add(text[i]) } return -1 }',
+    ],
+    // Keeps the last unique index instead of returning the first.
+    [
+      'first-unique-character',
+      'function firstUnique(text: string) { const counts = new Map<string, number>(); for (const c of text) counts.set(c, (counts.get(c) ?? 0) + 1); let found = -1; for (let i = 0; i < text.length; i++) if (counts.get(text[i]) === 1) found = i; return found }',
+    ],
+  ])
+})
