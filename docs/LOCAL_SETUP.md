@@ -5,8 +5,14 @@ Code Reps is free and does not need an account or internet connection after depe
 ## First run
 
 1. Install Node.js 24 or later and Yarn Classic 1.22.22.
-2. In this project folder, run `yarn install --frozen-lockfile`, then `yarn build`.
-3. Run `yarn serve` and open `http://127.0.0.1:4173`.
+2. In this project folder, run `yarn install --frozen-lockfile`.
+3. Run `yarn start`. It builds the app when the build is missing or older than the source, starts the server in the background, and opens `http://127.0.0.1:4173`. Run it again any time: when the server is already running, it only opens the app.
+
+`yarn stop` stops a server that `yarn start` started. The server's output goes to `server.log` in the data folder. To run it in the foreground instead, use `yarn build` and then `yarn serve`.
+
+### Start at login (macOS)
+
+`yarn autostart` installs a login item (a LaunchAgent named `dev.code-reps.server`) that runs this checkout's server whenever you log in and restarts it if it crashes. With it, the app, or the web app installed from it, opens without a terminal, and the daily snapshots below keep being taken. It records the data folder and port in use when you run it. `yarn autostart --remove` removes it; your progress stays in place.
 
 The server listens only on your own laptop. It saves progress in `~/.code-reps/progress.sqlite`. The browser also keeps a local copy for quick startup and for the development server.
 
@@ -18,7 +24,7 @@ Keep the downloaded JSON file until you have checked that your attempts appear i
 
 ## Update
 
-Stop the server, update the project files, then run `yarn install --frozen-lockfile`, `yarn build`, and `yarn serve`. The database lives outside the project folder and remains in place. Export a JSON backup before a major update.
+Stop the server, update the project files, then run `yarn install --frozen-lockfile` and `yarn start`. With the login item, run `yarn build` and then `yarn autostart` to restart it on the new build. The database lives outside the project folder and remains in place. Export a JSON backup before a major update.
 
 ## Restore
 

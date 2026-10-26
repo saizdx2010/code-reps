@@ -87,7 +87,7 @@ yarn install --frozen-lockfile
 yarn dev          # development: saves work in the browser, no SQLite service needed
 ```
 
-To run the local app with SQLite instead, run `yarn build` and then `yarn serve`. It binds to `127.0.0.1` and stores learner data in `~/.code-reps/progress.sqlite`. `yarn package` builds a portable local web bundle with its own Node runtime; see the [portable bundle guide](./docs/PORTABLE_BUNDLE.md).
+To run the local app with SQLite instead, run `yarn start`: it builds when needed, starts the service in the background, and opens the app (`yarn stop` stops it; on macOS, `yarn autostart` starts it at login). `yarn build` then `yarn serve` runs it in the foreground. It binds to `127.0.0.1` and stores learner data in `~/.code-reps/progress.sqlite`. `yarn package` builds a portable local web bundle with its own Node runtime; see the [portable bundle guide](./docs/PORTABLE_BUNDLE.md).
 
 Your work stays local: separate profiles keep each learner's work apart, **Progress → Download backup** exports a portable JSON backup, and the local server keeps daily SQLite snapshots. The [local setup guide](./docs/LOCAL_SETUP.md) covers installation, updates, backups, restores, and moving browser data to the local app.
 
