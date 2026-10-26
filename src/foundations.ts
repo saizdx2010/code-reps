@@ -7,15 +7,16 @@ export const foundations = [
     explanation:
       'A variable gives a value a name. Use const when you will not reassign that name. Use let when its value needs to change. TypeScript usually infers the type from the first value.',
     example: 'const name = "Ada" // inferred as string\nlet score = 0     // inferred as number\nscore = score + 1',
-    tip: 'const prevents reassignment. It does not make an object or array immutable.',
+    tip: 'The `+` operator also joins strings: `"Hi, " + "Bo"` is `"Hi, Bo"`. const prevents reassignment, but it does not make an object or array immutable.',
   },
   {
     repId: 'basic-types',
     title: 'Strings, numbers, and booleans',
     explanation:
-      'A string is text, a number is numeric, and a boolean is true or false. Add a type after a colon when it makes the code clearer or when there is no starting value to infer from.',
-    example: 'const city: string = "Jakarta"\nconst visits: number = 3\nconst isOpen: boolean = true',
-    tip: 'Use quotes for strings. The values true and false have no quotes.',
+      'A string is text, a number is numeric, and a boolean is true or false. Add a type after a colon when it makes the code clearer or when there is no starting value to infer from. A template string, written in backticks, places values inside text.',
+    example:
+      'const city: string = "Jakarta"\nconst visits: number = 3\nconst isOpen: boolean = true\nconst line = `${city}: ${visits} visits` // "Jakarta: 3 visits"',
+    tip: 'Use quotes for strings. The values true and false have no quotes. Inside a template string, ${value} turns a number or boolean into text.',
   },
   {
     repId: 'create-objects',
@@ -79,9 +80,10 @@ export const foundations = [
     repId: 'string-basics',
     title: 'Work with text',
     explanation:
-      'Strings have methods that return new strings. trim removes spaces at the ends, toUpperCase changes letter case, and slice(start, end) copies part of the text. The original string stays the same.',
-    example: 'const name = "  ada  "\nconst clean = name.trim()       // "ada"\nconst first = clean.slice(0, 1) // "a"',
-    tip: 'slice(0, 1) returns the first character. On an empty string it returns an empty string instead of an error.',
+      'Strings have methods that return new values. trim removes spaces at the ends, toUpperCase changes letter case, and slice(start, end) copies part of the text. split cuts text into an array of pieces at a separator, and join glues an array of strings back into one string. The original string stays the same.',
+    example:
+      'const name = "  ada  "\nconst clean = name.trim()       // "ada"\nconst first = clean.slice(0, 1) // "a"\n"a b".split(" ")                // ["a", "b"]\n"a  b".split(" ")               // ["a", "", "b"]\n["a", "b"].join("")             // "ab"',
+    tip: 'Two separators in a row leave an empty piece `""` between them. slice(0, 1) on `""` returns `""` instead of an error.',
   },
   {
     repId: 'object-update',
@@ -99,25 +101,34 @@ export const foundationReps: Rep[] = [
     title: 'Declare a value',
     category: 'TypeScript basics',
     prompt:
-      'Create a const named greeting with the text "Hello, ". Create a let named message, combine greeting and the given name, and return message.',
+      'Return `"Hello, "` followed by the given name. Store `"Hello, "` in a const named greeting; it ends with a space after the comma. Create a let named message that starts as greeting, then reassign message so the name is added at its end. Return message. An empty name returns `"Hello, "` with its trailing space.',
+    brief: {
+      summary: 'Return `"Hello, "` followed by the given name.',
+      rules: [
+        'Store `"Hello, "` in a const named greeting. It ends with a space after the comma.',
+        'Create a let named message that starts as greeting. Then reassign message so the name is added at its end.',
+        'Return message.',
+      ],
+      edgeCases: ['An empty name returns `"Hello, "` with its trailing space.'],
+    },
     example: { input: "makeGreeting('Ada')", output: "'Hello, Ada'" },
     note: 'Keep the function name and parameter from the starter code. Checks verify the greeting; review your own use of const and let.',
     vocabulary: [
       { term: 'Variable', meaning: 'a name for a value' },
       { term: 'Reassign', meaning: 'give an existing variable a new value' },
     ],
-    planPrompt: 'Which value stays the same? Which variable will receive the combined message?',
+    planPrompt: 'Which value stays the same? Which variable changes, and what does it hold before and after the change?',
     starter: 'function makeGreeting(name: string): string {\n  // Create greeting with const and message with let.\n  return ""\n}\n',
     functionName: 'makeGreeting',
     hints: [
-      'Text values go inside quotes. The greeting ends with a space after the comma.',
-      'const names a value you will not reassign; let names one you might. The + operator joins two strings.',
-      'Build message from greeting followed by name, then return message itself.',
+      'Look closely at the example output: there is a space between the comma and the name. That space belongs to the greeting.',
+      'greeting never changes, so it is a const. message changes once, from the greeting alone to the full greeting, so it is a let.',
+      'Start message as greeting, reassign it to message joined with name by the + operator, then return message.',
     ],
     checks: [
       { name: 'Greets Ada', input: ['Ada'], expected: 'Hello, Ada' },
-      { name: 'Greets another name', input: ['Sam'], expected: 'Hello, Sam' },
-      { name: 'Handles an empty name', input: [''], expected: 'Hello, ' },
+      { name: 'Greets Sam', input: ['Sam'], expected: 'Hello, Sam' },
+      { name: 'Keeps the space for an empty name', input: [''], expected: 'Hello, ' },
     ],
   },
   {
@@ -125,25 +136,34 @@ export const foundationReps: Rep[] = [
     title: 'Use basic types',
     category: 'TypeScript basics',
     prompt:
-      'Return a sentence describing the given name, age, and whether the person is active. Use the exact format "{name} is {age}. Active: {active}", substituting the supplied values and writing the boolean as true or false.',
+      'Return one sentence about a person in the exact format `"{name} is {age}. Active: {active}"`. Put the supplied name, age, and active values in place of the braces. Keep the spaces, the period, and the colon exactly as in the format. Write the boolean as the word true or false. An age of 0 appears as 0, and an inactive person shows Active: false.',
+    brief: {
+      summary: 'Return one sentence about a person in the exact format `"{name} is {age}. Active: {active}"`.',
+      rules: [
+        'Put the supplied name, age, and active values in place of the braces.',
+        'Keep the spaces, the period, and the colon exactly as in the format.',
+        'Write the boolean as the word true or false.',
+      ],
+      edgeCases: ['An age of 0 appears as 0.', 'An inactive person shows Active: false.'],
+    },
     example: { input: "describePerson('Ada', 28, true)", output: "'Ada is 28. Active: true'" },
-    note: 'The starter shows string, number, and boolean parameter types. A template string can combine them.',
+    note: 'The starter shows string, number, and boolean parameter types. Checks cover an age of 0 and an inactive person.',
     vocabulary: [
       { term: 'Boolean', meaning: 'a value that is either true or false' },
       { term: 'Type annotation', meaning: 'a type written after a colon' },
     ],
-    planPrompt: 'Which input is text, which is a number, and which is a boolean?',
+    planPrompt: 'Which input is text, which is a number, and which is a boolean? Where does each one go in the sentence?',
     starter: 'function describePerson(name: string, age: number, active: boolean): string {\n  // Use all three values.\n  return ""\n}\n',
     functionName: 'describePerson',
     hints: [
-      'The output must be one string, with the same spaces and punctuation as the format.',
-      'A template string uses backticks, and ${value} places a value inside the text.',
-      'Place name, age, and active in that order. Numbers and booleans become text, so 0 and false still appear.',
+      'Compare your output with the format one character at a time: the period after the age and the space after the colon are part of the sentence.',
+      'Build the sentence from fixed text and the three values. A template string, written in backticks, places each value where you write ${value}.',
+      'Put name, age, and active into the template in that order. A number or boolean becomes text there, so 0 and false appear as written.',
     ],
     checks: [
       { name: 'Describes Ada', input: ['Ada', 28, true], expected: 'Ada is 28. Active: true' },
-      { name: 'Handles false', input: ['Bo', 0, false], expected: 'Bo is 0. Active: false' },
-      { name: 'Uses the supplied values', input: ['Lee', 42, true], expected: 'Lee is 42. Active: true' },
+      { name: 'Shows an age of 0', input: ['Bo', 0, true], expected: 'Bo is 0. Active: true' },
+      { name: 'Shows false for an inactive person', input: ['Lee', 42, false], expected: 'Lee is 42. Active: false' },
     ],
   },
   {
@@ -151,7 +171,16 @@ export const foundationReps: Rep[] = [
     title: 'Create an object',
     category: 'TypeScript basics',
     prompt:
-      'Inside the function, create a person object with name and age properties from the inputs. Return a sentence using those properties in the exact format "{name} is {age} years old", substituting the supplied values.',
+      'Return the sentence `"{name} is {age} years old"` for the given name and age. Inside the function, create a person object of type Person with name and age properties from the inputs. Read the name and age properties of person to build the sentence. Keep the words and single spaces exactly as in the format. An age of 0 appears as 0: `"Bo is 0 years old"`.',
+    brief: {
+      summary: 'Return the sentence `"{name} is {age} years old"` for the given name and age.',
+      rules: [
+        'Inside the function, create a person object of type Person with name and age properties from the inputs.',
+        'Read the name and age properties of person to build the sentence.',
+        'Keep the words and single spaces exactly as in the format.',
+      ],
+      edgeCases: ['An age of 0 appears as 0: `"Bo is 0 years old"`.'],
+    },
     example: { input: "introduce('Ada', 28)", output: "'Ada is 28 years old'" },
     note: 'Use the Person type supplied in the starter code. Checks verify the returned sentence; review your own use of the object and its properties.',
     vocabulary: [
@@ -163,23 +192,33 @@ export const foundationReps: Rep[] = [
       'type Person = { name: string; age: number }\n\nfunction introduce(name: string, age: number): string {\n  // Create a person object, then read its properties.\n  return ""\n}\n',
     functionName: 'introduce',
     hints: [
-      'Create the object from the two parameters and annotate it with the Person type from the starter.',
-      'Read each value back from the object with dot notation, not from the parameters.',
-      'Match the format exactly: the name, the word is, the age, then years old, separated by single spaces.',
+      'The Person type in the starter already lists the two properties your object needs, and the parameters hold their values.',
+      'Create a Person object from the parameters first. Then build the sentence from the properties of that object, not from the parameters.',
+      'Read each property with a dot after the object name. Place the name, the word is, the age, and then years old in one template string, with single spaces between them.',
     ],
     checks: [
       { name: 'Introduces Ada', input: ['Ada', 28], expected: 'Ada is 28 years old' },
-      { name: 'Uses another person', input: ['Sam', 19], expected: 'Sam is 19 years old' },
-      { name: 'Handles age zero', input: ['Bo', 0], expected: 'Bo is 0 years old' },
+      { name: 'Introduces Sam', input: ['Sam', 19], expected: 'Sam is 19 years old' },
+      { name: 'Shows an age of 0', input: ['Bo', 0], expected: 'Bo is 0 years old' },
     ],
   },
   {
     id: 'make-arrays',
     title: 'Read an array',
     category: 'TypeScript basics',
-    prompt: 'Return the first item of the names array. Return null when the array is empty.',
+    prompt:
+      'Return the first item of the names array. Return the item exactly as it is stored. Return null when the array has no items. Read the item without removing it: the array must stay unchanged. An empty string is still an item, so `["", "Ada"]` returns `""`. An array with one name returns that name.',
+    brief: {
+      summary: 'Return the first item of the names array.',
+      rules: [
+        'Return the item exactly as it is stored.',
+        'Return null when the array has no items.',
+        'Read the item without removing it: the array must stay unchanged.',
+      ],
+      edgeCases: ['An empty string is still an item, so `["", "Ada"]` returns `""`.', 'An array with one name returns that name.'],
+    },
     example: { input: "firstName(['Ada', 'Sam'])", output: "'Ada'" },
-    note: 'Arrays start at index 0. Check length before reading the first item.',
+    note: 'Checks cover an empty array, a single name, and an empty first name, and they detect changes to the array.',
     vocabulary: [
       { term: 'Array', meaning: 'an ordered list of values' },
       { term: 'Index', meaning: 'the position of an item, starting at zero' },
@@ -187,15 +226,16 @@ export const foundationReps: Rep[] = [
     planPrompt: 'How will you detect an empty array? Which index contains its first item?',
     starter: 'function firstName(names: string[]): string | null {\n  // Check whether the array is empty.\n  return null\n}\n',
     functionName: 'firstName',
+    preserveInput: true,
     hints: [
-      'The length of the array tells you how many items it holds.',
-      'If that count is zero, the answer is null.',
-      'Otherwise, read the item at index zero, the first position.',
+      'An empty array has no first item to read, but an array whose first item is "" does have one.',
+      'Use the length of the array to tell those cases apart: no items means null; otherwise read the first position.',
+      'If the length is 0, return null. Otherwise return the item at index 0, whatever text it holds.',
     ],
     checks: [
       { name: 'Returns the first name', input: [['Ada', 'Sam']], expected: 'Ada' },
-      { name: 'Handles an empty array', input: [[]], expected: null },
-      { name: 'Handles one name', input: [['Bo']], expected: 'Bo' },
+      { name: 'Returns null for an empty array', input: [[]], expected: null },
+      { name: 'Returns the only name', input: [['Bo']], expected: 'Bo' },
       { name: 'Keeps an empty first name', input: [['', 'Ada']], expected: '' },
     ],
   },
@@ -203,9 +243,19 @@ export const foundationReps: Rep[] = [
     id: 'write-functions',
     title: 'Return from a function',
     category: 'TypeScript basics',
-    prompt: 'Complete the function so it returns the price multiplied by the quantity.',
+    prompt:
+      'Return the total price: the price of one item multiplied by the quantity. price is the cost of one item and may be a decimal, such as 2.5. quantity is a whole number of items, 0 or more. Return the total to the caller; printing it is not enough. A quantity of 0 returns 0. A decimal price keeps its fraction: 1.25 times 3 is 3.75.',
+    brief: {
+      summary: 'Return the total price: the price of one item multiplied by the quantity.',
+      rules: [
+        'price is the cost of one item. It may be a decimal, such as 2.5.',
+        'quantity is a whole number of items, 0 or more.',
+        'Return the total to the caller; printing it is not enough.',
+      ],
+      edgeCases: ['A quantity of 0 returns 0.', 'A decimal price keeps its fraction: 1.25 times 3 is 3.75.'],
+    },
     example: { input: 'totalPrice(5, 3)', output: '15' },
-    note: 'The values passed to a function are arguments. Its parameter names let you use them inside.',
+    note: 'The values passed to a function are arguments. Its parameter names let you use them inside. Checks cover a zero quantity and decimal prices.',
     vocabulary: [
       { term: 'Parameter', meaning: 'an input named in a function definition' },
       { term: 'Return', meaning: 'send a value back from a function' },
@@ -214,14 +264,15 @@ export const foundationReps: Rep[] = [
     starter: 'function totalPrice(price: number, quantity: number): number {\n  // Return the total.\n  return 0\n}\n',
     functionName: 'totalPrice',
     hints: [
-      'Use the two parameter names inside the function.',
-      'Decide which operation turns a price and a quantity into a total.',
-      'Return the result of multiplying the two parameters so the caller receives it.',
+      'The starter already returns, but always 0. Whatever follows return is the value the caller receives.',
+      'Buying 3 items at 5 each costs 5 three times over. That is one multiplication of the price by the quantity.',
+      'Replace the 0 after return with the two parameter names joined by the multiplication operator.',
     ],
     checks: [
-      { name: 'Calculates the example', input: [5, 3], expected: 15 },
-      { name: 'Handles zero quantity', input: [8, 0], expected: 0 },
-      { name: 'Handles a decimal', input: [2.5, 2], expected: 5 },
+      { name: 'Multiplies the example', input: [5, 3], expected: 15 },
+      { name: 'Returns 0 for a zero quantity', input: [8, 0], expected: 0 },
+      { name: 'Handles a decimal price', input: [2.5, 2], expected: 5 },
+      { name: 'Keeps the fraction in the total', input: [1.25, 3], expected: 3.75 },
     ],
   },
   {
@@ -229,7 +280,12 @@ export const foundationReps: Rep[] = [
     title: 'Pass or retry a quiz score',
     category: 'TypeScript basics',
     prompt:
-      'Return "Pass" when a quiz score is 50 or more, and "Retry" when it is below 50. A score of exactly 50 passes. Scores are whole numbers from 0 to 100.',
+      'Return a label for a quiz score: "Pass" or "Retry". Scores are whole numbers from 0 to 100. A score of 50 or more returns "Pass". A score below 50 returns "Retry". A score of exactly 50 passes. 0 returns "Retry" and 100 returns "Pass".',
+    brief: {
+      summary: 'Return a label for a quiz score: `"Pass"` or `"Retry"`.',
+      rules: ['Scores are whole numbers from 0 to 100.', 'A score of 50 or more returns `"Pass"`.', 'A score below 50 returns `"Retry"`.'],
+      edgeCases: ['A score of exactly 50 passes.', '0 returns `"Retry"` and 100 returns `"Pass"`.'],
+    },
     example: { input: 'passLabel(72)', output: "'Pass'" },
     note: 'Checks cover both branches and the edge at 50. Review your comparison yourself.',
     vocabulary: [
@@ -240,9 +296,9 @@ export const foundationReps: Rep[] = [
     starter: 'function passLabel(score: number): string {\n  // Return "Pass" at 50 or more, otherwise "Retry".\n  return ""\n}\n',
     functionName: 'passLabel',
     hints: [
-      'Write one if statement that tests the score against 50.',
-      'Use >= so that exactly 50 is included in the passing branch.',
-      'Return "Pass" inside the if. After it, return "Retry".',
+      'The result changes at 50, and 50 itself belongs to Pass. 49 is the highest score that retries.',
+      'One comparison is enough: choose the one that is true for 50 and for every score above it. Every other score retries.',
+      'Inside an if with that comparison, return "Pass". After the if, return "Retry" for everything else.',
     ],
     checks: [
       { name: 'Passes the example', input: [72], expected: 'Pass' },
@@ -257,7 +313,19 @@ export const foundationReps: Rep[] = [
     title: 'Choose a grade from a score',
     category: 'TypeScript basics',
     prompt:
-      'Return a grade label for a score. A score from 90 to 100 is "A". A score from 80 up to 90 is "B", with 80 included and 90 excluded. A score from 70 up to 80 is "C", and a score from 60 up to 70 is "D". A score below 60 is "F". Return "Invalid" for any score below 0 or above 100. Decimal scores use the same boundaries.',
+      'Return a grade label for a score, or "Invalid" for a score outside 0 to 100. A score from 90 to 100 is "A". A score from 80 up to 90 is "B": 80 is included, 90 is not. A score from 70 up to 80 is "C", and from 60 up to 70 is "D", each including its lower edge. A score below 60 is "F". A score below 0 or above 100 is "Invalid". Decimal scores use the same boundaries. 90 is "A" and 89.9 is "B". 60 is "D" and 59.9 is "F". 0 is "F" and 100 is "A".',
+    brief: {
+      summary: 'Return a grade label for a score, or `"Invalid"` for a score outside 0 to 100.',
+      rules: [
+        'A score from 90 to 100 is `"A"`.',
+        'A score from 80 up to 90 is `"B"`: 80 is included, 90 is not.',
+        'A score from 70 up to 80 is `"C"`, and from 60 up to 70 is `"D"`, each including its lower edge.',
+        'A score below 60 is `"F"`.',
+        'A score below 0 or above 100 is `"Invalid"`.',
+        'Decimal scores use the same boundaries.',
+      ],
+      edgeCases: ['90 is `"A"` and 89.9 is `"B"`.', '60 is `"D"` and 59.9 is `"F"`.', '0 is `"F"` and 100 is `"A"`.'],
+    },
     example: { input: 'gradeLabel(85)', output: "'B'" },
     note: 'Checks cover the band boundaries and out-of-range scores. Review your branch order yourself.',
     vocabulary: [
@@ -268,9 +336,9 @@ export const foundationReps: Rep[] = [
     starter: 'function gradeLabel(score: number): string {\n  // Check the invalid range, then the grade bands.\n  return ""\n}\n',
     functionName: 'gradeLabel',
     hints: [
-      'Give scores below 0 and above 100 their own branch before any grade check.',
-      'Check the highest band first. If score >= 90 is false, the score is below 90.',
-      'Return the letter in each branch. The last return handles every score below 60.',
+      'Two questions hide in this task: is the score valid at all, and if it is, which band holds it? -1 and 101 must never reach a band.',
+      'Handle the invalid range first. Then test the bands from the highest down, so each test only checks a lower edge: a score that fails the 90 test is already below 90.',
+      'Return the letter inside each band test, with a comparison that includes the lower edge. The last return covers every score below 60.',
     ],
     checks: [
       { name: 'Labels the example', input: [85], expected: 'B' },
@@ -291,7 +359,12 @@ export const foundationReps: Rep[] = [
     title: 'Sum numbers with a for loop',
     category: 'TypeScript basics',
     prompt:
-      'Return the sum of the whole numbers from 1 through n, including n. Use a for loop that counts up from 1. Inputs are whole numbers from 0 to 1000. When n is 0, there are no numbers to add, so return 0.',
+      'Return the sum of the whole numbers from 1 through n. Use a for loop that counts up from 1 to n. Include n itself. n is a whole number from 0 to 1000. n = 0 returns 0: there is nothing to add. n = 1 returns 1.',
+    brief: {
+      summary: 'Return the sum of the whole numbers from 1 through n.',
+      rules: ['Use a for loop that counts up from 1 to n.', 'Include n itself.', 'n is a whole number from 0 to 1000.'],
+      edgeCases: ['n = 0 returns 0: there is nothing to add.', 'n = 1 returns 1.'],
+    },
     example: { input: 'sumUpTo(4)', output: '10' },
     note: 'The example is 1 + 2 + 3 + 4. Checks cover zero, one, and the largest allowed input. Review where your loop starts and stops yourself.',
     vocabulary: [
@@ -302,9 +375,9 @@ export const foundationReps: Rep[] = [
     starter: 'function sumUpTo(n: number): number {\n  // Add 1 through n with a for loop.\n  return 0\n}\n',
     functionName: 'sumUpTo',
     hints: [
-      'Create a total variable and start it at 0 before the loop.',
-      'A for loop can start with let i = 1 and keep going while i is less than or equal to n.',
-      'Inside the loop, add i to total. Return total after the loop finishes.',
+      'Before any number is added the sum is 0, and for n = 0 nothing is ever added. Each number from 1 to n is added exactly once.',
+      'Keep a running total that starts at 0, and use a for loop whose counter goes from 1 up to and including n.',
+      'Inside the loop, add the counter to the total. After the loop ends, return the total.',
     ],
     checks: [
       { name: 'Sums the example', input: [4], expected: 10 },
@@ -320,7 +393,17 @@ export const foundationReps: Rep[] = [
     title: 'Count halving steps with while',
     category: 'TypeScript basics',
     prompt:
-      'Count how many steps it takes to reach 1 by halving. Start with the given whole number n. Each step replaces the current value with Math.floor(value / 2), which rounds down, and counts as one step. Stop when the value is 1, then return the number of steps. Inputs are whole numbers from 1 to 1000000. When n is 1, return 0.',
+      'Return how many halving steps it takes to bring the whole number n down to 1. Each step replaces the current value with Math.floor(value / 2), which rounds down. Each replacement counts as one step. Stop as soon as the value is 1. n is a whole number from 1 to 1000000. When n is 1, no step is needed: return 0. Odd values round down: 7 becomes 3, then 1.',
+    brief: {
+      summary: 'Return how many halving steps it takes to bring the whole number n down to 1.',
+      rules: [
+        'Each step replaces the current value with `Math.floor(value / 2)`, which rounds down.',
+        'Each replacement counts as one step.',
+        'Stop as soon as the value is 1.',
+        'n is a whole number from 1 to 1000000.',
+      ],
+      edgeCases: ['When n is 1, no step is needed: return 0.', 'Odd values round down: 7 becomes 3, then 1.'],
+    },
     example: { input: 'stepsToOne(9)', output: '3' },
     note: 'Math.floor keeps every value whole. Checks cover the smallest input, the example, and the largest allowed input. Review your stopping condition yourself.',
     vocabulary: [
@@ -331,9 +414,9 @@ export const foundationReps: Rep[] = [
     starter: 'function stepsToOne(n: number): number {\n  // Halve with Math.floor until the value is 1.\n  return 0\n}\n',
     functionName: 'stepsToOne',
     hints: [
-      'Keep a steps counter that starts at 0.',
-      'A while loop can keep going as long as the value is greater than 1.',
-      'Keep the current value and the count separate. Check that the starting value 1 needs no steps.',
+      'Each halving is one step, and n = 1 needs no steps, so the loop may run zero times. Odd values lose their half when rounded down.',
+      'Keep the current value and a step count separately. Repeat while the value is still greater than 1.',
+      'In each pass, replace the value with its rounded-down half and add one to the count. Return the count after the loop.',
     ],
     checks: [
       { name: 'Counts the example', input: [9], expected: 3 },
@@ -349,7 +432,16 @@ export const foundationReps: Rep[] = [
     title: 'Build initials from a name',
     category: 'TypeScript basics',
     prompt:
-      'Return the initials of a full name as uppercase letters with no spaces between them. Ignore spaces at the start and end of the name. Words are separated by one or more spaces. Use the first letter of each word. Inputs use basic Latin letters and spaces only. An empty name, or a name with only spaces, returns an empty string.',
+      'Return the initials of a full name: the first letter of each word, in uppercase, with nothing between them. Ignore spaces at the start and end of the name. Words are separated by one or more spaces. Inputs use basic Latin letters and spaces only. An empty name, or a name with only spaces, returns an empty string. A one-word name returns one letter.',
+    brief: {
+      summary: 'Return the initials of a full name: the first letter of each word, in uppercase, with nothing between them.',
+      rules: [
+        'Ignore spaces at the start and end of the name.',
+        'Words are separated by one or more spaces.',
+        'Inputs use basic Latin letters and spaces only.',
+      ],
+      edgeCases: ['An empty name, or a name with only spaces, returns an empty string.', 'A one-word name returns one letter.'],
+    },
     example: { input: "initials('ada lovelace')", output: "'AL'" },
     note: 'Checks cover extra spaces, a middle name, and empty input. Review how you split the words yourself.',
     vocabulary: [
@@ -362,9 +454,9 @@ export const foundationReps: Rep[] = [
     starter: 'function initials(fullName: string): string {\n  // Trim, split into words, then take each first letter.\n  return ""\n}\n',
     functionName: 'initials',
     hints: [
-      'Remove spaces at the ends first so they do not create extra words.',
-      'Split into words while treating repeated spaces as one separator.',
-      'Build one initial per word. Check that a blank name does not add a letter.',
+      'Spaces at the ends, or two spaces in a row, leave empty pieces when you split at a space. An empty piece has no first letter.',
+      'Trim the ends, split the name at spaces, and take the first character of each piece in uppercase. Empty pieces must add nothing.',
+      'Loop over the pieces and add the uppercased first character of each to a result string. Slicing an empty piece gives empty text. Return the result.',
     ],
     checks: [
       { name: 'Uses the example', input: ['ada lovelace'], expected: 'AL' },
@@ -381,12 +473,21 @@ export const foundationReps: Rep[] = [
     title: 'Update an object without changing it',
     category: 'TypeScript basics',
     prompt:
-      'A task has a title, a done flag, and a priority number. Return a new task with the same title and priority, and with done set to the supplied value. Do not change the task you received. If done already has the requested value, still return a new object.',
+      'Return a new task with done set to the supplied value. A task has a title, a done flag, and a priority number. Keep the same title and priority. Do not change the task you received. If done already has the requested value, still return a new object. A priority of 0 stays 0.',
+    brief: {
+      summary: 'Return a new task with done set to the supplied value.',
+      rules: [
+        'A task has a title, a done flag, and a priority number. Keep the same title and priority.',
+        'Do not change the task you received.',
+        'If done already has the requested value, still return a new object.',
+      ],
+      edgeCases: ['A priority of 0 stays 0.'],
+    },
     example: {
       input: "setDone({ title: 'Write', done: false, priority: 2 }, true)",
       output: "{ title: 'Write', done: true, priority: 2 }",
     },
-    note: 'The supplied task must stay unchanged. Checks compare the returned task and also detect changes made to the supplied object.',
+    note: 'Checks compare the returned task and also detect changes made to the supplied object. They cannot tell a new object from the one you received, so review that rule yourself.',
     vocabulary: [
       { term: 'Spread', meaning: 'copy the fields of an object into a new object with three dots' },
       { term: 'Mutation', meaning: 'changing an existing value instead of creating a new one' },
@@ -397,9 +498,9 @@ export const foundationReps: Rep[] = [
     functionName: 'setDone',
     preserveInput: true,
     hints: [
-      'Create a new object instead of returning the task you received.',
-      'A spread such as { ...task } copies title and priority into the new object.',
-      'Put done after the spread so it replaces the copied done value, then return the new object.',
+      'The caller keeps using the task it gave you, so that object must look the same after your function returns, even when done changes.',
+      'Build a new object: copy every field of the task into it with a spread, then give done its new value in the same object.',
+      'List done after the spread so it replaces the copied value, then return the new object. Never assign to the received task.',
     ],
     checks: [
       {

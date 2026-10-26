@@ -137,34 +137,205 @@ export const coreDepth: Record<string, RepDepth> = {
         },
       ],
     },
-    reasoning: 'After each visit, total equals the sum of positive values in the visited prefix.',
-    trace: 'For [-2,4,0,3], totals are 0,4,4,7. Empty input leaves the initial zero untouched.',
+    reasoning:
+      'After each visit, the total equals the sum of the positive values seen so far. It starts at 0, which is the right answer for an empty array, and only a positive value changes it.',
+    trace:
+      'For the example [-2, 3, 0, 5], the total stays 0 at -2, becomes 3, stays 3 at 0, and becomes 8. An empty array never enters the loop, so the starting 0 is returned.',
     alternative:
-      'A loop keeps only a total; filter then reduce creates a selected array. A reducer without an initial value fails on empty input.',
-    counterexample: 'Returning after the first positive produces 4 instead of 7.',
+      'A loop keeps only a total; filter then reduce creates a selected array first. A reducer without an initial value throws on an empty array.',
+    counterexample:
+      'Returning inside the loop after the first positive gives 3 instead of 8 for the example. Emptying the array with shift() as you go gives the right sum, but the caller is left with an empty array, which the checks report.',
     transfer: 'Sum prices only when a record is available. Explain how the invariant changes from numbers to records.',
   },
   'count-even-numbers': {
-    reasoning: 'Count qualifying values rather than accumulating their magnitude.',
-    trace: 'For [0,-2,3,4], counts become 1,2,2,3. A negative even number still has remainder zero.',
+    traceSteps: {
+      code: [
+        'function countEvens(numbers: number[]): number {',
+        '  let count = 0',
+        '  for (let i = 0; i < numbers.length; i++) {',
+        '    if (numbers[i] % 2 === 0) count++',
+        '  }',
+        '  return count',
+        '}',
+      ],
+      input: 'numbers = [-3, 4, 0, 7]',
+      steps: [
+        {
+          line: 1,
+          vars: { count: 0 },
+          structure: { kind: 'array', values: [-3, 4, 0, 7] },
+          note: 'The count starts at 0. No number has been checked yet.',
+        },
+        {
+          line: 3,
+          vars: { count: 0, i: 0, remainder: -1 },
+          structure: { kind: 'array', values: [-3, 4, 0, 7], pointers: { i: 0 } },
+          note: '-3 % 2 is -1 in JavaScript, not 1. It is not 0, so -3 is odd and the count stays 0.',
+        },
+        {
+          line: 3,
+          vars: { count: 1, i: 1, remainder: 0 },
+          structure: { kind: 'array', values: [-3, 4, 0, 7], pointers: { i: 1 }, dimmed: [0] },
+          note: '4 % 2 is 0, so 4 is even. The count goes from 0 to 1.',
+        },
+        {
+          line: 3,
+          vars: { count: 2, i: 2, remainder: 0 },
+          structure: { kind: 'array', values: [-3, 4, 0, 7], pointers: { i: 2 }, dimmed: [0, 1] },
+          note: '0 % 2 is 0, so zero is even too. The count goes from 1 to 2.',
+        },
+        {
+          line: 3,
+          vars: { count: 2, i: 3, remainder: 1 },
+          structure: { kind: 'array', values: [-3, 4, 0, 7], pointers: { i: 3 }, dimmed: [0, 1, 2] },
+          note: '7 % 2 is 1, so 7 is odd. The count stays 2.',
+        },
+        {
+          line: 2,
+          vars: { count: 2, i: 4 },
+          structure: { kind: 'array', values: [-3, 4, 0, 7], dimmed: [0, 1, 2, 3] },
+          note: 'i is 4, which is not less than the 4 numbers, so the loop stops.',
+        },
+        {
+          line: 5,
+          vars: { count: 2, result: 2 },
+          structure: { kind: 'array', values: [-3, 4, 0, 7], dimmed: [0, 1, 2, 3] },
+          note: 'Return 2. The array itself was only read, never changed.',
+        },
+      ],
+    },
+    reasoning:
+      'The count is the number of values seen so far whose remainder after dividing by 2 is 0. Zero and negative even numbers leave a remainder of 0 too, so one test covers every case.',
+    trace:
+      'For the example [-3, 4, 0, 7], the remainders are -1, 0, 0, and 1, so the count goes 0, 1, 2, 2 and the result is 2. An empty array returns the starting 0.',
     alternative: 'A loop uses constant working memory; filtering and reading length builds an array. Both inspect every input.',
     counterexample:
-      'Checking n % 2 === 1 for oddness fails for negative odd numbers; checking remainder zero for evenness avoids that trap.',
+      'Testing n % 2 !== 1 counts -3 as even, because -3 % 2 is -1, so the example returns 3 instead of 2. Counting distinct values with a Set returns 1 instead of 3 for [2, 2, 2].',
     transfer: 'Count numbers divisible by a supplied nonzero divisor. Define the zero-divisor contract first.',
   },
   'count-above-threshold': {
-    reasoning: 'Strict comparison excludes equality, and the count summarizes every visited value.',
-    trace: 'For [4,5,6] and limit 5, count stays 0,0 then becomes 1.',
+    traceSteps: {
+      code: [
+        'function countAbove(numbers: number[], limit: number): number {',
+        '  let count = 0',
+        '  for (let i = 0; i < numbers.length; i++) {',
+        '    if (numbers[i] > limit) count++',
+        '  }',
+        '  return count',
+        '}',
+      ],
+      input: 'numbers = [2, 7, 7, 10], limit = 7',
+      steps: [
+        {
+          line: 1,
+          vars: { limit: 7, count: 0 },
+          structure: { kind: 'array', values: [2, 7, 7, 10] },
+          note: 'The count starts at 0. Only values strictly above 7 will raise it.',
+        },
+        {
+          line: 3,
+          vars: { limit: 7, count: 0, i: 0 },
+          structure: { kind: 'array', values: [2, 7, 7, 10], pointers: { i: 0 } },
+          note: '2 is not above 7. The count stays 0.',
+        },
+        {
+          line: 3,
+          vars: { limit: 7, count: 0, i: 1 },
+          structure: { kind: 'array', values: [2, 7, 7, 10], pointers: { i: 1 }, dimmed: [0] },
+          note: '7 equals the limit. Equal is not above, so the count stays 0.',
+        },
+        {
+          line: 3,
+          vars: { limit: 7, count: 0, i: 2 },
+          structure: { kind: 'array', values: [2, 7, 7, 10], pointers: { i: 2 }, dimmed: [0, 1] },
+          note: 'The second 7 also equals the limit. The count stays 0.',
+        },
+        {
+          line: 3,
+          vars: { limit: 7, count: 1, i: 3 },
+          structure: { kind: 'array', values: [2, 7, 7, 10], pointers: { i: 3 }, dimmed: [0, 1, 2] },
+          note: '10 is above 7. The count goes from 0 to 1.',
+        },
+        {
+          line: 2,
+          vars: { limit: 7, count: 1, i: 4 },
+          structure: { kind: 'array', values: [2, 7, 7, 10], dimmed: [0, 1, 2, 3] },
+          note: 'i is 4, which is not less than the 4 values, so the loop stops.',
+        },
+        {
+          line: 5,
+          vars: { limit: 7, count: 1, result: 1 },
+          structure: { kind: 'array', values: [2, 7, 7, 10], dimmed: [0, 1, 2, 3] },
+          note: 'Return 1. With >= the two 7s would have counted too, giving 3.',
+        },
+      ],
+    },
+    reasoning:
+      'A strict comparison leaves values equal to the limit out, and visiting every value means each match is counted once per occurrence, repeats included.',
+    trace:
+      'For the example [2, 7, 7, 10] with limit 7, the count stays 0 at 2 and at both 7s, because equal is not above, and becomes 1 at 10. An empty array returns the starting 0.',
     alternative: 'A loop avoids allocating selected values; filter is concise when the selected values are also needed.',
-    counterexample: 'Using >= yields 2 instead of 1 at the equality boundary.',
+    counterexample:
+      'Using >= counts both 7s and returns 3 instead of 1. Removing duplicates with a Set first counts 6 once in [4, 6, 6, 8] above 3 and returns 3 instead of 4. Sorting the array to stop early changes the caller’s array.',
     transfer: 'Count values within a range. Specify whether both endpoints are included before choosing operators.',
   },
   'first-long-word': {
+    traceSteps: {
+      code: [
+        'function firstLongWord(words: string[], minimum: number): string | null {',
+        '  for (let i = 0; i < words.length; i++) {',
+        '    if (words[i].length >= minimum) return words[i]',
+        '  }',
+        '  return null',
+        '}',
+      ],
+      input: "words = ['cat', 'tiger', 'dog'], minimum = 5",
+      steps: [
+        {
+          line: 0,
+          vars: { minimum: 5 },
+          structure: { kind: 'array', values: ['cat', 'tiger', 'dog'] },
+          note: 'Look for the first word with at least 5 characters, from left to right.',
+        },
+        {
+          line: 1,
+          vars: { minimum: 5, i: 0 },
+          structure: { kind: 'array', values: ['cat', 'tiger', 'dog'], pointers: { i: 0 } },
+          note: 'Start at index 0, the first word.',
+        },
+        {
+          line: 2,
+          vars: { minimum: 5, i: 0, length: 3 },
+          structure: { kind: 'array', values: ['cat', 'tiger', 'dog'], pointers: { i: 0 } },
+          note: 'cat has 3 characters, fewer than 5. Keep looking.',
+        },
+        {
+          line: 1,
+          vars: { minimum: 5, i: 1 },
+          structure: { kind: 'array', values: ['cat', 'tiger', 'dog'], pointers: { i: 1 }, dimmed: [0] },
+          note: 'Move to index 1.',
+        },
+        {
+          line: 2,
+          vars: { minimum: 5, i: 1, length: 5 },
+          structure: { kind: 'array', values: ['cat', 'tiger', 'dog'], pointers: { i: 1 }, dimmed: [0] },
+          note: 'tiger has exactly 5 characters. At least 5 includes 5, so it qualifies.',
+        },
+        {
+          line: 2,
+          vars: { minimum: 5, i: 1, result: 'tiger' },
+          structure: { kind: 'array', values: ['cat', 'tiger', 'dog'], pointers: { i: 1 }, dimmed: [0] },
+          note: 'Return tiger at once. dog is never read: a later word cannot change which one came first.',
+        },
+      ],
+    },
     reasoning: 'First-match search may stop early because later items cannot change the earliest result.',
-    trace: 'For [a,code,longer] and minimum 4, a fails, code qualifies and longer is never needed.',
+    trace:
+      'For the example, cat has 3 characters, fewer than 5. tiger has exactly 5, so it is returned and dog is never read. With a minimum of 0 the first word qualifies at once, even when it is empty.',
     alternative:
       'find is concise but its absent result is undefined, so adapt it to null. Filtering all words does unnecessary work for a first-match task.',
-    counterexample: 'Using > skips code at the exact length boundary. A zero minimum allows an empty first word.',
+    counterexample:
+      'Using > skips tiger, because 5 is not more than 5, and returns null for the example. Sorting the words by length first returns moon instead of planet for [planet, moon, galaxy] with minimum 4, and it changes the caller’s array.',
     transfer: 'Search records for the first available item at a price limit. Explain the stopping condition.',
   },
   'count-words': {

@@ -57,9 +57,11 @@ test('Trail shows one compact secondary list when a saved draft offers another c
 
 test('task limits remain visible outside the assessment disclosure', async ({ page }) => {
   await page.goto('/#/practice/sum-positive-numbers')
-  await expect(page.locator('#brief-section .task-note')).toBeVisible()
-  await expect(page.locator('#brief-section .task-note')).toContainText('Numbers may be decimals as well as whole numbers.')
-  await expect(page.locator('#brief-section .task-note')).toContainText('Return 0 for an empty array')
+  const brief = page.locator('#brief-section .brief-structure')
+  await expect(brief).toContainText('Numbers may be decimals as well as whole numbers.')
+  await expect(brief).toContainText('Return 0 for an empty array')
+  // The note's task sentence stays beside the example; only its checking sentence moves into the disclosure.
+  await expect(page.locator('#brief-section .task-note')).toHaveText('In the example, 3 and 5 are added; -2 and 0 add nothing.')
   await expect(page.locator('#brief-section summary').filter({ hasText: 'How this is checked' })).toHaveCount(1)
 })
 
