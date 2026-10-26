@@ -37,6 +37,14 @@ check-all: check
 preview:
     yarn preview
 
+# Open the app: reuse the running server, or build if needed and start it in the background.
+start:
+    yarn start
+
+# Stop the server that `just start` started.
+stop:
+    yarn stop
+
 # Run the local server after building the app.
 serve: build
     yarn serve
