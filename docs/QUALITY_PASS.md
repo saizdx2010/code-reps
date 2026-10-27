@@ -32,7 +32,7 @@ A rep passes when all ten are true. Each maps to an existing field or test, so n
 4. **The hints step down gently.** Hint 1 says what to notice, hint 2 gives the approach, and hint 3 gives the next concrete step. None of them is code (`hints`).
 5. **Every rule has a check,** and every check has a plain-English name a learner would understand when it fails. Normal, boundary, and empty cases are all covered (`checks`).
 6. **The checks catch plausible wrong answers.** Two or three realistic incorrect solutions fail: off-by-one, mutating the input, a missed empty case, wrong ordering, or whatever is most likely for this task. Add them to the rep's test with `assertMutantsFail`.
-7. **The review is specific to this task.** The trace walks through the actual example, and the alternative, counterexample, and transfer challenge are not generic text (`src/review-*.ts`).
+7. **The review is specific to this task.** The trace walks through the actual example, and the alternative, counterexample, and transfer challenge are not generic text (`src/review-*.ts`). Code in its prose and trace notes is marked with backticks so it renders as code.
 8. **It's visual where state changes.** Reps with loops, pointers, stacks, queues, trees, grids, or DP tables get `traceSteps`. The user is a visual learner.
 9. **The voice is plain and consistent.** Short sentences, terms match the lesson and vocabulary, and the title starts with a verb. Words like "simply" and "just" don't appear, and the wording never hints at the solution.
 10. **The difficulty fits its place.** Guided → independent → recall steps up, and recall needs a different application, not the earlier answer remembered.
