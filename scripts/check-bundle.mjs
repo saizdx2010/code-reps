@@ -52,9 +52,10 @@ const groups = [
   // 157,500 for the icon pack, whose inline SVG shapes replaced CSS mask images, and from 159,000 for the Trail warm-up
   // and the drawer's type-check note after the comparisons and mistake habits moved out of startup, and from 160,500 for
   // the Today set's navigation in the workspace, and from 161,000 for the Break it format's workspace switch and the
-  // Game of Life catalog rows, and from 161,500 for the practice header's way back to the page a rep was opened from
-  // (see docs/PERFORMANCE.md).
-  { name: 'Initial JavaScript', files: [...initial], limit: 165_000, rawLimit: 530_000 },
+  // Game of Life catalog rows, and from 161,500 for the practice header's way back to the page a rep was opened from,
+  // and from 165,000 for checking the saved retries of missed lesson questions when learning data loads (see
+  // docs/PERFORMANCE.md).
+  { name: 'Initial JavaScript', files: [...initial], limit: 165_500, rawLimit: 531_000 },
   { name: 'Additional editor JavaScript', files: [...editor], limit: 1_050_000, rawLimit: 4_200_000 },
   // About 10% above the 30,703 gzip / 100,124 raw bytes of monaco-vim 0.4.4; see docs/PERFORMANCE.md.
   { name: 'Vim keys JavaScript', files: [...vimKeys], limit: 34_000, rawLimit: 110_000 },

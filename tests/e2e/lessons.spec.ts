@@ -69,3 +69,47 @@ test('a rep opened from a lesson leads back to that lesson', async ({ page }) =>
   await page.locator('.catalog-list .list-row button').first().click()
   await expect(page.locator('.breadcrumb-link')).toHaveText('Library')
 })
+
+test('a missed lesson question comes back on Trail days later, blank, and a right answer ends it', async ({ page }) => {
+  await page.goto('/#/home')
+  // A first prediction missed five days ago; the other question in the lesson was right.
+  await page.evaluate(() => {
+    const answeredAt = new Date(Date.now() - 5 * 86_400_000).toISOString()
+    const learning = {
+      version: 1,
+      goal: { pathId: 'typescript', minutes: 20, days: [1, 3, 5] },
+      answers: { 'values:return': { choice: 0, correct: false, answeredAt }, 'values:const': { choice: 1, correct: true, answeredAt } },
+      reviews: {},
+      notes: [],
+      bookmarks: [],
+      rounds: [],
+    }
+    localStorage.setItem('code-reps:profile:default:fluency:v1', JSON.stringify(learning))
+  })
+  await page.reload()
+  await expect(page.getByText('A lesson question you missed is back for another try.')).toBeVisible()
+  await page.getByRole('button', { name: 'Revisit: Values, types, and functions' }).click()
+  await expect(page).toHaveURL(/#\/knowledge\/values$/)
+  const tabs = page.getByRole('navigation', { name: 'Lesson sections' })
+  await expect(tabs.getByRole('button', { name: 'Predict', exact: true })).toHaveAttribute('aria-current', 'location')
+  const [missed, right] = [page.locator('fieldset.lesson-question').nth(0), page.locator('fieldset.lesson-question').nth(1)]
+  // The missed question waits blank, to be answered from memory; the other keeps its recorded check.
+  await expect(missed).toContainText('You missed this on')
+  await expect(missed.getByRole('radio', { checked: true })).toHaveCount(0)
+  await expect(missed.locator('.lesson-feedback, label.is-answer')).toHaveCount(0)
+  await expect(right.locator('.lesson-feedback')).toContainText('Correct prediction.')
+  await missed.getByRole('radio', { name: '6', exact: true }).check()
+  await missed.getByRole('button', { name: 'Check answer', exact: true }).click()
+  await expect(missed.locator('.lesson-feedback')).toContainText('Correct prediction.')
+  await expect(missed.locator('.lesson-feedback')).toContainText('It will not come back. Your first prediction stays as your evidence.')
+  const saved = await page.evaluate(
+    () => JSON.parse(localStorage.getItem('code-reps:profile:default:fluency:v1')!).answers['values:return'],
+  )
+  expect(saved).toMatchObject({ choice: 0, correct: false, revisit: { correct: true } })
+  // The evidence is still the first prediction, and Trail no longer offers the question.
+  await page.getByRole('button', { name: 'Review', exact: true }).click()
+  await expect(page.locator('.skill-evidence')).toContainText('1 of 2 predictions correct on the first check.')
+  await page.goto('/#/home')
+  await expect(page.locator('#continue-heading, #today-heading').first()).toBeVisible()
+  await expect(page.getByText('back for another try')).toHaveCount(0)
+})
