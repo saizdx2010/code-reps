@@ -293,7 +293,7 @@ export const skills: Skill[] = [
       },
       {
         title: 'Order belongs to the question',
-        body: 'The first value that repeats is identified by its second occurrence, not the first position of any value that eventually repeats. Scan in input order and check membership before inserting. When the answer depends on items not reached yet, such as whether a value ever appears again, count everything first and then scan again in input order. A most-frequent task needs an explicit rule for ties.',
+        body: 'When each decision depends only on what came before, one pass can decide as it goes: check membership first, then insert. When the answer depends on items not reached yet, such as whether a value ever appears again, count everything first and then scan again in input order. A most-frequent task needs an explicit rule for ties.',
       },
       {
         title: 'Tradeoffs',
@@ -301,12 +301,12 @@ export const skills: Skill[] = [
       },
     ],
     example:
-      'const seen = new Set<number>()\nfor (const n of [5, 2, 2, 5]) {\n  if (seen.has(n)) { /* first repeat is 2 */ break }\n  seen.add(n)\n}',
+      "// Count each person's first ballot; ignore any later one.\nconst voted = new Set<string>()\nconst tally = new Map<string, number>()\nconst ballots = [['Ada', 'tea'], ['Bo', 'coffee'], ['Ada', 'coffee']]\nfor (const [voter, choice] of ballots) {\n  if (voted.has(voter)) continue\n  voted.add(voter)\n  const votes = tally.get(choice) ?? 0\n  tally.set(choice, votes + 1)\n}\n// tally: tea → 1, coffee → 1",
     walkthrough: [
-      '5 is new: seen becomes {5}.',
-      '2 is new: seen becomes {5, 2}.',
-      'The next 2 is already present, so it is the first repeat.',
-      'The later 5 does not change which repeat happened first.',
+      'Ada is not in voted, so she is added. tally.get("tea") is undefined, ?? 0 turns it into 0, and tea is set to 1.',
+      'Bo is new too: voted becomes {Ada, Bo}, and coffee is set to 1 the same way.',
+      'Ada is already in voted, so continue skips her second ballot before anything is counted.',
+      'The loop ends with tea → 1 and coffee → 1. Checking has before add is what lets the second ballot be caught.',
     ],
     mistakes: [
       'Adding before checking membership: after `seen.add(n)`, `seen.has(n)` is always true, so every value looks repeated.',

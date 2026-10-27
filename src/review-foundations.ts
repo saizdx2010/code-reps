@@ -583,6 +583,64 @@ export const foundationsDepth: Record<string, RepDepth> = {
       'Add a surcharge for lines heavier than 1000 grams each, charged once per line. Decide whether the surcharge is per line or per order before coding. This changed contract is self-reviewed, not checked by the original cases.',
   },
   'countdown-labels': {
+    traceSteps: {
+      code: [
+        'function countdownLabels(startSeconds: number, stepSeconds: number): string[] {',
+        '  const labels: string[] = []',
+        '  for (let value = startSeconds; value >= 0; value -= stepSeconds) {',
+        '    const minutes = Math.floor(value / 60)',
+        '    const seconds = value % 60',
+        "    labels.push(`${minutes}:${String(seconds).padStart(2, '0')}`)",
+        '  }',
+        '  return labels',
+        '}',
+      ],
+      input: 'startSeconds = 130, stepSeconds = 60',
+      steps: [
+        {
+          line: 2,
+          vars: { value: 130 },
+          structure: { kind: 'array', values: [] },
+          note: 'The first value is startSeconds, 130. It is 0 or more, so it gets a label.',
+        },
+        {
+          line: 4,
+          vars: { value: 130, minutes: 2, seconds: 10 },
+          structure: { kind: 'array', values: [] },
+          note: '130 is 2 whole minutes (120 seconds) with 10 seconds left over.',
+        },
+        {
+          line: 5,
+          vars: { value: 130, label: '2:10' },
+          structure: { kind: 'array', values: ['2:10'] },
+          note: 'Minutes stay as they are; seconds are padded to two digits. The label is 2:10.',
+        },
+        {
+          line: 5,
+          vars: { value: 70, minutes: 1, seconds: 10, label: '1:10' },
+          structure: { kind: 'array', values: ['2:10', '1:10'] },
+          note: 'Subtract 60: 70 is 1 minute and 10 seconds, so the label is 1:10.',
+        },
+        {
+          line: 5,
+          vars: { value: 10, minutes: 0, seconds: 10, label: '0:10' },
+          structure: { kind: 'array', values: ['2:10', '1:10', '0:10'] },
+          note: 'Subtract 60 again: 10 is 0 minutes and 10 seconds. Minutes are not padded, so the label is 0:10.',
+        },
+        {
+          line: 2,
+          vars: { value: -50 },
+          structure: { kind: 'array', values: ['2:10', '1:10', '0:10'] },
+          note: 'The next value, -50, is below 0, so the loop stops before labeling it.',
+        },
+        {
+          line: 7,
+          vars: { result: '["2:10","1:10","0:10"]' },
+          structure: { kind: 'array', values: ['2:10', '1:10', '0:10'] },
+          note: 'Return the three labels in countdown order.',
+        },
+      ],
+    },
     reasoning:
       'The value itself is the loop state. Looping while the value is at least zero means the last label is the last non-negative value the countdown reaches, and formatting is a separate step applied to each value.',
     trace:

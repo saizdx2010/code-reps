@@ -371,3 +371,117 @@ test('Foundations stage 7 checks reject plausible wrong answers', () => {
     ],
   ])
 })
+
+test('Foundations stage 8 checks reject plausible wrong answers', () => {
+  const countdown = (format, loop = 'let value = startSeconds; value >= 0; value -= stepSeconds') =>
+    `function countdownLabels(startSeconds: number, stepSeconds: number) { const labels: string[] = []; const pad = (n: number) => String(n).padStart(2, '0'); for (${loop}) labels.push(${format}); return labels }`
+  assertMutantsFail([
+    // Leaves out a word of exactly the minimum length.
+    [
+      'count-long-words',
+      'function countLongWords(words: string[], minimum: number) { let count = 0; for (const word of words) if (word.length > minimum) count++; return count }',
+    ],
+    // Trims each word before measuring it.
+    [
+      'count-long-words',
+      'function countLongWords(words: string[], minimum: number) { let count = 0; for (const word of words) if (word.trim().length >= minimum) count++; return count }',
+    ],
+    // Counts each distinct word once.
+    [
+      'count-long-words',
+      'function countLongWords(words: string[], minimum: number) { let count = 0; for (const word of new Set(words)) if (word.length >= minimum) count++; return count }',
+    ],
+    // Skips empty words, even when the minimum is 0.
+    [
+      'count-long-words',
+      'function countLongWords(words: string[], minimum: number) { let count = 0; for (const word of words) if (word && word.length >= minimum) count++; return count }',
+    ],
+    // Joins the words and splits at whitespace, as for counting words in text.
+    [
+      'count-long-words',
+      'function countLongWords(words: string[], minimum: number) { return words.join(" ").split(/\\s+/).filter(word => word.length >= minimum).length }',
+    ],
+    // Counts every word from the first long one onward.
+    [
+      'count-long-words',
+      'function countLongWords(words: string[], minimum: number) { const first = words.findIndex(word => word.length >= minimum); return first === -1 ? 0 : words.length - first }',
+    ],
+    // Takes words off the caller's array while counting.
+    [
+      'count-long-words',
+      'function countLongWords(words: string[], minimum: number) { let count = 0; while (words.length > 0) if (words.pop()!.length >= minimum) count++; return count }',
+    ],
+    // Counts first, then returns the first number in the array that appears twice.
+    [
+      'first-repeated-number',
+      'function firstRepeated(numbers: number[]) { const counts = new Map<number, number>(); for (const n of numbers) counts.set(n, (counts.get(n) ?? 0) + 1); for (const n of numbers) if (counts.get(n)! > 1) return n; return null }',
+    ],
+    // Returns the first number that appears again anywhere later.
+    [
+      'first-repeated-number',
+      'function firstRepeated(numbers: number[]) { return numbers.find(n => numbers.indexOf(n) !== numbers.lastIndexOf(n)) ?? null }',
+    ],
+    // Compares each number only with its neighbor.
+    [
+      'first-repeated-number',
+      'function firstRepeated(numbers: number[]) { for (let i = 1; i < numbers.length; i++) if (numbers[i] === numbers[i - 1]) return numbers[i]; return null }',
+    ],
+    // Marks seen numbers with their own value, so a repeated 0 looks unseen.
+    [
+      'first-repeated-number',
+      'function firstRepeated(numbers: number[]) { const seen: Record<number, number> = {}; for (const n of numbers) { if (seen[n]) return n; seen[n] = n } return null }',
+    ],
+    // Sorts a copy and returns the first equal neighbors.
+    [
+      'first-repeated-number',
+      'function firstRepeated(numbers: number[]) { const sorted = [...numbers].sort((a, b) => a - b); for (let i = 1; i < sorted.length; i++) if (sorted[i] === sorted[i - 1]) return sorted[i]; return null }',
+    ],
+    // Takes numbers off the front of the caller's array.
+    [
+      'first-repeated-number',
+      'function firstRepeated(numbers: number[]) { const seen = new Set<number>(); while (numbers.length > 0) { const n = numbers.shift()!; if (seen.has(n)) return n; seen.add(n) } return null }',
+    ],
+    // Removes pairs in one pass, so a pair created by a removal stays.
+    ['remove-adjacent-pairs', "function removePairs(text: string) { return text.replace(/(.)\\1/g, '') }"],
+    // Removes whole runs of equal characters until nothing changes.
+    [
+      'remove-adjacent-pairs',
+      "function removePairs(text: string) { let before = ''; while (before !== text) { before = text; text = text.replace(/(.)\\1+/g, '') } return text }",
+    ],
+    // Compares each character with the one before it in the input, not the kept top.
+    [
+      'remove-adjacent-pairs',
+      "function removePairs(text: string) { const kept: string[] = []; for (let i = 0; i < text.length; i++) { if (i > 0 && text[i] === text[i - 1]) kept.pop(); else kept.push(text[i]) } return kept.join('') }",
+    ],
+    // Ignores letter case.
+    [
+      'remove-adjacent-pairs',
+      "function removePairs(text: string) { const kept: string[] = []; for (const c of text) { if (kept.length > 0 && kept[kept.length - 1].toLowerCase() === c.toLowerCase()) kept.pop(); else kept.push(c) } return kept.join('') }",
+    ],
+    // Pads the minutes as well as the seconds.
+    ['countdown-labels', countdown('`${pad(Math.floor(value / 60))}:${pad(value % 60)}`')],
+    // Checks the next value before labeling, so the last label is lost.
+    [
+      'countdown-labels',
+      countdown(
+        '`${Math.floor(value / 60)}:${pad(value % 60)}`',
+        'let value = startSeconds; value - stepSeconds >= 0; value -= stepSeconds',
+      ),
+    ],
+    // Counts up to the start instead of down from it.
+    [
+      'countdown-labels',
+      countdown(
+        '`${Math.floor(value / 60)}:${pad(value % 60)}`',
+        'let value = startSeconds % stepSeconds; value <= startSeconds; value += stepSeconds',
+      ),
+    ],
+    // Writes an hour once the countdown reaches 3600 seconds.
+    [
+      'countdown-labels',
+      countdown(
+        'value >= 3600 ? `${Math.floor(value / 3600)}:${pad(Math.floor((value % 3600) / 60))}:${pad(value % 60)}` : `${Math.floor(value / 60)}:${pad(value % 60)}`',
+      ),
+    ],
+  ])
+})
