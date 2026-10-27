@@ -2,15 +2,15 @@ import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
 
 const day = 86_400_000
-const ago = (days: number) => {
-  const date = new Date()
+const ago = (days: number, now = Date.now()) => {
+  const date = new Date(now)
   date.setHours(12, 0, 0, 0)
-  return new Date(Math.min(date.getTime() - days * day, Date.now() - 60_000)).toISOString()
+  return new Date(Math.min(date.getTime() - days * day, now - 60_000)).toISOString()
 }
-const record = (repId: string, daysAgo: number, hintCount = 0) => ({
+const record = (repId: string, daysAgo: number, hintCount = 0, now?: number) => ({
   id: `${repId}-${daysAgo}`,
   repId,
-  completedAt: ago(daysAgo),
+  completedAt: ago(daysAgo, now),
   plan: `My plan for ${repId}.`,
   code: 'code',
   explanation: 'explanation',
@@ -47,12 +47,16 @@ test('Trail draws the walked line, marks where you are, and names what is left i
 })
 
 test('the skill map shows fading skills, then and now, a recall countdown, and replays past weeks', async ({ page }) => {
+  // Which attempts share the oldest week depends on the weekday. On a Thursday, the guided rep 40 days back (a Saturday)
+  // sits alone in the oldest week and the independent one 38 days back starts the next, so the browser's clock is fixed.
+  const now = new Date('2026-10-29T15:00:00').getTime()
+  await page.clock.setFixedTime(now)
   await seed(page, [
-    record('sum-positive-numbers', 40, 2),
-    record('count-even-numbers', 38),
-    record('count-above-threshold', 33),
-    record('count-words', 2, 1),
-    record('first-word-ending', 1),
+    record('sum-positive-numbers', 40, 2, now),
+    record('count-even-numbers', 38, 0, now),
+    record('count-above-threshold', 33, 0, now),
+    record('count-words', 2, 1, now),
+    record('first-word-ending', 1, 0, now),
   ])
   await page.goto('/#/skillmap')
   const arrays = page.locator('.skill-node').filter({ hasText: 'Work through arrays' })
