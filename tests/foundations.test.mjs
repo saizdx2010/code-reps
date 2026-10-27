@@ -336,3 +336,38 @@ test('Foundations stage 6 checks reject plausible wrong answers', () => {
     ],
   ])
 })
+
+test('Foundations stage 7 checks reject plausible wrong answers', () => {
+  const shipping = (weigh, bulky, tier = 'total <= 500 ? 300 : total <= 2000 ? 600 : 1200') =>
+    `type Line = { weightGrams: number; quantity: number }; function shippingCost(lines: Line[]) { if (lines.length === 0) return 0; let total = 0; let items = 0; let bulky = false; for (const line of lines) { ${weigh}; items += line.quantity; ${bulky} } const base = ${tier}; return bulky ? base + 200 : base }`
+  assertMutantsFail([
+    // Adds the quantities of every line before comparing with 10.
+    ['shipping-cost-tiers', shipping('total += line.weightGrams * line.quantity', 'if (items > 10) bulky = true')],
+    // Adds each line's weight once, ignoring its quantity.
+    ['shipping-cost-tiers', shipping('total += line.weightGrams', 'if (line.quantity > 10) bulky = true')],
+    // Keeps exactly 2000 grams out of the middle tier.
+    [
+      'shipping-cost-tiers',
+      shipping(
+        'total += line.weightGrams * line.quantity',
+        'if (line.quantity > 10) bulky = true',
+        'total <= 500 ? 300 : total < 2000 ? 600 : 1200',
+      ),
+    ],
+    // Adds the handling charge once for every bulky line.
+    [
+      'shipping-cost-tiers',
+      'type Line = { weightGrams: number; quantity: number }; function shippingCost(lines: Line[]) { if (lines.length === 0) return 0; let total = 0; let fees = 0; for (const line of lines) { total += line.weightGrams * line.quantity; if (line.quantity > 10) fees += 200 } return (total <= 500 ? 300 : total <= 2000 ? 600 : 1200) + fees }',
+    ],
+    // Prices every line as its own shipment and adds the prices.
+    [
+      'shipping-cost-tiers',
+      'type Line = { weightGrams: number; quantity: number }; function shippingCost(lines: Line[]) { let cost = 0; let bulky = false; for (const line of lines) { const weight = line.weightGrams * line.quantity; cost += weight <= 500 ? 300 : weight <= 2000 ? 600 : 1200; if (line.quantity > 10) bulky = true } return bulky ? cost + 200 : cost }',
+    ],
+    // Stores each line's weight back into the caller's line.
+    [
+      'shipping-cost-tiers',
+      shipping('line.weightGrams *= line.quantity; total += line.weightGrams', 'if (line.quantity > 10) bulky = true'),
+    ],
+  ])
+})

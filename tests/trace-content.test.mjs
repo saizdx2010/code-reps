@@ -90,6 +90,7 @@ test('traces cover collection operations, stacks, sets, recursion, trees, tables
     'remove-adjacent-pairs',
     'scroll-report-throttle',
     'search-request-state',
+    'shipping-cost-tiers',
     'shortest-run-reaching-target',
     'simplify-file-path',
     'smallest-daily-capacity',

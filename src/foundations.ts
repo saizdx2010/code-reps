@@ -530,21 +530,21 @@ export const foundationReps: Rep[] = [
     title: 'Price a shipment by weight tiers',
     category: 'TypeScript basics',
     prompt:
-      'Return the shipping cost in cents for an order. The order is a list of lines, and each line has weightGrams and quantity, both whole numbers. The total weight is the sum of weightGrams times quantity over every line. Charge 300 cents when the total is 500 grams or less, 600 cents when it is above 500 up to and including 2000 grams, and 1200 cents when it is above 2000 grams. An empty order costs 0 cents. Add one handling charge of 200 cents when any line has a quantity above 10, however many lines are bulky.',
+      'Return the shipping cost in cents for an order, a list of lines that each have weightGrams and quantity. Both fields are whole numbers. The total weight is the sum of weightGrams times quantity over every line. Charge 300 cents when the total is 500 grams or less, 600 cents when it is above 500 up to and including 2000 grams, and 1200 cents when it is above 2000 grams. A line is bulky when its own quantity is above 10; two lines of 6 are not bulky. Add one handling charge of 200 cents when any line is bulky. Do not change the lines. An empty order costs 0 cents. The handling charge is added once, however many lines are bulky.',
     brief: {
-      summary:
-        'Return the shipping cost in cents for an order. The order is a list of lines, and each line has weightGrams and quantity, both whole numbers.',
+      summary: 'Return the shipping cost in cents for an order, a list of lines that each have weightGrams and quantity.',
       rules: [
-        'The total weight is the sum of weightGrams times quantity over every line.',
+        'Both fields are whole numbers. The total weight is the sum of weightGrams times quantity over every line.',
         'Charge 300 cents when the total is 500 grams or less, 600 cents when it is above 500 up to and including 2000 grams, and 1200 cents when it is above 2000 grams.',
-        'Add one handling charge of 200 cents when any line has a quantity above 10.',
+        'A line is bulky when its own quantity is above 10; two lines of 6 are not bulky. Add one handling charge of 200 cents when any line is bulky.',
+        'Do not change the lines.',
       ],
       edgeCases: ['An empty order costs 0 cents.', 'The handling charge is added once, however many lines are bulky.'],
     },
     example: { input: 'shippingCost([{weightGrams: 300, quantity: 2}, {weightGrams: 150, quantity: 1}])', output: '600' },
-    note: 'The total weight is 750 grams in the example, which falls in the middle tier. Checks cover the tier edges, the fee threshold, a fee added once, and a heavy order with a fee. Do not change the lines. Review your loop and tier order yourself.',
+    note: 'In the example, 300 × 2 + 150 × 1 = 750 grams, which is above 500 and at most 2000, and no quantity is above 10, so the cost is 600 cents. Checks cover the example, an empty order, the tier edges at 500 and 2000 grams, quantities of exactly 10 and 11, two lines that are not bulky on their own, a charge added once, and a heavy order with the charge, and they detect changes to the lines.',
     vocabulary: [
-      { term: 'Accumulator', meaning: 'a variable that collects a value as a loop visits each item' },
+      { term: 'Tier', meaning: 'a band of total weight that has its own price' },
       { term: 'Boundary', meaning: 'a value where the result changes' },
     ],
     planPrompt: 'How will you total the weight and pick a tier? When does the handling charge apply?',
@@ -553,13 +553,23 @@ export const foundationReps: Rep[] = [
     functionName: 'shippingCost',
     preserveInput: true,
     hints: [
-      'Add the weight of every line, multiplied by its quantity, before you choose a tier.',
-      'Check the tiers from the lightest up, using the exact upper edges given in the prompt, so each total lands in one tier.',
-      'Keep a yes-or-no flag that turns on when a line is bulky. Apply the handling charge once after the loop finishes.',
+      'The tier depends on the weight of the whole order, and the handling charge depends on whether any one line is bulky, so neither can be decided from one line alone. In the example, only the total of 750 grams puts the order in the middle tier.',
+      'Collect two facts in one pass over the lines: the total weight, and whether any line has a quantity above 10. After the pass, choose the tier from the total and add the charge once if needed.',
+      'Return 0 straight away when there are no lines. After the loop, test whether the total is at most 500, then at most 2000, so 500 and 2000 stay in the lower tier, and add 200 once if any line was bulky.',
     ],
     checks: [
       {
-        name: 'Charges the light tier for a light order',
+        name: 'Prices the example in the middle tier',
+        input: [
+          [
+            { weightGrams: 300, quantity: 2 },
+            { weightGrams: 150, quantity: 1 },
+          ],
+        ],
+        expected: 600,
+      },
+      {
+        name: 'Keeps exactly 500 grams in the light tier, counting each quantity',
         input: [
           [
             { weightGrams: 100, quantity: 1 },
@@ -574,6 +584,16 @@ export const foundationReps: Rep[] = [
       { name: 'Moves to the heavy tier just above 2000 grams', input: [[{ weightGrams: 2001, quantity: 1 }]], expected: 1200 },
       { name: 'Adds the handling charge above ten items', input: [[{ weightGrams: 10, quantity: 11 }]], expected: 500 },
       { name: 'Does not add the handling charge at exactly ten items', input: [[{ weightGrams: 10, quantity: 10 }]], expected: 300 },
+      {
+        name: 'Does not add quantities from different lines for the handling charge',
+        input: [
+          [
+            { weightGrams: 10, quantity: 6 },
+            { weightGrams: 10, quantity: 6 },
+          ],
+        ],
+        expected: 300,
+      },
       {
         name: 'Adds the handling charge once for several bulky lines',
         input: [

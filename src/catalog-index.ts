@@ -51,7 +51,7 @@ const repRows: [string, string, number, Rep['format'] | 0, string, number, numbe
   ["loop-while","Count halving steps with while",2,0,"47f7211f",3,71,6,4,1],
   ["string-basics","Build initials from a name",2,0,"167152cc",3,64,7,4,1],
   ["object-update","Update an object without changing it",2,0,"1d499be3",3,54,4,4,1],
-  ["shipping-cost-tiers","Price a shipment by weight tiers",2,0,"3e386a4a",3,104,9,4,1],
+  ["shipping-cost-tiers","Price a shipment by weight tiers",2,0,"3e386a4a",3,122,11,4,1],
   ["countdown-labels","Format a countdown timer",2,0,"dd5576f2",3,97,9,4,1],
   ["batch-slot-labels","Label packing batches",2,0,"4dee68c6",3,71,6,4,1],
   ["inspection-run-summary","Summarize inspection readings",2,0,"31a41711",3,60,6,4,1],

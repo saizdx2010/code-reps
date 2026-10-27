@@ -95,6 +95,7 @@ If something in daily practice feels unclear, flag it with **Something unclear h
   - [x] Stage 4: Count and remember
   - [x] Stage 5: Handle text and gaps
   - [x] Stage 6: Match openings and closings
+  - [x] Stage 7: Calculate shipping on your own
 - [ ] Problem solving (20 stages)
 - [ ] SQL
 - [ ] Pattern Recognition (5 stages)
