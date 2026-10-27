@@ -79,72 +79,72 @@ export const foundationsDepth: Record<string, RepDepth> = {
   },
   'declare-variables': {
     reasoning:
-      'greeting is fixed text, so const states that this name will never point at another value. message really does change: it starts as the greeting and then gains the name, so it needs let. The function returns whatever message holds at the end.',
+      '`greeting` is fixed text, so `const` states that this name will never point at another value. `message` really does change: it starts as the greeting and then gains the name, so it needs `let`. The function returns whatever `message` holds at the end.',
     trace:
-      'For Ada, greeting is "Hello, " and message starts as "Hello, ". Reassigning adds the name, so message becomes "Hello, Ada" and that is returned. For an empty name, adding "" leaves message as "Hello, ", trailing space included.',
+      'For `Ada`, `greeting` is `"Hello, "` and `message` starts as `"Hello, "`. Reassigning adds the name, so `message` becomes `"Hello, Ada"` and that is returned. For an empty name, adding `""` leaves `message` as `"Hello, "`, trailing space included.',
     alternative:
-      'const message = greeting + name, or returning greeting + name directly, gives the same output. In real code that is the better choice, because nothing is reassigned. This rep adds the reassignment so you practice the one case where let is needed.',
+      '`const message = greeting + name`, or returning `greeting + name` directly, gives the same output. In real code that is the better choice, because nothing is reassigned. This rep adds the reassignment so you practice the one case where `let` is needed.',
     counterexample:
-      'const greeting = "Hello," without the trailing space returns "Hello,Ada", and the first check points at character 7. Declaring message with const and then reassigning it stops with an error, because a const name cannot be reassigned.',
+      '`const greeting = "Hello,"` without the trailing space returns `"Hello,Ada"`, and the first check points at character 7. Declaring `message` with `const` and then reassigning it stops with an error, because a `const` name cannot be reassigned.',
     transfer:
-      'Build the message in three steps: start with greeting, add the name, then add "!" at the end. Which names change, and which can stay const? This changed contract is self-reviewed, not checked by the original cases.',
+      'Build the message in three steps: start with `greeting`, add the name, then add `"!"` at the end. Which names change, and which can stay `const`? This changed contract is self-reviewed, not checked by the original cases.',
   },
   'basic-types': {
     reasoning:
-      'Each value has one fixed place in the sentence. A template string turns the number and the boolean into text exactly as they are, so 0 and false need no special handling.',
+      'Each value has one fixed place in the sentence. A template string turns the number and the boolean into text exactly as they are, so `0` and `false` need no special handling.',
     trace:
-      'For Ada, 28, true the template fills in Ada, then 28, then true: Ada is 28. Active: true. For Bo, 0, true the age slot shows 0, and for Lee, 42, false the last slot shows false.',
+      'For `Ada`, `28`, `true` the template fills in `Ada`, then `28`, then `true`: `Ada is 28. Active: true`. For `Bo`, `0`, `true` the age slot shows `0`, and for `Lee`, `42`, `false` the last slot shows `false`.',
     alternative:
-      'Joining with +, as in name + " is " + age + ". Active: " + active, gives the same text, but the spaces and the period are harder to check by eye. Neither version checks that values arriving from outside the program really have these types.',
+      'Joining with `+`, as in `name + " is " + age + ". Active: " + active`, gives the same text, but the spaces and the period are harder to check by eye. Neither version checks that values arriving from outside the program really have these types.',
     counterexample:
-      'Writing ${age || "unknown"} looks like a safe default, but || treats 0 as missing, so Bo becomes Bo is unknown. Writing active ? "yes" : "no" changes the required words true and false.',
+      'Writing `${age || "unknown"}` looks like a safe default, but `||` treats `0` as missing, so `Bo` becomes `Bo is unknown`. Writing `active ? "yes" : "no"` changes the required words `true` and `false`.',
     transfer:
       'Add an optional nickname shown in brackets after the name. Decide what an empty nickname shows, and how that differs from no nickname at all. This changed contract is self-reviewed, not checked by the original cases.',
   },
   'create-objects': {
     reasoning:
-      'The object groups the two values under one name, and the Person type says exactly which properties it must have. Reading person.name and person.age gets back what you stored, so the sentence comes from the object rather than from loose variables.',
+      'The object groups the two values under one name, and the `Person` type says exactly which properties it must have. Reading `person.name` and `person.age` gets back what you stored, so the sentence comes from the object rather than from loose variables.',
     trace:
-      'For Ada and 28, person becomes { name: "Ada", age: 28 }. person.name is Ada and person.age is 28, so the sentence is Ada is 28 years old. For Bo and 0 the age property holds 0, and the sentence is Bo is 0 years old.',
+      'For `Ada` and `28`, `person` becomes `{ name: "Ada", age: 28 }`. `person.name` is `Ada` and `person.age` is `28`, so the sentence is `Ada is 28 years old`. For `Bo` and `0` the `age` property holds `0`, and the sentence is `Bo is 0 years old`.',
     alternative:
-      'Using the parameters directly gives the same sentence with less code, but skips the object this rep practices. The shorthand { name, age } and the long form { name: name, age: age } build the same object.',
+      'Using the parameters directly gives the same sentence with less code, but skips the object this rep practices. The shorthand `{ name, age }` and the long form `{ name: name, age: age }` build the same object.',
     counterexample:
-      'Writing { name: name } without age is a type error, because Person requires both properties. If it runs anyway, person.age is undefined and the sentence becomes Ada is undefined years old. Writing year instead of years fails every check.',
+      'Writing `{ name: name }` without `age` is a type error, because `Person` requires both properties. If it runs anyway, `person.age` is `undefined` and the sentence becomes `Ada is undefined years old`. Writing `year` instead of `years` fails every check.',
     transfer:
-      'Add a city property and end the sentence with "and lives in {city}". Name every place in the code that must change. This changed contract is self-reviewed, not checked by the original cases.',
+      'Add a `city` property and end the sentence with `"and lives in {city}"`. Name every place in the code that must change. This changed contract is self-reviewed, not checked by the original cases.',
   },
   'make-arrays': {
     reasoning:
       'No item is different from an item that holds empty text. The length tells you which case you have, and index 0 reads the first item without changing the array.',
     trace:
-      'For ["Ada", "Sam"] the length is 2, so index 0 gives Ada. [] has length 0 and returns null. ["", "Ada"] has length 2, so index 0 gives the empty string, which is returned as it is.',
+      'For `["Ada", "Sam"]` the length is 2, so index 0 gives `Ada`. `[]` has length 0 and returns `null`. `["", "Ada"]` has length 2, so index 0 gives the empty string, which is returned as it is.',
     alternative:
-      'names[0] ?? null also works: reading past the end gives undefined, and ?? swaps only undefined or null for null. An explicit length check makes the empty-array rule easier to see.',
+      '`names[0] ?? null` also works: reading past the end gives `undefined`, and `??` swaps only `undefined` or `null` for `null`. An explicit length check makes the empty-array rule easier to see.',
     counterexample:
-      'names[0] || null turns an empty first name into null, because "" counts as false. names.shift() returns the right name but removes it from the caller’s array, which the checks report as a changed input.',
+      '`names[0] || null` turns an empty first name into `null`, because `""` counts as false. `names.shift()` returns the right name but removes it from the caller’s array, which the checks report as a changed input.',
     transfer:
       'Return the last item instead. Work out its index from the length, and decide what an empty array returns. This changed contract is self-reviewed, not checked by the original cases.',
   },
   'write-functions': {
     reasoning:
-      'return hands the computed total back to the caller, which can store it or use it in another calculation. One multiplication covers every case, including 0 items and decimal prices.',
+      '`return` hands the computed total back to the caller, which can store it or use it in another calculation. One multiplication covers every case, including 0 items and decimal prices.',
     trace:
-      'totalPrice(5, 3) computes 5 times 3 and returns 15. totalPrice(1.25, 3) returns 3.75, and totalPrice(8, 0) returns 0 without a special branch.',
+      '`totalPrice(5, 3)` computes 5 times 3 and returns 15. `totalPrice(1.25, 3)` returns 3.75, and `totalPrice(8, 0)` returns 0 without a special branch.',
     alternative:
-      'Storing the product in const total and returning total is equally correct and gives the value a name. console.log(price * quantity) shows the number but the function then returns undefined, so the caller has nothing to use.',
+      'Storing the product in `const total` and returning `total` is equally correct and gives the value a name. `console.log(price * quantity)` shows the number but the function then returns `undefined`, so the caller has nothing to use.',
     counterexample:
-      'Hardcoding return 15 passes the example but fails every other check. Writing price + quantity returns 8 for the example instead of 15.',
+      'Hardcoding `return 15` passes the example but fails every other check. Writing `price + quantity` returns 8 for the example instead of 15.',
     transfer:
-      'Write a second function that adds a fixed shipping charge of 2 to totalPrice(price, quantity). Explain why it needs totalPrice to return its value rather than print it. This changed contract is self-reviewed, not checked by the original cases.',
+      'Write a second function that adds a fixed shipping charge of 2 to `totalPrice(price, quantity)`. Explain why it needs `totalPrice` to return its value rather than print it. This changed contract is self-reviewed, not checked by the original cases.',
   },
   'pass-or-retry': {
     reasoning:
-      'One comparison splits every score into two groups. Using >= puts the edge value 50 in the passing group, and the final return covers everything else.',
+      'One comparison splits every score into two groups. Using `>=` puts the edge value 50 in the passing group, and the final `return` covers everything else.',
     trace:
-      'For 50, 50 >= 50 is true, so the result is Pass. For 49, 49 >= 50 is false, so the if block is skipped and the final return gives Retry.',
+      'For 50, `50 >= 50` is `true`, so the result is `Pass`. For 49, `49 >= 50` is `false`, so the `if` block is skipped and the final `return` gives `Retry`.',
     alternative:
-      'An if with else makes both branches visible, while an early return needs no else. A conditional expression is shorter but harder to read while you are learning the boundary.',
-    counterexample: 'Writing score > 50 sends exactly 50 to Retry. The edge check at 50 exposes it, and the example 72 would not.',
+      'An `if` with `else` makes both branches visible, while an early `return` needs no `else`. A conditional expression is shorter but harder to read while you are learning the boundary.',
+    counterexample: 'Writing `score > 50` sends exactly 50 to `Retry`. The edge check at 50 exposes it, and the example 72 would not.',
     transfer: 'Change the rule so a score must be above 50 to pass, then name which check changes and what 50 returns.',
   },
   'use-conditions': {
@@ -237,18 +237,18 @@ export const foundationsDepth: Record<string, RepDepth> = {
               ['grade', 'D'],
             ],
           },
-          note: '60 is at least 60, so the grade is D. The lower edge belongs to D.',
+          note: '60 is at least 60, so the grade is `D`. The lower edge belongs to D.',
         },
       ],
     },
     reasoning:
       'Checking the invalid range first keeps out-of-range scores away from the grade bands. Each grade test assumes every higher band has already failed, so the order defines the boundaries.',
     trace:
-      'For the example 85, the range guard and the 90 test fail, and the 80 test passes, so the result is B. For 90 the A test passes first. For 89.9 the A test fails and the B test passes. For 59.9 every band test fails and the final return gives F. For 101 the range guard returns Invalid before any band is tested.',
+      'For the example 85, the range guard and the 90 test fail, and the 80 test passes, so the result is `B`. For 90 the A test passes first. For 89.9 the A test fails and the B test passes. For 59.9 every band test fails and the final `return` gives `F`. For 101 the range guard returns `Invalid` before any band is tested.',
     alternative:
-      'A table of score ranges is compact, but each inclusive or exclusive edge must be written correctly. Separate if statements make each boundary visible when you trace a value.',
+      'A table of score ranges is compact, but each inclusive or exclusive edge must be written correctly. Separate `if` statements make each boundary visible when you trace a value.',
     counterexample:
-      'Writing score > 90 for A sends exactly 90 to B, which breaks the contract. The boundary value is where this mistake appears.',
+      'Writing `score > 90` for A sends exactly 90 to B, which breaks the contract. The boundary value is where this mistake appears.',
     transfer: 'Add a plus band for 97 and above, and explain which branch must come first and what 96.5 returns.',
   },
   'loop-with-for': {
@@ -267,26 +267,26 @@ export const foundationsDepth: Record<string, RepDepth> = {
         {
           line: 1,
           vars: { n: 4 },
-          note: 'n is 4, so the loop counts from 1 up to 4. If n were 0, the loop would never run and the result would be 0.',
+          note: '`n` is 4, so the loop counts from 1 up to 4. If `n` were 0, the loop would never run and the result would be 0.',
         },
-        { line: 2, vars: { n: 4, total: 0, i: 1 }, note: 'i starts at 1. Since 1 is at most 4, the loop body runs.' },
+        { line: 2, vars: { n: 4, total: 0, i: 1 }, note: '`i` starts at 1. Since 1 is at most 4, the loop body runs.' },
         { line: 3, vars: { n: 4, total: 0, i: 1 }, note: 'Add 1: the total goes from 0 to 1.' },
-        { line: 2, vars: { n: 4, total: 1, i: 2 }, note: 'i is now 2. It is still at most 4, so the body runs again.' },
+        { line: 2, vars: { n: 4, total: 1, i: 2 }, note: '`i` is now 2. It is still at most 4, so the body runs again.' },
         { line: 3, vars: { n: 4, total: 1, i: 2 }, note: 'Add 2: the total goes from 1 to 3.' },
-        { line: 3, vars: { n: 4, total: 3, i: 3 }, note: 'i is now 3. Add 3: the total goes from 3 to 6.' },
-        { line: 3, vars: { n: 4, total: 6, i: 4 }, note: 'i is now 4. Add 4: the total goes from 6 to 10.' },
-        { line: 2, vars: { n: 4, total: 10, i: 5 }, note: 'i is 5, which is more than 4, so the loop stops.' },
+        { line: 3, vars: { n: 4, total: 3, i: 3 }, note: '`i` is now 3. Add 3: the total goes from 3 to 6.' },
+        { line: 3, vars: { n: 4, total: 6, i: 4 }, note: '`i` is now 4. Add 4: the total goes from 6 to 10.' },
+        { line: 2, vars: { n: 4, total: 10, i: 5 }, note: '`i` is 5, which is more than 4, so the loop stops.' },
         { line: 5, vars: { n: 4, total: 10, result: 10 }, note: 'Return the total, 10.' },
       ],
     },
     reasoning:
-      'The total is the sum of the values already visited. It starts at zero, so the empty range is correct, and each pass adds the next value until i passes n.',
+      'The total is the sum of the values already visited. It starts at zero, so the empty range is correct, and each pass adds the next value until `i` passes `n`.',
     trace:
-      'For n = 4 the total becomes 1, 3, 6, and 10 as i takes 1, 2, 3, and 4. For n = 0 the condition 1 <= 0 is false, so the loop never runs and 0 is returned.',
+      'For `n = 4` the total becomes 1, 3, 6, and 10 as `i` takes 1, 2, 3, and 4. For `n = 0` the condition `1 <= 0` is `false`, so the loop never runs and 0 is returned.',
     alternative:
-      'The formula n * (n + 1) / 2 returns the same result without visiting each value. The loop is easier to change when the rule adds only selected values.',
-    counterexample: 'Using i < n omits n. For n = 4 it returns 6 instead of 10.',
-    transfer: 'Sum only the odd numbers from 1 through n. Decide the starting value and the step size before you write the loop body.',
+      'The formula `n * (n + 1) / 2` returns the same result without visiting each value. The loop is easier to change when the rule adds only selected values.',
+    counterexample: 'Using `i < n` omits `n`. For `n = 4` it returns 6 instead of 10.',
+    transfer: 'Sum only the odd numbers from 1 through `n`. Decide the starting value and the step size before you write the loop body.',
   },
   'loop-while': {
     traceSteps: {
@@ -305,11 +305,11 @@ export const foundationsDepth: Record<string, RepDepth> = {
       steps: [
         { line: 1, vars: { n: 9 }, note: 'The starting number is 9. No halving has happened yet.' },
         { line: 3, vars: { value: 9, steps: 0 }, note: '9 is more than 1, so the loop body runs.' },
-        { line: 5, vars: { value: 4, steps: 0 }, note: '9 halved and rounded down is 4. Count this step: steps goes from 0 to 1.' },
+        { line: 5, vars: { value: 4, steps: 0 }, note: '9 halved and rounded down is 4. Count this step: `steps` goes from 0 to 1.' },
         { line: 3, vars: { value: 4, steps: 1 }, note: '4 is more than 1, so the loop runs again.' },
-        { line: 5, vars: { value: 2, steps: 1 }, note: '4 halved is 2. Count this step: steps goes from 1 to 2.' },
+        { line: 5, vars: { value: 2, steps: 1 }, note: '4 halved is 2. Count this step: `steps` goes from 1 to 2.' },
         { line: 3, vars: { value: 2, steps: 2 }, note: '2 is more than 1, so one more halving is needed.' },
-        { line: 5, vars: { value: 1, steps: 2 }, note: '2 halved is 1. Count this step: steps goes from 2 to 3.' },
+        { line: 5, vars: { value: 1, steps: 2 }, note: '2 halved is 1. Count this step: `steps` goes from 2 to 3.' },
         { line: 3, vars: { value: 1, steps: 3 }, note: '1 is not more than 1, so the loop stops.' },
         { line: 7, vars: { value: 1, steps: 3, result: 3 }, note: 'Return the step count, 3.' },
       ],
@@ -317,13 +317,13 @@ export const foundationsDepth: Record<string, RepDepth> = {
     reasoning:
       'The loop tests the current value before each halving. When the value reaches 1 no further halving is needed, so the count equals the number of halvings performed.',
     trace:
-      'Starting with 9, the value is greater than 1, so it becomes 4 and steps becomes 1. Then 4 becomes 2 and steps becomes 2. Then 2 becomes 1 and steps becomes 3. The value 1 fails the condition, so the result is 3.',
+      'Starting with 9, the value is greater than 1, so it becomes 4 and `steps` becomes 1. Then 4 becomes 2 and `steps` becomes 2. Then 2 becomes 1 and `steps` becomes 3. The value 1 fails the condition, so the result is 3.',
     alternative:
-      'A for loop with a manual break can work, but the while condition states the stopping rule directly. Bit operations count bit length, but they hide the halving rule this rep asks you to practice.',
+      'A `for` loop with a manual `break` can work, but the `while` condition states the stopping rule directly. Bit operations count bit length, but they hide the halving rule this rep asks you to practice.',
     counterexample:
-      'Using value / 2 without Math.floor gives 9 four steps: 4.5, 2.25, 1.125, and 0.5625. The value stays fractional, so the count is wrong.',
+      'Using `value / 2` without `Math.floor` gives 9 four steps: 4.5, 2.25, 1.125, and 0.5625. The value stays fractional, so the count is wrong.',
     transfer:
-      'Repeat the halving rule until the value is 0 instead. Explain why an input of 1 never reaches 0 under floor division, and what this means for the loop.',
+      'Repeat the halving rule until the value is 0 instead. Explain why an input of `-1` never reaches 0 under floor division, and what this means for the loop.',
   },
   'string-basics': {
     traceSteps: {
@@ -343,7 +343,7 @@ export const foundationsDepth: Record<string, RepDepth> = {
           line: 1,
           vars: {},
           structure: { kind: 'array', values: ['ada', '""', 'lovelace'] },
-          note: 'trim drops the leading space. split at each space gives three pieces: the two spaces between the words leave an empty piece, "".',
+          note: '`trim` drops the leading space. `split` at each space gives three pieces: the two spaces between the words leave an empty piece, `""`.',
         },
         {
           line: 2,
@@ -355,42 +355,42 @@ export const foundationsDepth: Record<string, RepDepth> = {
           line: 4,
           vars: { i: 0, result: 'A' },
           structure: { kind: 'array', values: ['ada', '""', 'lovelace'], pointers: { i: 0 } },
-          note: 'Piece 0 is ada. Its first character, uppercased, is A, so the result becomes A.',
+          note: 'Piece 0 is `ada`. Its first character, uppercased, is `A`, so the result becomes `A`.',
         },
         {
           line: 4,
           vars: { i: 1, result: 'A' },
           structure: { kind: 'array', values: ['ada', '""', 'lovelace'], pointers: { i: 1 }, dimmed: [0] },
-          note: 'Piece 1 is empty. slice(0, 1) gives empty text, so the result stays A and nothing breaks.',
+          note: 'Piece 1 is empty. `slice(0, 1)` gives empty text, so the result stays `A` and nothing breaks.',
         },
         {
           line: 4,
           vars: { i: 2, result: 'AL' },
           structure: { kind: 'array', values: ['ada', '""', 'lovelace'], pointers: { i: 2 }, dimmed: [0, 1] },
-          note: 'Piece 2 is lovelace. Its first character, uppercased, is L, so the result becomes AL.',
+          note: 'Piece 2 is `lovelace`. Its first character, uppercased, is `L`, so the result becomes `AL`.',
         },
         {
           line: 3,
           vars: { i: 3, result: 'AL' },
           structure: { kind: 'array', values: ['ada', '""', 'lovelace'], dimmed: [0, 1, 2] },
-          note: 'i is 3, which is not less than the 3 pieces, so the loop stops.',
+          note: '`i` is 3, which is not less than the 3 pieces, so the loop stops.',
         },
         {
           line: 6,
           vars: { result: 'AL' },
           structure: { kind: 'array', values: ['ada', '""', 'lovelace'], dimmed: [0, 1, 2] },
-          note: 'Return AL: the same answer as the example, even with the extra spaces.',
+          note: 'Return `AL`: the same answer as the example, even with the extra spaces.',
         },
       ],
     },
     reasoning:
-      'Splitting at single spaces can leave empty pieces, but slice(0, 1) turns each of them into empty text, so they add nothing. Only real words contribute a letter, and an empty or blank name gives an empty result without a special case.',
+      'Splitting at single spaces can leave empty pieces, but `slice(0, 1)` turns each of them into empty text, so they add nothing. Only real words contribute a letter, and an empty or blank name gives an empty result without a special case.',
     trace:
-      'For the example ada lovelace the pieces are ada and lovelace, giving A and then AL. For grace   hopper the pieces are grace, "", "", and hopper; the empty pieces add nothing, so the result is GH. For a name of only spaces, trim leaves "", which splits into one empty piece, so the result is empty.',
+      'For the example `ada lovelace` the pieces are `ada` and `lovelace`, giving `A` and then `AL`. For `grace   hopper` the pieces are `grace`, `""`, `""`, and `hopper`; the empty pieces add nothing, so the result is `GH`. For a name of only spaces, `trim` leaves `""`, which splits into one empty piece, so the result is empty.',
     alternative:
-      'Splitting on runs of spaces with split(/\\s+/) after trimming gives only real words, except that an empty name still gives one empty piece. A regular expression that matches the start of each word can collect initials in one step, but it is harder to trace.',
+      'Splitting on runs of spaces with `split(/\\s+/)` after trimming gives only real words, except that an empty name still gives one empty piece. A regular expression that matches the start of each word can collect initials in one step, but it is harder to trace.',
     counterexample:
-      'Reading word[0].toUpperCase() instead of slicing throws on an empty piece, because word[0] is undefined there: grace   hopper fails with an error. Joining the letters with a space returns A L instead of AL.',
+      'Reading `word[0].toUpperCase()` instead of slicing throws on an empty piece, because `word[0]` is `undefined` there: `grace   hopper` fails with an error. Joining the letters with a space returns `A L` instead of `AL`.',
     transfer:
       'Return the first letter of the first and last words only. Decide what a one-word name should return before you change the code. This changed contract is self-reviewed, not checked by the original cases.',
   },
@@ -417,7 +417,7 @@ export const foundationsDepth: Record<string, RepDepth> = {
               ['updated', 'not made yet'],
             ],
           },
-          note: 'The function receives the task and the requested value true. The task must look the same when the function returns.',
+          note: 'The function receives the task and the requested value `true`. The task must look the same when the function returns.',
         },
         {
           line: 2,
@@ -431,7 +431,7 @@ export const foundationsDepth: Record<string, RepDepth> = {
               ['updated.title', 'Write'],
             ],
           },
-          note: 'The spread starts a new object and copies the first field, title.',
+          note: 'The spread starts a new object and copies the first field, `title`.',
         },
         {
           line: 2,
@@ -446,7 +446,7 @@ export const foundationsDepth: Record<string, RepDepth> = {
               ['updated.done', false],
             ],
           },
-          note: 'It copies done as it is in the task: false for now.',
+          note: 'It copies `done` as it is in the task: `false` for now.',
         },
         {
           line: 2,
@@ -462,7 +462,7 @@ export const foundationsDepth: Record<string, RepDepth> = {
               ['updated.priority', 2],
             ],
           },
-          note: 'It copies priority. The new object now matches the task field for field.',
+          note: 'It copies `priority`. The new object now matches the task field for field.',
         },
         {
           line: 2,
@@ -478,7 +478,7 @@ export const foundationsDepth: Record<string, RepDepth> = {
               ['updated.priority', 2],
             ],
           },
-          note: 'done is listed after the spread, so it replaces the copied false with true. Only the new object changes.',
+          note: '`done` is listed after the spread, so it replaces the copied `false` with `true`. Only the new object changes.',
         },
         {
           line: 3,
@@ -494,18 +494,18 @@ export const foundationsDepth: Record<string, RepDepth> = {
               ['updated.priority', 2],
             ],
           },
-          note: 'Return the new object. The task still has done false, so the caller sees no surprise.',
+          note: 'Return the new object. The task still has `done` `false`, so the caller sees no surprise.',
         },
       ],
     },
     reasoning:
       'The caller keeps its original task. Returning a new object makes the change explicit, and code that still holds the old value sees no surprise.',
     trace:
-      "For { title: 'Write', done: false, priority: 2 } with done true, the spread copies title and priority, then done replaces false. The supplied object still has done false afterward.",
+      "For `{ title: 'Write', done: false, priority: 2 }` with `done` `true`, the spread copies `title` and `priority`, then `done` replaces `false`. The supplied object still has `done` `false` afterward.",
     alternative:
-      "Object.assign({}, task, { done }) gives the same result and is more verbose. Assigning task.done directly is shorter but changes the caller's object.",
+      "`Object.assign({}, task, { done })` gives the same result and is more verbose. Assigning `task.done` directly is shorter but changes the caller's object.",
     counterexample:
-      'task.done = done; return task returns the right value, but the supplied object changed, which the input check reports. { ...task, done: !task.done } flips the flag instead of setting it, so a task that is already done gets reopened.',
+      '`task.done = done; return task` returns the right value, but the supplied object changed, which the input check reports. `{ ...task, done: !task.done }` flips the flag instead of setting it, so a task that is already done gets reopened.',
     transfer:
       'Update one field inside a nested settings object. Explain why one spread is no longer enough and which nested objects must be copied.',
   },
@@ -531,7 +531,7 @@ export const foundationsDepth: Record<string, RepDepth> = {
           line: 4,
           vars: { total: 0, bulky: false },
           structure: { kind: 'array', values: ['300 g × 2', '150 g × 1'] },
-          note: 'The order has two lines, so it is not empty. The total starts at 0 grams and the bulky flag starts false.',
+          note: 'The order has two lines, so it is not empty. The total starts at 0 grams and the `bulky` flag starts `false`.',
         },
         {
           line: 6,
@@ -543,7 +543,7 @@ export const foundationsDepth: Record<string, RepDepth> = {
           line: 7,
           vars: { quantity: 2, bulky: false },
           structure: { kind: 'array', values: ['300 g × 2', '150 g × 1'], pointers: { line: 0 } },
-          note: 'A quantity of 2 is not above 10, so the flag stays false.',
+          note: 'A quantity of 2 is not above 10, so the flag stays `false`.',
         },
         {
           line: 6,
@@ -578,7 +578,7 @@ export const foundationsDepth: Record<string, RepDepth> = {
     alternative:
       'Adding the handling charge inside the loop is shorter to type but charges once per bulky line. Choosing the tier per line would price each line as its own shipment, which changes the contract.',
     counterexample:
-      'Returning 300 for an empty order treats no items as the lightest parcel. Testing total < 500 moves exactly 500 grams into the middle tier. Adding up the quantities of every line before comparing with 10 charges two lines of 6, though neither line is bulky on its own.',
+      'Returning 300 for an empty order treats no items as the lightest parcel. Testing `total < 500` moves exactly 500 grams into the middle tier. Adding up the quantities of every line before comparing with 10 charges two lines of 6, though neither line is bulky on its own.',
     transfer:
       'Add a surcharge for lines heavier than 1000 grams each, charged once per line. Decide whether the surcharge is per line or per order before coding. This changed contract is self-reviewed, not checked by the original cases.',
   },
@@ -601,7 +601,7 @@ export const foundationsDepth: Record<string, RepDepth> = {
           line: 2,
           vars: { value: 130 },
           structure: { kind: 'array', values: [] },
-          note: 'The first value is startSeconds, 130. It is 0 or more, so it gets a label.',
+          note: 'The first value is `startSeconds`, 130. It is 0 or more, so it gets a label.',
         },
         {
           line: 4,
@@ -613,19 +613,19 @@ export const foundationsDepth: Record<string, RepDepth> = {
           line: 5,
           vars: { value: 130, label: '2:10' },
           structure: { kind: 'array', values: ['2:10'] },
-          note: 'Minutes stay as they are; seconds are padded to two digits. The label is 2:10.',
+          note: 'Minutes stay as they are; seconds are padded to two digits. The label is `2:10`.',
         },
         {
           line: 5,
           vars: { value: 70, minutes: 1, seconds: 10, label: '1:10' },
           structure: { kind: 'array', values: ['2:10', '1:10'] },
-          note: 'Subtract 60: 70 is 1 minute and 10 seconds, so the label is 1:10.',
+          note: 'Subtract 60: 70 is 1 minute and 10 seconds, so the label is `1:10`.',
         },
         {
           line: 5,
           vars: { value: 10, minutes: 0, seconds: 10, label: '0:10' },
           structure: { kind: 'array', values: ['2:10', '1:10', '0:10'] },
-          note: 'Subtract 60 again: 10 is 0 minutes and 10 seconds. Minutes are not padded, so the label is 0:10.',
+          note: 'Subtract 60 again: 10 is 0 minutes and 10 seconds. Minutes are not padded, so the label is `0:10`.',
         },
         {
           line: 2,
@@ -644,13 +644,13 @@ export const foundationsDepth: Record<string, RepDepth> = {
     reasoning:
       'The value itself is the loop state. Looping while the value is at least zero means the last label is the last non-negative value the countdown reaches, and formatting is a separate step applied to each value.',
     trace:
-      'Start 130 with step 60: values 130, 70, 10 are labeled 2:10, 1:10, 0:10. The next value, -50, fails the test and stops the loop. Start 120 with step 60 reaches 0 exactly, so 0:00 appears.',
+      'Start 130 with step 60: values 130, 70, 10 are labeled `2:10`, `1:10`, `0:10`. The next value, -50, fails the test and stops the loop. Start 120 with step 60 reaches 0 exactly, so `0:00` appears.',
     alternative:
-      'Counting the number of labels first and then computing each value is also correct, but it adds a division that the countdown does not need. A while loop with the same condition reads the same way.',
+      'Counting the number of labels first and then computing each value is also correct, but it adds a division that the countdown does not need. A `while` loop with the same condition reads the same way.',
     counterexample:
-      'Using value > 0 drops the 0:00 label for starts that land exactly on zero. Padding minutes as well as seconds turns 2:10 into 02:10, which the format does not ask for.',
+      'Using `value > 0` drops the `0:00` label for starts that land exactly on zero. Padding minutes as well as seconds turns `2:10` into `02:10`, which the format does not ask for.',
     transfer:
-      'Count up from zero to a limit in steps and format each value as h:mm:ss. Decide the stop condition and how hours appear before coding. This changed contract is self-reviewed, not checked by the original cases.',
+      'Count up from zero to a limit in steps and format each value as `h:mm:ss`. Decide the stop condition and how hours appear before coding. This changed contract is self-reviewed, not checked by the original cases.',
   },
   'batch-slot-labels': {
     reasoning:
