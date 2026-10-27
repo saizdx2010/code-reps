@@ -249,8 +249,10 @@ export const coreDepth: Record<string, RepDepth> = {
     transfer: 'Return every unique character in original order. Keep the basic Latin assumption explicit.',
   },
   'balanced-brackets': {
-    reasoning: 'Nested structure must close the latest unmatched opening first.',
-    trace: 'For ([)], push (, push [, then ) expects ( but the top is [. Reject before reaching the final ].',
+    reasoning:
+      'Pairs can nest but not cross, so a closing bracket must close the latest bracket that is still open. A stack keeps the open brackets in order with the latest on top: push each opening bracket, and for each closing bracket pop the top and compare kinds. An empty stack at the end means nothing is left open.',
+    trace:
+      'In the example {[()]}, the stack grows to {, [, ( and then each closing bracket pops a match: ) takes (, ] takes [, and } takes {. The stack ends empty, so the result is true. In ([)], the ) pops [, a different kind, so the function returns false before reading the last ]. For ], pop on an empty stack gives undefined, which matches no opening bracket, so the result is false.',
     traceSteps: {
       code: [
         'function isBalanced(text: string): boolean {',
@@ -263,57 +265,64 @@ export const coreDepth: Record<string, RepDepth> = {
         '  return stack.length === 0',
         '}',
       ],
-      input: "text = '([)]'",
+      input: "text = '{[()]}'",
       steps: [
         {
           line: 1,
-          vars: { text: '([)]' },
+          vars: { text: '{[()]}' },
           structure: { kind: 'stack', values: [] },
-          note: 'Start with an empty stack for opening brackets that are still waiting for a closing bracket.',
+          note: 'Start with an empty stack for the opening brackets that are still waiting to be closed.',
         },
         {
-          line: 3,
-          vars: { character: '(' },
-          structure: { kind: 'stack', values: [] },
-          note: 'Read the first character, an opening bracket.',
-        },
-        { line: 4, vars: { character: '(' }, structure: { kind: 'stack', values: ['('] }, note: 'Save the opening bracket on the stack.' },
-        {
-          line: 3,
-          vars: { character: '[' },
-          structure: { kind: 'stack', values: ['('] },
-          note: 'Read the next character, another opening bracket.',
+          line: 4,
+          vars: { character: '{' },
+          structure: { kind: 'stack', values: ['{'] },
+          note: '{ is an opening bracket, so push it.',
         },
         {
           line: 4,
           vars: { character: '[' },
-          structure: { kind: 'stack', values: ['(', '['] },
-          note: 'The newer [ sits on top, so it must be closed before the (.',
+          structure: { kind: 'stack', values: ['{', '['] },
+          note: '[ opens inside {, so it goes on top. It must close before { can.',
         },
         {
-          line: 3,
-          vars: { character: ')' },
-          structure: { kind: 'stack', values: ['(', '['] },
-          note: 'Read ). It must match the most recent unmatched opening bracket.',
-        },
-        {
-          line: 5,
-          vars: { character: ')' },
-          structure: { kind: 'stack', values: ['('] },
-          note: 'Removing [ leaves ( on the stack. ) needs (, so the two do not match and the function rejects here.',
+          line: 4,
+          vars: { character: '(' },
+          structure: { kind: 'stack', values: ['{', '[', '('] },
+          note: '( opens inside [. It is now the latest open bracket, on top of the stack.',
         },
         {
           line: 5,
-          vars: { character: ')', result: false },
-          structure: { kind: 'stack', values: ['('] },
-          note: 'The function returns false before reading the final ]. Both bracket types appear twice, but the order is wrong.',
+          vars: { character: ')' },
+          structure: { kind: 'stack', values: ['{', '['] },
+          note: ') pops the top, (. They are the same kind, so the innermost pair is closed and [ is on top again.',
+        },
+        {
+          line: 5,
+          vars: { character: ']' },
+          structure: { kind: 'stack', values: ['{'] },
+          note: '] pops [, a match. Only { is still open.',
+        },
+        {
+          line: 5,
+          vars: { character: '}' },
+          structure: { kind: 'stack', values: [] },
+          note: '} pops {, the last open bracket. Every closing bracket matched the latest open one.',
+        },
+        {
+          line: 7,
+          vars: { result: true },
+          structure: { kind: 'stack', values: [] },
+          note: 'The text has ended and the stack is empty, so nothing is left open. Return true.',
         },
       ],
     },
     alternative:
-      'A stack handles several bracket types. A single counter suffices for one type but loses the opening type and nesting order here.',
-    counterexample: '([)] has matching counts for each type but is not balanced.',
-    transfer: 'Allow non-bracket text to be ignored. State that new rule and test a mixed-text expression.',
+      'One counter per kind of bracket checks the totals but not the order, so it accepts ([)]. Removing (), [], and {} from the text until nothing changes also works, but every pass rescans the text, which takes O(n²) time for deep nesting. The stack reads each character once: O(n) time and O(n) space.',
+    counterexample:
+      '([)] has two brackets of each kind, so any check that only counts accepts it. Skipping the comparison when the stack is empty accepts ]. Returning true without checking that the stack is empty at the end accepts ()[, whose [ is never closed.',
+    transfer:
+      'Allow other characters, such as letters and spaces, between the brackets and ignore them. State the new rule, then predict the result for f(a[0]) and for f(a[0)].',
   },
   'sum-positive-numbers': {
     traceSteps: {
@@ -790,23 +799,131 @@ export const coreDepth: Record<string, RepDepth> = {
     transfer: 'Now permit duplicate inputs. Explain why the sum argument no longer proves one missing value and define validation.',
   },
   'valid-parentheses': {
-    reasoning: 'Every prefix must have at least as many openings as closings, and the final balance must be zero.',
-    trace: 'For )(, the first close makes balance negative, so reject immediately even though the final counts match.',
-    alternative: 'A counter is enough for one bracket type; a stack uses more storage but generalizes to multiple types.',
-    counterexample: 'Checking only final balance incorrectly accepts )(.',
-    transfer: 'Extend to multiple bracket types. Explain exactly what information the counter loses.',
+    traceSteps: {
+      code: [
+        'function validParentheses(text: string): boolean {',
+        '  let open = 0',
+        '  for (const character of text) {',
+        "    open += character === '(' ? 1 : -1",
+        '    if (open < 0) return false',
+        '  }',
+        '  return open === 0',
+        '}',
+      ],
+      input: "text = '(())'",
+      steps: [
+        {
+          line: 1,
+          vars: { open: 0 },
+          structure: { kind: 'array', values: ['(', '(', ')', ')'] },
+          note: 'open counts the ( that are still waiting for a ). Nothing has been read, so it starts at 0.',
+        },
+        {
+          line: 3,
+          vars: { character: '(', open: 1 },
+          structure: { kind: 'array', values: ['(', '(', ')', ')'], pointers: { character: 0 } },
+          note: 'The first ( opens a pair: open is 1.',
+        },
+        {
+          line: 3,
+          vars: { character: '(', open: 2 },
+          structure: { kind: 'array', values: ['(', '(', ')', ')'], pointers: { character: 1 }, dimmed: [0] },
+          note: 'A second ( opens inside the first: open is 2.',
+        },
+        {
+          line: 4,
+          vars: { character: ')', open: 1 },
+          structure: { kind: 'array', values: ['(', '(', ')', ')'], pointers: { character: 2 }, dimmed: [0, 1] },
+          note: 'The first ) closes one of them: open is 1. It is not below 0, so the text is still valid so far.',
+        },
+        {
+          line: 4,
+          vars: { character: ')', open: 0 },
+          structure: { kind: 'array', values: ['(', '(', ')', ')'], pointers: { character: 3 }, dimmed: [0, 1, 2] },
+          note: 'The last ) closes the other: open is 0. The count never dropped below 0 on the way.',
+        },
+        {
+          line: 6,
+          vars: { open: 0, result: true },
+          structure: { kind: 'array', values: ['(', '(', ')', ')'], dimmed: [0, 1, 2, 3] },
+          note: 'The text has ended with open at 0, so every ( was closed. Return true.',
+        },
+      ],
+    },
+    reasoning:
+      'Reading left to right, open is the number of ( still waiting for a ). A ) is valid only when open is above 0, so a negative count means a ) closed nothing and the text can be rejected at once. When the loop ends, every ( must have been closed, so open must be 0. With one kind of bracket, the count is enough: any open ( can be closed by any ).',
+    trace:
+      'For the example (()), open goes 1, 2, 1, 0: it never drops below 0 and ends at 0, so the result is true. For ())((), open goes 1, 0, -1 at the third character, so the function returns false without reading the rest, even though the text has three of each. For ()(, open ends at 1, so one ( is still open and the result is false.',
+    alternative:
+      'A stack of the open ( gives the same answer, and it is what Check balanced brackets needs, where each closing bracket must match the kind on top. With one kind, every entry on the stack is the same, so only its length matters, and the count stores that length in constant space.',
+    counterexample:
+      'Comparing only the totals of ( and ) accepts )(. Checking the totals and that the text does not start with ) still accepts ())((), whose third character closes nothing. Returning true as soon as the count reaches 0 accepts ()(, whose last ( is never closed.',
+    transfer:
+      'Return the deepest nesting level instead of true or false: (()) is 2 and ()() is 1. Decide what text that is not valid, such as ())(, should return, and say why.',
   },
   'count-long-words': {
-    reasoning: 'The running count describes all qualifying words already visited.',
-    trace: 'For [a,code,longer] and minimum 4, counts are 0,1,2. Minimum zero includes even an empty word.',
+    traceSteps: {
+      code: [
+        'function countLongWords(words: string[], minimum: number): number {',
+        '  let count = 0',
+        '  for (const word of words) {',
+        '    if (word.length >= minimum) count++',
+        '  }',
+        '  return count',
+        '}',
+      ],
+      input: "words = ['cat', 'tiger', 'bear'], minimum = 4",
+      steps: [
+        {
+          line: 1,
+          vars: { minimum: 4, count: 0 },
+          structure: { kind: 'array', values: ['cat', 'tiger', 'bear'] },
+          note: 'No word has been checked yet, so the count starts at 0.',
+        },
+        {
+          line: 3,
+          vars: { word: 'cat', length: 3, count: 0 },
+          structure: { kind: 'array', values: ['cat', 'tiger', 'bear'], pointers: { word: 0 } },
+          note: 'cat has 3 characters, fewer than 4, so the count stays 0.',
+        },
+        {
+          line: 3,
+          vars: { word: 'tiger', length: 5, count: 1 },
+          structure: { kind: 'array', values: ['cat', 'tiger', 'bear'], pointers: { word: 1 }, dimmed: [0] },
+          note: 'tiger has 5 characters, more than 4: the count is 1.',
+        },
+        {
+          line: 3,
+          vars: { word: 'bear', length: 4, count: 2 },
+          structure: { kind: 'array', values: ['cat', 'tiger', 'bear'], pointers: { word: 2 }, dimmed: [0, 1] },
+          note: 'bear has exactly 4. At least includes the minimum itself, so the count is 2.',
+        },
+        {
+          line: 2,
+          vars: { count: 2 },
+          structure: { kind: 'array', values: ['cat', 'tiger', 'bear'], dimmed: [0, 1, 2] },
+          note: 'Every word has been checked, so the loop ends. A count depends on the whole array, so nothing returns early.',
+        },
+        {
+          line: 5,
+          vars: { count: 2, result: 2 },
+          structure: { kind: 'array', values: ['cat', 'tiger', 'bear'], dimmed: [0, 1, 2] },
+          note: 'Return 2: tiger and bear.',
+        },
+      ],
+    },
+    reasoning:
+      'After each word, count is the number of long words among the words already visited. It starts at 0, which is already the answer for an empty array, and grows only when a word reaches the minimum. Unlike Find the first long word, the answer depends on every word, so the loop cannot stop early.',
+    trace:
+      "For the example, cat (3) is too short, tiger (5) counts, and bear (4) counts because at least includes 4 itself, so the result is 2. In ['a b', ' hi', 'no'] with a minimum of 3, a b and the space before hi both count as characters, so two words have 3 and the result is 2. A minimum of 0 counts every word, even an empty one.",
     alternative:
-      'A loop needs constant storage; filter allocates matches. Reading basic Latin string length is not a general grapheme count.',
-    counterexample: 'Using > excludes a word exactly at the minimum.',
-    transfer: 'Count matching records with two conditions. Write an invariant that includes both requirements.',
+      'words.filter(word => word.length >= minimum).length gives the same count in one line, but it builds an array of the matches first. The loop keeps only the count: O(n) time and O(1) extra space.',
+    counterexample:
+      "Using > drops bear from the example and returns 1. Trimming each word first gives ' hi' a length of 2, so the spaces check returns 1 instead of 2. Counting distinct words with a Set counts ['hi', 'hi'] once.",
+    transfer:
+      'Count the words whose length is between two limits, inclusive at both ends. Decide what to return when the lower limit is above the upper one, and say why.',
   },
   'first-repeated-number': {
-    reasoning: 'The earliest second occurrence determines the result, not the earliest first occurrence.',
-    trace: 'For [8,3,3,8], seen grows to {8,3}; the next 3 repeats before the final 8, so return 3.',
     traceSteps: {
       code: [
         'function firstRepeated(numbers: number[]): number | null {',
@@ -819,72 +936,62 @@ export const coreDepth: Record<string, RepDepth> = {
         '  return null',
         '}',
       ],
-      input: 'numbers = [8, 3, 3, 8]',
+      input: 'numbers = [6, 1, 9, 1, 6]',
       steps: [
         {
           line: 1,
           vars: { seen: '{}' },
-          structure: { kind: 'array', values: [8, 3, 3, 8], pointers: { current: 0 } },
-          note: 'Start with an empty Set and the first position.',
-        },
-        {
-          line: 2,
-          vars: { index: 0, seen: '{}' },
-          structure: { kind: 'array', values: [8, 3, 3, 8], pointers: { current: 0 } },
-          note: 'Move to the first position.',
-        },
-        {
-          line: 3,
-          vars: { index: 0, value: 8, seen: '{}' },
-          structure: { kind: 'array', values: [8, 3, 3, 8], pointers: { current: 0 } },
-          note: 'The value is 8. The Set is empty, so it is not a repeat.',
-        },
-        {
-          line: 5,
-          vars: { index: 0, value: 8, seen: '{8}' },
-          structure: { kind: 'array', values: [8, 3, 3, 8], pointers: { current: 0 } },
-          note: 'Remember 8 for the positions after it.',
-        },
-        {
-          line: 2,
-          vars: { index: 1, seen: '{8}' },
-          structure: { kind: 'array', values: [8, 3, 3, 8], pointers: { current: 1 }, dimmed: [0] },
-          note: 'Move to the second position.',
-        },
-        {
-          line: 3,
-          vars: { index: 1, value: 3, seen: '{8}' },
-          structure: { kind: 'array', values: [8, 3, 3, 8], pointers: { current: 1 }, dimmed: [0] },
-          note: 'The value is 3. It is not in the Set yet, so it is not a repeat.',
-        },
-        {
-          line: 5,
-          vars: { index: 1, value: 3, seen: '{8, 3}' },
-          structure: { kind: 'array', values: [8, 3, 3, 8], pointers: { current: 1 }, dimmed: [0] },
-          note: 'Remember 3.',
-        },
-        {
-          line: 2,
-          vars: { index: 2, seen: '{8, 3}' },
-          structure: { kind: 'array', values: [8, 3, 3, 8], pointers: { current: 2 }, dimmed: [0, 1] },
-          note: 'Move to the third position.',
+          structure: { kind: 'array', values: [6, 1, 9, 1, 6] },
+          note: 'Start with an empty Set of the numbers already passed.',
         },
         {
           line: 4,
-          vars: { index: 2, value: 3, seen: '{8, 3}', result: 3 },
-          structure: { kind: 'array', values: [8, 3, 3, 8], pointers: { current: 2 }, dimmed: [0, 1] },
-          note: '3 is already in the Set, so this is its second occurrence. The later 8 is never reached because the function has returned 3.',
+          vars: { index: 0, value: 6, seen: '{}' },
+          structure: { kind: 'array', values: [6, 1, 9, 1, 6], pointers: { index: 0 } },
+          note: 'The value is 6. The Set is empty, so 6 has not been seen before.',
+        },
+        {
+          line: 5,
+          vars: { index: 0, value: 6, seen: '{6}' },
+          structure: { kind: 'array', values: [6, 1, 9, 1, 6], pointers: { index: 0 } },
+          note: 'Remember 6, after the check, so that its own first occurrence is not mistaken for a repeat.',
+        },
+        {
+          line: 5,
+          vars: { index: 1, value: 1, seen: '{6, 1}' },
+          structure: { kind: 'array', values: [6, 1, 9, 1, 6], pointers: { index: 1 }, dimmed: [0] },
+          note: '1 is not in the Set, so it is not a repeat. Remember it.',
+        },
+        {
+          line: 5,
+          vars: { index: 2, value: 9, seen: '{6, 1, 9}' },
+          structure: { kind: 'array', values: [6, 1, 9, 1, 6], pointers: { index: 2 }, dimmed: [0, 1] },
+          note: '9 is new as well. Remember it.',
+        },
+        {
+          line: 4,
+          vars: { index: 3, value: 1, seen: '{6, 1, 9}', result: 1 },
+          structure: { kind: 'array', values: [6, 1, 9, 1, 6], pointers: { index: 3 }, dimmed: [0, 1, 2] },
+          note: '1 is already in the Set, so this is its second occurrence. Return 1. The second 6, at index 4, is never read.',
         },
       ],
     },
+    reasoning:
+      'A number is known to repeat only at its second occurrence, so reading left to right and stopping at the first number already seen returns the earliest second occurrence. Checking before adding matters: after adding, the current number is always in the Set. Returning at once also leaves the rest of the array unread.',
+    trace:
+      'In the example [6, 1, 9, 1, 6], the Set grows to {6, 1, 9}. At index 3, 1 is already in the Set, so the function returns 1, and the second 6 is never reached. For [0, 1, 0], has(0) is true at index 2, so 0 is returned. For [1, 2, 3], no number is found and the loop ends with null.',
     alternative:
-      'A Set scan can stop immediately. Computing frequencies then taking the first duplicated value selects a different notion of first.',
-    counterexample: 'The frequency-first approach returns 8 on [8,3,3,8], violating second-occurrence ordering.',
-    transfer: 'Return the index of the first repeated occurrence instead of its value.',
+      'Counting every number first and then taking the first one with a count of 2 answers a different question: for the example it returns 6, the number that appeared first. Comparing each number with all earlier ones finds the right answer without a Set, but takes O(n²) time. The Set scan takes O(n) expected time and O(n) space, and stops early.',
+    counterexample:
+      'Counting first, or numbers.find with indexOf !== lastIndexOf, returns 6 for the example. Storing each number in an object as seen[n] = n and testing if (seen[n]) misses a repeated 0, so [0, 1, 0] returns null. Comparing only neighbors misses the example, where the two 1s are not next to each other.',
+    transfer:
+      'Return the index of the second occurrence instead of the number: 3 for the example. Decide what to return when nothing repeats, and say why null or -1 fits better.',
   },
   'remove-adjacent-pairs': {
-    reasoning: 'The stack holds the reduced visited prefix, so its top is the only possible match for the next character.',
-    trace: 'For abba, save a, save b, remove b on the next b, then remove a. The result is empty.',
+    reasoning:
+      'The stack holds the text reduced so far, so its top is the only character the next one can pair with. A match pops the top, which can uncover an earlier character for the next one to meet; anything else is pushed. Each character is pushed or pops once, so one pass handles every chain of removals.',
+    trace:
+      'For the example abbaca, the stack goes a, ab, a, empty, c, ca: the second b removes b, the next a meets the a that this uncovered, and c and a are kept, so the result is ca. For aaa, the second a removes the first and the third is kept, so the result is a. For aA, the two characters differ, so both stay.',
     traceSteps: {
       code: [
         'function removePairs(text: string): string {',
@@ -896,56 +1003,64 @@ export const coreDepth: Record<string, RepDepth> = {
         "  return stack.join('')",
         '}',
       ],
-      input: "text = 'abba'",
+      input: "text = 'abbaca'",
       steps: [
         {
           line: 1,
-          vars: { text: 'abba' },
+          vars: { text: 'abbaca' },
           structure: { kind: 'stack', values: [] },
-          note: 'Start with an empty stack of characters that have not been removed.',
-        },
-        {
-          line: 2,
-          vars: { character: 'a' },
-          structure: { kind: 'stack', values: [] },
-          note: 'Read the first a. Nothing is saved yet, so it cannot pair with anything.',
+          note: 'Start with an empty stack of the characters kept so far.',
         },
         {
           line: 4,
           vars: { character: 'a' },
           structure: { kind: 'stack', values: ['a'] },
-          note: 'Save a. The stack now has one saved character.',
+          note: 'Nothing is kept yet, so a cannot pair with anything. Keep it.',
+        },
+        {
+          line: 4,
+          vars: { character: 'b' },
+          structure: { kind: 'stack', values: ['a', 'b'] },
+          note: 'b differs from the top, a, so keep it on top.',
         },
         {
           line: 3,
           vars: { character: 'b' },
           structure: { kind: 'stack', values: ['a'] },
-          note: 'Compare the next b with the top, a. They differ, so b is not removed.',
-        },
-        { line: 4, vars: { character: 'b' }, structure: { kind: 'stack', values: ['a', 'b'] }, note: 'Save b above a.' },
-        {
-          line: 3,
-          vars: { character: 'b' },
-          structure: { kind: 'stack', values: ['a'] },
-          note: 'The second b matches the saved top b, so both are removed. a is on top again.',
+          note: 'This b equals the top b, so the pair is removed. a is on top again.',
         },
         {
           line: 3,
           vars: { character: 'a' },
           structure: { kind: 'stack', values: [] },
-          note: 'The last a matches the saved a, so that pair is removed too.',
+          note: 'The next a equals the a that removing bb uncovered, so that pair goes too.',
+        },
+        {
+          line: 4,
+          vars: { character: 'c' },
+          structure: { kind: 'stack', values: ['c'] },
+          note: 'The stack is empty, so c is kept.',
+        },
+        {
+          line: 4,
+          vars: { character: 'a' },
+          structure: { kind: 'stack', values: ['c', 'a'] },
+          note: 'a differs from the top, c, so it is kept as well.',
         },
         {
           line: 6,
-          vars: { result: '' },
-          structure: { kind: 'stack', values: [] },
-          note: 'Nothing remains, so the function returns an empty string.',
+          vars: { result: 'ca' },
+          structure: { kind: 'stack', values: ['c', 'a'] },
+          note: 'Join the kept characters from the bottom up, in their original order: ca.',
         },
       ],
     },
-    alternative: 'Repeated replacement is intuitive but can rescan the string many times; a stack processes each character once.',
-    counterexample: 'One replacement pass can leave aa after removing bb from abba, even though another pair must vanish.',
-    transfer: 'Explain the same process for numeric IDs, including zero and negative IDs.',
+    alternative:
+      'Replacing pairs with a regular expression until the text stops changing gives the same result, but each pass rescans the whole text, which can take O(n²) time. The stack takes O(n) time and O(n) space. A string used as the stack also works, though each removal copies the text.',
+    counterexample:
+      "One pass of replace(/(.)\\1/g, '') turns abbaca into aaca and stops there. Removing whole runs of equal characters turns aaa into empty text instead of a. Comparing each character with the one before it in the input, instead of the kept top, leaves aa for abba.",
+    transfer:
+      'Remove a pair only when a lowercase letter meets the same letter in uppercase, as in aA, so aa stays. Predict the result for abBA, then say what the stack compares at each step.',
   },
   'repair-visible-count': {
     reasoning: 'A minimal repair should align the condition with the contract while preserving the working scan.',

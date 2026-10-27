@@ -281,3 +281,207 @@ test('Foundations stage 5 checks reject plausible wrong answers', () => {
     ],
   ])
 })
+
+test('Foundations stage 6 checks reject plausible wrong answers', () => {
+  assertMutantsFail([
+    // Compares only the totals of ( and ).
+    [
+      'valid-parentheses',
+      "function validParentheses(text: string) { let open = 0; for (const c of text) open += c === '(' ? 1 : -1; return open === 0 }",
+    ],
+    // Compares the totals and only rejects a text that starts with ).
+    [
+      'valid-parentheses',
+      "function validParentheses(text: string) { let open = 0; for (const c of text) open += c === '(' ? 1 : -1; return open === 0 && text[0] !== ')' }",
+    ],
+    // Never lets the count go below 0 but forgets that it must end at 0.
+    [
+      'valid-parentheses',
+      "function validParentheses(text: string) { let open = 0; for (const c of text) { open += c === '(' ? 1 : -1; if (open < 0) return false } return true }",
+    ],
+    // Returns true as soon as the count is back to 0.
+    [
+      'valid-parentheses',
+      "function validParentheses(text: string) { let open = 0; for (const c of text) { open += c === '(' ? 1 : -1; if (open < 0) return false; if (open === 0) return true } return open === 0 }",
+    ],
+    // Uses one stack for every kind, so a ) can close a [.
+    [
+      'balanced-brackets',
+      "function isBalanced(text: string) { const stack: string[] = []; for (const c of text) { if ('([{'.includes(c)) stack.push(c); else if (stack.pop() === undefined) return false } return stack.length === 0 }",
+    ],
+    // Forgets to check that nothing is left open at the end.
+    [
+      'balanced-brackets',
+      "function isBalanced(text: string) { const pairs: Record<string, string> = { ')': '(', ']': '[', '}': '{' }; const stack: string[] = []; for (const c of text) { if ('([{'.includes(c)) stack.push(c); else if (stack.pop() !== pairs[c]) return false } return true }",
+    ],
+    // Skips the comparison when the stack is empty.
+    [
+      'balanced-brackets',
+      "function isBalanced(text: string) { const pairs: Record<string, string> = { ')': '(', ']': '[', '}': '{' }; const stack: string[] = []; for (const c of text) { if ('([{'.includes(c)) stack.push(c); else if (stack.length > 0 && stack.pop() !== pairs[c]) return false } return stack.length === 0 }",
+    ],
+    // Returns true as soon as the stack is empty again.
+    [
+      'balanced-brackets',
+      "function isBalanced(text: string) { const pairs: Record<string, string> = { ')': '(', ']': '[', '}': '{' }; const stack: string[] = []; for (const c of text) { if ('([{'.includes(c)) stack.push(c); else { if (stack.pop() !== pairs[c]) return false; if (stack.length === 0) return true } } return stack.length === 0 }",
+    ],
+    // Compares the text with its mirror image, which rejects pairs side by side.
+    [
+      'balanced-brackets',
+      "function isBalanced(text: string) { const pairs: Record<string, string> = { '(': ')', '[': ']', '{': '}' }; for (let i = 0; i < text.length / 2; i++) if (pairs[text[i]] !== text[text.length - 1 - i]) return false; return text.length % 2 === 0 }",
+    ],
+    // Removes (), [], and {} once each, in that order, instead of until nothing changes.
+    [
+      'balanced-brackets',
+      "function isBalanced(text: string) { return text.replaceAll('()', '').replaceAll('[]', '').replaceAll('{}', '') === '' }",
+    ],
+  ])
+})
+
+test('Foundations stage 7 checks reject plausible wrong answers', () => {
+  const shipping = (weigh, bulky, tier = 'total <= 500 ? 300 : total <= 2000 ? 600 : 1200') =>
+    `type Line = { weightGrams: number; quantity: number }; function shippingCost(lines: Line[]) { if (lines.length === 0) return 0; let total = 0; let items = 0; let bulky = false; for (const line of lines) { ${weigh}; items += line.quantity; ${bulky} } const base = ${tier}; return bulky ? base + 200 : base }`
+  assertMutantsFail([
+    // Adds the quantities of every line before comparing with 10.
+    ['shipping-cost-tiers', shipping('total += line.weightGrams * line.quantity', 'if (items > 10) bulky = true')],
+    // Adds each line's weight once, ignoring its quantity.
+    ['shipping-cost-tiers', shipping('total += line.weightGrams', 'if (line.quantity > 10) bulky = true')],
+    // Keeps exactly 2000 grams out of the middle tier.
+    [
+      'shipping-cost-tiers',
+      shipping(
+        'total += line.weightGrams * line.quantity',
+        'if (line.quantity > 10) bulky = true',
+        'total <= 500 ? 300 : total < 2000 ? 600 : 1200',
+      ),
+    ],
+    // Adds the handling charge once for every bulky line.
+    [
+      'shipping-cost-tiers',
+      'type Line = { weightGrams: number; quantity: number }; function shippingCost(lines: Line[]) { if (lines.length === 0) return 0; let total = 0; let fees = 0; for (const line of lines) { total += line.weightGrams * line.quantity; if (line.quantity > 10) fees += 200 } return (total <= 500 ? 300 : total <= 2000 ? 600 : 1200) + fees }',
+    ],
+    // Prices every line as its own shipment and adds the prices.
+    [
+      'shipping-cost-tiers',
+      'type Line = { weightGrams: number; quantity: number }; function shippingCost(lines: Line[]) { let cost = 0; let bulky = false; for (const line of lines) { const weight = line.weightGrams * line.quantity; cost += weight <= 500 ? 300 : weight <= 2000 ? 600 : 1200; if (line.quantity > 10) bulky = true } return bulky ? cost + 200 : cost }',
+    ],
+    // Stores each line's weight back into the caller's line.
+    [
+      'shipping-cost-tiers',
+      shipping('line.weightGrams *= line.quantity; total += line.weightGrams', 'if (line.quantity > 10) bulky = true'),
+    ],
+  ])
+})
+
+test('Foundations stage 8 checks reject plausible wrong answers', () => {
+  const countdown = (format, loop = 'let value = startSeconds; value >= 0; value -= stepSeconds') =>
+    `function countdownLabels(startSeconds: number, stepSeconds: number) { const labels: string[] = []; const pad = (n: number) => String(n).padStart(2, '0'); for (${loop}) labels.push(${format}); return labels }`
+  assertMutantsFail([
+    // Leaves out a word of exactly the minimum length.
+    [
+      'count-long-words',
+      'function countLongWords(words: string[], minimum: number) { let count = 0; for (const word of words) if (word.length > minimum) count++; return count }',
+    ],
+    // Trims each word before measuring it.
+    [
+      'count-long-words',
+      'function countLongWords(words: string[], minimum: number) { let count = 0; for (const word of words) if (word.trim().length >= minimum) count++; return count }',
+    ],
+    // Counts each distinct word once.
+    [
+      'count-long-words',
+      'function countLongWords(words: string[], minimum: number) { let count = 0; for (const word of new Set(words)) if (word.length >= minimum) count++; return count }',
+    ],
+    // Skips empty words, even when the minimum is 0.
+    [
+      'count-long-words',
+      'function countLongWords(words: string[], minimum: number) { let count = 0; for (const word of words) if (word && word.length >= minimum) count++; return count }',
+    ],
+    // Joins the words and splits at whitespace, as for counting words in text.
+    [
+      'count-long-words',
+      'function countLongWords(words: string[], minimum: number) { return words.join(" ").split(/\\s+/).filter(word => word.length >= minimum).length }',
+    ],
+    // Counts every word from the first long one onward.
+    [
+      'count-long-words',
+      'function countLongWords(words: string[], minimum: number) { const first = words.findIndex(word => word.length >= minimum); return first === -1 ? 0 : words.length - first }',
+    ],
+    // Takes words off the caller's array while counting.
+    [
+      'count-long-words',
+      'function countLongWords(words: string[], minimum: number) { let count = 0; while (words.length > 0) if (words.pop()!.length >= minimum) count++; return count }',
+    ],
+    // Counts first, then returns the first number in the array that appears twice.
+    [
+      'first-repeated-number',
+      'function firstRepeated(numbers: number[]) { const counts = new Map<number, number>(); for (const n of numbers) counts.set(n, (counts.get(n) ?? 0) + 1); for (const n of numbers) if (counts.get(n)! > 1) return n; return null }',
+    ],
+    // Returns the first number that appears again anywhere later.
+    [
+      'first-repeated-number',
+      'function firstRepeated(numbers: number[]) { return numbers.find(n => numbers.indexOf(n) !== numbers.lastIndexOf(n)) ?? null }',
+    ],
+    // Compares each number only with its neighbor.
+    [
+      'first-repeated-number',
+      'function firstRepeated(numbers: number[]) { for (let i = 1; i < numbers.length; i++) if (numbers[i] === numbers[i - 1]) return numbers[i]; return null }',
+    ],
+    // Marks seen numbers with their own value, so a repeated 0 looks unseen.
+    [
+      'first-repeated-number',
+      'function firstRepeated(numbers: number[]) { const seen: Record<number, number> = {}; for (const n of numbers) { if (seen[n]) return n; seen[n] = n } return null }',
+    ],
+    // Sorts a copy and returns the first equal neighbors.
+    [
+      'first-repeated-number',
+      'function firstRepeated(numbers: number[]) { const sorted = [...numbers].sort((a, b) => a - b); for (let i = 1; i < sorted.length; i++) if (sorted[i] === sorted[i - 1]) return sorted[i]; return null }',
+    ],
+    // Takes numbers off the front of the caller's array.
+    [
+      'first-repeated-number',
+      'function firstRepeated(numbers: number[]) { const seen = new Set<number>(); while (numbers.length > 0) { const n = numbers.shift()!; if (seen.has(n)) return n; seen.add(n) } return null }',
+    ],
+    // Removes pairs in one pass, so a pair created by a removal stays.
+    ['remove-adjacent-pairs', "function removePairs(text: string) { return text.replace(/(.)\\1/g, '') }"],
+    // Removes whole runs of equal characters until nothing changes.
+    [
+      'remove-adjacent-pairs',
+      "function removePairs(text: string) { let before = ''; while (before !== text) { before = text; text = text.replace(/(.)\\1+/g, '') } return text }",
+    ],
+    // Compares each character with the one before it in the input, not the kept top.
+    [
+      'remove-adjacent-pairs',
+      "function removePairs(text: string) { const kept: string[] = []; for (let i = 0; i < text.length; i++) { if (i > 0 && text[i] === text[i - 1]) kept.pop(); else kept.push(text[i]) } return kept.join('') }",
+    ],
+    // Ignores letter case.
+    [
+      'remove-adjacent-pairs',
+      "function removePairs(text: string) { const kept: string[] = []; for (const c of text) { if (kept.length > 0 && kept[kept.length - 1].toLowerCase() === c.toLowerCase()) kept.pop(); else kept.push(c) } return kept.join('') }",
+    ],
+    // Pads the minutes as well as the seconds.
+    ['countdown-labels', countdown('`${pad(Math.floor(value / 60))}:${pad(value % 60)}`')],
+    // Checks the next value before labeling, so the last label is lost.
+    [
+      'countdown-labels',
+      countdown(
+        '`${Math.floor(value / 60)}:${pad(value % 60)}`',
+        'let value = startSeconds; value - stepSeconds >= 0; value -= stepSeconds',
+      ),
+    ],
+    // Counts up to the start instead of down from it.
+    [
+      'countdown-labels',
+      countdown(
+        '`${Math.floor(value / 60)}:${pad(value % 60)}`',
+        'let value = startSeconds % stepSeconds; value <= startSeconds; value += stepSeconds',
+      ),
+    ],
+    // Writes an hour once the countdown reaches 3600 seconds.
+    [
+      'countdown-labels',
+      countdown(
+        'value >= 3600 ? `${Math.floor(value / 3600)}:${pad(Math.floor((value % 3600) / 60))}:${pad(value % 60)}` : `${Math.floor(value / 60)}:${pad(value % 60)}`',
+      ),
+    ],
+  ])
+})

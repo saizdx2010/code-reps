@@ -510,18 +510,137 @@ export const foundationsDepth: Record<string, RepDepth> = {
       'Update one field inside a nested settings object. Explain why one spread is no longer enough and which nested objects must be copied.',
   },
   'shipping-cost-tiers': {
+    traceSteps: {
+      code: [
+        'type Line = { weightGrams: number; quantity: number }',
+        'function shippingCost(lines: Line[]): number {',
+        '  if (lines.length === 0) return 0',
+        '  let total = 0',
+        '  let bulky = false',
+        '  for (const line of lines) {',
+        '    total += line.weightGrams * line.quantity',
+        '    if (line.quantity > 10) bulky = true',
+        '  }',
+        '  const base = total <= 500 ? 300 : total <= 2000 ? 600 : 1200',
+        '  return bulky ? base + 200 : base',
+        '}',
+      ],
+      input: 'lines = [{ weightGrams: 300, quantity: 2 }, { weightGrams: 150, quantity: 1 }]',
+      steps: [
+        {
+          line: 4,
+          vars: { total: 0, bulky: false },
+          structure: { kind: 'array', values: ['300 g × 2', '150 g × 1'] },
+          note: 'The order has two lines, so it is not empty. The total starts at 0 grams and the bulky flag starts false.',
+        },
+        {
+          line: 6,
+          vars: { total: 600, bulky: false },
+          structure: { kind: 'array', values: ['300 g × 2', '150 g × 1'], pointers: { line: 0 } },
+          note: '300 grams times a quantity of 2 adds 600 grams.',
+        },
+        {
+          line: 7,
+          vars: { quantity: 2, bulky: false },
+          structure: { kind: 'array', values: ['300 g × 2', '150 g × 1'], pointers: { line: 0 } },
+          note: 'A quantity of 2 is not above 10, so the flag stays false.',
+        },
+        {
+          line: 6,
+          vars: { total: 750, bulky: false },
+          structure: { kind: 'array', values: ['300 g × 2', '150 g × 1'], pointers: { line: 1 }, dimmed: [0] },
+          note: '150 grams times 1 adds 150, so the total is 750 grams.',
+        },
+        {
+          line: 7,
+          vars: { quantity: 1, bulky: false },
+          structure: { kind: 'array', values: ['300 g × 2', '150 g × 1'], pointers: { line: 1 }, dimmed: [0] },
+          note: 'A quantity of 1 is not bulky either. Both facts are now known for the whole order.',
+        },
+        {
+          line: 9,
+          vars: { total: 750, base: 600 },
+          structure: { kind: 'array', values: ['300 g × 2', '150 g × 1'], dimmed: [0, 1] },
+          note: '750 is above 500 and at most 2000, so the middle tier applies: 600 cents.',
+        },
+        {
+          line: 10,
+          vars: { base: 600, bulky: false, result: 600 },
+          structure: { kind: 'array', values: ['300 g × 2', '150 g × 1'], dimmed: [0, 1] },
+          note: 'No line was bulky, so no handling charge is added. Return 600.',
+        },
+      ],
+    },
     reasoning:
       'The loop only gathers two facts, the total weight and whether any line is bulky. The tier is chosen once from the total, and the handling charge is added once from the flag, so each fact is decided after the loop has seen every line.',
     trace:
-      'Lines 1000g x 3 and 5g x 11: total is 3000 + 55 = 3055, which is above 2000, so the base is 1200. The second line has quantity 11, so bulky is true and 200 is added once for a total of 1400. A second bulky line in the same order would not add another 200.',
+      'In the example, 300 × 2 + 150 × 1 = 750 grams, which is above 500 and at most 2000, so the base is 600; neither quantity is above 10, so the cost is 600. Exactly 500 grams, as in 100 × 1 + 200 × 2, stays at 300 because the light tier includes its edge. Lines 1000g x 3 and 5g x 11 total 3055 grams, so the base is 1200, and the second line is bulky, so 200 is added once for 1400.',
     alternative:
       'Adding the handling charge inside the loop is shorter to type but charges once per bulky line. Choosing the tier per line would price each line as its own shipment, which changes the contract.',
     counterexample:
-      'Returning 300 for an empty order because the total is zero treats no items as the lightest parcel. Checking the lower edge with 500 > total instead of total <= 500 shifts the boundary for exactly 500 grams.',
+      'Returning 300 for an empty order treats no items as the lightest parcel. Testing total < 500 moves exactly 500 grams into the middle tier. Adding up the quantities of every line before comparing with 10 charges two lines of 6, though neither line is bulky on its own.',
     transfer:
       'Add a surcharge for lines heavier than 1000 grams each, charged once per line. Decide whether the surcharge is per line or per order before coding. This changed contract is self-reviewed, not checked by the original cases.',
   },
   'countdown-labels': {
+    traceSteps: {
+      code: [
+        'function countdownLabels(startSeconds: number, stepSeconds: number): string[] {',
+        '  const labels: string[] = []',
+        '  for (let value = startSeconds; value >= 0; value -= stepSeconds) {',
+        '    const minutes = Math.floor(value / 60)',
+        '    const seconds = value % 60',
+        "    labels.push(`${minutes}:${String(seconds).padStart(2, '0')}`)",
+        '  }',
+        '  return labels',
+        '}',
+      ],
+      input: 'startSeconds = 130, stepSeconds = 60',
+      steps: [
+        {
+          line: 2,
+          vars: { value: 130 },
+          structure: { kind: 'array', values: [] },
+          note: 'The first value is startSeconds, 130. It is 0 or more, so it gets a label.',
+        },
+        {
+          line: 4,
+          vars: { value: 130, minutes: 2, seconds: 10 },
+          structure: { kind: 'array', values: [] },
+          note: '130 is 2 whole minutes (120 seconds) with 10 seconds left over.',
+        },
+        {
+          line: 5,
+          vars: { value: 130, label: '2:10' },
+          structure: { kind: 'array', values: ['2:10'] },
+          note: 'Minutes stay as they are; seconds are padded to two digits. The label is 2:10.',
+        },
+        {
+          line: 5,
+          vars: { value: 70, minutes: 1, seconds: 10, label: '1:10' },
+          structure: { kind: 'array', values: ['2:10', '1:10'] },
+          note: 'Subtract 60: 70 is 1 minute and 10 seconds, so the label is 1:10.',
+        },
+        {
+          line: 5,
+          vars: { value: 10, minutes: 0, seconds: 10, label: '0:10' },
+          structure: { kind: 'array', values: ['2:10', '1:10', '0:10'] },
+          note: 'Subtract 60 again: 10 is 0 minutes and 10 seconds. Minutes are not padded, so the label is 0:10.',
+        },
+        {
+          line: 2,
+          vars: { value: -50 },
+          structure: { kind: 'array', values: ['2:10', '1:10', '0:10'] },
+          note: 'The next value, -50, is below 0, so the loop stops before labeling it.',
+        },
+        {
+          line: 7,
+          vars: { result: '["2:10","1:10","0:10"]' },
+          structure: { kind: 'array', values: ['2:10', '1:10', '0:10'] },
+          note: 'Return the three labels in countdown order.',
+        },
+      ],
+    },
     reasoning:
       'The value itself is the loop state. Looping while the value is at least zero means the last label is the last non-negative value the countdown reaches, and formatting is a separate step applied to each value.',
     trace:

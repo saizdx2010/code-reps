@@ -530,21 +530,21 @@ export const foundationReps: Rep[] = [
     title: 'Price a shipment by weight tiers',
     category: 'TypeScript basics',
     prompt:
-      'Return the shipping cost in cents for an order. The order is a list of lines, and each line has weightGrams and quantity, both whole numbers. The total weight is the sum of weightGrams times quantity over every line. Charge 300 cents when the total is 500 grams or less, 600 cents when it is above 500 up to and including 2000 grams, and 1200 cents when it is above 2000 grams. An empty order costs 0 cents. Add one handling charge of 200 cents when any line has a quantity above 10, however many lines are bulky.',
+      'Return the shipping cost in cents for an order, a list of lines that each have weightGrams and quantity. Both fields are whole numbers. The total weight is the sum of weightGrams times quantity over every line. Charge 300 cents when the total is 500 grams or less, 600 cents when it is above 500 up to and including 2000 grams, and 1200 cents when it is above 2000 grams. A line is bulky when its own quantity is above 10; two lines of 6 are not bulky. Add one handling charge of 200 cents when any line is bulky. Do not change the lines. An empty order costs 0 cents. The handling charge is added once, however many lines are bulky.',
     brief: {
-      summary:
-        'Return the shipping cost in cents for an order. The order is a list of lines, and each line has weightGrams and quantity, both whole numbers.',
+      summary: 'Return the shipping cost in cents for an order, a list of lines that each have weightGrams and quantity.',
       rules: [
-        'The total weight is the sum of weightGrams times quantity over every line.',
+        'Both fields are whole numbers. The total weight is the sum of weightGrams times quantity over every line.',
         'Charge 300 cents when the total is 500 grams or less, 600 cents when it is above 500 up to and including 2000 grams, and 1200 cents when it is above 2000 grams.',
-        'Add one handling charge of 200 cents when any line has a quantity above 10.',
+        'A line is bulky when its own quantity is above 10; two lines of 6 are not bulky. Add one handling charge of 200 cents when any line is bulky.',
+        'Do not change the lines.',
       ],
       edgeCases: ['An empty order costs 0 cents.', 'The handling charge is added once, however many lines are bulky.'],
     },
     example: { input: 'shippingCost([{weightGrams: 300, quantity: 2}, {weightGrams: 150, quantity: 1}])', output: '600' },
-    note: 'The total weight is 750 grams in the example, which falls in the middle tier. Checks cover the tier edges, the fee threshold, a fee added once, and a heavy order with a fee. Do not change the lines. Review your loop and tier order yourself.',
+    note: 'In the example, 300 × 2 + 150 × 1 = 750 grams, which is above 500 and at most 2000, and no quantity is above 10, so the cost is 600 cents. Checks cover the example, an empty order, the tier edges at 500 and 2000 grams, quantities of exactly 10 and 11, two lines that are not bulky on their own, a charge added once, and a heavy order with the charge, and they detect changes to the lines.',
     vocabulary: [
-      { term: 'Accumulator', meaning: 'a variable that collects a value as a loop visits each item' },
+      { term: 'Tier', meaning: 'a band of total weight that has its own price' },
       { term: 'Boundary', meaning: 'a value where the result changes' },
     ],
     planPrompt: 'How will you total the weight and pick a tier? When does the handling charge apply?',
@@ -553,13 +553,23 @@ export const foundationReps: Rep[] = [
     functionName: 'shippingCost',
     preserveInput: true,
     hints: [
-      'Add the weight of every line, multiplied by its quantity, before you choose a tier.',
-      'Check the tiers from the lightest up, using the exact upper edges given in the prompt, so each total lands in one tier.',
-      'Keep a yes-or-no flag that turns on when a line is bulky. Apply the handling charge once after the loop finishes.',
+      'The tier depends on the weight of the whole order, and the handling charge depends on whether any one line is bulky, so neither can be decided from one line alone. In the example, only the total of 750 grams puts the order in the middle tier.',
+      'Collect two facts in one pass over the lines: the total weight, and whether any line has a quantity above 10. After the pass, choose the tier from the total and add the charge once if needed.',
+      'Return 0 straight away when there are no lines. After the loop, test whether the total is at most 500, then at most 2000, so 500 and 2000 stay in the lower tier, and add 200 once if any line was bulky.',
     ],
     checks: [
       {
-        name: 'Charges the light tier for a light order',
+        name: 'Prices the example in the middle tier',
+        input: [
+          [
+            { weightGrams: 300, quantity: 2 },
+            { weightGrams: 150, quantity: 1 },
+          ],
+        ],
+        expected: 600,
+      },
+      {
+        name: 'Keeps exactly 500 grams in the light tier, counting each quantity',
         input: [
           [
             { weightGrams: 100, quantity: 1 },
@@ -574,6 +584,16 @@ export const foundationReps: Rep[] = [
       { name: 'Moves to the heavy tier just above 2000 grams', input: [[{ weightGrams: 2001, quantity: 1 }]], expected: 1200 },
       { name: 'Adds the handling charge above ten items', input: [[{ weightGrams: 10, quantity: 11 }]], expected: 500 },
       { name: 'Does not add the handling charge at exactly ten items', input: [[{ weightGrams: 10, quantity: 10 }]], expected: 300 },
+      {
+        name: 'Does not add quantities from different lines for the handling charge',
+        input: [
+          [
+            { weightGrams: 10, quantity: 6 },
+            { weightGrams: 10, quantity: 6 },
+          ],
+        ],
+        expected: 300,
+      },
       {
         name: 'Adds the handling charge once for several bulky lines',
         input: [
@@ -601,22 +621,22 @@ export const foundationReps: Rep[] = [
     title: 'Format a countdown timer',
     category: 'TypeScript basics',
     prompt:
-      'Return the labels a countdown timer shows. Start at startSeconds and subtract stepSeconds each time, stopping before the value would drop below 0. Format each value as minutes, a colon, and two-digit seconds, such as 2:05 or 0:30. Minutes are not padded. Keep counting whole minutes past 59; there are no hours (3600 seconds is 60:00). Return the labels in the order shown, starting with the largest value. Inputs are whole numbers: startSeconds from 0 to 3600 and stepSeconds from 1 to 600. When startSeconds is 0, return ["0:00"].',
+      'Return the labels a countdown timer shows, from startSeconds down in steps of stepSeconds. The values are startSeconds, then startSeconds minus stepSeconds, and so on, down to the smallest value that is still 0 or more. Write each value as minutes, a colon, and two-digit seconds, such as 2:05 or 0:30. Minutes are not padded. Return the labels in countdown order, largest first. Minutes keep counting past 59; there are no hours: 3600 seconds is 60:00. Inputs are whole numbers: startSeconds from 0 to 3600 and stepSeconds from 1 to 600. A start of 0 returns ["0:00"].',
     brief: {
-      summary: 'Return the labels a countdown timer shows, counting down from startSeconds in steps of stepSeconds.',
+      summary: 'Return the labels a countdown timer shows, from startSeconds down in steps of stepSeconds.',
       rules: [
-        'Start at startSeconds and subtract stepSeconds each time, stopping before the value would drop below 0.',
-        'Format each value as minutes, a colon, and two-digit seconds, such as 2:05 or 0:30. Minutes are not padded.',
-        'Return the labels in the order shown, starting with the largest value.',
+        'The values are startSeconds, then startSeconds minus stepSeconds, and so on, down to the smallest value that is still 0 or more.',
+        'Write each value as minutes, a colon, and two-digit seconds, such as 2:05 or 0:30. Minutes are not padded.',
+        'Return the labels in countdown order, largest first.',
       ],
       edgeCases: [
-        'Keep counting whole minutes past 59; there are no hours (3600 seconds is 60:00).',
+        'Minutes keep counting past 59; there are no hours: 3600 seconds is 60:00.',
         'Inputs are whole numbers: startSeconds from 0 to 3600 and stepSeconds from 1 to 600.',
-        'When startSeconds is 0, return ["0:00"].',
+        'A start of 0 returns ["0:00"].',
       ],
     },
     example: { input: 'countdownLabels(130, 60)', output: "['2:10', '1:10', '0:10']" },
-    note: 'The example stops at 0:10 because the next value would be negative. Checks cover steps that land exactly on zero, steps that do not, and the largest input. Review your stopping condition yourself.',
+    note: 'In the example, the values are 130, 70, and 10; the next one, -50, would be below 0, so the countdown ends at 0:10. Checks cover steps that land exactly on 0, steps that do not, a step larger than the start, a start of 0, and the largest input.',
     vocabulary: [
       { term: 'Countdown', meaning: 'a sequence of values that gets smaller until it reaches a limit' },
       { term: 'Padding', meaning: 'adding leading characters so text has a fixed width' },
@@ -626,25 +646,25 @@ export const foundationReps: Rep[] = [
       'function countdownLabels(startSeconds: number, stepSeconds: number): string[] {\n  // Count down by stepSeconds and format each value as m:ss.\n  return []\n}\n',
     functionName: 'countdownLabels',
     hints: [
-      'Keep one current value that starts at startSeconds and gets smaller by stepSeconds on each pass.',
-      'Decide when the loop must stop, so a value that would be negative is never labeled.',
-      'Turn each value into whole minutes and remaining seconds. Pad only the seconds to two digits.',
+      'Two separate things happen: choosing which values appear, and writing each one as m:ss. In the example, 130, 70, and 10 appear; the next value, -50, would be below 0, so it never does.',
+      'Count down from startSeconds by stepSeconds, labeling each value while it is still 0 or more. Turn each value into whole minutes and the seconds left over.',
+      'Minutes are the value divided by 60, rounded down, and seconds are the remainder after dividing by 60. Pad only the seconds to two digits, then join the two with a colon.',
     ],
     checks: [
       { name: 'Labels the countdown in steps of a minute', input: [130, 60], expected: ['2:10', '1:10', '0:10'] },
-      { name: 'Includes zero when a step lands on it', input: [120, 60], expected: ['2:00', '1:00', '0:00'] },
-      { name: 'Returns one label for a zero start', input: [0, 15], expected: ['0:00'] },
+      { name: 'Includes 0:00 when a step lands exactly on 0', input: [120, 60], expected: ['2:00', '1:00', '0:00'] },
+      { name: 'Returns one label for a start of 0', input: [0, 15], expected: ['0:00'] },
       { name: 'Stops before a negative value', input: [5, 10], expected: ['0:05'] },
       { name: 'Pads seconds but not minutes', input: [605, 300], expected: ['10:05', '5:05', '0:05'] },
       { name: 'Returns only the start when the step is too large', input: [30, 600], expected: ['0:30'] },
       { name: 'Counts down by one second to zero', input: [3, 1], expected: ['0:03', '0:02', '0:01', '0:00'] },
       {
-        name: 'Handles an uneven step near the end',
+        name: 'Ends at 0:02 when a 7-second step does not land on 0',
         input: [100, 7],
         expected: ['1:40', '1:33', '1:26', '1:19', '1:12', '1:05', '0:58', '0:51', '0:44', '0:37', '0:30', '0:23', '0:16', '0:09', '0:02'],
       },
       {
-        name: 'Handles the largest allowed input',
+        name: 'Shows 3600 seconds as 60:00, with no hours',
         input: [3600, 600],
         expected: ['60:00', '50:00', '40:00', '30:00', '20:00', '10:00', '0:00'],
       },

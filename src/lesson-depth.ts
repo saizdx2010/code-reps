@@ -63,13 +63,14 @@ export const lessonDepth: Record<string, LessonDepth> = {
       '[3, 1, 3] returns false: 3 is stored with index 0, and `if (0)` skips the return. [1, 3, 3] returns true, because 3 is stored with index 1. Testing `firstIndex.has(numbers[i])` fixes both. Since the index is never used, a Set would do the same job with less to misread.',
   },
   stacks: {
-    title: 'Why counts lose nested order',
-    code: '// ([)] has two openings and two closings.\n// Stack before ): ["(", "["].\n// ) cannot close the top [.',
+    title: 'The stack lists what is still owed',
+    code: '// After reading {[(, the stack is ["{", "[", "("].\n// From the top down, the text still owes ), then ], then }.\n// A ] here would close [ while ( is still open.',
     reasoning:
-      'A count records quantity but discards opening type and order. A stack retains exactly the unmatched openings in nesting order. For reduction tasks, the same structure can instead represent a fully reduced prefix; popping exposes newly adjacent work.',
-    challenge: 'Trace abba through adjacent-pair removal. Explain why merely removing bb once is incomplete.',
+      'A count records how many brackets are open but not which kinds or in what order. The stack keeps exactly the open brackets in nesting order, so reading it from the top down lists the closing brackets the text still owes, in the order they must appear. That is why the next closing bracket can only match the top, and why anything left at the end is a bracket that never closed.',
+    challenge:
+      'After reading ([{, which closing brackets complete the text, in order? Then say what the stack holds after ([{} and which closing bracket may come next.',
     answer:
-      'The stack evolves a, ab, a, empty. Removing bb exposes aa, which must also disappear. Each character is pushed or removes a top character, so a single scan handles cascades.',
+      'The stack is (, [, { with { on top, so the text needs }, then ], then ). After ([{}, the } has popped {, the stack is (, [, and only ] may come next. A ) there would close ( while [ is still open.',
   },
   validation: {
     title: 'Reject before normalizing',

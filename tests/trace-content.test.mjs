@@ -34,10 +34,12 @@ test('traces cover collection operations, stacks, sets, recursion, trees, tables
     'closure-counters',
     'count-above-threshold',
     'count-even-numbers',
+    'count-long-words',
     'count-object-leaves',
     'count-record-highs',
     'count-unique-windows',
     'count-words',
+    'countdown-labels',
     'course-order',
     'debounce-schedule',
     'debug-page-offset',
@@ -90,6 +92,7 @@ test('traces cover collection operations, stacks, sets, recursion, trees, tables
     'remove-adjacent-pairs',
     'scroll-report-throttle',
     'search-request-state',
+    'shipping-cost-tiers',
     'shortest-run-reaching-target',
     'simplify-file-path',
     'smallest-daily-capacity',
@@ -103,6 +106,7 @@ test('traces cover collection operations, stacks, sets, recursion, trees, tables
     'tree-depth-sum',
     'tree-value-path',
     'use-conditions',
+    'valid-parentheses',
     'validate-import-batch',
   ])
 })
