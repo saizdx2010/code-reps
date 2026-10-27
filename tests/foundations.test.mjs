@@ -281,3 +281,58 @@ test('Foundations stage 5 checks reject plausible wrong answers', () => {
     ],
   ])
 })
+
+test('Foundations stage 6 checks reject plausible wrong answers', () => {
+  assertMutantsFail([
+    // Compares only the totals of ( and ).
+    [
+      'valid-parentheses',
+      "function validParentheses(text: string) { let open = 0; for (const c of text) open += c === '(' ? 1 : -1; return open === 0 }",
+    ],
+    // Compares the totals and only rejects a text that starts with ).
+    [
+      'valid-parentheses',
+      "function validParentheses(text: string) { let open = 0; for (const c of text) open += c === '(' ? 1 : -1; return open === 0 && text[0] !== ')' }",
+    ],
+    // Never lets the count go below 0 but forgets that it must end at 0.
+    [
+      'valid-parentheses',
+      "function validParentheses(text: string) { let open = 0; for (const c of text) { open += c === '(' ? 1 : -1; if (open < 0) return false } return true }",
+    ],
+    // Returns true as soon as the count is back to 0.
+    [
+      'valid-parentheses',
+      "function validParentheses(text: string) { let open = 0; for (const c of text) { open += c === '(' ? 1 : -1; if (open < 0) return false; if (open === 0) return true } return open === 0 }",
+    ],
+    // Uses one stack for every kind, so a ) can close a [.
+    [
+      'balanced-brackets',
+      "function isBalanced(text: string) { const stack: string[] = []; for (const c of text) { if ('([{'.includes(c)) stack.push(c); else if (stack.pop() === undefined) return false } return stack.length === 0 }",
+    ],
+    // Forgets to check that nothing is left open at the end.
+    [
+      'balanced-brackets',
+      "function isBalanced(text: string) { const pairs: Record<string, string> = { ')': '(', ']': '[', '}': '{' }; const stack: string[] = []; for (const c of text) { if ('([{'.includes(c)) stack.push(c); else if (stack.pop() !== pairs[c]) return false } return true }",
+    ],
+    // Skips the comparison when the stack is empty.
+    [
+      'balanced-brackets',
+      "function isBalanced(text: string) { const pairs: Record<string, string> = { ')': '(', ']': '[', '}': '{' }; const stack: string[] = []; for (const c of text) { if ('([{'.includes(c)) stack.push(c); else if (stack.length > 0 && stack.pop() !== pairs[c]) return false } return stack.length === 0 }",
+    ],
+    // Returns true as soon as the stack is empty again.
+    [
+      'balanced-brackets',
+      "function isBalanced(text: string) { const pairs: Record<string, string> = { ')': '(', ']': '[', '}': '{' }; const stack: string[] = []; for (const c of text) { if ('([{'.includes(c)) stack.push(c); else { if (stack.pop() !== pairs[c]) return false; if (stack.length === 0) return true } } return stack.length === 0 }",
+    ],
+    // Compares the text with its mirror image, which rejects pairs side by side.
+    [
+      'balanced-brackets',
+      "function isBalanced(text: string) { const pairs: Record<string, string> = { '(': ')', '[': ']', '{': '}' }; for (let i = 0; i < text.length / 2; i++) if (pairs[text[i]] !== text[text.length - 1 - i]) return false; return text.length % 2 === 0 }",
+    ],
+    // Removes (), [], and {} once each, in that order, instead of until nothing changes.
+    [
+      'balanced-brackets',
+      "function isBalanced(text: string) { return text.replaceAll('()', '').replaceAll('[]', '').replaceAll('{}', '') === '' }",
+    ],
+  ])
+})

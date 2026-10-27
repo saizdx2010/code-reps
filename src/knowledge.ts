@@ -364,21 +364,21 @@ export const skills: Skill[] = [
         body: 'Reject a closing with no opening, a closing of the wrong kind, and leftover openings at the end. For just one bracket kind, a counter can be enough: it must never be negative and must finish at zero.',
       },
       {
-        title: 'Adjacent cancellation',
-        body: 'A stack also supports removing adjacent equal pairs. Removing a pair exposes the earlier top, which can form a new pair with the next character. This avoids repeatedly rescanning the whole string.',
+        title: 'Reading the top',
+        body: '`stack.pop()` removes the top item and returns it; `stack[stack.length - 1]` reads the top without removing it. On an empty array both give undefined, which equals no bracket, so a closing bracket with nothing open fails its comparison. Skipping the comparison when the stack is empty would accept that bracket instead.',
       },
     ],
     example: 'const stack: string[] = []\n// For ([]): push (, push [, pop [ for ], pop ( for ).\n// At the end the stack is empty.',
     walkthrough: [
       '( starts unfinished work.',
       '[ is nested inside it and becomes the top.',
-      '] must match [, not the earlier (. ',
+      '] must match [, not the earlier (.',
       ') matches the remaining (. Nothing is left.',
     ],
     mistakes: [
-      'Checking only equal counts of openings and closings.',
-      'Accepting leftover openings.',
-      'Removing from the front instead of the top.',
+      'Checking only equal counts: ([)] has two openings and two closings but is not balanced.',
+      'Accepting leftover openings: in (() the first ( is still on the stack when the text ends.',
+      'Removing from the front instead of the top: shift() takes the oldest opening, so in {[()]} the ) is compared with { instead of (.',
     ],
     questions: [
       q(

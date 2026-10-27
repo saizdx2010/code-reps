@@ -103,6 +103,7 @@ test('traces cover collection operations, stacks, sets, recursion, trees, tables
     'tree-depth-sum',
     'tree-value-path',
     'use-conditions',
+    'valid-parentheses',
     'validate-import-batch',
   ])
 })

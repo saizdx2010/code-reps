@@ -249,8 +249,10 @@ export const coreDepth: Record<string, RepDepth> = {
     transfer: 'Return every unique character in original order. Keep the basic Latin assumption explicit.',
   },
   'balanced-brackets': {
-    reasoning: 'Nested structure must close the latest unmatched opening first.',
-    trace: 'For ([)], push (, push [, then ) expects ( but the top is [. Reject before reaching the final ].',
+    reasoning:
+      'Pairs can nest but not cross, so a closing bracket must close the latest bracket that is still open. A stack keeps the open brackets in order with the latest on top: push each opening bracket, and for each closing bracket pop the top and compare kinds. An empty stack at the end means nothing is left open.',
+    trace:
+      'In the example {[()]}, the stack grows to {, [, ( and then each closing bracket pops a match: ) takes (, ] takes [, and } takes {. The stack ends empty, so the result is true. In ([)], the ) pops [, a different kind, so the function returns false before reading the last ]. For ], pop on an empty stack gives undefined, which matches no opening bracket, so the result is false.',
     traceSteps: {
       code: [
         'function isBalanced(text: string): boolean {',
@@ -263,57 +265,64 @@ export const coreDepth: Record<string, RepDepth> = {
         '  return stack.length === 0',
         '}',
       ],
-      input: "text = '([)]'",
+      input: "text = '{[()]}'",
       steps: [
         {
           line: 1,
-          vars: { text: '([)]' },
+          vars: { text: '{[()]}' },
           structure: { kind: 'stack', values: [] },
-          note: 'Start with an empty stack for opening brackets that are still waiting for a closing bracket.',
+          note: 'Start with an empty stack for the opening brackets that are still waiting to be closed.',
         },
         {
-          line: 3,
-          vars: { character: '(' },
-          structure: { kind: 'stack', values: [] },
-          note: 'Read the first character, an opening bracket.',
-        },
-        { line: 4, vars: { character: '(' }, structure: { kind: 'stack', values: ['('] }, note: 'Save the opening bracket on the stack.' },
-        {
-          line: 3,
-          vars: { character: '[' },
-          structure: { kind: 'stack', values: ['('] },
-          note: 'Read the next character, another opening bracket.',
+          line: 4,
+          vars: { character: '{' },
+          structure: { kind: 'stack', values: ['{'] },
+          note: '{ is an opening bracket, so push it.',
         },
         {
           line: 4,
           vars: { character: '[' },
-          structure: { kind: 'stack', values: ['(', '['] },
-          note: 'The newer [ sits on top, so it must be closed before the (.',
+          structure: { kind: 'stack', values: ['{', '['] },
+          note: '[ opens inside {, so it goes on top. It must close before { can.',
         },
         {
-          line: 3,
-          vars: { character: ')' },
-          structure: { kind: 'stack', values: ['(', '['] },
-          note: 'Read ). It must match the most recent unmatched opening bracket.',
-        },
-        {
-          line: 5,
-          vars: { character: ')' },
-          structure: { kind: 'stack', values: ['('] },
-          note: 'Removing [ leaves ( on the stack. ) needs (, so the two do not match and the function rejects here.',
+          line: 4,
+          vars: { character: '(' },
+          structure: { kind: 'stack', values: ['{', '[', '('] },
+          note: '( opens inside [. It is now the latest open bracket, on top of the stack.',
         },
         {
           line: 5,
-          vars: { character: ')', result: false },
-          structure: { kind: 'stack', values: ['('] },
-          note: 'The function returns false before reading the final ]. Both bracket types appear twice, but the order is wrong.',
+          vars: { character: ')' },
+          structure: { kind: 'stack', values: ['{', '['] },
+          note: ') pops the top, (. They are the same kind, so the innermost pair is closed and [ is on top again.',
+        },
+        {
+          line: 5,
+          vars: { character: ']' },
+          structure: { kind: 'stack', values: ['{'] },
+          note: '] pops [, a match. Only { is still open.',
+        },
+        {
+          line: 5,
+          vars: { character: '}' },
+          structure: { kind: 'stack', values: [] },
+          note: '} pops {, the last open bracket. Every closing bracket matched the latest open one.',
+        },
+        {
+          line: 7,
+          vars: { result: true },
+          structure: { kind: 'stack', values: [] },
+          note: 'The text has ended and the stack is empty, so nothing is left open. Return true.',
         },
       ],
     },
     alternative:
-      'A stack handles several bracket types. A single counter suffices for one type but loses the opening type and nesting order here.',
-    counterexample: '([)] has matching counts for each type but is not balanced.',
-    transfer: 'Allow non-bracket text to be ignored. State that new rule and test a mixed-text expression.',
+      'One counter per kind of bracket checks the totals but not the order, so it accepts ([)]. Removing (), [], and {} from the text until nothing changes also works, but every pass rescans the text, which takes O(n²) time for deep nesting. The stack reads each character once: O(n) time and O(n) space.',
+    counterexample:
+      '([)] has two brackets of each kind, so any check that only counts accepts it. Skipping the comparison when the stack is empty accepts ]. Returning true without checking that the stack is empty at the end accepts ()[, whose [ is never closed.',
+    transfer:
+      'Allow other characters, such as letters and spaces, between the brackets and ignore them. State the new rule, then predict the result for f(a[0]) and for f(a[0)].',
   },
   'sum-positive-numbers': {
     traceSteps: {
@@ -790,11 +799,67 @@ export const coreDepth: Record<string, RepDepth> = {
     transfer: 'Now permit duplicate inputs. Explain why the sum argument no longer proves one missing value and define validation.',
   },
   'valid-parentheses': {
-    reasoning: 'Every prefix must have at least as many openings as closings, and the final balance must be zero.',
-    trace: 'For )(, the first close makes balance negative, so reject immediately even though the final counts match.',
-    alternative: 'A counter is enough for one bracket type; a stack uses more storage but generalizes to multiple types.',
-    counterexample: 'Checking only final balance incorrectly accepts )(.',
-    transfer: 'Extend to multiple bracket types. Explain exactly what information the counter loses.',
+    traceSteps: {
+      code: [
+        'function validParentheses(text: string): boolean {',
+        '  let open = 0',
+        '  for (const character of text) {',
+        "    open += character === '(' ? 1 : -1",
+        '    if (open < 0) return false',
+        '  }',
+        '  return open === 0',
+        '}',
+      ],
+      input: "text = '(())'",
+      steps: [
+        {
+          line: 1,
+          vars: { open: 0 },
+          structure: { kind: 'array', values: ['(', '(', ')', ')'] },
+          note: 'open counts the ( that are still waiting for a ). Nothing has been read, so it starts at 0.',
+        },
+        {
+          line: 3,
+          vars: { character: '(', open: 1 },
+          structure: { kind: 'array', values: ['(', '(', ')', ')'], pointers: { character: 0 } },
+          note: 'The first ( opens a pair: open is 1.',
+        },
+        {
+          line: 3,
+          vars: { character: '(', open: 2 },
+          structure: { kind: 'array', values: ['(', '(', ')', ')'], pointers: { character: 1 }, dimmed: [0] },
+          note: 'A second ( opens inside the first: open is 2.',
+        },
+        {
+          line: 4,
+          vars: { character: ')', open: 1 },
+          structure: { kind: 'array', values: ['(', '(', ')', ')'], pointers: { character: 2 }, dimmed: [0, 1] },
+          note: 'The first ) closes one of them: open is 1. It is not below 0, so the text is still valid so far.',
+        },
+        {
+          line: 4,
+          vars: { character: ')', open: 0 },
+          structure: { kind: 'array', values: ['(', '(', ')', ')'], pointers: { character: 3 }, dimmed: [0, 1, 2] },
+          note: 'The last ) closes the other: open is 0. The count never dropped below 0 on the way.',
+        },
+        {
+          line: 6,
+          vars: { open: 0, result: true },
+          structure: { kind: 'array', values: ['(', '(', ')', ')'], dimmed: [0, 1, 2, 3] },
+          note: 'The text has ended with open at 0, so every ( was closed. Return true.',
+        },
+      ],
+    },
+    reasoning:
+      'Reading left to right, open is the number of ( still waiting for a ). A ) is valid only when open is above 0, so a negative count means a ) closed nothing and the text can be rejected at once. When the loop ends, every ( must have been closed, so open must be 0. With one kind of bracket, the count is enough: any open ( can be closed by any ).',
+    trace:
+      'For the example (()), open goes 1, 2, 1, 0: it never drops below 0 and ends at 0, so the result is true. For ())((), open goes 1, 0, -1 at the third character, so the function returns false without reading the rest, even though the text has three of each. For ()(, open ends at 1, so one ( is still open and the result is false.',
+    alternative:
+      'A stack of the open ( gives the same answer, and it is what Check balanced brackets needs, where each closing bracket must match the kind on top. With one kind, every entry on the stack is the same, so only its length matters, and the count stores that length in constant space.',
+    counterexample:
+      'Comparing only the totals of ( and ) accepts )(. Checking the totals and that the text does not start with ) still accepts ())((), whose third character closes nothing. Returning true as soon as the count reaches 0 accepts ()(, whose last ( is never closed.',
+    transfer:
+      'Return the deepest nesting level instead of true or false: (()) is 2 and ()() is 1. Decide what text that is not valid, such as ())(, should return, and say why.',
   },
   'count-long-words': {
     reasoning: 'The running count describes all qualifying words already visited.',
