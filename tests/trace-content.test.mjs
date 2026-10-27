@@ -357,7 +357,7 @@ test('window brackets sit between the traced start and end pointers', () => {
   }
 })
 
-test('review prose and trace notes pair every backtick, so code marks render as code and never show literally', () => {
+test('review prose and trace notes pair every backtick, and code marks keep their spaces visible', () => {
   const unpaired = []
   for (const [id, depth] of Object.entries(repDepth)) {
     const texts = {
@@ -371,6 +371,8 @@ test('review prose and trace notes pair every backtick, so code marks render as 
       trace.steps.forEach((step, index) => (texts[`note ${index + 1}`] = step.note ?? ''))
     for (const [field, text] of Object.entries(texts))
       if ((text.match(/`/g) ?? []).length % 2 || /``|`\n/.test(text)) unpaired.push(`${id} ${field}`)
+      // HTML collapses runs of spaces, so code that depends on them uses non-breaking spaces (\u00a0).
+      else if ([...text.matchAll(/`[^`\n]+`/g)].some(([code]) => / {2}/.test(code))) unpaired.push(`${id} ${field} (repeated spaces)`)
   }
   assert.deepEqual(unpaired, [])
 })
