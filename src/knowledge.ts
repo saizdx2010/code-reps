@@ -212,6 +212,7 @@ export const skills: Skill[] = [
       'sum-positive-numbers',
       'count-even-numbers',
       'count-above-threshold',
+      'missing-number',
       'sum-matching-prices',
       'count-open-tickets',
       'count-record-highs',
@@ -279,7 +280,7 @@ export const skills: Skill[] = [
   {
     id: 'lookup',
     title: 'Maps, sets, and lookup',
-    summary: 'Remember seen values, count occurrences, and preserve the required order.',
+    summary: 'Remember seen values, count occurrences, and keep the required order.',
     prerequisites: ['arrays'],
     objectives: [
       'Choose a Set for membership or a Map for associated values.',
