@@ -356,3 +356,21 @@ test('window brackets sit between the traced start and end pointers', () => {
     }
   }
 })
+
+test('review prose and trace notes pair every backtick, so code marks render as code and never show literally', () => {
+  const unpaired = []
+  for (const [id, depth] of Object.entries(repDepth)) {
+    const texts = {
+      reasoning: depth.reasoning,
+      trace: depth.trace,
+      alternative: depth.alternative,
+      counterexample: depth.counterexample,
+      transfer: depth.transfer,
+    }
+    for (const trace of [depth.traceSteps, depth.alternativeTrace?.trace].filter(Boolean))
+      trace.steps.forEach((step, index) => (texts[`note ${index + 1}`] = step.note ?? ''))
+    for (const [field, text] of Object.entries(texts))
+      if ((text.match(/`/g) ?? []).length % 2 || /``|`\n/.test(text)) unpaired.push(`${id} ${field}`)
+  }
+  assert.deepEqual(unpaired, [])
+})

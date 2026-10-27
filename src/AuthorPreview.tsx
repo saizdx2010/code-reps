@@ -230,19 +230,29 @@ function RepPreview({ rep, problems }: { rep: Rep; problems: string[] }) {
         {depth ? (
           <>
             <h4>Why this works</h4>
-            <p>{depth.reasoning}</p>
+            <p>
+              <InlineCode text={depth.reasoning} />
+            </p>
             <h4>Trace a boundary case</h4>
-            <p>{depth.trace}</p>
+            <p>
+              <InlineCode text={depth.trace} />
+            </p>
             {depth.traceSteps && <TraceViewer key={rep.id} trace={depth.traceSteps} />}
             <h4>Compare approaches</h4>
-            <p>{depth.alternative}</p>
+            <p>
+              <InlineCode text={depth.alternative} />
+            </p>
             {depth.alternativeTrace && (
               <TraceViewer key={`${rep.id}-alternative`} trace={depth.alternativeTrace.trace} title={depth.alternativeTrace.title} />
             )}
             <h4>A tempting mistake</h4>
-            <p>{depth.counterexample}</p>
+            <p>
+              <InlineCode text={depth.counterexample} />
+            </p>
             <h4>Try a variation</h4>
-            <p>{depth.transfer}</p>
+            <p>
+              <InlineCode text={depth.transfer} />
+            </p>
           </>
         ) : (
           <p>No authored depth entry yet.</p>

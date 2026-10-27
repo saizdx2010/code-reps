@@ -634,11 +634,17 @@ export function ExplainSection({
             {depth && (
               <div className="reflection-example">
                 <h3>Why this works</h3>
-                <p>{depth.reasoning}</p>
+                <p>
+                  <InlineCode text={depth.reasoning} />
+                </p>
                 <h3>Trace a boundary case</h3>
-                <p>{depth.trace}</p>
+                <p>
+                  <InlineCode text={depth.trace} />
+                </p>
                 <h3>Compare approaches</h3>
-                <p>{depth.alternative}</p>
+                <p>
+                  <InlineCode text={depth.alternative} />
+                </p>
                 {depth.alternativeTrace && (
                   <Suspense
                     fallback={
@@ -651,9 +657,13 @@ export function ExplainSection({
                   </Suspense>
                 )}
                 <h3>A tempting mistake</h3>
-                <p>{depth.counterexample}</p>
+                <p>
+                  <InlineCode text={depth.counterexample} />
+                </p>
                 <h3>Try a variation</h3>
-                <p>{depth.transfer}</p>
+                <p>
+                  <InlineCode text={depth.transfer} />
+                </p>
                 <p>Write your prediction in your notes, then compare your reasoning.</p>
               </div>
             )}

@@ -1,3 +1,4 @@
+import { InlineCode } from './InlineCode'
 import { useState } from 'react'
 import { Button } from './Button'
 import { Input } from './Input'
@@ -593,11 +594,15 @@ export function TraceViewer({
       </div>
       <p className="trace-note" aria-live="polite" aria-atomic="true">
         Step {index + 1} of {trace.steps.length}:{' '}
-        {hidden
-          ? changed.length
-            ? `Line ${step.line + 1} runs next. Predict ${changed.join(', ')}.`
-            : `Line ${step.line + 1} runs next. Predict what it does.`
-          : step.note}
+        {hidden ? (
+          changed.length ? (
+            `Line ${step.line + 1} runs next. Predict ${changed.join(', ')}.`
+          ) : (
+            `Line ${step.line + 1} runs next. Predict what it does.`
+          )
+        ) : (
+          <InlineCode text={step.note} />
+        )}
       </p>
       <div className="trace-controls">
         <Button disabled={index === 0} onClick={() => move(-1)}>
