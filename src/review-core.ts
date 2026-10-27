@@ -26,13 +26,13 @@ export const coreDepth: Record<string, RepDepth> = {
           line: 1,
           vars: {},
           structure: { kind: 'map', entries: [] },
-          note: 'This input has a tie. Start with an empty Map: each key will be a number, and its value how many times it has appeared.',
+          note: 'This input has a tie. Start with an empty `Map`: each key will be a number, and its value how many times it has appeared.',
         },
         {
           line: 2,
           vars: { n: 7 },
           structure: { kind: 'map', entries: [['7', 1]] },
-          note: '7 is new, so counts.get(7) is undefined and ?? 0 supplies 0. Its count becomes 1.',
+          note: '7 is new, so `counts.get(7)` is `undefined` and `?? 0` supplies 0. Its count becomes 1.',
         },
         {
           line: 2,
@@ -140,11 +140,11 @@ export const coreDepth: Record<string, RepDepth> = {
     reasoning:
       'The winner depends on each number’s final count and on the tie rule, not on which number appears first. Counting the whole array before choosing means no later copy can change a decision. The choice then keeps the highest count and, on an equal count, the lower value.',
     trace:
-      'For the example [4, 2, 4, 2, 4, 3], the counts finish at 4: 3, 2: 2, and 3: 1, so 4 wins outright. For the tie [9, 2, 9, 2], both counts are 2 and the smaller 2 is returned. An empty array never sets a best, so the result is null.',
+      'For the example `[4, 2, 4, 2, 4, 3]`, the counts finish at `4: 3`, `2: 2`, and `3: 1`, so 4 wins outright. For the tie `[9, 2, 9, 2]`, both counts are 2 and the smaller 2 is returned. An empty array never sets a best, so the result is `null`.',
     alternative:
-      'Tracking the best while counting takes one pass, but every update must apply the tie rule, because a number can catch up later. Sorting a copy and counting runs of equal values also works, in O(n log n) time. Counting each number with filter inside a loop rescans the array and takes O(n²) time.',
+      'Tracking the best while counting takes one pass, but every update must apply the tie rule, because a number can catch up later. Sorting a copy and counting runs of equal values also works, in O(n log n) time. Counting each number with `filter` inside a loop rescans the array and takes O(n²) time.',
     counterexample:
-      'Keeping the first number to reach the top count returns 9 for [9, 2, 9, 2]. Keeping the last one, with >=, returns -1 for [-3, -1, -3, -1]. Sorting the keys with sort() and no comparator compares them as text, so -1 comes before -3. Returning best || null turns a winning 0 into null.',
+      'Keeping the first number to reach the top count returns 9 for `[9, 2, 9, 2]`. Keeping the last one, with `>=`, returns -1 for `[-3, -1, -3, -1]`. Sorting the keys with `sort()` and no comparator compares them as text, so -1 comes before -3. Returning `best || null` turns a winning `0` into `null`.',
     transfer: 'Change the tie rule so the number that appeared first wins. Explain what extra information you must keep beside each count.',
   },
   'first-unique-character': {
@@ -165,13 +165,13 @@ export const coreDepth: Record<string, RepDepth> = {
           line: 1,
           vars: {},
           structure: { kind: 'map', entries: [] },
-          note: 'First pass: count every character. Start with an empty Map from character to count.',
+          note: 'First pass: count every character. Start with an empty `Map` from character to count.',
         },
         {
           line: 2,
           vars: { character: 's' },
           structure: { kind: 'map', entries: [['s', 1]] },
-          note: 's is new: count 1. It looks unique for now, but the rest of the text has not been read.',
+          note: '`s` is new: count 1. It looks unique for now, but the rest of the text has not been read.',
         },
         {
           line: 2,
@@ -183,7 +183,7 @@ export const coreDepth: Record<string, RepDepth> = {
               ['w', 1],
             ],
           },
-          note: 'w is new: count 1.',
+          note: '`w` is new: count 1.',
         },
         {
           line: 2,
@@ -196,7 +196,7 @@ export const coreDepth: Record<string, RepDepth> = {
               ['i', 1],
             ],
           },
-          note: 'i is new: count 1.',
+          note: '`i` is new: count 1.',
         },
         {
           line: 2,
@@ -209,7 +209,7 @@ export const coreDepth: Record<string, RepDepth> = {
               ['i', 1],
             ],
           },
-          note: 'The second s raises its count to 2. The s at index 0 is not unique after all.',
+          note: 'The second `s` raises its count to 2. The `s` at index 0 is not unique after all.',
         },
         {
           line: 2,
@@ -222,37 +222,37 @@ export const coreDepth: Record<string, RepDepth> = {
               ['i', 1],
             ],
           },
-          note: 'The third s makes its count 3. Every character is counted.',
+          note: 'The third `s` makes its count 3. Every character is counted.',
         },
         {
           line: 4,
           vars: { i: 0, count: 3 },
           structure: { kind: 'array', values: ['s', 'w', 'i', 's', 's'], pointers: { i: 0 } },
-          note: 'Second pass, in the original order. s at index 0 has count 3, so it is not unique.',
+          note: 'Second pass, in the original order. `s` at index 0 has count 3, so it is not unique.',
         },
         {
           line: 4,
           vars: { i: 1, count: 1, result: 1 },
           structure: { kind: 'array', values: ['s', 'w', 'i', 's', 's'], pointers: { i: 1 }, dimmed: [0] },
-          note: 'w at index 1 has count 1. Return 1. i at index 2 is unique too, but it comes later.',
+          note: '`w` at index 1 has count 1. Return 1. `i` at index 2 is unique too, but it comes later.',
         },
       ],
     },
     reasoning:
       'Whether a character is unique depends on the characters after it, so one left-to-right pass cannot decide. Counting the whole text first settles every character. A second pass in the original order then finds the first character with a count of 1.',
     trace:
-      'In swiss, the counts finish at s: 3, w: 1, and i: 1. The second pass rejects s at index 0 and returns 1 for w. In aAbba, a appears twice but A once, so the answer is 1; lowercasing first would merge them and return -1. An empty string skips both loops and returns -1.',
+      'In `swiss`, the counts finish at `s: 3`, `w: 1`, and `i: 1`. The second pass rejects `s` at index 0 and returns 1 for `w`. In `aAbba`, `a` appears twice but `A` once, so the answer is 1; lowercasing first would merge them and return -1. An empty string skips both loops and returns -1.',
     alternative:
-      'Checking whether indexOf and lastIndexOf agree for each character needs no Map, but each check searches the text again, so long text takes O(n²) time. The Map needs two passes of O(n) and O(k) extra space for k different characters.',
+      'Checking whether `indexOf` and `lastIndexOf` agree for each character needs no `Map`, but each check searches the text again, so long text takes O(n²) time. The `Map` needs two passes of O(n) and O(k) extra space for k different characters.',
     counterexample:
-      'Returning the first character not seen before returns 0 for swiss: s looks new at index 0, and its repeats come later. Keeping the last unique index instead of returning the first gives 2, the i.',
+      'Returning the first character not seen before returns 0 for `swiss`: `s` looks new at index 0, and its repeats come later. Keeping the last unique index instead of returning the first gives 2, the `i`.',
     transfer: 'Return every unique character in original order. Keep the basic Latin assumption explicit.',
   },
   'balanced-brackets': {
     reasoning:
       'Pairs can nest but not cross, so a closing bracket must close the latest bracket that is still open. A stack keeps the open brackets in order with the latest on top: push each opening bracket, and for each closing bracket pop the top and compare kinds. An empty stack at the end means nothing is left open.',
     trace:
-      'In the example {[()]}, the stack grows to {, [, ( and then each closing bracket pops a match: ) takes (, ] takes [, and } takes {. The stack ends empty, so the result is true. In ([)], the ) pops [, a different kind, so the function returns false before reading the last ]. For ], pop on an empty stack gives undefined, which matches no opening bracket, so the result is false.',
+      'In the example `{[()]}`, the stack grows to `{`, `[`, `(` and then each closing bracket pops a match: `)` takes `(`, `]` takes `[`, and `}` takes `{`. The stack ends empty, so the result is `true`. In `([)]`, the `)` pops `[`, a different kind, so the function returns `false` before reading the last `]`. For `]`, `pop` on an empty stack gives `undefined`, which matches no opening bracket, so the result is `false`.',
     traceSteps: {
       code: [
         'function isBalanced(text: string): boolean {',
@@ -277,52 +277,52 @@ export const coreDepth: Record<string, RepDepth> = {
           line: 4,
           vars: { character: '{' },
           structure: { kind: 'stack', values: ['{'] },
-          note: '{ is an opening bracket, so push it.',
+          note: '`{` is an opening bracket, so push it.',
         },
         {
           line: 4,
           vars: { character: '[' },
           structure: { kind: 'stack', values: ['{', '['] },
-          note: '[ opens inside {, so it goes on top. It must close before { can.',
+          note: '`[` opens inside `{`, so it goes on top. It must close before `{` can.',
         },
         {
           line: 4,
           vars: { character: '(' },
           structure: { kind: 'stack', values: ['{', '[', '('] },
-          note: '( opens inside [. It is now the latest open bracket, on top of the stack.',
+          note: '`(` opens inside `[`. It is now the latest open bracket, on top of the stack.',
         },
         {
           line: 5,
           vars: { character: ')' },
           structure: { kind: 'stack', values: ['{', '['] },
-          note: ') pops the top, (. They are the same kind, so the innermost pair is closed and [ is on top again.',
+          note: '`)` pops the top, `(`. They are the same kind, so the innermost pair is closed and `[` is on top again.',
         },
         {
           line: 5,
           vars: { character: ']' },
           structure: { kind: 'stack', values: ['{'] },
-          note: '] pops [, a match. Only { is still open.',
+          note: '`]` pops `[`, a match. Only `{` is still open.',
         },
         {
           line: 5,
           vars: { character: '}' },
           structure: { kind: 'stack', values: [] },
-          note: '} pops {, the last open bracket. Every closing bracket matched the latest open one.',
+          note: '`}` pops `{`, the last open bracket. Every closing bracket matched the latest open one.',
         },
         {
           line: 7,
           vars: { result: true },
           structure: { kind: 'stack', values: [] },
-          note: 'The text has ended and the stack is empty, so nothing is left open. Return true.',
+          note: 'The text has ended and the stack is empty, so nothing is left open. Return `true`.',
         },
       ],
     },
     alternative:
-      'One counter per kind of bracket checks the totals but not the order, so it accepts ([)]. Removing (), [], and {} from the text until nothing changes also works, but every pass rescans the text, which takes O(n²) time for deep nesting. The stack reads each character once: O(n) time and O(n) space.',
+      'One counter per kind of bracket checks the totals but not the order, so it accepts `([)]`. Removing `()`, `[]`, and `{}` from the text until nothing changes also works, but every pass rescans the text, which takes O(n²) time for deep nesting. The stack reads each character once: O(n) time and O(n) space.',
     counterexample:
-      '([)] has two brackets of each kind, so any check that only counts accepts it. Skipping the comparison when the stack is empty accepts ]. Returning true without checking that the stack is empty at the end accepts ()[, whose [ is never closed.',
+      '`([)]` has two brackets of each kind, so any check that only counts accepts it. Skipping the comparison when the stack is empty accepts `]`. Returning `true` without checking that the stack is empty at the end accepts `()[`, whose `[` is never closed.',
     transfer:
-      'Allow other characters, such as letters and spaces, between the brackets and ignore them. State the new rule, then predict the result for f(a[0]) and for f(a[0)].',
+      'Allow other characters, such as letters and spaces, between the brackets and ignore them. State the new rule, then predict the result for `f(a[0])` and for `f(a[0)]`.',
   },
   'sum-positive-numbers': {
     traceSteps: {
@@ -378,11 +378,11 @@ export const coreDepth: Record<string, RepDepth> = {
     reasoning:
       'After each visit, the total equals the sum of the positive values seen so far. It starts at 0, which is the right answer for an empty array, and only a positive value changes it.',
     trace:
-      'For the example [-2, 3, 0, 5], the total stays 0 at -2, becomes 3, stays 3 at 0, and becomes 8. An empty array never enters the loop, so the starting 0 is returned.',
+      'For the example `[-2, 3, 0, 5]`, the total stays 0 at -2, becomes 3, stays 3 at 0, and becomes 8. An empty array never enters the loop, so the starting 0 is returned.',
     alternative:
-      'A loop keeps only a total; filter then reduce creates a selected array first. A reducer without an initial value throws on an empty array.',
+      'A loop keeps only a total; `filter` then `reduce` creates a selected array first. A reducer without an initial value throws on an empty array.',
     counterexample:
-      'Returning inside the loop after the first positive gives 3 instead of 8 for the example. Emptying the array with shift() as you go gives the right sum, but the caller is left with an empty array, which the checks report.',
+      'Returning inside the loop after the first positive gives 3 instead of 8 for the example. Emptying the array with `shift()` as you go gives the right sum, but the caller is left with an empty array, which the checks report.',
     transfer: 'Sum prices only when a record is available. Explain how the invariant changes from numbers to records.',
   },
   'count-even-numbers': {
@@ -408,31 +408,31 @@ export const coreDepth: Record<string, RepDepth> = {
           line: 3,
           vars: { count: 0, i: 0, remainder: -1 },
           structure: { kind: 'array', values: [-3, 4, 0, 7], pointers: { i: 0 } },
-          note: '-3 % 2 is -1 in JavaScript, not 1. It is not 0, so -3 is odd and the count stays 0.',
+          note: '`-3 % 2` is -1 in JavaScript, not 1. It is not 0, so -3 is odd and the count stays 0.',
         },
         {
           line: 3,
           vars: { count: 1, i: 1, remainder: 0 },
           structure: { kind: 'array', values: [-3, 4, 0, 7], pointers: { i: 1 }, dimmed: [0] },
-          note: '4 % 2 is 0, so 4 is even. The count goes from 0 to 1.',
+          note: '`4 % 2` is 0, so 4 is even. The count goes from 0 to 1.',
         },
         {
           line: 3,
           vars: { count: 2, i: 2, remainder: 0 },
           structure: { kind: 'array', values: [-3, 4, 0, 7], pointers: { i: 2 }, dimmed: [0, 1] },
-          note: '0 % 2 is 0, so zero is even too. The count goes from 1 to 2.',
+          note: '`0 % 2` is 0, so zero is even too. The count goes from 1 to 2.',
         },
         {
           line: 3,
           vars: { count: 2, i: 3, remainder: 1 },
           structure: { kind: 'array', values: [-3, 4, 0, 7], pointers: { i: 3 }, dimmed: [0, 1, 2] },
-          note: '7 % 2 is 1, so 7 is odd. The count stays 2.',
+          note: '`7 % 2` is 1, so 7 is odd. The count stays 2.',
         },
         {
           line: 2,
           vars: { count: 2, i: 4 },
           structure: { kind: 'array', values: [-3, 4, 0, 7], dimmed: [0, 1, 2, 3] },
-          note: 'i is 4, which is not less than the 4 numbers, so the loop stops.',
+          note: '`i` is 4, which is not less than the 4 numbers, so the loop stops.',
         },
         {
           line: 5,
@@ -445,10 +445,10 @@ export const coreDepth: Record<string, RepDepth> = {
     reasoning:
       'The count is the number of values seen so far whose remainder after dividing by 2 is 0. Zero and negative even numbers leave a remainder of 0 too, so one test covers every case.',
     trace:
-      'For the example [-3, 4, 0, 7], the remainders are -1, 0, 0, and 1, so the count goes 0, 1, 2, 2 and the result is 2. An empty array returns the starting 0.',
+      'For the example `[-3, 4, 0, 7]`, the remainders are -1, 0, 0, and 1, so the count goes 0, 1, 2, 2 and the result is 2. An empty array returns the starting 0.',
     alternative: 'A loop uses constant working memory; filtering and reading length builds an array. Both inspect every input.',
     counterexample:
-      'Testing n % 2 !== 1 counts -3 as even, because -3 % 2 is -1, so the example returns 3 instead of 2. Counting distinct values with a Set returns 1 instead of 3 for [2, 2, 2].',
+      'Testing `n % 2 !== 1` counts -3 as even, because `-3 % 2` is -1, so the example returns 3 instead of 2. Counting distinct values with a `Set` returns 1 instead of 3 for `[2, 2, 2]`.',
     transfer: 'Count numbers divisible by a supplied nonzero divisor. Define the zero-divisor contract first.',
   },
   'count-above-threshold': {
@@ -498,23 +498,23 @@ export const coreDepth: Record<string, RepDepth> = {
           line: 2,
           vars: { limit: 7, count: 1, i: 4 },
           structure: { kind: 'array', values: [2, 7, 7, 10], dimmed: [0, 1, 2, 3] },
-          note: 'i is 4, which is not less than the 4 values, so the loop stops.',
+          note: '`i` is 4, which is not less than the 4 values, so the loop stops.',
         },
         {
           line: 5,
           vars: { limit: 7, count: 1, result: 1 },
           structure: { kind: 'array', values: [2, 7, 7, 10], dimmed: [0, 1, 2, 3] },
-          note: 'Return 1. With >= the two 7s would have counted too, giving 3.',
+          note: 'Return 1. With `>=` the two 7s would have counted too, giving 3.',
         },
       ],
     },
     reasoning:
       'A strict comparison leaves values equal to the limit out, and visiting every value means each match is counted once per occurrence, repeats included.',
     trace:
-      'For the example [2, 7, 7, 10] with limit 7, the count stays 0 at 2 and at both 7s, because equal is not above, and becomes 1 at 10. An empty array returns the starting 0.',
-    alternative: 'A loop avoids allocating selected values; filter is concise when the selected values are also needed.',
+      'For the example `[2, 7, 7, 10]` with limit 7, the count stays 0 at 2 and at both 7s, because equal is not above, and becomes 1 at 10. An empty array returns the starting 0.',
+    alternative: 'A loop avoids allocating selected values; `filter` is concise when the selected values are also needed.',
     counterexample:
-      'Using >= counts both 7s and returns 3 instead of 1. Removing duplicates with a Set first counts 6 once in [4, 6, 6, 8] above 3 and returns 3 instead of 4. Sorting the array to stop early changes the caller’s array.',
+      'Using `>=` counts both 7s and returns 3 instead of 1. Removing duplicates with a `Set` first counts 6 once in `[4, 6, 6, 8]` above 3 and returns 3 instead of 4. Sorting the array to stop early changes the caller’s array.',
     transfer: 'Count values within a range. Specify whether both endpoints are included before choosing operators.',
   },
   'first-long-word': {
@@ -545,7 +545,7 @@ export const coreDepth: Record<string, RepDepth> = {
           line: 2,
           vars: { minimum: 5, i: 0, length: 3 },
           structure: { kind: 'array', values: ['cat', 'tiger', 'dog'], pointers: { i: 0 } },
-          note: 'cat has 3 characters, fewer than 5. Keep looking.',
+          note: '`cat` has 3 characters, fewer than 5. Keep looking.',
         },
         {
           line: 1,
@@ -557,23 +557,23 @@ export const coreDepth: Record<string, RepDepth> = {
           line: 2,
           vars: { minimum: 5, i: 1, length: 5 },
           structure: { kind: 'array', values: ['cat', 'tiger', 'dog'], pointers: { i: 1 }, dimmed: [0] },
-          note: 'tiger has exactly 5 characters. At least 5 includes 5, so it qualifies.',
+          note: '`tiger` has exactly 5 characters. At least 5 includes 5, so it qualifies.',
         },
         {
           line: 2,
           vars: { minimum: 5, i: 1, result: 'tiger' },
           structure: { kind: 'array', values: ['cat', 'tiger', 'dog'], pointers: { i: 1 }, dimmed: [0] },
-          note: 'Return tiger at once. dog is never read: a later word cannot change which one came first.',
+          note: 'Return `tiger` at once. `dog` is never read: a later word cannot change which one came first.',
         },
       ],
     },
     reasoning: 'First-match search may stop early because later items cannot change the earliest result.',
     trace:
-      'For the example, cat has 3 characters, fewer than 5. tiger has exactly 5, so it is returned and dog is never read. With a minimum of 0 the first word qualifies at once, even when it is empty.',
+      'For the example, `cat` has 3 characters, fewer than 5. `tiger` has exactly 5, so it is returned and `dog` is never read. With a minimum of 0 the first word qualifies at once, even when it is empty.',
     alternative:
-      'find is concise but its absent result is undefined, so adapt it to null. Filtering all words does unnecessary work for a first-match task.',
+      '`find` is concise but its absent result is `undefined`, so adapt it to `null`. Filtering all words does unnecessary work for a first-match task.',
     counterexample:
-      'Using > skips tiger, because 5 is not more than 5, and returns null for the example. Sorting the words by length first returns moon instead of planet for [planet, moon, galaxy] with minimum 4, and it changes the caller’s array.',
+      'Using `>` skips `tiger`, because 5 is not more than 5, and returns `null` for the example. Sorting the words by length first returns `moon` instead of `planet` for `[planet, moon, galaxy]` with minimum 4, and it changes the caller’s array.',
     transfer: 'Search records for the first available item at a price limit. Explain the stopping condition.',
   },
   'count-words': {
@@ -607,19 +607,19 @@ export const coreDepth: Record<string, RepDepth> = {
           line: 5,
           vars: { count: 0, inWord: false, i: 1 },
           structure: { kind: 'array', values: ['␣', 'a', 'b', '␣', '␣', 'c', '␣'], pointers: { i: 1 }, dimmed: [0] },
-          note: 'a is not a space and no word is open, so a new word starts. Count will go from 0 to 1.',
+          note: '`a` is not a space and no word is open, so a new word starts. Count will go from 0 to 1.',
         },
         {
           line: 4,
           vars: { count: 1, inWord: true, i: 2 },
           structure: { kind: 'array', values: ['␣', 'a', 'b', '␣', '␣', 'c', '␣'], pointers: { i: 2 }, dimmed: [0, 1] },
-          note: 'b is not a space and a word is already open, so count stays at 1.',
+          note: '`b` is not a space and a word is already open, so count stays at 1.',
         },
         {
           line: 4,
           vars: { count: 1, inWord: true, i: 3 },
           structure: { kind: 'array', values: ['␣', 'a', 'b', '␣', '␣', 'c', '␣'], pointers: { i: 3 }, dimmed: [0, 1, 2] },
-          note: 'This space ends the word, so inWord becomes false.',
+          note: 'This space ends the word, so `inWord` becomes `false`.',
         },
         {
           line: 4,
@@ -631,7 +631,7 @@ export const coreDepth: Record<string, RepDepth> = {
           line: 5,
           vars: { count: 1, inWord: false, i: 5 },
           structure: { kind: 'array', values: ['␣', 'a', 'b', '␣', '␣', 'c', '␣'], pointers: { i: 5 }, dimmed: [0, 1, 2, 3, 4] },
-          note: 'c starts a second word. Count will go from 1 to 2.',
+          note: '`c` starts a second word. Count will go from 1 to 2.',
         },
         {
           line: 4,
@@ -650,11 +650,11 @@ export const coreDepth: Record<string, RepDepth> = {
     reasoning:
       'A word is a run of characters that are not whitespace, so any run of whitespace is one gap, and whitespace at either end separates nothing. Trimming removes the ends, and splitting at each run then gives one piece per word. Empty text is the exception: splitting it still gives one empty piece, so it needs its own 0.',
     trace:
-      "Trimming the example removes the two spaces at each end and leaves code, three spaces, and reps. Splitting at each run of whitespace gives ['code', 'reps'], so the result is 2. For text of only spaces, trimming leaves '', and the early return gives 0 before any split. 'one\\ntwo\\nthree' splits at both newlines into 3 words.",
+      "Trimming the example removes the two spaces at each end and leaves `code`, three spaces, and `reps`. Splitting at each run of whitespace gives `['code', 'reps']`, so the result is 2. For text of only spaces, trimming leaves `''`, and the early `return` gives 0 before any split. `'one\\ntwo\\nthree'` splits at both newlines into 3 words.",
     alternative:
       'Splitting is clear but builds an array of words first. The character scan in the step trace counts each place where a word starts and needs only a count and one flag, whatever the length of the text.',
     counterexample:
-      "split(' ') cuts at single spaces only: the example gives ['', '', 'code', '', '', 'reps', '', ''], and 'a\\tb' stays one piece. Splitting at runs without trimming gives 4 pieces for the example. Skipping the empty check makes '' return 1, because splitting '' gives [''].",
+      "`split(' ')` cuts at single spaces only: the example gives `['', '', 'code', '', '', 'reps', '', '']`, and `'a\\tb'` stays one piece. Splitting at runs without trimming gives 4 pieces for the example. Skipping the empty check makes `''` return 1, because splitting `''` gives `['']`.",
     transfer: 'Return the length of the longest word instead of the count. Decide what text with no words should return, and say why.',
   },
   'has-duplicate': {
@@ -675,49 +675,49 @@ export const coreDepth: Record<string, RepDepth> = {
           line: 1,
           vars: { seen: '{}' },
           structure: { kind: 'array', values: [3, 1, 3] },
-          note: 'Start with an empty Set. It will hold every number visited so far.',
+          note: 'Start with an empty `Set`. It will hold every number visited so far.',
         },
         {
           line: 3,
           vars: { i: 0, seen: '{}' },
           structure: { kind: 'array', values: [3, 1, 3], pointers: { i: 0 } },
-          note: '3 is not in the Set, so it is not a repeat yet. Check before adding.',
+          note: '3 is not in the `Set`, so it is not a repeat yet. Check before adding.',
         },
         {
           line: 4,
           vars: { i: 0, seen: '{3}' },
           structure: { kind: 'array', values: [3, 1, 3], pointers: { i: 0 } },
-          note: 'Remember 3 by adding it to the Set.',
+          note: 'Remember 3 by adding it to the `Set`.',
         },
         {
           line: 3,
           vars: { i: 1, seen: '{3}' },
           structure: { kind: 'array', values: [3, 1, 3], pointers: { i: 1 }, dimmed: [0] },
-          note: '1 is not in the Set, so it is new.',
+          note: '1 is not in the `Set`, so it is new.',
         },
         {
           line: 4,
           vars: { i: 1, seen: '{3, 1}' },
           structure: { kind: 'array', values: [3, 1, 3], pointers: { i: 1 }, dimmed: [0] },
-          note: 'Add 1. The Set now holds both numbers visited so far.',
+          note: 'Add 1. The `Set` now holds both numbers visited so far.',
         },
         {
           line: 3,
           vars: { i: 2, seen: '{3, 1}', result: true },
           structure: { kind: 'array', values: [3, 1, 3], pointers: { i: 2 }, dimmed: [0, 1] },
-          note: '3 is already in the Set: it appeared at index 0. Return true at once, even though the two copies are not side by side.',
+          note: '3 is already in the `Set`: it appeared at index 0. Return `true` at once, even though the two copies are not side by side.',
         },
       ],
     },
     reasoning:
-      'Before each number is checked, seen holds exactly the numbers visited so far. A number already in seen therefore appeared earlier, which makes it a repeat. If the loop ends without a match, every number was new when it was visited.',
+      'Before each number is checked, `seen` holds exactly the numbers visited so far. A number already in `seen` therefore appeared earlier, which makes it a repeat. If the loop ends without a match, every number was new when it was visited.',
     trace:
-      'For the example [3, 1, 3], seen grows from {} to {3} to {3, 1}. The last 3 is already in seen, so the result is true. An empty array never enters the loop and returns false, and a single number is added once and never matched.',
+      'For the example `[3, 1, 3]`, `seen` grows from `{}` to `{3}` to `{3, 1}`. The last 3 is already in `seen`, so the result is `true`. An empty array never enters the loop and returns `false`, and a single number is added once and never matched.',
     alternative:
-      'Comparing every pair with two nested loops needs no extra storage but makes about n² comparisons. Sorting a copy puts equal numbers side by side in O(n log n) time; sorting the array itself changes the caller’s data. A Set takes one pass with expected fast lookup and O(n) extra storage.',
+      'Comparing every pair with two nested loops needs no extra storage but makes about n² comparisons. Sorting a copy puts equal numbers side by side in O(n log n) time; sorting the array itself changes the caller’s data. A `Set` takes one pass with expected fast lookup and O(n) extra storage.',
     counterexample:
-      'Adding before checking makes every number look repeated: [1, 2, 3] returns true. Comparing only neighbors misses the example, where the two 3s are apart. Storing each index in a Map and testing whether get returns a truthy value misses a repeat of the first number, because its stored index is 0.',
-    transfer: 'Detect duplicates by record ID instead of object identity. Explain which key enters the Set.',
+      'Adding before checking makes every number look repeated: `[1, 2, 3]` returns `true`. Comparing only neighbors misses the example, where the two 3s are apart. Storing each index in a `Map` and testing whether `get` returns a truthy value misses a repeat of the first number, because its stored index is `0`.',
+    transfer: 'Detect duplicates by record ID instead of object identity. Explain which key enters the `Set`.',
   },
   'missing-number': {
     traceSteps: {
@@ -736,7 +736,7 @@ export const coreDepth: Record<string, RepDepth> = {
           line: 2,
           vars: { n: 3, remaining: 0 },
           structure: { kind: 'array', values: [0, 1, 2, 3] },
-          note: 'n is 3, the array’s length, so the full range is 0 to 3: these four boxes. The total starts at 0.',
+          note: '`n` is 3, the array’s length, so the full range is 0 to 3: these four boxes. The total starts at 0.',
         },
         {
           line: 3,
@@ -760,7 +760,7 @@ export const coreDepth: Record<string, RepDepth> = {
           line: 3,
           vars: { n: 3, k: 3, remaining: 6 },
           structure: { kind: 'array', values: [0, 1, 2, 3], pointers: { k: 3 }, dimmed: [0, 1, 2] },
-          note: 'Add 3, which is n itself, because k <= n includes it. The whole range adds up to 6.',
+          note: 'Add 3, which is `n` itself, because `k <= n` includes it. The whole range adds up to 6.',
         },
         {
           line: 4,
@@ -789,13 +789,13 @@ export const coreDepth: Record<string, RepDepth> = {
       ],
     },
     reasoning:
-      'The range 0 to n has n + 1 numbers and the array holds n of them, each once, so exactly one is absent. Adding the whole range and then subtracting every number present cancels each present number, which leaves only the missing one. This relies on the contract: with repeats, the difference would no longer name one missing number.',
+      'The range 0 to `n` has `n + 1` numbers and the array holds `n` of them, each once, so exactly one is absent. Adding the whole range and then subtracting every number present cancels each present number, which leaves only the missing one. This relies on the contract: with repeats, the difference would no longer name one missing number.',
     trace:
-      'For the example [3, 0, 1], n is 3: 0 + 1 + 2 + 3 = 6, the array adds up to 4, and 6 - 4 = 2. For [0, 1], n is 2, so the range is 0 to 2 and the answer is 2 itself. An empty array has n = 0: the range is only 0, nothing is subtracted, and the result is 0.',
+      'For the example `[3, 0, 1]`, `n` is 3: 0 + 1 + 2 + 3 = 6, the array adds up to 4, and 6 - 4 = 2. For `[0, 1]`, `n` is 2, so the range is 0 to 2 and the answer is 2 itself. An empty array has `n = 0`: the range is only 0, nothing is subtracted, and the result is 0.',
     alternative:
-      'A Set of the numbers present makes membership visible: check 0 to n in order and return the first one missing, with O(n) extra storage. Sorting a copy and finding the first index whose value differs takes O(n log n) time. Subtracting totals needs constant storage; a much larger range would need care with number precision.',
+      'A `Set` of the numbers present makes membership visible: check 0 to `n` in order and return the first one missing, with O(n) extra storage. Sorting a copy and finding the first index whose value differs takes O(n log n) time. Subtracting totals needs constant storage; a much larger range would need care with number precision.',
     counterexample:
-      'Treating the largest number as n fails when n itself is missing: [0, 1] gives 0 instead of 2. Adding 0 through n - 1 leaves n out of the total and returns -1 for the example. Sorting a copy with sort() and no comparator puts 10 before 2, so the gap among ten numbers is found in the wrong place.',
+      'Treating the largest number as `n` fails when `n` itself is missing: `[0, 1]` gives 0 instead of 2. Adding 0 through `n - 1` leaves `n` out of the total and returns -1 for the example. Sorting a copy with `sort()` and no comparator puts 10 before 2, so the gap among ten numbers is found in the wrong place.',
     transfer: 'Now permit duplicate inputs. Explain why the sum argument no longer proves one missing value and define validation.',
   },
   'valid-parentheses': {
@@ -816,50 +816,50 @@ export const coreDepth: Record<string, RepDepth> = {
           line: 1,
           vars: { open: 0 },
           structure: { kind: 'array', values: ['(', '(', ')', ')'] },
-          note: 'open counts the ( that are still waiting for a ). Nothing has been read, so it starts at 0.',
+          note: '`open` counts the `(` that are still waiting for a `)`. Nothing has been read, so it starts at 0.',
         },
         {
           line: 3,
           vars: { character: '(', open: 1 },
           structure: { kind: 'array', values: ['(', '(', ')', ')'], pointers: { character: 0 } },
-          note: 'The first ( opens a pair: open is 1.',
+          note: 'The first `(` opens a pair: `open` is 1.',
         },
         {
           line: 3,
           vars: { character: '(', open: 2 },
           structure: { kind: 'array', values: ['(', '(', ')', ')'], pointers: { character: 1 }, dimmed: [0] },
-          note: 'A second ( opens inside the first: open is 2.',
+          note: 'A second `(` opens inside the first: `open` is 2.',
         },
         {
           line: 4,
           vars: { character: ')', open: 1 },
           structure: { kind: 'array', values: ['(', '(', ')', ')'], pointers: { character: 2 }, dimmed: [0, 1] },
-          note: 'The first ) closes one of them: open is 1. It is not below 0, so the text is still valid so far.',
+          note: 'The first `)` closes one of them: `open` is 1. It is not below 0, so the text is still valid so far.',
         },
         {
           line: 4,
           vars: { character: ')', open: 0 },
           structure: { kind: 'array', values: ['(', '(', ')', ')'], pointers: { character: 3 }, dimmed: [0, 1, 2] },
-          note: 'The last ) closes the other: open is 0. The count never dropped below 0 on the way.',
+          note: 'The last `)` closes the other: `open` is 0. The count never dropped below 0 on the way.',
         },
         {
           line: 6,
           vars: { open: 0, result: true },
           structure: { kind: 'array', values: ['(', '(', ')', ')'], dimmed: [0, 1, 2, 3] },
-          note: 'The text has ended with open at 0, so every ( was closed. Return true.',
+          note: 'The text has ended with `open` at 0, so every `(` was closed. Return `true`.',
         },
       ],
     },
     reasoning:
-      'Reading left to right, open is the number of ( still waiting for a ). A ) is valid only when open is above 0, so a negative count means a ) closed nothing and the text can be rejected at once. When the loop ends, every ( must have been closed, so open must be 0. With one kind of bracket, the count is enough: any open ( can be closed by any ).',
+      'Reading left to right, `open` is the number of `(` still waiting for a `)`. A `)` is valid only when `open` is above 0, so a negative count means a `)` closed nothing and the text can be rejected at once. When the loop ends, every `(` must have been closed, so `open` must be 0. With one kind of bracket, the count is enough: any open `(` can be closed by any `)`.',
     trace:
-      'For the example (()), open goes 1, 2, 1, 0: it never drops below 0 and ends at 0, so the result is true. For ())((), open goes 1, 0, -1 at the third character, so the function returns false without reading the rest, even though the text has three of each. For ()(, open ends at 1, so one ( is still open and the result is false.',
+      'For the example `(())`, `open` goes 1, 2, 1, 0: it never drops below 0 and ends at 0, so the result is `true`. For `())(()`, `open` goes 1, 0, -1 at the third character, so the function returns `false` without reading the rest, even though the text has three of each. For `()(`, `open` ends at 1, so one `(` is still open and the result is `false`.',
     alternative:
-      'A stack of the open ( gives the same answer, and it is what Check balanced brackets needs, where each closing bracket must match the kind on top. With one kind, every entry on the stack is the same, so only its length matters, and the count stores that length in constant space.',
+      'A stack of the open `(` gives the same answer, and it is what Check balanced brackets needs, where each closing bracket must match the kind on top. With one kind, every entry on the stack is the same, so only its length matters, and the count stores that length in constant space.',
     counterexample:
-      'Comparing only the totals of ( and ) accepts )(. Checking the totals and that the text does not start with ) still accepts ())((), whose third character closes nothing. Returning true as soon as the count reaches 0 accepts ()(, whose last ( is never closed.',
+      'Comparing only the totals of `(` and `)` accepts `)(`. Checking the totals and that the text does not start with `)` still accepts `())(()`, whose third character closes nothing. Returning `true` as soon as the count reaches 0 accepts `()(`, whose last `(` is never closed.',
     transfer:
-      'Return the deepest nesting level instead of true or false: (()) is 2 and ()() is 1. Decide what text that is not valid, such as ())(, should return, and say why.',
+      'Return the deepest nesting level instead of `true` or `false`: `(())` is 2 and `()()` is 1. Decide what text that is not valid, such as `())(`, should return, and say why.',
   },
   'count-long-words': {
     traceSteps: {
@@ -884,19 +884,19 @@ export const coreDepth: Record<string, RepDepth> = {
           line: 3,
           vars: { word: 'cat', length: 3, count: 0 },
           structure: { kind: 'array', values: ['cat', 'tiger', 'bear'], pointers: { word: 0 } },
-          note: 'cat has 3 characters, fewer than 4, so the count stays 0.',
+          note: '`cat` has 3 characters, fewer than 4, so the count stays 0.',
         },
         {
           line: 3,
           vars: { word: 'tiger', length: 5, count: 1 },
           structure: { kind: 'array', values: ['cat', 'tiger', 'bear'], pointers: { word: 1 }, dimmed: [0] },
-          note: 'tiger has 5 characters, more than 4: the count is 1.',
+          note: '`tiger` has 5 characters, more than 4: the count is 1.',
         },
         {
           line: 3,
           vars: { word: 'bear', length: 4, count: 2 },
           structure: { kind: 'array', values: ['cat', 'tiger', 'bear'], pointers: { word: 2 }, dimmed: [0, 1] },
-          note: 'bear has exactly 4. At least includes the minimum itself, so the count is 2.',
+          note: '`bear` has exactly 4. At least includes the minimum itself, so the count is 2.',
         },
         {
           line: 2,
@@ -908,18 +908,18 @@ export const coreDepth: Record<string, RepDepth> = {
           line: 5,
           vars: { count: 2, result: 2 },
           structure: { kind: 'array', values: ['cat', 'tiger', 'bear'], dimmed: [0, 1, 2] },
-          note: 'Return 2: tiger and bear.',
+          note: 'Return 2: `tiger` and `bear`.',
         },
       ],
     },
     reasoning:
-      'After each word, count is the number of long words among the words already visited. It starts at 0, which is already the answer for an empty array, and grows only when a word reaches the minimum. Unlike Find the first long word, the answer depends on every word, so the loop cannot stop early.',
+      'After each word, `count` is the number of long words among the words already visited. It starts at 0, which is already the answer for an empty array, and grows only when a word reaches the minimum. Unlike Find the first long word, the answer depends on every word, so the loop cannot stop early.',
     trace:
-      "For the example, cat (3) is too short, tiger (5) counts, and bear (4) counts because at least includes 4 itself, so the result is 2. In ['a b', ' hi', 'no'] with a minimum of 3, a b and the space before hi both count as characters, so two words have 3 and the result is 2. A minimum of 0 counts every word, even an empty one.",
+      "For the example, `cat` (3) is too short, `tiger` (5) counts, and `bear` (4) counts because at least includes 4 itself, so the result is 2. In `['a b', ' hi', 'no']` with a minimum of 3, `a b` and the space before `hi` both count as characters, so two words have 3 and the result is 2. A minimum of 0 counts every word, even an empty one.",
     alternative:
-      'words.filter(word => word.length >= minimum).length gives the same count in one line, but it builds an array of the matches first. The loop keeps only the count: O(n) time and O(1) extra space.',
+      '`words.filter(word => word.length >= minimum).length` gives the same count in one line, but it builds an array of the matches first. The loop keeps only the count: O(n) time and O(1) extra space.',
     counterexample:
-      "Using > drops bear from the example and returns 1. Trimming each word first gives ' hi' a length of 2, so the spaces check returns 1 instead of 2. Counting distinct words with a Set counts ['hi', 'hi'] once.",
+      "Using `>` drops `bear` from the example and returns 1. Trimming each word first gives `' hi'` a length of 2, so the spaces check returns 1 instead of 2. Counting distinct words with a `Set` counts `['hi', 'hi']` once.",
     transfer:
       'Count the words whose length is between two limits, inclusive at both ends. Decide what to return when the lower limit is above the upper one, and say why.',
   },
@@ -942,13 +942,13 @@ export const coreDepth: Record<string, RepDepth> = {
           line: 1,
           vars: { seen: '{}' },
           structure: { kind: 'array', values: [6, 1, 9, 1, 6] },
-          note: 'Start with an empty Set of the numbers already passed.',
+          note: 'Start with an empty `Set` of the numbers already passed.',
         },
         {
           line: 4,
           vars: { index: 0, value: 6, seen: '{}' },
           structure: { kind: 'array', values: [6, 1, 9, 1, 6], pointers: { index: 0 } },
-          note: 'The value is 6. The Set is empty, so 6 has not been seen before.',
+          note: 'The value is 6. The `Set` is empty, so 6 has not been seen before.',
         },
         {
           line: 5,
@@ -960,7 +960,7 @@ export const coreDepth: Record<string, RepDepth> = {
           line: 5,
           vars: { index: 1, value: 1, seen: '{6, 1}' },
           structure: { kind: 'array', values: [6, 1, 9, 1, 6], pointers: { index: 1 }, dimmed: [0] },
-          note: '1 is not in the Set, so it is not a repeat. Remember it.',
+          note: '1 is not in the `Set`, so it is not a repeat. Remember it.',
         },
         {
           line: 5,
@@ -972,26 +972,26 @@ export const coreDepth: Record<string, RepDepth> = {
           line: 4,
           vars: { index: 3, value: 1, seen: '{6, 1, 9}', result: 1 },
           structure: { kind: 'array', values: [6, 1, 9, 1, 6], pointers: { index: 3 }, dimmed: [0, 1, 2] },
-          note: '1 is already in the Set, so this is its second occurrence. Return 1. The second 6, at index 4, is never read.',
+          note: '1 is already in the `Set`, so this is its second occurrence. Return 1. The second 6, at index 4, is never read.',
         },
       ],
     },
     reasoning:
-      'A number is known to repeat only at its second occurrence, so reading left to right and stopping at the first number already seen returns the earliest second occurrence. Checking before adding matters: after adding, the current number is always in the Set. Returning at once also leaves the rest of the array unread.',
+      'A number is known to repeat only at its second occurrence, so reading left to right and stopping at the first number already seen returns the earliest second occurrence. Checking before adding matters: after adding, the current number is always in the `Set`. Returning at once also leaves the rest of the array unread.',
     trace:
-      'In the example [6, 1, 9, 1, 6], the Set grows to {6, 1, 9}. At index 3, 1 is already in the Set, so the function returns 1, and the second 6 is never reached. For [0, 1, 0], has(0) is true at index 2, so 0 is returned. For [1, 2, 3], no number is found and the loop ends with null.',
+      'In the example `[6, 1, 9, 1, 6]`, the `Set` grows to `{6, 1, 9}`. At index 3, 1 is already in the `Set`, so the function returns 1, and the second 6 is never reached. For `[0, 1, 0]`, `has(0)` is `true` at index 2, so `0` is returned. For `[1, 2, 3]`, no number is found and the loop ends with `null`.',
     alternative:
-      'Counting every number first and then taking the first one with a count of 2 answers a different question: for the example it returns 6, the number that appeared first. Comparing each number with all earlier ones finds the right answer without a Set, but takes O(n²) time. The Set scan takes O(n) expected time and O(n) space, and stops early.',
+      'Counting every number first and then taking the first one with a count of 2 answers a different question: for the example it returns 6, the number that appeared first. Comparing each number with all earlier ones finds the right answer without a `Set`, but takes O(n²) time. The `Set` scan takes O(n) expected time and O(n) space, and stops early.',
     counterexample:
-      'Counting first, or numbers.find with indexOf !== lastIndexOf, returns 6 for the example. Storing each number in an object as seen[n] = n and testing if (seen[n]) misses a repeated 0, so [0, 1, 0] returns null. Comparing only neighbors misses the example, where the two 1s are not next to each other.',
+      'Counting first, or `numbers.find` with `indexOf !== lastIndexOf`, returns 6 for the example. Storing each number in an object as `seen[n] = n` and testing `if (seen[n])` misses a repeated `0`, so `[0, 1, 0]` returns `null`. Comparing only neighbors misses the example, where the two 1s are not next to each other.',
     transfer:
-      'Return the index of the second occurrence instead of the number: 3 for the example. Decide what to return when nothing repeats, and say why null or -1 fits better.',
+      'Return the index of the second occurrence instead of the number: 3 for the example. Decide what to return when nothing repeats, and say why `null` or `-1` fits better.',
   },
   'remove-adjacent-pairs': {
     reasoning:
       'The stack holds the text reduced so far, so its top is the only character the next one can pair with. A match pops the top, which can uncover an earlier character for the next one to meet; anything else is pushed. Each character is pushed or pops once, so one pass handles every chain of removals.',
     trace:
-      'For the example abbaca, the stack goes a, ab, a, empty, c, ca: the second b removes b, the next a meets the a that this uncovered, and c and a are kept, so the result is ca. For aaa, the second a removes the first and the third is kept, so the result is a. For aA, the two characters differ, so both stay.',
+      'For the example `abbaca`, the stack goes `a`, `ab`, `a`, empty, `c`, `ca`: the second `b` removes `b`, the next `a` meets the `a` that this uncovered, and `c` and `a` are kept, so the result is `ca`. For `aaa`, the second `a` removes the first and the third is kept, so the result is `a`. For `aA`, the two characters differ, so both stay.',
     traceSteps: {
       code: [
         'function removePairs(text: string): string {',
@@ -1015,52 +1015,52 @@ export const coreDepth: Record<string, RepDepth> = {
           line: 4,
           vars: { character: 'a' },
           structure: { kind: 'stack', values: ['a'] },
-          note: 'Nothing is kept yet, so a cannot pair with anything. Keep it.',
+          note: 'Nothing is kept yet, so `a` cannot pair with anything. Keep it.',
         },
         {
           line: 4,
           vars: { character: 'b' },
           structure: { kind: 'stack', values: ['a', 'b'] },
-          note: 'b differs from the top, a, so keep it on top.',
+          note: '`b` differs from the top, `a`, so keep it on top.',
         },
         {
           line: 3,
           vars: { character: 'b' },
           structure: { kind: 'stack', values: ['a'] },
-          note: 'This b equals the top b, so the pair is removed. a is on top again.',
+          note: 'This `b` equals the top `b`, so the pair is removed. `a` is on top again.',
         },
         {
           line: 3,
           vars: { character: 'a' },
           structure: { kind: 'stack', values: [] },
-          note: 'The next a equals the a that removing bb uncovered, so that pair goes too.',
+          note: 'The next `a` equals the `a` that removing `bb` uncovered, so that pair goes too.',
         },
         {
           line: 4,
           vars: { character: 'c' },
           structure: { kind: 'stack', values: ['c'] },
-          note: 'The stack is empty, so c is kept.',
+          note: 'The stack is empty, so `c` is kept.',
         },
         {
           line: 4,
           vars: { character: 'a' },
           structure: { kind: 'stack', values: ['c', 'a'] },
-          note: 'a differs from the top, c, so it is kept as well.',
+          note: '`a` differs from the top, `c`, so it is kept as well.',
         },
         {
           line: 6,
           vars: { result: 'ca' },
           structure: { kind: 'stack', values: ['c', 'a'] },
-          note: 'Join the kept characters from the bottom up, in their original order: ca.',
+          note: 'Join the kept characters from the bottom up, in their original order: `ca`.',
         },
       ],
     },
     alternative:
       'Replacing pairs with a regular expression until the text stops changing gives the same result, but each pass rescans the whole text, which can take O(n²) time. The stack takes O(n) time and O(n) space. A string used as the stack also works, though each removal copies the text.',
     counterexample:
-      "One pass of replace(/(.)\\1/g, '') turns abbaca into aaca and stops there. Removing whole runs of equal characters turns aaa into empty text instead of a. Comparing each character with the one before it in the input, instead of the kept top, leaves aa for abba.",
+      "One pass of `replace(/(.)\\1/g, '')` turns `abbaca` into `aaca` and stops there. Removing whole runs of equal characters turns `aaa` into empty text instead of `a`. Comparing each character with the one before it in the input, instead of the kept top, leaves `aa` for `abba`.",
     transfer:
-      'Remove a pair only when a lowercase letter meets the same letter in uppercase, as in aA, so aa stays. Predict the result for abBA, then say what the stack compares at each step.',
+      'Remove a pair only when a lowercase letter meets the same letter in uppercase, as in `aA`, so `aa` stays. Predict the result for `abBA`, then say what the stack compares at each step.',
   },
   'repair-visible-count': {
     reasoning: 'A minimal repair should align the condition with the contract while preserving the working scan.',
