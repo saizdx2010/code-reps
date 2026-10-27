@@ -386,11 +386,11 @@ export const foundationsDepth: Record<string, RepDepth> = {
     reasoning:
       'Splitting at single spaces can leave empty pieces, but `slice(0, 1)` turns each of them into empty text, so they add nothing. Only real words contribute a letter, and an empty or blank name gives an empty result without a special case.',
     trace:
-      'For the example `ada lovelace` the pieces are `ada` and `lovelace`, giving `A` and then `AL`. For `grace   hopper` the pieces are `grace`, `""`, `""`, and `hopper`; the empty pieces add nothing, so the result is `GH`. For a name of only spaces, `trim` leaves `""`, which splits into one empty piece, so the result is empty.',
+      'For the example `ada lovelace` the pieces are `ada` and `lovelace`, giving `A` and then `AL`. For `grace\u00a0\u00a0\u00a0hopper` the pieces are `grace`, `""`, `""`, and `hopper`; the empty pieces add nothing, so the result is `GH`. For a name of only spaces, `trim` leaves `""`, which splits into one empty piece, so the result is empty.',
     alternative:
       'Splitting on runs of spaces with `split(/\\s+/)` after trimming gives only real words, except that an empty name still gives one empty piece. A regular expression that matches the start of each word can collect initials in one step, but it is harder to trace.',
     counterexample:
-      'Reading `word[0].toUpperCase()` instead of slicing throws on an empty piece, because `word[0]` is `undefined` there: `grace   hopper` fails with an error. Joining the letters with a space returns `A L` instead of `AL`.',
+      'Reading `word[0].toUpperCase()` instead of slicing throws on an empty piece, because `word[0]` is `undefined` there: `grace\u00a0\u00a0\u00a0hopper` fails with an error. Joining the letters with a space returns `A L` instead of `AL`.',
     transfer:
       'Return the first letter of the first and last words only. Decide what a one-word name should return before you change the code. This changed contract is self-reviewed, not checked by the original cases.',
   },
