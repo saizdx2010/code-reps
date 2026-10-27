@@ -42,7 +42,11 @@ export type FluencyState = {
    * reminder at that time while Code Reps is open.
    */
   goal: { pathId: string; minutes: number; days: number[]; weekly?: number; time?: string; remind?: boolean }
-  answers: Record<string, { choice: number; correct: boolean; answeredAt: string; response?: string }>
+  /** `correct` is the first prediction, the lesson's evidence; `revisit` is the latest spaced retry of a missed one. */
+  answers: Record<
+    string,
+    { choice: number; correct: boolean; answeredAt: string; response?: string; revisit?: { correct: boolean; at: string } }
+  >
   reviews: Record<string, SelfReview>
   notes: LearningNote[]
   noteDraft?: LearningNote
@@ -133,7 +137,9 @@ export function parseFluency(raw: unknown): FluencyState {
         (question!.completion
           ? typeof answer.response === 'string' && answer.response.trim() === question!.answerText
           : answer.choice === question!.answer) ||
-      !isDateString(answer.answeredAt, 100)
+      !isDateString(answer.answeredAt, 100) ||
+      (answer.revisit !== undefined &&
+        (!isPlainObject(answer.revisit) || typeof answer.revisit.correct !== 'boolean' || !isDateString(answer.revisit.at, 100)))
     )
       throw new Error('Invalid lesson answer.')
   }

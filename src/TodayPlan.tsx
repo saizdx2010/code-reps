@@ -10,7 +10,10 @@ import { repTitle } from './rep-index.ts'
 import { setOrder, todayPlan } from './today-plan'
 import type { TodayItem } from './today-plan'
 import type { SetItem } from './warmup'
+import type { FluencyState } from './fluency'
 import { useSessionPreference } from './useSessionPreference'
+import { dueQuestions, openRevisit } from './question-revisit'
+import { skillIndex } from './catalog-index.ts'
 
 type TodaySeen = { day: number; done: string[] }
 function readSeen(value: string): TodaySeen | null {
@@ -42,6 +45,7 @@ export default function TodayPlan({
   warmup,
   startWarmup,
   onCloseDay,
+  answers,
 }: {
   history: PortableRecord[]
   now: number
@@ -58,6 +62,8 @@ export default function TodayPlan({
   startWarmup: () => void
   /** Ends the day on Trail: what today held and the rep for next time. */
   onCloseDay: () => void
+  /** Lesson answers, for missed questions that are back for another try (src/question-revisit.ts). */
+  answers: FluencyState['answers']
 }) {
   const plan = todayPlan(history, practicePlan, new Date(now))
   const day = dayNumber(new Date(now))
@@ -96,6 +102,19 @@ export default function TodayPlan({
     </p>
   )
   const set = setOrder(plan.items)
+  // Missed lesson questions coming back: practice beside the plan, never one of its items.
+  const missed = dueQuestions(answers, now)
+  const revisit = missed[0] && (
+    <p className="today-one">
+      <span>
+        {missed.length === 1 ? 'A lesson question you missed is' : `${missed.length} lesson questions you missed are`} back for another try.
+      </span>
+      <Button variant="text" onClick={() => openRevisit(missed[0].skillId)}>
+        Revisit: {skillIndex.find(skill => skill.id === missed[0].skillId)?.title}
+        <Icon name="arrow" />
+      </Button>
+    </p>
+  )
   // Offered beside Today's plan; on its own when there is no plan to show.
   // One quiet line, not a third card: the reps it holds are named once it starts.
   const warmupPanel = warmup.length >= 2 && (
@@ -116,10 +135,11 @@ export default function TodayPlan({
     </section>
   )
   if (!plan.shown)
-    return warmupPanel || smallest ? (
+    return warmupPanel || smallest || revisit ? (
       <>
         {warmupPanel}
         {smallest}
+        {revisit}
       </>
     ) : null
   return (
@@ -203,6 +223,7 @@ export default function TodayPlan({
       </section>
       {warmupPanel}
       {smallest}
+      {revisit}
     </>
   )
 }

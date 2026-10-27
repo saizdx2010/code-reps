@@ -18,6 +18,7 @@ import type { PortableRecord } from './portability'
 import { repTitle } from './rep-index.ts'
 import { preloadPractice } from './editor-loader'
 import { useSessionPreference } from './useSessionPreference'
+import { dueQuestions, revisitDays } from './question-revisit'
 import './milestones.css'
 
 const defaultReview = (): SelfReview => ({
@@ -347,23 +348,37 @@ function LessonQuestions({ skill, state, update }: { skill: Skill; state: Fluenc
   const [responses, setResponses] = useState<Record<string, string>>({})
   // Retries after the first check are practice: shown here, never written over the recorded first prediction.
   const [retries, setRetries] = useState<Record<string, { choice: number; response?: string; correct: boolean }>>({})
+  // Missed questions that were due when the lesson opened stay blank for this visit, to be answered from memory.
+  const [due] = useState(() => new Set(dueQuestions(state.answers, Date.now()).map(q => `${q.skillId}:${q.questionId}`)))
+  const [revisits, setRevisits] = useState<Record<string, { choice: number; response?: string; correct: boolean }>>({})
   return skill.questions.map(question => {
     const id = `${skill.id}:${question.id}`
     const answer = state.answers[id]
-    const choice = choices[id] ?? answer?.choice
-    const response = responses[id] ?? answer?.response ?? ''
+    const revisiting = due.has(id)
+    const choice = choices[id] ?? (revisiting ? undefined : answer?.choice)
+    const response = responses[id] ?? (revisiting ? undefined : answer?.response) ?? ''
     const retry = retries[id]
+    const revisit = revisits[id]
+    const matches = (checked?: { choice: number; response?: string }) =>
+      checked && checked.choice === choice && (!question.completion || (checked.response ?? '') === response)
     // Feedback belongs to the choice that was checked; changing the choice hides it until the next check.
-    const shown =
-      retry && retry.choice === choice && (!question.completion || retry.response === response)
-        ? { ...retry, practice: true }
-        : answer && !retries[id] && answer.choice === choice && (!question.completion || (answer.response ?? '') === response)
-          ? { choice: answer.choice, response: answer.response, correct: answer.correct, practice: false }
+    const shown = matches(retry)
+      ? { ...retry!, kind: 'practice' }
+      : !retry && matches(revisit)
+        ? { ...revisit!, kind: 'revisit' }
+        : answer && !retry && !revisiting && matches(answer)
+          ? { choice: answer.choice, response: answer.response, correct: answer.correct, kind: 'first' }
           : undefined
     function check() {
       const correct = question.completion ? response.trim() === question.options[question.answer] : choice === question.answer
+      const checked = { choice: question.completion ? question.answer : choice!, response, correct }
+      if (answer && revisiting && !revisit) {
+        setRevisits({ ...revisits, [id]: checked })
+        update({ ...state, answers: { ...state.answers, [id]: { ...answer, revisit: { correct, at: new Date().toISOString() } } } })
+        return
+      }
       if (answer) {
-        setRetries({ ...retries, [id]: { choice: question.completion ? question.answer : choice!, response, correct } })
+        setRetries({ ...retries, [id]: checked })
         return
       }
       update({
@@ -387,6 +402,7 @@ function LessonQuestions({ skill, state, update }: { skill: Skill; state: Fluenc
         <legend>
           <InlineCode text={question.prompt} />
         </legend>
+        {revisiting && <p className="utility-note">You missed this on {formatDate(answer!.answeredAt)}. Answer it from memory.</p>}
         {question.code && (
           <pre>
             <code>{question.code}</code>
@@ -426,7 +442,7 @@ function LessonQuestions({ skill, state, update }: { skill: Skill; state: Fluenc
         )}
         {!shown && (
           <Button variant="primary" type="button" disabled={question.completion ? !response.trim() : choice === undefined} onClick={check}>
-            {answer ? 'Check again (practice)' : 'Check prediction'}
+            {revisiting && !revisit ? 'Check answer' : answer ? 'Check again (practice)' : 'Check prediction'}
           </Button>
         )}
         {shown && (
@@ -443,9 +459,11 @@ function LessonQuestions({ skill, state, update }: { skill: Skill; state: Fluenc
                 <InlineCode text={question.explanation} />
               </p>
               <p className="lesson-feedback-meta">
-                {shown.practice
+                {shown.kind === 'practice'
                   ? 'Practice check: your first prediction stays as your evidence.'
-                  : `Your first prediction, checked ${formatDate(answer!.answeredAt)}. Later checks are practice.`}
+                  : shown.kind === 'revisit'
+                    ? `${shown.correct ? 'It will not come back.' : `It comes back in ${revisitDays} days.`} Your first prediction stays as your evidence.`
+                    : `Your first prediction, checked ${formatDate(answer!.answeredAt)}. Later checks are practice.`}
               </p>
             </div>
           </div>

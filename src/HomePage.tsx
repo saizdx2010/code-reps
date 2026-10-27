@@ -337,6 +337,7 @@ export function HomePage(props: Props) {
                   warmup={warmup}
                   startWarmup={startWarmup}
                   onCloseDay={props.onCloseDay}
+                  answers={props.learning.answers}
                 />
               </Suspense>
               <Suspense fallback={null}>
