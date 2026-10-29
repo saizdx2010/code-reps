@@ -43,7 +43,7 @@ test('lit parts run the learner’s code and the request stops at the first part
   await expect(flow).toContainText('5 of 8 parts lit. 3 reps until requests reach a handler.')
   await expect(flow.locator('.console-part.is-lit')).toHaveCount(5)
   await expect(part(page, 'Path cleaning')).toContainText('Not lit')
-  await expect(part(page, 'Path cleaning')).toContainText('Complete Clean a path before routing to light this part.')
+  await expect(part(page, 'Path cleaning')).toContainText('Complete “Clean a path before routing” to light this part.')
   await send(page)
   await expect(flow.getByRole('status')).toHaveText('Stopped at path cleaning.', { timeout: runTimeout })
   await expect(part(page, 'Request line')).toContainText('Agrees')

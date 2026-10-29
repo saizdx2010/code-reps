@@ -43,7 +43,7 @@ export const skills: Skill[] = [
     sections: [
       {
         title: 'Names and values',
-        body: 'A variable names a value. const prevents assigning a different value to that name; it does not freeze an object. let allows reassignment. Choose names that describe the role of the value, such as quantity, rather than its type alone.',
+        body: 'A variable names a value. `const` prevents assigning a different value to that name; it does not freeze an object. `let` allows reassignment. Choose names that describe the role of the value, such as quantity, rather than its type alone.',
       },
       {
         title: 'Types describe expectations',
@@ -51,19 +51,19 @@ export const skills: Skill[] = [
       },
       {
         title: 'A function is a boundary',
-        body: 'A function takes inputs and returns an output. console.log displays something for a person; return sends a value back to the caller. Keep calculation separate from display so you can check the calculation directly.',
+        body: 'A function takes inputs and returns an output. `console.log` displays something for a person; `return` sends a value back to the caller. Keep calculation separate from display so you can check the calculation directly.',
       },
     ],
     example: 'function cost(price: number, quantity: number): number {\n  return price * quantity\n}\nconst subtotal = cost(250, 2) // 500',
     walkthrough: [
       'The caller supplies 250 and 2.',
-      'Inside cost, price is 250 and quantity is 2.',
-      'Multiplication produces 500; return passes it to the caller.',
-      'subtotal names the returned value. No output is printed.',
+      'Inside `cost`, `price` is 250 and `quantity` is 2.',
+      'Multiplication produces 500; `return` passes it to the caller.',
+      '`subtotal` names the returned value. No output is printed.',
     ],
     mistakes: [
-      'Using console.log where the caller expects a return value.',
-      'Assuming const makes an array immutable.',
+      'Using `console.log` where the caller expects a return value.',
+      'Assuming `const` makes an array immutable.',
       'Treating TypeScript annotations as runtime validation.',
     ],
     questions: [
@@ -109,7 +109,7 @@ export const skills: Skill[] = [
       },
       {
         title: 'Return a new value',
-        body: 'Some code must keep the value it received. Create a new object or string instead of assigning to the received object. Spread syntax copies fields into a new object, and string methods such as trim return new strings. The original value still belongs to the caller.',
+        body: 'Some code must keep the value it received. Create a new object or string instead of assigning to the received object. Spread syntax copies fields into a new object, and string methods such as `trim` return new strings. The original value still belongs to the caller.',
       },
     ],
     example:
@@ -162,7 +162,7 @@ export const skills: Skill[] = [
     sections: [
       {
         title: 'Order and position',
-        body: 'An array stores ordered values. Position zero holds the first item. Reading past the end produces undefined. `for (const n of numbers)` visits each item in order; a loop over the indexes also gives you each position. Before reading an item, decide what an empty array means for your contract: zero, null, an empty result, or an error.',
+        body: 'An array stores ordered values. Position zero holds the first item. Reading past the end produces `undefined`. `for (const n of numbers)` visits each item in order; a loop over the indexes also gives you each position. Before reading an item, decide what an empty array means for your contract: zero, `null`, an empty result, or an error.',
       },
       {
         title: 'Keep an invariant',
@@ -290,7 +290,7 @@ export const skills: Skill[] = [
     sections: [
       {
         title: 'Membership versus counting',
-        body: 'A Set stores distinct values: `seen.has(n)` asks whether n is already stored, and `seen.add(n)` stores it. A Map stores a value for each key, such as a count: `counts.get(key)` reads it and `counts.set(key, value)` replaces it. A key that was never set reads as undefined. `??` uses its right side only when the left side is null or undefined, so `counts.get(key) ?? 0` gives 0 for a new key. `for (const [key, value] of counts)` visits every entry in the order the keys were first set. Object keys have reference identity; two separate objects with identical fields are different keys.',
+        body: 'A Set stores distinct values: `seen.has(n)` asks whether n is already stored, and `seen.add(n)` stores it. A Map stores a value for each key, such as a count: `counts.get(key)` reads it and `counts.set(key, value)` replaces it. A key that was never set reads as `undefined`. `??` uses its right side only when the left side is `null` or `undefined`, so `counts.get(key) ?? 0` gives 0 for a new key. `for (const [key, value] of counts)` visits every entry in the order the keys were first set. Object keys have reference identity; two separate objects with identical fields are different keys.',
       },
       {
         title: 'Order belongs to the question',
@@ -366,7 +366,7 @@ export const skills: Skill[] = [
       },
       {
         title: 'Reading the top',
-        body: '`stack.pop()` removes the top item and returns it; `stack[stack.length - 1]` reads the top without removing it. On an empty array both give undefined, which equals no bracket, so a closing bracket with nothing open fails its comparison. Skipping the comparison when the stack is empty would accept that bracket instead.',
+        body: '`stack.pop()` removes the top item and returns it; `stack[stack.length - 1]` reads the top without removing it. On an empty array both give `undefined`, which equals no bracket, so a closing bracket with nothing open fails its comparison. Skipping the comparison when the stack is empty would accept that bracket instead.',
       },
     ],
     example: 'const stack: string[] = []\n// For ([]): push (, push [, pop [ for ], pop ( for ).\n// At the end the stack is empty.',
@@ -415,7 +415,7 @@ export const skills: Skill[] = [
     sections: [
       {
         title: 'Unknown is honest',
-        body: 'A request can contain null, an array, a primitive, or an object with unexpected fields. Check object shape before accessing fields. typeof null is object, so explicitly exclude null. Array.isArray distinguishes arrays from records.',
+        body: 'A request can contain `null`, an array, a primitive, or an object with unexpected fields. Check object shape before accessing fields. `typeof null` is `"object"`, so explicitly exclude `null`. `Array.isArray` distinguishes arrays from records.',
       },
       {
         title: 'Validate, then normalize',
@@ -565,7 +565,7 @@ export const skills: Skill[] = [
       },
       {
         title: 'Read a stack trace from the top',
-        body: 'An error message names what went wrong; the stack trace lists the calls that were running, newest first. The top frame is where the error was thrown, and each frame below it is the caller that led there. The bad value may have been chosen by a caller lower down, and a function that already returned, such as a lookup that gave back null, does not appear at all.',
+        body: 'An error message names what went wrong; the stack trace lists the calls that were running, newest first. The top frame is where the error was thrown, and each frame below it is the caller that led there. The bad value may have been chosen by a caller lower down, and a function that already returned, such as a lookup that gave back `null`, does not appear at all.',
       },
       {
         title: 'Refactoring preserves the contract',
@@ -687,11 +687,11 @@ export const skills: Skill[] = [
     sections: [
       {
         title: 'A promise represents future completion',
-        body: 'An async function returns a Promise. await pauses that async function until the promise settles; it does not block the entire browser. A rejected promise throws at the await expression and can be handled with try/catch.',
+        body: 'An `async` function returns a `Promise`. `await` pauses that `async` function until the promise settles; it does not block the entire browser. A rejected promise throws at the `await` expression and can be handled with `try`/`catch`.',
       },
       {
         title: 'Ordering and independence',
-        body: 'Awaiting one request before starting another makes them sequential. Promise.all can start independent work together and rejects when an input rejects. Promise.allSettled records every outcome. Concurrency is useful only when operations do not depend on each other.',
+        body: 'Awaiting one request before starting another makes them sequential. `Promise.all` can start independent work together and rejects when an input rejects. `Promise.allSettled` records every outcome. Concurrency is useful only when operations do not depend on each other.',
       },
       {
         title: 'Races and cancellation',

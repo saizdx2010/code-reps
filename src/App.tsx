@@ -426,9 +426,16 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
     }
   }
 
+  // The editor's run shortcut can fire before React renders the edit just made (a paste, then Ctrl+Enter), so a run
+  // reads the editor's latest text; every render resets it to the saved attempt.
+  const latestCode = useRef(attempt.code)
+  useLayoutEffect(() => {
+    latestCode.current = attempt.code
+  })
   function runChecks() {
-    if (running || !full || attempt.code === undefined) return
-    checks.run(attempt.code, full, repId)
+    const code = latestCode.current
+    if (running || !full || code === undefined) return
+    checks.run(code, full, repId)
     setMobileTab('workspace')
     setActiveStep('solve')
     setChecksOpen(true)
@@ -693,10 +700,13 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
       <FirstRepWalkthrough step={activeStep} completed={!!attempt.completedAt} onNext={revealSection} onDismiss={dismissWalkthrough} />
     </Suspense>
   )
-  // Finish is never "Optional": it is where the rep is completed. It reads Ready once nothing is missing.
+  // Finish is never "Optional": it is where the rep is completed. It reads Ready once nothing is missing. Understand
+  // counts as done once the rep is complete, so a finished rep shows every step checked.
   const stepStatus = (stepId: string) =>
     stepId === 'understand'
-      ? 'Read'
+      ? attempt.completedAt
+        ? 'Done'
+        : 'Read'
       : stepId === 'review'
         ? attempt.completedAt
           ? 'Done'
@@ -708,7 +718,7 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
           : stepId === 'solve' || writingRequired
             ? 'Needed'
             : 'Optional'
-  const stepComplete = (stepId: string) => (stepId === 'review' ? !!attempt.completedAt : stepId !== 'understand' && stepDone[stepId])
+  const stepComplete = (stepId: string) => (stepId === 'review' || stepId === 'understand' ? !!attempt.completedAt : stepDone[stepId])
   const layoutColumns = focusMode ? 'auto minmax(0, 1fr)' : `minmax(0, ${splitWidth}fr) 12px minmax(0, ${100 - splitWidth}fr)`
   const activeRound = fluency.state.rounds.find(round => !round.endedAt && round.repId === repId)
   // The catalog knows a SQL rep before its content loads, so the editor opens with the right file and language.
@@ -930,7 +940,10 @@ function App({ profileName = 'My learning', onManageProfiles }: { profileName?: 
                       path={editorPath}
                       language={sqlRep ? 'sql' : 'typescript'}
                       value={attempt.code}
-                      onChange={value => update('code', value ?? '')}
+                      onChange={value => {
+                        latestCode.current = value ?? ''
+                        update('code', value ?? '')
+                      }}
                       onRunChecks={runChecks}
                       vim={vimKeys}
                       onTypeIssues={issues => setTypeIssues({ repId: rep.id, issues })}

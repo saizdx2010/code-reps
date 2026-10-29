@@ -570,17 +570,20 @@ main {
   min-height: var(--control-height);
 }
 .path-overview {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 28px;
-  padding: 28px;
+  margin-top: 20px;
+  padding: 22px 24px 26px;
+  overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
 .path-overview h2 {
-  margin-bottom: 10px;
+  margin-bottom: 0;
   font-size: var(--type-feature);
 }
 .path-overview p {
@@ -613,7 +616,7 @@ main {
   flex-direction: column;
   gap: 9px;
   min-width: 0;
-  padding: 20px;
+  padding: 16px 18px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: transparent;
@@ -632,7 +635,7 @@ main {
   color: var(--feature-muted);
 }
 .path-choices strong {
-  font-size: var(--type-card);
+  font-size: 16px;
   font-weight: 600;
 }
 .path-choices span,
@@ -714,7 +717,12 @@ main {
 }
 .learn-section > summary h2 {
   display: inline;
+  margin: 0;
   font-size: var(--type-section);
+}
+/* The group's intro follows its heading as a page section's would, without a second gap on top of the summary's. */
+.learn-section > .section-intro {
+  margin-top: 0;
 }
 .section-intro {
   color: var(--muted);
@@ -772,29 +780,6 @@ main {
   font-size: var(--type-card);
   font-weight: 600;
   margin-bottom: 6px;
-}
-.progress-reviews {
-  margin-top: 20px;
-}
-.progress-reviews > summary {
-  padding: 12px 0;
-  cursor: pointer;
-}
-.progress-reviews ul {
-  padding: 0;
-  list-style: none;
-}
-.progress-reviews li {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 16px 0;
-  border-top: 1px solid var(--border);
-}
-.progress-reviews p {
-  color: var(--muted);
-  margin: 6px 0 0;
-  font-size: 14px;
 }
 .progress-skills-title {
   margin: 32px 0 8px;
@@ -2305,10 +2290,13 @@ footer {
 .checks-toggle > span:last-child > span {
   margin-left: 12px;
 }
+/* Rows scrolling under the run bar fade out across the bottom padding, so a cut row reads as more to scroll; at the end
+   only the padding is faded. */
 #check-details {
   min-height: 0;
   padding: 0 16px 16px;
   overflow-y: auto;
+  mask-image: linear-gradient(#000 calc(100% - 16px), #0000);
   overscroll-behavior: contain;
   scrollbar-width: thin;
 }
@@ -3388,6 +3376,7 @@ dialog.preview-inline {
   .path-overview {
     align-items: start;
     flex-direction: column;
+    gap: 14px;
     padding: 22px;
   }
   .path-choices,
@@ -3404,10 +3393,6 @@ dialog.preview-inline {
   }
   .progress-heading > div {
     flex-basis: 100%;
-  }
-  .progress-reviews li {
-    flex-direction: column;
-    gap: 8px;
   }
   .evidence-list li {
     grid-template-columns: minmax(0, 1fr);
@@ -4904,16 +4889,7 @@ details[open]:not(.site-menu):not(.workspace-options):not(.knowledge-browser):no
  * Plain chevron disclosures: the hover tint spans exactly the divider's width with the chevron inset, and keeps a little
  * air from the dividers above and below, as divided lists do.
  */
-:is(
-    .starting-point-settings,
-    .catalog-filters,
-    .progress-reviews,
-    .local-data,
-    .vocab,
-    .reflection-guide,
-    .progress-more-reviews,
-    .profile-management
-  )
+:is(.starting-point-settings, .catalog-filters, .local-data, .vocab, .reflection-guide, .progress-more-reviews, .profile-management)
   > summary {
   margin-block: 3px;
   padding-inline: 8px;

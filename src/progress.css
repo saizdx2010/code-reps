@@ -282,7 +282,9 @@
 /* The ladder: one bar of skills by rung, then each rung as a row with its count, lowest rung last. */
 .progress-main .progress-summary .skill-ladder dd {
   display: grid;
-  align-content: end;
+  /* The bar sits under its caption and the legend rows share the rest of the card, so a card stretched to the
+     practice-rhythm card's height never opens a gap in the middle. */
+  grid-template-rows: auto 1fr;
   gap: 14px;
   padding-top: 14px;
   font-size: 14px;
@@ -297,7 +299,8 @@
   background: var(--surface-2);
 }
 .skill-ladder-bar > span {
-  min-width: 8px;
+  /* Wide enough that a single skill reads as a rounded end, not a sliver. */
+  min-width: 14px;
   flex-basis: 0;
 }
 /* The end segments take the bar's rounding, so an outlined rung's inset edge follows the curve instead of being
@@ -331,6 +334,7 @@
 }
 .skill-ladder-legend {
   display: grid;
+  grid-auto-rows: minmax(min-content, 1fr);
   margin: 0;
   padding: 0;
   list-style: none;

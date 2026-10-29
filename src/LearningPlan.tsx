@@ -15,6 +15,7 @@ import { calendarFile } from './calendar-file'
 import { canInstall, install, installed, onInstallChange } from './install-prompt'
 import { monthLookBack } from './month-look-back'
 import { plural } from './ui-copy'
+import './learning-plan.css'
 
 type Props = {
   state: FluencyState

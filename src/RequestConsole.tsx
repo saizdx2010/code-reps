@@ -265,7 +265,7 @@ function PartRow({
           <p className="console-part-source">From your completed {title}</p>
         ) : (
           <p className="console-part-source">
-            Complete {title} to light this part.{' '}
+            Complete “{title}” to light this part.{' '}
             <Button variant="text" onClick={() => openRep(part.repId)}>
               Open the rep
               <Icon name="arrow" />

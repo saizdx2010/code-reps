@@ -14,7 +14,7 @@ export const typescriptBoundarySkill: Skill = {
   sections: [
     {
       title: 'Unknown is an honest boundary',
-      body: 'A parsed JSON value can be null, an array, or an object with the wrong fields. Treat it as unknown: check for a non-null, non-array object, then each field. A predicate returning value is Contact must really inspect every required field; a lying predicate compiles yet fails at runtime, and an assertion validates nothing. A string field proves shape, not a sensible name, so apply length rules separately. False is a valid boolean; truthiness is not a type check.',
+      body: 'A parsed JSON value can be `null`, an array, or an object with the wrong fields. Treat it as `unknown`: check for a non-null, non-array object, then each field. A predicate returning `value is Contact` must really inspect every required field; a lying predicate compiles yet fails at runtime, and an assertion validates nothing. A string field proves shape, not a sensible name, so apply length rules separately. False is a valid boolean; truthiness is not a type check.',
     },
     {
       title: 'Narrow alternatives, then exhaust them',

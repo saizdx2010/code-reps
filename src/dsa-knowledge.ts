@@ -14,15 +14,15 @@ export const dsaSkills: Skill[] = [
     sections: [
       {
         title: 'An ordered array',
-        body: 'The declaration `const values: number[] = []` creates an empty array of numbers. push adds at the end; pop removes and returns the last item, or undefined when empty. values.length counts items. values[index] reads a zero-based position. Spread, [...values], creates a separate shallow array: nested objects would still share references. const prevents reassignment of the name, not changes to the array.',
+        body: 'The declaration `const values: number[] = []` creates an empty array of numbers. `push` adds at the end; `pop` removes and returns the last item, or `undefined` when empty. `values.length` counts items. `values[index]` reads a zero-based position. Spread, `[...values]`, creates a separate shallow array: nested objects would still share references. `const` prevents reassignment of the name, not changes to the array.',
       },
       {
         title: 'Distinct values in a set',
-        body: 'The declaration `const seen = new Set<number>()` creates an empty set. add(value) inserts a value; has(value) checks membership; delete(value) removes it; size counts distinct values. Adding the same number twice keeps one member. Deleting an absent member is allowed. Use for...of to visit values in insertion order. A set does not offer array-style indexing.',
+        body: 'The declaration `const seen = new Set<number>()` creates an empty set. `add(value)` inserts a value; `has(value)` checks membership; `delete(value)` removes it; `size` counts distinct values. Adding the same number twice keeps one member. Deleting an absent member is allowed. Use `for...of` to visit values in insertion order. A set does not offer array-style indexing.',
       },
       {
         title: 'Associated values in a map',
-        body: 'The declaration `const counts = new Map<string, number>()` associates text keys with numbers. set(key, value) creates or replaces an association; get(key) reads it; has(key) distinguishes presence; delete(key) removes it; size counts keys. for (const [key, value] of counts) visits entries in insertion order. A missing get returns undefined. A stored zero is still present: use ?? rather than || when defaulting only missing values.',
+        body: 'The declaration `const counts = new Map<string, number>()` associates text keys with numbers. `set(key, value)` creates or replaces an association; `get(key)` reads it; `has(key)` distinguishes presence; `delete(key)` removes it; `size` counts keys. `for (const [key, value] of counts)` visits entries in insertion order. A missing `get` returns `undefined`. A stored zero is still present: use `??` rather than `||` when defaulting only missing values.',
       },
       {
         title: 'Choose by the question',
@@ -77,7 +77,7 @@ export const dsaSkills: Skill[] = [
     sections: [
       {
         title: 'A stack serves the newest item',
-        body: 'An array can be a stack: push adds at its end, pop removes from that end, and stack[stack.length - 1] peeks without removing. Last in, first out suits unfinished nested work and undo. An empty pop or peek yields undefined; translate that to null only when your contract asks for it.',
+        body: 'An array can be a stack: `push` adds at its end, `pop` removes from that end, and `stack[stack.length - 1]` peeks without removing. Last in, first out suits unfinished nested work and undo. An empty pop or peek yields `undefined`; translate that to `null` only when your contract asks for it.',
       },
       {
         title: 'A queue serves the oldest item',
@@ -292,11 +292,11 @@ export const dsaSkills: Skill[] = [
       },
       {
         title: 'Trace calls and returns',
-        body: 'Each call waits on the calls it made until they return, so unfinished work is stacked up. Trace by writing the call, the smaller calls it makes, and what each returns. For [1, [2, []]], the outer call adds 1 to the result of the call on [2, []], which adds 2 to the result for [], which is 0. Results combine on the way back: 0, then 2, then 3. Very deep nesting can exhaust the call stack and throw a RangeError, so recursion suits data whose depth is modest.',
+        body: 'Each call waits on the calls it made until they return, so unfinished work is stacked up. Trace by writing the call, the smaller calls it makes, and what each returns. For `[1, [2, []]]`, the outer call adds 1 to the result of the call on `[2, []]`, which adds 2 to the result for `[]`, which is 0. Results combine on the way back: 0, then 2, then 3. Very deep nesting can exhaust the call stack and throw a `RangeError`, so recursion suits data whose depth is modest.',
       },
       {
         title: 'Nested arrays and objects',
-        body: 'Use Array.isArray(item) to tell a nested list from a number. For objects, loop over Object.values and recurse into values that are objects; null needs its own check because typeof null is "object". Flattening collects numbers into one new array in left-to-right order: build a result, then append what each recursive call returns. Do not change the input while walking it.',
+        body: 'Use `Array.isArray(item)` to tell a nested list from a number. For objects, loop over `Object.values` and recurse into values that are objects; `null` needs its own check because `typeof null` is `"object"`. Flattening collects numbers into one new array in left-to-right order: build a result, then append what each recursive call returns. Do not change the input while walking it.',
       },
       {
         title: 'Cost and limits',
@@ -364,19 +364,19 @@ dsaSkills.push(
     sections: [
       {
         title: 'A list is a chain of references',
-        body: 'Each node holds a value and next, a reference to the following node. The head is the first node, and next is null on the last node. An empty list is just null. Unlike an array, a list has no positions to index: reaching the fifth node means following four links from the head. Values may repeat, and 0 is an ordinary value.',
+        body: 'Each node holds a `value` and `next`, a reference to the following node. The head is the first node, and `next` is `null` on the last node. An empty list is just `null`. Unlike an array, a list has no positions to index: reaching the fifth node means following four links from the head. Values may repeat, and 0 is an ordinary value.',
       },
       {
         title: 'Walk with a cursor',
-        body: 'Keep the head where it is and move a separate cursor instead: for (let current = head; current !== null; current = current.next). The loop visits each node once and stops after the last one. Test current !== null rather than current.value: a node holding 0 is still a node.',
+        body: 'Keep the head where it is and move a separate cursor instead: `for (let current = head; current !== null; current = current.next)`. The loop visits each node once and stops after the last one. Test `current !== null` rather than `current.value`: a node holding 0 is still a node.',
       },
       {
         title: 'Build in order with a tail',
-        body: 'Putting each new node in front of the result built so far reverses the order, which is exactly what reversal needs. To keep the original order, attach each new node after the last one instead, and keep a tail reference so you do not walk the copy again each time. A placeholder node before the real head means the first append is not a special case; return placeholder.next at the end, which is null when nothing was added.',
+        body: 'Putting each new node in front of the result built so far reverses the order, which is exactly what reversal needs. To keep the original order, attach each new node after the last one instead, and keep a tail reference so you do not walk the copy again each time. A placeholder node before the real head means the first append is not a special case; return `placeholder.next` at the end, which is `null` when nothing was added.',
       },
       {
         title: 'Copy rather than change',
-        body: 'These reps return fresh nodes. Assigning to current.next on an input node changes the caller’s list, and returning an input node makes the two lists share every node after it, so a later change to one appears in the other. Checks compare values and detect visible input changes, but they cannot see whether output nodes are fresh; review that yourself.',
+        body: 'These reps return fresh nodes. Assigning to `current.next` on an input node changes the caller’s list, and returning an input node makes the two lists share every node after it, so a later change to one appears in the other. Checks compare values and detect visible input changes, but they cannot see whether output nodes are fresh; review that yourself.',
       },
       {
         title: 'Insert and remove',

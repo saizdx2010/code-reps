@@ -167,17 +167,18 @@ export function PathsPage(props: Props) {
             </Button>
           )}
         </div>
+        {/* The bar runs along the card's bottom edge, so it reads as this track's progress rather than a page divider. */}
+        <div
+          className="path-progress"
+          role="progressbar"
+          aria-label="Track progress"
+          aria-valuenow={trail.done}
+          aria-valuemin={0}
+          aria-valuemax={trail.total}
+        >
+          <span style={{ width: `${trail.total ? (trail.done / trail.total) * 100 : 0}%` }} />
+        </div>
       </section>
-      <div
-        className="path-progress"
-        role="progressbar"
-        aria-label="Track progress"
-        aria-valuenow={trail.done}
-        aria-valuemin={0}
-        aria-valuemax={trail.total}
-      >
-        <span style={{ width: `${trail.total ? (trail.done / trail.total) * 100 : 0}%` }} />
-      </div>
       <InfoNote label="What track progress counts">
         <p>
           Track completion records finished reps, including hinted work. Independence and retention use separate skill evidence: a guided

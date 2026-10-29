@@ -63,7 +63,7 @@ export const practicalSkills: Skill[] = [
     sections: [
       {
         title: 'Identity differs from content',
-        body: 'For objects, === compares identity. Two object literals with the same fields are distinct. A Set or Map also distinguishes those references. Primitive strings compare by value. Use a stable record ID when business identity is the intended comparison.',
+        body: 'For objects, `===` compares identity. Two object literals with the same fields are distinct. A Set or Map also distinguishes those references. Primitive strings compare by value. Use a stable record ID when business identity is the intended comparison.',
       },
       {
         title: 'Shallow copying',

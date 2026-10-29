@@ -30,8 +30,8 @@
   font-size: var(--type-card);
 }
 .life-toy-head p,
-.life-toy-intro,
-.life-toy-help {
+.life-toy .life-toy-intro,
+.life-toy .life-toy-help {
   margin: 2px 0 0;
   color: var(--muted);
   font-size: 14px;

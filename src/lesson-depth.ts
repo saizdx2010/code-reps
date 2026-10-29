@@ -19,10 +19,10 @@ export const lessonDepth: Record<string, LessonDepth> = {
     title: 'A binding and an object can change independently',
     code: 'const first = { score: 1 };\nconst second = first;\nsecond.score = 2;\n// first.score is now 2.',
     reasoning:
-      'Both names refer to the same object. Updating through second changes that object; neither binding is reassigned. A copied object would have a different identity. This is why const does not guarantee immutable data.',
-    challenge: 'Predict what happens after const copy = { ...first }; copy.score = 9. Explain the value of first.score.',
+      'Both names refer to the same object. Updating through `second` changes that object; neither binding is reassigned. A copied object would have a different identity. This is why `const` does not guarantee immutable data.',
+    challenge: 'Predict what happens after `const copy = { ...first }; copy.score = 9`. Explain the value of `first.score`.',
     answer:
-      'first.score remains 2: the spread creates a separate object for these primitive properties. Nested objects would still share references unless copied too.',
+      '`first.score` remains 2: the spread creates a separate object for these primitive properties. Nested objects would still share references unless copied too.',
   },
   'control-flow': {
     title: 'Order the branches and make the loop progress',
