@@ -1,5 +1,5 @@
 import { dsaPlanPrompts } from './dsa-plan-prompts.ts'
-import type { RepDepth, TraceStructure } from './rep-depth.ts'
+import type { RepDepth, TraceStructure, TraceTreeNode } from './rep-depth.ts'
 
 type GraphState = Pick<Extract<TraceStructure, { kind: 'graph' }>, 'current' | 'visited' | 'queued' | 'highlight'>
 // Graph trace layouts are fixed per rep so a node keeps its place between steps.
@@ -77,6 +77,109 @@ const courseGraph = (edgeCount: number, needs: Record<number, string>, state: Gr
     ] as [string, string][]
   ).slice(0, edgeCount),
   ...state,
+})
+// graph-reachable-count: 0 → 1 → 2, and 3 points into 0.
+const countGraph = (state: GraphState): TraceStructure => ({
+  kind: 'graph',
+  directed: true,
+  nodes: [
+    { id: '0', at: [0, 0], note: 'start' },
+    { id: '1', at: [1, 0] },
+    { id: '2', at: [2, 0] },
+    { id: '3', at: [1, 1] },
+  ],
+  edges: [
+    ['0', '1'],
+    ['1', '2'],
+    ['3', '0'],
+  ],
+  ...state,
+})
+// graph-incoming-counts: each node's note shows its count so far.
+const incomingGraph = (counts: number[], state: GraphState = {}): TraceStructure => ({
+  kind: 'graph',
+  directed: true,
+  nodes: [
+    { id: '0', at: [0, 0], note: `in ${counts[0]}` },
+    { id: '1', at: [2, 0], note: `in ${counts[1]}` },
+    { id: '2', at: [1, 1], note: `in ${counts[2]}` },
+  ],
+  edges: [
+    ['0', '1'],
+    ['0', '2'],
+    ['1', '2'],
+  ],
+  ...state,
+})
+
+// A {value, children} tree written as [value, children?]; node ids are n<value>, so values must be unique.
+type TreeSpec = [number, TreeSpec[]?]
+const drawTree = ([value, children]: TreeSpec, notes: Record<number, string> = {}): TraceTreeNode => ({
+  id: `n${value}`,
+  value,
+  ...(notes[value] ? { note: notes[value] } : {}),
+  ...(children ? { children: children.map(child => drawTree(child, notes)) } : {}),
+})
+const depthTree: TreeSpec = [
+  1,
+  [
+    [2, [[3]]],
+    [4, [[5]]],
+  ],
+]
+const leafTree: TreeSpec = [1, [[2], [3]]]
+
+// life-count-neighbours: the board, with reads marking the neighbor being checked.
+const lifeBoard = (reads: [number, number][] = []): TraceStructure => ({
+  kind: 'table',
+  name: 'grid',
+  rowLabels: ['0', '1', '2'],
+  colLabels: ['0', '1', '2'],
+  cells: [
+    ['#', '#', '.'],
+    ['.', '#', '.'],
+    ['.', '.', '#'],
+  ],
+  reads,
+})
+// shared-seat-occurrences: both sorted lists, with reads marking the pair being compared.
+const seatLists = (reads: [number, number][] = []): TraceStructure => ({
+  kind: 'table',
+  name: 'seats',
+  rowLabels: ['left', 'right'],
+  colLabels: ['0', '1', '2', '3'],
+  cells: [
+    [1, 2, 2, 4],
+    [2, 2, 2, 3],
+  ],
+  reads,
+})
+// ticket-service-times: arrival and minutes are given; start and finish fill in as each ticket is served.
+const ticketRows = (
+  start: (number | null)[],
+  finish: (number | null)[],
+  current?: [number, number],
+  reads: [number, number][] = [],
+): TraceStructure => ({
+  kind: 'table',
+  name: 'tickets',
+  rowLabels: ['A', 'B'],
+  colLabels: ['arrival', 'minutes', 'start', 'finish'],
+  cells: [
+    [2, 3, start[0], finish[0]],
+    [3, 1, start[1], finish[1]],
+  ],
+  ...(current ? { current } : {}),
+  reads,
+})
+// sorted-offset-squares: offsets are only read; the result row fills from the back.
+const squareRows = (result: (number | null)[], current?: number, reads: number[] = []): TraceStructure => ({
+  kind: 'table',
+  rowLabels: ['offsets', 'result'],
+  colLabels: ['0', '1', '2', '3'],
+  cells: [[-4, -1, 0, 3], result],
+  ...(current === undefined ? {} : { current: [1, current] as [number, number] }),
+  reads: reads.map(index => [0, index] as [number, number]),
 })
 
 export const dsaDepth: Record<string, RepDepth> = {
@@ -492,6 +595,85 @@ export const dsaDepth: Record<string, RepDepth> = {
       'Reading grid[r + dr][c + dc] without a row check throws at the bottom edge. Wrapping columns with a remainder makes ["#..#"] at [0,0] report 1 instead of 0.',
     transfer:
       'Self-reviewed: count live neighbours on a board that does wrap around, so the left edge touches the right. The original checks do not validate wrapping.',
+    traceSteps: {
+      code: [
+        'function countNeighbours(grid: string[], position: [number, number]): number {',
+        '  const [r, c] = position, h = grid.length, w = grid[0]?.length ?? 0',
+        '  if (r < 0 || r >= h || c < 0 || c >= w) return 0',
+        '  let count = 0',
+        '  for (let dr = -1; dr <= 1; dr++) {',
+        '    for (let dc = -1; dc <= 1; dc++) {',
+        '      const nr = r + dr, nc = c + dc',
+        "      if ((dr !== 0 || dc !== 0) && nr >= 0 && nr < h && nc >= 0 && nc < w && grid[nr][nc] === '#') count++",
+        '    }',
+        '  }',
+        '  return count',
+        '}',
+      ],
+      input: 'grid = ["##.", ".#.", "..#"], position = [1, 1]',
+      steps: [
+        {
+          line: 3,
+          vars: { r: 1, c: 1, count: 0 },
+          structure: lifeBoard(),
+          note: '`[1, 1]` is inside the 3 × 3 board, so the scan starts with `count` at 0. The center is live, but a cell is never its own neighbor.',
+        },
+        {
+          line: 7,
+          vars: { dr: -1, dc: -1, count: 1 },
+          structure: lifeBoard([[0, 0]]),
+          note: 'Up and to the left, `[0, 0]` is inside the board and live, so `count` becomes 1. Diagonals count like any other neighbor.',
+        },
+        {
+          line: 7,
+          vars: { dr: -1, dc: 0, count: 2 },
+          structure: lifeBoard([[0, 1]]),
+          note: 'Straight up, `[0, 1]` is live: 2.',
+        },
+        {
+          line: 7,
+          vars: { dr: -1, dc: 1, count: 2 },
+          structure: lifeBoard([[0, 2]]),
+          note: '`[0, 2]` is dead, so `count` stays 2.',
+        },
+        {
+          line: 7,
+          vars: { dr: 0, dc: -1, count: 2 },
+          structure: lifeBoard([[1, 0]]),
+          note: '`[1, 0]` is dead.',
+        },
+        {
+          line: 7,
+          vars: { dr: 0, dc: 1, count: 2 },
+          structure: lifeBoard([[1, 2]]),
+          note: 'Just before this, `dr` and `dc` were both 0, and the first test skipped the live center. `[1, 2]` is dead.',
+        },
+        {
+          line: 7,
+          vars: { dr: 1, dc: -1, count: 2 },
+          structure: lifeBoard([[2, 0]]),
+          note: '`[2, 0]` is dead.',
+        },
+        {
+          line: 7,
+          vars: { dr: 1, dc: 0, count: 2 },
+          structure: lifeBoard([[2, 1]]),
+          note: '`[2, 1]` is dead.',
+        },
+        {
+          line: 7,
+          vars: { dr: 1, dc: 1, count: 3 },
+          structure: lifeBoard([[2, 2]]),
+          note: 'Down and to the right, `[2, 2]` is live: 3. All eight offsets have been tried.',
+        },
+        {
+          line: 10,
+          vars: { count: 3, result: 3 },
+          structure: lifeBoard(),
+          note: 'Return 3. On an edge cell, the bounds tests would skip the missing neighbors instead of wrapping around to the other side.',
+        },
+      ],
+    },
   },
   'life-next-cell': {
     reasoning:
@@ -726,6 +908,80 @@ export const dsaDepth: Record<string, RepDepth> = {
     counterexample: 'A set loses multiplicity: [2,2] and [2,2] require [2,2], not [2].',
     transfer:
       'Self-reviewed: accept unsorted lists and preserve left occurrence order. Decide whether sorting remains appropriate; existing checks do not cover that contract.',
+    traceSteps: {
+      code: [
+        'function sharedSeats(left: number[], right: number[]): number[] {',
+        '  const shared: number[] = []',
+        '  let i = 0, j = 0',
+        '  while (i < left.length && j < right.length) {',
+        '    if (left[i] < right[j]) i++',
+        '    else if (left[i] > right[j]) j++',
+        '    else { shared.push(left[i]); i++; j++ }',
+        '  }',
+        '  return shared',
+        '}',
+      ],
+      input: 'left = [1, 2, 2, 4], right = [2, 2, 2, 3]',
+      steps: [
+        {
+          line: 2,
+          vars: { i: 0, j: 0, shared: '[]' },
+          structure: seatLists(),
+          note: 'Both lists are sorted. `i` and `j` start at the front; everything before them is already matched or discarded.',
+        },
+        {
+          line: 4,
+          vars: { i: 1, j: 0, shared: '[]' },
+          structure: seatLists([
+            [0, 0],
+            [1, 0],
+          ]),
+          note: 'Compare `left[0]` = 1 with `right[0]` = 2. Every value still in `right` is at least 2, so 1 has no partner: `i++` discards it.',
+        },
+        {
+          line: 6,
+          vars: { i: 2, j: 1, shared: '[2]' },
+          structure: seatLists([
+            [0, 1],
+            [1, 0],
+          ]),
+          note: '2 equals 2: one shared occurrence. Record it and move both positions, so neither 2 can be matched again.',
+        },
+        {
+          line: 6,
+          vars: { i: 3, j: 2, shared: '[2, 2]' },
+          structure: seatLists([
+            [0, 2],
+            [1, 1],
+          ]),
+          note: 'The second 2 on the left meets the second 2 on the right. Record another 2.',
+        },
+        {
+          line: 5,
+          vars: { i: 3, j: 3, shared: '[2, 2]' },
+          structure: seatLists([
+            [0, 3],
+            [1, 2],
+          ]),
+          note: '4 is greater than 2. The left list has no 2s left, so the third 2 on the right has no partner: `j++` discards it.',
+        },
+        {
+          line: 5,
+          vars: { i: 3, j: 4, shared: '[2, 2]' },
+          structure: seatLists([
+            [0, 3],
+            [1, 3],
+          ]),
+          note: '4 is greater than 3, so discard 3. `j` reaches the end of `right` and the loop stops; 4 is never matched.',
+        },
+        {
+          line: 8,
+          vars: { result: '[2,2]' },
+          structure: seatLists(),
+          note: '2 appears twice on the left and three times on the right, so it is shared twice, the smaller count.',
+        },
+      ],
+    },
   },
   'dispatch-priority-order': {
     reasoning:
@@ -1425,6 +1681,58 @@ export const dsaDepth: Record<string, RepDepth> = {
       'Counting complete rounds overcounts later carts: [1,100], target 0 finishes on turn 1, before cart 1 gets a turn. Looking up a count instead of identity confuses equal carts: [2,2,2], target 2 finishes on turn 6.',
     transfer:
       'Self-reviewed: let carts remove up to two parcels each turn. Decide whether a turn or a parcel is counted and derive new boundaries; original checks do not validate the changed policy.',
+    traceSteps: {
+      code: [
+        'function loadingTurn(parcels: number[], targetIndex: number): number {',
+        '  const line = parcels.map((left, cart) => ({ cart, left }))',
+        '  for (let turn = 1; ; turn++) {',
+        '    const front = line.shift()!',
+        '    front.left--',
+        '    if (front.left > 0) line.push(front)',
+        '    else if (front.cart === targetIndex) return turn',
+        '  }',
+        '}',
+      ],
+      input: 'parcels = [2, 1, 3], targetIndex = 0',
+      steps: [
+        {
+          line: 1,
+          vars: { targetIndex: 0 },
+          structure: { kind: 'array', values: ['c0:2', 'c1:1', 'c2:3'], pointers: { next: 0, target: 0 } },
+          note: 'Each box is a cart: `c0:2` is the cart from index 0, holding 2 parcels. The target is `c0`, wherever it moves in the line.',
+        },
+        {
+          line: 4,
+          vars: { turn: 1, front: 'c0:1' },
+          structure: { kind: 'array', values: ['c1:1', 'c2:3'], pointers: { next: 0 } },
+          note: 'Turn 1: `c0` leaves the front of the line and gives up one parcel, leaving 1.',
+        },
+        {
+          line: 5,
+          vars: { turn: 1, front: 'c0:1' },
+          structure: { kind: 'array', values: ['c1:1', 'c2:3', 'c0:1'], pointers: { next: 0, target: 2 } },
+          note: '`c0` still has a parcel, so it rejoins at the back. Its place changed, but it is still the target cart.',
+        },
+        {
+          line: 6,
+          vars: { turn: 2, front: 'c1:0' },
+          structure: { kind: 'array', values: ['c2:3', 'c0:1'], pointers: { next: 0, target: 1 } },
+          note: 'Turn 2: `c1` gives up its only parcel and leaves. It is not the target, so loading goes on.',
+        },
+        {
+          line: 5,
+          vars: { turn: 3, front: 'c2:2' },
+          structure: { kind: 'array', values: ['c0:1', 'c2:2'], pointers: { next: 0, target: 0 } },
+          note: 'Turn 3: `c2` drops to 2 parcels and rejoins behind `c0`.',
+        },
+        {
+          line: 6,
+          vars: { turn: 4, front: 'c0:0', result: 4 },
+          structure: { kind: 'array', values: ['c2:2'], pointers: { next: 0 } },
+          note: 'Turn 4: `c0` gives up its last parcel and leaves. It is the target, so return 4, even though `c2` still has parcels.',
+        },
+      ],
+    },
   },
   'ticket-service-times': {
     reasoning:
@@ -1437,6 +1745,83 @@ export const dsaDepth: Record<string, RepDepth> = {
       'Starting every ticket at arrival overlaps service: arrivals [2,3] with durations [3,1] must start at [2,5], not [2,3]. Sorting equal arrivals by ID also breaks input-order precedence.',
     transfer:
       'Self-reviewed: allow unsorted arrivals and choose a tie policy. Explain how you would order tickets and restore output to original input order; current checks do not cover that contract.',
+    traceSteps: {
+      code: [
+        'function ticketTimes(tickets: Ticket[]): { id: string; start: number; finish: number }[] {',
+        '  const times: { id: string; start: number; finish: number }[] = []',
+        '  let free = 0',
+        '  for (const { id, arrival, minutes } of tickets) {',
+        '    const start = Math.max(arrival, free)',
+        '    free = start + minutes',
+        '    times.push({ id, start, finish: free })',
+        '  }',
+        '  return times',
+        '}',
+      ],
+      input: 'tickets = [{ id: "A", arrival: 2, minutes: 3 }, { id: "B", arrival: 3, minutes: 1 }]',
+      steps: [
+        {
+          line: 2,
+          vars: { free: 0 },
+          structure: ticketRows([null, null], [null, null]),
+          note: 'The desk is free from minute 0. Each ticket gets a `start` and a `finish`, in input order.',
+        },
+        {
+          line: 4,
+          vars: { id: 'A', free: 0, start: 2 },
+          structure: ticketRows([2, null], [null, null], [0, 2], [[0, 0]]),
+          note: 'A arrives at 2, and the desk has been free since 0. It starts at the later of the two: 2.',
+        },
+        {
+          line: 5,
+          vars: { id: 'A', start: 2, free: 5 },
+          structure: ticketRows(
+            [2, null],
+            [5, null],
+            [0, 3],
+            [
+              [0, 2],
+              [0, 1],
+            ],
+          ),
+          note: 'A takes 3 minutes, so it finishes at 5. `free` becomes 5: the desk is busy until then.',
+        },
+        {
+          line: 4,
+          vars: { id: 'B', free: 5, start: 5 },
+          structure: ticketRows(
+            [2, 5],
+            [5, null],
+            [1, 2],
+            [
+              [1, 0],
+              [0, 3],
+            ],
+          ),
+          note: 'B arrived at 3, but A holds the desk until 5. `Math.max(3, 5)` makes B wait and start at 5.',
+        },
+        {
+          line: 5,
+          vars: { id: 'B', start: 5, free: 6 },
+          structure: ticketRows(
+            [2, 5],
+            [5, 6],
+            [1, 3],
+            [
+              [1, 2],
+              [1, 1],
+            ],
+          ),
+          note: 'B takes 1 minute, so it finishes at 6.',
+        },
+        {
+          line: 8,
+          vars: { result: '[{"id":"A","start":2,"finish":5},{"id":"B","start":5,"finish":6}]' },
+          structure: ticketRows([2, 5], [5, 6]),
+          note: 'Return one record per ticket, in input order, with each ID unchanged. B waited 2 minutes for the desk.',
+        },
+      ],
+    },
   },
   'sorted-offset-squares': {
     reasoning:
@@ -1449,6 +1834,59 @@ export const dsaDepth: Record<string, RepDepth> = {
       'Squaring in input order gives [16,1,0,9] for [-4,-1,0,3], which is not ascending. Dropping equal endpoint squares loses a duplicate for [-3,3].',
     transfer:
       'Self-review: return original offsets ordered by absolute magnitude with ties retaining input order. Decide which endpoint wins a tie; original checks do not validate this variation.',
+    traceSteps: {
+      code: [
+        'function squareOffsets(offsets: number[]): number[] {',
+        '  const result = new Array<number>(offsets.length)',
+        '  let left = 0, right = offsets.length - 1',
+        '  for (let write = offsets.length - 1; write >= 0; write--) {',
+        '    const a = offsets[left] ** 2, b = offsets[right] ** 2',
+        '    if (a >= b) { result[write] = a; left++ }',
+        '    else { result[write] = b; right-- }',
+        '  }',
+        '  return result',
+        '}',
+      ],
+      input: 'offsets = [-4, -1, 0, 3]',
+      steps: [
+        {
+          line: 2,
+          vars: { left: 0, right: 3 },
+          structure: squareRows([null, null, null, null]),
+          note: 'The result fills from the back. The largest square still unplaced must come from an end: the most negative or the most positive offset.',
+        },
+        {
+          line: 5,
+          vars: { write: 3, a: 16, b: 9, left: 1 },
+          structure: squareRows([null, null, null, 16], 3, [0, 3]),
+          note: '`(-4) ** 2` is 16 and `3 ** 2` is 9. 16 fills the last slot, and `left` moves past -4.',
+        },
+        {
+          line: 6,
+          vars: { write: 2, a: 1, b: 9, right: 2 },
+          structure: squareRows([null, null, 9, 16], 2, [1, 3]),
+          note: '1 against 9: the right end wins. 9 fills slot 2, and `right` moves past 3.',
+        },
+        {
+          line: 5,
+          vars: { write: 1, a: 1, b: 0, left: 2 },
+          structure: squareRows([null, 1, 9, 16], 1, [1, 2]),
+          note: '1 against 0: -1 has the larger square, even though it is the smaller offset. 1 fills slot 1.',
+        },
+        {
+          line: 5,
+          vars: { write: 0, a: 0, b: 0, left: 3 },
+          structure: squareRows([0, 1, 9, 16], 0, [2]),
+          note: '`left` and `right` both point at index 2 now, the offset 0. Its square fills slot 0, and every offset has been used once.',
+        },
+        {
+          line: 8,
+          vars: { result: '[0,1,9,16]' },
+          structure: squareRows([0, 1, 9, 16]),
+          note: 'Each step placed the largest remaining square, so the result is ascending without a sort. `offsets` was only read.',
+        },
+      ],
+    },
   },
   'reading-run-summary': {
     reasoning:
@@ -1461,6 +1899,104 @@ export const dsaDepth: Record<string, RepDepth> = {
       'Only emitting a run when its value changes drops the last run: [7,7,7] would return []. Testing the current value by truthiness mishandles [0,0].',
     transfer:
       'Self-review: accept unsorted readings and retain first-seen value order. Explain which sortedness assumption breaks and what additional state you need; these checks do not assess the changed contract.',
+    traceSteps: {
+      code: [
+        'function summarizeReadings(readings: number[]): ReadingRun[] {',
+        '  const runs: ReadingRun[] = []',
+        '  for (const value of readings) {',
+        '    const last = runs[runs.length - 1]',
+        '    if (last && last.value === value) last.count++',
+        '    else runs.push({ value, count: 1 })',
+        '  }',
+        '  return runs',
+        '}',
+      ],
+      input: 'readings = [-2, -2, 0, 4, 4, 4]',
+      steps: [
+        {
+          line: 1,
+          vars: { runs: '[]' },
+          structure: { kind: 'map', entries: [] },
+          note: 'Start with no records. Each row below is one record: a reading and its count.',
+        },
+        {
+          line: 5,
+          vars: { value: -2 },
+          structure: { kind: 'map', entries: [['-2', 1]] },
+          note: 'No record exists yet, so -2 starts one with count 1.',
+        },
+        {
+          line: 4,
+          vars: { value: -2 },
+          structure: { kind: 'map', entries: [['-2', 2]] },
+          note: 'The last record holds -2 too, so its count grows to 2.',
+        },
+        {
+          line: 5,
+          vars: { value: 0 },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['-2', 2],
+              ['0', 1],
+            ],
+          },
+          note: '0 differs from the last record. The input is sorted, so -2 cannot appear again and its record is final. Start a record for 0.',
+        },
+        {
+          line: 5,
+          vars: { value: 4 },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['-2', 2],
+              ['0', 1],
+              ['4', 1],
+            ],
+          },
+          note: '4 differs from 0, so it starts a record too.',
+        },
+        {
+          line: 4,
+          vars: { value: 4 },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['-2', 2],
+              ['0', 1],
+              ['4', 2],
+            ],
+          },
+          note: 'The next 4 extends that record to 2.',
+        },
+        {
+          line: 4,
+          vars: { value: 4 },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['-2', 2],
+              ['0', 1],
+              ['4', 3],
+            ],
+          },
+          note: 'The last 4 makes it 3. The final run needs no extra step after the loop: its record already exists.',
+        },
+        {
+          line: 7,
+          vars: { result: '[{"value":-2,"count":2},{"value":0,"count":1},{"value":4,"count":3}]' },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['-2', 2],
+              ['0', 1],
+              ['4', 3],
+            ],
+          },
+          note: 'Return the records in the same ascending order as the readings.',
+        },
+      ],
+    },
   },
   'algo-insertion-sort': {
     reasoning:
@@ -1913,6 +2449,56 @@ export const dsaDepth: Record<string, RepDepth> = {
       'Returning extra directly passes the behavior checks but skips the learning goal. Copy and append require O(n) time and space; inspect the code separately.',
     counterexample: 'Calling numbers.push(extra) changes the input even though the returned value is right.',
     transfer: 'Return the copied array instead. How would the output contract and checks change?',
+    traceSteps: {
+      code: [
+        'function appendAndRead(numbers: number[], extra: number): number {',
+        '  const values: number[] = [...numbers]',
+        '  values.push(extra)',
+        '  const lastIndex = values.length - 1',
+        '  const last = values[lastIndex]',
+        '  return last',
+        '}',
+      ],
+      input: 'numbers = [4, 7], extra = 0',
+      steps: [
+        {
+          line: 0,
+          vars: { extra: 0 },
+          structure: { kind: 'array', values: [4, 7] },
+          note: 'The caller passes `[4, 7]` and `extra` = 0. Nothing has changed yet.',
+        },
+        {
+          line: 1,
+          vars: { values: '[4, 7]' },
+          structure: { kind: 'array', values: [4, 7] },
+          note: 'Spread copies the values into a new array, so the `push` below cannot change `numbers`.',
+        },
+        {
+          line: 2,
+          vars: { values: '[4, 7, 0]' },
+          structure: { kind: 'array', values: [4, 7, 0], pointers: { pushed: 2 } },
+          note: '`push` adds 0 at the end of the copy. `numbers` is still `[4, 7]`.',
+        },
+        {
+          line: 3,
+          vars: { values: '[4, 7, 0]', lastIndex: 2 },
+          structure: { kind: 'array', values: [4, 7, 0], pointers: { lastIndex: 2 } },
+          note: 'Indexes start at 0, so the last of three values is at index 2.',
+        },
+        {
+          line: 4,
+          vars: { lastIndex: 2, last: 0 },
+          structure: { kind: 'array', values: [4, 7, 0], pointers: { lastIndex: 2 } },
+          note: 'Reading index 2 gives 0. Zero is a real value here, not a missing one.',
+        },
+        {
+          line: 5,
+          vars: { last: 0, result: 0 },
+          structure: { kind: 'array', values: [4, 7, 0] },
+          note: 'Return 0, the value just appended.',
+        },
+      ],
+    },
   },
   'ds-set-operations': {
     reasoning: 'Adding before deleting makes removal win when the two supplied values match. A new set leaves the input unchanged.',
@@ -1921,6 +2507,62 @@ export const dsaDepth: Record<string, RepDepth> = {
       'An array with duplicate checks can work but repeatedly scans values. A Set stores O(k) distinct values and has efficient average access without a universal O(1) guarantee.',
     counterexample: 'Deleting before adding returns 1 instead of 0 for [], 5, 5.',
     transfer: 'Return whether a requested number is present after the updates. Practice has and distinguish membership from size.',
+    traceSteps: {
+      code: [
+        'function updateDistinct(numbers: number[], extra: number, removed: number): number {',
+        '  const distinct = new Set<number>()',
+        '  for (const n of numbers) distinct.add(n)',
+        '  distinct.add(extra)',
+        '  distinct.delete(removed)',
+        '  return distinct.size',
+        '}',
+      ],
+      input: 'numbers = [2, 2, 3], extra = 4, removed = 2',
+      steps: [
+        {
+          line: 1,
+          vars: { distinct: '{}' },
+          structure: { kind: 'array', values: [] },
+          note: 'Start with an empty `Set`. The drawing shows its members in the order they were added.',
+        },
+        {
+          line: 2,
+          vars: { n: 2, distinct: '{2}' },
+          structure: { kind: 'array', values: [2] },
+          note: 'Add the first 2.',
+        },
+        {
+          line: 2,
+          vars: { n: 2, distinct: '{2}' },
+          structure: { kind: 'array', values: [2] },
+          note: 'The second 2 is already a member, so `add` changes nothing. A `Set` holds each value once.',
+        },
+        {
+          line: 2,
+          vars: { n: 3, distinct: '{2, 3}' },
+          structure: { kind: 'array', values: [2, 3] },
+          note: 'Add 3. The set now holds the distinct values of `numbers`.',
+        },
+        {
+          line: 3,
+          vars: { extra: 4, distinct: '{2, 3, 4}' },
+          structure: { kind: 'array', values: [2, 3, 4] },
+          note: 'Add `extra`, 4. Adding comes before deleting, as the contract orders.',
+        },
+        {
+          line: 4,
+          vars: { removed: 2, distinct: '{3, 4}' },
+          structure: { kind: 'array', values: [3, 4] },
+          note: 'Delete `removed`, 2. Both 2s from the input are gone at once, because the set held only one.',
+        },
+        {
+          line: 5,
+          vars: { result: 2 },
+          structure: { kind: 'array', values: [3, 4] },
+          note: '`size` counts the remaining members, 3 and 4. Return 2.',
+        },
+      ],
+    },
   },
   'ds-map-operations': {
     reasoning: 'Sequential writes leave the latest value for each key. Checking absence separately preserves zero.',
@@ -1929,6 +2571,55 @@ export const dsaDepth: Record<string, RepDepth> = {
       'A record can represent string keys, but needs care with inherited property names and absence. A Map makes these operations explicit and stores O(k) keys.',
     counterexample: 'lookup.get(query) || null turns a stored 0 into null.',
     transfer: 'Delete a key before querying and return both membership and value. Explain why these are different questions.',
+    traceSteps: {
+      code: [
+        'function updateLookup(entries: [string, number][], key: string, value: number, query: string): number | null {',
+        '  const lookup = new Map<string, number>()',
+        '  for (const [k, v] of entries) lookup.set(k, v)',
+        '  lookup.set(key, value)',
+        '  const found = lookup.get(query)',
+        '  return found ?? null',
+        '}',
+      ],
+      input: 'entries = [["a", 2]], key = "a", value = 0, query = "a"',
+      steps: [
+        {
+          line: 0,
+          vars: { key: 'a', value: 0, query: 'a' },
+          note: 'The call writes `a` twice: once from `entries`, then once from `key`. The later write decides what `query` finds.',
+        },
+        {
+          line: 1,
+          vars: { lookup: '{}' },
+          structure: { kind: 'map', entries: [] },
+          note: 'Start with an empty `Map` from string keys to numbers.',
+        },
+        {
+          line: 2,
+          vars: { k: 'a', v: 2 },
+          structure: { kind: 'map', entries: [['a', 2]] },
+          note: 'Copy the one entry: `a` maps to 2.',
+        },
+        {
+          line: 3,
+          vars: { key: 'a', value: 0 },
+          structure: { kind: 'map', entries: [['a', 0]] },
+          note: '`set` on an existing key replaces its value. The map still has one entry, and `a` now maps to 0.',
+        },
+        {
+          line: 4,
+          vars: { query: 'a', found: 0 },
+          structure: { kind: 'map', entries: [['a', 0]] },
+          note: '`get` finds `a` and returns 0. A missing key would give `undefined`.',
+        },
+        {
+          line: 5,
+          vars: { found: 0, result: 0 },
+          structure: { kind: 'map', entries: [['a', 0]] },
+          note: '`??` replaces only `null` or `undefined`, so the stored 0 is returned. `found || null` would turn it into `null`.',
+        },
+      ],
+    },
   },
   'ds-stack-operations': {
     reasoning: 'The push and pop cancel each other; the remaining top is the original last item, or absent for empty input.',
@@ -1996,6 +2687,56 @@ export const dsaDepth: Record<string, RepDepth> = {
       'Array shift can move O(n) items. A head-index queue avoids repeated shifts but needs a cleanup policy; this single copy/update uses O(n) time and space.',
     counterexample: 'Using pop on [1, 2, 3, 4] leaves front 1, while dequeue should leave front 2.',
     transfer: 'Process many arrivals and removals with a head index. Decide when consumed storage should be reclaimed.',
+    traceSteps: {
+      code: [
+        'function queueFront(numbers: number[], extra: number): number | null {',
+        '  const queue = [...numbers]',
+        '  queue.push(extra)',
+        '  queue.shift()',
+        '  const front = queue[0] ?? null',
+        '  return front',
+        '}',
+      ],
+      input: 'numbers = [4, 7], extra = 9',
+      steps: [
+        {
+          line: 0,
+          vars: { extra: 9 },
+          structure: { kind: 'array', values: [4, 7], pointers: { front: 0, back: 1 } },
+          note: 'The front of the queue is the first item, 4. The back is the last, 7.',
+        },
+        {
+          line: 1,
+          vars: { queue: '[4, 7]' },
+          structure: { kind: 'array', values: [4, 7], pointers: { front: 0, back: 1 } },
+          note: 'Copy the array, so the queue operations leave `numbers` unchanged.',
+        },
+        {
+          line: 2,
+          vars: { queue: '[4, 7, 9]' },
+          structure: { kind: 'array', values: [4, 7, 9], pointers: { front: 0, back: 2 } },
+          note: 'Enqueue 9 at the back. The front is still 4.',
+        },
+        {
+          line: 3,
+          vars: { queue: '[7, 9]' },
+          structure: { kind: 'array', values: [7, 9], pointers: { front: 0, back: 1 } },
+          note: 'Dequeue once from the front: 4 has waited longest, so it leaves first. 7 is the new front.',
+        },
+        {
+          line: 4,
+          vars: { queue: '[7, 9]', front: 7 },
+          structure: { kind: 'array', values: [7, 9], pointers: { front: 0, back: 1 } },
+          note: 'Peek at index 0 without removing it: 7.',
+        },
+        {
+          line: 5,
+          vars: { front: 7, result: 7 },
+          structure: { kind: 'array', values: [7, 9], pointers: { front: 0, back: 1 } },
+          note: 'Return 7. A stack would have removed 9, the newest item, instead.',
+        },
+      ],
+    },
   },
   'algo-sorted-pair': {
     reasoning:
@@ -2279,6 +3020,60 @@ export const dsaDepth: Record<string, RepDepth> = {
       'Insertion into a copied list can preserve ties explicitly but takes quadratic time; stable built-in sorting is shorter. Sorting cost depends on the implementation, plus name comparisons.',
     counterexample: 'Sorting scores as text puts 10 before 2. Using IDs as a third key reverses z and a on a complete tie.',
     transfer: 'Self-review: change score to descending while retaining ascending names. Which comparison changes?',
+    traceSteps: {
+      code: [
+        'function orderRecords(records: ScoreRecord[]): ScoreRecord[] {',
+        '  const before = (a: ScoreRecord, b: ScoreRecord) =>',
+        '    a.score !== b.score ? a.score < b.score : a.name < b.name',
+        '  const sorted: ScoreRecord[] = []',
+        '  for (const record of records) {',
+        '    let i = sorted.length',
+        '    while (i > 0 && before(record, sorted[i - 1])) i--',
+        '    sorted.splice(i, 0, record)',
+        '  }',
+        '  return sorted',
+        '}',
+      ],
+      input: 'records = [{ id: "x", score: 3, name: "Bo" }, { id: "y", score: 1, name: "Ada" }]',
+      steps: [
+        {
+          line: 3,
+          vars: { sorted: '[]' },
+          structure: { kind: 'array', values: [] },
+          note: 'Build a new array, `sorted`, one record at a time. Each box shows a record as its `id`, `score`, and `name`.',
+        },
+        {
+          line: 7,
+          vars: { record: 'x', i: 0 },
+          structure: { kind: 'array', values: ['x 3 Bo'], pointers: { i: 0 } },
+          note: '`sorted` is empty, so `x` goes in at index 0.',
+        },
+        {
+          line: 5,
+          vars: { record: 'y', i: 1 },
+          structure: { kind: 'array', values: ['x 3 Bo'] },
+          note: 'Next, `y` starts at the end, `i` = 1, and moves left past each record it belongs before.',
+        },
+        {
+          line: 6,
+          vars: { record: 'y', i: 0 },
+          structure: { kind: 'array', values: ['x 3 Bo'], pointers: { i: 0 } },
+          note: 'The scores differ and 1 is less than 3, so `y` belongs before `x` and `i` moves to 0. Names are compared only when scores tie.',
+        },
+        {
+          line: 7,
+          vars: { record: 'y', i: 0 },
+          structure: { kind: 'array', values: ['y 1 Ada', 'x 3 Bo'], pointers: { i: 0 } },
+          note: '`splice` inserts `y` at index 0, which shifts `x` right.',
+        },
+        {
+          line: 9,
+          vars: { result: '[{"id":"y","score":1,"name":"Ada"},{"id":"x","score":3,"name":"Bo"}]' },
+          structure: { kind: 'array', values: ['y 1 Ada', 'x 3 Bo'] },
+          note: 'Return the new array; `records` keeps its order. A record that ties on score and name never moves before an earlier one, so ties keep input order. A stable built-in `sort` with the same comparison gives this order too.',
+        },
+      ],
+    },
   },
   'kth-smallest-copy': {
     reasoning:
@@ -2288,6 +3083,55 @@ export const dsaDepth: Record<string, RepDepth> = {
       'Selection can avoid fully sorting but is more complex; sorting a copy uses O(n) storage with sorting time depending on the implementation.',
     counterexample: 'Deduplicating [2,2,9] makes rank 2 equal 9 instead of 2.',
     transfer: 'Self-review: request the kth distinct value. Define absent-rank behavior again.',
+    traceSteps: {
+      code: [
+        'function kthSmallest(numbers: number[], k: number): number | null {',
+        '  if (k > numbers.length) return null',
+        '  const sorted = [...numbers]',
+        '  sorted.sort((a, b) => a - b)',
+        '  return sorted[k - 1]',
+        '}',
+      ],
+      input: 'numbers = [8, 3, 3, 1], k = 3',
+      steps: [
+        {
+          line: 0,
+          vars: { k: 3 },
+          structure: { kind: 'array', values: [8, 3, 3, 1] },
+          note: 'The numbers are unsorted, and 3 appears twice. Each copy of 3 counts as its own position.',
+        },
+        {
+          line: 1,
+          vars: { k: 3, length: 4 },
+          structure: { kind: 'array', values: [8, 3, 3, 1] },
+          note: '`k` is 3 and there are 4 values, so a third smallest exists.',
+        },
+        {
+          line: 2,
+          vars: { sorted: '[8, 3, 3, 1]' },
+          structure: { kind: 'array', values: [8, 3, 3, 1] },
+          note: 'Copy first. `sort` changes the array it is called on, and `numbers` must keep its order.',
+        },
+        {
+          line: 3,
+          vars: { sorted: '[1, 3, 3, 8]' },
+          structure: { kind: 'array', values: [1, 3, 3, 8] },
+          note: 'Sort the copy numerically. Without `(a, b) => a - b`, the default sort compares numbers as text and puts 10 before 9.',
+        },
+        {
+          line: 4,
+          vars: { sorted: '[1, 3, 3, 8]' },
+          structure: { kind: 'array', values: [1, 3, 3, 8], pointers: { 'rank 1': 0, 'rank 2': 1, 'rank 3': 2 } },
+          note: 'Ranks are one-based, and duplicates count separately: 1 is rank 1, the first 3 is rank 2, and the second 3 is rank 3.',
+        },
+        {
+          line: 4,
+          vars: { index: 2, result: 3 },
+          structure: { kind: 'array', values: [1, 3, 3, 8], pointers: { 'k - 1': 2 } },
+          note: 'Rank 3 sits at index `k - 1` = 2, so return 3.',
+        },
+      ],
+    },
   },
   'count-unique-windows': {
     reasoning:
@@ -4121,6 +4965,64 @@ export const dsaDepth: Record<string, RepDepth> = {
       'Comparing only neighbours in the input gives 8 for [1,10,2] instead of 1. Skipping the length check returns Infinity or NaN for a single value.',
     transfer:
       'Self-reviewed: return the two values themselves, or the closest value to a given target. Decide what changes in the comparison; original checks do not cover that contract.',
+    traceSteps: {
+      code: [
+        'function closestGap(numbers: number[]): number | null {',
+        '  if (numbers.length < 2) return null',
+        '  const sorted = [...numbers].sort((a, b) => a - b)',
+        '  let best = Infinity',
+        '  for (let i = 1; i < sorted.length; i++) {',
+        '    best = Math.min(best, sorted[i] - sorted[i - 1])',
+        '  }',
+        '  return best',
+        '}',
+      ],
+      input: 'numbers = [10, 3, 7, 20]',
+      steps: [
+        {
+          line: 1,
+          vars: { length: 4 },
+          structure: { kind: 'array', values: [10, 3, 7, 20], window: [0, 1], windowLabel: 'gap 7' },
+          note: 'Four numbers make at least one pair. In input order 10 and 3 sit side by side, but they are 7 apart, not the closest pair.',
+        },
+        {
+          line: 2,
+          vars: { sorted: '[3, 7, 10, 20]' },
+          structure: { kind: 'array', values: [3, 7, 10, 20] },
+          note: 'Sort a copy. A value lying between two others is closer to each of them, so in sorted order the closest pair must be neighbors.',
+        },
+        {
+          line: 3,
+          vars: { best: 'Infinity' },
+          structure: { kind: 'array', values: [3, 7, 10, 20] },
+          note: '`best` starts at `Infinity`, so the first gap always replaces it.',
+        },
+        {
+          line: 5,
+          vars: { i: 1, best: 4 },
+          structure: { kind: 'array', values: [3, 7, 10, 20], pointers: { i: 1 }, window: [0, 1], windowLabel: 'gap 4' },
+          note: '7 - 3 = 4 is the first neighbor gap.',
+        },
+        {
+          line: 5,
+          vars: { i: 2, best: 3 },
+          structure: { kind: 'array', values: [3, 7, 10, 20], pointers: { i: 2 }, window: [1, 2], windowLabel: 'gap 3' },
+          note: '10 - 7 = 3 is smaller, so `best` becomes 3.',
+        },
+        {
+          line: 5,
+          vars: { i: 3, best: 3 },
+          structure: { kind: 'array', values: [3, 7, 10, 20], pointers: { i: 3 }, window: [2, 3], windowLabel: 'gap 10' },
+          note: '20 - 10 = 10 is larger, so `best` stays 3.',
+        },
+        {
+          line: 7,
+          vars: { result: 3 },
+          structure: { kind: 'array', values: [3, 7, 10, 20], window: [1, 2], windowLabel: 'closest' },
+          note: 'Return 3, from 7 and 10, which were not next to each other in the input.',
+        },
+      ],
+    },
   },
   'tree-value-depth': {
     reasoning:
@@ -4133,6 +5035,86 @@ export const dsaDepth: Record<string, RepDepth> = {
       'Using 0 or falsy results as "not found" hides a root target at depth 0, and returning the first child result without checking it ignores a match in a later sibling.',
     transfer:
       'Self-reviewed: return the route of values instead of the depth, or allow repeated values and return the shallowest match. Name what must be remembered on the way back; original checks do not cover either contract.',
+    traceSteps: {
+      code: [
+        'function depthOfValue(root: TreeNode | null, target: number): number {',
+        '  if (root === null) return -1',
+        '  if (root.value === target) return 0',
+        '  for (const child of root.children) {',
+        '    const below = depthOfValue(child, target)',
+        '    if (below !== -1) return below + 1',
+        '  }',
+        '  return -1',
+        '}',
+      ],
+      input:
+        'root = { value: 1, children: [{ value: 2, children: [{ value: 3, children: [] }] }, { value: 4, children: [{ value: 5, children: [] }] }] }, target = 5',
+      steps: [
+        {
+          line: 3,
+          vars: { root: 1, target: 5 },
+          structure: { kind: 'tree', root: drawTree(depthTree), current: 'n1' },
+          note: '1 is not 5. If a child finds 5, the depth here is one more than the depth that child reports.',
+        },
+        {
+          line: 3,
+          vars: { root: 2 },
+          structure: { kind: 'tree', root: drawTree(depthTree), current: 'n2', visited: ['n1'] },
+          note: '2 is not 5 either. Search its only child, 3.',
+        },
+        {
+          line: 7,
+          vars: { root: 3, returns: -1 },
+          structure: { kind: 'tree', root: drawTree(depthTree, { 3: '-1' }), current: 'n3', visited: ['n1', 'n2'] },
+          note: '3 is not 5 and has no children, so the loop never runs. Return -1 for not found.',
+        },
+        {
+          line: 7,
+          vars: { root: 2, returns: -1 },
+          structure: { kind: 'tree', root: drawTree(depthTree, { 3: '-1', 2: '-1' }), current: 'n2', visited: ['n1', 'n3'] },
+          note: 'Every child of 2 reported -1, so 2 reports -1 too. That tells 1 to try its next child instead of giving up.',
+        },
+        {
+          line: 3,
+          vars: { root: 4 },
+          structure: { kind: 'tree', root: drawTree(depthTree, { 3: '-1', 2: '-1' }), current: 'n4', visited: ['n1', 'n2', 'n3'] },
+          note: 'Back at 1, try its next child, 4. It is not 5.',
+        },
+        {
+          line: 2,
+          vars: { root: 5, returns: 0 },
+          structure: {
+            kind: 'tree',
+            root: drawTree(depthTree, { 3: '-1', 2: '-1', 5: '0' }),
+            current: 'n5',
+            visited: ['n1', 'n2', 'n3', 'n4'],
+          },
+          note: '5 is the target: depth 0, counted from itself.',
+        },
+        {
+          line: 5,
+          vars: { root: 4, below: 0, returns: 1 },
+          structure: {
+            kind: 'tree',
+            root: drawTree(depthTree, { 3: '-1', 2: '-1', 5: '0', 4: '1' }),
+            current: 'n4',
+            visited: ['n1', 'n2', 'n3', 'n5'],
+          },
+          note: '4 receives 0 from its child and returns `below + 1` = 1.',
+        },
+        {
+          line: 5,
+          vars: { root: 1, below: 1, result: 2 },
+          structure: {
+            kind: 'tree',
+            root: drawTree(depthTree, { 3: '-1', 2: '-1', 5: '0', 4: '1', 1: '2' }),
+            current: 'n1',
+            visited: ['n2', 'n3', 'n4', 'n5'],
+          },
+          note: '1 receives 1 and returns 2: the target is two levels below the root.',
+        },
+      ],
+    },
   },
   'graph-reachable-count': {
     reasoning:
@@ -4145,6 +5127,66 @@ export const dsaDepth: Record<string, RepDepth> = {
       'Counting every node in the graph returns 4 for [[1],[2],[],[0]] from 0; node 3 points in but is not reachable. Counting neighbour entries returns 3 for [[0,0,1],[]], but only 2 nodes are reached.',
     transfer:
       'Self-reviewed: list the nodes that cannot be reached, or count groups in an undirected graph. Decide how a visited set must be shared; original checks do not cover either contract.',
+    traceSteps: {
+      code: [
+        'function reachableCount(graph: number[][], start: number): number {',
+        '  if (start < 0 || start >= graph.length) return 0',
+        '  const seen = new Set([start]), stack = [start]',
+        '  while (stack.length > 0) {',
+        '    const node = stack.pop()!',
+        '    for (const next of graph[node]) {',
+        '      if (!seen.has(next)) { seen.add(next); stack.push(next) }',
+        '    }',
+        '  }',
+        '  return seen.size',
+        '}',
+      ],
+      input: 'graph = [[1], [2], [], [0]], start = 0',
+      steps: [
+        {
+          line: 2,
+          vars: { seen: '{0}', stack: '[0]' },
+          structure: countGraph({ queued: ['0'] }),
+          note: 'Start is a real node. Record it before exploring, so it is counted once. Arrows are one-way: 3 points into 0.',
+        },
+        {
+          line: 4,
+          vars: { node: 0, seen: '{0}', stack: '[]' },
+          structure: countGraph({ current: '0' }),
+          note: 'Take 0 off the stack and follow its connections.',
+        },
+        {
+          line: 6,
+          vars: { node: 0, seen: '{0, 1}', stack: '[1]' },
+          structure: countGraph({ current: '0', queued: ['1'], highlight: [['0', '1']] }),
+          note: '0 leads to 1, which is new: record it and push it.',
+        },
+        {
+          line: 4,
+          vars: { node: 1, seen: '{0, 1}', stack: '[]' },
+          structure: countGraph({ current: '1', visited: ['0'] }),
+          note: 'Take 1 off the stack.',
+        },
+        {
+          line: 6,
+          vars: { node: 1, seen: '{0, 1, 2}', stack: '[2]' },
+          structure: countGraph({ current: '1', visited: ['0'], queued: ['2'], highlight: [['1', '2']] }),
+          note: '1 leads to 2, which is also new.',
+        },
+        {
+          line: 4,
+          vars: { node: 2, seen: '{0, 1, 2}', stack: '[]' },
+          structure: countGraph({ current: '2', visited: ['0', '1'] }),
+          note: '2 has no outgoing connections, so nothing new is found, and the stack is empty.',
+        },
+        {
+          line: 9,
+          vars: { result: 3 },
+          structure: countGraph({ visited: ['0', '1', '2'] }),
+          note: '`seen` holds 0, 1, and 2. Node 3 is never reached: its arrow points into 0, not out of it.',
+        },
+      ],
+    },
   },
   'tree-leaf-count': {
     reasoning:
@@ -4157,6 +5199,66 @@ export const dsaDepth: Record<string, RepDepth> = {
       'Counting every node returns 5 instead of 3 for the example tree. Treating a node with value 0 as absent drops a real leaf.',
     transfer:
       'Self-reviewed: count nodes that have exactly one child, or the leaves at a given depth. Decide what the base case and the combined result become; original checks do not cover that contract.',
+    traceSteps: {
+      code: [
+        'function countTreeLeaves(root: TreeNode | null): number {',
+        '  if (root === null) return 0',
+        '  if (root.children.length === 0) return 1',
+        '  let leaves = 0',
+        '  for (const child of root.children) leaves += countTreeLeaves(child)',
+        '  return leaves',
+        '}',
+      ],
+      input: 'root = { value: 1, children: [{ value: 2, children: [] }, { value: 3, children: [] }] }',
+      steps: [
+        {
+          line: 3,
+          vars: { root: 1, leaves: 0 },
+          structure: { kind: 'tree', root: drawTree(leafTree), current: 'n1' },
+          note: '1 has children, so it is not a leaf. Its count is the sum of its children’s counts.',
+        },
+        {
+          line: 2,
+          vars: { root: 2, returns: 1 },
+          structure: { kind: 'tree', root: drawTree(leafTree, { 2: 'leaf' }), current: 'n2', visited: ['n1'] },
+          note: '2 has no children: it is one leaf. Return 1.',
+        },
+        {
+          line: 4,
+          vars: { root: 1, leaves: 1 },
+          structure: { kind: 'tree', root: drawTree(leafTree, { 2: 'leaf', 1: 'leaves 1' }), current: 'n1', visited: ['n2'] },
+          note: 'Back at 1, add the 1 from 2.',
+        },
+        {
+          line: 2,
+          vars: { root: 3, returns: 1 },
+          structure: {
+            kind: 'tree',
+            root: drawTree(leafTree, { 2: 'leaf', 1: 'leaves 1', 3: 'leaf' }),
+            current: 'n3',
+            visited: ['n1', 'n2'],
+          },
+          note: '3 has no children either: return 1.',
+        },
+        {
+          line: 4,
+          vars: { root: 1, leaves: 2 },
+          structure: {
+            kind: 'tree',
+            root: drawTree(leafTree, { 2: 'leaf', 1: 'leaves 2', 3: 'leaf' }),
+            current: 'n1',
+            visited: ['n2', 'n3'],
+          },
+          note: 'Add the 1 from 3. `leaves` is 2.',
+        },
+        {
+          line: 5,
+          vars: { root: 1, result: 2 },
+          structure: { kind: 'tree', root: drawTree(leafTree, { 2: 'leaf', 1: 'leaves 2', 3: 'leaf' }), visited: ['n1', 'n2', 'n3'] },
+          note: 'Return 2. The root adds its children’s leaves but is not counted itself, because it has children.',
+        },
+      ],
+    },
   },
   'graph-incoming-counts': {
     reasoning:
@@ -4169,6 +5271,56 @@ export const dsaDepth: Record<string, RepDepth> = {
       'Using graph[i].length reports how many connections leave node i, giving [2, 1, 0] for the example instead of [0, 1, 2].',
     transfer:
       'Self-reviewed: list the nodes with no incoming connection, or treat duplicate edges as one. Decide what changes in the bookkeeping; original checks do not cover that contract.',
+    traceSteps: {
+      code: [
+        'function incomingCounts(graph: number[][]): number[] {',
+        '  const counts = graph.map(() => 0)',
+        '  for (let from = 0; from < graph.length; from++) {',
+        '    for (const to of graph[from]) counts[to]++',
+        '  }',
+        '  return counts',
+        '}',
+      ],
+      input: 'graph = [[1, 2], [2], []]',
+      steps: [
+        {
+          line: 1,
+          vars: { counts: '[0, 0, 0]' },
+          structure: incomingGraph([0, 0, 0]),
+          note: 'Every node starts at 0, including any node nothing points to.',
+        },
+        {
+          line: 3,
+          vars: { from: 0, to: 1, counts: '[0, 1, 0]' },
+          structure: incomingGraph([0, 1, 0], { current: '0', highlight: [['0', '1']] }),
+          note: 'The entry 1 in `graph[0]` is a connection from 0 into 1, so add one to `counts[1]`.',
+        },
+        {
+          line: 3,
+          vars: { from: 0, to: 2, counts: '[0, 1, 1]' },
+          structure: incomingGraph([0, 1, 1], { current: '0', highlight: [['0', '2']] }),
+          note: '0 also points into 2.',
+        },
+        {
+          line: 3,
+          vars: { from: 1, to: 2, counts: '[0, 1, 2]' },
+          structure: incomingGraph([0, 1, 2], { current: '1', visited: ['0'], highlight: [['1', '2']] }),
+          note: '1 points into 2 as well: its second incoming connection.',
+        },
+        {
+          line: 2,
+          vars: { from: 2, counts: '[0, 1, 2]' },
+          structure: incomingGraph([0, 1, 2], { current: '2', visited: ['0', '1'] }),
+          note: '`graph[2]` is empty: 2 points nowhere, so no count changes.',
+        },
+        {
+          line: 5,
+          vars: { result: '[0,1,2]' },
+          structure: incomingGraph([0, 1, 2], { visited: ['0', '1', '2'] }),
+          note: 'Return `[0, 1, 2]`. A node’s outgoing connections never add to its own count.',
+        },
+      ],
+    },
   },
 }
 

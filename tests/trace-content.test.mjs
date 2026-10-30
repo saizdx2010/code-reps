@@ -31,6 +31,7 @@ test('traces cover collection operations, stacks, sets, recursion, trees, tables
     'bst-insert-value',
     'bst-range-values',
     'bst-search-path',
+    'closest-value-gap',
     'closure-counters',
     'count-above-threshold',
     'count-even-numbers',
@@ -47,6 +48,10 @@ test('traces cover collection operations, stacks, sets, recursion, trees, tables
     'dp-garage-paths',
     'dp-stall-revenue',
     'dp-tag-edits',
+    'ds-array-operations',
+    'ds-map-operations',
+    'ds-queue-operations',
+    'ds-set-operations',
     'ds-stack-operations',
     'event-loop-order',
     'first-affordable-edition',
@@ -60,14 +65,18 @@ test('traces cover collection operations, stacks, sets, recursion, trees, tables
     'frontend-view-state',
     'function-returns-function',
     'graph-connected-groups',
+    'graph-incoming-counts',
+    'graph-reachable-count',
     'graph-shortest-hops',
     'grid-count-rooms',
     'grid-fewest-steps',
     'grid-open-neighbours',
     'has-duplicate',
     'heap-rooms-needed',
+    'kth-smallest-copy',
     'latest-request',
     'leading-throttle',
+    'life-count-neighbours',
     'life-next-generation',
     'list-insert-sorted',
     'list-merge-sorted',
@@ -81,6 +90,7 @@ test('traces cover collection operations, stacks, sets, recursion, trees, tables
     'nested-parcel-load',
     'next-warmer-day',
     'object-update',
+    'parcel-loading-turns',
     'preview-slot-results',
     'promise-outcomes',
     'pubsub-trace',
@@ -88,22 +98,29 @@ test('traces cover collection operations, stacks, sets, recursion, trees, tables
     'puzzle-parse-part-one',
     'quiet-sensor-span',
     'read-batch-labels',
+    'reading-run-summary',
     'remaining-actions',
     'remove-adjacent-pairs',
     'scroll-report-throttle',
     'search-request-state',
+    'shared-seat-occurrences',
     'shipping-cost-tiers',
     'shortest-run-reaching-target',
     'simplify-file-path',
     'smallest-daily-capacity',
+    'sort-score-records',
+    'sorted-offset-squares',
     'stack-trace-missing-field',
     'string-basics',
     'sum-positive-numbers',
     'terminal-folder-paths',
     'text-normalized-palindrome',
     'text-run-length',
+    'ticket-service-times',
     'top-k-frequent-tags',
     'tree-depth-sum',
+    'tree-leaf-count',
+    'tree-value-depth',
     'tree-value-path',
     'use-conditions',
     'valid-parentheses',
@@ -236,7 +253,7 @@ test('table traces fill monotonically and end with the executed answer in the ta
 })
 
 test('tree and call traces keep the traced input in every snapshot', () => {
-  const stable = ['tree-depth-sum', 'tree-value-path', 'algo-subsets']
+  const stable = ['tree-depth-sum', 'tree-value-path', 'algo-subsets', 'tree-value-depth', 'tree-leaf-count']
   for (const id of stable) {
     const shapes = repDepth[id].traceSteps.steps
       .filter(step => step.structure?.kind === 'tree')
@@ -332,13 +349,26 @@ test('linked-list traces keep the input row intact and return the drawn copy', (
 })
 
 test('graph traces keep every node in place and draw the traced edges', () => {
-  for (const id of ['algo-graph-reachable', 'graph-shortest-hops', 'graph-connected-groups', 'course-order']) {
+  for (const id of [
+    'algo-graph-reachable',
+    'graph-shortest-hops',
+    'graph-connected-groups',
+    'course-order',
+    'graph-reachable-count',
+    'graph-incoming-counts',
+  ]) {
     const graphs = repDepth[id].traceSteps.steps.map(step => step.structure).filter(structure => structure?.kind === 'graph')
     assert.equal(graphs.length, repDepth[id].traceSteps.steps.length, `${id}: every step should draw the graph`)
     const layout = graph => JSON.stringify(graph.nodes.map(node => [node.id, node.at]))
     assert.equal(new Set(graphs.map(layout)).size, 1, `${id}: a node moved between steps`)
   }
-  for (const id of ['algo-graph-reachable', 'graph-shortest-hops', 'graph-connected-groups']) {
+  for (const id of [
+    'algo-graph-reachable',
+    'graph-shortest-hops',
+    'graph-connected-groups',
+    'graph-reachable-count',
+    'graph-incoming-counts',
+  ]) {
     const [graph] = traceArguments(repDepth[id].traceSteps.input)
     const drawn = repDepth[id].traceSteps.steps[0].structure
     const listed = graph.flatMap((targets, from) => targets.map(to => [String(from), String(to)]))
