@@ -20,6 +20,8 @@ Snapshot from `main` at `ba19aa4` (2026-10-17), before the SQL track lands. Reco
 
 There are 246 reps; 205 appear on a track and 41 are Library-only. There are 45 lessons. Wrong-solution tests (`assertMutantsFail` in `tests/helpers/checks.mjs`) cover only some reps, and 84 reviews have visual `traceSteps`.
 
+Current count (2026-10-30): 131 of the 392 rep reviews have visual `traceSteps`; `tests/trace-content.test.mjs` lists them.
+
 Word count is a prompt for reading, not a defect: a short brief can be complete. The rubric decides.
 
 ## The bar for every rep
