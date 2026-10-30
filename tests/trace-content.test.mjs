@@ -29,6 +29,8 @@ test('traces cover collection operations, stacks, sets, recursion, trees, tables
     'broadcast-unreached-stations',
     'bst-check-order',
     'bst-insert-value',
+    'bst-latest-at-or-before',
+    'bst-nearest-slot',
     'bst-range-values',
     'bst-search-path',
     'closest-value-gap',
@@ -72,6 +74,8 @@ test('traces cover collection operations, stacks, sets, recursion, trees, tables
     'grid-fewest-steps',
     'grid-open-neighbours',
     'has-duplicate',
+    'heap-kth-largest-stream',
+    'heap-merge-log-streams',
     'heap-rooms-needed',
     'kth-smallest-copy',
     'latest-request',
@@ -82,6 +86,7 @@ test('traces cover collection operations, stacks, sets, recursion, trees, tables
     'list-merge-sorted',
     'list-remove-value',
     'list-rotate-route',
+    'list-split-at-first',
     'longest-shared-sequence',
     'loop-while',
     'loop-with-for',
@@ -253,7 +258,15 @@ test('table traces fill monotonically and end with the executed answer in the ta
 })
 
 test('tree and call traces keep the traced input in every snapshot', () => {
-  const stable = ['tree-depth-sum', 'tree-value-path', 'algo-subsets', 'tree-value-depth', 'tree-leaf-count']
+  const stable = [
+    'tree-depth-sum',
+    'tree-value-path',
+    'algo-subsets',
+    'tree-value-depth',
+    'tree-leaf-count',
+    'bst-latest-at-or-before',
+    'bst-nearest-slot',
+  ]
   for (const id of stable) {
     const shapes = repDepth[id].traceSteps.steps
       .filter(step => step.structure?.kind === 'tree')

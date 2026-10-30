@@ -90,6 +90,37 @@ const rangeTree = (notes: Record<string, string> = {}): TraceTreeNode => {
   return at('n540', 540, [at('n480', 480, [at('n420', 420), at('n510', 510)]), at('n600', 600, [at('n570', 570), at('n660', 660)])])
 }
 
+// list-split-at-first: the input 4 → 9 → 2 stays on the first row; each part grows behind its own placeholder ("ph").
+const splitRows = (before: number[], from: number[], pointers: Record<string, string | null>): TraceStructure => {
+  const part = (label: string, prefix: string, values: number[]) => ({
+    label,
+    nodes: [
+      { id: `${prefix}ph`, value: 'ph', next: values.length ? `${prefix}0` : null },
+      ...values.map((value, index) => ({
+        id: `${prefix}${index}`,
+        value,
+        next: index + 1 < values.length ? `${prefix}${index + 1}` : null,
+      })),
+    ],
+  })
+  return {
+    kind: 'list',
+    rows: [
+      {
+        label: 'input (only read)',
+        nodes: [
+          { id: 'i4', value: 4, next: 'i9' },
+          { id: 'i9', value: 9, next: 'i2' },
+          { id: 'i2', value: 2, next: null },
+        ],
+      },
+      part('before', 'b', before),
+      part('from', 'f', from),
+    ],
+    pointers,
+  }
+}
+
 export const dsaLinkedDepth: Record<string, RepDepth> = {
   'list-insert-sorted': {
     reasoning:
@@ -327,6 +358,66 @@ export const dsaLinkedDepth: Record<string, RepDepth> = {
       'Stopping at the first node at or before time returns 480 instead of 510 for time 515. Using if (best) to test for an answer treats a booking at midnight, value 0, as no booking.',
     transfer:
       'Find the earliest booking at or after a time instead. Decide which subtree to discard at each node and how equality is handled. This changed contract is self-reviewed.',
+    traceSteps: {
+      code: [
+        'function latestAtOrBefore(root: TreeNode | null, time: number): number | null {',
+        '  let best: number | null = null',
+        '  let node = root',
+        '  while (node !== null) {',
+        '    if (node.value <= time) {',
+        '      best = node.value',
+        '      node = node.right',
+        '    } else node = node.left',
+        '  }',
+        '  return best',
+        '}',
+      ],
+      input:
+        'root = {value: 540, left: {value: 480, left: {value: 420, left: null, right: null}, right: {value: 510, left: null, right: null}}, right: {value: 600, left: {value: 570, left: null, right: null}, right: {value: 660, left: null, right: null}}}, time = 590',
+      steps: [
+        {
+          line: 2,
+          vars: { time: 590, best: null },
+          structure: { kind: 'tree', root: rangeTree(), current: 'n540' },
+          note: 'Start at the root with no answer yet. Smaller values are to the left of a node, larger values to the right.',
+        },
+        {
+          line: 6,
+          vars: { best: 540 },
+          structure: { kind: 'tree', root: rangeTree({ n540: '≤ 590' }), current: 'n540' },
+          note: '540 is at or before 590, so it is the best so far. A later booking could still fit, and later values are on the right.',
+        },
+        {
+          line: 7,
+          vars: { best: 540 },
+          structure: { kind: 'tree', root: rangeTree({ n540: '≤ 590', n600: '> 590' }), current: 'n600', visited: ['n540'] },
+          note: '600 is after 590, so it is too late, and everything to its right is later still. Go left.',
+        },
+        {
+          line: 6,
+          vars: { best: 570 },
+          structure: {
+            kind: 'tree',
+            root: rangeTree({ n540: '≤ 590', n600: '> 590', n570: '≤ 590' }),
+            current: 'n570',
+            visited: ['n540', 'n600'],
+          },
+          note: '570 fits and is later than 540, so it is the new best. Go right to look for something later.',
+        },
+        {
+          line: 3,
+          vars: { best: 570, node: null },
+          structure: { kind: 'tree', root: rangeTree({ n540: '≤ 590', n600: '> 590', n570: '≤ 590' }), visited: ['n540', 'n600', 'n570'] },
+          note: '570 has no right child, so the path ends. 420, 480, 510, and 660 were never compared.',
+        },
+        {
+          line: 9,
+          vars: { result: 570 },
+          structure: { kind: 'tree', root: rangeTree({ n540: '≤ 590', n600: '> 590', n570: '≤ 590' }), visited: ['n540', 'n600', 'n570'] },
+          note: 'Return 570, the latest booking at or before 590.',
+        },
+      ],
+    },
   },
   'bst-check-order': {
     reasoning:
@@ -505,6 +596,60 @@ export const dsaLinkedDepth: Record<string, RepDepth> = {
       'Splitting at the last match instead of the first gives before = 1 → 3 → 2 for the repeated case. Testing the match with if (node.value) skips a track whose ID is 0. Returning the input node as from passes a value check but shares nodes with the caller.',
     transfer:
       'Split into three parts around a track, or split at the first track whose ID is greater than a limit. Decide whether the matching node belongs to the earlier or later part. This changed contract is self-reviewed.',
+    traceSteps: {
+      code: [
+        'function splitAtTrack(head: ListNode | null, track: number): { before: ListNode | null; from: ListNode | null } {',
+        '  const beforeHead: ListNode = { value: 0, next: null }, fromHead: ListNode = { value: 0, next: null }',
+        '  let beforeTail = beforeHead, fromTail = fromHead, found = false',
+        '  for (let node = head; node !== null; node = node.next) {',
+        '    if (node.value === track) found = true',
+        '    const copy: ListNode = { value: node.value, next: null }',
+        '    if (found) fromTail = fromTail.next = copy',
+        '    else beforeTail = beforeTail.next = copy',
+        '  }',
+        '  return { before: beforeHead.next, from: fromHead.next }',
+        '}',
+      ],
+      input: 'head = {value: 4, next: {value: 9, next: {value: 2, next: null}}}, track = 9',
+      steps: [
+        {
+          line: 2,
+          vars: { track: 9, found: false },
+          structure: splitRows([], [], { beforeTail: 'bph', fromTail: 'fph' }),
+          note: 'Each part starts with a placeholder (`ph`), so its first copied node is attached like any other. `found` records whether the track has appeared.',
+        },
+        {
+          line: 7,
+          vars: { node: 4, found: false },
+          structure: splitRows([4], [], { node: 'i4', beforeTail: 'b0', fromTail: 'fph' }),
+          note: '4 is not the track and `found` is still `false`, so a fresh copy of 4 goes on the before part.',
+        },
+        {
+          line: 4,
+          vars: { node: 9, found: true },
+          structure: splitRows([4], [], { node: 'i9', beforeTail: 'b0', fromTail: 'fph' }),
+          note: '9 is the track, so `found` flips to `true`. It never flips back.',
+        },
+        {
+          line: 6,
+          vars: { node: 9, found: true },
+          structure: splitRows([4], [9], { node: 'i9', beforeTail: 'b0', fromTail: 'f0' }),
+          note: 'The copy of 9 starts the from part.',
+        },
+        {
+          line: 6,
+          vars: { node: 2, found: true },
+          structure: splitRows([4], [9, 2], { node: 'i2', beforeTail: 'b0', fromTail: 'f1' }),
+          note: '2 is not the track, but `found` is already `true`, so 2 follows 9 in the from part.',
+        },
+        {
+          line: 9,
+          vars: { result: '{"before":{"value":4,"next":null},"from":{"value":9,"next":{"value":2,"next":null}}}' },
+          structure: splitRows([4], [9, 2], { before: 'b0', from: 'f0' }),
+          note: 'Return the nodes after each placeholder. The input still reads 4 → 9 → 2, and every output node is new.',
+        },
+      ],
+    },
   },
   'list-rotate-route': {
     reasoning:
@@ -778,6 +923,74 @@ export const dsaLinkedDepth: Record<string, RepDepth> = {
       'Stopping at the first node whose distance is smaller than its parent’s returns 540 for 525 and ignores the tie rule. Breaking ties toward the later value returns 540 instead of 510. Using if (best) treats a booking at midnight as no answer.',
     transfer:
       'Return the two nearest bookings, or the nearest one that is at least 30 minutes away. Decide whether one route is still enough. This changed contract is self-reviewed.',
+    traceSteps: {
+      code: [
+        'function nearestBooking(root: TreeNode | null, time: number): number | null {',
+        '  let best: number | null = null',
+        '  let node = root',
+        '  while (node !== null) {',
+        '    const gap = Math.abs(node.value - time), bestGap = best === null ? Infinity : Math.abs(best - time)',
+        '    if (gap < bestGap || (gap === bestGap && node.value < best!)) best = node.value',
+        '    if (node.value === time) break',
+        '    node = time < node.value ? node.left : node.right',
+        '  }',
+        '  return best',
+        '}',
+      ],
+      input:
+        'root = {value: 540, left: {value: 480, left: {value: 420, left: null, right: null}, right: {value: 510, left: null, right: null}}, right: {value: 600, left: {value: 570, left: null, right: null}, right: {value: 660, left: null, right: null}}}, time = 530',
+      steps: [
+        {
+          line: 2,
+          vars: { time: 530, best: null },
+          structure: { kind: 'tree', root: rangeTree(), current: 'n540' },
+          note: 'Start at the root with no best value yet.',
+        },
+        {
+          line: 5,
+          vars: { gap: 10, best: 540 },
+          structure: { kind: 'tree', root: rangeTree({ n540: '10 away' }), current: 'n540' },
+          note: '540 is 10 away. There is nothing to compare it with yet, so it is the best.',
+        },
+        {
+          line: 5,
+          vars: { gap: 50, bestGap: 10, best: 540 },
+          structure: { kind: 'tree', root: rangeTree({ n540: '10 away', n480: '50 away' }), current: 'n480', visited: ['n540'] },
+          note: '530 is below 540, so go left to 480. It is 50 away, farther than 540, so keep 540.',
+        },
+        {
+          line: 5,
+          vars: { gap: 20, bestGap: 10, best: 540 },
+          structure: {
+            kind: 'tree',
+            root: rangeTree({ n540: '10 away', n480: '50 away', n510: '20 away' }),
+            current: 'n510',
+            visited: ['n540', 'n480'],
+          },
+          note: '530 is above 480, so go right to 510. It is 20 away, still farther than 540.',
+        },
+        {
+          line: 3,
+          vars: { best: 540, node: null },
+          structure: {
+            kind: 'tree',
+            root: rangeTree({ n540: '10 away', n480: '50 away', n510: '20 away' }),
+            visited: ['n540', 'n480', 'n510'],
+          },
+          note: '530 is above 510, but 510 has no right child, so the path ends. The closest values below and above 530, 510 and 540, both lay on it.',
+        },
+        {
+          line: 9,
+          vars: { result: 540 },
+          structure: {
+            kind: 'tree',
+            root: rangeTree({ n540: '10 away', n480: '50 away', n510: '20 away' }),
+            visited: ['n540', 'n480', 'n510'],
+          },
+          note: 'Return 540. When two values are equally close, as 510 and 540 are for 525, the tie goes to the smaller one.',
+        },
+      ],
+    },
   },
 }
 

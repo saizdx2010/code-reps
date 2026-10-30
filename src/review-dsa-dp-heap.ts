@@ -436,6 +436,76 @@ export const dsaDpHeapDepth: Record<string, RepDepth> = {
       'Sorting with a comparator that only compares at lets ties come out in any order the sort chooses, and breaking ties by name puts alpha before zeta. Calling streams[i].times.shift() to advance changes the caller’s arrays.',
     transfer:
       'Return only the first 100 entries of the timeline, or merge streams that arrive one entry at a time. Decide what the queue must hold and when you can stop. This changed contract is self-reviewed.',
+    traceSteps: {
+      code: [
+        'function mergeStreams(streams: Stream[]): { at: number; name: string }[] {',
+        '  const merged: { at: number; name: string }[] = [], queue: [number, number, number][] = []',
+        '  const enqueue = (at: number, s: number, index: number) => {',
+        '    let i = queue.length',
+        '    while (i > 0 && (queue[i - 1][0] > at || (queue[i - 1][0] === at && queue[i - 1][1] > s))) i--',
+        '    queue.splice(i, 0, [at, s, index])',
+        '  }',
+        '  streams.forEach((stream, s) => { if (stream.times.length > 0) enqueue(stream.times[0], s, 0) })',
+        '  while (queue.length > 0) {',
+        '    const [at, s, index] = queue.shift()!',
+        '    merged.push({ at, name: streams[s].name })',
+        '    if (index + 1 < streams[s].times.length) enqueue(streams[s].times[index + 1], s, index + 1)',
+        '  }',
+        '  return merged',
+        '}',
+      ],
+      input: 'streams = [{ name: "api", times: [1, 5] }, { name: "db", times: [2, 5] }]',
+      steps: [
+        {
+          line: 7,
+          vars: { merged: '[]' },
+          structure: { kind: 'array', values: ['1 api', '2 db'], pointers: { next: 0 } },
+          note: 'Each stream offers its first timestamp. `queue` keeps one candidate per stream, earliest first, and a tie puts the earlier stream first.',
+        },
+        {
+          line: 10,
+          vars: { at: 1, s: 0, merged: '[1 api]' },
+          structure: { kind: 'array', values: ['2 db'], pointers: { next: 0 } },
+          note: 'Take the earliest candidate, 1 from api, and append it to the timeline.',
+        },
+        {
+          line: 11,
+          vars: { s: 0, index: 0, merged: '[1 api]' },
+          structure: { kind: 'array', values: ['2 db', '5 api'], pointers: { next: 0 } },
+          note: 'api has another timestamp, 5. It joins the queue behind 2.',
+        },
+        {
+          line: 10,
+          vars: { at: 2, s: 1, merged: '[1 api, 2 db]' },
+          structure: { kind: 'array', values: ['5 api'], pointers: { next: 0 } },
+          note: 'Take 2 from db.',
+        },
+        {
+          line: 11,
+          vars: { s: 1, index: 0, merged: '[1 api, 2 db]' },
+          structure: { kind: 'array', values: ['5 api', '5 db'], pointers: { next: 0 } },
+          note: 'db offers 5, which ties with the 5 from api. api comes earlier in `streams`, so the 5 from db waits behind it.',
+        },
+        {
+          line: 10,
+          vars: { at: 5, s: 0, merged: '[1 api, 2 db, 5 api]' },
+          structure: { kind: 'array', values: ['5 db'], pointers: { next: 0 } },
+          note: 'Take 5 from api. api has no more timestamps, so nothing joins the queue.',
+        },
+        {
+          line: 10,
+          vars: { at: 5, s: 1, merged: '[1 api, 2 db, 5 api, 5 db]' },
+          structure: { kind: 'array', values: [] },
+          note: 'Take 5 from db. The queue is empty, so every timestamp has been placed.',
+        },
+        {
+          line: 13,
+          vars: { result: '[{"at":1,"name":"api"},{"at":2,"name":"db"},{"at":5,"name":"api"},{"at":5,"name":"db"}]' },
+          structure: { kind: 'array', values: [] },
+          note: 'Return the timeline. The queue never held more than one candidate per stream; a binary heap would insert and remove each in O(log k) instead of shifting an array.',
+        },
+      ],
+    },
   },
   'heap-rooms-needed': {
     reasoning:
@@ -522,6 +592,78 @@ export const dsaDpHeapDepth: Record<string, RepDepth> = {
       'Removing duplicates before counting returns null for [5, 5, 5] with k = 2, because only one distinct score exists. Keeping a max-priority queue of everything and reading its top returns the highest score, not the kth. Returning 0 instead of null before k scores arrive is indistinguishable from a real score of 0.',
     transfer:
       'Report the median score after each arrival instead. Decide how two priority queues split the scores and which one holds the answer. This changed contract is self-reviewed.',
+    traceSteps: {
+      code: [
+        'function cutoffs(scores: number[], k: number): (number | null)[] {',
+        '  const top: number[] = [], result: (number | null)[] = []',
+        '  for (const score of scores) {',
+        '    let i = 0',
+        '    while (i < top.length && top[i] < score) i++',
+        '    top.splice(i, 0, score)',
+        '    if (top.length > k) top.shift()',
+        '    result.push(top.length === k ? top[0] : null)',
+        '  }',
+        '  return result',
+        '}',
+      ],
+      input: 'scores = [4, 5, 8, 2, 10, 9], k = 3',
+      steps: [
+        {
+          line: 1,
+          vars: { k: 3, result: '[]' },
+          structure: { kind: 'array', values: [] },
+          note: '`top` will hold the k highest scores so far, lowest first, like a min-priority queue. Once it holds k scores, its first value is the cutoff.',
+        },
+        {
+          line: 7,
+          vars: { score: 4, result: '[null]' },
+          structure: { kind: 'array', values: [4] },
+          note: 'Only 1 score has arrived, fewer than k = 3, so the entry is `null`.',
+        },
+        {
+          line: 7,
+          vars: { score: 5, result: '[null, null]' },
+          structure: { kind: 'array', values: [4, 5] },
+          note: '5 goes after 4. There are still fewer than 3 scores: `null` again.',
+        },
+        {
+          line: 7,
+          vars: { score: 8, result: '[null, null, 4]' },
+          structure: { kind: 'array', values: [4, 5, 8], pointers: { cutoff: 0 } },
+          note: 'With 3 scores held, the cutoff is the lowest of them, 4.',
+        },
+        {
+          line: 7,
+          vars: { score: 2, result: '[null, null, 4, 4]' },
+          structure: { kind: 'array', values: [4, 5, 8], pointers: { cutoff: 0 } },
+          note: '2 is inserted at the front, which makes 4 scores, so the lowest is removed: 2 itself. The cutoff stays 4.',
+        },
+        {
+          line: 5,
+          vars: { score: 10, i: 3 },
+          structure: { kind: 'array', values: [4, 5, 8, 10], pointers: { lowest: 0 } },
+          note: '10 is higher than every held score, so it goes at the back. Now 4 scores are held, one too many.',
+        },
+        {
+          line: 7,
+          vars: { score: 10, result: '[null, null, 4, 4, 5]' },
+          structure: { kind: 'array', values: [5, 8, 10], pointers: { cutoff: 0 } },
+          note: 'Removing the lowest, 4, leaves the 3 highest. The cutoff rises to 5.',
+        },
+        {
+          line: 7,
+          vars: { score: 9, result: '[null, null, 4, 4, 5, 8]' },
+          structure: { kind: 'array', values: [8, 9, 10], pointers: { cutoff: 0 } },
+          note: '9 goes between 8 and 10, and 5 is removed. The cutoff is 8.',
+        },
+        {
+          line: 9,
+          vars: { result: '[null,null,4,4,5,8]' },
+          structure: { kind: 'array', values: [8, 9, 10], pointers: { cutoff: 0 } },
+          note: 'Each entry is the kth highest score so far. A binary heap would insert and remove in O(log k) instead of shifting the array.',
+        },
+      ],
+    },
   },
 }
 
