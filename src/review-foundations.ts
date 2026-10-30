@@ -662,6 +662,71 @@ export const foundationsDepth: Record<string, RepDepth> = {
     counterexample: 'A loop allowing remaining equal to zero adds Batch 3: 0 items for total 6, capacity 3.',
     transfer:
       'Allow different capacities on different days. Decide what happens if the schedule ends before all items are packed. This transfer is self-reviewed.',
+    traceSteps: {
+      code: [
+        'function batchLabels(total: number, capacity: number): string[] {',
+        '  const labels: string[] = []',
+        '  let remaining = total',
+        '  while (remaining > 0) {',
+        '    const count = Math.min(capacity, remaining)',
+        '    labels.push(`Batch ${labels.length + 1}: ${count} items`)',
+        '    remaining -= count',
+        '  }',
+        '  return labels',
+        '}',
+      ],
+      input: 'total = 7, capacity = 3',
+      steps: [
+        {
+          line: 2,
+          vars: { remaining: 7 },
+          structure: { kind: 'array', values: [1, 2, 3, 4, 5, 6, 7] },
+          note: 'Seven items wait to be packed. Each pass of the loop packs one batch and subtracts it from `remaining`.',
+        },
+        {
+          line: 4,
+          vars: { remaining: 7, count: 3 },
+          structure: { kind: 'array', values: [1, 2, 3, 4, 5, 6, 7], window: [0, 2], windowLabel: 'batch 1' },
+          note: 'A batch holds at most `capacity` = 3 items, and 7 remain, so this batch takes 3.',
+        },
+        {
+          line: 6,
+          vars: { remaining: 4, label: 'Batch 1: 3 items' },
+          structure: { kind: 'array', values: [1, 2, 3, 4, 5, 6, 7], dimmed: [0, 1, 2] },
+          note: 'Push `Batch 1: 3 items`, then subtract: 4 items remain.',
+        },
+        {
+          line: 4,
+          vars: { remaining: 4, count: 3 },
+          structure: { kind: 'array', values: [1, 2, 3, 4, 5, 6, 7], dimmed: [0, 1, 2], window: [3, 5], windowLabel: 'batch 2' },
+          note: '4 remain, still at least 3, so batch 2 is full too.',
+        },
+        {
+          line: 6,
+          vars: { remaining: 1, label: 'Batch 2: 3 items' },
+          structure: { kind: 'array', values: [1, 2, 3, 4, 5, 6, 7], dimmed: [0, 1, 2, 3, 4, 5] },
+          note: 'Push `Batch 2: 3 items`. 1 item remains.',
+        },
+        {
+          line: 4,
+          vars: { remaining: 1, count: 1 },
+          structure: { kind: 'array', values: [1, 2, 3, 4, 5, 6, 7], dimmed: [0, 1, 2, 3, 4, 5], window: [6, 6], windowLabel: 'batch 3' },
+          note: '`Math.min(3, 1)` is 1, so the last batch is short.',
+        },
+        {
+          line: 6,
+          vars: { remaining: 0, label: 'Batch 3: 1 items' },
+          structure: { kind: 'array', values: [1, 2, 3, 4, 5, 6, 7], dimmed: [0, 1, 2, 3, 4, 5, 6] },
+          note: 'Push `Batch 3: 1 items`. Nothing remains, so the loop stops without adding an empty batch.',
+        },
+        {
+          line: 8,
+          vars: { result: '["Batch 1: 3 items","Batch 2: 3 items","Batch 3: 1 items"]' },
+          structure: { kind: 'array', values: [1, 2, 3, 4, 5, 6, 7], dimmed: [0, 1, 2, 3, 4, 5, 6] },
+          note: 'Return three labels. Their counts, 3, 3, and 1, add up to 7.',
+        },
+      ],
+    },
   },
   'inspection-run-summary': {
     reasoning:
@@ -672,6 +737,87 @@ export const foundationsDepth: Record<string, RepDepth> = {
     counterexample: 'Updating the maximum only when a streak ends misses [8,9,10] at limit 5 entirely.',
     transfer:
       'Require at least two consecutive alerts before sounding an alarm. Decide when the alarm resets. This transfer is self-reviewed.',
+    traceSteps: {
+      code: [
+        'function inspectionSummary(readings: number[], limit: number): { alerts: number; longestRun: number } {',
+        '  let alerts = 0, run = 0, longestRun = 0',
+        '  for (const reading of readings) {',
+        '    if (reading > limit) {',
+        '      alerts++',
+        '      run++',
+        '      longestRun = Math.max(longestRun, run)',
+        '    } else run = 0',
+        '  }',
+        '  return { alerts, longestRun }',
+        '}',
+      ],
+      input: 'readings = [4, 7, 8, 5, 9], limit = 5',
+      steps: [
+        {
+          line: 1,
+          vars: { alerts: 0, run: 0, longestRun: 0 },
+          structure: { kind: 'array', values: [4, 7, 8, 5, 9] },
+          note: '`run` counts the current streak of alerts, and `longestRun` keeps the longest streak so far.',
+        },
+        {
+          line: 7,
+          vars: { reading: 4, alerts: 0, run: 0, longestRun: 0 },
+          structure: { kind: 'array', values: [4, 7, 8, 5, 9], pointers: { reading: 0 } },
+          note: '4 is not above 5, so it is not an alert, and the streak stays at 0.',
+        },
+        {
+          line: 6,
+          vars: { reading: 7, alerts: 1, run: 1, longestRun: 1 },
+          structure: {
+            kind: 'array',
+            values: [4, 7, 8, 5, 9],
+            pointers: { reading: 1 },
+            dimmed: [0],
+            window: [1, 1],
+            windowLabel: 'run 1',
+          },
+          note: '7 is above 5: an alert, and the start of a streak.',
+        },
+        {
+          line: 6,
+          vars: { reading: 8, alerts: 2, run: 2, longestRun: 2 },
+          structure: {
+            kind: 'array',
+            values: [4, 7, 8, 5, 9],
+            pointers: { reading: 2 },
+            dimmed: [0],
+            window: [1, 2],
+            windowLabel: 'run 2',
+          },
+          note: '8 extends the streak to 2, the longest so far.',
+        },
+        {
+          line: 7,
+          vars: { reading: 5, alerts: 2, run: 0, longestRun: 2 },
+          structure: { kind: 'array', values: [4, 7, 8, 5, 9], pointers: { reading: 3 }, dimmed: [0, 1, 2] },
+          note: '5 equals the limit, and only readings strictly above it are alerts. The streak resets to 0, but `longestRun` keeps 2.',
+        },
+        {
+          line: 6,
+          vars: { reading: 9, alerts: 3, run: 1, longestRun: 2 },
+          structure: {
+            kind: 'array',
+            values: [4, 7, 8, 5, 9],
+            pointers: { reading: 4 },
+            dimmed: [0, 1, 2, 3],
+            window: [4, 4],
+            windowLabel: 'run 1',
+          },
+          note: '9 is an alert that starts a new streak of 1, shorter than 2.',
+        },
+        {
+          line: 9,
+          vars: { result: '{"alerts":3,"longestRun":2}' },
+          structure: { kind: 'array', values: [4, 7, 8, 5, 9], dimmed: [0, 1, 2, 3, 4] },
+          note: 'Return three alerts and a longest streak of 2, from 7 and 8.',
+        },
+      ],
+    },
   },
 }
 
