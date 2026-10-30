@@ -172,6 +172,10 @@
   width: 100%;
   max-height: 340px;
 }
+/* Linked lists stack a row per list; capping their height would shrink every row. */
+.trace-list svg {
+  max-height: none;
+}
 .trace-structure rect {
   fill: var(--surface-2);
   stroke: var(--border-strong);

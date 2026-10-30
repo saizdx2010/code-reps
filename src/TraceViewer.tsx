@@ -31,6 +31,8 @@ const nodeValues = (root: TraceTreeNode, ids: string[] = []) =>
 type TableStructure = Extract<TraceStructure, { kind: 'table' }>
 const tableName = (table: TableStructure, [row, col]: [number, number]) => {
   const column = table.colLabels?.[col] ?? col
+  // A table without a name but with labelled rows reads as `result[1]`, not `cell[result][1]`.
+  if (!table.name && table.rowLabels && table.cells.length > 1) return `${table.rowLabels[row]}[${column}]`
   return `${table.name ?? 'cell'}[${table.cells.length > 1 ? `${table.rowLabels?.[row] ?? row}][${column}` : column}]`
 }
 const joinAnd = (items: string[]) => (items.length < 3 ? items.join(' and ') : `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`)
@@ -306,7 +308,7 @@ function TableView({ structure, fresh }: { structure: TableStructure; fresh: str
       <Legend
         items={[
           ...(structure.current ? [['now', 'filling now'] as const] : []),
-          ...(structure.reads?.length ? [['reads', 'read to fill it'] as const] : []),
+          ...(structure.reads?.length ? [['reads', structure.current ? 'read to fill it' : 'being read'] as const] : []),
           ...(hasEmpty ? [['empty', 'not filled yet'] as const] : []),
         ]}
       />
