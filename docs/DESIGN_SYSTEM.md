@@ -147,6 +147,7 @@ Motion acknowledges interaction and shows where something came from; it never de
 | Section tab | Underline grows from the centre; the current tab keeps it. Moving to another area, its tabs rise in a short cascade; tabs that stay in the same area keep still |
 | Practice steps | Underline glides and resizes to the selected step (`StepIndicator`); markers ease into their new state; a link fills from the left once both neighbouring steps are done; first placement and layout resizes snap |
 | Lesson sections, segmented switches, Journal | Selected fill glides between options (`StepIndicator`); first placement and layout resizes snap |
+| Step trace | Changing step, the current-line band glides to the new line, pointers and a window bracket slide to their new cells, and graph and tree nodes ease into their new state. Cells, entries, and nodes this step changed settle in with an accent outline, changed variables wash from the accent, and the step note fades from 40%. The step track's current segment fills. First placement and layout resizes snap; with reduced motion every change is immediate |
 | Trail node | Marker grows to 114% with an accent ring; title takes the accent; press washes the row |
 | Next trail node | Lime ring pulses twice when the trail arrives or the next rep moves, then stays still |
 | Next-practice panel | When its rep changes in place (a starting choice or Undo), its words rise in over 320ms and a short confirmation rises beneath it; nothing moves on page arrival |

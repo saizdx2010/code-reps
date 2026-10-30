@@ -1,0 +1,787 @@
+/* Post-solve authored trace snapshots. Loaded with the trace viewer, not at startup. */
+.trace-viewer {
+  container-type: inline-size;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+.trace-viewer > * {
+  margin: 0;
+}
+/* Trace code shows the characters as written: no `===` or `<=` ligatures. */
+.trace-viewer code,
+.trace-structure text,
+.trace-cell,
+.trace-pick button {
+  font-variant-ligatures: none;
+  font-feature-settings:
+    'calt' 0,
+    'liga' 0;
+}
+.trace-viewer h4 {
+  font-size: var(--type-card);
+  margin: 0;
+}
+.trace-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.trace-heading .utility-note {
+  margin: 2px 0 0;
+}
+.trace-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  font-size: 14px;
+}
+.trace-input > span {
+  color: var(--muted);
+  font-size: var(--type-meta);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.trace-input code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.trace-predict-note {
+  font-weight: 700;
+}
+.trace-hidden-structure {
+  padding: 16px;
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--bg);
+  color: var(--muted);
+}
+.trace-predict-row .ui-input {
+  width: 100%;
+  min-width: 0;
+  font-family: var(--font-mono);
+}
+.trace-guess {
+  display: block;
+  font-size: 13px;
+}
+.trace-guess-match {
+  color: var(--success);
+}
+.trace-guess-miss {
+  color: var(--feature-text);
+}
+.trace-viewer:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Code on the left; the drawing, the step, its controls, and the variables on the right. */
+.trace-panes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+.trace-panes > * {
+  min-width: 0;
+}
+.trace-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+.trace-stage > * {
+  min-width: 0;
+}
+
+/* Long lines wrap with a hanging indent instead of running out of view. */
+.trace-code {
+  position: relative;
+  background: var(--surface-2);
+  border-radius: var(--radius-control);
+  padding: 8px;
+  font-size: 14px;
+}
+.trace-code > div {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 12px;
+  padding: 4px;
+  border-left: 3px solid transparent;
+}
+.trace-code > div code {
+  flex: 1;
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.trace-code .trace-current {
+  color: var(--feature-text);
+  font-weight: 700;
+}
+/* The current-line band sits behind the rows and glides between them. */
+.trace-line-marker {
+  position: absolute;
+  top: 0;
+  left: 8px;
+  right: 8px;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface-2));
+  pointer-events: none;
+}
+.trace-line-number {
+  color: var(--muted);
+  min-width: 2ch;
+  text-align: right;
+}
+.trace-current .trace-line-number {
+  color: var(--feature-text);
+}
+
+/* Drawings keep a readable size and scroll sideways when the column is narrower. */
+.trace-canvas {
+  overflow-x: auto;
+  border-radius: var(--radius-control);
+}
+.trace-canvas:focus-visible,
+.trace-table-scroll:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.trace-canvas,
+.trace-table-scroll {
+  background:
+    linear-gradient(to right, var(--surface) 30%, transparent) left / 24px 100% no-repeat local,
+    linear-gradient(to left, var(--surface) 30%, transparent) right / 24px 100% no-repeat local,
+    linear-gradient(to right, var(--border-strong), transparent) left / 8px 100% no-repeat scroll,
+    linear-gradient(to left, var(--border-strong), transparent) right / 8px 100% no-repeat scroll;
+}
+.trace-structure svg {
+  display: block;
+  width: 100%;
+  max-height: 340px;
+}
+.trace-structure rect {
+  fill: var(--surface-2);
+  stroke: var(--border-strong);
+}
+.trace-structure text {
+  fill: var(--text);
+  text-anchor: middle;
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+.trace-structure .trace-index {
+  fill: var(--muted);
+  font-size: var(--type-meta);
+}
+.trace-structure .trace-dimmed rect {
+  fill: var(--bg);
+  stroke-dasharray: 4 3;
+}
+.trace-structure .trace-dimmed text {
+  fill: var(--muted);
+}
+/* A cell, entry, or node whose value this step changed. */
+.trace-structure .trace-fresh rect {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+}
+.trace-structure .trace-fresh text {
+  font-weight: 700;
+}
+.trace-pointer path {
+  fill: var(--accent);
+}
+.trace-pointer text {
+  font-weight: 700;
+}
+.trace-tree circle {
+  fill: var(--surface-2);
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+}
+.trace-tree .trace-edge {
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+}
+.trace-tree .trace-dimmed circle {
+  fill: var(--bg);
+  stroke-dasharray: 4 3;
+}
+.trace-tree .trace-node-current circle {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-width: 4;
+}
+.trace-tree .trace-node-current text {
+  fill: var(--feature-text);
+  font-weight: 700;
+}
+.trace-structure .trace-node-note {
+  font-size: var(--type-meta);
+  fill: var(--muted);
+  /* A halo keeps notes readable where an edge passes behind them. */
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+.trace-tree .trace-node-current .trace-node-note {
+  fill: var(--feature-text);
+}
+/* Graph, linked-list, cached-call, and window shapes reuse the tree's state language: filled outline, double ring, dashed. */
+.trace-graph circle,
+.trace-tree .trace-node-ring {
+  fill: var(--surface-2);
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+}
+.trace-graph .trace-edge,
+.trace-list .trace-link {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+}
+.trace-graph .trace-edge-active {
+  stroke: var(--accent);
+  stroke-width: 4;
+}
+.trace-graph marker path,
+.trace-list marker path {
+  fill: var(--border-strong);
+}
+.trace-graph .trace-dimmed circle {
+  fill: var(--bg);
+  stroke-dasharray: 4 3;
+}
+.trace-graph .trace-dimmed text {
+  fill: var(--muted);
+}
+.trace-graph .trace-node-current circle {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-width: 4;
+}
+.trace-graph .trace-node-current text {
+  fill: var(--feature-text);
+  font-weight: 700;
+}
+.trace-structure .trace-node-ring {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+}
+.trace-tree .trace-node-cached .trace-node-ring,
+.trace-graph .trace-node-queued .trace-node-ring {
+  fill: none;
+}
+.trace-list .trace-null path,
+.trace-structure .trace-window path {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 2;
+}
+.trace-structure .trace-window text {
+  font-size: 12px;
+  font-weight: 700;
+}
+.trace-structure .trace-row-label {
+  text-anchor: start;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--muted);
+}
+.trace-list .trace-list-pointed rect {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+/* Legends draw a small sample of each mark beside a short label. */
+.trace-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--muted);
+}
+.trace-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.trace-key {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface-2);
+}
+.trace-key-current,
+.trace-key-visited,
+.trace-key-queued {
+  border-radius: 50%;
+}
+.trace-key-current,
+.trace-key-now {
+  border: 3px solid var(--accent);
+  background: var(--accent-soft);
+}
+.trace-key-visited,
+.trace-key-empty {
+  border-style: dashed;
+  background: var(--bg);
+}
+.trace-key-queued {
+  width: 10px;
+  height: 10px;
+  margin: 2px;
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 3.5px var(--border-strong);
+}
+.trace-key-now,
+.trace-key-reads,
+.trace-key-empty {
+  border-radius: 4px;
+}
+.trace-key-reads {
+  border: 4px double var(--border-strong);
+}
+.trace-key-edge,
+.trace-key-null {
+  height: 4px;
+  width: 18px;
+  border: 0;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.trace-key-null {
+  width: 14px;
+  height: 14px;
+  border-radius: 0;
+  border-right: 2px solid var(--text);
+  background: linear-gradient(var(--text), var(--text)) left center / 12px 2px no-repeat;
+}
+
+.trace-calls {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.trace-frame {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  overflow-wrap: anywhere;
+}
+.trace-frame-top {
+  border: 3px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--feature-text);
+  font-weight: 700;
+}
+.trace-frame-locals {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+}
+.trace-frame-top .trace-frame-locals {
+  color: var(--feature-text);
+}
+.trace-frame-tag {
+  font-size: 13px;
+  font-weight: 700;
+  flex-basis: 100%;
+}
+.trace-state {
+  display: grid;
+  gap: 12px;
+}
+.trace-events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.trace-events li {
+  padding: 4px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  overflow-wrap: anywhere;
+}
+.trace-events .trace-event-done {
+  border-style: dashed;
+  color: var(--muted);
+  background: var(--bg);
+}
+.trace-events .trace-event-current {
+  /* An inset ring keeps the chip's size, so the row never reflows as the current event moves. */
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent);
+  background: var(--accent-soft);
+  color: var(--feature-text);
+  font-weight: 700;
+}
+.trace-state-rows {
+  margin: 0;
+  display: grid;
+}
+.trace-state-rows > div {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: 8px;
+  padding: 6px;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+.trace-state-rows > div:last-child {
+  border-bottom: 0;
+}
+.trace-state-rows dt {
+  font-weight: 700;
+}
+.trace-state-rows dd {
+  margin: 0;
+}
+
+/* The step: what this line did, with the controls right under it. */
+.trace-step {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+}
+.trace-note {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.trace-note-count {
+  display: block;
+  color: var(--muted);
+  font-size: var(--type-meta);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.trace-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.trace-controls > .ui-button {
+  flex: none;
+}
+.trace-arrow {
+  font-size: 1.1em;
+  line-height: 1;
+}
+/* Steps as one segmented track: done steps fill, the current one is the accent. */
+.trace-dots {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 3px;
+}
+.trace-dots .ui-button {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: var(--control-height);
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.trace-dots span {
+  display: block;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+}
+.trace-dots .trace-dot-done span {
+  background: var(--border-strong);
+}
+.trace-dots [aria-current] span {
+  height: 8px;
+  background: var(--accent);
+}
+.trace-dots .ui-button:hover span {
+  background: var(--muted);
+}
+.trace-dots [aria-current]:hover span {
+  background: var(--accent);
+}
+
+.trace-vars {
+  width: 100%;
+  border-collapse: collapse;
+}
+.trace-vars caption {
+  text-align: left;
+  font-weight: 700;
+  padding-bottom: 4px;
+}
+.trace-vars th,
+.trace-vars td {
+  text-align: left;
+  padding: 6px;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+.trace-vars thead th {
+  color: var(--muted);
+  font-size: var(--type-meta);
+  font-weight: 700;
+}
+.trace-vars tbody th {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+}
+.trace-changed {
+  background: var(--accent-soft);
+  color: var(--feature-text);
+}
+.trace-changed td > code {
+  font-weight: 700;
+}
+.trace-was code {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+.trace-was > span[aria-hidden] {
+  color: var(--muted);
+  padding: 0 4px;
+}
+.trace-change-label {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 0 7px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 18px;
+  vertical-align: 1px;
+}
+.trace-viewer .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Table (dynamic programming) cells: shape and border style carry state, not colour alone. */
+.trace-table-wrap .trace-table-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.trace-table-scroll {
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+/* A grid lines its cells up under one row of column numbers. */
+.trace-grid {
+  display: grid;
+  grid-template-columns: auto repeat(var(--trace-columns), minmax(44px, max-content));
+  gap: 6px;
+  width: max-content;
+}
+.trace-grid .trace-table-row {
+  display: contents;
+}
+.trace-grid-head {
+  align-self: end;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--type-meta);
+  color: var(--muted);
+}
+.trace-table-rowlabel {
+  align-self: center;
+  min-width: 3ch;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--muted);
+}
+.trace-cell {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 2px;
+  min-width: 52px;
+  padding: 4px 6px 6px;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  font-family: var(--font-mono);
+}
+.trace-grid .trace-cell {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 2px 4px;
+}
+.trace-cell-index {
+  font-size: var(--type-meta);
+  color: var(--muted);
+}
+.trace-cell-value {
+  font-size: 16px;
+  min-height: 1.4em;
+}
+.trace-cell-tag {
+  font-size: var(--type-meta);
+  min-height: 1.2em;
+}
+.trace-grid .trace-cell-tag:empty {
+  display: none;
+}
+.trace-cell-empty {
+  border-style: dashed;
+  background: var(--bg);
+  color: var(--muted);
+}
+.trace-cell-read {
+  border-style: double;
+  border-width: 5px;
+  padding: 1px 3px 3px;
+  font-weight: 700;
+}
+.trace-cell-now {
+  border: 4px solid var(--accent);
+  padding: 2px 4px 4px;
+  background: var(--accent-soft);
+  color: var(--feature-text);
+  font-weight: 700;
+}
+.trace-grid .trace-cell-read,
+.trace-grid .trace-cell-now {
+  padding: 0 2px;
+}
+.trace-cell-now .trace-cell-index {
+  color: var(--feature-text);
+}
+.trace-table-focus {
+  margin: 8px 0 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* One column: the drawing and the step come first, the code follows. */
+@container (max-width: 560px) {
+  .trace-panes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .trace-stage {
+    order: -1;
+  }
+}
+
+/* Each step's changes move in place: the line band glides, pointers slide, and changed marks settle. */
+@media (prefers-reduced-motion: no-preference) {
+  .trace-line-marker.trace-line-glide {
+    transition:
+      transform 220ms var(--motion-ease),
+      height 220ms var(--motion-ease);
+  }
+  .trace-pointer,
+  .trace-window path,
+  .trace-window text {
+    transition:
+      transform 240ms var(--motion-ease),
+      d 240ms var(--motion-ease);
+  }
+  .trace-structure circle,
+  .trace-structure rect,
+  .trace-structure line,
+  .trace-structure .trace-link,
+  .trace-cell,
+  .trace-events li {
+    transition:
+      fill var(--motion-fast) var(--motion-ease),
+      stroke var(--motion-fast) var(--motion-ease),
+      stroke-width var(--motion-fast) var(--motion-ease),
+      background-color var(--motion-fast) var(--motion-ease),
+      border-color var(--motion-fast) var(--motion-ease),
+      box-shadow var(--motion-fast) var(--motion-ease);
+  }
+  .trace-structure .trace-fresh {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: trace-settle 280ms var(--motion-spring);
+  }
+  .trace-cell-value.trace-fresh,
+  .trace-frame-new {
+    animation: trace-settle 280ms var(--motion-spring);
+  }
+  @keyframes trace-settle {
+    from {
+      opacity: 0.35;
+      transform: scale(0.84);
+    }
+  }
+  .trace-vars .trace-changed,
+  .trace-state-rows .trace-changed {
+    animation: trace-flash 520ms var(--motion-ease);
+  }
+  @keyframes trace-flash {
+    from {
+      background-color: var(--accent);
+    }
+  }
+  .trace-note-text {
+    animation: trace-note 200ms var(--motion-ease);
+  }
+  @keyframes trace-note {
+    from {
+      opacity: 0.4;
+    }
+  }
+  .trace-dots span {
+    transition:
+      background-color var(--motion-fast) var(--motion-ease),
+      height var(--motion-fast) var(--motion-ease);
+  }
+}
+.trace-canvas svg {
+  min-width: var(--trace-min, 0);
+}

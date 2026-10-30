@@ -1,11 +1,13 @@
 import { InlineCode } from './InlineCode'
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { Button } from './Button'
 import { Input } from './Input'
 import type { RepTrace, TraceStep, TraceStructure, TraceTreeNode } from './rep-depth'
-import { GraphView, ListView } from './TraceShapes'
+import { Canvas, GraphView, Legend, ListView } from './TraceShapes'
 import { describeGraph, describeList } from './trace-describe.ts'
 import { changedVariables, pickScore, pickTarget, predictionMatches, predictionScore } from './trace-predict.ts'
+import './trace.css'
 import './trace-pick.css'
 import { plural } from './ui-copy.ts'
 
@@ -40,6 +42,24 @@ const tableFocus = (table: TableStructure) => {
 }
 const isCell = (cells: [number, number][] | undefined, row: number, col: number) =>
   Boolean(cells?.some(cell => cell[0] === row && cell[1] === col))
+
+/** Which parts of the drawing this step changed, compared with the previous step's drawing of the same kind. */
+function freshParts(structure: TraceStructure, previous?: TraceStructure): string[] {
+  if (!previous || previous.kind !== structure.kind) return []
+  if ((structure.kind === 'array' || structure.kind === 'stack') && (previous.kind === 'array' || previous.kind === 'stack'))
+    return structure.values.flatMap((value, index) => (previous.values[index] === value ? [] : [String(index)]))
+  if (structure.kind === 'map' && previous.kind === 'map') {
+    const before = new Map(previous.entries)
+    return structure.entries.flatMap(([key, value]) => (before.get(key) === value ? [] : [key]))
+  }
+  if (structure.kind === 'table' && previous.kind === 'table')
+    return structure.cells.flatMap((row, r) => row.flatMap((value, c) => (previous.cells[r]?.[c] === value ? [] : [`${r},${c}`])))
+  if (structure.kind === 'list' && previous.kind === 'list') {
+    const before = new Set(previous.rows.flatMap(row => row.nodes.map(node => `${node.id}=${node.value}`)))
+    return structure.rows.flatMap(row => row.nodes.filter(node => !before.has(`${node.id}=${node.value}`)).map(node => node.id))
+  }
+  return []
+}
 
 function describeTable(table: TableStructure) {
   const rows = table.cells.map((row, r) => {
@@ -122,44 +142,46 @@ function layoutTree(root: TraceTreeNode) {
 function TreeView({ structure }: { structure: Extract<TraceStructure, { kind: 'tree' }> }) {
   const { placed, width, height } = layoutTree(structure.root)
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
-      {placed
-        .filter(entry => entry.parent)
-        .map(entry => (
-          <line
-            key={`edge-${entry.node.id}`}
-            className="trace-edge"
-            x1={entry.parent!.x}
-            y1={entry.parent!.y + TREE_RADIUS}
-            x2={entry.x}
-            y2={entry.y - TREE_RADIUS}
-          />
-        ))}
-      {placed.map(({ node, x, y }) => {
-        const state =
-          node.id === structure.current
-            ? 'trace-node-current'
-            : structure.cached?.includes(node.id)
-              ? 'trace-node-cached'
-              : structure.visited?.includes(node.id)
-                ? 'trace-dimmed'
-                : undefined
-        return (
-          <g key={node.id} className={state}>
-            {structure.cached?.includes(node.id) && <circle className="trace-node-ring" cx={x} cy={y} r={TREE_RADIUS + 5} />}
-            <circle cx={x} cy={y} r={TREE_RADIUS} />
-            <text x={x} y={y + 5}>
-              {node.value}
-            </text>
-            {node.note && (
-              <text className="trace-node-note" x={x} y={y + TREE_RADIUS + 16}>
-                {node.note}
+    <Canvas width={width}>
+      <svg viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
+        {placed
+          .filter(entry => entry.parent)
+          .map(entry => (
+            <line
+              key={`edge-${entry.node.id}`}
+              className="trace-edge"
+              x1={entry.parent!.x}
+              y1={entry.parent!.y + TREE_RADIUS}
+              x2={entry.x}
+              y2={entry.y - TREE_RADIUS}
+            />
+          ))}
+        {placed.map(({ node, x, y }) => {
+          const state =
+            node.id === structure.current
+              ? 'trace-node-current'
+              : structure.cached?.includes(node.id)
+                ? 'trace-node-cached'
+                : structure.visited?.includes(node.id)
+                  ? 'trace-dimmed'
+                  : undefined
+          return (
+            <g key={node.id} className={state}>
+              {structure.cached?.includes(node.id) && <circle className="trace-node-ring" cx={x} cy={y} r={TREE_RADIUS + 5} />}
+              <circle cx={x} cy={y} r={TREE_RADIUS} />
+              <text x={x} y={y + 5}>
+                {node.value}
               </text>
-            )}
-          </g>
-        )
-      })}
-    </svg>
+              {node.note && (
+                <text className="trace-node-note" x={x} y={y + TREE_RADIUS + 16}>
+                  {node.note}
+                </text>
+              )}
+            </g>
+          )
+        })}
+      </svg>
+    </Canvas>
   )
 }
 
@@ -217,11 +239,12 @@ function StatePanel({ structure, previous }: { structure: Extract<TraceStructure
         {structure.entries.map(([label, value]) => {
           const changed = Boolean(before) && (!before!.has(label) || before!.get(label) !== value)
           return (
-            <div key={label} className={changed ? 'trace-changed' : undefined}>
+            <div key={changed ? `${label}-${String(value)}` : label} className={changed ? 'trace-changed' : undefined}>
               <dt>{label}</dt>
               <dd>
+                {changed && before!.has(label) && <Was value={before!.get(label)!} />}
                 <code>{String(value)}</code>
-                {changed && <span className="trace-change-label"> changed</span>}
+                {changed && <span className="trace-change-label">changed</span>}
               </dd>
             </div>
           )
@@ -231,58 +254,95 @@ function StatePanel({ structure, previous }: { structure: Extract<TraceStructure
   )
 }
 
-function TableView({ structure }: { structure: TableStructure }) {
+function TableView({ structure, fresh }: { structure: TableStructure; fresh: string[] }) {
+  // A grid of several rows names its columns once, above the cells; a single row labels each cell.
   const grid = structure.cells.length > 1
+  const columns = Math.max(...structure.cells.map(row => row.length))
   const rows = structure.cells.map((row, r) => (
     <div key={r} className="trace-table-row">
-      {structure.rowLabels && <span className="trace-table-rowlabel">{structure.rowLabels[r]}</span>}
+      {(grid || structure.rowLabels) && <span className="trace-table-rowlabel">{structure.rowLabels?.[r] ?? r}</span>}
       {row.map((value, c) => {
         const now = structure.current?.[0] === r && structure.current[1] === c
         const read = isCell(structure.reads, r, c)
         const kind = now ? 'trace-cell-now' : read ? 'trace-cell-read' : value === null ? 'trace-cell-empty' : 'trace-cell-filled'
+        const changed = fresh.includes(`${r},${c}`)
         return (
           <div key={c} className={`trace-cell ${kind}`}>
-            <span className="trace-cell-index">{structure.colLabels?.[c] ?? c}</span>
-            <span className="trace-cell-value">{value ?? '–'}</span>
-            <span className="trace-cell-tag">{now ? 'now' : read ? '↑ reads' : value === null ? 'empty' : ''}</span>
+            {!grid && <span className="trace-cell-index">{structure.colLabels?.[c] ?? c}</span>}
+            <span key={changed ? `fresh-${String(value)}` : 'value'} className={`trace-cell-value${changed ? ' trace-fresh' : ''}`}>
+              {value ?? ''}
+            </span>
+            <span className="trace-cell-tag">{now ? 'now' : read ? '↑ reads' : ''}</span>
           </div>
         )
       })}
     </div>
   ))
+  const hasEmpty = structure.cells.some(row => row.includes(null))
   return (
     <div className="trace-structure trace-table">
       {grid ? (
         <div className="trace-table-scroll" role="group" aria-label="Table cells, scroll sideways if clipped" tabIndex={0}>
-          <div aria-hidden="true">{rows}</div>
+          <div className="trace-grid" style={{ '--trace-columns': columns } as CSSProperties} aria-hidden="true">
+            <span />
+            {Array.from({ length: columns }, (_, c) => (
+              <span key={c} className="trace-grid-head">
+                {structure.colLabels?.[c] ?? c}
+              </span>
+            ))}
+            {rows}
+          </div>
         </div>
       ) : (
         <div className="trace-table-wrap" aria-hidden="true">
           {rows}
         </div>
       )}
-      <p className="trace-table-focus" aria-hidden="true">
-        {tableFocus(structure)}
-      </p>
-      <p className="trace-legend" aria-hidden="true">
-        Solid: filled. Dashed “empty”: not filled yet. Thick outline “now”: cell being filled. Double outline “↑ reads”: cells it uses.
-      </p>
+      {Boolean(structure.reads?.length) && (
+        <p className="trace-table-focus" aria-hidden="true">
+          {tableFocus(structure)}
+        </p>
+      )}
+      <Legend
+        items={[
+          ...(structure.current ? [['now', 'filling now'] as const] : []),
+          ...(structure.reads?.length ? [['reads', 'read to fill it'] as const] : []),
+          ...(hasEmpty ? [['empty', 'not filled yet'] as const] : []),
+        ]}
+      />
       <p className="sr-only">{describe(structure)}</p>
     </div>
   )
 }
 
+/** The value a variable or entry held before this step, struck through, then an arrow to the new one. */
+function Was({ value }: { value: string | number | boolean | null }) {
+  return (
+    <span className="trace-was">
+      <span className="sr-only">was </span>
+      <code>{String(value)}</code>
+      <span aria-hidden="true">→</span>
+      <span className="sr-only"> now </span>
+    </span>
+  )
+}
+
 function Structure({ structure, previous }: { structure: TraceStructure; previous?: TraceStep }) {
-  if (structure.kind === 'table') return <TableView structure={structure} />
-  if (structure.kind === 'list') return <ListView structure={structure} />
+  const fresh = freshParts(structure, previous?.structure)
+  if (structure.kind === 'table') return <TableView structure={structure} fresh={fresh} />
+  if (structure.kind === 'list') return <ListView structure={structure} fresh={fresh} />
   if (structure.kind === 'graph') return <GraphView structure={structure} />
   if (structure.kind === 'tree')
     return (
       <div className="trace-structure trace-tree">
         <TreeView structure={structure} />
-        <p className="trace-legend" aria-hidden="true">
-          Filled outline: current node. Dashed: visited.{structure.cached?.length ? ' Double ring: answered from the cache.' : ''}
-        </p>
+        <Legend
+          items={[
+            ...(structure.current !== undefined ? [['current', 'current'] as const] : []),
+            ...(structure.visited?.length ? [['visited', 'visited'] as const] : []),
+            ...(structure.cached?.length ? [['queued', 'from the cache'] as const] : []),
+          ]}
+        />
         <p className="sr-only">{describe(structure)}</p>
       </div>
     )
@@ -307,47 +367,63 @@ function Structure({ structure, previous }: { structure: TraceStructure; previou
   const windowSpace = window ? 30 : 0
   const width = vertical ? 260 : Math.max(100, cells.length * 90)
   const height = vertical ? Math.max(60, cells.length * 54) : 100 + windowSpace + pointers.length * 28
+  const keys = structure.kind === 'map' ? structure.entries.map(([key]) => key) : cells.map((_, index) => String(index))
   return (
     <div className="trace-structure">
-      <svg viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
-        {cells.map((value, index) => {
-          const x = vertical ? 5 : index * 90 + 5
-          const y = vertical ? (structure.kind === 'stack' ? cells.length - index - 1 : index) * 54 + 5 : 22
-          const dimmed = structure.kind === 'array' && structure.dimmed?.includes(index)
-          return (
-            <g key={index} className={dimmed ? 'trace-dimmed' : undefined}>
-              <rect x={x} y={y} width={vertical ? 250 : 80} height={40} rx={8} />
-              <text x={x + (vertical ? 125 : 40)} y={y + 25}>
-                {value}
-              </text>
-              {!vertical && (
-                <text x={x + 40} y={14} className="trace-index">
-                  {index}
+      <Canvas width={vertical ? 200 : width}>
+        <svg viewBox={`0 0 ${width} ${height}`} aria-hidden="true" style={vertical ? { maxWidth: 240, marginInline: 'auto' } : undefined}>
+          {cells.map((value, index) => {
+            const x = vertical ? 5 : index * 90 + 5
+            const y = vertical ? (structure.kind === 'stack' ? cells.length - index - 1 : index) * 54 + 5 : 22
+            const dimmed = structure.kind === 'array' && structure.dimmed?.includes(index)
+            const changed = fresh.includes(keys[index])
+            const className = [dimmed ? 'trace-dimmed' : '', changed ? 'trace-fresh' : ''].join(' ').trim() || undefined
+            return (
+              <g key={changed ? `${keys[index]}-${value}` : keys[index]} className={className}>
+                <rect x={x} y={y} width={vertical ? 250 : 80} height={40} rx={8} />
+                <text x={x + (vertical ? 125 : 40)} y={y + 25}>
+                  {value}
                 </text>
-              )}
+                {!vertical && (
+                  <text x={x + 40} y={14} className="trace-index">
+                    {index}
+                  </text>
+                )}
+              </g>
+            )
+          })}
+          {window && structure.kind === 'array' && (
+            // Drawn through CSS `d` and `transform`, so the bracket glides when the window moves.
+            <g className="trace-window">
+              <path
+                style={
+                  {
+                    d: `path('M ${window[0] * 90 + 5} 64 L ${window[0] * 90 + 5} 72 L ${window[1] * 90 + 85} 72 L ${window[1] * 90 + 85} 64')`,
+                  } as CSSProperties
+                }
+              />
+              <text style={{ transform: `translate(${((window[0] + window[1]) * 90 + 90) / 2}px, 90px)` }}>
+                {structure.windowLabel ?? 'window'}
+              </text>
             </g>
-          )
-        })}
-        {window && structure.kind === 'array' && (
-          <g className="trace-window">
-            <path d={`M ${window[0] * 90 + 5} 64 L ${window[0] * 90 + 5} 72 L ${window[1] * 90 + 85} 72 L ${window[1] * 90 + 85} 64`} />
-            <text x={((window[0] + window[1]) * 90 + 90) / 2} y={90}>
-              {structure.windowLabel ?? 'window'}
+          )}
+          {pointers.map(([name, index], row) => (
+            <g
+              key={name}
+              className="trace-pointer"
+              style={{ transform: `translate(${index * 90 + 45}px, ${70 + windowSpace + row * 28}px)` }}
+            >
+              <path d="M 0 0 L -6 10 L 6 10 Z" />
+              <text y={25}>{name}</text>
+            </g>
+          ))}
+          {!cells.length && (
+            <text x={width / 2} y={30}>
+              Empty {structure.kind}
             </text>
-          </g>
-        )}
-        {pointers.map(([name, index], row) => (
-          <g key={name} className="trace-pointer" transform={`translate(${index * 90 + 45}, ${70 + windowSpace + row * 28})`}>
-            <path d="M 0 0 L -6 10 L 6 10 Z" />
-            <text y={25}>{name}</text>
-          </g>
-        ))}
-        {!cells.length && (
-          <text x={width / 2} y={30}>
-            Empty {structure.kind}
-          </text>
-        )}
-      </svg>
+          )}
+        </svg>
+      </Canvas>
       <p className="sr-only">{describe(structure)}</p>
     </div>
   )
@@ -453,14 +529,41 @@ export function TraceViewer({
     setIndex(current => Math.max(0, Math.min(trace.steps.length - 1, current + delta)))
   }
   const guess = (name: string, value: string) => setGuesses(current => ({ ...current, [index]: { ...current[index], [name]: value } }))
+  const codeRef = useRef<HTMLDivElement>(null)
+  const markerRef = useRef<HTMLSpanElement>(null)
+  const markerPlaced = useRef(false)
+  // The current-line band glides to the next line; its first placement and any resize snap.
+  useLayoutEffect(() => {
+    const code = codeRef.current
+    const marker = markerRef.current
+    if (!code || !marker) return
+    const place = (glide: boolean) => {
+      const row = code.querySelector<HTMLElement>('[aria-current="step"]')
+      if (!row) return
+      marker.classList.toggle('trace-line-glide', glide)
+      marker.style.transform = `translateY(${row.offsetTop}px)`
+      marker.style.height = `${row.offsetHeight}px`
+    }
+    place(markerPlaced.current)
+    markerPlaced.current = true
+    let first = true
+    const observer = new ResizeObserver(() => {
+      if (first) first = false
+      else place(false)
+    })
+    observer.observe(code)
+    return () => observer.disconnect()
+  }, [step.line])
+  const vars = Object.entries(step.vars)
   return (
     <section
       className="trace-viewer"
       aria-label={title}
+      aria-keyshortcuts="ArrowLeft ArrowRight"
       tabIndex={0}
       onKeyDown={event => {
         if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
-        if (event.target instanceof Element && event.target.closest('.trace-table-scroll, input')) return
+        if (event.target instanceof Element && event.target.closest('.trace-table-scroll, .trace-canvas, input')) return
         if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
           event.preventDefault()
           event.stopPropagation()
@@ -471,7 +574,7 @@ export function TraceViewer({
       <div className="trace-heading">
         <div>
           <h4>{title}</h4>
-          <p className="utility-note">Authored reference snapshots</p>
+          <p className="utility-note">The reference solution, one line at a time. Arrow keys step through it.</p>
         </div>
         <Button
           aria-pressed={predicting}
@@ -498,27 +601,32 @@ export function TraceViewer({
             : 'Each step hides what changes until you reveal it. Type what you expect, or tap where the drawing changes next, then reveal.'}
         </p>
       )}
-      <p>
-        <strong>Input:</strong> <code>{trace.input}</code>
+      <p className="trace-input">
+        <span>Input</span> <code>{trace.input}</code>
       </p>
       <div className="trace-panes">
-        <div className="trace-code" role="list" aria-label="Trace code">
-          {trace.code.map((line, lineIndex) => (
-            <div
-              role="listitem"
-              key={lineIndex}
-              className={lineIndex === step.line ? 'trace-current' : undefined}
-              aria-current={lineIndex === step.line ? 'step' : undefined}
-            >
-              <span className="trace-line-number" aria-hidden="true">
-                {lineIndex + 1}
-              </span>
-              <code>{line || ' '}</code>
-              {lineIndex === step.line && <span className="sr-only"> Current line</span>}
-            </div>
-          ))}
+        <div className="trace-code" role="list" aria-label="Trace code" ref={codeRef}>
+          <span className="trace-line-marker" ref={markerRef} aria-hidden="true" />
+          {trace.code.map((line, lineIndex) => {
+            // Wrapped lines keep their indent and hang two characters further in.
+            const indent = line.length - line.trimStart().length
+            return (
+              <div
+                role="listitem"
+                key={lineIndex}
+                className={lineIndex === step.line ? 'trace-current' : undefined}
+                aria-current={lineIndex === step.line ? 'step' : undefined}
+              >
+                <span className="trace-line-number" aria-hidden="true">
+                  {lineIndex + 1}
+                </span>
+                <code style={{ paddingLeft: `${indent + 2}ch`, textIndent: '-2ch' }}>{line.trimStart() || ' '}</code>
+                {lineIndex === step.line && <span className="sr-only"> Current line</span>}
+              </div>
+            )
+          })}
         </div>
-        <div>
+        <div className="trace-stage">
           {step.structure &&
             (hidden ? (
               target && previous?.structure ? (
@@ -532,100 +640,123 @@ export function TraceViewer({
                 <p className="trace-hidden-structure">Picture what this line changes in the drawing, then reveal the step.</p>
               )
             ) : (
-              <>
+              <div>
                 {target && revealed.has(index) && picks[index] !== undefined && previous?.structure && (
                   <PickVerdict structure={previous.structure} answer={target.answer} picked={picks[index]} />
                 )}
                 <Structure structure={step.structure} previous={previous} />
-              </>
+              </div>
             ))}
-          <table className="trace-vars">
-            <caption>Variables</caption>
-            <thead>
-              <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(step.vars).map(([name, value]) => {
-                const isChanged = changed.includes(name)
-                const typed = guesses[index]?.[name] ?? ''
-                if (hidden && isChanged)
+          <div className="trace-step">
+            <p className="trace-note" aria-live="polite" aria-atomic="true">
+              <span className="trace-note-count">
+                Step {index + 1} of {trace.steps.length}
+                <span className="sr-only">:</span>
+              </span>{' '}
+              <span key={`${index}-${hidden}`} className="trace-note-text">
+                {hidden ? (
+                  changed.length ? (
+                    `Line ${step.line + 1} runs next. Predict ${changed.join(', ')}.`
+                  ) : (
+                    `Line ${step.line + 1} runs next. Predict what it does.`
+                  )
+                ) : (
+                  <InlineCode text={step.note} />
+                )}
+              </span>
+            </p>
+            <div className="trace-controls">
+              <Button disabled={index === 0} onClick={() => move(-1)}>
+                <span className="trace-arrow" aria-hidden="true">
+                  ‹
+                </span>
+                Prev
+              </Button>
+              <div className="trace-dots" aria-label="Trace steps">
+                {trace.steps.map((_, dot) => (
+                  <Button
+                    key={dot}
+                    variant="text"
+                    className={dot < index ? 'trace-dot-done' : undefined}
+                    aria-label={`Go to step ${dot + 1}`}
+                    aria-current={dot === index ? 'step' : undefined}
+                    onClick={() => setIndex(dot)}
+                  >
+                    <span aria-hidden="true" />
+                  </Button>
+                ))}
+              </div>
+              <Button
+                variant={hidden ? 'primary' : undefined}
+                disabled={!hidden && index === trace.steps.length - 1}
+                onClick={() => move(1)}
+              >
+                {hidden ? 'Reveal step' : 'Next'}
+                {!hidden && (
+                  <span className="trace-arrow" aria-hidden="true">
+                    ›
+                  </span>
+                )}
+              </Button>
+            </div>
+          </div>
+          {vars.length > 0 && (
+            <table className="trace-vars">
+              <caption>Variables</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {vars.map(([name, value]) => {
+                  const isChanged = changed.includes(name)
+                  const typed = guesses[index]?.[name] ?? ''
+                  if (hidden && isChanged)
+                    return (
+                      <tr key={name} className="trace-predict-row">
+                        <th scope="row">{name}</th>
+                        <td>
+                          <Input
+                            value={typed}
+                            aria-label={`Predict ${name}`}
+                            placeholder="Your prediction"
+                            onChange={event => guess(name, event.target.value)}
+                            onKeyDown={event => {
+                              if (event.key === 'Enter') {
+                                event.preventDefault()
+                                reveal()
+                              }
+                            }}
+                          />
+                        </td>
+                      </tr>
+                    )
+                  const checked = predicting && isChanged && revealed.has(index)
+                  const matched = checked && predictionMatches(typed, value)
+                  const before = previous?.vars[name]
                   return (
-                    <tr key={name} className="trace-predict-row">
+                    <tr key={isChanged ? `${name}-${index}` : name} className={isChanged ? 'trace-changed' : undefined}>
                       <th scope="row">{name}</th>
                       <td>
-                        <Input
-                          value={typed}
-                          aria-label={`Predict ${name}`}
-                          placeholder="Your prediction"
-                          onChange={event => guess(name, event.target.value)}
-                          onKeyDown={event => {
-                            if (event.key === 'Enter') {
-                              event.preventDefault()
-                              reveal()
-                            }
-                          }}
-                        />
+                        {isChanged && previous && name in previous.vars && <Was value={before ?? null} />}
+                        <code>{String(value)}</code>
+                        {isChanged && <span className="trace-change-label">changed</span>}
+                        {checked && (
+                          <span className={`trace-guess ${matched ? 'trace-guess-match' : 'trace-guess-miss'}`}>
+                            {matched ? ' Your prediction matched.' : typed.trim() ? ` You predicted ${typed.trim()}.` : ' No prediction.'}
+                          </span>
+                        )}
                       </td>
                     </tr>
                   )
-                const checked = predicting && isChanged && revealed.has(index)
-                const matched = checked && predictionMatches(typed, value)
-                return (
-                  <tr key={name} className={isChanged ? 'trace-changed' : undefined}>
-                    <th scope="row">{name}</th>
-                    <td>
-                      <code>{String(value)}</code>
-                      {isChanged && <span className="trace-change-label"> changed</span>}
-                      {checked && (
-                        <span className={`trace-guess ${matched ? 'trace-guess-match' : 'trace-guess-miss'}`}>
-                          {matched ? ' Your prediction matched.' : typed.trim() ? ` You predicted ${typed.trim()}.` : ' No prediction.'}
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
-      <p className="trace-note" aria-live="polite" aria-atomic="true">
-        Step {index + 1} of {trace.steps.length}:{' '}
-        {hidden ? (
-          changed.length ? (
-            `Line ${step.line + 1} runs next. Predict ${changed.join(', ')}.`
-          ) : (
-            `Line ${step.line + 1} runs next. Predict what it does.`
-          )
-        ) : (
-          <InlineCode text={step.note} />
-        )}
-      </p>
-      <div className="trace-controls">
-        <Button disabled={index === 0} onClick={() => move(-1)}>
-          Prev
-        </Button>
-        <div className="trace-dots" aria-label="Trace steps">
-          {trace.steps.map((_, dot) => (
-            <Button
-              key={dot}
-              variant="text"
-              aria-label={`Go to step ${dot + 1}`}
-              aria-current={dot === index ? 'step' : undefined}
-              onClick={() => setIndex(dot)}
-            >
-              <span aria-hidden="true" />
-            </Button>
-          ))}
-        </div>
-        <Button variant={hidden ? 'primary' : undefined} disabled={!hidden && index === trace.steps.length - 1} onClick={() => move(1)}>
-          {hidden ? 'Reveal step' : 'Next'}
-        </Button>
-      </div>
-      <p className="utility-note">Use Left and Right arrow keys while focused here.</p>
     </section>
   )
 }
