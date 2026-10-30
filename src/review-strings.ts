@@ -88,6 +88,89 @@ export const stringDepth: Record<string, RepDepth> = {
       'Using the set of distinct letters as the key puts aab and abb together. Collecting groups in a plain object whose keys look like numbers can reorder them. Sorting the input words first changes the required group and word order.',
     transfer:
       'Treat uppercase and lowercase letters as the same, and ignore spaces, so Dormitory and dirty room match. Decide which normalization the key needs and which form of each word you return. This changed contract is self-reviewed.',
+    traceSteps: {
+      code: [
+        'function anagramGroups(words: string[]): string[][] {',
+        '  const groups = new Map<string, string[]>()',
+        '  for (const word of words) {',
+        "    const key = [...word].sort().join('')",
+        '    const group = groups.get(key)',
+        '    if (group) group.push(word)',
+        '    else groups.set(key, [word])',
+        '  }',
+        '  return [...groups.values()]',
+        '}',
+      ],
+      input: "words = ['listen', 'cat', 'silent', 'act']",
+      steps: [
+        {
+          line: 1,
+          vars: { groups: '{}' },
+          structure: { kind: 'map', entries: [] },
+          note: 'Each group will be stored under a key that every arrangement of its letters shares.',
+        },
+        {
+          line: 3,
+          vars: { word: 'listen', key: 'eilnst' },
+          structure: { kind: 'map', entries: [] },
+          note: 'Sorting the letters of `listen` gives `eilnst`. Any anagram of `listen` sorts to the same key.',
+        },
+        {
+          line: 6,
+          vars: { word: 'listen', key: 'eilnst' },
+          structure: { kind: 'map', entries: [['eilnst', 'listen']] },
+          note: 'No group has that key yet, so start one.',
+        },
+        {
+          line: 6,
+          vars: { word: 'cat', key: 'act' },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['eilnst', 'listen'],
+              ['act', 'cat'],
+            ],
+          },
+          note: '`cat` sorts to `act`: a new key, so a second group starts after the first.',
+        },
+        {
+          line: 5,
+          vars: { word: 'silent', key: 'eilnst' },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['eilnst', 'listen, silent'],
+              ['act', 'cat'],
+            ],
+          },
+          note: '`silent` also sorts to `eilnst`, so it joins the first group, after `listen`.',
+        },
+        {
+          line: 5,
+          vars: { word: 'act', key: 'act' },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['eilnst', 'listen, silent'],
+              ['act', 'cat, act'],
+            ],
+          },
+          note: 'The letters of `act` are already in order, and its key matches the group of `cat`.',
+        },
+        {
+          line: 8,
+          vars: { result: '[["listen","silent"],["cat","act"]]' },
+          structure: {
+            kind: 'map',
+            entries: [
+              ['eilnst', 'listen, silent'],
+              ['act', 'cat, act'],
+            ],
+          },
+          note: 'A `Map` lists keys in the order they were first added, so the groups come out in the order of their first words.',
+        },
+      ],
+    },
   },
   'text-normalized-palindrome': {
     reasoning:
@@ -166,6 +249,105 @@ export const stringDepth: Record<string, RepDepth> = {
       'Splitting on a single space produces empty words from double spaces and lines that start with a space. Testing line + space + word < width instead of <= sends ab cd with width 5 onto two lines. Forcing an overlong word onto a line that already has words exceeds the width.',
     transfer:
       'Break words longer than width into pieces of at most width characters. Decide whether a piece may share a line with the next word. This changed contract is self-reviewed.',
+    traceSteps: {
+      code: [
+        'function wrapText(text: string, width: number): string[] {',
+        '  const lines: string[] = []',
+        "  let line = ''",
+        "  for (const word of text.split(' ').filter(word => word !== '')) {",
+        "    if (line === '') line = word",
+        "    else if (line.length + 1 + word.length <= width) line += ' ' + word",
+        '    else { lines.push(line); line = word }',
+        '  }',
+        "  if (line !== '') lines.push(line)",
+        '  return lines',
+        '}',
+      ],
+      input: "text = 'The quick brown fox jumps', width = 10",
+      steps: [
+        {
+          line: 2,
+          vars: { width: 10, line: '', lines: '[]' },
+          structure: { kind: 'array', values: ['The', 'quick', 'brown', 'fox', 'jumps'] },
+          note: 'Split on spaces and drop the empty pieces, so a run of spaces never makes an empty word. `line` holds the line being built.',
+        },
+        {
+          line: 4,
+          vars: { word: 'The', line: 'The' },
+          structure: {
+            kind: 'array',
+            values: ['The', 'quick', 'brown', 'fox', 'jumps'],
+            pointers: { word: 0 },
+            window: [0, 0],
+            windowLabel: '3 chars',
+          },
+          note: 'The line is empty, so `The` starts it. An empty line accepts any word, however long.',
+        },
+        {
+          line: 5,
+          vars: { word: 'quick', line: 'The quick' },
+          structure: {
+            kind: 'array',
+            values: ['The', 'quick', 'brown', 'fox', 'jumps'],
+            pointers: { word: 1 },
+            window: [0, 1],
+            windowLabel: '9 chars',
+          },
+          note: '3 letters, 1 space, and 5 letters make 9, within the width of 10, so `quick` joins the line.',
+        },
+        {
+          line: 6,
+          vars: { word: 'brown', line: 'brown', lines: '["The quick"]' },
+          structure: {
+            kind: 'array',
+            values: ['The', 'quick', 'brown', 'fox', 'jumps'],
+            pointers: { word: 2 },
+            dimmed: [0, 1],
+            window: [2, 2],
+            windowLabel: '5 chars',
+          },
+          note: '9 + 1 + 5 = 15 is over 10. Finish `The quick`, and start a new line with `brown`.',
+        },
+        {
+          line: 5,
+          vars: { word: 'fox', line: 'brown fox' },
+          structure: {
+            kind: 'array',
+            values: ['The', 'quick', 'brown', 'fox', 'jumps'],
+            pointers: { word: 3 },
+            dimmed: [0, 1],
+            window: [2, 3],
+            windowLabel: '9 chars',
+          },
+          note: '5 + 1 + 3 = 9 fits, so `fox` joins `brown`.',
+        },
+        {
+          line: 6,
+          vars: { word: 'jumps', line: 'jumps', lines: '["The quick", "brown fox"]' },
+          structure: {
+            kind: 'array',
+            values: ['The', 'quick', 'brown', 'fox', 'jumps'],
+            pointers: { word: 4 },
+            dimmed: [0, 1, 2, 3],
+            window: [4, 4],
+            windowLabel: '5 chars',
+          },
+          note: '9 + 1 + 5 = 15 does not fit. Finish `brown fox`, and start a new line with `jumps`.',
+        },
+        {
+          line: 8,
+          vars: { line: 'jumps', lines: '["The quick", "brown fox", "jumps"]' },
+          structure: { kind: 'array', values: ['The', 'quick', 'brown', 'fox', 'jumps'], dimmed: [0, 1, 2, 3, 4] },
+          note: 'The loop ends with `jumps` still in `line`, so push it. Without this step, the last line would be lost.',
+        },
+        {
+          line: 9,
+          vars: { result: '["The quick","brown fox","jumps"]' },
+          structure: { kind: 'array', values: ['The', 'quick', 'brown', 'fox', 'jumps'], dimmed: [0, 1, 2, 3, 4] },
+          note: 'Return three lines, none longer than 10 characters.',
+        },
+      ],
+    },
   },
 }
 
